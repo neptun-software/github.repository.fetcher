@@ -1,14 +1,15 @@
 import { graphql } from "@octokit/graphql";
 import type {
   SearchResultItemConnection,
-  RateLimit
+  RateLimit,
+  Repository as GithubRepository,
+  TreeEntry
 } from "@octokit/graphql-schema";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const PATH = process.env.GITHUB_PATH;
 
-if (!GITHUB_TOKEN || !PATH) {
-  throw new Error("Missing required environment variables");
+if (!GITHUB_TOKEN) {
+  throw new Error("Missing required environment variables (GITHUB_TOKEN).");
 }
 
 const graphqlWithAuth = graphql.defaults({
@@ -18,8 +19,41 @@ const graphqlWithAuth = graphql.defaults({
 });
 
 async function fetchTopRepositories() {
+  let repositories: Array<{
+    nameWithOwner: GithubRepository['nameWithOwner'];
+    stars: GithubRepository['stargazerCount'];
+    defaultBranch: string;
+    files: Array<{
+      name: TreeEntry['name'];
+      type: TreeEntry['type'];
+      size?: number;
+      content?: string;
+    }>;
+  }> = [];
   let hasNextPage = true;
   let cursor: string | null = null;
+
+  // Try to load existing data
+  try {
+    const file = Bun.file('repositories.json');
+    if (await file.exists()) {
+      const existingData = await file.json();
+      repositories = existingData.repositories;
+      hasNextPage = existingData.pagination.hasNextPage;
+      cursor = existingData.pagination.endCursor;
+      console.log('\n📂 Loaded existing data, continuing from cursor:', cursor);
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not load existing data, starting fresh');
+  }
+
+  const output = {
+    repositories,
+    pagination: {
+      hasNextPage,
+      endCursor: cursor
+    }
+  };
 
   try {
     while (hasNextPage) {
@@ -87,6 +121,38 @@ async function fetchTopRepositories() {
       for (const repo of search.nodes) {
         if (!repo || !('nameWithOwner' in repo)) continue;
 
+        let repoData: Array<{
+          name: TreeEntry['name'];
+          type: TreeEntry['type'];
+          size?: number;
+          content?: string;
+        }> = [];
+
+        if (repo.defaultBranchRef?.target && 'tree' in repo.defaultBranchRef.target) {
+          const tree = repo.defaultBranchRef.target.tree;
+          if (tree?.entries) {
+            repoData = tree.entries.map(entry => ({
+              name: entry.name,
+              type: entry.type,
+              size: entry.object && 'byteSize' in entry.object ?
+                Number((entry.object.byteSize / 1024).toFixed(2)) : undefined,
+              content: entry.object && 'byteSize' in entry.object &&
+                entry.object.byteSize < 1024 * 1024 &&
+                'text' in entry.object &&
+                entry.object.text !== null ?
+                entry.object.text : undefined
+            }));
+          }
+        }
+
+        repositories.push({
+          nameWithOwner: repo.nameWithOwner,
+          stars: repo.stargazerCount,
+          defaultBranch: repo.defaultBranchRef?.name || 'unknown',
+          files: repoData
+        });
+
+        // Keep existing console logging for visibility
         console.log(`\n📦 Repository: ${repo.nameWithOwner}`);
         console.log(`⭐ Stars: ${repo.stargazerCount.toLocaleString()}`);
         console.log(`🌿 Default branch: ${repo.defaultBranchRef?.name}`);
@@ -113,12 +179,31 @@ async function fetchTopRepositories() {
         console.log('----------------------------');
       }
 
-      // Update pagination variables
-      hasNextPage = search.pageInfo.hasNextPage;
-      cursor = search.pageInfo.endCursor ?? null;
+      // Update pagination variables and output
+      output.pagination.hasNextPage = search.pageInfo.hasNextPage;
+      output.pagination.endCursor = search.pageInfo.endCursor ?? null;
+      hasNextPage = output.pagination.hasNextPage;
+      cursor = output.pagination.endCursor;
+
+      // After processing each batch, save to file
+      try {
+        const filePath = 'repositories.json';
+        await Bun.write(filePath, JSON.stringify(output, null, 2));
+
+        // Verify file was written
+        const file = Bun.file(filePath);
+        const exists = await file.exists();
+        console.log(`
+\n📝 File status:
+- Path: ${filePath}
+- Exists: ${exists}
+- Size: ${exists ? (file.size / 1024).toFixed(2) : 0} KB`);
+      } catch (writeError) {
+        console.error('❌ Error writing file:', writeError);
+      }
 
       // Add delay to avoid rate limiting issues
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 250));
 
       console.log('\n=== Pagination Info ===');
       console.log(`Has next page: ${hasNextPage}`);
@@ -131,9 +216,14 @@ async function fetchTopRepositories() {
         break;
       }
     }
+
   } catch (error) {
     console.error('❌ Error fetching repositories:', error);
   }
 }
+
+process.on('uncaughtException', (error) => {
+  console.error('💥 Uncaught Exception:', error);
+});
 
 fetchTopRepositories();
