@@ -18,17 +18,19 @@ const graphqlWithAuth = graphql.defaults({
   },
 });
 
+type Files = Array<{
+  name: TreeEntry['name'];
+  type: TreeEntry['type'];
+  size?: number;
+  content?: string | null;
+}>;
+
 async function fetchTopRepositories() {
   let repositories: Array<{
     nameWithOwner: GithubRepository['nameWithOwner'];
     stars: GithubRepository['stargazerCount'];
     defaultBranch: string;
-    files: Array<{
-      name: TreeEntry['name'];
-      type: TreeEntry['type'];
-      size?: number;
-      content?: string;
-    }>;
+    files: Files;
   }> = [];
   let hasNextPage = true;
   let cursor: string | null = null;
@@ -121,12 +123,7 @@ async function fetchTopRepositories() {
       for (const repo of search.nodes) {
         if (!repo || !('nameWithOwner' in repo)) continue;
 
-        let repoData: Array<{
-          name: TreeEntry['name'];
-          type: TreeEntry['type'];
-          size?: number;
-          content?: string;
-        }> = [];
+        let repoData: Files = [];
 
         if (repo.defaultBranchRef?.target && 'tree' in repo.defaultBranchRef.target) {
           const tree = repo.defaultBranchRef.target.tree;
@@ -139,8 +136,8 @@ async function fetchTopRepositories() {
               content: entry.object && 'byteSize' in entry.object &&
                 entry.object.byteSize < 1024 * 1024 &&
                 'text' in entry.object &&
-                entry.object.text !== null ?
-                entry.object.text : undefined
+                entry.object.text ?
+                entry.object.text : null
             }));
           }
         }
