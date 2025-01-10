@@ -2,11 +2,15 @@ import { graphql } from "@octokit/graphql";
 import type {
   SearchResultItemConnection,
   RateLimit,
-  Repository as GithubRepository,
-  TreeEntry
+  TreeEntry,
+  Repository
 } from "@octokit/graphql-schema";
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const CHUNK_SIZE = 10; // Number of repositories per file
+const DATA_DIR = "data";
 
 if (!GITHUB_TOKEN) {
   throw new Error("Missing required environment variables (GITHUB_TOKEN).");
@@ -18,6 +22,13 @@ const graphqlWithAuth = graphql.defaults({
   },
 });
 
+type Repositories = Array<{
+  nameWithOwner: Repository['nameWithOwner'];
+  stars: Repository['stargazerCount'];
+  defaultBranch: string;
+  files: Files;
+}>
+
 type Files = Array<{
   name: TreeEntry['name'];
   type: TreeEntry['type'];
@@ -25,37 +36,83 @@ type Files = Array<{
   content?: string | null;
 }>;
 
-async function fetchTopRepositories() {
-  let repositories: Array<{
-    nameWithOwner: GithubRepository['nameWithOwner'];
-    stars: GithubRepository['stargazerCount'];
-    defaultBranch: string;
-    files: Files;
-  }> = [];
-  let hasNextPage = true;
-  let cursor: string | null = null;
+type ChunkMetadata = {
+  timestamp: number;
+  page: number;
+  hasNextPage: boolean;
+  endCursor: string | null;
+  completionStatus: 'RATE_LIMITED' | 'COMPLETED' | 'ERROR' | 'IN_PROGRESS';
+  error?: string;
+};
 
-  // Try to load existing data
+async function getLatestChunk(): Promise<ChunkMetadata | null> {
   try {
-    const file = Bun.file('repositories.json');
-    if (await file.exists()) {
-      const existingData = await file.json();
-      repositories = existingData.repositories;
-      hasNextPage = existingData.pagination.hasNextPage;
-      cursor = existingData.pagination.endCursor;
-      console.log('\n📂 Loaded existing data, continuing from cursor:', cursor);
+    const metadataFile = Bun.file(join(DATA_DIR, 'metadata.json'));
+    if (await metadataFile.exists()) {
+      const metadata: ChunkMetadata = await metadataFile.json();
+      return {
+        timestamp: metadata.timestamp,
+        page: metadata.page + 1,
+        hasNextPage: metadata.hasNextPage,
+        endCursor: metadata.endCursor,
+        completionStatus: metadata.completionStatus || 'IN_PROGRESS'
+      };
     }
   } catch (error) {
-    console.warn('⚠️ Could not load existing data, starting fresh');
+    console.warn('⚠️ Could not load metadata, starting fresh');
   }
+  return null;
+}
+
+async function saveChunk(repositories: Repositories, metadata: ChunkMetadata) {
+  await mkdir(DATA_DIR, { recursive: true });
+
+  const filename = `repositories-${metadata.timestamp}-${metadata.page}.json`;
+  const filePath = join(DATA_DIR, filename);
 
   const output = {
+    metadata: {
+      ...metadata,
+      completionStatus: metadata.completionStatus || 'IN_PROGRESS'
+    },
     repositories,
-    pagination: {
-      hasNextPage,
-      endCursor: cursor
-    }
   };
+
+  await Bun.write(filePath, JSON.stringify(output, null, 2));
+  await Bun.write(join(DATA_DIR, 'metadata.json'), JSON.stringify(metadata, null, 2));
+
+  console.log(`
+📝 Chunk saved:
+- Path: ${filePath}
+- Page: ${metadata.page}
+- Status: ${metadata.completionStatus}
+- Repositories: ${repositories.length}
+- Size: ${(Bun.file(filePath).size / 1024).toFixed(2)} KB`);
+}
+
+async function fetchTopRepositories() {
+  let currentChunk: Repositories = [];
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  let page = 1;
+
+  // Try to load existing metadata
+  const lastChunk = await getLatestChunk();
+  if (lastChunk) {
+    // Only continue if the last chunk was rate limited or in progress
+    if (lastChunk.completionStatus === 'RATE_LIMITED' || lastChunk.completionStatus === 'IN_PROGRESS') {
+      hasNextPage = lastChunk.hasNextPage;
+      cursor = lastChunk.endCursor;
+      page = lastChunk.page;
+      console.log('\n📂 Loaded existing metadata, continuing from:', {
+        page,
+        cursor,
+        previousStatus: lastChunk.completionStatus
+      });
+    } else {
+      console.log(`\n⚠️ Previous run was ${lastChunk.completionStatus}, starting fresh`);
+    }
+  }
 
   try {
     while (hasNextPage) {
@@ -142,7 +199,7 @@ async function fetchTopRepositories() {
           }
         }
 
-        repositories.push({
+        currentChunk.push({
           nameWithOwner: repo.nameWithOwner,
           stars: repo.stargazerCount,
           defaultBranch: repo.defaultBranchRef?.name || 'unknown',
@@ -174,33 +231,29 @@ async function fetchTopRepositories() {
           console.log(`${icon} ${entry.name} ${size}`);
         }
         console.log('----------------------------');
+
+        // Save chunk when it reaches CHUNK_SIZE
+        if (currentChunk.length >= CHUNK_SIZE) {
+          const metadata: ChunkMetadata = {
+            timestamp: Date.now(),
+            page,
+            hasNextPage: search.pageInfo.hasNextPage,
+            endCursor: search.pageInfo.endCursor ?? null,
+            completionStatus: 'IN_PROGRESS'
+          };
+
+          await saveChunk(currentChunk, metadata);
+          currentChunk = [];
+          page++;
+        }
       }
 
-      // Update pagination variables and output
-      output.pagination.hasNextPage = search.pageInfo.hasNextPage;
-      output.pagination.endCursor = search.pageInfo.endCursor ?? null;
-      hasNextPage = output.pagination.hasNextPage;
-      cursor = output.pagination.endCursor;
-
-      // After processing each batch, save to file
-      try {
-        const filePath = 'repositories.json';
-        await Bun.write(filePath, JSON.stringify(output, null, 2));
-
-        // Verify file was written
-        const file = Bun.file(filePath);
-        const exists = await file.exists();
-        console.log(`
-\n📝 File status:
-- Path: ${filePath}
-- Exists: ${exists}
-- Size: ${exists ? (file.size / 1024).toFixed(2) : 0} KB`);
-      } catch (writeError) {
-        console.error('❌ Error writing file:', writeError);
-      }
+      // Update pagination variables
+      hasNextPage = search.pageInfo.hasNextPage;
+      cursor = search.pageInfo.endCursor ?? null;
 
       // Add delay to avoid rate limiting issues
-      await new Promise(resolve => setTimeout(resolve, 250));
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       console.log('\n=== Pagination Info ===');
       console.log(`Has next page: ${hasNextPage}`);
@@ -210,12 +263,48 @@ async function fetchTopRepositories() {
       // Check if we're running low on rate limit
       if (rateLimit.remaining < rateLimit.cost) {
         console.log('⚠️ Rate limit nearly exhausted, stopping pagination');
-        break;
+        const metadata: ChunkMetadata = {
+          timestamp: Date.now(),
+          page,
+          hasNextPage: true,
+          endCursor: cursor,
+          completionStatus: 'RATE_LIMITED'
+        };
+        if (currentChunk.length > 0) {
+          await saveChunk(currentChunk, metadata);
+        }
+        console.log(`\n✅ Successfully saved progress before rate limit. Will resume from page ${page} next time.`);
+        process.exit(0); // Exit successfully since this is an expected condition
       }
+    }
+
+    // Save any remaining repositories in the last chunk
+    if (currentChunk.length > 0) {
+      const metadata: ChunkMetadata = {
+        timestamp: Date.now(),
+        page,
+        hasNextPage,
+        endCursor: cursor,
+        completionStatus: hasNextPage ? 'IN_PROGRESS' : 'COMPLETED'
+      };
+      await saveChunk(currentChunk, metadata);
     }
 
   } catch (error) {
     console.error('❌ Error fetching repositories:', error);
+    // Save error state in metadata
+    const metadata: ChunkMetadata = {
+      timestamp: Date.now(),
+      page,
+      hasNextPage: true,
+      endCursor: cursor,
+      completionStatus: 'ERROR',
+      error: error instanceof Error ? error.message : String(error)
+    };
+    if (currentChunk.length > 0) {
+      await saveChunk(currentChunk, metadata);
+    }
+    throw error; // Re-throw to trigger the uncaught exception handler
   }
 }
 
