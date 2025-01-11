@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736561380940,
+    "page": 422,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjQyNg==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dockur/macos",
+      "stars": 10038,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.16015625,
+          "content": ".dockerignore\n.git\n.github\n.gitignore\n.gitlab-ci.yml\n.gitmodules\nDockerfile\nDockerfile.archive\ncompose.yml\ncompose.yaml\ndocker-compose.yml\ndocker-compose.yaml\n*.md\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0009765625,
+          "content": "\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.7568359375,
+          "content": "FROM --platform=$BUILDPLATFORM alpine:3.21 AS builder\n\nARG VERSION_OPENCORE=\"1.0.2\"\nARG REPO_OPENCORE=\"https://github.com/acidanthera/OpenCorePkg\"\nADD $REPO_OPENCORE/releases/download/$VERSION_OPENCORE/OpenCore-$VERSION_OPENCORE-RELEASE.zip /tmp/opencore.zip\n\nRUN apk --update --no-cache add unzip && \\\n    unzip /tmp/opencore.zip -d /tmp/oc && \\\n    cp /tmp/oc/Utilities/macserial/macserial.linux /macserial && \\\n    rm -rf /tmp/* /var/tmp/* /var/cache/apk/*\n\nFROM scratch AS runner\nCOPY --from=qemux/qemu-docker:6.12 / /\n\nARG VERSION_ARG=\"0.0\"\nARG VERSION_KVM_OPENCORE=\"v21\"\nARG VERSION_OSX_KVM=\"326053dd61f49375d5dfb28ee715d38b04b5cd8e\"\nARG REPO_OSX_KVM=\"https://raw.githubusercontent.com/kholia/OSX-KVM\"\nARG REPO_KVM_OPENCORE=\"https://github.com/thenickdude/KVM-Opencore\"\n\nARG DEBCONF_NOWARNINGS=\"yes\"\nARG DEBIAN_FRONTEND=\"noninteractive\"\nARG DEBCONF_NONINTERACTIVE_SEEN=\"true\"\n\nRUN set -eu && \\\n    apt-get update && \\\n    apt-get --no-install-recommends -y install \\\n    xxd \\\n    fdisk \\\n    mtools \\\n    python3 && \\\n    apt-get clean && \\\n    echo \"$VERSION_ARG\" > /run/version && \\\n    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*\n\nCOPY --chmod=755 ./src /run/\nCOPY --chmod=755 ./assets /assets/\nCOPY --chmod=755 --from=builder /macserial /usr/local/bin/\n\nADD --chmod=644 \\\n    $REPO_OSX_KVM/$VERSION_OSX_KVM/OVMF_CODE.fd \\\n    $REPO_OSX_KVM/$VERSION_OSX_KVM/OVMF_VARS.fd \\\n    $REPO_OSX_KVM/$VERSION_OSX_KVM/OVMF_VARS-1024x768.fd \\\n    $REPO_OSX_KVM/$VERSION_OSX_KVM/OVMF_VARS-1920x1080.fd /usr/share/OVMF/\n\nADD $REPO_KVM_OPENCORE/releases/download/$VERSION_KVM_OPENCORE/OpenCore-$VERSION_KVM_OPENCORE.iso.gz /opencore.iso.gz\n\nVOLUME /storage\nEXPOSE 8006 5900\n\nENV VERSION=\"13\"\nENV RAM_SIZE=\"4G\"\nENV CPU_CORES=\"2\"\nENV DISK_SIZE=\"64G\"\n\nENTRYPOINT [\"/usr/bin/tini\", \"-s\", \"/run/entry.sh\"]\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "compose.yml",
+          "type": "blob",
+          "size": 0.279296875,
+          "content": "services:\n  osx:\n    image: dockurr/macos\n    container_name: macos\n    environment:\n      VERSION: \"13\"\n    devices:\n      - /dev/kvm\n      - /dev/net/tun\n    cap_add:\n      - NET_ADMIN\n    ports:\n      - 8006:8006\n      - 5900:5900/tcp\n      - 5900:5900/udp\n    stop_grace_period: 2m\n"
+        },
+        {
+          "name": "kubernetes.yml",
+          "type": "blob",
+          "size": 1.2919921875,
+          "content": "---\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: macos-pvc\nspec:\n  accessModes:\n  - ReadWriteOnce\n  resources:\n    requests:\n      storage: 64Gi\n---\napiVersion: v1\nkind: Pod\nmetadata:\n  name: macos\n  labels:\n    name: macos\nspec:\n  containers:\n  - name: macos\n    image: dockurr/macos\n    env:\n    - name: VERSION\n      value: \"13\"\n    - name: RAM_SIZE\n      value: \"4G\"\n    - name: CPU_CORES\n      value: \"2\"\n    - name: DISK_SIZE\n      value: \"64G\"\n    ports:\n    - containerPort: 8006\n    - containerPort: 5900\n    - containerPort: 5900\n      protocol: UDP\n    securityContext:\n      capabilities:\n        add:\n        - NET_ADMIN\n      privileged: true\n    volumeMounts:\n    - mountPath: /storage\n      name: storage\n    - mountPath: /dev/kvm\n      name: dev-kvm\n    - mountPath: /dev/net/tun\n      name: dev-tun\n  terminationGracePeriodSeconds: 120\n  volumes:\n  - name: storage\n    persistentVolumeClaim:\n      claimName: macos-pvc\n  - hostPath:\n      path: /dev/kvm\n    name: dev-kvm\n  - hostPath:\n      path: /dev/net/tun\n      type: CharDevice\n    name: dev-tun\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: macos\nspec:\n  ports:\n  - name: tcp-8006\n    port: 8006\n  - name: tcp-5900\n    port: 5900\n  - name: udp-5900\n    port: 5900\n    protocol: UDP\n  selector:\n    name: macos\n  type: NodePort\n"
+        },
+        {
+          "name": "license.md",
+          "type": "blob",
+          "size": 1.01171875,
+          "content": "MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 7.0302734375,
+          "content": "<h1 align=\"center\">OSX<br />\n<div align=\"center\">\n<a href=\"https://github.com/dockur/macos/\"><img src=\"https://github.com/dockur/macos/raw/master/.github/logo.png\" title=\"Logo\" style=\"max-width:100%;\" width=\"128\" /></a>\n</div>\n<div align=\"center\">\n\n[![Build]][build_url]\n[![Version]][tag_url]\n[![Size]][tag_url]\n[![Package]][pkg_url]\n[![Pulls]][hub_url]\n\n</div></h1>\n\nOSX (macOS) inside a Docker container.\n\n## Features ✨\n\n - KVM acceleration\n - Web-based viewer\n - Automatic download\n\n## Usage  🐳\n\nVia Docker Compose:\n\n```yaml\nservices:\n  macos:\n    image: dockurr/macos\n    container_name: macos\n    environment:\n      VERSION: \"13\"\n    devices:\n      - /dev/kvm\n      - /dev/net/tun\n    cap_add:\n      - NET_ADMIN\n    ports:\n      - 8006:8006\n      - 5900:5900/tcp\n      - 5900:5900/udp\n    stop_grace_period: 2m\n```\n\nVia Docker CLI:\n\n```bash\ndocker run -it --rm -p 8006:8006 --device=/dev/kvm --device=/dev/net/tun --cap-add NET_ADMIN --stop-timeout 120 dockurr/macos\n```\n\nVia Kubernetes:\n\n```shell\nkubectl apply -f https://raw.githubusercontent.com/dockur/macos/refs/heads/master/kubernetes.yml\n```\n\n## Compatibility ⚙️\n\n| **Product**  | **Platform**   | |\n|---|---|---|\n| Docker Engine | Linux| ✅ |\n| Docker Desktop | Linux | ❌ |\n| Docker Desktop | macOS | ❌ |\n| Docker Desktop | Windows 11 | ✅ |\n| Docker Desktop | Windows 10 | ❌ |\n\n## FAQ 💬\n\n### How do I use it?\n\n  Very simple! These are the steps:\n  \n  - Start the container and connect to [port 8006](http://localhost:8006) using your web browser.\n\n  - Choose `Disk Utility` and then select the largest `Apple Inc. VirtIO Block Media` disk.\n\n  - Click the `Erase` button to format the disk to APFS, and give it any recognizable name you like.\n\n  - Close the current window and proceed the installation by clicking `Reinstall macOS`.\n  \n  - When prompted where you want to install it, select the disk you just created previously.\n \n  - After all files are copied, select your region, language, and account settings.\n  \n  Enjoy your brand new machine, and don't forget to star this repo!\n\n### How do I select the macOS version?\n\n  By default, macOS 13 (Ventura) will be installed, as it offers the best performance.\n  \n  But you can add the `VERSION` environment variable to your compose file, in order to specify an alternative macOS version to be downloaded:\n\n  ```yaml\n  environment:\n    VERSION: \"13\"\n  ```\n\n  Select from the values below:\n  \n  |   **Value** | **Version**    | **Name** |\n  |-------------|----------------|------------------|\n  | `15`        | macOS 15       | Sequoia          |\n  | `14`        | macOS 14       | Sonoma           |\n  | `13`        | macOS 13       | Ventura          |\n  | `12`        | macOS 12       | Monterey         |\n  | `11`        | macOS 11       | Big Sur          |\n\n### How do I change the storage location?\n\n  To change the storage location, include the following bind mount in your compose file:\n\n  ```yaml\n  volumes:\n    - /var/osx:/storage\n  ```\n\n  Replace the example path `/var/osx` with the desired storage folder.\n\n### How do I change the size of the disk?\n\n  To expand the default size of 64 GB, add the `DISK_SIZE` setting to your compose file and set it to your preferred capacity:\n\n  ```yaml\n  environment:\n    DISK_SIZE: \"256G\"\n  ```\n  \n> [!TIP]\n> This can also be used to resize the existing disk to a larger capacity without any data loss.\n\n### How do I change the amount of CPU or RAM?\n\n  By default, the container will be allowed to use a maximum of 2 CPU cores and 4 GB of RAM.\n\n  If you want to adjust this, you can specify the desired amount using the following environment variables:\n\n  ```yaml\n  environment:\n    RAM_SIZE: \"8G\"\n    CPU_CORES: \"4\"\n  ```\n\n### How do I pass-through a USB device?\n\n  To pass-through a USB device, first lookup its vendor and product id via the `lsusb` command, then add them to your compose file like this:\n\n  ```yaml\n  environment:\n    ARGUMENTS: \"-device usb-host,vendorid=0x1234,productid=0x1234\"\n  devices:\n    - /dev/bus/usb\n  ```\n\n### How do I verify if my system supports KVM?\n\n  Only Linux and Windows 11 support KVM virtualization, macOS and Windows 10 do not unfortunately.\n  \n  You can run the following commands in Linux to check your system:\n\n  ```bash\n  sudo apt install cpu-checker\n  sudo kvm-ok\n  ```\n\n  If you receive an error from `kvm-ok` indicating that KVM cannot be used, please check whether:\n\n  - the virtualization extensions (`Intel VT-x` or `AMD SVM`) are enabled in your BIOS.\n\n  - you enabled \"nested virtualization\" if you are running the container inside a virtual machine.\n\n  - you are not using a cloud provider, as most of them do not allow nested virtualization for their VPS's.\n\n  If you do not receive any error from `kvm-ok` but the container still complains about KVM, please check whether:\n\n  - you are not using \"Docker Desktop for Linux\" as it does not support KVM, instead make use of Docker Engine directly.\n \n  - it could help to add `privileged: true` to your compose file (or `sudo` to your `docker run` command), to rule out any permission issue.\n\n### How do I run Windows in a container?\n\n  You can use [dockur/windows](https://github.com/dockur/windows) for that. It shares many of the same features, and even has completely automatic installation.\n\n### Is this project legal?\n\n  Yes, this project contains only open-source code and does not distribute any copyrighted material. Neither does it try to circumvent any copyright protection measures. So under all applicable laws, this project will be considered legal.\n\n  However, by installing Apple's macOS, you must accept their end-user license agreement, which does not permit installation on non-official hardware. So only run this container on hardware sold by Apple, as any other use will be a violation of their terms and conditions.\n\n ## Acknowledgements 🙏\n\nSpecial thanks to [seitenca](https://github.com/seitenca), this project would not exist without her invaluable work.\n\n## Stars 🌟\n[![Stars](https://starchart.cc/dockur/macos.svg?variant=adaptive)](https://starchart.cc/dockur/macos)\n\n## Disclaimer ⚖️\n\n*Only run this container on Apple hardware, any other use is not permitted by their EULA. The product names, logos, brands, and other trademarks referred to within this project are the property of their respective trademark holders. This project is not affiliated, sponsored, or endorsed by Apple Inc.*\n\n[build_url]: https://github.com/dockur/macos/\n[hub_url]: https://hub.docker.com/r/dockurr/macos/\n[tag_url]: https://hub.docker.com/r/dockurr/macos/tags\n[pkg_url]: https://github.com/dockur/macos/pkgs/container/macos\n\n[Build]: https://github.com/dockur/macos/actions/workflows/build.yml/badge.svg\n[Size]: https://img.shields.io/docker/image-size/dockurr/macos/latest?color=066da5&label=size\n[Pulls]: https://img.shields.io/docker/pulls/dockurr/macos.svg?style=flat&label=pulls&logo=docker\n[Version]: https://img.shields.io/docker/v/dockurr/macos/latest?arch=amd64&sort=semver&color=066da5\n[Package]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fipitio.github.io%2Fbackage%2Fdockur%2Fmacos%2Fmacos.json&query=%24.downloads&logo=github&style=flat&color=066da5&label=pulls\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

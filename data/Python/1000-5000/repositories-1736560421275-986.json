@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736560421275,
+    "page": 986,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bowenpay/wechat-spider",
+      "stars": 3202,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": ".idea\n*.pyc\nlogs\nlocal_settings.py\n.DS_Store\n/static/\nt.py\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.4658203125,
+          "content": "注意：搜狗微信在2019.10.29下线相关功能过后，该项目废弃 ！！！\n\n# 微信爬虫\n一个爬取微信公众号文章的爬虫。 \n\n# 微信爬虫的由来\n零分贝是一家帮助中国5000万贫困人口与社会公益组织对接的公司。\n\n我们通过国家和地方政府的“建档立卡”系统，获取到了一手的贫困户数据，目前有100万左右，总数为5000万，目前每个月都在增长。\n\n为了帮助这部分贫困户对接公益机构，我写了这个微信爬虫，从微信公众号发布的文章中上找出最新的公益项目。\n\n这种找项目的方式的可行性，我们还在试验中。 \n\n起初，为了快速上线，本爬虫的代码是基于我的另一个 [通用爬虫项目](https://github.com/yijingping/unicrawler) 开发的，我也希望任何对本项目感兴趣的人联系我，与我一同改进这个项目。\n\n联系方式：在本项目中新建一个issue留言。\n\n# 界面预览\n\n1） 要爬取的微信公众号列表\n\n![](docs/images/1.jpg?raw=true)\n\n2） 要爬取的文章关键字列表\n\n![](docs/images/2.png?raw=true)\n\n3） 已经爬取的微信文章\n\n![](docs/images/3.png?raw=true)\n\n4） 查看文章，并标记是否可用\n\n![](docs/images/4.jpg?raw=true)\n\n5） 控制爬取进程数\n\n![](docs/images/5.png?raw=true)\n\n\n# 安装\n\n1）python环境, 检查python的版本，是否为2.7.x，如果不是，安装2.7.6。\n\n如果是centos 6.x，升级python2.6到python2.7，参考教程 http://ruiaylin.github.io/2014/12/12/python%20update/\n\n如果是centos 7.x，默认就是python2.7,不用升级\n\n如果是mac osx，可以使用virtualenv，安装python2.7\n\n2）安装依赖包, clone代码\n安装Mysql-python依赖\n```\nyum install python-devel mysql-devel gcc\n```\n\n安装lxml依赖\n```\nyum install libxslt-devel libxml2-devel\n```\n\n安装浏览器环境 selenium依赖.(如果是mac环境，仅需安装firefox， 但确保版本是 firefox 36.0，使用最新的版本会报错)\n```\nyum install xorg-x11-server-Xvfb\nyum upgrade glib2 # 确保glib2版本大于2.42.2，否则firefox启动会报错 \nyum install firefox # centos下安装最新的firefox版本\n```\n\nclone代码,安装依赖python库\n```\n$ git clone https://github.com/bowenpay/wechat-spider.git\n$ cd wechat-spider\n$ pip install -r requirements.txt\n```\n\n3) 创建mysql数据库\n\n创建数据库wechatspider，默认采用utf8编码。（如果系统支持，可以采用utf8mb4，以兼容emoji字符）\n\n```\nmysql> CREATE DATABASE `wechatspider` CHARACTER SET utf8;\n```\n\n4) 安装和运行Redis \n\n```shell\n$ wget http://download.redis.io/releases/redis-2.8.3.tar.gz\n$ tar xzvf redis-2.8.3.tar.gz\n$ cd redis-2.8.3\n$ make\n$ make install\n$ redis-server\n```\n\n5) 更新配置文件local_settings \n\n在 wechatspider 目录下,添加 `local_settings.py` 文件,配置如下:\n```\n# -*- coding: utf-8 -*-\n\nSECRET_KEY=\"xxxxxx\"\n\nCRAWLER_DEBUG = True\n\n# aliyun oss2, 可以将图片和视频存储到阿里云，也可以选择不存储，爬取速度会更快。 默认不存储。\n#OSS2_ENABLE = True\n#OSS2_CONFIG = {\n#    \"ACCESS_KEY_ID\": \"XXXXXXXXXXXXXX\",\n#    \"ACCESS_KEY_SECRET\": \"YYYYYYYYYYYYYYYYYYYYYY\",\n#    \"ENDPOINT\": \"\",\n#    \"BUCKET_DOMAIN\": \"oss-cn-hangzhou.aliyuncs.com\",\n#    \"BUCKET_NAME\": \"XXXXX\",\n#    \"IMAGES_PATH\": \"images/\",\n#    \"VIDEOS_PATH\": \"videos/\",\n#    \"CDN_DOMAIN\": \"XXXXXX.oss-cn-hangzhou.aliyuncs.com\"\n#}\n# mysql 数据库配置\nDATABASES = {\n    'default': {\n        'ENGINE': 'django.db.backends.mysql',\n        'HOST': '127.0.0.1',\n        'NAME': 'wechatspider',\n        'USER': 'root',\n        'PASSWORD': '',\n        'OPTIONS':{\n            'charset': 'utf8mb4',\n        },\n    }\n}\n# redis配置,用于消息队列和k-v存储\nREDIS_OPTIONS = {\n    'host': 'localhost',\n    'port': 6379,\n    'password': '',\n    'db': 4\n}\n\n```\n\n6) 初始化表\n```\n$ python manage.py migrate\n```\n\n7）启动网站\n\n```\npython manage.py runserver 0.0.0.0:8001\n```\n访问 http://localhost:8001/。 \n\n\n6) 创建超级管理员账号,访问后台，并配置要爬取的公众号和关键字\n```\npython manage.py createsuperuser\n```\n\n\n8）启动爬虫\n\n```shell\n$ python bin/scheduler.py\n$ python bin/downloader.py\n$ python bin/extractor.py\n$ python bin/processor.py\n```\n\n以上步骤执行成功，并能爬取文章后。可以参考以下部分配置生产环境。\n\n# 部署nginx\n前期先用nginx将域名www.mydomain.com转发到8001端口。\n\n# 部署supervisor脚本\n参考文件 `supervisord.conf`\n\n# 部署crontab脚本\n参考文件 `crontab`\n\n# 系统使用文档\n\n\n# API接口文档\n\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "crontab",
+          "type": "blob",
+          "size": 0.8798828125,
+          "content": "1 1 * * * ps aux|grep firefox|grep -v grep|xargs kill\n1 1 * * * ps aux|grep Xvfb|grep -v grep|xargs kill\n1 * * * * rm -f /var/log/wechatspider/*.log.*\n40 */3 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_downloader:0\n22 */2 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_downloader:1\n22 */4 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_extractor:0\n22 */4 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_extractor:1\n22 */4 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_extractor:2\n22 */4 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_extractor:3\n22 */4 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_processor\n22 */4 * * * /usr/bin/supervisorctl -c /etc/supervisord.conf restart wechatspider_scheduler\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "manage.py",
+          "type": "blob",
+          "size": 0.2490234375,
+          "content": "#!/usr/bin/env python\nimport os\nimport sys\n\nif __name__ == \"__main__\":\n    os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"wechatspider.settings\")\n\n    from django.core.management import execute_from_command_line\n\n    execute_from_command_line(sys.argv)\n"
+        },
+        {
+          "name": "nginx.conf",
+          "type": "blob",
+          "size": 0.8447265625,
+          "content": "upstream wechatspider_0fenbei_uwsgi_backend {\n    server 127.0.0.1:49161;\n}\n\nserver {\n    listen   80;\n    server_name wechatspider.0fenbei.com;\n\n    location ^~ /.git {\n        deny all;\n    }\n\n    location ^~ /static {\n        root   /var/www/0fenbei/wechat-spider;\n        index  index.html;\n        expires 1M;\n        access_log off;\n        add_header Cache-Control \"public\";\n    }\n\n    location / {\n        proxy_next_upstream error timeout http_500 http_503;\n        proxy_connect_timeout 4000ms;\n        proxy_read_timeout    30s;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $remote_addr;\n        proxy_set_header X-Rewrite-URL $request_uri;\n        client_max_body_size 10m;\n\n        uwsgi_pass  wechatspider_0fenbei_uwsgi_backend;\n        include uwsgi_params;\n    }\n\n}\n\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.1865234375,
+          "content": "Django==1.8.1\nMySQL-python==1.2.5\nrequests==2.9.1\nlxml==3.4.4\nhiredis==0.2.0\nredis==2.10.3\noss2==2.0.5\nselenium==2.52.0\nPyVirtualDisplay==0.1.5\npython-dateutil==2.5.0\nbeautifulsoup4==4.4.1\n\n\n"
+        },
+        {
+          "name": "supervisord.conf",
+          "type": "blob",
+          "size": 2.2294921875,
+          "content": "#[program:wechatspider.0fenbei.com]\n#command=/usr/bin/python /var/www/0fenbei/wechat-spider/manage.py runserver 0.0.0.0:8090\n#umask=022\n#user=ripple\n#startsecs=0\n#stopwaitsecs=0\n#autostart=true\n#autorestart=true\n#stdout_logfile=/var/log/wechatspider/wechatspider.stdout.log\n#stderr_logfile=/var/log/wechatspider/wechatspider.stderr.log\n#stopsignal=KILL\n#killasgroup=true\n\n[program:uwsgi-wechatspider.0fenbei.com]\ncommand=/usr/bin/uwsgi --ini /var/www/0fenbei/wechat-spider/uwsgi.ini\ndirectory=/var/www/0fenbei/wechat-spider\numask=022\nuser=ripple\nstartsecs=0\nstopwaitsecs=0\nautostart=true\nautorestart=true\nstdout_logfile=/var/log/bowenpay/wechatspider.stdout.log\nstderr_logfile=/var/log/bowenpay/wechatspider.stderr.log\nstopsignal=QUIT\nkillasgroup=true\n\n[program:wechatspider_scheduler]\ncommand=/usr/bin/python /var/www/0fenbei/wechat-spider/bin/scheduler.py\numask=022\nuser=ripple\nstartsecs=0\nstopwaitsecs=0\nautostart=true\nautorestart=true\nstdout_logfile=/var/log/wechatspider/wechatspider_scheduler.stdout.log\nstderr_logfile=/var/log/wechatspider/wechatspider_scheduler.stderr.log\nstopsignal=KILL\nkillasgroup=true\n\n[program:wechatspider_downloader]\ncommand=/usr/bin/python /var/www/0fenbei/wechat-spider/bin/downloader.py\numask=022\nuser=root\nstartsecs=0\nstopwaitsecs=0\nautostart=true\nautorestart=true\nstdout_logfile=/var/log/wechatspider/wechatspider_downloader.stdout.log\nstderr_logfile=/var/log/wechatspider/wechatspider_downloader.stderr.log\nstopsignal=KILL\nkillasgroup=true\nprocess_name=%(process_num)s\nnumprocs=2\n\n[program:wechatspider_extractor]\ncommand=/usr/bin/python /var/www/0fenbei/wechat-spider/bin/extractor.py\numask=022\nuser=ripple\nstartsecs=0\nstopwaitsecs=0\nautostart=true\nautorestart=true\nstdout_logfile=/var/log/wechatspider/wechatspider_extractor.stdout.log\nstderr_logfile=/var/log/wechatspider/wechatspider_extractor.stderr.log\nstopsignal=KILL\nkillasgroup=true\nprocess_name=%(process_num)s\nnumprocs=2\n\n[program:wechatspider_processor]\ncommand=/usr/bin/python /var/www/0fenbei/wechat-spider/bin/processor.py\numask=022\nuser=ripple\nstartsecs=0\nstopwaitsecs=0\nautostart=true\nautorestart=true\nstdout_logfile=/var/log/wechatspider/wechatspider_processor.stdout.log\nstderr_logfile=/var/log/wechatspider/wechatspider_processor.stderr.log\nstopsignal=KILL\nkillasgroup=true\n\n"
+        },
+        {
+          "name": "uwsgi.ini",
+          "type": "blob",
+          "size": 0.5048828125,
+          "content": "[uwsgi]\nchdir=/var/www/0fenbei/wechat-spider\npy-autoreload=3  #实现和django自带server一样更新文件自动重启功能\nmodule=wechatspider.wsgi:application\nmaster=True\npidfile=/tmp/wechatspider.pid\nvacuum=True   # clear environment on exit\nsocket=127.0.0.1:49161\nprocesses=1    # 启动1个进程\nharakiri=20 # respawn processes taking more than 20 seconds\nmax-requests=5000  # 请求5000次后重启\n# daemonize=/var/log/bowenpay/weibo-spider-uwsgi.log # 不使用daemon模式，防止supervisor自动重启\n"
+        },
+        {
+          "name": "wechat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wechatspider",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

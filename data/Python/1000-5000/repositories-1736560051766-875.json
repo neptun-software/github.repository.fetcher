@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "timestamp": 1736560051766,
+    "page": 875,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hamuchiwa/AutoRCCar",
+      "stars": 3338,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "*.ipynb linguist-vendored\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.26171875,
+          "content": "Copyright (c) 2015, hamuchiwa\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.9931640625,
+          "content": "## AutoRCCar\n### Python3 + OpenCV3\n\nSee self-driving in action  \n\n<a href=\"http://www.youtube.com/watch?feature=player_embedded&v=BBwEF6WBUQs\n\" target=\"_blank\"><img src=\"http://img.youtube.com/vi/BBwEF6WBUQs/0.jpg\" width=\"360\" height=\"240\" border=\"10\" /></a>\n\nThis project builds a self-driving RC car using Raspberry Pi, Arduino and open source software. Raspberry Pi collects inputs from a camera module and an ultrasonic sensor, and sends data to a computer wirelessly. The computer processes input images and sensor data for object detection (stop sign and traffic light) and collision avoidance respectively. A neural network model runs on computer and makes predictions for steering based on input images. Predictions are then sent to the Arduino for RC car control. \n  \n### Setting up environment with Anaconda\n  1. Install [`miniconda(Python3)`](https://conda.io/miniconda.html) on your computer\n  2. Create `auto-rccar` environment with all necessary libraries for this project  \n     ```conda env create -f environment.yml```\n     \n  3. Activate `auto-rccar` environment  \n     ```source activate auto-rccar```\n  \n  &ensp; To exit, simply close the terminal window. More info about managing Anaconda environment, please see [here](https://conda.io/docs/user-guide/tasks/manage-environments.html).\n  \n### About the files\n**test/**  \n  &emsp; &emsp; `rc_control_test.py`: RC car control with keyboard  \n  &emsp; &emsp;  `stream_server_test.py`: video streaming from Pi to computer  \n  &emsp; &emsp;  `ultrasonic_server_test.py`: sensor data streaming from Pi to computer  \n  &emsp; &emsp;  **model_train_test/**  \n      &emsp; &emsp;  &emsp; &emsp; `data_test.npz`: sample data  \n      &emsp; &emsp;  &emsp; &emsp; `train_predict_test.ipynb`: a jupyter notebook that goes through neural network model in OpenCV3  \n  \n**raspberryPi/**    \n  &emsp; &emsp;  `stream_client.py`:        stream video frames in jpeg format to the host computer  \n  &emsp; &emsp;  `ultrasonic_client.py`:    send distance data measured by sensor to the host computer  \n  \n**arduino/**  \n  &emsp; &emsp;  `rc_keyboard_control.ino`: control RC car controller  \n  \n**computer/**    \n  &emsp; &emsp;  **cascade_xml/**  \n      &emsp; &emsp;  &emsp; &emsp;  trained cascade classifiers  \n  &emsp; &emsp;  **chess_board/**   \n      &emsp; &emsp;  &emsp; &emsp;  images for calibration, captured by pi camera  \n      \n  &emsp; &emsp;  `picam_calibration.py`:     pi camera calibration  \n  &emsp; &emsp;  `collect_training_data.py`: collect images in grayscale, data saved as `*.npz`  \n  &emsp; &emsp;  `model.py`:                 neural network model  \n  &emsp; &emsp;  `model_training.py`:        model training and validation  \n  &emsp; &emsp;  `rc_driver_helper.py`:      helper classes/functions for `rc_driver.py`  \n  &emsp; &emsp;  `rc_driver.py`:             receive data from raspberry pi and drive the RC car based on model prediction  \n  &emsp; &emsp;  `rc_driver_nn_only.py`:     simplified `rc_driver.py` without object detection  \n  \n  \n**Traffic_signal**  \n  &emsp; &emsp;  trafic signal sketch contributed by [@geek111](https://github.com/geek1111)\n\n\n### How to drive\n1. **Testing:** Flash `rc_keyboard_control.ino` to Arduino and run `rc_control_test.py` to drive the RC car with keyboard. Run `stream_server_test.py` on computer and then run `stream_client.py` on raspberry pi to test video streaming. Similarly, `ultrasonic_server_test.py` and `ultrasonic_client.py` can be used for sensor data streaming testing.   \n\n2. **Pi Camera calibration (optional):** Take multiple chess board images using pi camera module at various angles and put them into **`chess_board`** folder, run `picam_calibration.py` and returned parameters from the camera matrix will be used in `rc_driver.py`.\n\n3. **Collect training/validation data:** First run `collect_training_data.py` and then run `stream_client.py` on raspberry pi. Press arrow keys to drive the RC car, press `q` to exit. Frames are saved only when there is a key press action. Once exit, data will be saved into newly created **`training_data`** folder.\n\n4. **Neural network training:** Run `model_training.py` to train a neural network model. Please feel free to tune the model architecture/parameters to achieve a better result. After training, model will be saved into newly created **`saved_model`** folder.\n\n5. **Cascade classifiers training (optional):** Trained stop sign and traffic light classifiers are included in the **`cascade_xml`** folder, if you are interested in training your own classifiers, please refer to [OpenCV doc](http://docs.opencv.org/doc/user_guide/ug_traincascade.html) and this great [tutorial](http://coding-robin.de/2013/07/22/train-your-own-opencv-haar-classifier.html).\n\n6. **Self-driving in action**: First run `rc_driver.py` to start the server on the computer (for simplified no object detection version, run `rc_driver_nn_only.py` instead), and then run `stream_client.py` and `ultrasonic_client.py` on raspberry pi. \n\n[中文文档](https://github.com/zhaoying9105/AutoRCCar) (感谢[zhaoying9105](https://github.com/zhaoying9105))\n"
+        },
+        {
+          "name": "Traffic_signal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "arduino",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "computer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "environment.yml",
+          "type": "blob",
+          "size": 0.185546875,
+          "content": "name: auto-rccar\ndependencies:\n    - python\n    - numpy\n    - matplotlib\n    - jupyter\n    - scikit-learn\n    - cython\n    - pip:\n        - pygame\n        - pyserial\n        - opencv-python\n"
+        },
+        {
+          "name": "raspberryPi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

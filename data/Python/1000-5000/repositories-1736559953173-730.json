@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736559953173,
+    "page": 730,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "awentzonline/image-analogies",
+      "stars": 3519,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1103515625,
+          "content": "*.DS_Store\n*.pyc\n*.swp\n*.egg-info\nbuild/\nexamples/out/*\n!examples/README.md\nvgg16_weights.h5\nvenv\nMANIFEST\ndist/\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License (MIT)\nCopyright (c) 2016 Adam Wentz\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in the\nSoftware without restriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell copies of the\nSoftware, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.3681640625,
+          "content": "neural image analogies\n----------------------\n![Image of arch](https://raw.githubusercontent.com/awentzonline/image-analogies/master/examples/images/image-analogy-explanation.jpg)\n![Image of Sugar Steve](https://raw.githubusercontent.com/awentzonline/image-analogies/master/examples/images/sugarskull-analogy.jpg)\n![Image of season transfer](https://raw.githubusercontent.com/awentzonline/image-analogies/master/examples/images/season-xfer.jpg)![Image of Trump](https://raw.githubusercontent.com/awentzonline/image-analogies/master/examples/images/trump-image-analogy.jpg)\n\n\nThis is basically an implementation of this [\"Image Analogies\" paper]( http://www.mrl.nyu.edu/projects/image-analogies/index.html), In our case, we use feature maps from VGG16. The patch matching and blending is inspired by the method described in [\"Combining Markov Random Fields and Convolutional Neural Networks for Image Synthesis\"](http://arxiv.org/abs/1601.04589). Effects similar to that paper can be achieved by turning off the analogy loss (or leave it on!) `--analogy-w=0` and turning on the B/B' content weighting via the `--b-content-w` parameter. Also, instead of using brute-force patch matching\nwe use the [PatchMatch algorithm](http://gfx.cs.princeton.edu/gfx/pubs/Barnes_2009_PAR/index.php)\nto approximate the best patch matches. Brute-force matching can be re-enabled by setting\n`--model=brute`\n\nThe initial code was adapted from the Keras \"neural style transfer\" example.\n\nThe example arch images are from the [\"Image Analogies\" website]( http://www.mrl.nyu.edu/projects/image-analogies/tbn.html).\nThey have some other good examples from their own implementation which\nare worth a look. Their paper discusses the various applications of image\nanalogies so you might want to take a look for inspiration.\n\nInstallation\n------------\nThis requires either  [TensorFlow](https://www.tensorflow.org/versions/r0.7/get_started/os_setup.html)\nor [Theano](http://deeplearning.net/software/theano/install.html). If you don't\nhave a GPU you'll want to use TensorFlow. GPU users may find to Theano to be\nfaster at the expense of longer startup times. Here's the [Theano GPU guide]( http://deeplearning.net/software/theano/tutorial/using_gpu.html).\n\nHere's how to [configure the backend with Keras](http://keras.io/backend/) and\nset your default device (e.g. cpu, gpu0).\n\nTo install via [virtualenv](https://virtualenv.readthedocs.org/en/latest/installation.html) run the following commands.\n\n```\nvirtualenv venv\nsource venv/bin/activate\npip install neural-image-analogies\n```\n\nIf you have trouble with the above method, follow these directions to [Install latest keras and theano or TensorFlow](http://keras.io/#installation)\n\nThe script `make_image_analogy.py` should now be on your path.\n\n**Before running this script**, download the [weights for the VGG16 model](\nhttps://github.com/awentzonline/image-analogies/releases/download/v0.0.5/vgg16_weights.h5). This file contains only the convolutional layers of VGG16 which is 10% of the full size. [Original source of full weights](https://gist.github.com/baraldilorenzo/07d7802847aaad0a35d3).\nThe script assumes the weights are in the current working directory. If you place\nthem somewhere else make sure to pass the `--vgg-weights=<location-of-the-weights.h5>` parameter or set the `VGG_WEIGHT_PATH` environment variable.\n\nExample script usage:\n`make_image_analogy.py image-A image-A-prime image-B prefix_for_output`\n\ne.g.:\n\n`make_image_analogy.py images/arch-mask.jpg images/arch.jpg images/arch-newmask.jpg out/arch`\n\nThe examples directory has a script, `render_example.sh` which accepts an example\nname prefix and, optionally the location of your vgg weights.\n\n`./render_example.sh arch /path/to/your/weights.h5`\n\nCurrently, A and A' must be the same size, the same holds for B and B'.\nOutput size is the same as Image B, unless specified otherwise.\n\nIt's too slow\n-------------\nIf you're not using a GPU, use TensorFlow. My Macbook Pro with with can render a\n512x512 image in approximately 12 minutes using TensorFlow and --mrf-w=0. Here\nare some other options which mostly trade quality for speed.\n\n * If you're using Theano enable openmp threading by using env variables `THEANO_FLAGS='openmp=1'` `OMP_NUM_THREADS=<cpu_num>`. You can read more about multi-core support [here](http://deeplearning.net/software/theano/tutorial/multi_cores.html).\n * set `--mrf-w=0` to skip optimization of local coherence\n * use fewer feature layers by setting `--mrf-layers=conv4_1` and/or `--analogy-layers=conv4_1` (or other layers) which will consider half as many feature layers.\n * generate a smaller image by either using a smaller source Image B, or setting\n  the `--width` or `--height` parameters.\n * ensure you're not using `--model=brute` which needs a powerful GPU\n\nI want it to look better\n------------------------\nThe default settings are somewhat lowered to give the average user a better chance\nat generating something on whatever computer they may have. If you have a powerful GPU\nthen here are some options for nicer output:\n * `--model=brute` will turn on brute-force patch-matching and will be done on GPU. This is Theano-only (default=patchmatch)\n * `--patch-size=3` this will allow for much nicer-looking details (default=1)\n * `--mrf-layers=conv1_1,conv2_1,...` add more layers to the mix (also `analogy-layers` and `content-layers`)\n\n\nParameters\n----------\n * --width Sets image output max width\n * --height Sets image output max height\n * --scales Run at N different scales\n * --iters Number of iterations per scale\n * --min-scale Smallest scale to iterate\n * --mrf-w Weight for MRF loss between A' and B'\n * --analogy-w Weight for analogy loss\n * --b-content-w Weight for content loss between B and B'\n * --tv-w Weight for total variation loss\n * --vgg-weights Path to VGG16 weights\n * --a-scale-mode Method of scaling A and A' relative to B\n * * 'match': force A to be the same size as B regardless of aspect ratio (former default)\n * * 'ratio': apply scale imposed by width/height params on B to A (current default)\n * * 'none': leave A/A' alone\n * --a-scale Additional scale factor for A and A'\n * --pool-mode Pooling style used by VGG\n * * 'avg': average pooling - generally smoother results\n * * 'max': max pooling - more noisy but maybe that's what you want (original default)\n * --contrast adjust the contrast of the output by removing the bottom x percentile\n    and scaling by the (100 - x)th percentile. Defaults to 0.02\n * --output-full Output all intermediate images at full size regardless of actual scale\n * --analogy-layers Comma-separated list of layer names to be used for the analogy loss (default: \"conv3_1,conv_4_1\")\n * --mrf-layers Comma-separated list of layer names to be used for the MRF loss (default: \"conv3_1,conv_4_1\")\n * --content-layers Comma-separated list of layer names to be used for the content loss (default: \"conv3_1,conv_4_1\")\n * --patch-size Patch size used for matching (default: 1)\n * --use-full-analogy match on all of the analogy patches, instead of combining\n    them into one image (slower/more memory but maybe more accurate)\n * --model Select the patch matching model ('patchmatch' or 'brute') patchmatch is\n  the default and requires less GPU memory but is less accurate then brute.\n * --nstyle-w Weight for neural style loss between A' and B'\n * --nstyle-layers Comma-separated list of layer names to be used for the neural style\nThe analogy loss is the amount of influence of B -> A -> A' -> B'. It's a\nstructure-preserving mapping of Image B into A' via A.\n\nThe MRF loss (or \"local coherence\") is the influence of B' -> A' -> B'. In the\nparlance of style transfer, this is the style loss which gives texture to the image.\n\nThe B/B' content loss is set to 0.0 by default. You can get effects similar\nto CNNMRF by turning this up and setting analogy weight to zero. Or leave the\nanalogy loss on for some extra style guidance.\n\nIf you'd like to only visualize the analogy target to see what's happening,\nset the MRF and content loss to zero: `--mrf-w=0 --content-w=0` This is also\nmuch faster as MRF loss is the slowest part of the algorithm.\n\nLicense\n-------\nThe code for this implementation is provided under the MIT license.\n\nThe suggested VGG16 weights are originally from [here](https://gist.github.com/ksimonyan/211839e770f7b538e2d8) and are\nlicensed http://creativecommons.org/licenses/by-nc/4.0/ Open a ticket if you\nhave a suggestion for a more free-as-in-free-speech license.\n\nThe attributions for the example art can be found in `examples/images/ATTRIBUTIONS.md`\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "image_analogy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.212890625,
+          "content": "Cython==0.23.4\nh5py==2.5.0\nKeras==1.1.1\nnumpy==1.10.4\nPillow==3.1.1\nPyYAML==3.11\nscipy==0.17.0\nscikit-learn==0.17.0\nsix==1.10.0\n-e git://github.com/Theano/Theano.git@954c3816a40de172c28124017a25387f3bf551b2#egg=Theano\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 0.68359375,
+          "content": "#!/usr/bin/env python\nfrom distutils.core import setup\nfrom setuptools import find_packages\n\nsetup(\n    name='neural-image-analogies',\n    version='0.1.2',\n    description='Generate image analogies with a deep neural network.',\n    author='Adam Wentz',\n    author_email='adam@adamwentz.com',\n    url='https://github.com/awentzonline/image-analogies/',\n    packages=find_packages(),\n    scripts=[\n        'scripts/make_image_analogy.py'\n    ],\n    install_requires=[\n        'h5py>=2.5.0',\n        'Keras>=1.0.0',\n        'numpy>=1.10.4',\n        'Pillow>=3.1.1',\n        'PyYAML>=3.11',\n        'scipy>=0.17.0',\n        'scikit-learn>=0.17.0',\n        'six>=1.10.0',\n        'Theano>=0.8.2',\n    ]\n)\n"
+        }
+      ]
+    }
+  ]
+}

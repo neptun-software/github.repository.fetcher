@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736561158652,
+    "page": 111,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "MetaCubeX/mihomo",
+      "stars": 17731,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "__pycache__\nvenv\nbuild\nmihomo.egg-info\n*.ipynb"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0244140625,
+          "content": "Copyright 2023 KT\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.541015625,
+          "content": "# mihomo\nA simple python pydantic model (type hint and autocompletion support) for Honkai: Star Rail parsed data from the Mihomo API.\n\nAPI url: https://api.mihomo.me/sr_info_parsed/{UID}?lang={LANG}\n\n## Installation\n```\npip install -U git+https://github.com/KT-Yeh/mihomo.git\n```\n\n## Usage\n\n### Basic\nThere are two parsed data formats:\n- V1:\n  - URL: https://api.mihomo.me/sr_info_parsed/800333171?lang=en&version=v1\n  - Fetching: use `client.fetch_user_v1(800333171)`\n  - Data model: `mihomo.models.v1.StarrailInfoParsedV1`\n  - All models defined in `mihomo/models/v1` directory.\n- V2: \n  - URL: https://api.mihomo.me/sr_info_parsed/800333171?lang=en\n  - Fetching: use `client.fetch_user(800333171)`\n  - Data model: `mihomo.models.StarrailInfoParsed`\n  - All models defined in `mihomo/models` directory.\n\nIf you don't want to use `client.get_icon_url` to get the image url everytime, you can use `client.fetch_user(800333171, replace_icon_name_with_url=True)` to get the parsed data with asset urls.\n\n### Example\n```py\nimport asyncio\n\nfrom mihomo import Language, MihomoAPI\nfrom mihomo.models import StarrailInfoParsed\nfrom mihomo.models.v1 import StarrailInfoParsedV1\n\nclient = MihomoAPI(language=Language.EN)\n\n\nasync def v1():\n    data: StarrailInfoParsedV1 = await client.fetch_user_v1(800333171)\n\n    print(f\"Name: {data.player.name}\")\n    print(f\"Level: {data.player.level}\")\n    print(f\"Signature: {data.player.signature}\")\n    print(f\"Achievements: {data.player_details.achievements}\")\n    print(f\"Characters count: {data.player_details.characters}\")\n    print(f\"Profile picture url: {client.get_icon_url(data.player.icon)}\")\n    for character in data.characters:\n        print(\"-----------\")\n        print(f\"Name: {character.name}\")\n        print(f\"Rarity: {character.rarity}\")\n        print(f\"Level: {character.level}\")\n        print(f\"Avatar url: {client.get_icon_url(character.icon)}\")\n        print(f\"Preview url: {client.get_icon_url(character.preview)}\")\n        print(f\"Portrait url: {client.get_icon_url(character.portrait)}\")\n\n\nasync def v2():\n    data: StarrailInfoParsed = await client.fetch_user(800333171, replace_icon_name_with_url=True)\n\n    print(f\"Name: {data.player.name}\")\n    print(f\"Level: {data.player.level}\")\n    print(f\"Signature: {data.player.signature}\")\n    print(f\"Profile picture url: {data.player.avatar.icon}\")\n    for character in data.characters:\n        print(\"-----------\")\n        print(f\"Name: {character.name}\")\n        print(f\"Rarity: {character.rarity}\")\n        print(f\"Portrait url: {character.portrait}\")\n\nasyncio.run(v1())\nasyncio.run(v2())\n```\n\n### Tools\n`from mihomo import tools`\n#### Remove Duplicate Character\n```py\n    data = await client.fetch_user(800333171)\n    data = tools.remove_duplicate_character(data)\n```\n\n#### Merge Character Data\n```py\n    old_data = await client.fetch_user(800333171)\n\n    # Change characters in game and wait for the API to refresh\n    # ...\n\n    new_data = await client.fetch_user(800333171)\n    data = tools.merge_character_data(new_data, old_data)\n```\n\n### Data Persistence\nTake pickle and json as an example\n```py\nimport pickle\nimport zlib\nfrom mihomo import MihomoAPI, Language, StarrailInfoParsed\n\nclient = MihomoAPI(language=Language.EN)\ndata = await client.fetch_user(800333171)\n\n# Save\npickle_data = zlib.compress(pickle.dumps(data))\nprint(len(pickle_data))\njson_data = data.json(by_alias=True, ensure_ascii=False)\nprint(len(json_data))\n\n# Load\ndata_from_pickle = pickle.loads(zlib.decompress(pickle_data))\ndata_from_json = StarrailInfoParsed.parse_raw(json_data)\nprint(type(data_from_pickle))\nprint(type(data_from_json))\n```\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mihomo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 0.5322265625,
+          "content": "[build-system]\nrequires = [\"setuptools>=61.0\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"mihomo\"\nversion = \"1.1.7\"\nauthors = [\n  { name=\"KT\", email=\"xns77477@gmail.com\" },\n]\ndescription = \"A simple Python Pydantic model for Honkai: Star Rail parsed data from the Mihomo API.\"\nreadme = \"README.md\"\nrequires-python = \">=3.10\"\nclassifiers = [\n    \"Programming Language :: Python :: 3\",\n    \"License :: OSI Approved :: MIT License\",\n    \"Operating System :: OS Independent\",\n]\ndependencies = [\n  \"aiohttp==3.*\",\n  \"pydantic==1.*\",\n]"
+        }
+      ]
+    }
+  ]
+}

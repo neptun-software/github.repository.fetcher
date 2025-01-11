@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736559960554,
+    "page": 741,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "coleifer/sqlite-web",
+      "stars": 3502,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.033203125,
+          "content": "Copyright (c) 2010 Charles Leifer\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.091796875,
+          "content": "include README.md\ninclude docker/Dockerfile\ninclude run-docker\nrecursive-include sqlite_web *\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.4814453125,
+          "content": "![](http://media.charlesleifer.com/blog/photos/sqlite-web.png)\n\n`sqlite-web` is a web-based SQLite database browser written in Python.\n\nProject dependencies:\n\n* [flask](http://flask.pocoo.org)\n* [peewee](http://docs.peewee-orm.com)\n* [pygments](http://pygments.org)\n\n### Installation\n\n```sh\n$ pip install sqlite-web\n```\n\n### Usage\n\n```sh\n$ sqlite_web /path/to/database.db\n```\n\nOr run with docker:\n\n```sh\n$ docker run -it --rm \\\n    -p 8080:8080 \\\n    -v /path/to/your-data:/data \\\n    -e SQLITE_DATABASE=db_filename.db \\\n    ghcr.io/coleifer/sqlite-web:latest\n```\n\nThen navigate to http://localhost:8080/ to view your database.\n\n### Features\n\n* Works with your existing SQLite databases, or can be used to create new databases.\n* Add or drop:\n  * Tables\n  * Columns (with support for older versions of Sqlite)\n  * Indexes\n* Export data as JSON or CSV.\n* Import JSON or CSV files.\n* Browse table data.\n* Insert, Update or Delete rows.\n\n### Screenshots\n\nThe index page shows some basic information about the database, including the number of tables and indexes, as well as its size on disk:\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620302295.png)\n\nThe `structure` tab displays information about the structure of the table, including columns, indexes, triggers, and foreign keys (if any exist). From this page you can also create, rename or drop columns and indexes.\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620314144.png)\n\nColumns are easy to add, drop or rename:\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620333535.png)\n\nThe `content` tab displays all the table data. Links in the table header can be used to sort the data:\n\n![](https://media.charlesleifer.com/blog/photos/im-1707415896996.png)\n\nThe `query` tab allows you to execute arbitrary SQL queries on a table. The query results are displayed in a table and can be exported to either JSON or CSV:\n\n![](https://media.charlesleifer.com/blog/photos/im-1707415396996.png)\n\nThe `import` tab supports importing CSV and JSON files into a table. There is an option to automatically create columns for any unrecognized keys in the import file:\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620413940.png)\n\nThe `export` tab supports exporting all, or a subset, of columns:\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620429054.png)\n\nBasic INSERT, UPDATE and DELETE queries are supported:\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620441528.png)\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620459831.png)\n\n![](https://media.charlesleifer.com/blog/photos/im-1694620475286.png)\n\n### Command-line options\n\nThe syntax for invoking sqlite-web is:\n\n```console\n\n$ sqlite_web [options] /path/to/database-file.db\n```\n\nThe following options are available:\n\n* `-p`, `--port`: default is 8080\n* `-H`, `--host`: default is 127.0.0.1\n* `-d`, `--debug`: default is false\n* `-l`, `--log-file`: filename for application logs.\n* `-x`, `--no-browser`: do not open a web-browser when sqlite-web starts.\n* `-P`, `--password`: prompt for password to access sqlite-web.\n  Alternatively, the password can be stored in the \"SQLITE_WEB_PASSWORD\"\n  environment variable, in which case the application will not prompt for a\n  password, but will use the value from the environment.\n* `-r`, `--read-only`: open database in read-only mode.\n* `-R`, `--rows-per-page`: set pagination on content page, default 50 rows.\n* `-Q`, `--query-rows-per-page`: set pagination on query page, default 1000 rows.\n* `-T`, `--no-truncate`: disable ellipsis for long text values. If this option\n  is used, the full text value is always shown.\n* `-e`, `--extension`: path or name of loadable extension(s). To load\n  multiple extensions, specify ``-e [path]`` for each extension.\n* `-f`, `--foreign-keys`: enable foreign-key constraint pragma.\n* `-u`, `--url-prefix`: URL prefix for application, e.g. \"/sqlite-web\".\n* `-c`, `--cert` and ``-k``, ``--key`` - specify SSL cert and private key.\n* `-a`, `--ad-hoc` - run using an ad-hoc SSL context.\n\n### Using docker\n\nA Dockerfile is provided with sqlite-web. To use:\n\n```console\n#\n# Use GitHub container registry:\n#\n\n$ docker run -it --rm \\\n    -p 8080:8080 \\\n    -v /path/to/your-data:/data \\\n    -e SQLITE_DATABASE=db_filename.db \\\n    ghcr.io/coleifer/sqlite-web:latest\n\n#\n# OR build the image yourself:\n#\n\n$ cd docker/  # Change dirs to the dir containing Dockerfile\n$ docker build -t coleifer/sqlite-web .\n$ docker run -it --rm \\\n    -p 8080:8080 \\\n    -v /path/to/your-data:/data \\\n    -e SQLITE_DATABASE=db_filename.db \\\n    coleifer/sqlite-web\n```\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.068359375,
+          "content": "flask\npygments\n-e git+git://github.com/coleifer/peewee.git#egg=peewee\n"
+        },
+        {
+          "name": "run-docker",
+          "type": "blob",
+          "size": 0.326171875,
+          "content": "#!/bin/bash\n\nif [ $# -eq 0 ]; then\n  echo \"Missing required parameter: database name.\"\n  exit 1\nfi\n\ndefault_port=\"8012\"\nport=${2:-$default_port}\n\ndb_dir=$(dirname $1)\ndb_file=$(basename $1)\necho \"Starting on: http://0.0.0.0:$port\"\ndocker run -it --rm -p \"$port:8080\" -v $db_dir:/data -e SQLITE_DATABASE=\"$db_file\" coleifer/sqlite-web\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.4599609375,
+          "content": "import os\nimport re\n\nfrom setuptools import find_packages, setup\n\ncur_dir = os.path.dirname(__file__)\nreadme = os.path.join(cur_dir, 'README.md')\nif os.path.exists(readme):\n    with open(readme) as fh:\n        long_description = fh.read()\nelse:\n    long_description = ''\n\nwith open(os.path.join(cur_dir, 'sqlite_web/sqlite_web.py')) as fh:\n    try:\n        v, = [re.search(r'= \\'([\\d\\.]+)\\'', l).groups()[0]\n              for l in fh.read().strip().splitlines()\n              if l.startswith('__version__ = ')]\n    except:\n        v = '0.0.0'\n\nsetup(\n    name='sqlite-web',\n    version=v,\n    description='Web-based SQLite database browser.',\n    long_description='Web-based SQLite database browser.',\n    author='Charles Leifer',\n    author_email='coleifer@gmail.com',\n    url='https://github.com/coleifer/sqlite-web',\n    license='MIT',\n    install_requires=[\n        'flask',\n        'peewee>=3.0.0',\n        'pygments',\n    ],\n    include_package_data=True,\n    packages=find_packages(),\n    package_data={\n        'sqlite_web': [\n            'static/*/*',\n            'templates/*'\n        ],\n    },\n    entry_points={\n        'console_scripts': [\n            'sqlite_web = sqlite_web.sqlite_web:main'\n        ],\n    },\n    classifiers=[\n        'Environment :: Web Environment',\n        'Intended Audience :: Developers',\n        'License :: OSI Approved :: MIT License',\n        'Operating System :: OS Independent',\n        'Programming Language :: Python',\n    ],\n    zip_safe=False,\n)\n"
+        },
+        {
+          "name": "sqlite_web",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wsgi_example",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

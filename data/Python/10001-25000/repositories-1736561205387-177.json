@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "timestamp": 1736561205387,
+    "page": 177,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jupyter/jupyter",
+      "stars": 14973,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.43359375,
+          "content": "# Set the default behavior, in case people don't have core.autocrlf set.\n* text=auto\n\n# Explicitly declare text files you want to always be normalized and converted\n# to native line endings on checkout.\n*.py text\n*.yaml text\n*.md text\n*.rst text\n*.html text\n\n# The following files need to be converted for them to work properly\n*.bat text eol=crlf\n\n# Denote all files that are truly binary and should not be modified.\n*.png binary\n*.jpg binary\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.6943359375,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n\n# C extensions\n*.so\n\n# Distribution / packaging\nMANIFEST\n.Python\nenv/\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\n*.egg-info/\n.installed.cfg\n*.egg\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*,cover\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n"
+        },
+        {
+          "name": ".readthedocs.yaml",
+          "type": "blob",
+          "size": 0.3203125,
+          "content": "version: 2\n\n# Set the OS, Python version and other tools you might need\nbuild:\n  os: ubuntu-22.04\n  tools:\n    python: \"3.11\"\n  apt_packages:\n    - graphviz\n\n# Build documentation in the \"docs/\" directory with Sphinx\nsphinx:\n  configuration: docs/source/conf.py\n\npython:\n   install:\n   - requirements: docs/doc-requirements.txt\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 2.1435546875,
+          "content": "language: python\nsudo: false\npython:\n    - 3.7\n\njobs:\n  include:\n    - stage: test-docs\n      install:\n      - pip install --upgrade pip sphinx\n      - pip install -r docs/doc-requirements.txt\n      script:\n      # Test build of HTML docs and English translation templates\n      - make -C docs html\n      - make -C docs gettext\n      - cd docs && sphinx-intl update -p build/locale -l en\n    - stage: push-tx\n      install:\n      - pip install --upgrade pip sphinx\n      - pip install -r docs/doc-requirements.txt\n      script:\n      - cd docs\n      # Rebuild HTML again to test for merge problems\n      - make html\n      # Regenerate English translation templates\n      - make gettext\n      - sphinx-intl update -p build/locale -l en\n      - git config --global user.email \"travis@travis-ci.org\"\n      - git config --global user.name \"Travis CI\"\n      # Stage any changes to the english source files\n      - git checkout master\n      - git add -A source/locale/en\n      - git status\n      # Commit the english templates, exiting early if there are no changes\n      - git commit -m '[ci skip] Update English source strings' || travis_terminate 0;\n      # Push the commit to master for Transifex to notice and update its strings for translation\n      - git remote add origin-tx https://${GH_TOKEN}@github.com/jupyter/jupyter.git\n      - git push -u origin-tx master\n\nstages:\n  - name: test-docs\n    if: type = pull_request\n  - name: push-tx\n    if: type = push AND branch = master\n\nenv:\n  global:\n    secure: \"xWn2cnWWNgtQEm9MXAIQerigtwkZxMDQYQnlbALvHywy63MVsWwvDSi9AnPm9ty+TuNxu8bWXGP99KNjSgPEkvb5wA/uCGmmD1l6eA8CdxWZeRVEQ88NNQMXvAwxmUEGub0OSBaLC37WHXWrM1BzPV9jXQGS5HKC1icu9en/ScorOnw7Waz1wfVpjZRPLbp/8+M5jadpp6VZfCp4rsAdb6wuBy0JKA383azPE8e87WBqDWCS3zR2esZqwJKkOpkMsTcIs+n6naJXFl9rmM5o+l4vEQ0aUpAzzdE2ZrX9HfwCuOAFGJmlYmdmCbNFty3Dh6vkdtZvp2ptysda6Tb2FFc1+5kWhzfrQoHBhkXQW9557YGjwmIohjCy7pmTxtucnd9JgqOUNH1dnvQ8Z4RMOTcIc1loKe80I903Yw4aFkj36gMWtMfqUghpEn1ZYbtl5k/ZWwTnRKyyg8bkFPU7EyXn+u97ItPMdIpRybXUa2qKWGohXoziDur/7ecJOiCI1ynJlUT8sJRa8fhpRd0/iTC28zECU3wa+G1nx4XcOowNX9tJAV4EpaL/DFNLXlxXfs1JX0Ccn0YTaljo/suOnINzBl1Dn87QDdYlvijFwmRrXWS363wjzp0K9OqqSWkfEAEuSBI6d4Ywc64Ob4+pRoBJIW3sT2LHNvP0yUQL39Y=\"\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4912109375,
+          "content": "BSD 3-Clause License\n\nCopyright (c) 2017, Project Jupyter Contributors\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the copyright holder nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.0791015625,
+          "content": "graft docs\nprune docs/build\nprune build\nprune dist\n\ninclude LICENSE\ninclude *.md\n"
+        },
+        {
+          "name": "README.es-ES.md",
+          "type": "blob",
+          "size": 0.7021484375,
+          "content": "# Jupyter\n\n*Leer en otros idiomas: [English](README.md), [Español](README.es-ES.md), [Português](README.pt-BR.md), [Français](README.fr-FR.md)*\n\nMeta paquete de Jupyter para su instalación y documentación.\n\n## Ejecutando los documentos localmente\nPrimero navega al directorio `/docs` y crea un entorno en `conda`:\n\n```bash\nconda env create -f environment.yml  \n```  \n\nActiva el entorno:\n\n```bash\nsource activate jupyter_docs  \n```\n\nGenera los documentos:\n\n```bash\nmake clean  \nmake html\n```\n\nLos documentos se crearán en `build/html`. Éstos pueden ser vistos abriendo `build/html/index.html` o iniciando un servidor HTTP y navegando hasta `0.0.0.0:8000` en tu explorador web.\n\n```bash\npython3 -m http.server\n```\n"
+        },
+        {
+          "name": "README.fr-FR.md",
+          "type": "blob",
+          "size": 0.685546875,
+          "content": "# Jupyter\n\n*Lire ceci dans d'autres langues: [English](README.md), [Español](README.es-ES.md), [Português](README.pt-BR.md)*\n\nJupyter metapackage pour installation et docs.\n\n## Faire tourner les docs localement\nD'abord naviguer dans le répertoire `/docs` et créer un environment `conda` :\n\n```bash\nconda env create -f environment.yml  \n```  \n\nActiver l'environment:\n\n```bash\nsource activate jupyter_docs  \n```\n\nConstruire les docs:\n\n```bash\nmake clean  \nmake html\n```\n\nLes docs seront construit dans `build/html`. Ils peuvent être vus dans `build/html/index.html` ou en démarrant le serveur HTTP puis en naviguant sur `0.0.0.0:8000` dans votre navigateur web.\n```bash\npython3 -m http.server\n```\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.2685546875,
+          "content": "# Jupyter\n\n*Read this in other languages: [English](README.md), [Español](README.es-ES.md), [Português](README.pt-BR.md), [Français](README.fr-FR.md)*\n\nJupyter metapackage for installation and documents\n\n## Documentation structure\n\nThis documentation uses the [Sphinx](https://sphinx-doc.org) documentation engine.\n\nThe documentation is located in the `docs/source` folder. When you build the documentation, it will be placed in the `docs/build` folder.\nIt is written in a combination of [reStructuredText](https://docutils.sourceforge.io/rst.html) and [MyST Markdown](https://myst-parser.readthedocs.io/).\n\n## Build the documentation locally\n\nThere are a few ways to build the documentation; see below for instructions:\n\n### Build the documentation automatically with `nox`\n\nThe easiest way to build the documentation locally is by using the [`nox` command line tool](https://nox.thea.codes/). This tool makes it easy to automate commands in a repository, and we have included a `docs` command to quickly install the dependencies and build the documentation.\n\nTo build and preview the site locally, follow these steps:\n\n1. **Clone this repository**.\n\n   ```console\n   $ git clone https://github.com/jupyter/jupyter\n   $ cd jupyter\n   ```\n2. **Install `nox`**\n\n   ```console\n   $ pip install nox\n   ```\n3. **Run the `docs` command**\n\n   ```console\n   $ nox -s docs\n   ```\n\nThis will install the needed dependencies in a virtual environment using `pip`.\nIt will then place the documentation in the `docs/build/html` folder.\nYou may explore these HTML files in order to preview the site.\n\n#### Create a live server to automatically preview changes\n\nThere is another `nox` command that will do the above, and also create a live server that watches your source files for changes, and auto-builds the website any time a change is made.\n\nTo start this live server, use the following `nox` command:\n\n```console\n$ nox -s docs-live\n```\n\nWhen the build is finished, go to the URL that is displayed. It should show a live preview of your documentation.\n\nTo stop serving the website, press **`Ctrl`**-`C` in your terminal\n\n### Build the documentation manually\n\nTo build the documentation manually, follow these steps:\n\nFirst, install [the `miniconda` Python distribution](https://conda.io/miniconda.html).\n\nNext, navigate to the `/docs` directory and create a `conda` environment:\n\n```bash\nconda env create -f environment.yml\n```\n\nActivate the environment:\n\n```bash\nsource activate jupyter_docs\n```\n\n**Build the docs** using Sphinx with the following commands:\n\n```bash\nmake clean\nmake html\n```\n\nThe docs will be built in `build/html`. They can be viewed by opening `build/html/index.html` or starting an HTTP server and navigating to `0.0.0.0:8000` in your web browser.\n\n```bash\npython3 -m http.server\n```\n\n## Releasing the jupyter metapackage\n\nAnyone with push access to this repo can make a release\nof the Jupyter metapackage (this happens very rarely).\nWe use [tbump][] to publish releases.\n\ntbump updates version numbers and publishes the `git tag` of the version.\n[Our GitHub Actions](https://github.com/jupyter/jupyter/actions)\nthen build the releases and publish them to PyPI.\n\nThe steps involved:\n\n1. Install tbump: `pip install tbump`\n2. Tag and publish the release `tbump $NEW_VERSION`.\n\nThat's it!\n\n[tbump]: https://github.com/your-tools/tbump\n"
+        },
+        {
+          "name": "README.pt-BR.md",
+          "type": "blob",
+          "size": 0.6923828125,
+          "content": "# Jupyter\n\n*Ler em outros idiomas: [English](README.md), [Español](README.es-ES.md), [Português](README.pt-BR.md), [Français](README.fr-FR.md)*\n\nMetapacote de Jupyter para instalação e documentação.\n\n## Executando os documentos localmente\nPrimeiro navegue até o diretório `/docs` e crie um ambiente `conda`:\n\n```bash\nconda env create -f environment.yml  \n```  \n\nAtive o ambiente:\n\n```bash\nsource activate jupyter_docs  \n```\n\nConstrua a documentação:\n\n```bash\nmake clean  \nmake html\n```\n\nA documentação será construida em `build/html`. Pode ser vista em `build/html/index.html` ou inicando um servidor HTTP e navegando para `0.0.0.0:8000` no seu navegador web.\n```bash\npython3 -m http.server\n```\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 0.31640625,
+          "content": "# Security Policy\n\n## Reporting a Vulnerability\n\nAll IPython and Jupyter security are handled via security@ipython.org. \nYou can find more information on the Jupyter website. https://jupyter.org/security\n\n## Tidelift\n\nYou can report security concerns for IPython via the [Tidelift platform](https://tidelift.com/security). \n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "long_description.md",
+          "type": "blob",
+          "size": 0.986328125,
+          "content": "# Jupyter metapackage\n\nFind more information on [the Jupyter homepage](https://jupyter.org).\n\n## A default installation of most common Jupyter packages\n\n`pip install jupyter` installs the Jupyter Notebook, JupyterLab, and the IPython Kernel.\n\nThis is an empty metapackage for user convenience,\nonly expressing dependencies on multiple Jupyter packages.\n`jupyter` should not be used as a dependency for any packages.\n\nFor more efficient installation of what you need,\nall Jupyter components installed by `pip install jupyter` can be installed separately.\nFor example:\n\n- `notebook` - Jupyter Notebook\n- `jupyterlab` - JupyterLab (added to metapackage v1.1)\n- `ipython` - IPython (terminal)\n- `ipykernel` - IPython Kernel for Jupyter\n- `jupyter-console` - terminal Jupyter client\n- `nbconvert` - convert notebooks between formats\n- `ipywidgets` - interactive widgets package for IPython\n\nNo longer included in `pip install jupyter`, but still supported:\n\n- `qtconsole` - Qt Console (removed in metapackage v1.1)\n"
+        },
+        {
+          "name": "noxfile.py",
+          "type": "blob",
+          "size": 0.6484375,
+          "content": "import nox\n\nnox.options.reuse_existing_virtualenvs = True\n\nbuild_command = [\"-b\", \"html\", \"docs/source\", \"docs/build/html\"]\n\n@nox.session(python=\"3.11\")\ndef docs(session):\n    session.install(\"-r\", \"docs/doc-requirements.txt\")\n    session.run(\"sphinx-build\", *build_command)\n\n@nox.session(name=\"docs-live\", python=\"3.11\")\ndef docs_live(session):\n    session.install(\"-r\", \"docs/doc-requirements.txt\")\n    session.install(\"sphinx-autobuild\")\n\n    AUTOBUILD_IGNORE = [\n        \"docs/build\",\n    ]\n    cmd = [\"sphinx-autobuild\"]\n    for folder in AUTOBUILD_IGNORE:\n        cmd.extend([\"--ignore\", f\"*/{folder}/*\"])\n    cmd.extend(build_command)\n    session.run(*cmd)\n"
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 0.0595703125,
+          "content": "[bdist_wheel]\nuniversal=1\n\n[metadata]\nlicense_file = LICENSE\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.5556640625,
+          "content": "#!/usr/bin/env python\n# coding: utf-8\n\n# Copyright (c) Jupyter Development Team.\n# Distributed under the terms of the Modified BSD License.\n\nfrom __future__ import print_function\n\nimport os\nfrom setuptools import setup\n\npjoin = os.path.join\nhere = os.path.abspath(os.path.dirname(__file__))\n\nwith open(pjoin(here, \"long_description.md\")) as f:\n    long_description = f.read()\n\nsetup_args = dict(\n    name                = 'jupyter',\n    version             = '1.2.0.dev0',\n    description         = \"Jupyter metapackage. Install all the Jupyter components in one go.\",\n    long_description    = long_description,\n    long_description_content_type = \"text/markdown\",\n    author              = \"Jupyter Development Team\",\n    author_email        = \"jupyter@googlegroups.org\",\n    py_modules          = [],\n    install_requires    = [\n        'notebook',\n        'jupyter-console',\n        'nbconvert',\n        'ipykernel',\n        'ipywidgets',\n        'jupyterlab',\n    ],\n    url                 = \"https://jupyter.org\",\n    license             = \"BSD\",\n    classifiers         = [\n        'Intended Audience :: Developers',\n        'Intended Audience :: System Administrators',\n        'Intended Audience :: Science/Research',\n        'License :: OSI Approved :: BSD License',\n        'Programming Language :: Python',\n        'Programming Language :: Python :: 3',\n        'Programming Language :: Python :: 3.6',\n        'Programming Language :: Python :: 3.7',\n        'Programming Language :: Python :: 3.8',\n        'Programming Language :: Python :: 3.9',\n    ],\n)\n\nsetup(**setup_args)\n"
+        },
+        {
+          "name": "tbump.toml",
+          "type": "blob",
+          "size": 0.916015625,
+          "content": "# Uncomment this if your project is hosted on GitHub:\n# github_url = \"https://github.com/<user or organization>/<project>/\"\n\n[version]\ncurrent = \"1.2.0.dev0\"\n\n# Example of a semver regexp.\n# Make sure this matches current_version before\n# using tbump\nregex = '''\n  (?P<major>\\d+)\n  \\.\n  (?P<minor>\\d+)\n  \\.\n  (?P<patch>\\d+)\n  (?P<extra>.*)\n  '''\n\n[git]\nmessage_template = \"Bump to {new_version}\"\ntag_template = \"v{new_version}\"\n\n# For each file to patch, add a [[file]] config\n# section containing the path of the file, relative to the\n# tbump.toml location.\n[[file]]\nsrc = \"setup.py\"\n\n# You can specify a list of commands to\n# run after the files have been patched\n# and before the git commit is made\n\n#  [[before_commit]]\n#  name = \"check changelog\"\n#  cmd = \"grep -q {new_version} Changelog.rst\"\n\n# Or run some commands after the git tag and the branch\n# have been pushed:\n#  [[after_push]]\n#  name = \"publish\"\n#  cmd = \"./publish.sh\"\n"
+        }
+      ]
+    }
+  ]
+}

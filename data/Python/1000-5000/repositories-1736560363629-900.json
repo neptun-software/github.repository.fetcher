@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736560363629,
+    "page": 900,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "letiantian/TextRank4ZH",
+      "stars": 3308,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0556640625,
+          "content": "build\ndist\nMANIFEST\ntextrank4zh/__pycache__\n*.pyc\ntest.py"
+        },
+        {
+          "name": "HISTORY.md",
+          "type": "blob",
+          "size": 0.0849609375,
+          "content": "### 2014\n\n主要功能的实现。\n\n### 2015-12\n\n更新到v0.2。\n\n接口有变化。\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 Letian Sun\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.6298828125,
+          "content": "# TextRank4ZH\n\nTextRank算法可以用来从文本中提取关键词和摘要（重要的句子）。TextRank4ZH是针对中文文本的TextRank算法的python算法实现。\n\n## 安装\n\n方式1：\n```\n$ python setup.py install --user\n```\n\n方式2：\n```\n$ sudo python setup.py install\n```\n\n方式3：\n```\n$ pip install textrank4zh --user\n```\n\n方式4：\n```\n$ sudo pip install textrank4zh\n```\n\nPython 3下需要将上面的python改成python3，pip改成pip3。\n\n\n## 卸载\n```plain\n$ pip uninstall textrank4zh\n```\n\n## 依赖\njieba >= 0.35  \nnumpy >= 1.7.1  \nnetworkx >= 1.9.1  \n\n## 兼容性\n在Python 2.7.9和Python 3.4.3中测试通过。\n\n\n## 原理\n\nTextRank的详细原理请参考：\n\n> Mihalcea R, Tarau P. TextRank: Bringing order into texts[C]. Association for Computational Linguistics, 2004.\n\n关于TextRank4ZH的原理和使用介绍：[使用TextRank算法为文本生成关键字和摘要](https://www.letianbiji.com/article/101666.html)\n\n### 关键词提取\n将原文本拆分为句子，在每个句子中过滤掉停用词（可选），并只保留指定词性的单词（可选）。由此可以得到句子的集合和单词的集合。\n\n每个单词作为pagerank中的一个节点。设定窗口大小为k，假设一个句子依次由下面的单词组成：\n```\nw1, w2, w3, w4, w5, ..., wn\n```\n`w1, w2, ..., wk`、`w2, w3, ...,wk+1`、`w3, w4, ...,wk+2`等都是一个窗口。在一个窗口中的任两个单词对应的节点之间存在一个无向无权的边。\n\n基于上面构成图，可以计算出每个单词节点的重要性。最重要的若干单词可以作为关键词。\n\n\n### 关键短语提取\n参照[关键词提取](#关键词提取)提取出若干关键词。若原文本中存在若干个关键词相邻的情况，那么这些关键词可以构成一个关键词组。\n\n例如，在一篇介绍`支持向量机`的文章中，可以找到关键词`支持`、`向量`、`机`，通过关键词组提取，可以得到`支持向量机`。\n\n### 摘要生成\n将每个句子看成图中的一个节点，若两个句子之间有相似性，认为对应的两个节点之间有一个无向有权边，权值是相似度。\n\n通过pagerank算法计算得到的重要性最高的若干句子可以当作摘要。\n\n\n## 示例\n见[example](./example)、[test](./test)。\n\nexample/example01.py:\n\n```python\n#-*- encoding:utf-8 -*-\nfrom __future__ import print_function\n\nimport sys\ntry:\n    reload(sys)\n    sys.setdefaultencoding('utf-8')\nexcept:\n    pass\n\nimport codecs\nfrom textrank4zh import TextRank4Keyword, TextRank4Sentence\n\ntext = codecs.open('../test/doc/01.txt', 'r', 'utf-8').read()\ntr4w = TextRank4Keyword()\n\ntr4w.analyze(text=text, lower=True, window=2)  # py2中text必须是utf8编码的str或者unicode对象，py3中必须是utf8编码的bytes或者str对象\n\nprint( '关键词：' )\nfor item in tr4w.get_keywords(20, word_min_len=1):\n    print(item.word, item.weight)\n\nprint()\nprint( '关键短语：' )\nfor phrase in tr4w.get_keyphrases(keywords_num=20, min_occur_num= 2):\n    print(phrase)\n\ntr4s = TextRank4Sentence()\ntr4s.analyze(text=text, lower=True, source = 'all_filters')\n\nprint()\nprint( '摘要：' )\nfor item in tr4s.get_key_sentences(num=3):\n    print(item.index, item.weight, item.sentence)  # index是语句在文本中位置，weight是权重\n```\n\n运行结果如下：\n```plain\n关键词：\n媒体 0.02155864734852778\n高圆圆 0.020220281898126486\n微 0.01671909730824073\n宾客 0.014328439104001788\n赵又廷 0.014035488254875914\n答谢 0.013759845912857732\n谢娜 0.013361244496632448\n现身 0.012724133346018603\n记者 0.01227742092899235\n新人 0.01183128428494362\n北京 0.011686712993089671\n博 0.011447168887452668\n展示 0.010889176260920504\n捧场 0.010507502237123278\n礼物 0.010447275379792245\n张杰 0.009558332870902892\n当晚 0.009137982757893915\n戴 0.008915271161035208\n酒店 0.00883521621207796\n外套 0.008822082954131174\n\n关键短语：\n微博\n\n摘要：\n摘要：\n0 0.0709719557171 中新网北京12月1日电(记者 张曦) 30日晚，高圆圆和赵又廷在京举行答谢宴，诸多明星现身捧场，其中包括张杰(微博)、谢娜(微博)夫妇、何炅(微博)、蔡康永(微博)、徐克、张凯丽、黄轩(微博)等\n6 0.0541037236415 高圆圆身穿粉色外套，看到大批记者在场露出娇羞神色，赵又廷则戴着鸭舌帽，十分淡定，两人快步走进电梯，未接受媒体采访\n27 0.0490428312984 记者了解到，出席高圆圆、赵又廷答谢宴的宾客近百人，其中不少都是女方的高中同学\n\n```\n\n## 使用说明\n\n类TextRank4Keyword、TextRank4Sentence在处理一段文本时会将文本拆分成4种格式：\n\n* sentences：由句子组成的列表。\n* words_no_filter：对sentences中每个句子分词而得到的两级列表。\n* words_no_stop_words：去掉words_no_filter中的停止词而得到的二维列表。\n* words_all_filters：保留words_no_stop_words中指定词性的单词而得到的二维列表。\n\n例如，对于：\n```\n这间酒店位于北京东三环，里面摆放很多雕塑，文艺气息十足。答谢宴于晚上8点开始。\n```\n\n```python\n#-*- encoding:utf-8 -*-\nfrom __future__ import print_function\nimport codecs\nfrom textrank4zh import TextRank4Keyword, TextRank4Sentence\n\nimport sys\ntry:\n    reload(sys)\n    sys.setdefaultencoding('utf-8')\nexcept:\n    pass\n\ntext = \"这间酒店位于北京东三环，里面摆放很多雕塑，文艺气息十足。答谢宴于晚上8点开始。\"\ntr4w = TextRank4Keyword()\n\ntr4w.analyze(text=text, lower=True, window=2)\n\nprint()\nprint('sentences:')\nfor s in tr4w.sentences:\n    print(s)                 # py2中是unicode类型。py3中是str类型。\n\nprint()\nprint('words_no_filter')\nfor words in tr4w.words_no_filter:\n    print('/'.join(words))   # py2中是unicode类型。py3中是str类型。\n\nprint()\nprint('words_no_stop_words')\nfor words in tr4w.words_no_stop_words:\n    print('/'.join(words))   # py2中是unicode类型。py3中是str类型。\n\nprint()\nprint('words_all_filters')\nfor words in tr4w.words_all_filters:\n    print('/'.join(words))   # py2中是unicode类型。py3中是str类型。\n```\n\n运行结果如下：\n```plain\nsentences:\n这间酒店位于北京东三环，里面摆放很多雕塑，文艺气息十足\n答谢宴于晚上8点开始\n\nwords_no_filter\n这/间/酒店/位于/北京/东三环/里面/摆放/很多/雕塑/文艺/气息/十足\n答谢/宴于/晚上/8/点/开始\n\nwords_no_stop_words\n间/酒店/位于/北京/东三环/里面/摆放/很多/雕塑/文艺/气息/十足\n答谢/宴于/晚上/8/点\n\nwords_all_filters\n酒店/位于/北京/东三环/摆放/雕塑/文艺/气息\n答谢/宴于/晚上\n\n```\n\n\n## API\nTODO.\n\n类的实现、函数的参数请参考源码注释。\n\n## License\n[MIT](./LICENSE)\n\n\n\n\n\n\n\n\n\n"
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.208984375,
+          "content": "# -*- coding: utf-8 -*-\nfrom distutils.core import setup\nLONGDOC = \"\"\"\nPlease go to https://github.com/someus/TextRank4ZH for more info.\n\"\"\"\n\nsetup(\n    name='textrank4zh',\n    version='0.3',\n    description='Extract keywords and abstract Chinese article',\n    long_description=LONGDOC,\n    author='Letian Sun',\n    author_email='sunlt1699@gmail.com',\n    url='https://github.com/someus/TextRank4ZH',\n    license=\"MIT\",\n    classifiers=[\n        'Intended Audience :: Developers',\n        'License :: OSI Approved :: MIT License',\n        'Operating System :: OS Independent',\n        'Natural Language :: Chinese (Simplified)',\n        'Natural Language :: Chinese (Traditional)',\n        'Programming Language :: Python :: 2',\n        'Programming Language :: Python :: 2.7',\n        'Programming Language :: Python :: 3',\n        'Programming Language :: Python :: 3.4',\n        'Topic :: Text Processing',\n        'Topic :: Text Processing :: Linguistic',\n    ],\n    keywords='NLP,Chinese,Keywords extraction, Abstract extraction',\n    install_requires=['jieba >= 0.35', 'numpy >= 1.7.1', 'networkx >= 1.9.1'],\n    packages=['textrank4zh'],\n    package_dir={'textrank4zh':'textrank4zh'},\n    package_data={'textrank4zh':['*.txt',]},\n)"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "textrank4zh",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

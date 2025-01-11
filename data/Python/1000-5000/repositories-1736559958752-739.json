@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "timestamp": 1736559958752,
+    "page": 739,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lijiejie/subDomainsBrute",
+      "stars": 3503,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "*.py[cod]\n.idea/*\ntmp/"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.46875,
+          "content": "# subDomainsBrute 1.5 #\n\nA fast sub domain brute tool for pentesters, works with Python3.5+ or Python2.7.\n\n高并发的DNS暴力枚举工具，支持Python3.6+和Python2.7，建议使用Python3.8+。\n\n\n## Install ##\nPython3.5+ users:   `pip3 install dnspython==2.2.1 async_timeout`\n\nPython2.7 users:    `pip install dnspython gevent`\n\n## New Features \n\n* Support find more domains from HTTPS cert\n* Some extra code to work with Python2.7 / 3.6 / 3.7 / 3.8 / 3.10 \n* Try to use Proactor event loop under Windows\n\n## ScreenShot ##\n\n使用大字典，扫描qq.com\n\n![screenshot](screenshot.png)\n\n## Usage ##\n\n\tUsage: subDomainsBrute.py [options] target.com\n\t\n\tOptions:\n\t  --version             show program's version number and exit\n\t  -h, --help            show this help message and exit\n\t  -f FILE               File contains new line delimited subs, default is\n\t                        subnames.txt.\n\t  --full                Full scan, NAMES FILE subnames_full.txt will be used\n\t                        to brute\n\t  -i, --ignore-intranet\n\t                        Ignore domains pointed to private IPs\n\t  -w, --wildcard        Force scan after wildcard test failed\n\t  -t THREADS, --threads=THREADS\n\t                        Num of scan threads, 500 by default\n\t  -p PROCESS, --process=PROCESS\n\t                        Num of scan process, 6 by default\n\t  --no-https            Disable get domain names from HTTPS cert, this can\n\t                        save some time\n\t  -o OUTPUT, --output=OUTPUT\n\t                        Output file name. default is {target}.txt\n\n## Change Log \n\n* [2022-06-14] Version 1.5, some improvements\n  * 增加支持通过HTTPS证书获取子域名\n  * 更好的兼容性。使用 Python 2.7 / 3.6 / 3.7 / 3.8 / 3.10 测试\n  * Windows下通过Proactor事件循环缓解进程句柄限制\n* [2022-05-06] 修复version check bug\n* [2020-10-29] 增加支持强制扫描泛解析的域名，需要加 `-w` 参数\n* [2020-10-26] 修复Windows下出现 `too many file descriptors`\n* [2020-05-05] 增加了Python3.5+支持。Python3执行效率更高\n* [2019-05-19] \n  * Add wildcard test\n  * Scan faster and more reliable, now can brute up to 3000 domains per second\n* [2018-02-06] \n  * 添加多进程支持。 多进程 + 协程，提升扫描效率。 \n  * 预处理了原字典中的占位符，提升扫描效率\n* [2017-06-03] Bug fix: normal_lines remove deep copy issues, thanks @BlueIce\n* [2017-05-04] 使用协程替代多线程； 使用优化级队列减小队列长度； 优化占位符支持\n"
+        },
+        {
+          "name": "dict",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshot.png",
+          "type": "blob",
+          "size": 18.8935546875,
+          "content": null
+        },
+        {
+          "name": "subDomainsBrute.py",
+          "type": "blob",
+          "size": 4.51171875,
+          "content": "#!/usr/bin/env python\n# -*- encoding: utf-8 -*-\n\"\"\"\n    subDomainsBrute 1.5\n    A simple and fast sub domains brute tool for pentesters\n    my[at]lijiejie.com (http://www.lijiejie.com)\n\"\"\"\n\nimport sys\nimport multiprocessing\nimport time\nimport signal\nimport os\nimport glob\nimport shutil\nimport platform\nfrom lib.cmdline import parse_args\n\n\nimport warnings\nwarnings.simplefilter(\"ignore\", category=UserWarning)\nmax_threads = 1000\n\nif sys.version_info.major >= 3 and sys.version_info.minor >= 5:\n    import asyncio\n    from lib.scanner_py3 import SubNameBrute\n    from lib.common_py3 import load_dns_servers, load_next_sub, print_msg, get_out_file_name, \\\n        user_abort, wildcard_test, get_sub_file_path\n    if platform.system() == 'Windows':\n        if sys.version_info.minor >= 8 and hasattr(asyncio, 'WindowsProactorEventLoopPolicy'):\n            asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())\n        else:\n            if hasattr(asyncio, 'WindowsSelectorEventLoopPolicy'):\n                asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())\n            max_threads = 200\nelse:\n    from lib.scanner_py2 import SubNameBrute\n    from lib.common_py2 import load_dns_servers, load_next_sub, print_msg, get_out_file_name, \\\n        user_abort, wildcard_test, get_sub_file_path\n    if platform.system() == 'Windows':\n        max_threads = 200\n\n\ndef run_process(*params):\n    signal.signal(signal.SIGINT, user_abort)\n    s = SubNameBrute(*params)\n    s.run()\n\n\nif __name__ == '__main__':\n    options, args = parse_args()\n    if options.threads > max_threads:\n        options.threads = max_threads\n    print('''[+] SubDomainsBrute v1.5  https://github.com/lijiejie/subDomainsBrute''')\n    # make tmp dirs\n    root_path = os.path.dirname(os.path.abspath(__file__))\n    tmp_dir = os.path.join(root_path, 'tmp/%s_%s' % (args[0], int(time.time())))\n    if not os.path.exists(tmp_dir):\n        os.makedirs(tmp_dir)\n\n    multiprocessing.freeze_support()\n    dns_servers = load_dns_servers()\n    next_subs = load_next_sub(options.full_scan)\n    scan_count = multiprocessing.Value('i', 0)\n    found_count = multiprocessing.Value('i', 0)\n    queue_size_array = multiprocessing.Array('i', options.process)\n\n    try:\n        print('[+] Run wildcard test')\n        if not options.w:\n            domain = wildcard_test(args[0], dns_servers)\n        else:\n            domain = args[0]\n        options.file = get_sub_file_path(options)\n        print('[+] Start %s scan process' % options.process)\n        print('[+] Please wait while scanning ... \\n')\n        start_time = time.time()\n        all_process = []\n        for process_num in range(options.process):\n            p = multiprocessing.Process(\n                target=run_process,\n                args=(domain, options, process_num, dns_servers, next_subs,\n                      scan_count, found_count, queue_size_array, tmp_dir)\n            )\n            all_process.append(p)\n            p.start()\n\n        char_set = ['\\\\', '|', '/', '-']\n        count = 0\n        while all_process:\n            for p in all_process:\n                if not p.is_alive():\n                    all_process.remove(p)\n            groups_count = 0\n            for c in queue_size_array:\n                groups_count += c\n            msg = '[%s] %s found, %s scanned in %.1f seconds, %s groups left' % (\n                char_set[count % 4], found_count.value, scan_count.value, time.time() - start_time, groups_count)\n            print_msg(msg)\n            count += 1\n            time.sleep(0.3)\n    except KeyboardInterrupt as e:\n        print('[ERROR] User aborted the scan!')\n        for p in all_process:\n            p.terminate()\n    except Exception as e:\n        import traceback\n        traceback.print_exc()\n        print('[ERROR] %s' % str(e))\n\n    out_file_name = get_out_file_name(domain, options)\n    all_domains = set()\n    domain_count = 0\n    with open(out_file_name, 'w') as f:\n        for _file in glob.glob(tmp_dir + '/*.txt'):\n            with open(_file, 'r') as tmp_f:\n                for domain in tmp_f:\n                    if domain not in all_domains:\n                        domain_count += 1\n                        all_domains.add(domain)       # cname query can result in duplicated domains\n                        f.write(domain)\n\n    msg = 'All Done. %s found, %s scanned in %.1f seconds.' % (\n        domain_count, scan_count.value, time.time() - start_time)\n    print_msg(msg, line_feed=True)\n    print('Output file is %s' % out_file_name)\n    try:\n        shutil.rmtree(tmp_dir)\n    except Exception as e:\n        pass\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736560022349,
+    "page": 835,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "richzhang/colorization",
+      "stars": 3374,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.296875,
+          "content": "Copyright (c) 2016, Richard Zhang, Phillip Isola, Alexei A. Efros\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.66015625,
+          "content": "<!--<h3><b>Colorful Image Colorization</b></h3>-->\n## <b>Colorful Image Colorization</b> [[Project Page]](http://richzhang.github.io/colorization/) <br>\n[Richard Zhang](https://richzhang.github.io/), [Phillip Isola](http://web.mit.edu/phillipi/), [Alexei A. Efros](http://www.eecs.berkeley.edu/~efros/). In [ECCV, 2016](http://arxiv.org/pdf/1603.08511.pdf).\n\n**+ automatic colorization functionality for Real-Time User-Guided Image Colorization with Learned Deep Priors, SIGGRAPH 2017!**\n\n**[Sept20 Update]** Since it has been 3-4 years, I converted this repo to support minimal test-time usage in PyTorch. I also added our SIGGRAPH 2017 (it's an interactive method but can also do automatic). See the [Caffe branch](https://github.com/richzhang/colorization/tree/caffe) for the original release.\n\n![Teaser Image](http://richzhang.github.io/colorization/resources/images/teaser4.jpg)\n\n**Clone the repository; install dependencies**\n\n```\ngit clone https://github.com/richzhang/colorization.git\npip install requirements.txt\n```\n\n**Colorize!** This script will colorize an image. The results should match the images in the `imgs_out` folder.\n\n```\npython demo_release.py -i imgs/ansel_adams3.jpg\n```\n\n**Model loading in Python** The following loads pretrained colorizers. See [demo_release.py](demo_release.py) for some details on how to run the model. There are some pre and post-processing steps: convert to Lab space, resize to 256x256, colorize, and concatenate to the original full resolution, and convert to RGB.\n\n```python\nimport colorizers\ncolorizer_eccv16 = colorizers.eccv16().eval()\ncolorizer_siggraph17 = colorizers.siggraph17().eval()\n```\n\n### Original implementation (Caffe branch)\n\nThe original implementation contained train and testing, our network and AlexNet (for representation learning tests), as well as representation learning tests. It is in Caffe and is no longer supported. Please see the [caffe](https://github.com/richzhang/colorization/tree/caffe) branch for it.\n\n### Citation ###\n\nIf you find these models useful for your resesarch, please cite with these bibtexs.\n\n```\n@inproceedings{zhang2016colorful,\n  title={Colorful Image Colorization},\n  author={Zhang, Richard and Isola, Phillip and Efros, Alexei A},\n  booktitle={ECCV},\n  year={2016}\n}\n\n@article{zhang2017real,\n  title={Real-Time User-Guided Image Colorization with Learned Deep Priors},\n  author={Zhang, Richard and Zhu, Jun-Yan and Isola, Phillip and Geng, Xinyang and Lin, Angela S and Yu, Tianhe and Efros, Alexei A},\n  journal={ACM Transactions on Graphics (TOG)},\n  volume={9},\n  number={4},\n  year={2017},\n  publisher={ACM}\n}\n```\n\n### Misc ###\nContact Richard Zhang at rich.zhang at eecs.berkeley.edu for any questions or comments.\n"
+        },
+        {
+          "name": "colorizers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demo_release.py",
+          "type": "blob",
+          "size": 1.708984375,
+          "content": "\nimport argparse\nimport matplotlib.pyplot as plt\n\nfrom colorizers import *\n\nparser = argparse.ArgumentParser()\nparser.add_argument('-i','--img_path', type=str, default='imgs/ansel_adams3.jpg')\nparser.add_argument('--use_gpu', action='store_true', help='whether to use GPU')\nparser.add_argument('-o','--save_prefix', type=str, default='saved', help='will save into this file with {eccv16.png, siggraph17.png} suffixes')\nopt = parser.parse_args()\n\n# load colorizers\ncolorizer_eccv16 = eccv16(pretrained=True).eval()\ncolorizer_siggraph17 = siggraph17(pretrained=True).eval()\nif(opt.use_gpu):\n\tcolorizer_eccv16.cuda()\n\tcolorizer_siggraph17.cuda()\n\n# default size to process images is 256x256\n# grab L channel in both original (\"orig\") and resized (\"rs\") resolutions\nimg = load_img(opt.img_path)\n(tens_l_orig, tens_l_rs) = preprocess_img(img, HW=(256,256))\nif(opt.use_gpu):\n\ttens_l_rs = tens_l_rs.cuda()\n\n# colorizer outputs 256x256 ab map\n# resize and concatenate to original L channel\nimg_bw = postprocess_tens(tens_l_orig, torch.cat((0*tens_l_orig,0*tens_l_orig),dim=1))\nout_img_eccv16 = postprocess_tens(tens_l_orig, colorizer_eccv16(tens_l_rs).cpu())\nout_img_siggraph17 = postprocess_tens(tens_l_orig, colorizer_siggraph17(tens_l_rs).cpu())\n\nplt.imsave('%s_eccv16.png'%opt.save_prefix, out_img_eccv16)\nplt.imsave('%s_siggraph17.png'%opt.save_prefix, out_img_siggraph17)\n\nplt.figure(figsize=(12,8))\nplt.subplot(2,2,1)\nplt.imshow(img)\nplt.title('Original')\nplt.axis('off')\n\nplt.subplot(2,2,2)\nplt.imshow(img_bw)\nplt.title('Input')\nplt.axis('off')\n\nplt.subplot(2,2,3)\nplt.imshow(out_img_eccv16)\nplt.title('Output (ECCV 16)')\nplt.axis('off')\n\nplt.subplot(2,2,4)\nplt.imshow(out_img_siggraph17)\nplt.title('Output (SIGGRAPH 17)')\nplt.axis('off')\nplt.show()\n"
+        },
+        {
+          "name": "imgs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "imgs_out",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.0419921875,
+          "content": "torch\nskimage\nnumpy\nmatplotlib\nargparse\nPIL"
+        }
+      ]
+    }
+  ]
+}

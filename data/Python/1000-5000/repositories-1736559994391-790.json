@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736559994391,
+    "page": 790,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "eragonruan/text-detection-ctpn",
+      "stars": 3436,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1240234375,
+          "content": "__pycache__/\ncache/\npretrain/\nVOCdevkit2007/\nlogs/\noutput/\nbuild/\ndist/\ncheckpoints/\n.idea/\n*.py[cod]\n*.c[cod]\n*.so\n*.swp\n*.pb\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0439453125,
+          "content": "MIT License\n\nCopyright (c) 2017 shaohui ruan\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.271484375,
+          "content": "# text-detection-ctpn\n\ntext detection mainly based on ctpn (connectionist text proposal network). It is implemented in tensorflow. I use id card detect as an example to demonstrate the results, but it should be noticing that this model can be used in almost every horizontal scene text detection task. The origin paper can be found [here](https://arxiv.org/abs/1609.03605). Also, the origin repo in caffe can be found in [here](https://github.com/tianzhi0549/CTPN). For more detail about the paper and code, see this [blog](http://slade-ruan.me/2017/10/22/text-detection-ctpn/). If you got any questions, check the issue first, if the problem persists, open a new issue.\n***\n# roadmap\n- [x] freeze the graph for convenient inference\n- [x] pure python, cython nms and cuda nms\n- [x] loss function as referred in paper\n- [x] oriented text connector\n- [x] BLSTM\n***\n# demo\n- for a quick demo,you don't have to build the library, simpely use demo_pb.py for inference.\n- first, git clone git@github.com:eragonruan/text-detection-ctpn.git --depth=1\n- then, download the pb file from [release](https://github.com/eragonruan/text-detection-ctpn/releases)\n- put ctpn.pb in data/\n- put your images in data/demo, the results will be saved in data/results, and run demo in the root \n```shell\npython ./ctpn/demo_pb.py\n```\n***\n# parameters\nthere are some parameters you may need to modify according to your requirement, you can find them in ctpn/text.yml\n- USE_GPU_NMS # whether to use nms implemented in cuda or not\n- DETECT_MODE # H represents horizontal mode, O represents oriented mode, default is H\n- checkpoints_path # the model I provided is in checkpoints/, if you train the model by yourself,it will be saved in output/\n***\n# training\n## setup\n- requirements: python2.7, tensorflow1.3, cython0.24, opencv-python, easydict,(recommend to install Anaconda)\n- if you do not have a gpu device,follow here to [setup](https://github.com/eragonruan/text-detection-ctpn/issues/43)\n- if you have a gpu device, build the library by\n```shell\ncd lib/utils\nchmod +x make.sh\n./make.sh\n```\n## prepare data\n- First, download the pre-trained model of VGG net and put it in data/pretrain/VGG_imagenet.npy. you can download it from [google drive](https://drive.google.com/drive/folders/0B_WmJoEtfQhDRl82b1dJTjB2ZGc?resourcekey=0-OjW5DtLUbX5xUob7fwRvEw&usp=sharing) or [baidu yun](https://pan.baidu.com/s/1kUNTl1l). \n- Second, prepare the training data as referred in paper, or you can download the data I prepared from [google drive](https://drive.google.com/drive/folders/0B_WmJoEtfQhDRl82b1dJTjB2ZGc?resourcekey=0-OjW5DtLUbX5xUob7fwRvEw&usp=sharing) or [baidu yun](https://pan.baidu.com/s/1kUNTl1l). Or you can prepare your own data according to the following steps. \n- Modify the path and gt_path in prepare_training_data/split_label.py according to your dataset. And run\n```shell\ncd lib/prepare_training_data\npython split_label.py\n```\n- it will generate the prepared data in current folder, and then run\n```shell\npython ToVoc.py\n```\n- to convert the prepared training data into voc format. It will generate a folder named TEXTVOC. move this folder to data/ and then run\n```shell\ncd ../../data\nln -s TEXTVOC VOCdevkit2007\n```\n## train \nSimplely run\n```shell\npython ./ctpn/train_net.py\n```\n- you can modify some hyper parameters in ctpn/text.yml, or just used the parameters I set.\n- The model I provided in checkpoints is trained on GTX1070 for 50k iters.\n- If you are using cuda nms, it takes about 0.2s per iter. So it will takes about 2.5 hours to finished 50k iterations.\n***\n# some results\n`NOTICE:` all the photos used below are collected from the internet. If it affects you, please contact me to delete them.\n<img src=\"/data/results/006.jpg\" width=320 height=480 /><img src=\"/data/results/008.jpg\" width=320 height=480 />\n<img src=\"/data/results/009.jpg\" width=320 height=480 /><img src=\"/data/results/010.png\" width=320 height=320 />\n***\n## oriented text connector\n- oriented text connector has been implemented, i's working, but still need futher improvement.\n- left figure is the result for DETECT_MODE H, right figure for DETECT_MODE O\n<img src=\"/data/results/007.jpg\" width=320 height=240 /><img src=\"/data/oriented_results/007.jpg\" width=320 height=240 />\n<img src=\"/data/results/008.jpg\" width=320 height=480 /><img src=\"/data/oriented_results/008.jpg\" width=320 height=480 />\n***\n"
+        },
+        {
+          "name": "ctpn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.126953125,
+          "content": "easydict==1.7\ntensorflow_gpu==1.3.0\nscipy==0.18.1\nnumpy==1.11.1\nopencv_python==3.4.0.12\nCython==0.27.3\nPillow==5.0.0\nPyYAML==3.12\n"
+        }
+      ]
+    }
+  ]
+}

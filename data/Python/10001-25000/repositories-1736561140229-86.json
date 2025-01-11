@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736561140229,
+    "page": 86,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "facebook/prophet",
+      "stars": 18723,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".deepsource.toml",
+          "type": "blob",
+          "size": 0.2265625,
+          "content": "version = 1\r\n\r\ntest_patterns = [\"python/prophet/tests/**\"]\r\nexclude_patterns = [\"R/**\", \"notebooks/**\", \"docs/**\", \"examples/**\"]\r\n\r\n[[analyzers]]\r\nname = \"python\"\r\nenabled = true\r\n\r\n  [analyzers.meta]\r\n  runtime_version = \"3.x.x\"\r\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0966796875,
+          "content": "docs/* linguist-documentation\nexamples/* linguist-documentation\nnotebooks/* linguist-documentation\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.5947265625,
+          "content": "# Compiled python modules.\n*.pyc\n\n# Persisted models.\n*.pkl\n\n# Setuptools distribution folder.\npython/dist/\npython_shim/dist/\n\n# test cache\n.pytest_cache\npython/prophet/tests/dask-worker-space\n\n# Python cache\n__pycache__\n\n# Python egg metadata, regenerated from source files by setuptools.\npython/*.egg-info\npython/build/\npython_shim/*.egg-info\npython_shim/build/\n\n# Notebook checkpoints\n.ipynb_checkpoints\n\n*.*~\n\n*.idea\n*.vscode\n*.DS_Store\n*.envrc\n\n# Development with Python\npython/**/bin/\npython/**/etc/\npython/**/lib/\npython/**/lib64\npython/**/pyvenv.cfg\npython/**/share/\npython/**/stan_model/\n.Rproj.user\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.09375,
+          "content": "dist: xenial\naddons:\n  apt:\n    packages:\n      - libv8-dev\nlanguage: python\n\njobs:\n  include:\n    - language: python\n      python:\n        - \"3.7\"\n      cache: pip\n      install:\n        - pip install --upgrade pip\n        - pip install -U -r python/requirements.txt dask[dataframe] distributed\n      script:\n        - cd python && python setup.py develop test\n        - python setup.py clean\n        - rm -rf prophet/stan_model\n        - wget https://github.com/stan-dev/cmdstan/releases/download/v2.22.1/cmdstan-2.22.1.tar.gz -O /tmp/cmdstan.tar.gz > /dev/null\n        - tar -xvf /tmp/cmdstan.tar.gz -C /tmp > /dev/null\n        - make -C /tmp/cmdstan-2.22.1/ build > /dev/null\n        - CMDSTAN=/tmp/cmdstan-2.22.1 STAN_BACKEND=CMDSTANPY python setup.py develop test\n\n    - language: r\n      r:\n        - devel\n      cache: packages\n      install:\n        - R -e 'install.packages(\"devtools\")'\n        - R -e 'devtools::install_deps(\"R\", dependencies = TRUE)'\n        - cd R\n        - R CMD build .\n        - R CMD INSTALL *tar.gz\n      script:\n        - R -e 'library(prophet); library(devtools); devtools::test()'\n\n"
+        },
+        {
+          "name": "CODE_OF_CONDUCT.md",
+          "type": "blob",
+          "size": 0.2353515625,
+          "content": "# Code of Conduct\nFacebook has adopted a Code of Conduct that we expect project participants to adhere to. Please [read the full text](https://code.fb.com/codeofconduct) so that you can understand what actions will and will not be tolerated."
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.169921875,
+          "content": "FROM python:3.7-stretch\n\nRUN apt-get -y install libc-dev\n\nRUN pip install --upgrade pip\n\nCOPY . .\n\nWORKDIR python\n\nRUN python -m pip install -e \".[dev, parallel]\"\n\nWORKDIR /\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.060546875,
+          "content": "MIT License\n\nCopyright (c) Facebook, Inc. and its affiliates.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.1142578125,
+          "content": "build:\n\tdocker-compose build\n\npy-shell:\n\tdocker-compose run package ipython\n\nshell:\n\tdocker-compose run package bash\n"
+        },
+        {
+          "name": "R",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 10.591796875,
+          "content": "\n# Prophet: Automatic Forecasting Procedure\n\n![Build](https://github.com/facebook/prophet/workflows/Build/badge.svg)\n\n[![PyPI Version](https://img.shields.io/pypi/v/prophet.svg)](https://pypi.python.org/pypi/prophet)\n[![PyPI Downloads Monthly](https://pepy.tech/badge/prophet/month)](https://pepy.tech/project/prophet)\n[![PyPI Downloads All](https://pepy.tech/badge/prophet)](https://pepy.tech/project/prophet)\n\n[![CRAN Version](https://www.r-pkg.org/badges/version/prophet)](https://CRAN.R-project.org/package=prophet)\n[![CRAN Downloads Monthly](https://cranlogs.r-pkg.org/badges/prophet?color=brightgreen)](https://cran.r-project.org/package=prophet)\n[![CRAN Downloads All](https://cranlogs.r-pkg.org/badges/grand-total/prophet?color=brightgreen)](https://cranlogs.r-pkg.org/badges/grand-total/prophet)\n\n[![Conda_Version](https://anaconda.org/conda-forge/prophet/badges/version.svg)](https://anaconda.org/conda-forge/prophet/)\n\n-----\n\n**2023 Update:** We discuss our plans for the future of Prophet in this blog post: [facebook/prophet in 2023 and beyond](https://medium.com/@cuongduong_35162/facebook-prophet-in-2023-and-beyond-c5086151c138)\n\n-----\n\nProphet is a procedure for forecasting time series data based on an additive model where non-linear trends are fit with yearly, weekly, and daily seasonality, plus holiday effects. It works best with time series that have strong seasonal effects and several seasons of historical data. Prophet is robust to missing data and shifts in the trend, and typically handles outliers well.\n\nProphet is [open source software](https://code.facebook.com/projects/) released by Facebook's [Core Data Science team](https://research.fb.com/category/data-science/). It is available for download on [CRAN](https://cran.r-project.org/package=prophet) and [PyPI](https://pypi.python.org/pypi/prophet/).\n\n## Important links\n\n- Homepage: https://facebook.github.io/prophet/\n- HTML documentation: https://facebook.github.io/prophet/docs/quick_start.html\n- Issue tracker: https://github.com/facebook/prophet/issues\n- Source code repository: https://github.com/facebook/prophet\n- Contributing: https://facebook.github.io/prophet/docs/contributing.html\n- Prophet R package: https://cran.r-project.org/package=prophet\n- Prophet Python package: https://pypi.python.org/pypi/prophet/\n- Release blogpost: https://research.facebook.com/blog/2017/2/prophet-forecasting-at-scale/\n- Prophet paper: Sean J. Taylor, Benjamin Letham (2018) Forecasting at scale. The American Statistician 72(1):37-45 (https://peerj.com/preprints/3190.pdf).\n\n## Installation in R - CRAN\n\n⚠️ **The CRAN version of prophet is fairly outdated. To get the latest bug fixes and updated country holiday data, we suggest installing the [latest release](#installation-in-r---latest-release).**\n\nProphet is a [CRAN package](https://cran.r-project.org/package=prophet) so you can use `install.packages`.\n\n```r\ninstall.packages('prophet')\n```\n\nAfter installation, you can [get started!](https://facebook.github.io/prophet/docs/quick_start.html#r-api)\n\n## Installation in R - Latest release\n\n```r\ninstall.packages('remotes')\nremotes::install_github('facebook/prophet@*release', subdir = 'R')\n```\n\n#### Experimental backend - cmdstanr\n\nYou can also choose an experimental alternative stan backend called `cmdstanr`. Once you've installed `prophet`,\nfollow these instructions to use `cmdstanr` instead of `rstan` as the backend:\n\n```r\n# R\n# We recommend running this in a fresh R session or restarting your current session\ninstall.packages(c(\"cmdstanr\", \"posterior\"), repos = c(\"https://mc-stan.org/r-packages/\", getOption(\"repos\")))\n\n# If you haven't installed cmdstan before, run:\ncmdstanr::install_cmdstan()\n# Otherwise, you can point cmdstanr to your cmdstan path:\ncmdstanr::set_cmdstan_path(path = <your existing cmdstan>)\n\n# Set the R_STAN_BACKEND environment variable\nSys.setenv(R_STAN_BACKEND = \"CMDSTANR\")\n```\n\n### Windows\n\nOn Windows, R requires a compiler so you'll need to [follow the instructions](https://github.com/stan-dev/rstan/wiki/RStan-Getting-Started) provided by `rstan`. The key step is installing [Rtools](http://cran.r-project.org/bin/windows/Rtools/) before attempting to install the package.\n\nIf you have custom Stan compiler settings, install from source rather than the CRAN binary.\n\n## Installation in Python - PyPI release\n\nProphet is on PyPI, so you can use `pip` to install it.\n\n```bash\npython -m pip install prophet\n```\n\n* From v0.6 onwards, Python 2 is no longer supported.\n* As of v1.0, the package name on PyPI is \"prophet\"; prior to v1.0 it was \"fbprophet\".\n* As of v1.1, the minimum supported Python version is 3.7.\n\nAfter installation, you can [get started!](https://facebook.github.io/prophet/docs/quick_start.html#python-api)\n\n### Anaconda\n\nProphet can also be installed through conda-forge.\n\n```bash\nconda install -c conda-forge prophet\n```\n\n## Installation in Python - Development version\n\nTo get the latest code changes as they are merged, you can clone this repo and build from source manually. This is **not** guaranteed to be stable.\n\n```bash\ngit clone https://github.com/facebook/prophet.git\ncd prophet/python\npython -m pip install -e .\n```\n\nBy default, Prophet will use a fixed version of `cmdstan` (downloading and installing it if necessary) to compile the model executables. If this is undesired and you would like to use your own existing `cmdstan` installation, you can set the environment variable `PROPHET_REPACKAGE_CMDSTAN` to `False`:\n\n```bash\nexport PROPHET_REPACKAGE_CMDSTAN=False; python -m pip install -e .\n```\n\n### Linux\n\nMake sure compilers (gcc, g++, build-essential) and Python development tools (python-dev, python3-dev) are installed. In Red Hat systems, install the packages gcc64 and gcc64-c++. If you are using a VM, be aware that you will need at least 4GB of memory to install prophet, and at least 2GB of memory to use prophet.\n\n### Windows\n\nUsing `cmdstanpy` with Windows requires a Unix-compatible C compiler such as mingw-gcc. If cmdstanpy is installed first, one can be installed via the `cmdstanpy.install_cxx_toolchain` command.\n\n## Changelog\n\n### Version 1.1.6 (2024.09.29)\n\n#### Python\n\n- Bug fixes: include predictions for dates with missing `y` the history, zero division error in cross validation metrics.\n- Changed `NDArray[np.float_]` to `NDArray[np.float64]` to be compatible with numpy 2.0\n\n#### R\n\n- Updated `holidays` data based on holidays version 0.57.\n\n### Version 1.1.5 (2023.10.10)\n\n#### Python\n\n- Upgraded cmdstan version to 2.33.1, enabling Apple M2 support.\n- Added pre-built wheels for macOS arm64 architecture (M1, M2 chips)\n- Added argument `scaling` to the `Prophet()` instantiation. Allows `minmax` scaling on `y` instead of\n  `absmax` scaling (dividing by the maximum value). `scaling='absmax'` by default, preserving the\n  behaviour of previous versions.\n- Added argument `holidays_mode` to the `Prophet()` instantiation. Allows holidays regressors to have\n  a different mode than seasonality regressors. `holidays_mode` takes the same value as `seasonality_mode`\n  if not specified, preserving the behaviour of previous versions.\n- Added two methods to the `Prophet` object: `preprocess()` and `calculate_initial_params()`. These\n  do not need to be called and will not change the model fitting process. Their purpose is to provide\n  clarity on the pre-processing steps taken (`y` scaling, creating fourier series, regressor scaling,\n  setting changepoints, etc.) before the data is passed to the stan model.\n- Added argument `extra_output_columns` to `cross_validation()`. The user can specify additional columns\n  from `predict()` to include in the final output alongside `ds` and `yhat`, for example `extra_output_columns=['trend']`.\n- prophet's custom `hdays` module was deprecated last version and is now removed.\n\n#### R\n\n- Updated `holidays` data based on holidays version 0.34.\n\n### Version 1.1.4 (2023.05.30)\n\n#### Python\n\n- We now rely solely on `holidays` package for country holidays.\n- Upgraded cmdstan version to 2.31.0, enabling Apple M1 support.\n- Fixed bug with Windows installation caused by long paths.\n\n#### R\n\n- Updated `holidays` data based on holidays version 0.25.\n\n### Version 1.1.2 (2023.01.20)\n\n#### Python\n\n- Sped up `.predict()` by up to 10x by removing intermediate DataFrame creations.\n- Sped up fourier series generation, leading to at least 1.5x speed improvement for `train()` and `predict()` pipelines.\n- Fixed bug in how warm start values were being read.\n- Wheels are now version-agnostic.\n\n#### R\n\n- Fixed a bug in `construct_holiday_dataframe()`\n- Updated `holidays` data based on holidays version 0.18.\n\n### Version 1.1.1 (2022.09.08)\n\n- (Python) Improved runtime (3-7x) of uncertainty predictions via vectorization.\n- Bugfixes relating to Python package versions and R holiday objects.\n\n### Version 1.1 (2022.06.25)\n\n- Replaced `pystan2` dependency with `cmdstan` + `cmdstanpy`.\n- Pre-packaged model binaries for Python package, uploaded binary distributions to PyPI.\n- Improvements in the `stan` model code, cross-validation metric calculations, holidays.\n\n### Version 1.0 (2021.03.28)\n\n- Python package name changed from fbprophet to prophet\n- Fixed R Windows build issues to get latest version back on CRAN\n- Improvements in serialization, holidays, and R timezone handling\n- Plotting improvements\n\n### Version 0.7 (2020.09.05)\n\n- Built-in json serialization\n- Added \"flat\" growth option\n- Bugfixes related to `holidays` and `pandas`\n- Plotting improvements\n- Improvements in cross validation, such as parallelization and directly specifying cutoffs\n\n### Version 0.6 (2020.03.03)\n\n- Fix bugs related to upstream changes in `holidays` and `pandas` packages.\n- Compile model during first use, not during install (to comply with CRAN policy)\n- `cmdstanpy` backend now available in Python\n- Python 2 no longer supported\n\n### Version 0.5 (2019.05.14)\n\n- Conditional seasonalities\n- Improved cross validation estimates\n- Plotly plot in Python\n- Bugfixes\n\n### Version 0.4 (2018.12.18)\n\n- Added holidays functionality\n- Bugfixes\n\n### Version 0.3 (2018.06.01)\n\n- Multiplicative seasonality\n- Cross validation error metrics and visualizations\n- Parameter to set range of potential changepoints\n- Unified Stan model for both trend types\n- Improved future trend uncertainty for sub-daily data\n- Bugfixes\n\n### Version 0.2.1 (2017.11.08)\n\n- Bugfixes\n\n### Version 0.2 (2017.09.02)\n\n- Forecasting with sub-daily data\n- Daily seasonality, and custom seasonalities\n- Extra regressors\n- Access to posterior predictive samples\n- Cross-validation function\n- Saturating minimums\n- Bugfixes\n\n### Version 0.1.1 (2017.04.17)\n\n- Bugfixes\n- New options for detecting yearly and weekly seasonality (now the default)\n\n### Version 0.1 (2017.02.23)\n\n- Initial release\n\n## License\n\nProphet is licensed under the [MIT license](LICENSE).\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.15234375,
+          "content": "version: \"3\"\nservices:\n  package:\n    image: facebook/prophet\n    build:\n      context: .\n      dockerfile: Dockerfile\n\n    volumes:\n      - .:/usr/src/app\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "notebooks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python_shim",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

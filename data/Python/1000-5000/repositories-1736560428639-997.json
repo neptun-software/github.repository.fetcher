@@ -1,0 +1,193 @@
+{
+  "metadata": {
+    "timestamp": 1736560428639,
+    "page": 997,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjEwMDA=",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "geekan/scrapy-examples",
+      "stars": 3187,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.119140625,
+          "content": ".idea/\n*.swp\n.ipynb_checkpoints/\n\ncscope.out\ndownload_file/\ndata_utf8.json\n# *.json\n.DS_Store\ndump.rdb\n\n\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n\n# C extensions\n*.so\n\n# Distribution / packaging\nbin/\nbuild/\ndevelop-eggs/\ndist/\neggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\n*.egg-info/\n.installed.cfg\n*.egg\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\n.tox/\n.coverage\n.cache\nnosetests.xml\ncoverage.xml\n\n# Translations\n*.mo\n\n# Mr Developer\n.mr.developer.cfg\n.project\n.pydevproject\n\n# Rope\n.ropeproject\n\n# Django stuff:\n*.log\n*.pot\n\n# Sphinx documentation\ndocs/_build/# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n\n# C extensions\n*.so\n\n# Distribution / packaging\nbin/\nbuild/\ndevelop-eggs/\ndist/\neggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\n*.egg-info/\n.installed.cfg\n*.egg\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\n.tox/\n.coverage\n.cache\nnosetests.xml\ncoverage.xml\n\n# Translations\n*.mo\n\n# Mr Developer\n.mr.developer.cfg\n.project\n.pydevproject\n\n# Rope\n.ropeproject\n\n# Django stuff:\n*.log\n*.pot\n\n# Sphinx documentation\ndocs/_build/\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.7041015625,
+          "content": "scrapy-examples\n==============\n\nMultifarious scrapy examples with integrated proxies and agents, which make you comfy to write a spider.\n\nDon't use it to do anything illegal!\n\n***\n\n## Real spider example: doubanbook\n\n#### Tutorial\n\n    git clone https://github.com/geekan/scrapy-examples\n    cd scrapy-examples/doubanbook\n    scrapy crawl doubanbook\n\n#### Depth\n\nThere are several depths in the spider, and the spider gets\nreal data from depth2.\n\n- Depth0: The entrance is `http://book.douban.com/tag/`\n- Depth1: Urls like `http://book.douban.com/tag/外国文学` from depth0\n- Depth2: Urls like `http://book.douban.com/subject/1770782/` from depth1\n\n#### Example image\n![douban book](https://raw.githubusercontent.com/geekan/scrapy-examples/master/doubanbook/sample.jpg)\n\n***\n\n## Avaiable Spiders\n\n* tutorial\n  * dmoz_item\n  * douban_book\n  * page_recorder\n  * douban_tag_book\n* doubanbook\n* linkedin\n* hrtencent\n* sis\n* zhihu\n* alexa\n  * alexa\n  * alexa.cn\n\n## Advanced\n\n* Use `parse_with_rules` to write a spider quickly.  \n  See dmoz spider for more details.\n\n* Proxies\n  * If you don't want to use proxy, just comment the proxy middleware in settings.  \n  * If you want to custom it, hack `misc/proxy.py` by yourself.  \n\n* Notice\n  * Don't use `parse` as your method name, it's an inner method of CrawlSpider.\n\n### Advanced Usage\n\n* Run `./startproject.sh <PROJECT>` to start a new project.  \n  It will automatically generate most things, the only left things are:\n  * `PROJECT/PROJECT/items.py`\n  * `PROJECT/PROJECT/spider/spider.py`\n\n#### Example to hack `items.py` and `spider.py`\n\nHacked `items.py` with additional fields `url` and `description`:  \n```\nfrom scrapy.item import Item, Field\n\nclass exampleItem(Item):\n    url = Field()\n    name = Field()\n    description = Field()\n```\n\nHacked `spider.py` with start rules and css rules (here only display the class exampleSpider):  \n```\nclass exampleSpider(CommonSpider):\n    name = \"dmoz\"\n    allowed_domains = [\"dmoz.org\"]\n    start_urls = [\n        \"http://www.dmoz.com/\",\n    ]\n    # Crawler would start on start_urls, and follow the valid urls allowed by below rules.\n    rules = [\n        Rule(sle(allow=[\"/Arts/\", \"/Games/\"]), callback='parse', follow=True),\n    ]\n\n    css_rules = {\n        '.directory-url li': {\n            '__use': 'dump', # dump data directly\n            '__list': True, # it's a list\n            'url': 'li > a::attr(href)',\n            'name': 'a::text',\n            'description': 'li::text',\n        }\n    }\n\n    def parse(self, response):\n        info('Parse '+response.url)\n        # parse_with_rules is implemented here:\n        #   https://github.com/geekan/scrapy-examples/blob/master/misc/spider.py\n        self.parse_with_rules(response, self.css_rules, exampleItem)\n```\n\n"
+        },
+        {
+          "name": "alexa",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "alexa_topsites",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "amazonbook",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clean.sh",
+          "type": "blob",
+          "size": 0.03125,
+          "content": "find . -name '*.pyc' | xargs rm\n"
+        },
+        {
+          "name": "delay.sh",
+          "type": "blob",
+          "size": 0.375,
+          "content": "#!/bin/bash\n\ndelay=${1:-1}\n\n#find . | grep -E \"settings.py$\" | xargs sed -i '' \"s/DOWNLOAD_DEALY = [0-9]+/DOWNLOAD_DELAY=$1/g\"\nif [[ \"$OSTYPE\" == \"darwin\"* ]]; then\nfind . | grep -E \"settings.py$\" | xargs sed -E -i '' \"s/DOWNLOAD_DELAY = [0-9]+/DOWNLOAD_DELAY = $delay/g\"\nelse\nfind . | grep -E \"settings.py$\" | xargs sed -E -i \"s/DOWNLOAD_DELAY = [0-9]+/DOWNLOAD_DELAY = $delay/g\"\nfi\n"
+        },
+        {
+          "name": "dianping",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dmoz",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doubanbook",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doubanmovie",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "douyu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "general_spider",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "github_trending",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "googlescholar",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hacker_news",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hrtencent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "linkedin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pandatv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proxylist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "qqnews",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "reddit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sinanews",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sis",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "startproject.sh",
+          "type": "blob",
+          "size": 0.568359375,
+          "content": "#!/bin/bash\nset -e\n\nusage() {\n    echo \"\\n  usage:\\n      ./startproject.sh <project name>\\n\"\n}\n\nif [ -z \"$1\" ]; then\n    usage\n    exit\nfi\n\necho \"Starting project $1.\"\n\ncp -r template $1\nif [ \"$(uname)\" == \"Darwin\" ]; then\n    #alias sed='sed -i'\n    find $1 -type f | xargs sed -i '' \"s/template/$1/\"\nelif [ \"$(expr substr $(uname -s) 1 5)\" == \"Linux\" ]; then\n    find $1 -type f | xargs sed -i \"s/template/$1/\"\nelif [ \"$(expr substr $(uname -s) 1 10)\" == \"MINGW32_NT\" ]; then\n    find $1 -type f | xargs sed -i \"s/template/$1/\"\nfi\nmv $1/template $1/$1\n\necho \"Create $1 succeed!\"\n"
+        },
+        {
+          "name": "template",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tutorial",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "underdev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v2ex",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "youtube_trending",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zhibo8",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zhihu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ziroom",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

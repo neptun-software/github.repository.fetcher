@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "timestamp": 1736561175546,
+    "page": 134,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cool-RR/PySnooper",
+      "stars": 16412,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.11328125,
+          "content": "*.py[co]\n__pycache__/\n\n.tox/\n.pytest_cache/\n.mypy_cache/\n\ndist/\nbuild/\n*.egg-info/\n\n*.bak\n\n*.wpu\n\n.coverage\nhtmlcov\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.7978515625,
+          "content": "dist: xenial\nlanguage: python\n\npython:\n- 2.7\n- 3.5\n- 3.6\n- 3.7\n- 3.8\n- 3.9\n- 3.10-dev\n- pypy2.7-6.0\n- pypy3.5\n\ninstall:\n- pip install tox-travis\nscript:\n- tox\n\nstages:\n- lint\n- test\n#- deploy\n\nmatrix:\n  allow_failures:\n  - env: TOXENV=flake8\n  - env: TOXENV=pylint\n  - env: TOXENV=bandit\n  - python: 3.10-dev\n\njobs:\n  include:\n  #- { stage: lint, python: 3.7, env: TOXENV=flake8 }\n  #- { stage: lint, python: 3.7, env: TOXENV=pylint }\n  #- { stage: lint, python: 3.7, env: TOXENV=bandit }\n  - { stage: lint, python: 3.7, env: TOXENV=readme }\n\n  #- stage: deploy\n  #  install: skip\n  #  script: skip\n  #  deploy:\n  #    provider: pypi\n  #    distributions: sdist bdist_wheel\n  #    user: cool-RR\n  #    password:\n  #      secure: <your-pypi-password-here-encrypted-using-the-travis-cli>\n  #    on:\n  #      tags: true\n"
+        },
+        {
+          "name": "ADVANCED_USAGE.md",
+          "type": "blob",
+          "size": 2.6484375,
+          "content": "# Advanced Usage #\n\nUse `watch_explode` to expand values to see all their attributes or items of lists/dictionaries:\n\n```python\n@pysnooper.snoop(watch_explode=('foo', 'self'))\n```\n\n`watch_explode` will automatically guess how to expand the expression passed to it based on its class. You can be more specific by using one of the following classes:\n\n```python\nimport pysnooper\n\n@pysnooper.snoop(watch=(\n    pysnooper.Attrs('x'),    # attributes\n    pysnooper.Keys('y'),     # mapping (e.g. dict) items\n    pysnooper.Indices('z'),  # sequence (e.g. list/tuple) items\n))\n```\n\nExclude specific keys/attributes/indices with the `exclude` parameter, e.g. `Attrs('x', exclude=('_foo', '_bar'))`.\n\nAdd a slice after `Indices` to only see the values within that slice, e.g. `Indices('z')[-3:]`.\n\n```console\n$ export PYSNOOPER_DISABLED=1 # This makes PySnooper not do any snooping\n```\n\nThis will output lines like:\n\n```\nModified var:.. foo[2] = 'whatever'\nNew var:....... self.baz = 8\n```\n\nStart all snoop lines with a prefix, to grep for them easily:\n\n```python\n@pysnooper.snoop(prefix='ZZZ ')\n```\n\nRemove all machine-related data (paths, timestamps, memory addresses) to compare with other traces easily:\n\n```python\n@pysnooper.snoop(normalize=True)\n```\n\nOn multi-threaded apps identify which thread are snooped in output:\n\n```python\n@pysnooper.snoop(thread_info=True)\n```\n\nPySnooper supports decorating generators.\n\nIf you decorate a class with `snoop`, it'll automatically apply the decorator to all the methods. (Not including properties and other special cases.)\n\nYou can also customize the repr of an object:\n\n```python\ndef large(l):\n    return isinstance(l, list) and len(l) > 5\n\ndef print_list_size(l):\n    return 'list(size={})'.format(len(l))\n\ndef print_ndarray(a):\n    return 'ndarray(shape={}, dtype={})'.format(a.shape, a.dtype)\n\n@pysnooper.snoop(custom_repr=((large, print_list_size), (numpy.ndarray, print_ndarray)))\ndef sum_to_x(x):\n    l = list(range(x))\n    a = numpy.zeros((10,10))\n    return sum(l)\n\nsum_to_x(10000)\n```\n\nYou will get `l = list(size=10000)` for the list, and `a = ndarray(shape=(10, 10), dtype=float64)` for the ndarray.\nThe `custom_repr` are matched in order, if one condition matches, no further conditions will be checked.\n\nVariables and exceptions get truncated to 100 characters by default. You\ncan customize that:\n\n```python\n    @pysnooper.snoop(max_variable_length=200)\n```\n\nYou can also use `max_variable_length=None` to never truncate them.\n\nUse `relative_time=True` to show timestamps relative to start time rather than\nwall time.\n\nThe output is colored for easy viewing by default, except on Windows. Disable colors like so:\n\n```python\n    @pysnooper.snoop(color=False)\n````\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.388671875,
+          "content": "Ram Rachum\nOleg Butuzov\nEdward Betts\nwilfredinni\nPeter Bittner\nAlireza Ayinmehr\nChristian Zietz\nBinwei Hu\nLoukas Leontopoulos\nShlomi Fish\nAlex Hall\npohmelie\nNikita Melentev\nMike Bayer\nAndreas van Cranenburgh\nHervé Beraud\nDiego Volpatto\nAlexander Bersenev\nXiang Gao\npikez\nJonathan Reichelt Gjertsen\nGuoqiang Ding\nItamar.Raviv\niory\nMark Blakeney\nYael Mintz\nLumír 'Frenzy' Balhar\nLukas Klenk\nsizhky\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0595703125,
+          "content": "MIT License\n\nCopyright (c) 2019 Ram Rachum and collaborators\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.140625,
+          "content": "include README.md\ninclude LICENSE\ninclude requirements.in\ninclude requirements.txt\nrecursive-include tests *.txt *.py\nprune tests/.pytest_cache\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.1982421875,
+          "content": "# PySnooper - Never use print for debugging again\n\n**PySnooper** is a poor man's debugger. If you've used Bash, it's like `set -x` for Python, except it's fancier.\n\nYour story: You're trying to figure out why your Python code isn't doing what you think it should be doing. You'd love to use a full-fledged debugger with breakpoints and watches, but you can't be bothered to set one up right now.\n\nYou want to know which lines are running and which aren't, and what the values of the local variables are.\n\nMost people would use `print` lines, in strategic locations, some of them showing the values of variables.\n\n**PySnooper** lets you do the same, except instead of carefully crafting the right `print` lines, you just add one decorator line to the function you're interested in. You'll get a play-by-play log of your function, including which lines ran and   when, and exactly when local variables were changed.\n\nWhat makes **PySnooper** stand out from all other code intelligence tools? You can use it in your shitty, sprawling enterprise codebase without having to do any setup. Just slap the decorator on, as shown below, and redirect the output to a dedicated log file by specifying its path as the first argument.\n\n## Example\n\nWe're writing a function that converts a number to binary, by returning a list of bits. Let's snoop on it by adding the `@pysnooper.snoop()` decorator:\n\n```python\nimport pysnooper\n\n@pysnooper.snoop()\ndef number_to_bits(number):\n    if number:\n        bits = []\n        while number:\n            number, remainder = divmod(number, 2)\n            bits.insert(0, remainder)\n        return bits\n    else:\n        return [0]\n\nnumber_to_bits(6)\n```\nThe output to stderr is:\n\n![](https://i.imgur.com/TrF3VVj.jpg)\n\nOr if you don't want to trace an entire function, you can wrap the relevant part in a `with` block:\n\n```python\nimport pysnooper\nimport random\n\ndef foo():\n    lst = []\n    for i in range(10):\n        lst.append(random.randrange(1, 1000))\n\n    with pysnooper.snoop():\n        lower = min(lst)\n        upper = max(lst)\n        mid = (lower + upper) / 2\n        print(lower, mid, upper)\n\nfoo()\n```\n\nwhich outputs something like:\n\n```\nNew var:....... i = 9\nNew var:....... lst = [681, 267, 74, 832, 284, 678, ...]\n09:37:35.881721 line        10         lower = min(lst)\nNew var:....... lower = 74\n09:37:35.882137 line        11         upper = max(lst)\nNew var:....... upper = 832\n09:37:35.882304 line        12         mid = (lower + upper) / 2\n74 453.0 832\nNew var:....... mid = 453.0\n09:37:35.882486 line        13         print(lower, mid, upper)\nElapsed time: 00:00:00.000344\n```\n\n## Features\n\nIf stderr is not easily accessible for you, you can redirect the output to a file:\n\n```python\n@pysnooper.snoop('/my/log/file.log')\n```\n\nYou can also pass a stream or a callable instead, and they'll be used.\n\nSee values of some expressions that aren't local variables:\n\n```python\n@pysnooper.snoop(watch=('foo.bar', 'self.x[\"whatever\"]'))\n```\n\nShow snoop lines for functions that your function calls:\n\n```python\n@pysnooper.snoop(depth=2)\n```\n\n**See [Advanced Usage](https://github.com/cool-RR/PySnooper/blob/master/ADVANCED_USAGE.md) for more options.** <------\n\n\n## Installation with Pip\n\nThe best way to install **PySnooper** is with Pip:\n\n```console\n$ pip install pysnooper\n```\n\n## Other installation options\n\nConda with conda-forge channel:\n\n```console\n$ conda install -c conda-forge pysnooper\n```\n\nArch Linux:\n\n```console\n$ yay -S python-pysnooper\n```\n\nFedora Linux:\n\n```console\n$ dnf install python3-pysnooper\n```\n\n\n## Citing PySnooper\n\nIf you use PySnooper in academic work, please use this citation format:\n\n```bibtex\n@software{rachum2019pysnooper,\n    title={PySnooper: Never use print for debugging again},\n    author={Rachum, Ram and Hall, Alex and Yanokura, Iori and others},\n    year={2019},\n    month={jun},\n    publisher={PyCon Israel},\n    doi={10.5281/zenodo.10462459},\n    url={https://github.com/cool-RR/PySnooper}\n}\n```\n\n\n## License\n\nCopyright (c) 2019 Ram Rachum and collaborators, released under the MIT license.\n\n\n## Media Coverage\n\n[Hacker News thread](https://news.ycombinator.com/item?id=19717786)\nand [/r/Python Reddit thread](https://www.reddit.com/r/Python/comments/bg0ida/pysnooper_never_use_print_for_debugging_again/) (22 April 2019)\n"
+        },
+        {
+          "name": "make_release.sh",
+          "type": "blob",
+          "size": 0.1103515625,
+          "content": "#!/usr/bin/env bash\nrm -rf dist/* build/* && python setup.py sdist bdist_wheel --universal && twine upload dist/*"
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 0.0791015625,
+          "content": "[build-system]\nrequires = [\"setuptools\"]\nbuild-backend = \"setuptools.build_meta\"\n"
+        },
+        {
+          "name": "pysnooper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.in",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "# That's right baby! No dependencies!"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "#\n# This file is autogenerated by pip-compile\n# To update, run:\n#\n#    pip-compile --output-file requirements.txt requirements.in\n#\n"
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 1.166015625,
+          "content": "[metadata]\nname = PySnooper\nversion = attr: pysnooper.__version__\nauthor = Ram Rachum\nauthor_email = ram@rachum.com\ndescription = A poor man's debugger for Python.\nurl = https://github.com/cool-RR/PySnooper\nlong_description = file: README.md\nlong_description_content_type = text/markdown\nclassifiers =\n    Environment :: Console\n    Intended Audience :: Developers\n    Programming Language :: Python :: 2.7\n    Programming Language :: Python :: 3.4\n    Programming Language :: Python :: 3.5\n    Programming Language :: Python :: 3.6\n    Programming Language :: Python :: 3.7\n    Programming Language :: Python :: 3.8\n    Programming Language :: Python :: 3.9\n    Programming Language :: Python :: 3.10\n    Programming Language :: Python :: 3.11\n    Programming Language :: Python :: 3.12\n    Programming Language :: Python :: Implementation :: CPython\n    Programming Language :: Python :: Implementation :: PyPy\n    License :: OSI Approved :: MIT License\n    Operating System :: OS Independent\n    Topic :: Software Development :: Debuggers\n\n[options]\npackages = find:\ninstall_requires = file: requirements.in\n\n[options.packages.find]\nexclude = tests*\n\n[options.extras_require]\ntests = pytest\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.6357421875,
+          "content": "# Copyright 2019 Ram Rachum and collaborators.\n# This program is distributed under the MIT license.\nimport setuptools\nimport re\n\n\ndef read_file(filename):\n    with open(filename) as file:\n        return file.read()\n\nversion = re.search(\"__version__ = '([0-9.]*)'\",\n                    read_file('pysnooper/__init__.py')).group(1)\n\nsetuptools.setup(\n    name='PySnooper',\n    version=version,\n    author='Ram Rachum',\n    author_email='ram@rachum.com',\n    description=\"A poor man's debugger for Python.\",\n    long_description=read_file('README.md'),\n    long_description_content_type='text/markdown',\n    url='https://github.com/cool-RR/PySnooper',\n    packages=setuptools.find_packages(exclude=['tests*']),\n    install_requires=read_file('requirements.in'),\n    extras_require={\n        'tests': {\n            'pytest',\n        },\n    },\n    classifiers=[\n        'Environment :: Console',\n        'Intended Audience :: Developers',\n        'Programming Language :: Python :: 2.7',\n        'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.5',\n        'Programming Language :: Python :: 3.6',\n        'Programming Language :: Python :: 3.7',\n        'Programming Language :: Python :: 3.8',\n        'Programming Language :: Python :: 3.9',\n        'Programming Language :: Python :: 3.10',\n        'Programming Language :: Python :: 3.11',\n        'Programming Language :: Python :: Implementation :: CPython',\n        'Programming Language :: Python :: Implementation :: PyPy',\n        'License :: OSI Approved :: MIT License',\n        'Operating System :: OS Independent',\n        'Topic :: Software Development :: Debuggers',\n    ],\n)\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 1.1884765625,
+          "content": "# tox (https://tox.readthedocs.io/) is a tool for running tests\n# Run tests in multiple virtualenvs.\n\n[tox]\nenvlist =\n    flake8\n    pylint\n    bandit\n    py{27,34,35,36,37,38,39,310,py,py3}\n    readme\n    requirements\n    clean\n\n[testenv]\ndescription = Unit tests\ndeps =\n    pytest\n    py34: typing\ncommands = pytest {posargs}\n\n[testenv:bandit]\ndescription = PyCQA security linter\ndeps = bandit\ncommands = bandit -r --ini tox.ini\n\n[testenv:clean]\ndescription = Clean up bytecode\ndeps = pyclean\ncommands = py3clean -v {toxinidir}\n\n[testenv:flake8]\ndescription = Static code analysis and code style\ndeps = flake8\ncommands = flake8\n\n[testenv:pylint]\ndescription = Check for errors and code smells\ndeps = pylint\ncommands = pylint pysnooper setup\n\n[testenv:readme]\ndescription = Ensure README renders on PyPI\ndeps = twine\ncommands =\n    {envpython} setup.py -q sdist bdist_wheel\n    twine check dist/*\n\n[testenv:requirements]\ndescription = Update requirements.txt\ndeps = pip-tools\ncommands = pip-compile --output-file requirements.txt requirements.in\nchangedir = {toxinidir}\n\n[bandit]\nexclude = .tox,build,dist,tests\ntargets = .\n\n[flake8]\nexclude = .tox,build,dist,pysnooper.egg-info\n\n[pytest]\naddopts = --strict-markers\n"
+        }
+      ]
+    }
+  ]
+}

