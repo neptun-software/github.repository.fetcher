@@ -83,6 +83,7 @@ This project was created using `bun init` in bun v1.1.30. [Bun](https://bun.sh) 
 
 - The GitHub GraphQL API has a hard limit of 1000 items for search queries
 - When this limit is reached, `hasNextPage` will be `false` and the `endCursor` will be at position 1000
+- The API has a rate limit of 5000 requests per hour per authenticated user
 
 ### IP Allowlist Behavior
 
