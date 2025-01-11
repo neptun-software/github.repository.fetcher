@@ -76,3 +76,17 @@ Each chunk file contains:
 ```
 
 This project was created using `bun init` in bun v1.1.30. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+
+## Limitations and Behavior
+
+### GitHub API Limits
+
+- The GitHub GraphQL API has a hard limit of 1000 items for search queries
+- When this limit is reached, `hasNextPage` will be `false` and the `endCursor` will be at position 1000
+
+### IP Allowlist Behavior
+
+- Some repositories may have IP allowlist restrictions enabled
+- These repositories are automatically skipped during fetching
+- Skipped repositories still count towards the page number but not towards GitHub's 1000-item limit
+- This can result in the page count being lower than the cursor position (e.g., page 982 with cursor at 1000)
