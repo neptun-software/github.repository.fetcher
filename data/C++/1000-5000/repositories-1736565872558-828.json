@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736565872558,
+    "page": 828,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "TheCruZ/kdmapper",
+      "stars": 2082,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0771484375,
+          "content": ".vs\nkdmapper/x64\nkdmapper/kdmapper.vcxproj.user\nx64\nHelloWorld/.vs\nIntermediate"
+        },
+        {
+          "name": "HelloWorld.sys",
+          "type": "blob",
+          "size": 3,
+          "content": null
+        },
+        {
+          "name": "HelloWorld",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2021 TheCruZ\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "LibUsageExample",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.MD",
+          "type": "blob",
+          "size": 4.068359375,
+          "content": "# KDMapper\r\n\r\nOriginal creator https://github.com/z175\r\n\r\nUpdated and improved by https://github.com/TheCruZ\r\n\r\nPDB offsets parser written by https://github.com/Mohi-eddine\r\n\r\nIndependent Pages allocation written by https://github.com/Herooyyy/\r\n\r\nTested from **Windows 10 1607** to **Windows 11 26100.1882** :heavy_check_mark:\r\n\r\nUpdate mainly done for UnknownCheats Forum https://www.unknowncheats.me/forum/members/1117395.html\r\n\r\nKDMapper is a simple tool that exploits iqvw64e.sys Intel driver to manually map non-signed drivers in memory\r\n\r\n**Note:** Add definition **DISABLE_OUTPUT** to remove all console outputs\r\n\r\n**Note:** Can be recommended like in the past set a custom entry point like in the HelloWorld example to reduce the generated code in the binary\r\n\r\n## Features:\r\n\t\r\n\tWorks with /GS- compiled drivers\r\n\tHooks NtAddAtom which exists everywhere and is rarely called\r\n\tClears MmUnloadedDrivers\r\n\tClears PiDDBCacheTable\r\n\tClears g_KernelHashBucketList\r\n\tClears Wdfilter RuntimeDriverList RuntimeDriverCount and RuntimeDriverArry\r\n\tUse NtLoadDriver and NtUnloadDriver for less traces\r\n\tPrevent load if \\Device\\Nal exists (Prevents BSOD)\r\n\tHeader section skipped while copying driver to kernel\r\n\tAdded param --free to automatically unmap the allocated memory\r\n\tAdded param --indPages to map in allocated independent pages\r\n\tAdded param --PassAllocationPtr to pass allocation ptr as first param\r\n\tAdded the possibility to modify params before call driver entry\r\n\tNow you can pass bytes directly to mapdriver function\r\n\tAdded PDB_OFFSETS macro that will allow the use of Offset PDB features (choose the target build or define in SymbolsHandler.hpp)\r\n\tAdded param --OffsetsPath \"FilePath\" to include your own offsets file path (if FilePath contains spaces, it must be enclosed in quotation marks)\r\n\tAdded param --DontUpdateOffset to execute without updating the offsets file (warning: you have to be sure that the offsets are not outdated to your current windows build, or you risk a potential BSOD)\r\n\tIntroduced new project \"SymbolsFromPDB\" that will help KDMapper to adapt quickly to any windows updates by parsing the target .PDB files (PDB_OFFSETS macro must be defined to use this feature)\r\n\t\r\n## Requirements:\r\n\r\n    Return from driver entry fastest as you can to prevent unexpected calls or patch guard, don't ever create a infinite while loop in the driver entry, create a thread or any other procedure to keep code running (if you can't close kdmapper you are doing it wrong)\r\n    Disable vulnerable driver list if enabled https://support.microsoft.com/en-au/topic/kb5020779-the-vulnerable-driver-blocklist-after-the-october-2022-preview-release-3fcbe13a-6013-4118-b584-fcfbc6a09936\r\n\r\n## Parameters\r\nJust as reminder, in driver entry, **DriverObject and RegistryPath** are **NULL** unless you specify anything! this is a manual mapped driver and not a normal loading procedure\r\n\r\n### Errors 0xC0000022 and 0xC000009A:\r\nA lot of people ask me about this errors loading the vulnerable driver, both are caused by FACEIT AC since his driver is always running you have to uninstall it\r\n\r\n### Error 0xC0000603:\r\nThe certificate has been blocked as vulnerable and the mapper will return a status of STATUS_IMAGE_CERT_REVOKED. More info at [Microsoft](https://support.microsoft.com/en-au/topic/kb5020779-the-vulnerable-driver-blocklist-after-the-october-2022-preview-release-3fcbe13a-6013-4118-b584-fcfbc6a09936)\r\n\r\nIf you want to disable your vulnerable driver list you have to open regedit.exe, go to HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\CI\\Config and set 'VulnerableDriverBlocklistEnable' as dword with value 0 and restart to apply the changes\r\n\r\nHave Fun!!\r\n\r\n#### TODO just maybe interesting ideas\r\n\r\nif anyone interested in create a pull request\r\n\r\nSelf cleaning of self execution ?\r\n\r\n* Registry User Assist\r\n* Prefetch (need to be deleted normally after it's update)\r\n* Recent files and AutomaticDestination\r\n* Registry RecentDocs\r\n* USN journal maybe?\r\n* Self deletion option?\r\n* Loaded driver deletion option?\r\n* SRUM may contain any information?\r\n* Shellbags in kdmapper named folders?\r\n\r\nMessages for common loading errors?\r\n"
+        },
+        {
+          "name": "SymbolsFromPDB",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kdmapper.sln",
+          "type": "blob",
+          "size": 2.89453125,
+          "content": "﻿\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n# Visual Studio Version 17\r\nVisualStudioVersion = 17.5.33530.505\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"kdmapper\", \"kdmapper\\kdmapper.vcxproj\", \"{518E0636-BA8F-459D-ACAC-81BD33475E3E}\"\r\nEndProject\r\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"SymbolsFromPDB\", \"SymbolsFromPDB\\SymbolsFromPDB.vcxproj\", \"{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}\"\r\nEndProject\r\nGlobal\r\n\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n\t\tDebug|x64 = Debug|x64\r\n\t\tlib-Debug|x64 = lib-Debug|x64\r\n\t\tlib-Release_Pdb_Offsets|x64 = lib-Release_Pdb_Offsets|x64\r\n\t\tlib-Release|x64 = lib-Release|x64\r\n\t\tRelease_Pdb_Offset|x64 = Release_Pdb_Offset|x64\r\n\t\tRelease|x64 = Release|x64\r\n\tEndGlobalSection\r\n\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.Debug|x64.ActiveCfg = Debug|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.Debug|x64.Build.0 = Debug|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.lib-Debug|x64.ActiveCfg = lib-Debug|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.lib-Debug|x64.Build.0 = lib-Debug|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.lib-Release_Pdb_Offsets|x64.ActiveCfg = lib-Release_Pdb_Offsets|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.lib-Release_Pdb_Offsets|x64.Build.0 = lib-Release_Pdb_Offsets|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.lib-Release|x64.ActiveCfg = lib-Release|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.lib-Release|x64.Build.0 = lib-Release|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.Release_Pdb_Offset|x64.ActiveCfg = Release_Pdb_Offset|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.Release_Pdb_Offset|x64.Build.0 = Release_Pdb_Offset|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.Release|x64.ActiveCfg = Release|x64\r\n\t\t{518E0636-BA8F-459D-ACAC-81BD33475E3E}.Release|x64.Build.0 = Release|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.Debug|x64.ActiveCfg = Release_Pdb_Offset|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.lib-Debug|x64.ActiveCfg = lib-Release_Pdb_Offsets|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.lib-Release_Pdb_Offsets|x64.ActiveCfg = lib-Release_Pdb_Offsets|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.lib-Release_Pdb_Offsets|x64.Build.0 = lib-Release_Pdb_Offsets|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.lib-Release|x64.ActiveCfg = lib-Release_Pdb_Offsets|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.Release_Pdb_Offset|x64.ActiveCfg = Release_Pdb_Offset|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.Release_Pdb_Offset|x64.Build.0 = Release_Pdb_Offset|x64\r\n\t\t{25F92BD2-B79F-44C0-9B34-B7DE61F39E50}.Release|x64.ActiveCfg = Release_Pdb_Offset|x64\r\n\tEndGlobalSection\r\n\tGlobalSection(SolutionProperties) = preSolution\r\n\t\tHideSolutionNode = FALSE\r\n\tEndGlobalSection\r\n\tGlobalSection(ExtensibilityGlobals) = postSolution\r\n\t\tSolutionGuid = {83D5D338-2A6D-49D5-B1DF-BDD34FB5CC9F}\r\n\tEndGlobalSection\r\nEndGlobal\r\n"
+        },
+        {
+          "name": "kdmapper",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "timestamp": 1736566007935,
+    "page": 989,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Qihoo360/QConf",
+      "stars": 1866,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0517578125,
+          "content": "*/deps/* linguist-vendored\n*/doc/* linguist-vendored\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "*.swp\n*lockfile\n*.out\n**tags\nmanager/deps/*\ndeps/*\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.205078125,
+          "content": "[submodule \"monitor/third/pink\"]\n\tpath = monitor/third/pink\n\turl = https://github.com/Qihoo360/pink.git\n[submodule \"monitor/third/slash\"]\n\tpath = monitor/third/slash\n\turl = https://github.com/baotiao/slash.git\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.166015625,
+          "content": "sudo: required\ndist: trusty\nlanguage: cpp\n\nos:\n  - linux\n\ncompiler: \n  - gcc\n\nlanguage: cpp\nnotifications:\n  email:\n    - gaodunqiao@360.cn\n\nscript:\n  - cmake .\n  - make\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.185546875,
+          "content": "# Name should be added: Name or Organization(email address)\n\nQihoo 360\n\nLiu Zhongchao(liuzhongchao@360.cn)\nWang kang(wangkang-xy@360.cn)\nZhu Chao(zhuchao@360.cn)\nWang Chao(wangchao3@360.cn)\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.1435546875,
+          "content": "#CMakelist root\nset(HAS_PREFIX OFF CACHE BOOL \"wether add prefix of qconf node on zookeeper\")\nif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)\n    set(CMAKE_INSTALL_PREFIX\n        \"/usr/local/qconf\" CACHE PATH \"qconf install prefix\" FORCE\n        )\nendif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)\n\ncmake_minimum_required(VERSION 2.6)\n#build libzookeeper\nexecute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND\n    patch -f -p1 -i zookeeper-3.4.5.patch)\nexecute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND ./configure\n    --prefix=${PROJECT_SOURCE_DIR}/deps/zookeeper/_install)\nexecute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND\n    make)\nexecute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND\n    make install)\nexecute_process(WORKING_DIRECTORY\n    ${PROJECT_SOURCE_DIR}/deps/zookeeper/_install/lib COMMAND\n    ar x libzookeeper_mt.a)\nexecute_process(WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/zookeeper COMMAND\n    cp src/zk_adaptor.h src/zk_hashtable.h _install/include/zookeeper)\n\nadd_subdirectory(agent)\nadd_subdirectory(driver/c++)\nadd_subdirectory(driver/sh)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.33203125,
+          "content": "QConf Copyright (c) 2015, 360. All rights reserved.\n\nThis program comes with ABSOLUTELY NO WARRANTY. Redistribution and use in \nsource and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n    * Redistributions of source code must retain the above copyright notice, this\n    list of conditions and the following disclaimer.\n\n    * Redistributions in binary form must reproduce the above copyright notice,\n    this list of conditions and the following disclaimer in the documentation\n    and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n        SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.666015625,
+          "content": "QConf\n=====\n\n[![Build Status](https://travis-ci.org/Qihoo360/QConf.svg?branch=master)](https://travis-ci.org/Qihoo360/QConf)\n\nWe have build another interesting proect [pika](https://github.com/Qihoo360/pika). Pika is a nosql compatible with redis protocol with huge storage space. You can have a try.\n\n## Introduction [中文](https://github.com/Qihoo360/QConf/blob/master/README_ZH.md)\n\nQConf is a Distributed Configuration Management System!\nA better replacement of the traditional configuration file. As designed, configuration items which is constantly accessed and modified should be completely separated with application code, and QConf is where it should be.\n\n## Features\n* Changes to any configuration will be synchronised to all client machines in real-time.\n* High query efficiency.\n* Convenient deployment and simple interface.\n* High robustness and  fault-tolerance.\n* support c/c++, shell, php, python, lua, java, go, node and etc.\n\n## Install\nThe QConf is built using CMake (version 2.6 or newer).\n\nOn most systems you can build the library using the following commands:\n``` shell\nmkdir build && cd build\ncmake ..\nmake\nmake install\n```\nAlternatively you can also point the CMake GUI tool to the CMakeLists.txt file.\n\nTo install the QConf you can specify the install prefix by setting:\n``` shell\ncmake .. -DCMAKE_INSTALL_PREFIX=/install/prefix\n```\n\n## Usage\n\n - **Set up Zookeeper servers**, create or modify znode with Zookeeper Client\n\n\t More information about Zookeper: [ZooKeeper Getting Started Guide](http://zookeeper.apache.org/doc/r3.3.3/zookeeperStarted.html)\n\t \n\n - **Register** the Zookeeper server address with QConf\n\n``` shell\nvi QCONF_INSTALL_PREFIX/conf/idc.conf\n```\n``` php\n  # all the zookeeper host configuration.\n  #[zookeeper]\n  \n  #zookeeper of idc 'test'\n  zookeeper.test=127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183\n```\n - **Assign** local idc\n``` \necho test > QCONF_INSTALL_PREFIX/conf/localidc #assign local idc to 'test'\n```\n - **Run** QConf\n\n``` shell\ncd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start\n```\n - **Code** to access QConf\n\n\n## Related\n* [zkdash](https://github.com/ireaderlab/zkdash) - An excellent dashboard for QConf or ZooKeeper provided by IReader Team\n\n\n## Performance\n1.   statergy\n * **running times** :  ten million times altogether\n * **data size** :      the size of value of each key is 1k\n * **test method** :  multi-processes are running at the same time, and get the elapsed time that ten million times are running\n * **machine** : Intel(R) Xeon(R) CPU E5-2630 0 @ 2.30GHz, 24 cores; 64G memory\n * **language** : c++\n2.   result\n * ![enter image description here](http://ww1.sinaimg.cn/bmiddle/69a9c739jw1eqgwvqxhhmj206207tdg5.jpg \"Result\")\n3. conclusion: \n * the lantency is 16μs\n * during multi-process, the QPS can reach one million\n \n## Example\n\n* **shell** \n``` shell\n    qconf get_conf /demo/node1   # get the value of '/demo/node1'\n```\n\n* **c/c++**\n``` c\n\t  // Init the qconf env\n      ret = qconf_init();\n      assert(QCONF_OK == ret);\n\n      // Get Conf value\n      char value[QCONF_CONF_BUF_MAX_LEN];\n      ret = qconf_get_conf(\"/demo/node1\", value, sizeof(value), NULL);\n      assert(QCONF_OK == ret);\n      \n      // Destroy qconf env\n      qconf_destroy();\n```\n\n## Document\n* [Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - a tutorial-style guide for developers to install, run, and program to QConf\n* [Implement](http://catkang.github.io/2015/06/23/qconf.html)\n* [wiki](https://github.com/Qihoo360/QConf/wiki)\n* [qconf video guide](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%80%E6%98%93%E9%83%A8%E7%BD%B2%E5%92%8C%E4%BD%BF%E7%94%A8)\n\n## Contact\n\n* Email: g-qconf@list.qihoo.net\n* QQ Group: 438042718 \n"
+        },
+        {
+          "name": "README_ZH.md",
+          "type": "blob",
+          "size": 3.771484375,
+          "content": "QConf\n=====\n\n我们团队开发了另外一个有意思的项目 [pika](https://github.com/Qihoo360/pika), pika 是一个兼容redis 协议的大容量的存储, 用来解决redis 内存不够的问题, 欢迎大家试试\n\n## 简介 [English](https://github.com/Qihoo360/QConf/blob/master/README.md)\nQConf 是一个分布式配置管理工具。\n用来替代传统的配置文件，使得配置信息和程序代码分离，同时配置变化能够实时同步到客户端，而且保证用户高效读取配置，这使的工程师从琐碎的配置修改、代码提交、配置上线流程中解放出来，极大地简化了配置管理工作。\n\n## 特点\n* 一处修改，所有机器实时同步更新\n* 高效读取配置\n* 安装部署方便，使用简单\n* 服务器宕机、网络中断、集群迁移等异常情况对用户透明\n* 支持c/c++、shell、php、python、lua、java、go、node 等语言\n\n\n## 编译安装\nQConf采用CMake进行构建（CMake 版本 2.6及以上）\n\n可以使用以下命令完成QConf的编译安装:\n``` shell\nmkdir build && cd build\ncmake ..\nmake\nmake install\n```\n你也可以在CMake图形界面工具中导入CMakeList.txt 文件\n\n使用如下配置可以指定QConf的安装目录:\n``` shell\ncmake .. -DCMAKE_INSTALL_PREFIX=/install/prefix\n```\n## 使用\n\n - 搭建Zookeeper集群，并通过Zookeeper Client 新建修改配置\n\n\t 关于zookeeper使用的更多信息: [ZooKeeper Getting Started Guide](http://zookeeper.apache.org/doc/r3.3.3/zookeeperStarted.html)\n\t \n\n - 在QConf 配置文件中配置Zookeeper集群地址\n\n``` shell\nvi QCONF_INSTALL_PREFIX/conf/idc.conf\n```\n``` php\n  #all the zookeeper host configuration.\n  #[zookeeper]\n  \n  #test机房zookeeper配置\n  zookeeper.test=127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183\n```\n - 在QConf配置文件中指定本地机房\n``` shell\necho test > QCONF_INSTALL_PREFIX/conf/localidc #指定本地机房为test\n```\n - 启动QConf\n\n``` shell\ncd QCONF_INSTALL_PREFIX/bin && sh agent-cmd.sh start\n```\n - 编写代码访问QConf\n \n## 相关\n* [zkdash](https://github.com/ireaderlab/zkdash) - 由掌阅团队开发的dashboad平台，可以作为QConf或ZooKeeper的管理端\n \n## 性能\n1. 测试策略\n * **测试次数** ： 循环测试1000次，每次循环获取分别获取10000个不同key对应的值，总共取一千万次key\n * **测试数据** ： 每个key对应的value的大小是1k\n * **测试方式** ： 多进程测试时候，多个进程同时运行，然后截取其中一段时间，来记录各个进程运行取一千万次的总耗时\n * **测试机器** ： Intel(R) Xeon(R) CPU E5-2630 0 @ 2.30GHz,  24核；64G memory\n * **测试语言** ： c++\n2. 测试结果 \n * ![enter image description here](http://ww1.sinaimg.cn/bmiddle/69a9c739jw1eqgw9ss6nwj20600763yu.jpg \"Qconf测试结果\")\n3. 结论\n *  单进程的延迟是16微秒左右\n *  在多进程的情况下，QPS 能够达到百万\n\n## 使用样例\n\n* **shell** \n``` shell\n    qconf get_conf /demo/node1   # get the value of '/demo/node1'\n```\n\n* **c/c++**\n``` c\n\t  // Init the qconf env\n      ret = qconf_init();\n      assert(QCONF_OK == ret);\n\n      // Get Conf value\n      char value[QCONF_CONF_BUF_MAX_LEN];\n      ret = qconf_get_conf(\"/demo/node1\", value, sizeof(value), NULL);\n      assert(QCONF_OK == ret);\n\n      // Destroy qconf env\n      qconf_destroy();\n```\n\n## 文档\n* [Getting Started](https://github.com/Qihoo360/QConf/blob/master/doc/QConf%20Getting%20Started%20Guide.md) - QConf 使用说明，包括QConf的安装，运行，API等信息\n* [实现介绍](http://catkang.github.io/2015/06/23/qconf.html)\n* [wiki](https://github.com/Qihoo360/QConf/wiki)\n* [qconf video guide](https://github.com/Qihoo360/QConf/wiki/QConf-%E7%AE%80%E6%98%93%E9%83%A8%E7%BD%B2%E5%92%8C%E4%BD%BF%E7%94%A8)\n\n\n## 联系方式\n\n* 邮箱: g-qconf@list.qihoo.net\n* QQ群: 438042718\n"
+        },
+        {
+          "name": "agent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "deps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "driver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "manager",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "monitor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

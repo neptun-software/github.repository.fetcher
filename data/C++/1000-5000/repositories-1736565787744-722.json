@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "timestamp": 1736565787744,
+    "page": 722,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjczMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "flann-lib/flann",
+      "stars": 2271,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0625,
+          "content": ".gitignore      export-ignore\n.gitattributes      export-ignore\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.244140625,
+          "content": "*.save\n.*\ntmp\n*.pyc\nsrc/matlab/*.dat\nsrc/matlab/test.m\nsrc/python/setup.py\ntest/*.h5\ntest/*.pkl\ntest/*.idx\ntest/*.dat\ntest/*.bz2\ntest/flann_multithreaded_test\ntest/flann_simple_test\ntest/flann_uint_autotune.py\nbuild\nbuild_win\ndist/\nflann.kdev4\nTODO\n\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 8.2392578125,
+          "content": "cmake_minimum_required(VERSION 2.8.12)\n\nif(COMMAND cmake_policy)\n    cmake_policy(SET CMP0003 NEW)\nendif(COMMAND cmake_policy)\n\nproject(flann)\nstring(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)\n\ninclude(${PROJECT_SOURCE_DIR}/cmake/flann_utils.cmake)\nset(FLANN_VERSION 1.9.2)\nDISSECT_VERSION()\nGET_OS_INFO()\nENABLE_TESTING()\n\n\n# detect if using the Clang compiler\nif(\"${CMAKE_C_COMPILER_ID}\" MATCHES \"Clang\")\n  set(CMAKE_COMPILER_IS_CLANG 1)\nendif ()\n\nif(\"${CMAKE_CXX_COMPILER_ID}\" MATCHES \"Clang\")\n  set(CMAKE_COMPILER_IS_CLANGXX 1)\nendif ()\n\nlist(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)\n\n# Add an \"uninstall\" target\nCONFIGURE_FILE (\"${PROJECT_SOURCE_DIR}/cmake/uninstall_target.cmake.in\"\n    \"${PROJECT_BINARY_DIR}/uninstall_target.cmake\" IMMEDIATE @ONLY)\nADD_CUSTOM_TARGET (uninstall \"${CMAKE_COMMAND}\" -P\n    \"${PROJECT_BINARY_DIR}/uninstall_target.cmake\")\n\n# Set the build type.  Options are:\n#  Debug          : w/ debug symbols, w/o optimization\n#  Release        : w/o debug symbols, w/ optimization\n#  RelWithDebInfo : w/ debug symbols, w/ optimization\n#  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries\n\nif (NOT CMAKE_BUILD_TYPE)\n    #set(CMAKE_BUILD_TYPE Release)\n    set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING \"Build type\" FORCE)\n    #set(CMAKE_BUILD_TYPE Debug)\nendif()\n\n#set the default path for built executables to the \"bin\" directory\nset(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n#set the default path for built libraries to the \"lib\" directory\nset(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)\n# set output path for tests\nset(TEST_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/test)\n\noption(BUILD_C_BINDINGS \"Build C bindings\" ON)\noption(BUILD_PYTHON_BINDINGS \"Build Python bindings\" ON)\noption(BUILD_MATLAB_BINDINGS \"Build Matlab bindings\" ON)\noption(BUILD_CUDA_LIB \"Build CUDA library\" OFF)\noption(BUILD_EXAMPLES \"Build examples\" ON)\noption(BUILD_TESTS \"Build tests\" ON)\noption(BUILD_DOC \"Build documentation\" ON)\noption(USE_OPENMP \"Use OpenMP multi-threading\" ON)\noption(USE_MPI \"Use MPI\" OFF)\n\nset(NVCC_COMPILER_BINDIR \"\" CACHE PATH  \"Directory where nvcc should look for C++ compiler. This is passed to nvcc through the --compiler-bindir option.\")\n\nif (NOT BUILD_C_BINDINGS)\n    set(BUILD_PYTHON_BINDINGS OFF)\n    set(BUILD_MATLAB_BINDINGS OFF)\nendif()\n\n\n# find python\nif (BUILD_PYTHON_BINDINGS)\nfind_package(PythonInterp)\nif (NOT PYTHON_EXECUTABLE)\n    set(BUILD_PYTHON_BINDINGS OFF)\nendif()\nendif()\n\nfind_hdf5()\nif (NOT HDF5_FOUND)\n\tmessage(WARNING \"hdf5 library not found, some tests will not be run\")\nelse()\n    include_directories(${HDF5_INCLUDE_DIR})\nendif()\n\nif (USE_MPI OR HDF5_IS_PARALLEL)\n    find_package(MPI)\nendif()\nif (HDF5_IS_PARALLEL)\n    if (NOT MPI_FOUND)\n        message(WARNING \"Found the parallel HDF5 library, but could not find the MPI library. Define the MPI_COMPILER variable to the path of your MPI compiler.\")\n    endif()\n    # Parallel HDF5 needs to find the \"mpi.h\" header file\n    include_directories(${MPI_INCLUDE_PATH})\nendif()\n\n\nif (USE_MPI)\n    if (NOT MPI_FOUND)\n        message(WARNING \"Could not find an MPI library. Define the MPI_COMPILER variable to the path of your MPI compiler.\")\n        set(USE_MPI OFF)\n    endif()\n\n    if (NOT HDF5_IS_PARALLEL)\n        message(WARNING \"For MPI support the Parallel HDF5 library is required.\")\n        set(USE_MPI OFF)\n    endif()\nendif(USE_MPI)\n\n\nif (USE_MPI AND HDF5_IS_PARALLEL)\n    find_package(Boost COMPONENTS mpi system serialization thread REQUIRED)\n    include_directories(${Boost_INCLUDE_DIRS})\n    add_definitions(\"-DHAVE_MPI\")\nendif()\n\n\nif (BUILD_TESTS)\n# find_package(GTest)\n# if (NOT GTEST_FOUND)\n# \tmessage(WARNING \"gtest library not found, some tests will not be run\")\n# endif()\nendif()\n\n\nif (USE_OPENMP)\n    find_package(OpenMP)\n    if(OPENMP_FOUND)\n        set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}\")\n        set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}\")\n        set(CMAKE_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}\")\n    else()\n        message(WARNING \"OpenMP NOT found\")\n    endif()\nendif()\n\n\n# CUDA support\nif (BUILD_CUDA_LIB)\n    find_package(CUDA)\n    if (CUDA_FOUND)\n        message(STATUS \"CUDA found (include: ${CUDA_INCLUDE_DIRS}, lib: ${CUDA_LIBRARIES})\")\n        include_directories(${CUDA_INCLUDE_DIRS})\n    else(CUDA_FOUND)\n        message(STATUS \"CUDA not found, CUDA library will not be built\")\n        set(BUILD_CUDA_LIB OFF)\n    endif(CUDA_FOUND)\nendif(BUILD_CUDA_LIB)\n\nfind_package(PkgConfig REQUIRED)\npkg_check_modules(LZ4 REQUIRED liblz4)\ninclude_directories(${LZ4_INCLUDE_DIRS})\n\n#set the C/C++ include path to the \"include\" directory\ninclude_directories(BEFORE ${PROJECT_SOURCE_DIR}/src/cpp)\n\n# require proper c++\n#add_definitions( \"-Wall -ansi -pedantic\" )\n# HDF5 uses long long which is not ansi\nif(CMAKE_C_COMPILER_ID MATCHES \"MSVC\" OR CMAKE_CXX_COMPILER_ID MATCHES \"MSVC\")\n    # lots of warnings with cl.exe right now, use /W1\n    add_definitions(\"/W1 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS /bigobj\")\nelse()\n    add_definitions( \"-Wall -Wno-unknown-pragmas -Wno-unused-function\" )\nendif()\n\n# install and export variables\nset(config_install_dir \"lib/cmake/${PROJECT_NAME}\")\nset(generated_dir \"${CMAKE_CURRENT_BINARY_DIR}/generated\")\nset(version_config \"${generated_dir}/flann-config-version.cmake\")\nset(project_config \"${generated_dir}/flann-config.cmake\")\nset(targets_export_name \"flann-targets\")\nset(namespace \"flann::\")\n\nadd_subdirectory( cmake )\nadd_subdirectory( src )\nif (BUILD_EXAMPLES)\n  add_subdirectory( examples )\nendif(BUILD_EXAMPLES)\nif (BUILD_TESTS)\n  add_subdirectory( test )\nendif (BUILD_TESTS)\nif (BUILD_DOC)\n  add_subdirectory( doc )\nendif (BUILD_DOC)\n\n# CMake configuration file creation\n# Include module with fuction 'write_basic_package_version_file'\ninclude(CMakePackageConfigHelpers)\n\n# Configure 'flann-config-version.cmake'\n# Note: FLANN_VERSION is used as a VERSION\nwrite_basic_package_version_file(\n    \"${version_config}\"\n    VERSION ${FLANN_VERSION}\n    COMPATIBILITY SameMajorVersion\n)\n\n# Configure 'flann-config.cmake'\n# Use variables:\n#   * targets_export_name\n#   * PROJECT_NAME\nconfigure_package_config_file(\n    \"cmake/Config.cmake.in\"\n    \"${project_config}\"\n    INSTALL_DESTINATION \"${config_install_dir}\"\n)\n\n# Config\n#   * <prefix>/lib/cmake/flann/flann-config.cmake\n#   * <prefix>/lib/cmake/flann/flann-config-version.cmake\ninstall(\n    FILES \"${project_config}\" \"${version_config}\"\n    DESTINATION \"${config_install_dir}\"\n)\n# Config\n#   * <prefix>/lib/cmake/flann/flann-targets.cmake\ninstall(\n    EXPORT \"${targets_export_name}\"\n    NAMESPACE \"${namespace}\"\n    DESTINATION \"${config_install_dir}\"\n)\n\n\n# CPACK options\n\n# RPM\nfind_program(RPM_PROGRAM rpm)\nif(EXISTS ${RPM_PROGRAM})\n  list(APPEND CPACK_GENERATOR \"RPM\")\nendif(EXISTS ${RPM_PROGRAM})\n# DEB\nfind_program(DPKG_PROGRAM dpkg)\nif(EXISTS ${DPKG_PROGRAM})\n  list(APPEND CPACK_GENERATOR \"DEB\")\nendif(EXISTS ${DPKG_PROGRAM})\n# NSIS\nfind_program(NSIS_PROGRAM makensis MakeNSIS)\nif(EXISTS ${NSIS_PROGRAM})\n  list(APPEND CPACK_GENERATOR \"NSIS\")\nendif(EXISTS ${NSIS_PROGRAM})\n# dpkg\nfind_program(PACKAGE_MAKER_PROGRAM PackageMaker\n\t    HINTS /Developer/Applications/Utilities)\nif(EXISTS ${PACKAGE_MAKER_PROGRAM})\n  list(APPEND CPACK_GENERATOR \"PackageMaker\")\nendif(EXISTS ${PACKAGE_MAKER_PROGRAM})\n\nset(CPACK_GENERATOR \"${CPACK_GENERATOR}\")\nset(CPACK_MONOLITHIC_INSTALL 1)\nset(CPACK_SET_DESTDIR ON)\ninclude(InstallRequiredSystemLibraries)\nset(CPACK_PACKAGE_CONTACT \"Marius Muja\")\nset(CPACK_PACKAGING_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})\nSET(CPACK_PACKAGE_VERSION ${FLANN_VERSION})\nSET(CPACK_PACKAGE_VERSION_MAJOR ${FLANN_VERSION_MAJOR})\nSET(CPACK_PACKAGE_VERSION_MINOR ${FLANN_VERSION_MINOR})\nSET(CPACK_PACKAGE_VERSION_PATCH ${FLANN_VERSION_PATCH})\ninclude(CPack)\n\n\nmessage(STATUS \"Install prefix: ${CMAKE_INSTALL_PREFIX}\")\nmessage(STATUS \"Build type: ${CMAKE_BUILD_TYPE}\")\nmessage(STATUS \"Building C bindings: ${BUILD_C_BINDINGS}\")\nmessage(STATUS \"Building examples: ${BUILD_EXAMPLES}\")\nmessage(STATUS \"Building tests: ${BUILD_TESTS}\")\nmessage(STATUS \"Building documentation: ${BUILD_DOC}\")\nmessage(STATUS \"Building python bindings: ${BUILD_PYTHON_BINDINGS}\")\nmessage(STATUS \"Building matlab bindings: ${BUILD_MATLAB_BINDINGS}\")\nmessage(STATUS \"Building CUDA library: ${BUILD_CUDA_LIB}\")\nmessage(STATUS \"Using OpenMP support: ${USE_OPENMP}\")\nmessage(STATUS \"Using MPI support: ${USE_MPI}\")\n"
+        },
+        {
+          "name": "COPYING",
+          "type": "blob",
+          "size": 1.6650390625,
+          "content": "\nThe BSD License\n\nCopyright (c) 2008-2011  Marius Muja (mariusm@cs.ubc.ca). All rights reserved.\nCopyright (c) 2008-2011  David G. Lowe (lowe@cs.ubc.ca). All rights reserved.\nCopyright (c) 2015       Google Inc (Jack Rae, jwrae@google.com). All Rights Reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n * Neither the name of the \"University of British Columbia\" nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "ChangeLog",
+          "type": "blob",
+          "size": 2.2099609375,
+          "content": "Version 1.9.2\n        * Removed redundant assignment (issue #422 @fluber)\n        * Removed unnecessary null checks before delete (issue #420 @elfring)\n        * Reverted PR #424 due to lack of portability\n        * fscanf fix (PR #467 @rdelfin)\n        * Out of bounds check (modified PR #455 @legrosbuffle, also included in PR #319 @seth-planet)\n        * Fixed MacOS build (PR #470 @johnhe4, modified for linux)\n\t* Fixed build system with dummy.c hack (PR #457 @pemmanuelviel)\n\t* Fixed misleading indentation in util/any.h (PR #365 @psteinb, also PR #428, #430, #459)\n\t* Included datasets in repo\n\t* Correct typo in definition (PR #419 @SergioRAgostinho)\n        * Fix typos (PR #279 @gadomski)\n\t* CMakefile CUDA sources fix (PR #458 @pemmanuelviel)\n\t* Documentation fix (PR #456 @pemmanuelviel)\n\t* Scoping issue fix (PR #405 @greenbrettmichael, also PR #469, issue #386)\n\t* Documentation fixes (PR #460 @pemmanuelviel)\n\t* Changed return value (PR #461 @pemmanuelviel)\n\t* Fixed CUDA crash - guarantee prealloc > 0 (PR #437 @neka-rat)\n\t* Fixed wrong variable use (PR #433 @XinyiYS)\n\t* Fixed RNG initialization (PR #424 @SiddhantRanade)\n\t* Updated link to PDF (PR #474 @kleinma)\n\nVersion 1.6.11\n\t* bug fixes\n\nVersion 1.6.10\n\t* fixed a radiusSearch bug introduced in 1.6.9\n\nVersion 1.6.9\n\t* bug fixes\n\t* fixed radius search bug on MSVC compiler\n\t* fixed windows linking problems\n\nVersion 1.6.8\n\t* bug fixes, low dimensional search speedup\n\nVersion 1.6.7\n\t* bug fixes\n\nVersion 1.6.6\n\t* misc bug fixes\n\nVersion 1.6.5\n\t* fix compilation problem on some C++ compilers\n\t* fixes in the python bindings\n\nVersion 1.6.4\n\t* small bug fix\n\nVersion 1.6.3\n\t* radius search speedup\n\nVersion 1.6.2\n\t* slight API changes to the C++ bindings, now the main index type is templated\n\t* on the distance functor which makes it easier to use custom distances\n\t* new kd-tree implementation optimized for low dimensionality data\n\t* experimental MPI support for cluster computing\n\nVersion 1.5\n\t* new C++ templated API\n\t* saving/loading of indices to disk\n\t* threadsafe search\n\t* new distance types (thanks to Radu Bogdan Rusu and Romain Thibaux for the patch)\n\t* (api change) autotuned is no longer selected by passing a precision >0, it's used when the algorithm type is set to autotuned\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.7412109375,
+          "content": "FLANN - Fast Library for Approximate Nearest Neighbors\n======================================================\n\nFLANN is a library for performing fast approximate nearest neighbor searches in high dimensional spaces. It contains a collection of algorithms we found to work best for nearest neighbor search and a system for automatically choosing the best algorithm and optimum parameters depending on the dataset.\nFLANN is written in C++ and contains bindings for the following languages: C, MATLAB, Python, and Ruby.\n\n\nDocumentation\n-------------\n\nCheck FLANN web page [here](http://www.cs.ubc.ca/research/flann).\n\nDocumentation on how to use the library can be found in the doc/manual.pdf file included in the release archives.\n\nMore information and experimental results can be found in the following paper:\n\n  * Marius Muja and David G. Lowe, \"Fast Approximate Nearest Neighbors with Automatic Algorithm Configuration\", in International Conference on Computer Vision Theory and Applications (VISAPP'09), 2009 [(PDF)](https://www.cs.ubc.ca/research/flann/uploads/FLANN/flann_visapp09.pdf) [(BibTex)](http://people.cs.ubc.ca/~mariusm/index.php/FLANN/BibTex)\n\n\nGetting FLANN\n-------------\n\nIf you want to try out the latest changes or contribute to FLANN, then it's recommended that you checkout the git source repository: `git clone git://github.com/mariusmuja/flann.git`\n\nIf you just want to browse the repository, you can do so by going [here](https://github.com/mariusmuja/flann).\n\n\nConditions of use\n-----------------\n\nFLANN is distributed under the terms of the [BSD License](https://github.com/mariusmuja/flann/blob/master/COPYING).\n\nBug reporting\n-------------\n\nPlease report bugs or feature requests using [github's issue tracker](http://github.com/mariusmuja/flann/issues).\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "datasets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

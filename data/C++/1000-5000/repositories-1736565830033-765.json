@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736565830033,
+    "page": 765,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wjwwood/serial",
+      "stars": 2183,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2431640625,
+          "content": ".*\n.DS_Store\n*.coverage\n*.egg-info\n*.log\n*.swp\n*.pyc\n*.pyo\n*.zip\n*/files/*\n*/tmp/*\n*.hwm*\n*.cfg\n*.out\n.svn\nbuild\nbin\nlib\ncpp\n*/lib/*\ninstalled\npatched\nwiped\nmsg_gen\nsrv_gen\ndoc/html\n*sublime-workspace\n*.user\n*.suo\n*.sdf\n*.opensdf\nipch\nDebug\nRelease\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.234375,
+          "content": "os:\n  - linux\n  - osx\nlanguage: cpp\ninstall:\n  - make install_deps\n  - source setup.bash\nscript:\n  - mkdir build && cd build && cmake .. -DPYTHON_EXECUTABLE=$(which python2) && make && make tests && make run_tests\n  - catkin_test_results .\n"
+        },
+        {
+          "name": "CHANGELOG.rst",
+          "type": "blob",
+          "size": 3.7431640625,
+          "content": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nChangelog for package serial\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n1.2.1 (2015-04-21)\n------------------\n* Removed the use of a C++11 feature for compatibility with older browsers.\n* Fixed an issue with cross compiling with mingw on Windows.\n* Restructured Visual Studio project layout.\n* Added include of ``#include <AvailabilityMacros.h>`` on OS X (listing of ports).\n* Fixed MXE for the listing of ports on Windows.\n* Now closes file device if ``reconfigureDevice`` fails (Windows).\n* Added the MARK/SPACE parity bit option, also made it optional.\n  Adding the enumeration values for MARK and SPACE was the only code change to an API header.\n  It should not affect ABI or API.\n* Added support for 576000 baud on Linux.\n* Now releases iterator properly in listing of ports code for OS X.\n* Fixed the ability to open COM ports over COM10 on Windows.\n* Fixed up some documentation about exceptions in ``serial.h``.\n\n1.2.0 (2014-07-02)\n------------------\n* Removed vestigial ``read_cache_`` private member variable from Serial::Serial\n* Fixed usage of scoped locks\n  Previously they were getting destroyed immediately because they were not stored in a temporary scope variable\n* Added check of return value from close in Serial::SerialImpl::close () in unix.cc and win.cc\n* Added ability to enumerate ports on linux and windows.\n  Updated serial_example.cc to show example of port enumeration.\n* Fixed compile on VS2013\n* Added functions ``waitReadable`` and ``waitByteTimes`` with implemenations for Unix to support high performance reading\n* Contributors: Christopher Baker, Craig Lilley, Konstantina Kastanara, Mike Purvis, William Woodall\n\n1.1.7 (2014-02-20)\n------------------\n* Improved support for mingw (mxe.cc)\n* Fix compilation warning\n  See issue `#53 <https://github.com/wjwwood/serial/issues/53>`_\n* Improved timer handling in unix implementation\n* fix broken ifdef _WIN32\n* Fix broken ioctl calls, add exception handling.\n* Code guards for platform-specific implementations. (when not using cmake / catkin)\n* Contributors: Christopher Baker, Mike Purvis, Nicolas Bigaouette, William Woodall, dawid\n\n1.1.6 (2013-10-17)\n------------------\n* Move stopbits_one_point_five to the end of the enum, so that it doesn't alias with stopbits_two.\n\n1.1.5 (2013-09-23)\n------------------\n* Fix license labeling, I put BSD, but the license has always been MIT...\n* Added Microsoft Visual Studio 2010 project to make compiling on Windows easier.\n* Implemented Serial::available() for Windows\n* Update how custom baudrates are handled on OS X\n  This is taken from the example serial program on Apple's developer website, see:\n  http://free-pascal-general.1045716.n5.nabble.com/Non-standard-baud-rates-in-OS-X-IOSSIOSPEED-IOCTL-td4699923.html\n* Timout settings are now applied by reconfigurePort\n* Pass LPCWSTR to CreateFile in Windows impl\n* Use wstring for ``port_`` type in Windows impl\n\n1.1.4 (2013-06-12 00:13:18 -0600)\n---------------------------------\n* Timing calculation fix for read and write.\n  Fixes `#27 <https://github.com/wjwwood/serial/issues/27>`_\n* Update list of exceptions thrown from constructor.\n* fix, by Thomas Hoppe <thomas.hoppe@cesys.com>\n  For SerialException's:\n  * The name was misspelled...\n  * Use std::string's for error messages to prevent corruption of messages on some platforms\n* alloca.h does not exist on OpenBSD either.\n\n1.1.3 (2013-01-09 10:54:34 -0800)\n---------------------------------\n* Install headers\n\n1.1.2 (2012-12-14 14:08:55 -0800)\n---------------------------------\n* Fix buildtool depends\n\n1.1.1 (2012-12-03)\n------------------\n* Removed rt linking on OS X. Fixes `#24 <https://github.com/wjwwood/serial/issues/24>`_.\n\n1.1.0 (2012-10-24)\n------------------\n* Previous history is unstructured and therefore has been truncated. See the commit messages for more info.\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.0244140625,
+          "content": "cmake_minimum_required(VERSION 2.8.3)\nproject(serial)\n\n# Find catkin\nfind_package(catkin REQUIRED)\n\nif(APPLE)\n    find_library(IOKIT_LIBRARY IOKit)\n    find_library(FOUNDATION_LIBRARY Foundation)\nendif()\n\nif(UNIX AND NOT APPLE)\n    # If Linux, add rt and pthread\n    set(rt_LIBRARIES rt)\n    set(pthread_LIBRARIES pthread)\n    catkin_package(\n        LIBRARIES ${PROJECT_NAME}\n        INCLUDE_DIRS include\n        DEPENDS rt pthread\n    )\nelse()\n    # Otherwise normal call\n    catkin_package(\n        LIBRARIES ${PROJECT_NAME}\n        INCLUDE_DIRS include\n    )\nendif()\n\n## Sources\nset(serial_SRCS\n    src/serial.cc\n    include/serial/serial.h\n    include/serial/v8stdint.h\n)\nif(APPLE)\n    # If OSX\n    list(APPEND serial_SRCS src/impl/unix.cc)\n    list(APPEND serial_SRCS src/impl/list_ports/list_ports_osx.cc)\nelseif(UNIX)\n    # If unix\n    list(APPEND serial_SRCS src/impl/unix.cc)\n    list(APPEND serial_SRCS src/impl/list_ports/list_ports_linux.cc)\nelse()\n    # If windows\n    list(APPEND serial_SRCS src/impl/win.cc)\n    list(APPEND serial_SRCS src/impl/list_ports/list_ports_win.cc)\nendif()\n\n## Add serial library\nadd_library(${PROJECT_NAME} ${serial_SRCS})\nif(APPLE)\n    target_link_libraries(${PROJECT_NAME} ${FOUNDATION_LIBRARY} ${IOKIT_LIBRARY})\nelseif(UNIX)\n    target_link_libraries(${PROJECT_NAME} rt pthread)\nelse()\n    target_link_libraries(${PROJECT_NAME} setupapi)\nendif()\n\n## Uncomment for example\nadd_executable(serial_example examples/serial_example.cc)\nadd_dependencies(serial_example ${PROJECT_NAME})\ntarget_link_libraries(serial_example ${PROJECT_NAME})\n\n## Include headers\ninclude_directories(include)\n\n## Install executable\ninstall(TARGETS ${PROJECT_NAME}\n    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}\n    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}\n    RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}\n)\n\n## Install headers\ninstall(FILES include/serial/serial.h include/serial/v8stdint.h\n  DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION}/serial)\n\n## Tests\nif(CATKIN_ENABLE_TESTING)\n    add_subdirectory(tests)\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "Copyright (c) 2012 William Woodall, John Harrison\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.646484375,
+          "content": "all: serial\n\nCMAKE_FLAGS := -DCMAKE_INSTALL_PREFIX=/tmp/usr/local\nUNAME := $(shell uname -s)\n\ninstall_deps:\nifeq ($(UNAME),Darwin)\n\tbrew tap ros/deps\n\tbrew update\n\tbrew outdated boost || brew upgrade boost || brew install boost\n\tbrew outdated python || brew upgrade python || brew install python\n\tsudo -H python2 -m pip install -U pip setuptools\n\tsudo -H python2 -m pip install --force-reinstall --no-deps -U pip\n\tsudo -H python2 -m pip install rosinstall_generator wstool rosdep empy catkin_pkg\n\tsudo -H rosdep init\n\trosdep update\n\tmkdir catkin_ws\n\tcd catkin_ws && rosinstall_generator catkin --rosdistro hydro --tar > catkin.rosinstall\n\tcd catkin_ws && wstool init src catkin.rosinstall\n\tcd catkin_ws && rosdep install --from-paths src --ignore-src -y\n\tcd catkin_ws && python2 ./src/catkin/bin/catkin_make -DPYTHON_EXECUTABLE=`which python2` install\n\techo \"source catkin_ws/install/setup.bash\" > setup.bash\nelse\n\tsudo sh -c 'echo \"deb http://packages.ros.org/ros/ubuntu precise main\" > /etc/apt/sources.list.d/ros-latest.list'\n\twget http://packages.ros.org/ros.key -O - | sudo apt-key add -\n\tsudo apt-get update\n\tsudo apt-get install ros-hydro-catkin libboost-dev\n\techo \"source /opt/ros/hydro/setup.bash\" > setup.bash\nendif\n\ninstall:\n\tcd build && make install\n\nserial:\n\t@mkdir -p build\n\tcd build && cmake $(CMAKE_FLAGS) ..\nifneq ($(MAKE),)\n\tcd build && $(MAKE)\nelse\n\tcd build && make\nendif\n\n.PHONY: clean\nclean:\n\trm -rf build\n\n.PHONY: doc\ndoc:\n\t@doxygen doc/Doxyfile\nifeq ($(UNAME),Darwin)\n\t@open doc/html/index.html\nendif\n\n.PHONY: test\ntest:\n\t@mkdir -p build\n\tcd build && cmake $(CMAKE_FLAGS) ..\nifneq ($(MAKE),)\n\tcd build && $(MAKE) run_tests\nelse\n\tcd build && make run_tests\nendif\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.076171875,
+          "content": "# Serial Communication Library\n\n[![Build Status](https://travis-ci.org/wjwwood/serial.svg?branch=master)](https://travis-ci.org/wjwwood/serial)*(Linux and OS X)* [![Build Status](https://ci.appveyor.com/api/projects/status/github/wjwwood/serial)](https://ci.appveyor.com/project/wjwwood/serial)*(Windows)*\n\nThis is a cross-platform library for interfacing with rs-232 serial like ports written in C++. It provides a modern C++ interface with a workflow designed to look and feel like PySerial, but with the speed and control provided by C++. \n\nThis library is in use in several robotics related projects and can be built and installed to the OS like most unix libraries with make and then sudo make install, but because it is a catkin project it can also be built along side other catkin projects in a catkin workspace.\n\nSerial is a class that provides the basic interface common to serial libraries (open, close, read, write, etc..) and requires no extra dependencies. It also provides tight control over timeouts and control over handshaking lines. \n\n### Documentation\n\nWebsite: http://wjwwood.github.io/serial/\n\nAPI Documentation: http://wjwwood.github.io/serial/doc/1.1.0/index.html\n\n### Dependencies\n\nRequired:\n* [catkin](http://www.ros.org/wiki/catkin) - cmake and Python based buildsystem\n* [cmake](http://www.cmake.org) - buildsystem\n* [Python](http://www.python.org) - scripting language\n  * [empy](http://www.alcyone.com/pyos/empy/) - Python templating library\n  * [catkin_pkg](http://pypi.python.org/pypi/catkin_pkg/) - Runtime Python library for catkin\n\nOptional (for documentation):\n* [Doxygen](http://www.doxygen.org/) - Documentation generation tool\n* [graphviz](http://www.graphviz.org/) - Graph visualization software\n\n### Install\n\nGet the code:\n\n    git clone https://github.com/wjwwood/serial.git\n\nBuild:\n\n    make\n\nBuild and run the tests:\n\n    make test\n\nBuild the documentation:\n\n    make doc\n\nInstall:\n\n    make install\n\n### License\n\n[The MIT License](LICENSE)\n\n### Authors\n\nWilliam Woodall <wjwwood@gmail.com>\nJohn Harrison <ash.gti@gmail.com>\n\n### Contact\n\nWilliam Woodall <william@osrfoundation.org>\n"
+        },
+        {
+          "name": "changes.txt",
+          "type": "blob",
+          "size": 0.2529296875,
+          "content": "# 1.1.0 10-24-2012\n\n* Converted the build system to catkin\n\n# v1.0.1 8-27-2012\n\n* Added baudrates: 1000000, 11520000, 2000000, 2500000, 3000000, 3500000, and 4000000\n* Linking related bug fixes on Linux and OS X\n* Custom baudrate bug fix.  Closes issue #18.\n\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.xml",
+          "type": "blob",
+          "size": 0.7958984375,
+          "content": "<?xml version=\"1.0\"?>\n<package>\n  <name>serial</name>\n  <version>1.2.1</version>\n  <description>\n    Serial is a cross-platform, simple to use library for using serial ports on computers.\n    This library provides a C++, object oriented interface for interacting with RS-232\n    like devices on Linux and Windows.\n  </description>\n\n  <maintainer email=\"william@osrfoundation.org\">William Woodall</maintainer>\n\n  <license>MIT</license>\n\n  <url type=\"website\">http://wjwwood.github.com/serial/</url>\n  <url type=\"repository\">https://github.com/wjwwood/serial</url>\n  <url type=\"bugtracker\">https://github.com/wjwwood/serial/issues</url>\n\n  <author email=\"wjwwood@gmail.com\">William Woodall</author>\n  <author email=\"ash.gti@gmail.com\">John Harrison</author>\n\n  <buildtool_depend>catkin</buildtool_depend>\n\n</package>\n"
+        },
+        {
+          "name": "serial.sublime-project",
+          "type": "blob",
+          "size": 0.5615234375,
+          "content": "{\n\t\"word_wrap\": \"on\",\n    \"wrap_width\": 80,\n\t\"folders\":\n\t[\n\t\t{\n\t\t\t\"path\": \"./\"\n\t\t}\n\t],\n\t\"settings\":\n\t{\n\t\t\"sublimeclang_options\":\n\t\t[\n\t\t\t\"-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include/c++/v1\",\n\t\t\t\"-I/usr/local/include\",\n\t\t\t\"-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/9.0.0/include\",\n\t\t\t\"-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include\",\n\t\t\t\"-I/usr/include\",\n\t\t\t\"-I${folder:${project_path:serial.sublime-project}}/include\",\n\t\t]\n\t}\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "visual_studio",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

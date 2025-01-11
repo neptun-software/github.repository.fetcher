@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "timestamp": 1736565836697,
+    "page": 773,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "HKUST-Aerial-Robotics/A-LOAM",
+      "stars": 2171,
+      "defaultBranch": "devel",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0078125,
+          "content": ".vscode/"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.2431640625,
+          "content": "cmake_minimum_required(VERSION 2.8.3)\nproject(aloam_velodyne)\n\nset(CMAKE_BUILD_TYPE \"Release\")\nset(CMAKE_CXX_FLAGS \"-std=c++11\")\nset(CMAKE_CXX_FLAGS_RELEASE \"-O3 -Wall -g\")\n\nfind_package(catkin REQUIRED COMPONENTS\n  geometry_msgs\n  nav_msgs\n  sensor_msgs\n  roscpp\n  rospy\n  rosbag\n  std_msgs\n  image_transport\n  cv_bridge\n  tf\n)\n\n#find_package(Eigen3 REQUIRED)\nfind_package(PCL REQUIRED)\nfind_package(OpenCV REQUIRED)\nfind_package(Ceres REQUIRED)\n\ninclude_directories(\n  include\n\t${catkin_INCLUDE_DIRS} \n\t${PCL_INCLUDE_DIRS}\n  ${CERES_INCLUDE_DIRS}\n  ${OpenCV_INCLUDE_DIRS})\n\ncatkin_package(\n  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp rospy std_msgs\n  DEPENDS EIGEN3 PCL \n  INCLUDE_DIRS include\n)\n\n\nadd_executable(ascanRegistration src/scanRegistration.cpp)\ntarget_link_libraries(ascanRegistration ${catkin_LIBRARIES} ${PCL_LIBRARIES})\n\nadd_executable(alaserOdometry src/laserOdometry.cpp)\ntarget_link_libraries(alaserOdometry ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})\n\nadd_executable(alaserMapping src/laserMapping.cpp)\ntarget_link_libraries(alaserMapping ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES})\n\nadd_executable(kittiHelper src/kittiHelper.cpp)\ntarget_link_libraries(kittiHelper ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBS})\n\n\n\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.876953125,
+          "content": "This is an advanced implementation of the algorithm described in the following paper:\n  J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.\n    Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014. \n\nModifier: Tong Qin               qintonguav@gmail.com\n\t  Shaozu Cao \t\t saozu.cao@connect.ust.hk\n\nCopyright 2013, Ji Zhang, Carnegie Mellon University\nFurther contributions copyright (c) 2016, Southwest Research Institute\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n3. Neither the name of the copyright holder nor the names of its contributors\n   may be used to endorse or promote products derived from this software without\n   specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,OR\nTORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF\nTHIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.9990234375,
+          "content": "# A-LOAM\n## Advanced implementation of LOAM\n\nA-LOAM is an Advanced implementation of LOAM (J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time), which uses Eigen and Ceres Solver to simplify code structure. This code is modified from LOAM and [LOAM_NOTED](https://github.com/cuitaixiang/LOAM_NOTED). This code is clean and simple without complicated mathematical derivation and redundant operations. It is a good learning material for SLAM beginners.\n\n<img src=\"https://github.com/HKUST-Aerial-Robotics/A-LOAM/blob/devel/picture/kitti.png\" width = 55% height = 55%/>\n\n**Modifier:** [Tong Qin](http://www.qintonguav.com), [Shaozu Cao](https://github.com/shaozu)\n\n\n## 1. Prerequisites\n### 1.1 **Ubuntu** and **ROS**\nUbuntu 64-bit 16.04 or 18.04.\nROS Kinetic or Melodic. [ROS Installation](http://wiki.ros.org/ROS/Installation)\n\n\n### 1.2. **Ceres Solver**\nFollow [Ceres Installation](http://ceres-solver.org/installation.html).\n\n### 1.3. **PCL**\nFollow [PCL Installation](http://www.pointclouds.org/downloads/linux.html).\n\n\n## 2. Build A-LOAM\nClone the repository and catkin_make:\n\n```\n    cd ~/catkin_ws/src\n    git clone https://github.com/HKUST-Aerial-Robotics/A-LOAM.git\n    cd ../\n    catkin_make\n    source ~/catkin_ws/devel/setup.bash\n```\n\n## 3. Velodyne VLP-16 Example\nDownload [NSH indoor outdoor](https://drive.google.com/file/d/1s05tBQOLNEDDurlg48KiUWxCp-YqYyGH/view) to YOUR_DATASET_FOLDER. \n\n```\n    roslaunch aloam_velodyne aloam_velodyne_VLP_16.launch\n    rosbag play YOUR_DATASET_FOLDER/nsh_indoor_outdoor.bag\n```\n\n\n## 4. KITTI Example (Velodyne HDL-64)\nDownload [KITTI Odometry dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) to YOUR_DATASET_FOLDER and set the `dataset_folder` and `sequence_number` parameters in `kitti_helper.launch` file. Note you also convert KITTI dataset to bag file for easy use by setting proper parameters in `kitti_helper.launch`. \n\n```\n    roslaunch aloam_velodyne aloam_velodyne_HDL_64.launch\n    roslaunch aloam_velodyne kitti_helper.launch\n```\n<img src=\"https://github.com/HKUST-Aerial-Robotics/A-LOAM/blob/devel/picture/kitti_gif.gif\" width = 720 height = 351 />\n\n## 5. Docker Support\nTo further facilitate the building process, we add docker in our code. Docker environment is like a sandbox, thus makes our code environment-independent. To run with docker, first make sure [ros](http://wiki.ros.org/ROS/Installation) and [docker](https://docs.docker.com/install/linux/docker-ce/ubuntu/) are installed on your machine. Then add your account to `docker` group by `sudo usermod -aG docker $YOUR_USER_NAME`. **Relaunch the terminal or logout and re-login if you get `Permission denied` error**, type:\n```\ncd ~/catkin_ws/src/A-LOAM/docker\nmake build\n```\nThe build process may take a while depends on your machine. After that, run `./run.sh 16` or `./run.sh 64` to launch A-LOAM, then you should be able to see the result.\n\n\n## 6.Acknowledgements\nThanks for LOAM(J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time) and [LOAM_NOTED](https://github.com/cuitaixiang/LOAM_NOTED).\n\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "launch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.xml",
+          "type": "blob",
+          "size": 1.2587890625,
+          "content": "<?xml version=\"1.0\"?>\n<package>\n  <name>aloam_velodyne</name>\n  <version>0.0.0</version>\n\n  <description>\n    This is an advanced implentation of LOAM.\n    LOAM is described in the following paper:\n    J. Zhang and S. Singh. LOAM: Lidar Odometry and Mapping in Real-time.\n      Robotics: Science and Systems Conference (RSS). Berkeley, CA, July 2014.\n  </description>\n\n  <maintainer email=\"qintonguav@gmail.com\">qintong</maintainer>\n\n  <license>BSD</license>\n\n  <author email=\"zhangji@cmu.edu\">Ji Zhang</author>\n  \n  <buildtool_depend>catkin</buildtool_depend>\n  <build_depend>geometry_msgs</build_depend>\n  <build_depend>nav_msgs</build_depend>\n  <build_depend>roscpp</build_depend>\n  <build_depend>rospy</build_depend>\n  <build_depend>std_msgs</build_depend>  \n  <build_depend>rosbag</build_depend>\n  <build_depend>sensor_msgs</build_depend>\n  <build_depend>tf</build_depend>\n  <build_depend>image_transport</build_depend>\n  \n  <run_depend>geometry_msgs</run_depend>\n  <run_depend>nav_msgs</run_depend>\n  <run_depend>sensor_msgs</run_depend>\n  <run_depend>roscpp</run_depend>\n  <run_depend>rospy</run_depend>\n  <run_depend>std_msgs</run_depend>\n  <run_depend>rosbag</run_depend>\n  <run_depend>tf</run_depend>\n  <run_depend>image_transport</run_depend>\n\n  <export>\n  </export>\n</package>\n"
+        },
+        {
+          "name": "picture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rviz_cfg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

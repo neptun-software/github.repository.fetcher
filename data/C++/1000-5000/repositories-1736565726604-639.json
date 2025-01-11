@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "timestamp": 1736565726604,
+    "page": 639,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "SFUMECJF/cmake-examples-Chinese",
+      "stars": 2408,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": "01-basic",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "02-sub-projects",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "03-code-generation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CMake-scope.md",
+          "type": "blob",
+          "size": 5.2880859375,
+          "content": "这三个属性在不同命令中有不同的含义。\n我把它总结为一个表格，如果看不太明白，再看下方的翻译。\n\n![在这里插入图片描述](https://gitee.com/umecjf/figures/raw/master/2020051109320685.png)\n\n\n\n下面的内容均来自Cmake英文官方手册。主要是翻译了三处CMake手册的介绍。\n\n\n对于target_link_libraries（）我认为这三个变量是用来控制库传递过程中，库所包含的依赖是否也能被连接到这个库的其他目标所包含。同时，这个手册建议，根据库的cpp以及库的h(注意不是工程)是否用到依赖，来设置这个依赖的scope范围。\n\n对于target_include_directories()这三个关键词设置了这个目录A会被包含到目标B的哪个属性，同时，在使用target_link_libraries（）将目标B链接给目标C的时候，B所包含的目录也会因为关键字的设置而决定是否能被C包含。\n\n英文原文：\n\nhttps://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#build-specification-and-usage-requirements\n英文翻译：\n\n传递用法要求\n目标的使用要求可以传递给依赖对象。 target_link_libraries（）命令具有PRIVATE，INTERFACE和PUBLIC关键字来控制传播使用要求。\n\n```c\nadd_library(archive archive.cpp)\ntarget_compile_definitions(archive INTERFACE USING_ARCHIVE_LIB)\n\nadd_library(serialization serialization.cpp)\ntarget_compile_definitions(serialization INTERFACE USING_SERIALIZATION_LIB)\n\nadd_library(archiveExtras extras.cpp)\ntarget_link_libraries(archiveExtras PUBLIC archive)\ntarget_link_libraries(archiveExtras PRIVATE serialization)\n# archiveExtras is compiled with -DUSING_ARCHIVE_LIB\n# and -DUSING_SERIALIZATION_LIB\n\nadd_executable(consumer consumer.cpp)\n# consumer is compiled with -DUSING_ARCHIVE_LIB\ntarget_link_libraries(consumer archiveExtras)\n```\n\n因为`archive`库是目标`archiveExtras`的PUBLIC依赖项，所以它（`archive`）的使用要求也传播到了`consumer`。因为`serialization`是`archiveExtras`的`PRIVATE`依赖项，所以它（`serialization`）的使用要求不会传播到`consumer`。\n通常，如果只有库的实现而不是头文件使用了依赖项（生成库的cpp文件中使用依赖项，但是库所包含的头文件没有包含依赖项），则应在使用target_link_libraries（）时用PRIVATE关键字指定依赖项。如果在库的头文件中还使用了依赖项（例如，用于类继承），则应将其指定为PUBLIC依赖项。库的实现不使用依赖项，而是仅由其头文件使用的依赖项应指定为INTERFACE依赖项。\n\n可以通过多次使用每个关键字来调用target_link_libraries（）命令：\n\n```cmake\ntarget_link_libraries(archiveExtras\n  PUBLIC archive\n  PRIVATE serialization\n)\n```\n英文原文：\nhttps://cmake.org/cmake/help/latest/command/target_include_directories.html \n英文翻译：\ntarget_include_directories\n将包含目录添加到目标。\n\n```cmake\ntarget_include_directories(<target> [SYSTEM] [BEFORE]\n  <INTERFACE|PUBLIC|PRIVATE> [items1...]\n  [<INTERFACE|PUBLIC|PRIVATE> [items2...] ...])\n```\n\n在编译给定目标时,要指定包含目录。<target>必须由诸如add_executable（）或add_library（）之类的命令创建，并且不能为ALIAS(别名)目标。\n\n如果指定了BEFORE，则内容将被添加到该属性的前面，而不是被附加。\n\nINTERFACE，PUBLIC和PRIVATE关键字来指定以下参数的范围。 PRIVATE和PUBLIC项目将放到<target>的INCLUDE_DIRECTORIES变量里。 PUBLIC和INTERFACE项目将放到<target>的INTERFACE_INCLUDE_DIRECTORIES变量里。 （导入的目标仅支持INTERFACE项。）以下参数指定包含目录。\n\n指定的包含目录可以是绝对路径或相对路径。对相同<target>的重复调用将按调用顺序追加项目。如果指定了SYSTEM，则会在某些平台上告知编译器目录为系统包含目录（对此设置进行信号化可能会产生效果，例如编译器跳过警告，或者在依赖性计算中不考虑这些固定安装的系统文件-请参阅编译器文档）。如果将SYSTEM与PUBLIC或INTERFACE一起使用，则INTERFACE_SYSTEM_INCLUDE_DIRECTORIES目标属性将使用指定的目录填充。\n\n\n英文原文：\n https://cmake.org/cmake/help/latest/command/target_link_libraries.html?highlight=target_link_libraries#libraries-for-both-a-target-and-its-dependents \n 英文翻译：\n```cmake\ntarget_link_libraries(<target> <item>...)\n```\n\n默认情况下，使用这个函数（signature）的库依赖关系是可传递的（我认为默认是PUBLIC关键词）。 当这个目标（假设为库A，我认为不是库无法被链接，所以如果这是一个单纯的可执行文件，那么这个scope关键词就没有意义）被链接到另一个目标（目标B）时，链接到这个目标（库A）的库也可以被另一个目标（目标B）链接上。\n\n这个可传递的“链接接口”存储在INTERFACE_LINK_LIBRARIES目标属性中，可以直接设置该属性。 当CMP0022未设置为NEW时，将建立传递链接，但可被LINK_INTERFACE_LIBRARIES属性覆盖。 调用此命令的其他签名可能会设置该属性，从而使由该签名专有链接的任何库都变为私有。\n\n欢迎关注我的公众号一起交流讨论：\n公众号名称：三丰杂货铺\n![在这里插入图片描述](https://gitee.com/umecjf/figures/raw/master/2020051109320685.png)"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.7744140625,
+          "content": "<table border=\"0\" width=\"10%\" align=\"center\">\n  <tr>\n    <td><img src=\"https://img1.github.io/tmp/1.jpg\" height=\"80\" width=\"82\"></td>\n    <td><img src=\"https://img1.github.io/tmp/2.jpg\" height=\"80\" width=\"82\"></td>\n    <td><img src=\"https://img1.github.io/tmp/3.jpg\" height=\"80\" width=\"82\"></td>\n  </tr>\n  <tr>\n    <td><img src=\"https://img1.github.io/tmp/4.jpg\" height=\"80\" width=\"82\"></td>\n    <td><img src=\"https://img.shields.io/github/stars/SFUMECJF/cmake-examples-Chinese.svg?style=social\"></td>\n    <td><img src=\"https://img1.github.io/tmp/6.jpg\" height=\"82\" width=\"82\"></td>\n  </tr>\n   <tr>\n    <td><img src=\"https://img1.github.io/tmp/7.jpg\" height=\"82\" width=\"82\"></td>\n    <td><img src=\"https://img1.github.io/tmp/8.jpg\" height=\"82\" width=\"82\"></td>\n    <td><img src=\"https://img1.github.io/tmp/9.jpg\" height=\"82\" width=\"82\"></td>\n  </tr>\n</table>\n\n<p align=\"center\">\n  <a href=\"https://github.com/vuejs/vue\">\n    <img src=\"https://img.shields.io/badge/ubuntu-1604/1804/2004-brightgreen.svg\" alt=\"ubuntu\">\n  </a>\n  <a href=\"https://github.com/vuejs/vue-router\">\n    <img src=\"https://img.shields.io/badge/Language-C++--shell-brightred.svg\" alt=\"vue-router\">\n  </a>\n  <a href=\"https://github.com/vuejs/vuex\">\n    <img src=\"https://img.shields.io/badge/学习方式-在线阅读-brightgreen.svg\" alt=\"vuex\">\n  </a>\n</p>  \n\n\n仓库受到的关注度越来越高，考虑到大家学习容易出现问题，现在创建一个qq交流群：433323162。微信群可以扫码加入。    \n\n\n# cmake-examples-Chinese\n\n项目在线阅读电子书地址：[通过例子学习CMake](https://sfumecjf.github.io/cmake-examples-Chinese/)\n\n本教程全部采用中文，通过一个个例子帮助读者由浅入深逐渐理解CMake的语法。教程主要来源于github优秀CMake项目，项目贡献者在翻译中，又查阅CMake官方手册，或者与已经工作的C++开发者交流，对于模糊的地方予以详细说明。\n\n非常适合完全没接触过CMake以及shell的人从头阅读。\n\n另外，在部署过程中，main分支的代码会比在线电子书的更新进度快，因为页面部署总是出现问题。最近打算弃用部署页面的`gitbook`工具（它已经过时了，过时至少2年）。\n\n\n**觉得有用的话，希望给个star哦～**\n##  什么是cmake\nCMake是一个跨平台的安装（编译）工具，可以用简单的语句来描述所有平台的安装(编译过程)。他能够输出各种各样的makefile或者project文件，CMake 的组态档取名为 CMakeLists.txt。也就是在CMakeLists.txt这个文件中写cmake代码。\n一句话：cmake就是将多个cpp、hpp文件组合构建为一个大工程的语言。\n\n##  本cmake系列介绍\n首先大家学习cmake一定会遇到《cmake practice》这本书，但是纯粹讲理论，如果没有实践的话是学不会的。<mark>learning by doing</mark>是学习各种知识的不二法门。\n\n另外，在不太大的工程中，其实cmake也不需要钻研到多深入，日后工作用得多了自然就会了。比如说PRIVATE、INTERFACE、PUBLIC这三个参数在实际中的用途，当时请教了wps的一位前辈，最终的理解在这篇文章中[cmake-scope](https://github.com/SFUMECJF/cmake-examples-Chinese/blob/main/CMake-scope.md)。他自己也是偶尔有一次用这三个参数测试了一下，其他时候不怎么关心。\n\n而如果作为在校学生，花费很多时间钻这块内容，不实践也很快会忘掉。所以，基本上cmake写出来，能用就行，学习阶段不要钻牛角尖，工作了再钻研。\n\n如果想要快速入门，直接学习`01-basic`即可，学完就可以动手编写自己的工程了。有时间可以学习`02-sub-projects`以及`03-code-generation`。\n\n另外，大家学习CMake的主要目的还是用于实操，所以本文作者在第4个文件夹`实践案例`中提供了使用CMake包含`Open CV`,`dcmtk`, `qt`的CMake工程，大家可以直接下载使用，根据里面的readme进行初步配置。如果遇到错误可以告诉我，我来修改。\n\n## 学习途径\n\n推荐在线阅读该电子书，快速过一遍知识点。\n\n时间充足想打基础的人，可以结合[原项目例子](https://github.com/ttroy50/cmake-examples)，在Linux系统下载运行代码。当遇到有疑问的地方，查阅本项目手册。\n\n\n\n点个star以后，直接将本github克隆到本地或者fork,欢迎PR。\n\n```shell\ngit clone https://github.com/SFUMECJF/cmake-examples-Chinese.git\n```\n##  微信公众号\n最后，博主也只是一个初学者罢了，只是把自己学习过程中的东西做了总结，如果大家有什么想法，欢迎指正。我的微信公众号如下：\n现阶段主要总结计算机视觉知识：Qt，C++，CMake,OpenCV等等\n公众号名称：三丰杂货铺\n\n![在这里插入图片描述](https://img-blog.csdnimg.cn/20200529103009878.gif#pic_center)\n"
+        },
+        {
+          "name": "SUMMARY.md",
+          "type": "blob",
+          "size": 1.7734375,
+          "content": "# Summary\n\n* [前言](README.md)\n* [1  基本例程](01-basic/README.adoc)\n    * [1.1  hello-CMake](01-basic/1.1  hello-cmake.md)\n    * [1.2  包含头文件](01-basic/1.2  hello-headers.md)\n    * [1.3  包含静态库](01-basic/1.3  Static Library.md)\n    * [1.4  包含动态库](01-basic/1.4  Shared Library.md)\n    * [1.5  设置构建类型](01-basic/1.5  build-type.md)\n    * [1.6  设置编译方式](01-basic/1.6  Compile Flags.md)\n    * [1.7  包含第三方库](01-basic/1.7  Including Third Party Library.md)\n    * [1.8  使用clang编译工程](01-basic/1.8 compiling-with-clang.adoc)\n    * [1.9  使用ninja构建工程](01-basic/1.9 J-building-with-ninja.adoc)\n    * [1.10  导入目标](01-basic/1.10 imported-targets.adoc)\n    * [1.11 C++标准](01-basic/1.11 cpp-standard.adoc)\n* 2  [子目录中使用多个CMake文件](02-sub-projects/README.adoc)\n    - [2.1 使用子工程CMake](02-sub-projects/A-basic/README.adoc)\n* 3  [生成源代码](03-code-generation/README.adoc)\n    - [3.1  配置文件](03-code-generation/configure-files/README.adoc)\n    - [3.2  protobuf](03-code-generation/protobuf/README.adoc)\n* 4 [实践案例](https://github.com/SFUMECJF/cmake-examples-Chinese/tree/main/%E5%AE%9E%E8%B7%B5%E6%A1%88%E4%BE%8B)\n    - 4.1 [qt](https://github.com/SFUMECJF/cmake-examples-Chinese/tree/main/%E5%AE%9E%E8%B7%B5%E6%A1%88%E4%BE%8B/qt)\n    - 4.2 [dcmtk](https://github.com/SFUMECJF/cmake-examples-Chinese/tree/main/%E5%AE%9E%E8%B7%B5%E6%A1%88%E4%BE%8B/dcmtk)\n    - 4.3 [opencv](https://github.com/SFUMECJF/cmake-examples-Chinese/tree/main/%E5%AE%9E%E8%B7%B5%E6%A1%88%E4%BE%8B/opencv)\n    - 4.4 [opencv + qt](https://github.com/SFUMECJF/cmake-examples-Chinese/tree/main/%E5%AE%9E%E8%B7%B5%E6%A1%88%E4%BE%8B/qt%2Bopencv)\n* 细节思考  \n    - [PUBLIC、INTERFACE和PRIVATE](CMake-scope.md)"
+        },
+        {
+          "name": "book.json",
+          "type": "blob",
+          "size": 0.349609375,
+          "content": "{\n  \"plugins\": [\n    \"github-buttons\"\n  ],\n  \"pluginsConfig\": {\n    \"github-buttons\": {\n      \"buttons\": [{\n        \"user\": \"SFUMECJF\",\n        \"repo\": \"cmake-examples-Chinese\",\n        \"type\": \"star\",\n        \"size\": \"large\"\n      }, {\n        \"user\": \"SFUMECJF\",\n        \"type\": \"follow\",\n        \"width\": \"230\",\n        \"count\": false\n      }]\n    }\n  }\n}"
+        },
+        {
+          "name": "package-lock.json",
+          "type": "blob",
+          "size": 0.322265625,
+          "content": "{\n  \"requires\": true,\n  \"lockfileVersion\": 1,\n  \"dependencies\": {\n    \"gitbook-plugin-github-buttons\": {\n      \"version\": \"3.0.0\",\n      \"resolved\": \"https://registry.npm.taobao.org/gitbook-plugin-github-buttons/download/gitbook-plugin-github-buttons-3.0.0.tgz\",\n      \"integrity\": \"sha1-ClfJJmUU/gWbgIRSDTuYRCTba+E=\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "实践案例",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

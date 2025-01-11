@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "timestamp": 1736566016841,
+    "page": 1000,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjEwMDA=",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mutouyun/cpp-ipc",
+      "stars": 1856,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.48828125,
+          "content": "# C++ objects and libs\n*.slo\n*.lo\n*.o\n*.a\n*.la\n*.lai\n*.so\n*.dll\n*.dylib\n\n# Qt-es\nobject_script.*.Release\nobject_script.*.Debug\n*_plugin_import.cpp\n/.qmake.cache\n/.qmake.stash\n*.pro.user\n*.pro.user.*\n*.qbs.user\n*.qbs.user.*\n*.moc\nmoc_*.cpp\nmoc_*.h\nqrc_*.cpp\nui_*.h\n*.qmlc\n*.jsc\nMakefile*\n*build-*\n*build_*\n\n# Qt unit tests\ntarget_wrapper.*\n\n# QtCreator\n*.autosave\n\n# QtCreator Qml\n*.qmlproject.user\n*.qmlproject.user.*\n\n# QtCreator CMake\nCMakeLists.txt.user*\n\n# My output files\nbuild\n\n# vs\n.vs\n.vscode"
+        },
+        {
+          "name": "3rdparty",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.2568359375,
+          "content": "cmake_minimum_required(VERSION 3.10)\nproject(cpp-ipc)\n\noption(LIBIPC_BUILD_TESTS       \"Build all of libipc's own tests.\"                      OFF)\noption(LIBIPC_BUILD_DEMOS       \"Build all of libipc's own demos.\"                      OFF)\noption(LIBIPC_BUILD_SHARED_LIBS \"Build shared libraries (DLLs).\"                        OFF)\noption(LIBIPC_USE_STATIC_CRT    \"Set to ON to build with static CRT on Windows (/MT).\"  OFF)\n\nset(CMAKE_POSITION_INDEPENDENT_CODE ON)\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_FLAGS_RELEASE \"${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG\")\nif(NOT MSVC)\n    set(CMAKE_CXX_FLAGS_RELEASE \"${CMAKE_CXX_FLAGS_RELEASE} -O2\")\nendif()\n\nif (MSVC)\n    set(CompilerFlags\n        CMAKE_CXX_FLAGS\n        CMAKE_CXX_FLAGS_DEBUG\n        CMAKE_CXX_FLAGS_RELEASE\n        CMAKE_C_FLAGS\n        CMAKE_C_FLAGS_DEBUG\n        CMAKE_C_FLAGS_RELEASE\n        )\n    if (LIBIPC_USE_STATIC_CRT)\n        foreach(CompilerFlag ${CompilerFlags})\n            string(REPLACE \"/MD\" \"/MT\" ${CompilerFlag} \"${${CompilerFlag}}\")\n            string(REPLACE \"/MDd\" \"/MTd\" ${CompilerFlag} \"${${CompilerFlag}}\")\n        endforeach()\n    else()\n        foreach(CompilerFlag ${CompilerFlags})\n            string(REPLACE \"/MT\" \"/MD\" ${CompilerFlag} \"${${CompilerFlag}}\")\n            string(REPLACE \"/MTd\" \"/MDd\" ${CompilerFlag} \"${${CompilerFlag}}\")\n        endforeach()\n    endif()\nendif()\n\nset(LIBRARY_OUTPUT_PATH    ${CMAKE_BINARY_DIR}/bin)\nset(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)\nset(LIBIPC_PROJECT_DIR     ${PROJECT_SOURCE_DIR})\n\n# Unicode Support\nadd_definitions(-DUNICODE -D_UNICODE)\n\nadd_subdirectory(src)\n\nif (LIBIPC_BUILD_TESTS)\n    set(GOOGLETEST_VERSION 1.10.0)\n    if (LIBIPC_USE_STATIC_CRT)\n        set(gtest_force_shared_crt OFF)\n    else()\n        set(gtest_force_shared_crt ON)\n    endif()\n    add_subdirectory(3rdparty/gtest)\n    add_subdirectory(test)\nendif()\n\nif (LIBIPC_BUILD_DEMOS)\n    add_subdirectory(demo/chat)\n    add_subdirectory(demo/msg_que)\n    add_subdirectory(demo/send_recv)\n    if (MSVC)\n        add_subdirectory(demo/win_service/service)\n        add_subdirectory(demo/win_service/client)\n    else()\n        add_subdirectory(demo/linux_service/service)\n        add_subdirectory(demo/linux_service/client)\n    endif()\nendif()\n\ninstall(\n    DIRECTORY \"include/\"\n    DESTINATION \"include\"\n)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.146484375,
+          "content": "cpp-ipc(libipc) - A high-performance inter-process communication using shared memory on Linux/Windows.\n\nCopyright (c) 2018 mutouyun (http://orzz.org)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.2685546875,
+          "content": "# cpp-ipc (libipc) - C++ IPC Library\n\n[![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/mutouyun/cpp-ipc/blob/master/LICENSE)\n[![Build Status](https://github.com/mutouyun/cpp-ipc/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/mutouyun/cpp-ipc/actions)\n[![Build status](https://ci.appveyor.com/api/projects/status/github/mutouyun/cpp-ipc?branch=master&svg=true)](https://ci.appveyor.com/project/mutouyun/cpp-ipc)\n[![Vcpkg package](https://img.shields.io/badge/Vcpkg-package-blueviolet)](https://github.com/microsoft/vcpkg/tree/master/ports/cpp-ipc)\n\n## A high-performance inter-process communication library using shared memory on Linux/Windows.\n\n * Compilers with C++17 support are recommended (msvc-2017/gcc-7/clang-4)\n * No other dependencies except STL.\n * Only lock-free or lightweight spin-lock is used.\n * Circular array is used as the underline data structure.\n * `ipc::route` supports single read and multiple write. `ipc::channel` supports multiple read and write. (**Note: currently, a channel supports up to 32 receivers, but there is no such a limit for the sender.**) \n * Broadcasting is used by default, but user can choose any read/ write combinations.\n * No long time blind wait. (Semaphore will be used after a certain number of retries.) \n * [Vcpkg](https://github.com/microsoft/vcpkg/blob/master/README.md) way of installation is supported. E.g. `vcpkg install cpp-ipc`\n\n## Usage\n\nSee: [Wiki](https://github.com/mutouyun/cpp-ipc/wiki)\n\n## Performance\n\n Environment | Value\n ------ | ------\n Device | Lenovo ThinkPad T450\n CPU | Intel® Core™ i5-4300U @ 2.5 GHz\n RAM | 16 GB\n OS | Windows 7 Ultimate x64\n Compiler | MSVC 2017 15.9.4\n\nUnit & benchmark tests: [test](test)  \nPerformance data: [performance.xlsx](performance.xlsx)\n\n## Reference\n\n * [Lock-Free Data Structures | Dr Dobb's](http://www.drdobbs.com/lock-free-data-structures/184401865)\n * [Yet another implementation of a lock-free circular array queue | CodeProject](https://www.codeproject.com/Articles/153898/Yet-another-implementation-of-a-lock-free-circular)\n * [Lock-Free 编程 | 匠心十年 - 博客园](http://www.cnblogs.com/gaochundong/p/lock_free_programming.html)\n * [无锁队列的实现 | 酷 壳 - CoolShell](https://coolshell.cn/articles/8239.html)\n * [Implementing Condition Variables with Semaphores](https://www.microsoft.com/en-us/research/wp-content/uploads/2004/12/ImplementingCVs.pdf)\n\n------\n\n\n## 使用共享内存的跨平台（Linux/Windows，x86/x64/ARM）高性能IPC通讯库\n\n * 推荐支持C++17的编译器（msvc-2017/gcc-7/clang-4）\n * 除STL外，无其他依赖\n * 无锁（lock-free）或轻量级spin-lock\n * 底层数据结构为循环数组（circular array）\n * `ipc::route`支持单写多读，`ipc::channel`支持多写多读【**注意：目前同一条通道最多支持32个receiver，sender无限制**】\n * 默认采用广播模式收发数据，支持用户任意选择读写方案\n * 不会长时间忙等（重试一定次数后会使用信号量进行等待），支持超时\n * 支持[Vcpkg](https://github.com/microsoft/vcpkg/blob/master/README_zh_CN.md)方式安装，如`vcpkg install cpp-ipc`\n\n## 使用方法\n\n详见：[Wiki](https://github.com/mutouyun/cpp-ipc/wiki)\n\n## 性能\n\n| 环境     | 值                               |\n| -------- | -------------------------------- |\n| 设备     | 联想 ThinkPad T450               |\n| CPU      | 英特尔® Core™ i5-4300U @ 2.5 GHz |\n| 内存     | 16 GB                            |\n| 操作系统 | Windows 7 Ultimate x64           |\n| 编译器   | MSVC 2017 15.9.4                 |\n\n单元测试和Benchmark测试: [test](test)  \n性能数据: [performance.xlsx](performance.xlsx)\n\n## 参考\n\n * [Lock-Free Data Structures | Dr Dobb's](http://www.drdobbs.com/lock-free-data-structures/184401865)\n * [Yet another implementation of a lock-free circular array queue | CodeProject](https://www.codeproject.com/Articles/153898/Yet-another-implementation-of-a-lock-free-circular)\n * [Lock-Free 编程 | 匠心十年 - 博客园](http://www.cnblogs.com/gaochundong/p/lock_free_programming.html)\n * [无锁队列的实现 | 酷 壳 - CoolShell](https://coolshell.cn/articles/8239.html)\n * [Implementing Condition Variables with Semaphores](https://www.microsoft.com/en-us/research/wp-content/uploads/2004/12/ImplementingCVs.pdf)\n"
+        },
+        {
+          "name": "demo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "performance.xlsx",
+          "type": "blob",
+          "size": 73.8681640625,
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

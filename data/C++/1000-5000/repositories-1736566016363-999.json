@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736566016363,
+    "page": 999,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjEwMDA=",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gitahead/gitahead",
+      "stars": 1857,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "build\n.DS_Store\n.project\n.vscode/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.6005859375,
+          "content": "[submodule \"dep/libgit2/libgit2\"]\n\tpath = dep/libgit2/libgit2\n\turl = https://github.com/stinb/libgit2.git\n[submodule \"dep/libssh2/libssh2\"]\n\tpath = dep/libssh2/libssh2\n\turl = https://github.com/stinb/libssh2.git\n[submodule \"dep/openssl/openssl\"]\n\tpath = dep/openssl/openssl\n\turl = https://github.com/openssl/openssl.git\n[submodule \"dep/git/git\"]\n\tpath = dep/git/git\n\turl = https://github.com/git/git.git\n[submodule \"dep/cmark/cmark\"]\n\tpath = dep/cmark/cmark\n\turl = https://github.com/commonmark/cmark.git\n[submodule \"dep/hunspell/hunspell\"]\n\tpath = dep/hunspell/hunspell\n\turl = https://github.com/hunspell/hunspell\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.0791015625,
+          "content": "cmake_minimum_required(VERSION 3.15)\nproject(GitAhead)\n\n# Set name and version.\nset(GITAHEAD_NAME \"GitAhead\")\nset(GITAHEAD_VERSION_MAJOR 2)\nset(GITAHEAD_VERSION_MINOR 7)\nset(GITAHEAD_VERSION_PATCH 1)\nset(GITAHEAD_VERSION\n  \"${GITAHEAD_VERSION_MAJOR}.${GITAHEAD_VERSION_MINOR}.${GITAHEAD_VERSION_PATCH}\"\n)\n\n# Generate build date.\nstring(TIMESTAMP GITAHEAD_BUILD_DATE)\n\n# Lookup git revision.\nfind_package(Git)\nif(GIT_FOUND)\n  execute_process(\n    COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_SOURCE_DIR}/.git show -s --format=%h HEAD\n    OUTPUT_VARIABLE GITAHEAD_BUILD_REVISION\n    OUTPUT_STRIP_TRAILING_WHITESPACE\n  )\nelse()\n  set(GITAHEAD_BUILD_REVISION \"unknown\")\nendif()\n\n# Explicitly disable shared libraries.\nset(BUILD_SHARED_LIBS OFF)\n\n# Require C++17.\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_STANDARD_REQUIRED TRUE)\n\n# Disable exceptions and RTTI.\nif(WIN32)\n  string(REPLACE \"/EHsc\" \"/EHs-c-\" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})\n  string(REPLACE \"/GR\" \"/GR-\" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})\nelse()\n  set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -fno-exceptions -fno-rtti\")\nendif()\n\nif(UNIX AND NOT APPLE)\n  set(CMAKE_EXE_LINKER_FLAGS -ldl)\nendif()\n\n# Find Qt modules.\nset(QT_MODULES\n  Concurrent\n  Core\n  Core5Compat\n  Gui\n  Network\n  PrintSupport\n  Widgets\n  Test\n)\n\nif(APPLE)\n  set(QT_MODULES ${QT_MODULES} DBus)\nendif()\n\nfind_package(Qt6 COMPONENTS ${QT_MODULES} LinguistTools REQUIRED)\n\nset(QT_TRANSLATIONS_DIR \"${Qt6_DIR}/../../../translations\")\n\nif(APPLE)\n  foreach(QT_MODULE ${QT_MODULES})\n    # FIXME: Force debug build to link against release libraries\n    # inside of frameworks on macOS. The Qt debug libraries are\n    # broken because their link dependencies are to the release\n    # libraries (e.g. QtGui_debug depends on QtCore). This causes\n    # multiple symbol definition errors at application load time.\n    get_target_property(LOCATION Qt6::${QT_MODULE} LOCATION)\n    set_target_properties(Qt6::${QT_MODULE} PROPERTIES\n      IMPORTED_LOCATION_DEBUG ${LOCATION}\n    )\n  endforeach()\nendif()\n\nadd_subdirectory(dep)\nadd_subdirectory(src)\nadd_subdirectory(l10n)\nadd_subdirectory(test)\nadd_subdirectory(pack)\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.056640625,
+          "content": "MIT License\n\nCopyright (c) 2018 Scientific Toolworks, Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.263671875,
+          "content": "Please Note!\n============\nGitAhead is no longer under active development. Low-level maintenance and bug\nfix releases will be made as necessary for the foreseeable future, but no new\nfeatures or major changes are planned at this time. Please consider continuing\ndevelopment in a *rebranded* fork for anything other than trivial changes.\n\n\nGitAhead - Understand Your History\n==================================\n\nGitAhead is a graphical Git client designed to help you understand\nand manage your source code history. It's available as a [pre-built\nbinary for Windows, Linux, and macOS](https://gitahead.github.io/gitahead.com/), or can be built from source by\nfollowing the directions below.\n\nBuild Environment\n-----------------\n\n* C++11 compiler\n  * Windows - MSVC >= 2017 recommended\n  * Linux - GCC >= 6.2 recommended\n  * macOS - Xcode >= 10.1 recommended\n* CMake >= 3.3.1\n* Ninja (optional)\n\nDependencies\n------------\n\nExternal dependencies can be satisfied by system libraries or installed\nseparately. Included dependencies are submodules of this repository. Some\nsubmodules are optional or may also be satisfied by system libraries.\n\n**External Dependencies**\n\n* Qt (required >= 5.9)\n\n**Included Dependencies**\n\n* libgit2 (required)\n* cmark (required)\n* git (only needed for the credential helpers)\n* libssh2 (needed by `libgit2` for SSH support)\n* openssl (needed by `libssh2` and `libgit2` on some platforms)\n\nNote that building `OpenSSL` on Windows requires `Perl` and `NASM`.\n\nHow to Build\n------------\n\n**Initialize Submodules**\n\n    git submodule init\n    git submodule update\n\n**Build OpenSSL**\n\n    # Start from root of gitahead repo.\n    cd dep/openssl/openssl\n\nWin:\n\n    perl Configure VC-WIN64A\n    nmake\n\nMac:\n\n    ./Configure darwin64-x86_64-cc no-shared\n    make\n\nLinux:\n\n    ./config -fPIC\n    make\n\n**Configure Build**\n\n    # Start from root of gitahead repo.\n    mkdir -p build/release\n    cd build/release\n    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ../..\n\nIf you have Qt installed in a non-standard location, you may have to\nspecify the path to Qt by passing `-DCMAKE_PREFIX_PATH=<path-to-qt>`\nwhere `<path-to-qt>` points to the Qt install directory that contains\n`bin`, `lib`, etc.\n\n**Build**\n\n    ninja\n\nLicense\n-------\n\nGitAhead is licensed under the MIT license. See LICENSE.md for details.\n"
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dep",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "l10n",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rsrc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

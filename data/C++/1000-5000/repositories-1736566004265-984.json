@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "timestamp": 1736566004265,
+    "page": 984,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "microsoft/microsoft-pdb",
+      "stars": 1875,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.1298828125,
+          "content": "Copyright (c) 2015 Microsoft Corporation. All rights reserved. \n \nThis code is licensed under the MIT License (MIT). \n\nPermission is hereby granted, free of charge, to any person obtaining a copy \nof this software and associated documentation files (the \"Software\"), to deal \nin the Software without restriction, including without limitation the rights \nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies \nof the Software, and to permit persons to whom the Software is furnished to do \nso, subject to the following conditions: \n\nThe above copyright notice and this permission notice shall be included in all \ncopies or substantial portions of the Software. \n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE \nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER \nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, \nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN \nTHE SOFTWARE. \n"
+        },
+        {
+          "name": "PDB",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8037109375,
+          "content": "***Update:*** This repo has moved to archive. Currently we are not planning any new updates nor are we taking PRs.  Please add any new requests related to debugging and PDB format to [Visual Studio Feedback](https://developercommunity.visualstudio.com/home).\n\n# microsoft-pdb\nThis repo contains information from Microsoft about the PDB (Program Database) \n[Symbol File](https://msdn.microsoft.com/en-us/library/windows/desktop/aa363368(v=vs.85).aspx) format.\n\n[WILL NOT currently build. There is a cvdump.exe till the repo is completed.  pdb.h is in the langapi folder]\n\nThe intent here is to provide code that will show all the binary level formats and simple tools that can use the pdb.\n\nSimply put ...We will make best efforts to role this foward with the new compilers and tools that we ship every release. We will continue to innovate and change binary API's and ABI's for all the Microsoft platforms and we will try to include the community by keeping this PDB repo in synch with the latest retail products (compilers,linkers,debuggers) just shipped.  \n\nBy publishing this source code, we are by passing the publically documented API we provided for only reading a PDB - that was DIA\nhttps://msdn.microsoft.com/en-us/library/x93ctkx8.aspx \n\nWith this information we are now building the information for other compilers (and tools) to efficiently write a PDB. \n\nThe PDB format has not been officially documented, presenting a challenge for other compilers and\ntoolsets (such as Clang/LLVM) that want to work with Windows or the Visual Studio debugger. We want\nto help the Open Source compilers to get onto the Windows platform.\n \nThe majority of content on this repo is presented as actual source files from the VC++ compiler \ntoolset. Source code is the ultimate documentation :-) We hope that you will find it helpful. If you \nfind that you need other information to successfully complete your project, please enter an\n[Issue](https://github.com/microsoft/microsoft-pdb/issues) letting us know what information you need.\n\n##Start here\nThe file pdb.h (on in langapi), provides the API surface for mscorpdb.dll, which we ship with every compiler and toolset.\n\nImportant points:\n\n•\tMscorpdb.dll is what our linker and compiler uses to create PDB files.\n•\tMscorpdb.dll implements the “stream” abstractions.\n\nAlso there is another file that we ship that should allow you to determine whether you have correctly produced an “empty” PDB which contains the minimal encoding to let another tool open and correctly parse that “empty” file.  “Empty” really meaning a properl\ny formated file where the sections contain the correct information to indicate zero records or symbols are present\nA tool that I thought we also ship that would easily verify your “empty” PDB file is dia2dump.exe\n\nSo in summary, by using the externally defined function entry points in pdb.h you can call into mscorpdb.dll.\n\n##What is a PDB\n\nPDBs are files with multiple ‘streams’ of information in them. You can almost assume each stream as an individual file, except that storing them as individual files is wasteful and inconvenient, hence this multiple streams approach. PDB streams are not NTFS streams though. They can be implemented as NTFS streams, but since they are to be made available on Win9X as well, they use a home brewed implementation. The implementation allows a primitive form of two-phase commit protocol. The writers of PDB files write what ever they want to in PDBs, but it won’t be committed until an explicit commit is issued. This allows the clients quite a bit of flexibility - say for example, a compiler can keep on writing information, and just not commit it, if it encounters an error in users’ source code.\n\nEach stream is identified with a unique stream number and an optional name. In a nutshell here’s how the PDB looks like -\n\t\n| Stream No.\t\t\t| Contents\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t|Short Description\n|--------------|---------------------------------|-------------------\n| 1            | Pdb (header)\t                   | Version information, and information to connect this PDB to the EXE\n| 2\t           | Tpi (Type manager)\t             | All the types used in the executable.\n| 3\t           | Dbi (Debug information)\t        | Holds section contributions, and list of ‘Mods’\n| 4\t           | NameMap\t                        | Holds a hashed string table\n| 4-(n+4)\t     | n Mod’s (Module information)\t   | Each Mod stream holds symbols and line numbers for one compiland\n| n+4\t         | Global symbol hash\t             | An index that allows searching in global symbols by name\n| n+5\t         | Public symbol hash\t             | An index that allows searching in public symbols by addresses\n| n+6\t         | Symbol records\t                 | Actual symbol records of global and public symbols\n| n+7\t         | Type hash\t                      | Hash used by the TPI stream.\n\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 2.6923828125,
+          "content": "<!-- BEGIN MICROSOFT SECURITY.MD V0.0.8 BLOCK -->\n\n## Security\n\nMicrosoft takes the security of our software products and services seriously, which includes all source code repositories managed through our GitHub organizations, which include [Microsoft](https://github.com/microsoft), [Azure](https://github.com/Azure), [DotNet](https://github.com/dotnet), [AspNet](https://github.com/aspnet), [Xamarin](https://github.com/xamarin), and [our GitHub organizations](https://opensource.microsoft.com/).\n\nIf you believe you have found a security vulnerability in any Microsoft-owned repository that meets [Microsoft's definition of a security vulnerability](https://aka.ms/opensource/security/definition), please report it to us as described below.\n\n## Reporting Security Issues\n\n**Please do not report security vulnerabilities through public GitHub issues.**\n\nInstead, please report them to the Microsoft Security Response Center (MSRC) at [https://msrc.microsoft.com/create-report](https://aka.ms/opensource/security/create-report).\n\nIf you prefer to submit without logging in, send email to [secure@microsoft.com](mailto:secure@microsoft.com).  If possible, encrypt your message with our PGP key; please download it from the [Microsoft Security Response Center PGP Key page](https://aka.ms/opensource/security/pgpkey).\n\nYou should receive a response within 24 hours. If for some reason you do not, please follow up via email to ensure we received your original message. Additional information can be found at [microsoft.com/msrc](https://aka.ms/opensource/security/msrc). \n\nPlease include the requested information listed below (as much as you can provide) to help us better understand the nature and scope of the possible issue:\n\n  * Type of issue (e.g. buffer overflow, SQL injection, cross-site scripting, etc.)\n  * Full paths of source file(s) related to the manifestation of the issue\n  * The location of the affected source code (tag/branch/commit or direct URL)\n  * Any special configuration required to reproduce the issue\n  * Step-by-step instructions to reproduce the issue\n  * Proof-of-concept or exploit code (if possible)\n  * Impact of the issue, including how an attacker might exploit the issue\n\nThis information will help us triage your report more quickly.\n\nIf you are reporting for a bug bounty, more complete reports can contribute to a higher bounty award. Please visit our [Microsoft Bug Bounty Program](https://aka.ms/opensource/security/bounty) page for more details about our active programs.\n\n## Preferred Languages\n\nWe prefer all communications to be in English.\n\n## Policy\n\nMicrosoft follows the principle of [Coordinated Vulnerability Disclosure](https://aka.ms/opensource/security/cvd).\n\n<!-- END MICROSOFT SECURITY.MD BLOCK -->\n"
+        },
+        {
+          "name": "cvdump",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "langapi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pdbdump",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pdbtest",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

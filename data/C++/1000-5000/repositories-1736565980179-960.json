@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736565980179,
+    "page": 960,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "knightcrawler25/GLSL-PathTracer",
+      "stars": 1893,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0673828125,
+          "content": "# Don't track content of these folders\n\n.vs/\nbuild/*\n\n.DS_Store\n.idea"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 5.443359375,
+          "content": "cmake_minimum_required (VERSION 2.8)\nproject (PathTracer)\n\nSET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON) \n\nset(CMAKE_CONFIGURATION_TYPES \"Debug;Release;RelWithDebInfo\" CACHE STRING \"Configuration types\" FORCE)\n\nSET(CMAKE_MODULE_PATH \"${CMAKE_SOURCE_DIR}/CMake\")\nset(CMAKE_CXX_STANDARD 14)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\n\nfile(GLOB_RECURSE SHADERS\n    ${CMAKE_SOURCE_DIR}/src/shaders/*.glsl\n)\n\nfile(GLOB_RECURSE SRC_FILES\n    ${CMAKE_SOURCE_DIR}/src/*.h\n    ${CMAKE_SOURCE_DIR}/src/*.cpp\n)\n\nfile(GLOB_RECURSE EXT_FILES\n    ${CMAKE_SOURCE_DIR}/thirdparty/stb/*.h\n    ${CMAKE_SOURCE_DIR}/thirdparty/imgui/*.h\n    ${CMAKE_SOURCE_DIR}/thirdparty/imgui/*.cpp\n    ${CMAKE_SOURCE_DIR}/thirdparty/imguizmo/*.h\n    ${CMAKE_SOURCE_DIR}/thirdparty/imguizmo/*.cpp  \n    ${CMAKE_SOURCE_DIR}/thirdparty/RadeonRays/*.h \n    ${CMAKE_SOURCE_DIR}/thirdparty/RadeonRays/*.cpp     \n    ${CMAKE_SOURCE_DIR}/thirdparty/oidn/*.h\n    ${CMAKE_SOURCE_DIR}/thirdparty/oidn/*.hpp\n    ${CMAKE_SOURCE_DIR}/thirdparty/tinydir/*.h\n    ${CMAKE_SOURCE_DIR}/thirdparty/tinyobjloader/*.h\n    ${CMAKE_SOURCE_DIR}/thirdparty/tinygltf/*.h\n)\n\nif(APPLE)\nlist(APPEND EXT_FILES ${CMAKE_SOURCE_DIR}/thirdparty/gl3wApple/GL/gl3w.c)\nelse()\nlist(APPEND EXT_FILES ${CMAKE_SOURCE_DIR}/thirdparty/gl3w/GL/gl3w.c)\nendif()\n\nset(SRCS ${SRC_FILES} ${EXT_FILES} ${SHADERS})\n\nif(APPLE)\nfind_package(SDL2 REQUIRED)\nelse()\nset(SDL2_LIBRARIES \"SDL2\" \"SDL2main\")\nset(SDL2_INCLUDE_DIRS  ${CMAKE_SOURCE_DIR}/thirdparty/SDL2/include)\nset(SDL2_LIBDIR ${CMAKE_SOURCE_DIR}/thirdparty/SDL2/lib/x64)\nendif()\nset(OIDN_LIBRARIES \"OpenImageDenoise\")\nset(OIDN_LIBDIR ${CMAKE_SOURCE_DIR}/thirdparty/oidn/lib)\n\ninclude_directories(\n    ${CMAKE_SOURCE_DIR}/src/core\n    ${CMAKE_SOURCE_DIR}/src/loaders\n    ${CMAKE_SOURCE_DIR}/src/tests\n    ${CMAKE_SOURCE_DIR}/src/math\n    ${CMAKE_SOURCE_DIR}/thirdparty/imgui\n    ${CMAKE_SOURCE_DIR}/thirdparty/glew/include\n    ${CMAKE_SOURCE_DIR}/thirdparty/stb\n    ${CMAKE_SOURCE_DIR}/thirdparty/imguizmo\n    ${CMAKE_SOURCE_DIR}/thirdparty/RadeonRays\n    ${CMAKE_SOURCE_DIR}/thirdparty/tinydir\n    ${CMAKE_SOURCE_DIR}/thirdparty/tinyobjloader\n    ${CMAKE_SOURCE_DIR}/thirdparty/oidn/include\n    ${CMAKE_SOURCE_DIR}/thirdparty/tinygltf\n    ${SDL2_INCLUDE_DIRS}\n)\n\nif(APPLE)\ninclude_directories(${CMAKE_SOURCE_DIR}/thirdparty/gl3wApple)\nelse()\ninclude_directories(${CMAKE_SOURCE_DIR}/thirdparty/gl3w)\nendif()\n\nlink_directories(\n  ${SDL2_LIBDIR}\n  ${OIDN_LIBDIR}\n)\nfind_package(OpenGL)\n\nforeach(f ${SRCS})\n    # Get the path of the file relative to ${DIRECTORY},\n    # then alter it (not compulsory)\n    file(RELATIVE_PATH SRCGR ${CMAKE_SOURCE_DIR} ${f})\n    set(SRCGR \"Sources/${SRCGR}\")\n\n    # Extract the folder, ie remove the filename part\n    string(REGEX REPLACE \"(.*)(/[^/]*)$\" \"\\\\1\" SRCGR ${SRCGR})\n\n    # Source_group expects \\\\ (double antislash), not / (slash)\n    string(REPLACE / \\\\ SRCGR ${SRCGR})\n    source_group(\"${SRCGR}\" FILES ${f})\nendforeach()\n\nif(WIN32)\n  set(GUI_TYPE WIN32)\nelseif(MACOSX)\n  set(GUI_TYPE MACOSX_BUNDLE)\nendif()\n\nif(MSVC)\nset(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} /MP\")\nendif()\n\n\nSET(LINK_OPTIONS \" \")\nSET(EXE_NAME \"PathTracer\")\n\nADD_EXECUTABLE(${EXE_NAME} ${SRCS})\n\nif(WIN32)\nTARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} ${OIDN_LIBRARIES})\nelse()\nTARGET_LINK_LIBRARIES(${EXE_NAME} ${OPENGL_LIBRARIES} ${SDL2_LIBRARIES} ${OIDN_LIBRARIES} dl)\nendif()\n\n#--------------------------------------------------------------------\n# preproc\n#--------------------------------------------------------------------\nadd_definitions(-D_CRT_SECURE_NO_WARNINGS)\nadd_definitions(-D__STDC_FORMAT_MACROS)\nadd_definitions(-DBX_CONFIG_ENABLE_MSVC_LEVEL4_WARNINGS=1)\nadd_definitions(-D__STDC_LIMIT_MACROS)\nadd_definitions(-D__STDC_CONSTANT_MACROS)\nadd_definitions(-DIMGUI_DISABLE_OBSOLETE_FUNCTIONS)\nif(MSVC)\nadd_definitions(-DWIN32)\nadd_definitions(-D_WIN32)\n#add_definitions(-DNOMINMAX)\nendif()\nadd_definitions(-DUSE_DL_PREFIX)\nadd_definitions(-DGLEW_STATIC)\n\n#--------------------------------------------------------------------\n# output dirs\n#--------------------------------------------------------------------\n\nset_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_CURRENT_BINARY_DIR} )\nset_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_CURRENT_BINARY_DIR} )\nset_target_properties(${EXE_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_CURRENT_BINARY_DIR} )\nset_target_properties(${EXE_NAME} PROPERTIES DEBUG_POSTFIX \"_d\")\nset_target_properties(${EXE_NAME} PROPERTIES RELWITHDEBINFO_POSTFIX \"RelWithDebInfo\")\nset_target_properties(${EXE_NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\")\n\nif(WIN32)\nset_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_DEBUG \"/SUBSYSTEM:CONSOLE\")\nset_target_properties(${EXE_NAME} PROPERTIES LINK_FLAGS_RELEASE \"/SUBSYSTEM:CONSOLE\")\nendif()\n\n#add_custom_command(TARGET ${EXE_NAME} POST_BUILD\n#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/assets\n#)\n#add_custom_command(TARGET ${EXE_NAME} POST_BUILD\n#    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/shaders ${CMAKE_CURRENT_BINARY_DIR}/shaders\n#)\n\nif(WIN32)\nadd_custom_command(TARGET ${EXE_NAME} POST_BUILD\n    COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_LIBDIR}/SDL2.dll ${CMAKE_CURRENT_BINARY_DIR}\n    COMMAND ${CMAKE_COMMAND} -E copy ${OIDN_LIBDIR}/OpenImageDenoise.dll ${CMAKE_CURRENT_BINARY_DIR}\n    COMMAND ${CMAKE_COMMAND} -E copy ${OIDN_LIBDIR}/tbb.dll ${CMAKE_CURRENT_BINARY_DIR}\n)\nendif()"
+        },
+        {
+          "name": "INSTALL-LINUX.txt",
+          "type": "blob",
+          "size": 0.47265625,
+          "content": "Instructions for building:\n\n  * apt-get install libsdl2-dev\n\n  * git clone https://github.com/knightcrawler25/GLSL-PathTracer.git\n\n  * OpenImageDenoise: Copy linux64 libraries from https://github.com/OpenImageDenoise/oidn/releases/tag/v1.2.4 to thirdparty/oidn/lib folder\n\n  * mkdir build\n\n  * cd build\n\n  * cmake ..\n\n  * make\n\n  * To run the program: ./PathTracer\n\n  * Additional samples can be downloaded from: https://drive.google.com/file/d/1UFMMoVb5uB7WIvCeHOfQ2dCQSxNMXluB/view\n"
+        },
+        {
+          "name": "INSTALL-MAC.txt",
+          "type": "blob",
+          "size": 0.46875,
+          "content": "Instructions for building:\n\n  * brew install sdl2 open-image-denoise\n\n  * git clone https://github.com/knightcrawler25/GLSL-PathTracer.git\n\n  * mkdir build\n\n  * cd build\n\n  # You can also use -j to specify maximum number of concurrent processes to use when building.\n  * cmake build -DCMAKE_BUILD_TYPE=RELEASE ..\n\n  * make\n\n  * To run the program: ./PathTracer\n\n  * Additional samples can be downloaded from: https://drive.google.com/file/d/1UFMMoVb5uB7WIvCeHOfQ2dCQSxNMXluB/view\n"
+        },
+        {
+          "name": "INSTALL-WIN.txt",
+          "type": "blob",
+          "size": 0.794921875,
+          "content": "Instructions for building:\n\n  * Start up cmake-gui from the Start Menu.\n\n  * Select the main directory where CMakeLists.txt is as the source file location.\n\n  * Select the \"build\" directory as the location to build the binaries.\n\n  * Press \"Configure\" button and select the version of Visual Studio you wish to\n    use. (e.g. look for \"Visual Studio xx 20xx Win64\").  Leave all other options on\n    their default.  Press \"OK\".\n\n  * Open the .sln solution file in the \"build\" directory.\n\n  * Change to \"Release\" mode and Press \"Build Solution\" from the IDE.\n\n  * Right click on \"PathTracer\" program targets in the solution explorer and\n    select \"Set as start up project\".\n\n  * Run the program. \n\n  * Additional samples can be downloaded from: https://drive.google.com/file/d/1UFMMoVb5uB7WIvCeHOfQ2dCQSxNMXluB/view"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright(c) 2019 Asif Ali\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.693359375,
+          "content": "\nGLSL-PathTracer\n==========\nA physically based path tracer that runs in a GLSL fragment shader.\n\n![Jinx](./screenshots/Jinx.jpg)\n\n![Tropical Island](./screenshots/Tropical_Island.jpg)\n\nFeatures\n--------\n- Unidirectional path tracer\n- Two-level BVH for instancing\n- Disney BSDF\n- Texture mapping (Albedo, Metallic-Roughness, Normal, Emission)\n- Analytic lights (Spherical, Rectangular, Directional)\n- Image based lighting\n- Multiple importance sampling\n- Tile rendering\n- OpenImageDenoise\n- Stochastic alpha testing\n- MagicaVoxel style homogeneous volumes\n- GLTF/GLB support (In progress)\n\nBuild Instructions\n--------\nPlease see INSTALL-WIN.txt for the build instructions for Windows and INSTALL-LINUX.txt for Linux\n\nSample Scenes\n--------\nA couple of sample scenes are provided in the repository. Additional scenes can be downloaded from here:\nhttps://drive.google.com/file/d/1UFMMoVb5uB7WIvCeHOfQ2dCQSxNMXluB/view\n\nGallery\n--------\n![Monster](./screenshots/Monster.jpg)\n--------\n![WW2](./screenshots/ww2.jpg)\n--------\n![RenderMan Swatch](./screenshots/Renderman_swatch.jpg)\n--------\n![Dragon](./screenshots/dragon.jpg)\n--------\n![Stormtrooper](./screenshots/stormtrooper.jpg)\n--------\n![Panther](./screenshots/panther.jpg)\n--------\n![Crown](./screenshots/crown.jpg)\n--------\n![Mustang](./screenshots/Mustang.jpg)\n--------\n![Mustang_Red](./screenshots/Mustang_Red.jpg)\n--------\n![Hyperion](./screenshots/hyperion.jpg)\n--------\n![Ajax](./screenshots/ajax_materials.jpg)\n--------\n![Dining Room](./screenshots/DiningRoom.jpg)\n--------\n![Rank3PoliceUnit](./screenshots/rank3police_color_corrected.jpg)\n--------\n![Staircase](./screenshots/staircase.jpg)\n--------\n![Substance Boy](./screenshots/MeetMat_Maps.jpg)\n\nReferences/Credits\n--------\n- A huge shout-out to Cedric Guillemet (https://github.com/CedricGuillemet) for cleaning up the code, adding the UI, integrating ImGuizmo, cmake and quite a lot of fixes.\n- Tinsel Renderer (https://github.com/mmacklin/tinsel) A modified version of the scene description & loader from that project is used here.\n- Ray Tracing in One Weekend (https://github.com/petershirley/raytracinginoneweekend) Peter Shirley's excellent book introductory book on raytracing which helped me get started on this project.\n- Erich Loftis's THREE.js PathTracer (https://github.com/erichlof/THREE.js-PathTracing-Renderer).\n- OptiX Introduction Samples (https://github.com/nvpro-samples/optix_advanced_samples/tree/master/src/optixIntroduction)\n- Mitsuba Renderer (https://github.com/mitsuba-renderer/mitsuba) Reference for validation.\n- PBRT-v3 (https://github.com/mmp/pbrt-v3) which provides an endless source of knowledge. The online book is a gift that keeps giving.\n- Model links/credits are in the assets folder (See: Model Credits.txt)\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshots",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "thirdparty",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

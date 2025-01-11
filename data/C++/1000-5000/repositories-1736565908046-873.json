@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": 1736565908046,
+    "page": 873,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ZLMediaKit/ZLToolKit",
+      "stars": 2008,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2841796875,
+          "content": "# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n*.d\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Compiled Dynamic libraries\n#*.dylib\n#*.dll\n\n# Fortran module files\n*.mod\n*.smod\n\n# Compiled Static libraries\n*.lai\n*.la\n*.lib\n\n# Executables\n*.exe\n*.out\n*.app\n/X64/\n\n*.DS_Store\n/cmake-build-debug/\n/.idea/"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1171875,
+          "content": "language: cpp\nsudo: required\ndist: trusty\ncompiler:\n- gcc\nos:\n- linux\nbefore_install:\nscript:\n- ./build_for_linux.sh\n\n\n\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.2275390625,
+          "content": "#代码贡献者列表，提交pr时请留下您的联系方式\n#Code contributor list, please leave your contact information when submitting a pull request\n\nxiongziliang <771730766@qq.com>\n[清涩绿茶](https://github.com/baiyfcu)\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 5.2822265625,
+          "content": "﻿project(ZLToolKit)\ncmake_minimum_required(VERSION 3.1.3)\n\ninclude(CheckStructHasMember)\ninclude(CheckSymbolExists)\n\nlist(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)\ncheck_struct_has_member(\"struct mmsghdr\" msg_hdr sys/socket.h HAVE_MMSG_HDR)\ncheck_symbol_exists(sendmmsg sys/socket.h HAVE_SENDMMSG_API)\ncheck_symbol_exists(recvmmsg sys/socket.h HAVE_RECVMMSG_API)\n\nif (HAVE_MMSG_HDR)\n    add_definitions(-DHAVE_MMSG_HDR)\nendif ()\nif (HAVE_SENDMMSG_API)\n    add_definitions(-DHAVE_SENDMMSG_API)\nendif ()\nif (HAVE_RECVMMSG_API)\n    add_definitions(-DHAVE_RECVMMSG_API)\nendif ()\n\n# check the socket buffer size set by the upper cmake project, if it is set, use the setting of the upper cmake project, otherwise set it to 256K\n# if the socket buffer size is set to 0, it means that the socket buffer size is not set, and the kernel default value is used(just for linux)\nif (DEFINED SOCKET_DEFAULT_BUF_SIZE)\n    if (SOCKET_DEFAULT_BUF_SIZE EQUAL 0)\n        message(STATUS \"Socket default buffer size is not set, use the kernel default value\")\n    else ()\n        message(STATUS \"Socket default buffer size is set to ${SOCKET_DEFAULT_BUF_SIZE}\")\n    endif ()\n    add_definitions(-DSOCKET_DEFAULT_BUF_SIZE=${SOCKET_DEFAULT_BUF_SIZE})\nendif ()\n#加载自定义模块\n#Load custom modules\nset(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} \"${CMAKE_CURRENT_SOURCE_DIR}/cmake\")\n#设置库文件路径\n#Set the library file path\nset(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)\n#设置可执行程序路径\n#Set the executable program path\nset(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)\n#设置子目录\n#Set subdirectories\nset(SUB_DIR_LIST \"Network\" \"Poller\" \"Thread\" \"Util\")\n\nif (WIN32)\n    list(APPEND SUB_DIR_LIST \"win32\")\n    #防止Windows.h包含Winsock.h\n    #Prevent Windows.h from including Winsock.h\n    add_definitions(-DWIN32_LEAN_AND_MEAN)\n    if (MSVC)\n        add_compile_options(\"/utf-8\")\n    endif ()\n    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)\nelse ()\n    add_compile_options(\"-Wno-comment\")\nendif ()\n\n#安装目录\n#Installation directory\nif (WIN32)\n    set(INSTALL_PATH_LIB $ENV{HOME}/${PROJECT_NAME}/lib)\n    set(INSTALL_PATH_INCLUDE $ENV{HOME}/${PROJECT_NAME}/include)\nelse ()\n    set(INSTALL_PATH_LIB lib)\n    set(INSTALL_PATH_INCLUDE include)\nendif ()\n\nforeach (SUB_DIR ${SUB_DIR_LIST})\n    #遍历源文件\n    #Traverse source file\n    aux_source_directory(src/${SUB_DIR} SRC_LIST)\n    #安装头文件至系统目录\n    #Install header file to system directory\n    install(DIRECTORY src/${SUB_DIR} DESTINATION ${INSTALL_PATH_INCLUDE} FILES_MATCHING PATTERN \"*.h\")\nendforeach ()\n\n#非苹果平台移除.mm类型的文件\n#Remove .mm type files from non-apple platforms\nif (NOT APPLE)\n    list(REMOVE_ITEM SRC_LIST \"src/Network/Socket_ios.mm\")\nendif ()\n\nif (WIN32)\n    set(LINK_LIB_LIST WS2_32 Iphlpapi shlwapi)\nelse ()\n    set(LINK_LIB_LIST)\nendif ()\n\n\nset(ENABLE_OPENSSL ON CACHE BOOL \"enable openssl\")\nset(ENABLE_MYSQL ON CACHE BOOL \"enable mysql\")\nset(ASAN_USE_DELETE OFF CACHE BOOL \"use delele[] or free when asan enabled\")\n\n#查找openssl是否安装\n#Find out if openssl is installed\nfind_package(OpenSSL QUIET)\nif (OPENSSL_FOUND AND ENABLE_OPENSSL)\n    message(STATUS \"找到openssl库:\\\"${OPENSSL_INCLUDE_DIR}\\\",ENABLE_OPENSSL宏已打开\")\n    include_directories(${OPENSSL_INCLUDE_DIR})\n    add_definitions(-DENABLE_OPENSSL)\n    list(APPEND LINK_LIB_LIST ${OPENSSL_LIBRARIES})\nendif ()\n\n#查找mysql是否安装\n#Find out if mysql is installed\nfind_package(MYSQL QUIET)\nif (MYSQL_FOUND AND ENABLE_MYSQL)\n    message(STATUS \"找到mysqlclient库:\\\"${MYSQL_INCLUDE_DIR}\\\",ENABLE_MYSQL宏已打开\")\n    include_directories(${MYSQL_INCLUDE_DIR})\n    include_directories(${MYSQL_INCLUDE_DIR}/mysql)\n    add_definitions(-DENABLE_MYSQL)\n    list(APPEND LINK_LIB_LIST ${MYSQL_LIBRARIES})\nendif ()\n\n#是否使用delete[]替代free，用于解决开启asan后在MacOS上的卡死问题\n#use delele[] or free when asan enabled\nif (ASAN_USE_DELETE)\n    add_definitions(-DASAN_USE_DELETE)\nendif ()\n\n#打印库文件\n#Print library files\nmessage(STATUS \"将链接依赖库:${LINK_LIB_LIST}\")\n#使能c++11\n#Enable c++11\nset(CMAKE_CXX_STANDARD 11)\n\nif (NOT WIN32)\n    add_compile_options(-Wno-deprecated-declarations)\n    add_compile_options(-Wno-predefined-identifier-outside-function)\nendif ()\n\n#编译动态库\n#Compile dynamic library\nif (NOT IOS AND NOT ANDROID AND NOT WIN32)\n    add_library(${PROJECT_NAME}_shared SHARED ${SRC_LIST})\n    target_include_directories(${PROJECT_NAME}_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)\n    target_link_libraries(${PROJECT_NAME}_shared ${LINK_LIB_LIST})\n    set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME \"${PROJECT_NAME}\")\n    install(TARGETS ${PROJECT_NAME}_shared ARCHIVE DESTINATION ${INSTALL_PATH_LIB} LIBRARY DESTINATION ${INSTALL_PATH_LIB})\nendif ()\n\n#编译静态库\n#Compile static library\nadd_library(${PROJECT_NAME}_static STATIC ${SRC_LIST})\n#引用头文件路径\n#Reference header file path\ntarget_include_directories(${PROJECT_NAME}_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)\nset_target_properties(${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME \"${PROJECT_NAME}\")\n#安装静态库至系统目录\n#Install static library to system directory\ninstall(TARGETS ${PROJECT_NAME}_static ARCHIVE DESTINATION ${INSTALL_PATH_LIB})\n\n\n#测试程序\n#Test program\nif (NOT IOS)\n    add_subdirectory(tests)\nendif ()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.08203125,
+          "content": "MIT License\n\nCopyright (c) 2016 The ZLToolKit project authors. All Rights Reserved.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8408203125,
+          "content": "# 一个基于C++11简单易用的轻量级网络编程框架\n\n![](https://github.com/ZLMediaKit/ZLToolKit/actions/workflows/linux.yml/badge.svg)\n![](https://github.com/ZLMediaKit/ZLToolKit/actions/workflows/macos.yml/badge.svg)\n![](https://github.com/ZLMediaKit/ZLToolKit/actions/workflows/windows.yml/badge.svg)\n\n## 项目特点\n- 基于C++11开发，避免使用裸指针，代码稳定可靠；同时跨平台移植简单方便，代码清晰简洁。\n- 使用epoll+线程池+异步网络IO模式开发，并发性能优越。\n- 代码经过大量的稳定性、性能测试，可满足商用服务器项目。\n- 支持linux、macos、ios、android、windows平台\n- 了解更多:[ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit)\n\n## 特性\n- 网络库\n  - tcp/udp客户端，接口简单易用并且是线程安全的，用户不必关心具体的socket api操作。\n  - tcp/udp服务器，使用非常简单，只要实现具体的tcp/udp会话（Session类）逻辑,使用模板的方式可以快速的构建高性能的服务器。\n  - 对套接字多种操作的封装。\n- 线程库\n  - 使用线程实现的简单易用的定时器。\n  - 信号量。\n  - 线程组。\n  - 简单易用的线程池，可以异步或同步执行任务，支持functional 和 lambad表达式。\n- 工具库\n  - 文件操作。\n  - std::cout风格的日志库，支持颜色高亮、代码定位、异步打印。\n  - INI配置文件的读写。\n  - 监听者模式的消息广播器。\n  - 基于智能指针的循环池，不需要显式手动释放。\n  - 环形缓冲，支持主动读取和读取事件两种模式。\n  - mysql链接池，使用占位符（？）方式生成sql语句，支持同步异步操作。\n  - 简单易用的ssl加解密黑盒，支持多线程。\n  - 其他一些有用的工具。\n  - 命令行解析工具，可以很便捷的实现可配置应用程序\n\n## 编译(Linux)\n- 我的编译环境\n  - Ubuntu16.04 64 bit + gcc5.4(最低gcc4.7)\n  - cmake 3.5.1\n- 编译\n\n  ```\n  cd ZLToolKit\n  ./build_for_linux.sh\n  ```  \n  \n## 编译(macOS)\n- 我的编译环境\n  - macOS Sierra(10.12.1) + xcode8.3.1\n  - Homebrew 1.1.3\n  - cmake 3.8.0\n- 编译\n  \n  ```\n  cd ZLToolKit\n  ./build_for_mac.sh\n  ```\n\t \n## 编译(iOS)\n- 编译环境:`请参考macOS的编译指导。`\n- 编译\n  \n  ```\n  cd ZLToolKit\n  ./build_for_ios.sh\n  ```\n- 你也可以生成Xcode工程再编译：\n\n  ```\n  cd ZLToolKit\n  mkdir -p build\n  cd build\n  # 生成Xcode工程，工程文件在build目录下\n  cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/iOS.cmake -DIOS_PLATFORM=SIMULATOR64 -G \"Xcode\"\n  ```\n## 编译(Android)\n- 我的编译环境\n  - macOS Sierra(10.12.1) + xcode8.3.1\n  - Homebrew 1.1.3\n  - cmake 3.8.0\n  - [android-ndk-r14b](https://dl.google.com/android/repository/android-ndk-r14b-darwin-x86_64.zip)\n- 编译\n\n  ```\n  cd ZLToolKit\n  export ANDROID_NDK_ROOT=/path/to/ndk\n  ./build_for_android.sh\n  ```\n## 编译(Windows)\n- 我的编译环境\n  - windows 10\n  - visual studio 2017\n  - [openssl](http://slproweb.com/download/Win32OpenSSL-1_1_0f.exe)\n  - [mysqlclient](https://dev.mysql.com/downloads/file/?id=472430)\n  - [cmake-gui](https://cmake.org/files/v3.10/cmake-3.10.0-rc1-win32-x86.msi)\n  \n- 编译\n```\n   1 使用cmake-gui打开工程并生成vs工程文件.\n   2 找到工程文件(ZLToolKit.sln),双击用vs2017打开.\n   3 选择编译Release 版本.\n   4 依次编译 ZLToolKit_static、ZLToolKit_shared、ALL_BUILD、INSTALL.\n   5 找到目标文件并运行测试用例.\n   6 找到安装的头文件及库文件(在源码所在分区根目录).\n```\n## 授权协议\n\n本项目自有代码使用宽松的MIT协议，在保留版权信息的情况下可以自由应用于各自商用、非商业的项目。\n但是本项目也零碎的使用了一些其他的开源代码，在商用的情况下请自行替代或剔除；\n由于使用本项目而产生的商业纠纷或侵权行为一概与本项项目及开发者无关，请自行承担法律风险。\n\n## QA\n - 该库性能怎么样？\n\n基于ZLToolKit，我实现了一个流媒体服务器[ZLMediaKit](https://github.com/ZLMediaKit/ZLMediaKit);作者已经对其进行了性能测试，可以查看[benchmark.md](https://github.com/ZLMediaKit/ZLMediaKit/blob/master/benchmark.md)了解详情。\n\n - 该库稳定性怎么样？\n\n该库经过作者严格的valgrind测试，长时间大负荷的测试；作者也使用该库进行了多个线上项目的开发。实践证明该库稳定性很好；可以无看门狗脚本的方式连续运行几个月。\n\n - 在windows下编译很多错误？\n \n 由于本项目主体代码在macOS/linux下开发，部分源码采用的是无bom头的UTF-8编码；由于windows对于utf-8支持不甚友好，所以如果发现编译错误请先尝试添加bom头再编译。\n\n\n## 联系方式\n- 邮箱：<1213642868@qq.com>（本项目相关或网络编程相关问题请走issue流程，否则恕不邮件答复）\n- QQ群：542509000\n\n\n"
+        },
+        {
+          "name": "build_for_android.sh",
+          "type": "blob",
+          "size": 0.490234375,
+          "content": "#!/bin/bash\nruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"\nbrew install cmake\ncd ..\ngit clone --depth=50 https://github.com/xia-chu/ZLToolKit.git\ncd ZLToolKit\nmkdir -p android_build\nrm -rf ./build\nln -s ./android_build ./build\ncd android_build \ncmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/android.toolchain.cmake -DANDROID_NDK=$ANDROID_NDK_ROOT  -DCMAKE_BUILD_TYPE=Release  -DANDROID_ABI=\"armeabi\" -DANDROID_NATIVE_API_LEVEL=android-9\nmake -j4\nsudo make install\n"
+        },
+        {
+          "name": "build_for_ios.sh",
+          "type": "blob",
+          "size": 0.36328125,
+          "content": "#!/bin/bash\nruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"\nbrew install cmake\ncd ..\ngit clone --depth=50 https://github.com/xia-chu/ZLToolKit.git\ncd ZLToolKit\nmkdir -p ios_build\nrm -rf ./build\nln -s ./ios_build ./build\ncd ios_build \ncmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/iOS.cmake -DIOS_PLATFORM=OS\nmake -j4\nsudo make install\n"
+        },
+        {
+          "name": "build_for_linux.sh",
+          "type": "blob",
+          "size": 0.2998046875,
+          "content": "#!/bin/bash\nsudo apt-get install cmake\nsudo apt-get install libmysqlclient-dev\nsudo apt-get install libssl-dev\ncd ..\ngit clone --depth=50 https://github.com/xia-chu/ZLToolKit.git\ncd ZLToolKit\nmkdir -p linux_build\nrm -rf ./build\nln -s ./linux_build ./build\ncd linux_build\ncmake ..\nmake -j4\nsudo make install\n"
+        },
+        {
+          "name": "build_for_mac.sh",
+          "type": "blob",
+          "size": 0.3955078125,
+          "content": "#!/bin/bash\nruby -e \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)\"\nbrew install cmake\nbrew install mysql\nbrew install openssl\ncd ..\ngit clone --depth=50 https://github.com/xia-chu/ZLToolKit.git\ncd ZLToolKit\nmkdir -p mac_build\nrm -rf ./build\nln -s ./mac_build ./build\ncd mac_build \ncmake .. -DOPENSSL_ROOT_DIR=/usr/local/Cellar/openssl/1.0.2j/\nmake -j4\nsudo make install\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

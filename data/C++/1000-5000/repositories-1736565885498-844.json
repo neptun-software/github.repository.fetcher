@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "timestamp": 1736565885498,
+    "page": 844,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "livegrep/livegrep",
+      "stars": 2051,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".bazelignore",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "web/node_modules"
+        },
+        {
+          "name": ".bazelrc",
+          "type": "blob",
+          "size": 0.2373046875,
+          "content": "# c.f. https://github.com/grpc/grpc/pull/13929\nbuild --copt=-DGRPC_BAZEL_BUILD\n\n# abseil requires at least C++14, as of Jan 2023\n# https://github.com/abseil/abseil-cpp/releases/tag/20230125.3\nbuild --host_cxxopt=-std=c++14 --cxxopt=-std=c++14\n"
+        },
+        {
+          "name": ".bazelrc.ci",
+          "type": "blob",
+          "size": 1.3134765625,
+          "content": "startup --host_jvm_args=-Dbazel.DigestFunction=sha256\n\n# abseil requires at least C++14, as of Jan 2023\n# https://github.com/abseil/abseil-cpp/releases/tag/20230125.3\nbuild --host_cxxopt=-std=c++14 --cxxopt=-std=c++14\n\n# Ensure sandboxing is on to increase hermeticity.\nbuild --spawn_strategy=sandboxed\n\nbuild --compilation_mode=opt\n\n# This is so we understand failures better\nbuild --verbose_failures\nbuild --worker_verbose\ntest --test_output=errors\ntest --test_verbose_timeout_warnings\n\n# Use BuildBuddy (anonymously for now) to build\n# I tried a GCS cache, but I think we were hitting up against\n# GH Actions API Request limit (10,000 per hour), since the GCS\n# cache is HTTP based, and seeding the cache (building with an empty \n# cache) will write ~18k objects - \n# each which is theoretically an HTTP PUT call. BuildBuddy otoh uses\n# GRPC, so a single connection/API call can be used to stream many writes\nbuild --bes_results_url=https://app.buildbuddy.io/invocation/\nbuild --bes_backend=grpcs://cloud.buildbuddy.io\nbuild --remote_cache=grpcs://cloud.buildbuddy.io\nbuild --remote_timeout=3600\n\n# don't fail if the cache is unavailable\ncommon --remote_local_fallback=true\n# remote upload defaults to true, which we don't want. We use sed to switch\n# false to true during the CI build if necessary\ncommon --remote_upload_local_results=false\n"
+        },
+        {
+          "name": ".bazelrc.circle",
+          "type": "blob",
+          "size": 0.0615234375,
+          "content": "build --local_ram_resources=4096\nbuild --local_cpu_resources=4\n"
+        },
+        {
+          "name": ".bazelversion",
+          "type": "blob",
+          "size": 0.005859375,
+          "content": "5.3.2\n"
+        },
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.208984375,
+          "content": "*.a\n*.o\n*.test\n.*.d\n/.gopath\n/.makevars/\n/.vagrant\n/Makefile.config\n/bin/\n/node_modules\n/repos/\n/src/vendor/libdivsufsort/build/\n/web/log/\nconfig.json\nvendor/re2/obj/libre2.a\n/bazel-*\ncompile_commands.json\n.devbox\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "BUILD",
+          "type": "blob",
+          "size": 0.7412109375,
+          "content": "load(\"@rules_pkg//pkg:tar.bzl\", \"pkg_tar\")\nload(\"@hedron_compile_commands//:refresh_compile_commands.bzl\", \"refresh_compile_commands\")\n\nrefresh_compile_commands(\n    name = \"compilation_db\",\n    targets = [\n        \"//src/tools:codesearch\",\n        \"//src/tools:codesearchtool\",\n        \"//test:codesearch_test\",\n    ],\n)\n\nload(\"@bazel_gazelle//:def.bzl\", \"gazelle\")\n\n# gazelle:prefix github.com/livegrep/livegrep\ngazelle(name = \"gazelle\")\n\nfilegroup(\n    name = \"docs\",\n    srcs = glob([\n        \"doc/**/*\",\n    ]),\n)\n\npkg_tar(\n    name = \"livegrep\",\n    srcs = [\n        \":COPYING\",\n        \":README.md\",\n        \":docs\",\n    ],\n    strip_prefix = \".\",\n    deps = [\n        \"//cmd:go_tools\",\n        \"//src/tools:cc_tools\",\n        \"//web:assets\",\n    ],\n)\n"
+        },
+        {
+          "name": "COPYING",
+          "type": "blob",
+          "size": 1.47265625,
+          "content": "Copyright (c) 2011-2013 Nelson Elhage\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\nThe views and conclusions contained in the software and documentation are those\nof the authors and should not be interpreted as representing official policies,\neither expressed or implied, of the author.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.70703125,
+          "content": "Livegrep [![Build Status](https://github.com/livegrep/livegrep/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/livegrep/livegrep/actions/workflows/ci.yaml)\n========\n\nLivegrep is a tool, partially inspired by Google Code Search, for\ninteractive regex search of ~gigabyte-scale source repositories. You\ncan see a running instance at\n[http://livegrep.com/](http://livegrep.com).\n\nBuilding\n--------\n\nlivegrep builds using [bazel][bazel]. You will need to \n[install][bazel-install] with a version matching that in `.bazelversion`.\nRunning bazel via [bazelisk][bazelisk] will download the right version\nautomatically.\n\nlivegrep vendors and/or fetches all of its dependencies using `bazel`,\nand so should only require a relatively recent C++ compiler to build.\n\nOnce you have those dependencies, you can build using\n\n    bazel build //...\n\nNote that the initial build will download around 100M of\ndependencies. These will be cached once downloaded.\n\n[bazel]: http://www.bazel.io/\n[bazel-install]: http://www.bazel.io/docs/install.html\n[bazelisk]: https://bazel.build/install/bazelisk\n\nInvoking\n--------\n\nTo run `livegrep`, you need to invoke both the `codesearch` backend\nindex/search process, and the `livegrep` web interface.\n\nTo run the sample web interface over livegrep itself, once you have\nbuilt both `codesearch` and `livegrep`:\n\nIn one terminal, start the `codesearch` server like so:\n\n    bazel-bin/src/tools/codesearch -grpc localhost:9999 doc/examples/livegrep/index.json\n\nIn another, run livegrep:\n\n    bazel-bin/cmd/livegrep/livegrep_/livegrep\n\nIn a browser, now visit\n[http://localhost:8910/](http://localhost:8910/), and you should see a\nworking livegrep.\n\n## Using Index Files\n\nThe `codesearch` binary is responsible for reading source code,\nmaintaining an index, and handling searches. `livegrep` is stateless\nand relies only on the connection to `codesearch` over a TCP\nconnection.\n\nBy default, `codesearch` will build an in-memory index over the\nrepositories specified in its configuration file. You can, however,\nalso instruct it to save the index to a file on disk. This has the dual\nadvantages of allowing indexes that are too large to fit in RAM, and\nof allowing an index file to be reused. You instruct `codesearch` to\ngenerate an index file via the `-dump_index` flag and to not launch\na search server via the `-index_only` flag:\n\n    bazel-bin/src/tools/codesearch -index_only -dump_index livegrep.idx doc/examples/livegrep/index.json\n\nOnce `codeseach` has built the index, this index file can be used for\nfuture runs. Index files are standalone, and you no longer need access\nto the source code repositories, or even a configuration file, once an\nindex has been built. You can just launch a search server like so:\n\n    bazel-bin/src/tools/codesearch -load_index livegrep.idx -grpc localhost:9999\n\nThe schema for the `codesearch` configuration file defined using\nprotobuf in [src/proto/config.proto](src/proto/config.proto).\n\n## `livegrep`\n\nThe `livegrep` frontend accepts an optional position argument\nindicating a JSON configuration file; See\n[doc/examples/livegrep/server.json][server.json] for an example, and\n[server/config/config.go][config.go] for documentation of available\noptions.\n\nBy default, `livegrep` will connect to a single local codesearch\ninstance on port `9999`, and listen for HTTP connections on port\n`8910`.\n\n[server.json]: https://github.com/livegrep/livegrep/blob/main/doc/examples/livegrep/server.json\n[config.go]: https://github.com/livegrep/livegrep/blob/main/server/config/config.go\n\n## github integration\n\n`livegrep` includes a helper driver, `livegrep-github-reindex`, which\ncan automatically update and index selected github repositories. To\ndownload and index all of my repositories (except for forks), storing\nthe repos in `repos/` and writing `nelhage.idx`, you might run:\n\n    bazel-bin/cmd/livegrep-github-reindex/livegrep-github-reindex -user=nelhage -forks=false -name=github.com/nelhage -out nelhage.idx\n\nYou can now use `nelhage.idx` as an argument to `codesearch\n-load_index`.\n\n## Local repository browser\n`livegrep` provides the ability to view source files directly in `livegrep`, as\nan alternative to linking files to external viewers. This was initially implemented\nby @jboning [here](https://github.com/livegrep/livegrep/pull/70). There are\na few ways to enable this. The most important steps are to\n1. Generate a config file that `livegrep` can use to figure out where your\n   source files are (locally).\n2. Pass this config file as an argument to the frontend (`-index-config`)\n\n### Generating index manually\n\nSee [doc/examples/livegrep/server.json](doc/examples/livegrep/server.json) for an\nexample config file, and [server/config/config.go](server/config/config.go) for documentation on available options. To enable the file viewer, you must include an [`IndexConfig`](server/config/config.go#L61) block inside of the config file. An example `IndexConfig` block can be seen at [doc/examples/livegrep/index.json](doc/examples/livegrep/index.json).\n\n*Tip: For each repository included in your `IndexConfig`, make sure to include `metadata.url_pattern` if you would like the file viewer to be able to link out to the external host. You'll see a warning in your browser console if you don't do this.*\n\n### Generating index with `livegrep-github-reindex`\nIf you are already using the `livegrep-github-reindex` tool, an IndexConfig index file is generated for you, by default named \"livegrep.json\".\n\nRun the indexer\n```\nbazel-bin/cmd/livegrep-github-reindex/livegrep-github-reindex_/livegrep-github-reindex -user=xvandish -forks=false -name=github.com/xvandish -out xvandish.idx ```\n```\n\nThe indexer will have done these main things:\n1. Clone (or update) all repositories for `user=xvandish` to/in `repos/xvandish`\n2. Create an IndexConfig file - `repos/livegrep.json`\n3. Create a code index, this is whats used to search - `./xvandish.idx`\n\nHere's an abbreviated version of what your directory might look like after running the indexer.\n```\nlivegrep\n│   xvandish.idx\n└───repos\n│   │   livegrep.json\n│   └───xvandish\n│       └───repo1\n│       └───repo2\n│       └───repo3\n```\n\n### Using your generated index\nNow that you generated an index file, it's time to run livegrep with it.\n\nRun the backend:\n```\nbazel-bin/src/tools/codesearch -load_index xvandish.idx -grpc localhost:9999\n```\n\nRun the frontend in another shell instance with the path to the index file located at `repos/livegrep.json`.\n```\nbazel-bin/cmd/livegrep/livegrep_/livegrep -index-config ./repos/livegrep.json\n```\nIn a browser, now visit `http://localhost:8910` and you should see a working\nlivegrep. Search for something, and once you get a result, click on the file\nname or a line number. You should now be taken to the file browser!\n\nDocker images\n-------------\n\nLivegrep's CI builds Docker images [into the livegrep\norganization][docker] docker repository on every merge to `main`. They\nshould be generally usable. For instance, to build+run a livegrep\nindex of this repository, you could run:\n\n```\ndocker run -v $(pwd):/data ghcr.io/livegrep/livegrep/indexer /livegrep/bin/livegrep-github-reindex -repo livegrep/livegrep -http -dir /data\ndocker network create livegrep\ndocker run -d --rm -v $(pwd):/data --network livegrep --name livegrep-backend ghcr.io/livegrep/livegrep/base /livegrep/bin/codesearch -load_index /data/livegrep.idx -grpc 0.0.0.0:9999\ndocker run -d --rm --network livegrep --publish 8910:8910 ghcr.io/livegrep/livegrep/base /livegrep/bin/livegrep -docroot /livegrep/web -listen=0.0.0.0:8910 --connect livegrep-backend:9999\n```\n\nAnd then access http://localhost:8910/\n\nYou can also find the [docker-compose config powering\nlivegrep.com][docker-compose] in the `livegrep/livegrep.com`\nrepository.\n\n[docker]: https://github.com/orgs/livegrep/packages\n[docker-compose]: https://github.com/livegrep/livegrep.com/tree/main/compose\n\nResource Usage\n--------------\n\nlivegrep builds an index file of your source code, and then works\nentirely out of that index, with no further access to the original git\nrepositories.\n\nThe index file will vary somewhat in size, but will usually be 3-5x\nthe size of the indexed text. `livegrep` memory-maps the index file\ninto RAM, so it can work out of index files larger than (available)\nRAM, but will perform better if the file can be loaded entirely into\nmemory. Barring that, keeping the disk on fast SSDs is recommended for\noptimal performance.\n\nRegex Support\n-------------\n\nLivegrep uses Google's [re2](https://github.com/google/re2) regular\nexpression engine, and inherits its [supported\nsyntax](https://github.com/google/re2/wiki/Syntax).\n\nRE2 is mostly PCRE-compatible, but with some [mostly-deliberate\nexceptions](https://swtch.com/~rsc/regexp/regexp3.html#caveats)\n\n\nLICENSE\n-------\n\nLivegrep is open source. See [COPYING](COPYING) for more information.\n"
+        },
+        {
+          "name": "WORKSPACE",
+          "type": "blob",
+          "size": 4.802734375,
+          "content": "workspace(name = \"com_github_livegrep_livegrep\")\n\nload(\n    \"@bazel_tools//tools/build_defs/repo:git.bzl\",\n    \"git_repository\",\n)\nload(\n    \"@bazel_tools//tools/build_defs/repo:http.bzl\",\n    \"http_archive\",\n)\n\nhttp_archive(\n    name = \"divsufsort\",\n    build_file = \"//third_party:BUILD.divsufsort\",\n    sha256 = \"9164cb6044dcb6e430555721e3318d5a8f38871c2da9fd9256665746a69351e0\",\n    strip_prefix = \"libdivsufsort-2.0.1\",\n    type = \"tgz\",\n    url = \"https://codeload.github.com/y-256/libdivsufsort/tar.gz/2.0.1\",\n)\n\ngit_repository(\n    name = \"gflags\",\n    commit = \"e171aa2d15ed9eb17054558e0b3a6a413bb01067\",  # v2.2.2\n    remote = \"https://github.com/gflags/gflags\",\n    shallow_since = \"1541971260 +0000\",\n)\n\ngit_repository(\n    name = \"com_github_nelhage_rules_boost\",\n    commit = \"03a871125484f8bea934761d5e8673f5d4979b57\",\n    remote = \"https://github.com/nelhage/rules_boost\",\n)\n# local_repository(\n#   name = \"com_github_nelhage_boost\",\n#   path = \"../rules_boost\",\n# )\n\nload(\n    \"@com_github_nelhage_rules_boost//:boost/boost.bzl\",\n    \"boost_deps\",\n)\n\nboost_deps()\n\nhttp_archive(\n    name = \"io_bazel_rules_go\",\n    sha256 = \"099a9fb96a376ccbbb7d291ed4ecbdfd42f6bc822ab77ae6f1b5cb9e914e94fa\",\n    urls = [\n        \"https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.35.0/rules_go-v0.35.0.zip\",\n        \"https://github.com/bazelbuild/rules_go/releases/download/v0.35.0/rules_go-v0.35.0.zip\",\n    ],\n)\n\ngit_repository(\n    name = \"bazel_gazelle\",\n    commit = \"3ea1d64d6fe943dac06c341f9a265472bb99acd7\",  # 0.24.0\n    remote = \"https://github.com/bazelbuild/bazel-gazelle.git\",\n    shallow_since = \"1633971621 -0400\",\n)\n\nload(\"@io_bazel_rules_go//go:deps.bzl\", \"go_register_toolchains\", \"go_rules_dependencies\")\n\ngo_rules_dependencies()\n\ngo_register_toolchains(version = \"1.19.2\")\n\nload(\"@bazel_gazelle//:deps.bzl\", \"gazelle_dependencies\")\n\ngazelle_dependencies()\n\nload(\n    \"//tools/build_defs:go_externals.bzl\",\n    \"go_externals\",\n)\n\ngo_externals()\n\nhttp_archive(\n    name = \"com_github_libgit2\",\n    build_file = \"//third_party:BUILD.libgit2\",\n    sha256 = \"adf17310b590e6e7618f070c742b5ee028aeeed2c60099bc4190c386b5060de1\",\n    strip_prefix = \"libgit2-0.27.9/\",\n    url = \"https://github.com/libgit2/libgit2/archive/v0.27.9.tar.gz\",\n)\n\nhttp_archive(\n    name = \"com_google_absl\",\n    sha256 = \"497ebdc3a4885d9209b9bd416e8c3f71e7a1fb8af249f6c2a80b7cbeefcd7e21\",\n    strip_prefix = \"abseil-cpp-20230802.1/\",\n    url = \"https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.1.zip\",\n)\n\ngit_repository(\n    name = \"com_github_grpc_grpc\",\n    commit = \"591d56e1300b6d11948e1b821efac785a295989c\",  # 1.44.0\n    remote = \"https://github.com/grpc/grpc.git\",\n    shallow_since = \"1644573434 +0100\",\n)\n\nload(\"@com_github_grpc_grpc//bazel:grpc_deps.bzl\", \"grpc_deps\")\n\ngrpc_deps()\n\nload(\"@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl\", \"grpc_extra_deps\")\n\ngrpc_extra_deps()\n\ngit_repository(\n    name = \"io_bazel_buildifier\",\n    commit = \"ae772d29d07002dfd89ed1d9ff673a1721f1b8dd\",\n    remote = \"https://github.com/bazelbuild/buildifier.git\",\n)\n\nhttp_archive(\n    name = \"hedron_compile_commands\",\n\n    url = \"https://github.com/hedronvision/bazel-compile-commands-extractor/archive/e16062717d9b098c3c2ac95717d2b3e661c50608.tar.gz\",\n    sha256 = \"ed5aea1dc87856aa2029cb6940a51511557c5cac3dbbcb05a4abd989862c36b4\",\n    strip_prefix = \"bazel-compile-commands-extractor-e16062717d9b098c3c2ac95717d2b3e661c50608\",\n)\n\nload(\"@hedron_compile_commands//:workspace_setup.bzl\", \"hedron_compile_commands_setup\")\n\nhedron_compile_commands_setup()\n\ngit_repository(\n    name = \"com_google_googletest\",\n    commit = \"0ea2d8f8fa1601abb9ce713b7414e7b86f90bc61\",\n    remote = \"https://github.com/google/googletest\",\n)\n\nhttp_archive(\n    name = \"aspect_rules_js\",\n    sha256 = \"66ecc9f56300dd63fb86f11cfa1e8affcaa42d5300e2746dba08541916e913fd\",\n    strip_prefix = \"rules_js-1.13.0\",\n    url = \"https://github.com/aspect-build/rules_js/archive/refs/tags/v1.13.0.tar.gz\",\n)\n\nload(\"@aspect_rules_js//js:repositories.bzl\", \"rules_js_dependencies\")\n\nrules_js_dependencies()\n\nload(\"@rules_nodejs//nodejs:repositories.bzl\", \"DEFAULT_NODE_VERSION\", \"nodejs_register_toolchains\")\n\nnodejs_register_toolchains(\n    name = \"nodejs\",\n    node_version = DEFAULT_NODE_VERSION,\n)\n\nload(\"@aspect_rules_js//npm:npm_import.bzl\", \"npm_translate_lock\")\n\nnpm_translate_lock(\n    name = \"npm\",\n    npmrc = \"//web:.npmrc\",\n    pnpm_lock = \"//web:pnpm-lock.yaml\",\n    verify_node_modules_ignored = \"//:.bazelignore\",\n)\n\nload(\"@npm//:repositories.bzl\", \"npm_repositories\")\n\nnpm_repositories()\n\nhttp_archive(\n    name = \"rules_pkg\",\n    urls = [\n        \"https://github.com/bazelbuild/rules_pkg/releases/download/1.0.0/rules_pkg-1.0.0.tar.gz\",\n    ],\n    sha256 = \"cad05f864a32799f6f9022891de91ac78f30e0fa07dc68abac92a628121b5b11\",\n)\n\nload(\"@rules_pkg//:deps.bzl\", \"rules_pkg_dependencies\")\n\nrules_pkg_dependencies()\n"
+        },
+        {
+          "name": "client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jsonframe",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.sh",
+          "type": "blob",
+          "size": 0.365234375,
+          "content": "#!/bin/bash\nset -ex\nmkdir -p builds\nrev=$(git rev-parse HEAD | head -c10)\nbuilddir=\"livegrep-$rev\"\nrm -rf \"$builddir\" && mkdir \"$builddir\"\nbazel build :livegrep\ntar -C \"$builddir\" -xf \"$(bazel info bazel-bin)\"/livegrep.tar\ntar -czf \"builds/$builddir.tgz\" \"$builddir\"\nrm -rf \"$builddir\"\n\n# send the name of the built file, so that github actions can upload it\necho $builddir\n"
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "third_party",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "travisdeps.sh",
+          "type": "blob",
+          "size": 0.1494140625,
+          "content": "#!/bin/bash\nset -ex\n\nmkdir -p deps\n\nif ! test -d deps/linux; then\n    git clone --depth=1 --branch v3.17 https://github.com/torvalds/linux deps/linux\nfi\n"
+        },
+        {
+          "name": "web",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

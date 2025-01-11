@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736566374168,
+    "page": 136,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "JoeyDeVries/LearnOpenGL",
+      "stars": 11243,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "# ignores following folders\nbin/\nbuild/\nout/\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 8.935546875,
+          "content": "cmake_minimum_required (VERSION 3.0)\ncmake_policy(VERSION 3.0)\n\nproject(LearnOpenGL)\n\nset(CMAKE_CXX_STANDARD 17) # this does nothing for MSVC, use target_compile_options below\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\nset(CMAKE_CXX_EXTENSIONS ON)\n\nIF(NOT CMAKE_BUILD_TYPE)\n  SET(CMAKE_BUILD_TYPE Debug CACHE STRING \"Choose the type of build (Debug or Release)\" FORCE)\nENDIF(NOT CMAKE_BUILD_TYPE)\n\nset(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} \"${CMAKE_SOURCE_DIR}/cmake/modules/\")\n\nif(WIN32)\n\tset(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)\nendif(WIN32)\n\nlink_directories(${CMAKE_SOURCE_DIR}/lib)\n\n# find the required packages\nfind_package(GLM REQUIRED)\nmessage(STATUS \"GLM included at ${GLM_INCLUDE_DIR}\")\nfind_package(GLFW3 REQUIRED)\nmessage(STATUS \"Found GLFW3 in ${GLFW3_INCLUDE_DIR}\")\nfind_package(ASSIMP REQUIRED)\nmessage(STATUS \"Found ASSIMP in ${ASSIMP_INCLUDE_DIR}\")\n# find_package(SOIL REQUIRED)\n# message(STATUS \"Found SOIL in ${SOIL_INCLUDE_DIR}\")\n# find_package(GLEW REQUIRED)\n# message(STATUS \"Found GLEW in ${GLEW_INCLUDE_DIR}\")\nif(APPLE)\n  find_package(Freetype REQUIRED)\n  message(STATUS \"Found Freetype in ${FREETYPE_INCLUDE_DIRS}\")\nendif(APPLE)\n\nif(WIN32)\n  set(LIBS glfw3 opengl32 assimp freetype irrKlang)\n  add_definitions(-D_CRT_SECURE_NO_WARNINGS)\nelseif(UNIX AND NOT APPLE)\n  set(CMAKE_CXX_FLAGS_DEBUG \"${CMAKE_CXX_FLAGS_DEBUG} -Wall\")\n  find_package(OpenGL REQUIRED)\n  add_definitions(${OPENGL_DEFINITIONS})\n  find_package(X11 REQUIRED)\n  # note that the order is important for setting the libs\n  # use pkg-config --libs $(pkg-config --print-requires --print-requires-private glfw3) in a terminal to confirm\n  set(LIBS ${GLFW3_LIBRARY} X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread freetype ${ASSIMP_LIBRARY})\n  set (CMAKE_CXX_LINK_EXECUTABLE \"${CMAKE_CXX_LINK_EXECUTABLE} -ldl\")\nelseif(APPLE)\n  INCLUDE_DIRECTORIES(/System/Library/Frameworks)\n  FIND_LIBRARY(COCOA_LIBRARY Cocoa)\n  FIND_LIBRARY(OpenGL_LIBRARY OpenGL)\n  FIND_LIBRARY(IOKit_LIBRARY IOKit)\n  FIND_LIBRARY(CoreVideo_LIBRARY CoreVideo)\n  MARK_AS_ADVANCED(COCOA_LIBRARY OpenGL_LIBRARY)\n  SET(APPLE_LIBS ${COCOA_LIBRARY} ${IOKit_LIBRARY} ${OpenGL_LIBRARY} ${CoreVideo_LIBRARY})\n  SET(APPLE_LIBS ${APPLE_LIBS} ${GLFW3_LIBRARY} ${ASSIMP_LIBRARY} ${FREETYPE_LIBRARIES})\n  set(LIBS ${LIBS} ${APPLE_LIBS})\nelse()\n  set(LIBS )\nendif(WIN32)\n\nset(CHAPTERS\n    1.getting_started\n    2.lighting\n    3.model_loading\n    4.advanced_opengl\n    5.advanced_lighting\n    6.pbr\n    7.in_practice\n)\n\nset(1.getting_started\n    1.1.hello_window\n    1.2.hello_window_clear\n    2.1.hello_triangle\n    2.2.hello_triangle_indexed\n    2.3.hello_triangle_exercise1\n    2.4.hello_triangle_exercise2\n    2.5.hello_triangle_exercise3\n    3.1.shaders_uniform\n    3.2.shaders_interpolation\n    3.3.shaders_class\n    4.1.textures\n    4.2.textures_combined\n    4.4.textures_exercise2\n    4.5.textures_exercise3\n    4.6.textures_exercise4\n    5.1.transformations\n    5.2.transformations_exercise2\n    6.1.coordinate_systems\n    6.2.coordinate_systems_depth\n    6.3.coordinate_systems_multiple\n    7.1.camera_circle\n    7.2.camera_keyboard_dt\n    7.3.camera_mouse_zoom\n    7.4.camera_class\n)\n\nset(2.lighting\n    1.colors\n    2.1.basic_lighting_diffuse\n    2.2.basic_lighting_specular\n    3.1.materials\n    3.2.materials_exercise1\n    4.1.lighting_maps_diffuse_map\n    4.2.lighting_maps_specular_map\n    4.4.lighting_maps_exercise4\n    5.1.light_casters_directional\n    5.2.light_casters_point\n    5.3.light_casters_spot\n    5.4.light_casters_spot_soft\n    6.multiple_lights\n)\n\nset(3.model_loading\n    1.model_loading\n)\n\nset(4.advanced_opengl\n    1.1.depth_testing\n    1.2.depth_testing_view\n    2.stencil_testing\n    3.1.blending_discard\n    3.2.blending_sort\n    5.1.framebuffers\n    5.2.framebuffers_exercise1\n    6.1.cubemaps_skybox\n    6.2.cubemaps_environment_mapping\n    8.advanced_glsl_ubo\n    9.1.geometry_shader_houses\n    9.2.geometry_shader_exploding\n    9.3.geometry_shader_normals\n    10.1.instancing_quads\n    10.2.asteroids\n    10.3.asteroids_instanced\n    11.1.anti_aliasing_msaa\n    11.2.anti_aliasing_offscreen\n)\n\nset(5.advanced_lighting\n    1.advanced_lighting\n    2.gamma_correction\n    3.1.1.shadow_mapping_depth\n    3.1.2.shadow_mapping_base\n    3.1.3.shadow_mapping\n    3.2.1.point_shadows\n    3.2.2.point_shadows_soft\n    4.normal_mapping\n    5.1.parallax_mapping\n    5.2.steep_parallax_mapping\n    5.3.parallax_occlusion_mapping\n    6.hdr\n    7.bloom\n    8.1.deferred_shading\n    8.2.deferred_shading_volumes\n    9.ssao\n)\n\nset(6.pbr\n    1.1.lighting\n    1.2.lighting_textured\n    2.1.1.ibl_irradiance_conversion\n    2.1.2.ibl_irradiance\n    2.2.1.ibl_specular\n    2.2.2.ibl_specular_textured\n)\n\nset(7.in_practice\n    1.debugging\n    2.text_rendering\n    #3.2d_game\n)\n\nset(GUEST_ARTICLES\n\t8.guest/2020/oit\n\t8.guest/2020/skeletal_animation\n\t8.guest/2021/1.scene/1.scene_graph\n\t8.guest/2021/1.scene/2.frustum_culling\n\t8.guest/2021/2.csm\n\t8.guest/2021/3.tessellation/terrain_gpu_dist\n\t8.guest/2021/3.tessellation/terrain_cpu_src\n\t8.guest/2021/4.dsa\n\t8.guest/2022/5.computeshader_helloworld\n\t8.guest/2022/6.physically_based_bloom\n\t8.guest/2022/7.area_lights/1.area_light\n\t8.guest/2022/7.area_lights/2.multiple_area_lights\n)\n\nconfigure_file(configuration/root_directory.h.in configuration/root_directory.h)\ninclude_directories(${CMAKE_BINARY_DIR}/configuration)\n\n# first create relevant static libraries required for other projects\nadd_library(STB_IMAGE \"src/stb_image.cpp\")\nset(LIBS ${LIBS} STB_IMAGE)\n\nadd_library(GLAD \"src/glad.c\")\nset(LIBS ${LIBS} GLAD)\n\nmacro(makeLink src dest target)\n  add_custom_command(TARGET ${target} POST_BUILD COMMAND ${CMAKE_COMMAND} -E create_symlink ${src} ${dest}  DEPENDS  ${dest} COMMENT \"mklink ${src} -> ${dest}\")\nendmacro()\n\nfunction(create_project_from_sources chapter demo)\n\tfile(GLOB SOURCE\n            \"src/${chapter}/${demo}/*.h\"\n            \"src/${chapter}/${demo}/*.cpp\"\n            \"src/${chapter}/${demo}/*.vs\"\n            \"src/${chapter}/${demo}/*.fs\"\n            \"src/${chapter}/${demo}/*.tcs\"\n            \"src/${chapter}/${demo}/*.tes\"\n            \"src/${chapter}/${demo}/*.gs\"\n            \"src/${chapter}/${demo}/*.cs\"\n    )\n\tif (demo STREQUAL \"\")\n\t\tSET(replaced \"\")\n\t\tstring(REPLACE \"/\" \"_\" replaced ${chapter})\n\t\tset(NAME ${replaced})\n\telse()\n\t\tset(NAME \"${chapter}__${demo}\")\n\tendif()\n    add_executable(${NAME} ${SOURCE})\n    target_link_libraries(${NAME} ${LIBS})\n    if(MSVC)\n\t\ttarget_compile_options(${NAME} PRIVATE /std:c++17 /MP)\n        target_link_options(${NAME} PUBLIC /ignore:4099)\n    endif(MSVC)\n    if(WIN32)\n        set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_SOURCE_DIR}/bin/${chapter}\")\n        set_target_properties(${NAME} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}/bin/${chapter}/Debug\")\n    elseif(UNIX AND NOT APPLE)\n        set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_SOURCE_DIR}/bin/${chapter}\")\n    elseif(APPLE)\n        set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_SOURCE_DIR}/bin/${chapter}\")\n        set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG \"${CMAKE_SOURCE_DIR}/bin/${chapter}\")\n        set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE \"${CMAKE_SOURCE_DIR}/bin/${chapter}\")\n    endif(WIN32)\n    # copy shader files to build directory\n    file(GLOB SHADERS\n             \"src/${chapter}/${demo}/*.vs\"\n             # \"src/${chapter}/${demo}/*.frag\"\n             \"src/${chapter}/${demo}/*.fs\"\n             \"src/${chapter}/${demo}/*.tcs\"\n             \"src/${chapter}/${demo}/*.tes\"\n             \"src/${chapter}/${demo}/*.gs\"\n             \"src/${chapter}/${demo}/*.cs\"\n    )\n\t# copy dlls\n\tfile(GLOB DLLS \"dlls/*.dll\")\n    foreach(SHADER ${SHADERS})\n        if(WIN32)\n            # configure_file(${SHADER} \"test\")\n            add_custom_command(TARGET ${NAME} PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SHADER} $<TARGET_FILE_DIR:${NAME}>)\n\t\t\tadd_custom_command(TARGET ${NAME} PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different ${DLLS} $<TARGET_FILE_DIR:${NAME}>)\n        elseif(UNIX AND NOT APPLE)\n            file(COPY ${SHADER} DESTINATION ${CMAKE_SOURCE_DIR}/bin/${chapter})\n        elseif(APPLE)\n            # create symbolic link for *.vs *.fs *.gs\n            get_filename_component(SHADERNAME ${SHADER} NAME)\n            makeLink(${SHADER} ${CMAKE_SOURCE_DIR}/bin/${chapter}/${SHADERNAME} ${NAME})\n        endif(WIN32)\n    endforeach(SHADER)\n    # if compiling for visual studio, also use configure file for each project (specifically to set up working directory)\n    if(MSVC)\n        configure_file(${CMAKE_SOURCE_DIR}/configuration/visualstudio.vcxproj.user.in ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.vcxproj.user @ONLY)\n    endif(MSVC)\nendfunction()\n\n# then create a project file per tutorial\nforeach(CHAPTER ${CHAPTERS})\n    foreach(DEMO ${${CHAPTER}})\n\t\tcreate_project_from_sources(${CHAPTER} ${DEMO})\n    endforeach(DEMO)\nendforeach(CHAPTER)\nforeach(GUEST_ARTICLE ${GUEST_ARTICLES})\n\tcreate_project_from_sources(${GUEST_ARTICLE} \"\")\nendforeach(GUEST_ARTICLE)\n\ninclude_directories(${CMAKE_SOURCE_DIR}/includes)\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 0.267578125,
+          "content": "All code samples, unless explicitly stated otherwise, are licensed under the terms of the CC BY-NC 4.0 license as published by Creative Commons, either version 4 of the License, or (at your option) any later version.\n\nSee https://learnopengl.com/About for more information.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.130859375,
+          "content": "# learnopengl.com code repository\nContains code samples for all chapters of Learn OpenGL and [https://learnopengl.com](https://learnopengl.com). \n\n## Windows building\nAll relevant libraries are found in /libs and all DLLs found in /dlls (pre-)compiled for Windows. \nThe CMake script knows where to find the libraries so just run CMake script and generate project of choice.\n\nKeep in mind the supplied libraries were generated with a specific compiler version which may or may not work on your system (generating a large batch of link errors). In that case it's advised to build the libraries yourself from the source.\n\n## Linux building\nFirst make sure you have CMake, Git, and GCC by typing as root (sudo) `apt-get install g++ cmake git` and then get the required packages:\nUsing root (sudo) and type `apt-get install libsoil-dev libglm-dev libassimp-dev libglew-dev libglfw3-dev libxinerama-dev libxcursor-dev  libxi-dev libfreetype-dev libgl1-mesa-dev xorg-dev` .\n\n**Build through CMake-gui:** The source directory is LearnOpenGL and specify the build directory as LearnOpenGL/build. Creating the build directory within LearnOpenGL is important for linking to the resource files (it also will be ignored by Git). Hit configure and specify your compiler files (Unix Makefiles are recommended), resolve any missing directories or libraries, and then hit generate. Navigate to the build directory (`cd LearnOpenGL/build`) and type `make` in the terminal. This should generate the executables in the respective chapter folders.\n\n**Build through Cmake command line:**\n```\ncd /path/to/LearnOpenGL\nmkdir build && cd build\ncmake ..\ncmake --build .\n```\n\nNote that CodeBlocks or other IDEs may have issues running the programs due to problems finding the shader and resource files, however it should still be able to generate the executables. To work around this problem it is possible to set an environment variable to tell the tutorials where the resource files can be found. The environment variable is named LOGL_ROOT_PATH and may be set to the path to the root of the LearnOpenGL directory tree. For example:\n\n    `export LOGL_ROOT_PATH=/home/user/tutorials/LearnOpenGL`\n\nRunning `ls $LOGL_ROOT_PATH` should list, among other things, this README file and the resources directory.\n\n## Mac OS X building\nBuilding on Mac OS X is fairly simple:\n```\nbrew install cmake assimp glm glfw freetype\ncmake -S . -B build\ncmake --build build -j$(sysctl -n hw.logicalcpu)\n```\n## Create Xcode project on Mac platform\nThanks [@caochao](https://github.com/caochao):\nAfter cloning the repo, go to the root path of the repo, and run the command below:\n```\nmkdir xcode\ncd xcode\ncmake -G Xcode ..\n```\n\n## Glitter\nPolytonic created a project called [Glitter](https://github.com/Polytonic/Glitter) that is a dead-simple boilerplate for OpenGL. \nEverything you need to run a single LearnOpenGL Project (including all libraries) and just that; nothing more. \nPerfect if you want to follow along with the chapters, without the hassle of having to manually compile and link all third party libraries!\n\n## Ports\nCheck out [@srcres258](https://github.com/srcres258)'s port in Rust [here](https://github.com/srcres258/learnopengl-rust/).\n"
+        },
+        {
+          "name": "build_windows.sh",
+          "type": "blob",
+          "size": 0.1142578125,
+          "content": "mkdir -p out\ncd out\n\ncmake -G\"Visual Studio 16 2019\" ${COMMON_CMAKE_CONFIG_PARAMS} ../\ncmake --build . --config Debug"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configuration",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dlls",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "includes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

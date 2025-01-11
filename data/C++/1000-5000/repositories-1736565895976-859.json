@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "timestamp": 1736565895976,
+    "page": 859,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "darglein/ADOP",
+      "stars": 2029,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".clang-format",
+          "type": "blob",
+          "size": 0.8212890625,
+          "content": "﻿# Commented out parameters are those with the same value as base LLVM style\n# We can uncomment them if we want to change their value, or enforce the\n# chosen value in case the base style changes (last sync: Clang 6.0.1).\n---\n### General config, applies to all languages ###\nBasedOnStyle: Google\nIndentWidth: 4\nBreakBeforeBraces: Allman\nColumnLimit: 120\nDerivePointerAlignment: false\nPointerAlignment: Left\nMaxEmptyLinesToKeep: 3\nSortIncludes: true\nIncludeBlocks: Regroup\nIncludeCategories:\n  - Regex:           '^\"(saiga)/'\n    Priority:        1\n  - Regex:           '^\"(internal)/'\n    Priority:        2\n  - Regex:           '\"[[:alnum:]./]+\"'\n    Priority:        3\n  - Regex:           '<[[:alnum:]./]+>'\n    Priority:        4\nIndentPPDirectives: AfterHash\nAlignConsecutiveAssignments: true\nAllowShortFunctionsOnASingleLine: Inline\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1298828125,
+          "content": "log/\nvalgrind*\ncmake-build-*/\nperf*\nout.perf-folded\n.idea/\ncheckpoints/\nimgui.ini\nbuild*/\ndebug/\nconfig.ini\npretrained/\nexperiments/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.2060546875,
+          "content": "[submodule \"External/saiga\"]\n\tpath = External/saiga\n\turl = ../../darglein/saiga.git\n[submodule \"External/tensorboard_logger\"]\n\tpath = External/tensorboard_logger\n\turl = ../../RustingSword/tensorboard_logger.git\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.6240234375,
+          "content": "cmake_minimum_required(VERSION 3.8 FATAL_ERROR)\nproject(ADOP VERSION 1.0.0 LANGUAGES C CXX CUDA)\n\nset(CMAKE_MODULE_PATH \"${PROJECT_SOURCE_DIR}/cmake\" ${CMAKE_MODULE_PATH})\nlist(APPEND CMAKE_MODULE_PATH \"${PROJECT_SOURCE_DIR}/External/saiga/cmake/\")\n\ninclude(helper_macros)\ninclude(ExternalProject)\nDefaultBuildType(RelWithDebInfo)\nmessage(\"Build Options\")\n\nOptionsHelper(ADOP_HEADLESS \"Skips the adop_viewer and other apps that require a window.\" OFF)\nOptionsHelper(ADOP_ASAN \"Adds sanitize=address compiler flag\" OFF)\nOptionsHelper(ADOP_TINY_EIGEN \"Use saiga's tiny eigen library.\" ON)\n\nif (ADOP_HEADLESS)\n    set(SAIGA_MODULE_OPENGL OFF)\n    set(SAIGA_BUILD_GLFW OFF)\nendif ()\n\n############# Required LIBRARIES ###############\n\n# Saiga\nset(SAIGA_BUILD_SAMPLES OFF)\nset(SAIGA_BUILD_TESTS OFF)\nset(SAIGA_BUILD_SHARED ON)\nset(SAIGA_MODULE_VISION OFF)\nset(SAIGA_MODULE_VULKAN OFF)\n#set(SAIGA_MODULE_CUDA OFF)\nset(SAIGA_NO_INSTALL ON)\nset(SAIGA_USE_SUBMODULES ON)\nset(SAIGA_WITH_FFMPEG OFF)\nset(SAIGA_WITH_FREETYPE OFF)\nset(SAIGA_WITH_TINY_EIGEN ${ADOP_TINY_EIGEN})\nadd_subdirectory(External/saiga)\nPackageHelperTarget(saiga_core SAIGA_FOUND)\nif (NOT ADOP_HEADLESS)\n    PackageHelperTarget(saiga_opengl SAIGA_FOUND)\nendif ()\nPackageHelperTarget(saiga_opengl SAIGA_FOUND)\nPackageHelperTarget(saiga_cuda SAIGA_FOUND)\n\n# Torch\nfind_package(Torch REQUIRED)\nPackageHelperTarget(torch TORCH_FOUND)\n\n#replace flags\n\nset(CMAKE_EXE_LINKER_FLAGS \"-Wl,--as-needed\")\ninclude_directories(.)\ninclude_directories(${PACKAGE_INCLUDES})\n\nif (UNIX)\n    add_subdirectory(External/tensorboard_logger)\n    set_property(TARGET tensorboard_logger PROPERTY POSITION_INDEPENDENT_CODE ON)\n    PackageHelperTarget(tensorboard_logger TBL_FOUND)\n    add_compile_definitions(TBLOGGER)\nendif ()\n\n############# COMPILER FLAGS ###############\n\nif (MSVC)\n    #multiprocessor compilation for visual studio\n    SET(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} /MP\")\nelse ()\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -Werror=return-type\")\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wno-strict-aliasing\")\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wno-sign-compare\")\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -ftemplate-backtrace-limit=0\")\nendif ()\n\n\nmessage(STATUS CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})\nmessage(STATUS CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS})\n\nset(LIBS ${LIBS} ${LIB_TARGETS})\n\n############# C++ Standard and Filesystem stuff ###############\n\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\n#dll has all symbols, to avoid __declspecs everywhere\nset(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)\ninclude(GenerateExportHeader)\n\n############# SOURCE ###############\n\nadd_subdirectory(src)\n\n\n\n\n\n\n\n"
+        },
+        {
+          "name": "External",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "MIT License\n\nCopyright (c) 2021 Darius Rückert\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 11.697265625,
+          "content": "# ADOP: Approximate Differentiable One-Pixel Point Rendering\n\n<div style=\"text-align: center;\">Darius Rückert, Linus Franke, Marc Stamminger</div>\n\n![](images/adop_overview.png)\n\n\n**Abstract:** We present a novel point-based, differentiable neural rendering pipeline for\nscene refinement and novel view synthesis. The input are an initial estimate of\nthe point cloud and the camera parameters. The output are synthesized images\nfrom arbitrary camera poses. The point cloud rendering is performed by a\ndifferentiable renderer using multi-resolution one-pixel point rasterization.\nSpatial gradients of the discrete rasterization are approximated by the novel\nconcept of ghost geometry. After rendering, the neural image pyramid is passed\nthrough a deep neural network for shading calculations and hole-filling. A\ndifferentiable, physically-based tonemapper then converts the intermediate\noutput to the target image. Since all stages of the pipeline are\ndifferentiable, we optimize all of the scene's parameters i.e. camera model,\ncamera pose, point position, point color, environment map, rendering network\nweights, vignetting, camera response function, per image exposure, and per\nimage white balance. We show that our system is able to synthesize sharper and\nmore consistent novel views than existing approaches because the initial\nreconstruction is refined during training. The efficient one-pixel point\nrasterization allows us to use arbitrary camera models and display scenes with\nwell over 100M points in real time.\n\n[[Paper]](https://arxiv.org/abs/2110.06635) [[Youtube]](https://www.youtube.com/watch?v=WJRyu1JUtVw) [[Supplementary Material]](https://zenodo.org/record/6759811)\n\n<a href=\"https://www.youtube.com/watch?v=WJRyu1JUtVw\"><img  width=\"300\" src=\"https://img.youtube.com/vi/WJRyu1JUtVw/hqdefault.jpg\"> </a>\n\n## Citation\n\n```\n@article{ruckert2022adop,\n  title={Adop: Approximate differentiable one-pixel point rendering},\n  author={R{\\\"u}ckert, Darius and Franke, Linus and Stamminger, Marc},\n  journal={ACM Transactions on Graphics (ToG)},\n  volume={41},\n  number={4},\n  pages={1--14},\n  year={2022},\n  publisher={ACM New York, NY, USA}\n}\n```\n\n## Follow-up\n\nIf you found this repository interesting, take a look at our follow-up works:\n\n* [VET: Visual Error Tomography for Point Cloud Completion and High-Quality Neural Rendering](https://lfranke.github.io/vet/): Improving quality by completing the used pointclouds during training in the ADOP pipeline - [Code](https://github.com/lfranke/VET)\n\n* [TRIPS: Trilinear Point Splatting for Real-Time Radiance Field Rendering](https://lfranke.github.io/trips/): ADOP follow-up work with non-approximate gradients, smaller neural network, less flickering and faster rendering. This paper also includes ADOP metrics for the common MipNeRF-360 dataset as well as more Tanks and Temples scenes.  - [Code](https://github.com/lfranke/TRIPS)\n\n\n\n## Notes\n\nThis repository was updated to a more recent torch and CUDA version in January 2024. For the original (paper) implementation, see commit [ad88015](https://github.com/darglein/ADOP/tree/ad8801583ad30e2e9e205947cb3602406d3aac0f).\n\n\n## README Hierarchy\n\nThere are additional READMEs in subfolders. Take a look at [src/README.md](src/README.md) and [src/README_WINDOWS.md](src/README_WINDOWS.md) for compile instructions and [scenes/README.md](scenes/README.md) for information on custom datasets.\n\n## Compile Instructions\n\n * ADOP is implemented in C++/CUDA using libTorch.\n * A python wrapper for pyTorch is currently not available. Feel free to submit a pull-request on that issue.\n * The detailed compile instructions can be found here: [src/README.md](src/README.md)\n\n## Running ADOP on Pretrained Models\n\nAfter a successful compilation, the best way to get started is to run `adop_viewer` on the *tanks and temples* scenes using our pretrained models.\nFirst, download the [scenes](https://zenodo.org/record/6759811/files/scenes.zip?download=1) and extract them into `ADOP/scenes`.\nNow, download the [model checkpoints](https://zenodo.org/record/6759811/files/experiments.zip?download=1) and extract them into `ADOP/experiments`.\nYour folder structure should look like this:\n```shell\nADOP/\n    build/\n        ...\n    scenes/\n        tt_train/\n        tt_playground/\n        ...\n    experiments/\n        2021-10-15_08:26:49_multi_scene/\n        ...\n```\n\n\n## ADOP Viewer\n\nThe `adop_viewer` can now be run by passing the path to a scene.\nIt will automatically search for fitting pretrained models in the `experiments/` directory.\nFor example:\n```shell\nconda activate adop\nexport CONDA=${CONDA_PREFIX:-\"$(dirname $(which conda))/../\"}\nexport LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA/lib\n./build/bin/adop_viewer --scene_dir scenes/boat\n```\n\n * The working dir of `adop_viewer` must be the ADOP root directory. This is required because the shaders and experiments are search on relative paths.\n * The most important keyboard shortcuts are:\n    * F1: Switch to 3DView\n    * F2: Switch to neural view\n    * F3: Switch to split view (default)\n    * WASD: Move camera\n    * Center Mouse + Drag: Rotate around camera center\n    * Left Mouse + Drag: Rotate around world center\n    * Right click in 3DView: Select camera\n    * Q: Move camera to selected camera\n\n<img  width=\"400\"  src=\"images/adop_viewer.png\"> <img width=\"400\"  src=\"images/adop_viewer_demo.gif\">\n\n## ADOP VR Viewer\n\nWe have implemented **experimental** VR support using OpenVR/SteamVR.\nCheckout src/README.md for the compilation requirements.\n```shell\ncd ADOP\n./build/bin/adop_vr_viewer --scene_dir scenes/tt_playground\n```\n * Tune the `render_scale` settings for a compromise between FPS and resolution\n * Requires a high-end GPU to run reasonable\n * Hopefully will be optimized in the future :)\n\n<img src=\"images/vr.gif\">\n\n## HDR Scenes\n\nADOP supports HDR scenes due to the physically-based tone mapper.\nThe input images can therefore have different exposure settings.\nThe dynamic range of a scene is the difference between the smallest and largest EV of all images.\nFor example, our boat scene (see below) has a dynamic range of ~10 stops.\nIf you want to fit ADOP to your own HDR scene consider the following:\n\n * For small dynamic ranges (<4) you can use the default pipeline.\n * For scenes with a large dynamic range, change to the log texture format and reduce the texture learning rate. Use the train config of our boat scene as reference.\n * Check if an initial EV guess is available. Many cameras store the exposure settings in the EXIF data.\n * Set the scene EV in the dataset.ini to the mean EV of all frames. This keeps the weights in a reasonable range.\n\nWhen viewing HDR scenes in the `adop_viewer` you can press [F7] to open the tone mapper tab.\nHere you can change the exposure value of the virtual camera.\nIn the render settings you find an option to use OpenGL based tone mapping instead of the learned on.\n\nhttps://user-images.githubusercontent.com/16142878/138316754-ef8b2a8a-d421-4542-9b7b-4ee86bd15e97.mp4\n\n## Scene Description\n * ADOP uses a simple, text-based scene description format.\n * To run ADOP on your scenes you have to convert them into this format.\n * After that you run adop_scene_preprocess to precompute various parameters.\n * If you have created your scene with COLMAP (like us) you can use the colmap2adop converter.\n * More infos on this topic can be found here: [scenes/README.md](scenes/README.md)\n\n## Training ADOP\nThe ADOP pipeline is fitted to your scenes by the `adop_train` executable.\nAll training parameters are stored in a separate config file.\nThe basic syntax is:\n```shell\ncd ADOP\n./build/bin/adop_train --config configs/train_boat.ini\n```\nMake again sure that the working directory is the ADOP root.\nOtherwise, the loss models will not be found.\n\n#### Parameters\n\nIn `ADOP/configs/` you will find the train configurations files that we used to create the pretrained models.\nWe recommend to start with one these for your scenes.\n * Choose `configs/train_boat.ini` as a starting point, if your scene has been captured with a high variation of exposure values. (> 5 Stops)\n * Choose `configs/train_tank_and_temples_multi.ini` as a starting point for indoor scenes or if the images have a similar exposure value.\n\n#### Memory Consumption\n\nBoth of our reference training config files were created for a 40GB A100 GPU.\nIf you run these on a lower-end GPU you will most likely run out of memory.\nThe important config params that control memory consumption are:\n```shell\n# Settings for 40GB A100\n# Size in pixels of the random crop during training\ntrain_crop_size = 512\n# How many crops are taken per image\ninner_batch_size = 4\n# How many images are batched together. One batch will have inner_batch_size x batch_size = 16 crops!\nbatch_size = 4\n```\n\n```shell\n# Settings for 12GB Titan V\ntrain_crop_size = 256\ninner_batch_size = 8\nbatch_size = 2\n```\n\nAdditionally, you will find that the point cloud size will also have a significant impact on memory consumption.\nOn 12GB cards, we recommend to process only point clouds up to 100M points.\nOtherwise, the batch size will be too small for good results.\n\n#### Duration\n\nAs you can see in `configs`, we usually train for 400 epochs.\nThis will take between 12-24h depending on scene size and training hardware.\nHowever, after 100 epochs (3-6h) the novel view synthesis already works very well.\nYou can use this checkpoint in the `adop_viewer` to check if everything is working.\n\n## Camera Models\n\nADOP currently supports two different camera models.\nThe [Pinhole/Distortion](https://docs.opencv.org/4.5.4/d9/d0c/group__calib3d.html) camera model\nand the [Omnidirectional](https://sites.google.com/site/scarabotix/ocamcalib-omnidirectional-camera-calibration-toolbox-for-matlab?authuser=0) camera model.\n\n#### Pinhole/Distortion Camera Model\n\n * The default model for photogrammetry software like COLMAP, Metashape and Capture Reality.\n * Our implementation is found here: [Pinhole Part](https://github.com/darglein/saiga/blob/master/src/saiga/vision/cameraModel/Intrinsics4.h) and [Distortion Part](https://github.com/darglein/saiga/blob/master/src/saiga/vision/cameraModel/Distortion.h)\n\n#### Omnidirectional Camera Model\n\n * A fisheye camera model extreme wide-angle angles.\n * Our implementation is found here: [Model](https://github.com/darglein/saiga/blob/master/src/saiga/vision/cameraModel/OCam.h)\n\n#### Extending ADOP with other Camera Models\n\n 1. Implement the camera model and its derivative. The derivative should be returned as the Jacobian matrix.\n 2. Implement the forward and backward projection function [here](src/lib/rendering/PointRendererHelper.h).\n 3. Add a new type [here](src/lib/data/SceneData.h), update the [rasterization code](src/lib/rendering/PointRenderer.cu) and the [wrapper code](src/lib/data/NeuralStructure.h).\n\n## Supplementary Material\n\n[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6759811.svg)](https://doi.org/10.5281/zenodo.6759811)\n\nThe supplementary material is published on Zenodo:\n\nhttps://zenodo.org/record/6759811\n\nThis directory includes:\n\n * videos.zip\n      * Additional separated video clips of the scenes.\n      * Full-HD, 60 FPS\n * colmap.zip\n      * The COLMAP reconstructions of our 5 scenes (boat + 4 tanks and temple scenes)\n      * Includes triangle meshes to compare other approaches.\n * scenes.zip\n      * The preprocessed scenes in our scene format\n      * Required to run the pretrained model\n * experiments.zip\n      * The pretrained models for all 5 scenes.\n      * The 4 tanks and temples scenes were trained simultaneously and are therefore combined into a single experiment. They also share the same rendering network.\n\n#### Preview Videos\n\nhttps://user-images.githubusercontent.com/16142878/138441327-83b19400-e927-47c7-828e-ca21fe06c898.mp4\n\nhttps://user-images.githubusercontent.com/16142878/138441057-dc0b0074-8e8e-4ba2-8286-13fd332c8ac1.mp4\n\nhttps://user-images.githubusercontent.com/16142878/138441154-fa218d86-273c-4db1-951d-c7d39c015844.mp4\n\n\n"
+        },
+        {
+          "name": "build_adop.sh",
+          "type": "blob",
+          "size": 0.6591796875,
+          "content": "#!/bin/bash\n\ngit submodule update --init --recursive --jobs 0\nsource $(conda info --base)/etc/profile.d/conda.sh\nconda activate adop\n\n\n\nif command -v g++-9 &> /dev/null \nthen\n    export CC=gcc-9\n    export CXX=g++-9\n    export CUDAHOSTCXX=g++-9\n    echo \"Using g++-9\"\nelif command -v g++-7 &> /dev/null\nthen\n    export CC=gcc-7\n    export CXX=g++-7\n    export CUDAHOSTCXX=g++-7\n    echo \"Using g++-7\"\nelse\n    echo \"No suitable compiler found. Install g++-7 or g++-9\"\n    exit\nfi\n\nunset CUDA_HOME\n\nmkdir build\ncd build\nexport CONDA=${CONDA_PREFIX:-\"$(dirname $(which conda))/../\"}\ncmake -DCMAKE_PREFIX_PATH=\"${CONDA}/lib/python3.9/site-packages/torch/;${CONDA}\" ..\nmake -j10\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "create_environment.sh",
+          "type": "blob",
+          "size": 0.9208984375,
+          "content": "#!/bin/bash\n\n#git submodule update --init --recursive --jobs 0\n\n\nsource $(conda info --base)/etc/profile.d/conda.sh\n\nconda update -n base -c defaults conda\n\nconda create -y -n adop python=3.9.7\nconda activate adop\n\n#conda install -y ncurses=6.3 -c conda-forge\n#conda install -y cudnn=8.2.1.32 cudatoolkit-dev=11.3 cudatoolkit=11.3 -c nvidia -c conda-forge\n#conda install -y cudnn=8.2.1.32 cudatoolkit-dev=11.4 cudatoolkit=11.4 -c nvidia -c conda-forge\n#conda install -y astunparse numpy ninja pyyaml mkl mkl-include setuptools=58.0.4 cmake=3.19.6 cffi typing_extensions future six requests dataclasses pybind11=2.6.2\n#conda install -y magma-cuda110 -c pytorch\n#conda install -y freeimage=3.17 jpeg=9d protobuf=3.13.0.1 -c conda-forge\n\n\nconda install -y cuda  -c nvidia/label/cuda-11.8.0\nconda install -y -c conda-forge cudnn=8.9.2\nconda install -y -c conda-forge cmake=3.26.1\nconda install -y protobuf=3.13.0.1\nconda install -y mkl mkl-include"
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install_pytorch_precompiled.sh",
+          "type": "blob",
+          "size": 0.3681640625,
+          "content": "#!/bin/bash\nsource $(conda info --base)/etc/profile.d/conda.sh\n\nconda activate adop\n\nCONDA=${CONDA_PREFIX:-\"$(dirname $(which conda))/../\"}\n\nmkdir External/\ncd External/\n\n\nwget https://download.pytorch.org/libtorch/cu116/libtorch-cxx11-abi-shared-with-deps-1.13.1%2Bcu116.zip -O  libtorch.zip\nunzip libtorch.zip -d .\n\n\ncp -rv libtorch/ $CONDA/lib/python3.9/site-packages/torch/"
+        },
+        {
+          "name": "loss",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scenes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shader",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

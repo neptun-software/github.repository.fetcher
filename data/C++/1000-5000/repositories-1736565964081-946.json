@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "timestamp": 1736565964081,
+    "page": 946,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ssloy/tinyraycaster",
+      "stars": 1915,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "# Ignore content built with CMake\nbuild/\n\n"
+        },
+        {
+          "name": ".gitpod.yml",
+          "type": "blob",
+          "size": 0.2666015625,
+          "content": "image:\n  file: Dockerfile\nports:\n- port: 6080\n  onOpen: notify\n- port: 5900\n  onOpen: ignore\ntasks:\n- command: >\n    mkdir --parents build &&\n    cd build &&\n    cmake .. &&\n    make &&\n    ./tinyraycaster &&\n    pnmtopng out.ppm > out.png &&\n    open out.png &&\n    cd ..\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.1142578125,
+          "content": "cmake_minimum_required (VERSION 2.8)\nproject (tinyraycaster)\n\nset(SRC_DIR \"${CMAKE_CURRENT_SOURCE_DIR}\")\n\ninclude(CheckCXXCompilerFlag)\nfunction(enable_cxx_compiler_flag_if_supported flag)\n    string(FIND \"${CMAKE_CXX_FLAGS}\" \"${flag}\" flag_already_set)\n    if(flag_already_set EQUAL -1)\n        check_cxx_compiler_flag(\"${flag}\" flag_supported)\n        if(flag_supported)\n            set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} ${flag}\" PARENT_SCOPE)\n        endif()\n        unset(flag_supported CACHE)\n    endif()\nendfunction()\n\nenable_cxx_compiler_flag_if_supported(\"-Wall\")\nenable_cxx_compiler_flag_if_supported(\"-Wextra\")\nenable_cxx_compiler_flag_if_supported(\"-pedantic\")\nenable_cxx_compiler_flag_if_supported(\"-std=c++11\")\nenable_cxx_compiler_flag_if_supported(\"-O3\")\n\nset(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} \"${CMAKE_SOURCE_DIR}\")\nfind_package(SDL2 REQUIRED)\ninclude_directories(${SDL2_INCLUDE_DIRS})\n\nfile(GLOB SOURCES\n    \"${SRC_DIR}/*.h\"\n    \"${SRC_DIR}/*.cpp\"\n)\n\nadd_executable(${PROJECT_NAME} ${SOURCES})\ntarget_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})\ntarget_include_directories(${PROJECT_NAME} PRIVATE \"${SRC_DIR}\")\n\n\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "FROM gitpod/workspace-full-vnc\n\nUSER root\n# add your tools here\nRUN apt-get update && apt-get install -y \\\n  netpbm \\\n  libsdl2-dev\n"
+        },
+        {
+          "name": "FindSDL2.cmake",
+          "type": "blob",
+          "size": 7.216796875,
+          "content": "# Distributed under the OSI-approved BSD 3-Clause License. See accompanying\n# file Copyright.txt or https://cmake.org/licensing for details.\n\n#.rst:\n# FindSDL2\n# -------\n#\n# Locate SDL2 library\n#\n# This module defines\n#\n# ::\n#\n# SDL2_LIBRARY, the name of the library to link against\n# SDL2_FOUND, if false, do not try to link to SDL\n# SDL2_INCLUDE_DIR, where to find SDL.h\n# SDL2_VERSION_STRING, human-readable string containing the version of SDL\n#\n#\n#\n# This module responds to the flag:\n#\n# ::\n#\n# SDL2_BUILDING_LIBRARY\n# If this is defined, then no SDL2_main will be linked in because\n# only applications need main().\n# Otherwise, it is assumed you are building an application and this\n# module will attempt to locate and set the proper link flags\n# as part of the returned SDL2_LIBRARY variable.\n#\n#\n#\n# Don't forget to include SDLmain.h and SDLmain.m your project for the\n# OS X framework based version. (Other versions link to -lSDLmain which\n# this module will try to find on your behalf.) Also for OS X, this\n# module will automatically add the -framework Cocoa on your behalf.\n#\n#\n#\n# Additional Note: If you see an empty SDL2_LIBRARY_TEMP in your\n# configuration and no SDL2_LIBRARY, it means CMake did not find your SDL\n# library (SDL.dll, libsdl.so, SDL.framework, etc). Set\n# SDL2_LIBRARY_TEMP to point to your SDL library, and configure again.\n# Similarly, if you see an empty SDLMAIN_LIBRARY, you should set this\n# value as appropriate. These values are used to generate the final\n# SDL2_LIBRARY variable, but when these values are unset, SDL2_LIBRARY\n# does not get created.\n#\n#\n#\n# $SDL2DIR is an environment variable that would correspond to the\n# ./configure --prefix=$SDL2DIR used in building SDL. l.e.galup 9-20-02\n#\n# Modified by Eric Wing. Added code to assist with automated building\n# by using environmental variables and providing a more\n# controlled/consistent search behavior. Added new modifications to\n# recognize OS X frameworks and additional Unix paths (FreeBSD, etc).\n# Also corrected the header search path to follow \"proper\" SDL\n# guidelines. Added a search for SDLmain which is needed by some\n# platforms. Added a search for threads which is needed by some\n# platforms. Added needed compile switches for MinGW.\n#\n# On OSX, this will prefer the Framework version (if found) over others.\n# People will have to manually change the cache values of SDL2_LIBRARY to\n# override this selection or set the CMake environment\n# CMAKE_INCLUDE_PATH to modify the search paths.\n#\n# Note that the header path has changed from SDL/SDL.h to just SDL.h\n# This needed to change because \"proper\" SDL convention is #include\n# \"SDL.h\", not <SDL/SDL.h>. This is done for portability reasons\n# because not all systems place things in SDL/ (see FreeBSD).\n\nif(NOT SDL2_DIR)\n  set(SDL2_DIR \"\" CACHE PATH \"SDL2 directory\")\nendif()\n\nfind_path(SDL2_INCLUDE_DIR SDL.h\n  HINTS\n    ENV SDL2DIR\n    ${SDL2_DIR}\n  PATH_SUFFIXES SDL2\n                # path suffixes to search inside ENV{SDL2DIR}\n                include/SDL2 include\n)\n\nif(CMAKE_SIZEOF_VOID_P EQUAL 8)\n  set(VC_LIB_PATH_SUFFIX lib/x64)\nelse()\n  set(VC_LIB_PATH_SUFFIX lib/x86)\nendif()\n\nfind_library(SDL2_LIBRARY_TEMP\n  NAMES SDL2\n  HINTS\n    ENV SDL2DIR\n    ${SDL2_DIR}\n  PATH_SUFFIXES lib ${VC_LIB_PATH_SUFFIX}\n)\n\n# Hide this cache variable from the user, it's an internal implementation\n# detail. The documented library variable for the user is SDL2_LIBRARY\n# which is derived from SDL2_LIBRARY_TEMP further below.\nset_property(CACHE SDL2_LIBRARY_TEMP PROPERTY TYPE INTERNAL)\n\nif(NOT SDL2_BUILDING_LIBRARY)\n  if(NOT SDL2_INCLUDE_DIR MATCHES \".framework\")\n    # Non-OS X framework versions expect you to also dynamically link to\n    # SDLmain. This is mainly for Windows and OS X. Other (Unix) platforms\n    # seem to provide SDLmain for compatibility even though they don't\n    # necessarily need it.\n    find_library(SDL2MAIN_LIBRARY\n      NAMES SDL2main\n      HINTS\n        ENV SDL2DIR\n        ${SDL2_DIR}\n      PATH_SUFFIXES lib ${VC_LIB_PATH_SUFFIX}\n      PATHS\n      /sw\n      /opt/local\n      /opt/csw\n      /opt\n    )\n  endif()\nendif()\n\n# SDL may require threads on your system.\n# The Apple build may not need an explicit flag because one of the\n# frameworks may already provide it.\n# But for non-OSX systems, I will use the CMake Threads package.\nif(NOT APPLE)\n  find_package(Threads)\nendif()\n\n# MinGW needs an additional link flag, -mwindows\n# It's total link flags should look like -lmingw32 -lSDLmain -lSDL -mwindows\nif(MINGW)\n  set(MINGW32_LIBRARY mingw32 \"-mwindows\" CACHE STRING \"link flags for MinGW\")\nendif()\n\nif(SDL2_LIBRARY_TEMP)\n  # For SDLmain\n  if(SDL2MAIN_LIBRARY AND NOT SDL2_BUILDING_LIBRARY)\n    list(FIND SDL2_LIBRARY_TEMP \"${SDLMAIN_LIBRARY}\" _SDL2_MAIN_INDEX)\n    if(_SDL2_MAIN_INDEX EQUAL -1)\n      set(SDL2_LIBRARY_TEMP \"${SDLMAIN_LIBRARY}\" ${SDL2_LIBRARY_TEMP})\n    endif()\n    unset(_SDL2_MAIN_INDEX)\n  endif()\n\n  # For OS X, SDL uses Cocoa as a backend so it must link to Cocoa.\n  # CMake doesn't display the -framework Cocoa string in the UI even\n  # though it actually is there if I modify a pre-used variable.\n  # I think it has something to do with the CACHE STRING.\n  # So I use a temporary variable until the end so I can set the\n  # \"real\" variable in one-shot.\n  if(APPLE)\n    set(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} \"-framework Cocoa\")\n  endif()\n\n  # For threads, as mentioned Apple doesn't need this.\n  # In fact, there seems to be a problem if I used the Threads package\n  # and try using this line, so I'm just skipping it entirely for OS X.\n  if(NOT APPLE)\n    set(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} ${CMAKE_THREAD_LIBS_INIT})\n  endif()\n\n  # For MinGW library\n  if(MINGW)\n    set(SDL2_LIBRARY_TEMP ${MINGW32_LIBRARY} ${SDL2_LIBRARY_TEMP})\n  endif()\n\n  # Set the final string here so the GUI reflects the final state.\n  set(SDL2_LIBRARY ${SDL2_LIBRARY_TEMP} CACHE STRING \"Where the SDL Library can be found\")\nendif()\n\nif(SDL2_INCLUDE_DIR AND EXISTS \"${SDL2_INCLUDE_DIR}/SDL2_version.h\")\n  file(STRINGS \"${SDL2_INCLUDE_DIR}/SDL2_version.h\" SDL2_VERSION_MAJOR_LINE REGEX \"^#define[ \\t]+SDL2_MAJOR_VERSION[ \\t]+[0-9]+$\")\n  file(STRINGS \"${SDL2_INCLUDE_DIR}/SDL2_version.h\" SDL2_VERSION_MINOR_LINE REGEX \"^#define[ \\t]+SDL2_MINOR_VERSION[ \\t]+[0-9]+$\")\n  file(STRINGS \"${SDL2_INCLUDE_DIR}/SDL2_version.h\" SDL2_VERSION_PATCH_LINE REGEX \"^#define[ \\t]+SDL2_PATCHLEVEL[ \\t]+[0-9]+$\")\n  string(REGEX REPLACE \"^#define[ \\t]+SDL2_MAJOR_VERSION[ \\t]+([0-9]+)$\" \"\\\\1\" SDL2_VERSION_MAJOR \"${SDL2_VERSION_MAJOR_LINE}\")\n  string(REGEX REPLACE \"^#define[ \\t]+SDL2_MINOR_VERSION[ \\t]+([0-9]+)$\" \"\\\\1\" SDL2_VERSION_MINOR \"${SDL2_VERSION_MINOR_LINE}\")\n  string(REGEX REPLACE \"^#define[ \\t]+SDL2_PATCHLEVEL[ \\t]+([0-9]+)$\" \"\\\\1\" SDL2_VERSION_PATCH \"${SDL2_VERSION_PATCH_LINE}\")\n  set(SDL2_VERSION_STRING ${SDL2_VERSION_MAJOR}.${SDL2_VERSION_MINOR}.${SDL2_VERSION_PATCH})\n  unset(SDL2_VERSION_MAJOR_LINE)\n  unset(SDL2_VERSION_MINOR_LINE)\n  unset(SDL2_VERSION_PATCH_LINE)\n  unset(SDL2_VERSION_MAJOR)\n  unset(SDL2_VERSION_MINOR)\n  unset(SDL2_VERSION_PATCH)\nendif()\n\nset(SDL2_LIBRARIES ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY})\nset(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIR})\n\ninclude(FindPackageHandleStandardArgs)\n\nFIND_PACKAGE_HANDLE_STANDARD_ARGS(SDL\n                                  REQUIRED_VARS SDL2_LIBRARY SDL2_INCLUDE_DIR\n                                  VERSION_VAR SDL2_VERSION_STRING)\n\n\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 0.47265625,
+          "content": "            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE\n                    Version 2, December 2004\n\n Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>\n\n Everyone is permitted to copy and distribute verbatim or modified\n copies of this license document, and changing it is allowed as long\n as the name is changed.\n\n            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE\n   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION\n\n  0. You just DO WHAT THE FUCK YOU WANT TO.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.3349609375,
+          "content": "# Project based learning: build your own 3D shooter in a weekend\n\n**Check [the wiki](https://github.com/ssloy/tinyraycaster/wiki) for the detailed description of what is under the hood. Screw the source code, read the wiki.**\n\nIf you are interested by this project, you might want to [check my other tiny* repositories](https://github.com/ssloy), they were fun for me to make, I hope it will be fun for you to read.\n\n***\n\nThis video shows what lies in this repository:\n[![TinyRayCaster](https://raw.githubusercontent.com/ssloy/tinyraycaster/master/doc/017.png)](https://youtu.be/zPIVTqVilCM)\n\nAt the time I write this text, the repository contains mere 486 lines of code:\n\n```sh\nhaqreu@daffodil:~/tinyraycaster$ cat *.cpp *.h | wc -l\n486\n```\n\n# Few things tinyraycaster is NOT:\n* it is NOT a game, it is a mere stub;\n* it is NOT even a 3d engine;\n* it is NOT a place for design patterns lectures;\n* it is NOT a competitor for id Software products. People, please, I am not John Carmack and neither my students are. Focus on the word \"initiation\".\n\n# Few things tinyraycaster IS:\n* it IS fun;\n* it IS a blank you can start from;\n* it IS created in one day, check the commit history. I broke my leg, so I wrote some code instead of walking!\n* it IS a project you can participate to, pull requests are welcome, and anyone can edit the wiki;\n* it IS full of bugs. Bugreports are welcome!\n\nAs an example, [here are the sources](https://github.com/stephane-hulot/thanksgiving-party) for the game made by my students Salih Nascimento and Stephane Hulot, also check the following youtube video for a preview:\n\n[![Thanksgiving party](https://img.youtube.com/vi/Ekomnk1eNFU/0.jpg)](https://www.youtube.com/watch?v=Ekomnk1eNFU)\n\n## Compilation\n```sh\nsudo apt install -y libsdl2-dev git\ngit clone https://github.com/ssloy/tinyraycaster.git\ncd tinyraycaster\nmkdir build\ncd build\ncmake ..\nmake\n```\n\nYou can open the project in Gitpod, a free online dev environment for GitHub:\n\n[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ssloy/tinyraycaster)\n\n\nOn open, the editor will compile & run the program as well as open the resulting image in the editor's preview.\nJust change the code in the editor and rerun the script (use the terminal's history) to see updated images.\nNote how awesome Gitpod is, it allows to run SDL2 games directly in the browser!\n"
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.5322265625,
+          "content": "#!/usr/bin/env bash\nset -e\nBUILD_DIR=\"build\"\nBUILD_BIN=\"tinyraycaster\"\n\n# Take care of dependencies\nif [ \"$(uname)\" == \"Darwin\" ]; then\n  if brew help >/dev/null && ! brew list sdl2 >/dev/null 2>&1 ; then\n    brew install sdl2\n  fi\nelif [ \"$(uname)\" == \"Linux\" ]; then\n  # Ubuntu/Debian\n  if [ -f /etc/lsb-release ] && ! dpkg -l libsdl2-dev >/dev/null ; then\n      sudo apt install -y libsdl2-dev\n  fi\nfi\n\n# Build the project and run it\nif [ ! -d \"${BUILD_DIR}\" ]; then\n  mkdir \"${BUILD_DIR}\"\nfi\ncd \"${BUILD_DIR}\"\ncmake ..\nmake\n\"./${BUILD_BIN}\"\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "framebuffer.cpp",
+          "type": "blob",
+          "size": 0.7666015625,
+          "content": "#include <cassert>\n\n#include \"framebuffer.h\"\n#include \"utils.h\"\n\nvoid FrameBuffer::set_pixel(const size_t x, const size_t y, const uint32_t color) {\n    assert(img.size()==w*h && x<w && y<h);\n    img[x+y*w] = color;\n}\n\nvoid FrameBuffer::draw_rectangle(const size_t rect_x, const size_t rect_y, const size_t rect_w, const size_t rect_h, const uint32_t color) {\n    assert(img.size()==w*h);\n    for (size_t i=0; i<rect_w; i++) {\n        for (size_t j=0; j<rect_h; j++) {\n            size_t cx = rect_x+i;\n            size_t cy = rect_y+j;\n            if (cx<w && cy<h) // no need to check for negative values (unsigned variables)\n                set_pixel(cx, cy, color);\n        }\n    }\n}\n\nvoid FrameBuffer::clear(const uint32_t color) {\n    img = std::vector<uint32_t>(w*h, color);\n}\n\n"
+        },
+        {
+          "name": "framebuffer.h",
+          "type": "blob",
+          "size": 0.4541015625,
+          "content": "#ifndef FRAMEBUFFER_H\n#define FRAMEBUFFER_H\n\n#include <cstdint>\n#include <cstdlib>\n#include <vector>\n\nstruct FrameBuffer {\n    size_t w, h; // image dimensions\n    std::vector<uint32_t> img; // storage container\n\n    void clear(const uint32_t color);\n    void set_pixel(const size_t x, const size_t y, const uint32_t color);\n    void draw_rectangle(const size_t x, const size_t y, const size_t w, const size_t h, const uint32_t color);\n};\n\n#endif // FRAMEBUFFER_H\n\n"
+        },
+        {
+          "name": "gui.cpp",
+          "type": "blob",
+          "size": 4.609375,
+          "content": "#include <iostream>\n#include <vector>\n#include <algorithm>\n#include <chrono>\n#include <thread>\n#include <cmath>\n#include \"SDL.h\"\n\n#include \"utils.h\"\n#include \"tinyraycaster.h\"\n\nint main() {\n    if (SDL_Init(SDL_INIT_VIDEO)) {\n        std::cerr << \"Failed to initialize SDL: \" << SDL_GetError() << std::endl;\n        return -1;\n    }\n\n    FrameBuffer fb{1024, 512, std::vector<uint32_t>(1024*512, pack_color(255, 255, 255))};\n    GameState gs{ Map(),                                // game map\n                  {3.456, 2.345, 1.523, M_PI/3., 0, 0}, // player\n                  { {3.523, 3.812, 2, 0},               // monsters lists\n                    {1.834, 8.765, 0, 0},\n                    {5.323, 5.365, 1, 0},\n                    {14.32, 13.36, 3, 0},\n                    {4.123, 10.76, 1, 0} },\n                  Texture(\"../walltext.bmp\", SDL_PIXELFORMAT_ABGR8888),  // textures for the walls\n                  Texture(\"../monsters.bmp\", SDL_PIXELFORMAT_ABGR8888)}; // textures for the monsters\n    if (!gs.tex_walls.count || !gs.tex_monst.count) {\n        std::cerr << \"Failed to load textures\" << std::endl;\n        return -1;\n    }\n\n    SDL_Window   *window   = nullptr;\n    SDL_Renderer *renderer = nullptr;\n\n    if (SDL_CreateWindowAndRenderer(fb.w, fb.h, SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS, &window, &renderer)) {\n        std::cerr << \"Failed to create window and renderer: \" << SDL_GetError() << std::endl;\n        return -1;\n    }\n\n    SDL_Texture *framebuffer_texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, fb.w, fb.h);\n    if (!framebuffer_texture) {\n        std::cerr << \"Failed to create framebuffer texture : \" << SDL_GetError() << std::endl;\n        return -1;\n    }\n\n    auto t1 = std::chrono::high_resolution_clock::now();\n    while (1) {\n        { // sleep if less than 20 ms since last re-rendering; TODO: decouple rendering and event polling frequencies\n            auto t2 = std::chrono::high_resolution_clock::now();\n            std::chrono::duration<double, std::milli> fp_ms = t2 - t1;\n            if (fp_ms.count()<20) {\n                std::this_thread::sleep_for(std::chrono::milliseconds(3));\n                continue;\n            }\n            t1 = t2;\n        }\n\n        { // poll events and update player's state (walk/turn flags); TODO: move this block to a more appropriate place\n            SDL_Event event;\n            if (SDL_PollEvent(&event)) {\n                if (SDL_QUIT==event.type || (SDL_KEYDOWN==event.type && SDLK_ESCAPE==event.key.keysym.sym)) break;\n                if (SDL_KEYUP==event.type) {\n                    if ('a'==event.key.keysym.sym || 'd'==event.key.keysym.sym) gs.player.turn = 0;\n                    if ('w'==event.key.keysym.sym || 's'==event.key.keysym.sym) gs.player.walk = 0;\n                }\n                if (SDL_KEYDOWN==event.type) {\n                    if ('a'==event.key.keysym.sym) gs.player.turn = -1;\n                    if ('d'==event.key.keysym.sym) gs.player.turn =  1;\n                    if ('w'==event.key.keysym.sym) gs.player.walk =  1;\n                    if ('s'==event.key.keysym.sym) gs.player.walk = -1;\n                }\n            }\n        }\n\n        { // update player's position; TODO: move this block to a more appropriate place\n            gs.player.a += float(gs.player.turn)*.05; // TODO measure elapsed time and modify the speed accordingly\n            float nx = gs.player.x + gs.player.walk*cos(gs.player.a)*.05;\n            float ny = gs.player.y + gs.player.walk*sin(gs.player.a)*.05;\n\n            if (int(nx)>=0 && int(nx)<int(gs.map.w) && int(ny)>=0 && int(ny)<int(gs.map.h)) {\n                if (gs.map.is_empty(nx, gs.player.y)) gs.player.x = nx;\n                if (gs.map.is_empty(gs.player.x, ny)) gs.player.y = ny;\n            }\n            for (size_t i=0; i<gs.monsters.size(); i++) { // update the distances from the player to each sprite\n                gs.monsters[i].player_dist = std::sqrt(pow(gs.player.x - gs.monsters[i].x, 2) + pow(gs.player.y - gs.monsters[i].y, 2));\n            }\n            std::sort(gs.monsters.begin(), gs.monsters.end()); // sort it from farthest to closest\n        }\n\n        render(fb, gs); // render the scene to the frambuffer\n\n        { // copy the framebuffer contents to the screen\n            SDL_UpdateTexture(framebuffer_texture, NULL, reinterpret_cast<void *>(fb.img.data()), fb.w*4);\n            SDL_RenderClear(renderer);\n            SDL_RenderCopy(renderer, framebuffer_texture, NULL, NULL);\n            SDL_RenderPresent(renderer);\n        }\n    }\n\n    SDL_DestroyTexture(framebuffer_texture);\n    SDL_DestroyRenderer(renderer);\n    SDL_DestroyWindow(window);\n    SDL_Quit();\n\n    return 0;\n}\n\n"
+        },
+        {
+          "name": "map.cpp",
+          "type": "blob",
+          "size": 1.1220703125,
+          "content": "#include <cassert>\n#include \"map.h\"\n\nstatic const char map[] = \"0000222222220000\"\\\n                          \"1              5\"\\\n                          \"1              5\"\\\n                          \"1     01111    5\"\\\n                          \"0     0        5\"\\\n                          \"0     3     1155\"\\\n                          \"0   1000       5\"\\\n                          \"0   3  0       5\"\\\n                          \"5   4  100011  5\"\\\n                          \"5   4   1      4\"\\\n                          \"0       1      4\"\\\n                          \"2       1  44444\"\\\n                          \"0     000      4\"\\\n                          \"0 111          4\"\\\n                          \"0              4\"\\\n                          \"0002222244444444\";\n\nMap::Map() : w(16), h(16) {\n    assert(sizeof(map) == w*h+1); // +1 for the null terminated string\n}\n\nint Map::get(const size_t i, const size_t j) const {\n    assert(i<w && j<h && sizeof(map) == w*h+1);\n    return map[i+j*w] - '0';\n}\n\nbool Map::is_empty(const size_t i, const size_t j) const {\n    assert(i<w && j<h && sizeof(map) == w*h+1);\n    return map[i+j*w] == ' ';\n}\n\n"
+        },
+        {
+          "name": "map.h",
+          "type": "blob",
+          "size": 0.2392578125,
+          "content": "#ifndef MAP_H\n#define MAP_H\n\n#include <cstdlib>\n\nstruct Map {\n    size_t w, h; // overall map dimensions\n    Map();\n    int get(const size_t i, const size_t j) const;\n    bool is_empty(const size_t i, const size_t j) const;\n};\n\n#endif // MAP_H\n\n"
+        },
+        {
+          "name": "monsters.bmp",
+          "type": "blob",
+          "size": 64.134765625,
+          "content": null
+        },
+        {
+          "name": "monsters.png",
+          "type": "blob",
+          "size": 8.6015625,
+          "content": null
+        },
+        {
+          "name": "player.h",
+          "type": "blob",
+          "size": 0.185546875,
+          "content": "#ifndef PLAYER_H\n#define PLAYER_H\n\nstruct Player {\n    float x, y; // position\n    float a;    // view direction\n    float fov;  // field of view\n    int turn, walk;\n};\n\n#endif // PLAYER_H\n\n"
+        },
+        {
+          "name": "sprite.cpp",
+          "type": "blob",
+          "size": 0.11328125,
+          "content": "#include \"sprite.h\"\n\nbool Sprite::operator < (const Sprite& s) const {\n      return player_dist > s.player_dist;\n}\n\n"
+        },
+        {
+          "name": "sprite.h",
+          "type": "blob",
+          "size": 0.193359375,
+          "content": "#ifndef SPRITE_H\n#define SPRITE_H\n\n#include <cstdlib>\n\nstruct Sprite {\n    float x, y;\n    size_t tex_id;\n    float player_dist;\n    bool operator < (const Sprite& s) const;\n};\n\n#endif // SPRITE_H\n\n"
+        },
+        {
+          "name": "textures.cpp",
+          "type": "blob",
+          "size": 2.029296875,
+          "content": "#include <iostream>\n#include <cassert>\n#include \"SDL.h\"\n\n#include \"utils.h\"\n#include \"textures.h\"\n\nTexture::Texture(const std::string filename, const uint32_t format) : img_w(0), img_h(0), count(0), size(0), img() {\n    SDL_Surface *tmp = SDL_LoadBMP(filename.c_str());\n    if (!tmp) {\n        std::cerr << \"Error in SDL_LoadBMP: \" << SDL_GetError() << std::endl;\n        return;\n    }\n\n    SDL_Surface *surface = SDL_ConvertSurfaceFormat(tmp, format, 0);\n    SDL_FreeSurface(tmp);\n    if (!surface) {\n        std::cerr << \"Error in SDL_ConvertSurfaceFormat: \" << SDL_GetError() << std::endl;\n        return;\n    }\n\n    int w = surface->w;\n    int h = surface->h;\n\n    if (w*4!=surface->pitch) {\n        std::cerr << \"Error: the texture must be a 32 bit image\" << std::endl;\n        SDL_FreeSurface(surface);\n        return;\n    }\n    if (w!=h*int(w/h)) {\n        std::cerr << \"Error: the texture file must contain N square textures packed horizontally\" << std::endl;\n        SDL_FreeSurface(surface);\n        return;\n    }\n    count = w/h;\n    size = w/count;\n    img_w = w;\n    img_h = h;\n    uint8_t *pixmap = reinterpret_cast<uint8_t *>(surface->pixels);\n\n    img = std::vector<uint32_t>(w*h);\n    for (int j=0; j<h; j++) {\n        for (int i=0; i<w; i++) {\n            uint8_t r = pixmap[(i+j*w)*4+0];\n            uint8_t g = pixmap[(i+j*w)*4+1];\n            uint8_t b = pixmap[(i+j*w)*4+2];\n            uint8_t a = pixmap[(i+j*w)*4+3];\n            img[i+j*w] = pack_color(r, g, b, a);\n        }\n    }\n    SDL_FreeSurface(surface);\n}\n\nuint32_t Texture::get(const size_t i, const size_t j, const size_t idx) const {\n    assert(i<size && j<size && idx<count);\n    return img[i+idx*size+j*img_w];\n}\n\nstd::vector<uint32_t> Texture::get_scaled_column(const size_t texture_id, const size_t tex_coord, const size_t column_height) const {\n    assert(tex_coord<size && texture_id<count);\n    std::vector<uint32_t> column(column_height);\n    for (size_t y=0; y<column_height; y++) {\n        column[y] = get(tex_coord, (y*size)/column_height, texture_id);\n    }\n    return column;\n}\n\n"
+        },
+        {
+          "name": "textures.h",
+          "type": "blob",
+          "size": 0.6943359375,
+          "content": "#ifndef TEXTURES_H\n#define TEXTURES_H\n\n#include <vector>\n#include <cstdint>\n\nstruct Texture {\n    size_t img_w, img_h; // overall image dimensions\n    size_t count, size;  // number of textures and size in pixels\n    std::vector<uint32_t> img; // textures storage container\n\n    Texture(const std::string filename, const uint32_t format);\n    uint32_t get(const size_t i, const size_t j, const size_t idx) const; // get the pixel (i,j) from the texture idx\n    std::vector<uint32_t> get_scaled_column(const size_t texture_id, const size_t tex_coord, const size_t column_height) const; // retrieve one column (tex_coord) from the texture texture_id and scale it to the destination size\n};\n\n#endif // TEXTURES_H\n\n"
+        },
+        {
+          "name": "tinyraycaster.cpp",
+          "type": "blob",
+          "size": 5.197265625,
+          "content": "#define _USE_MATH_DEFINES\n#include <cmath>\n#include <iostream>\n#include <cassert>\n\n#include \"utils.h\"\n#include \"tinyraycaster.h\"\n\nint wall_x_texcoord(const float hitx, const float hity, const Texture &tex_walls) {\n    float x = hitx - floor(hitx+.5); // x and y contain (signed) fractional parts of hitx and hity,\n    float y = hity - floor(hity+.5); // they vary between -0.5 and +0.5, and one of them is supposed to be very close to 0\n    int tex = x*tex_walls.size;\n    if (std::abs(y)>std::abs(x)) // we need to determine whether we hit a \"vertical\" or a \"horizontal\" wall (w.r.t the map)\n        tex = y*tex_walls.size;\n    if (tex<0) // do not forget x_texcoord can be negative, fix that\n        tex += tex_walls.size;\n    assert(tex>=0 && tex<(int)tex_walls.size);\n    return tex;\n}\n\nvoid draw_map(FrameBuffer &fb, const std::vector<Sprite> &sprites, const Texture &tex_walls, const Map &map, const size_t cell_w, const size_t cell_h) {\n    for (size_t j=0; j<map.h; j++) {  // draw the map itself\n        for (size_t i=0; i<map.w; i++) {\n            if (map.is_empty(i, j)) continue; // skip empty spaces\n            size_t rect_x = i*cell_w;\n            size_t rect_y = j*cell_h;\n            size_t texid = map.get(i, j);\n            assert(texid<tex_walls.count);\n            fb.draw_rectangle(rect_x, rect_y, cell_w, cell_h, tex_walls.get(0, 0, texid)); // the color is taken from the upper left pixel of the texture #texid\n        }\n    }\n    for (size_t i=0; i<sprites.size(); i++) { // show the monsters\n        fb.draw_rectangle(sprites[i].x*cell_w-3, sprites[i].y*cell_h-3, 6, 6, pack_color(255, 0, 0));\n    }\n}\n\nvoid draw_sprite(FrameBuffer &fb, const Sprite &sprite, const std::vector<float> &depth_buffer, const Player &player, const Texture &tex_sprites) {\n    // absolute direction from the player to the sprite (in radians)\n    float sprite_dir = atan2(sprite.y - player.y, sprite.x - player.x);\n    while (sprite_dir - player.a >  M_PI) sprite_dir -= 2*M_PI; // remove unncesessary periods from the relative direction\n    while (sprite_dir - player.a < -M_PI) sprite_dir += 2*M_PI;\n\n    size_t sprite_screen_size = std::min(2000, static_cast<int>(fb.h/sprite.player_dist)); // screen sprite size\n    int h_offset = (sprite_dir - player.a)*(fb.w/2)/(player.fov) + (fb.w/2)/2 - sprite_screen_size/2; // do not forget the 3D view takes only a half of the framebuffer, thus fb.w/2 for the screen width\n    int v_offset = fb.h/2 - sprite_screen_size/2;\n\n    for (size_t i=0; i<sprite_screen_size; i++) {\n        if (h_offset+int(i)<0 || h_offset+i>=fb.w/2) continue;\n        if (depth_buffer[h_offset+i]<sprite.player_dist) continue; // this sprite column is occluded\n        for (size_t j=0; j<sprite_screen_size; j++) {\n            if (v_offset+int(j)<0 || v_offset+j>=fb.h) continue;\n            uint32_t color = tex_sprites.get(i*tex_sprites.size/sprite_screen_size, j*tex_sprites.size/sprite_screen_size, sprite.tex_id);\n            uint8_t r,g,b,a;\n            unpack_color(color, r, g, b, a);\n            if (a>128)\n            fb.set_pixel(fb.w/2 + h_offset+i, v_offset+j, color);\n        }\n    }\n}\n\nvoid render(FrameBuffer &fb, const GameState &gs) {\n    const Map &map                     = gs.map;\n    const Player &player               = gs.player;\n    const std::vector<Sprite> &sprites = gs.monsters;\n    const Texture &tex_walls           = gs.tex_walls;\n    const Texture &tex_monst           = gs.tex_monst;\n\n    fb.clear(pack_color(255, 255, 255)); // clear the screen\n\n    const size_t cell_w = fb.w/(map.w*2); // size of one map cell on the screen\n    const size_t cell_h = fb.h/map.h;\n    std::vector<float> depth_buffer(fb.w/2, 1e3);\n\n    for (size_t i=0; i<fb.w/2; i++) { // draw the visibility cone AND the \"3D\" view\n        float angle = player.a-player.fov/2 + player.fov*i/float(fb.w/2);\n        for (float t=0; t<20; t+=.01) { // ray marching loop\n            float x = player.x + t*cos(angle);\n            float y = player.y + t*sin(angle);\n            fb.set_pixel(x*cell_w, y*cell_h, pack_color(190, 190, 190)); // this draws the visibility cone\n\n            if (map.is_empty(x, y)) continue;\n\n            size_t texid = map.get(x, y); // our ray touches a wall, so draw the vertical column to create an illusion of 3D\n            assert(texid<tex_walls.count);\n            float dist = t*cos(angle-player.a);\n            depth_buffer[i] = dist;\n            size_t column_height = std::min(2000, int(fb.h/dist));\n            int x_texcoord = wall_x_texcoord(x, y, tex_walls);\n            std::vector<uint32_t> column = tex_walls.get_scaled_column(texid, x_texcoord, column_height);\n            int pix_x = i + fb.w/2; // we are drawing at the right half of the screen, thus +fb.w/2\n            for (size_t j=0; j<column_height; j++) { // copy the texture column to the framebuffer\n                int pix_y = j + fb.h/2 - column_height/2;\n                if (pix_y>=0 && pix_y<(int)fb.h) {\n                    fb.set_pixel(pix_x, pix_y, column[j]);\n                }\n            }\n            break;\n        } // ray marching loop\n    } // field of view ray sweeping\n\n    draw_map(fb, sprites, tex_walls, map, cell_w, cell_h);\n\n    for (size_t i=0; i<sprites.size(); i++) { // draw the sprites\n        draw_sprite(fb, sprites[i], depth_buffer, player, tex_monst);\n    }\n}\n\n"
+        },
+        {
+          "name": "tinyraycaster.h",
+          "type": "blob",
+          "size": 0.3779296875,
+          "content": "#ifndef TINYRAYCASTER_H\n#define TINYRAYCASTER_H\n\n#include <vector>\n\n#include \"map.h\"\n#include \"player.h\"\n#include \"sprite.h\"\n#include \"framebuffer.h\"\n#include \"textures.h\"\n\nstruct GameState {\n    Map map;\n    Player player;\n    std::vector<Sprite> monsters;\n    Texture tex_walls;\n    Texture tex_monst;\n};\n\nvoid render(FrameBuffer &fb, const GameState &gs);\n\n#endif // TINYRAYCASTER_H\n\n"
+        },
+        {
+          "name": "utils.cpp",
+          "type": "blob",
+          "size": 0.857421875,
+          "content": "#include <fstream>\n#include <cassert>\n\n#include \"utils.h\"\n\nuint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {\n    return (a<<24) + (b<<16) + (g<<8) + r;\n}\n\nvoid unpack_color(const uint32_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a) {\n    r = (color >>  0) & 255;\n    g = (color >>  8) & 255;\n    b = (color >> 16) & 255;\n    a = (color >> 24) & 255;\n}\n\nvoid drop_ppm_image(const std::string filename, const std::vector<uint32_t> &image, const size_t w, const size_t h) {\n    assert(image.size() == w*h);\n    std::ofstream ofs(filename, std::ios::binary);\n    ofs << \"P6\\n\" << w << \" \" << h << \"\\n255\\n\";\n    for (size_t i = 0; i < h*w; ++i) {\n        uint8_t r, g, b, a;\n        unpack_color(image[i], r, g, b, a);\n        ofs << static_cast<char>(r) << static_cast<char>(g) << static_cast<char>(b);\n    }\n    ofs.close();\n}\n\n"
+        },
+        {
+          "name": "utils.h",
+          "type": "blob",
+          "size": 0.3994140625,
+          "content": "#ifndef UTILS_H\n#define UTILS_H\n\n#include <vector>\n#include <cstdint>\n#include <string>\n\nuint32_t pack_color(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a=255);\nvoid unpack_color(const uint32_t &color, uint8_t &r, uint8_t &g, uint8_t &b, uint8_t &a);\nvoid drop_ppm_image(const std::string filename, const std::vector<uint32_t> &image, const size_t w, const size_t h);\n\n#endif // UTILS_H\n\n"
+        },
+        {
+          "name": "walltext.bmp",
+          "type": "blob",
+          "size": 96.134765625,
+          "content": null
+        },
+        {
+          "name": "walltext.png",
+          "type": "blob",
+          "size": 23.3720703125,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

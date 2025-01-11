@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "timestamp": 1736565740014,
+    "page": 657,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ssloy/tinykaboom",
+      "stars": 2367,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitpod.yml",
+          "type": "blob",
+          "size": 0.1982421875,
+          "content": "image:\n  file: Dockerfile\ntasks:\n- command: >\n    mkdir --parents build &&\n    cd build &&\n    cmake .. &&\n    make &&\n    ./tinykaboom &&\n    pnmtopng out.ppm > out.png &&\n    open out.png &&\n    cd ..\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 0.830078125,
+          "content": "cmake_minimum_required (VERSION 2.8)\nproject (tinykaboom)\n\ninclude(CheckCXXCompilerFlag)\n\nfunction(enable_cxx_compiler_flag_if_supported flag)\n    string(FIND \"${CMAKE_CXX_FLAGS}\" \"${flag}\" flag_already_set)\n    if(flag_already_set EQUAL -1)\n        check_cxx_compiler_flag(\"${flag}\" flag_supported)\n        if(flag_supported)\n            set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} ${flag}\" PARENT_SCOPE)\n        endif()\n        unset(flag_supported CACHE)\n    endif()\nendfunction()\n\nenable_cxx_compiler_flag_if_supported(\"-Wall\")\nenable_cxx_compiler_flag_if_supported(\"-Wextra\")\nenable_cxx_compiler_flag_if_supported(\"-pedantic\")\nenable_cxx_compiler_flag_if_supported(\"-std=c++11\")\nenable_cxx_compiler_flag_if_supported(\"-O3\")\nenable_cxx_compiler_flag_if_supported(\"-fopenmp\")\n\nfile(GLOB SOURCES *.h *.cpp)\n\nadd_executable(${PROJECT_NAME} ${SOURCES})\n\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.109375,
+          "content": "FROM gitpod/workspace-full\n\nUSER root\n# add your tools here\nRUN apt-get update && apt-get install -y \\\n  netpbm\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 1.79296875,
+          "content": "# KABOOM! in 180 lines of bare C++\n\nThis repository is a teaching aid for my computer graphics lectures. It is not meant to produce the ultimate or even physically realistic renders. It is meant to be **simple**. This project is distributed under the [DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE](https://en.wikipedia.org/wiki/WTFPL).\n\n**Check [the article](https://github.com/ssloy/tinykaboom/wiki) that accompanies the source code.**\n\nThis project is closely related to my  [software raytracer](https://github.com/ssloy/tinyraytracer/wiki). If you are looking for a software rasterizer, check the [other part of the lectures](https://github.com/ssloy/tinyrenderer/wiki).\n\nIn my lectures I tend to avoid third party libraries as long as it is reasonable, because it forces to understand what is happening under the hood. So, the raytracing in 180 lines of plain C++ produces this result:\n![](https://raw.githubusercontent.com/ssloy/tinykaboom/master/out.jpg)\n\n## compilation\n```sh\ngit clone https://github.com/ssloy/tinykaboom.git\ncd tinykaboom\nmkdir build\ncd build\ncmake ..\nmake\n```\n\nYou can open the project in Gitpod, a free online dev evironment for GitHub:\n\n[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ssloy/tinykaboom)\n\nOn open, the editor will compile & run the program as well as open the resulting image in the editor's preview.\nJust change the code in the editor and rerun the script (use the terminal's history) to see updated images.\n\n## Homework\nThe possibilities are infinte. For example, you can add the environment map and some transparency:  \n![](https://raw.githubusercontent.com/ssloy/tinykaboom/homework_assignment/envmap1.jpg)\n\nAdd other objects and illuminate them:\n![](https://raw.githubusercontent.com/ssloy/tinykaboom/homework_assignment/envmap2.jpg)\n"
+        },
+        {
+          "name": "geometry.h",
+          "type": "blob",
+          "size": 1.6494140625,
+          "content": "#ifndef __GEOMETRY_H__\n#define __GEOMETRY_H__\n#include <cmath>\n#include <cassert>\n\ntemplate <size_t DIM, typename T> struct vec {\n    vec() { for (size_t i=DIM; i--; data_[i] = T()); }\n          T& operator[](const size_t i)       { assert(i<DIM); return data_[i]; }\n    const T& operator[](const size_t i) const { assert(i<DIM); return data_[i]; }\nprivate:\n    T data_[DIM];\n};\n\ntemplate <typename T> struct vec<3,T> {\n    vec() : x(T()), y(T()), z(T()) {}\n    vec(T X, T Y, T Z) : x(X), y(Y), z(Z) {}\n          T& operator[](const size_t i)       { assert(i<3); return i<=0 ? x : (1==i ? y : z); }\n    const T& operator[](const size_t i) const { assert(i<3); return i<=0 ? x : (1==i ? y : z); }\n    float norm() const { return std::sqrt(x*x+y*y+z*z); }\n    vec<3,T> & normalize(T l=1) { *this = (*this)*(l/norm()); return *this; }\n    T x,y,z;\n};\n\ntemplate<size_t DIM,typename T> T operator*(const vec<DIM,T>& lhs, const vec<DIM,T>& rhs) {\n    T ret = T();\n    for (size_t i=DIM; i--; ret+=lhs[i]*rhs[i]);\n    return ret;\n}\n\ntemplate<size_t DIM,typename T>vec<DIM,T> operator+(vec<DIM,T> lhs, const vec<DIM,T>& rhs) {\n    for (size_t i=DIM; i--; lhs[i]+=rhs[i]);\n    return lhs;\n}\n\ntemplate<size_t DIM,typename T>vec<DIM,T> operator-(vec<DIM,T> lhs, const vec<DIM,T>& rhs) {\n    for (size_t i=DIM; i--; lhs[i]-=rhs[i]);\n    return lhs;\n}\n\ntemplate<size_t DIM,typename T,typename U> vec<DIM,T> operator*(const vec<DIM,T> &lhs, const U& rhs) {\n    vec<DIM,T> ret;\n    for (size_t i=DIM; i--; ret[i]=lhs[i]*rhs);\n    return ret;\n}\n\ntemplate<size_t DIM,typename T> vec<DIM,T> operator-(const vec<DIM,T> &lhs) {\n    return lhs*T(-1);\n}\n\ntypedef vec<3, float> Vec3f;\n\n#endif //__GEOMETRY_H__\n\n"
+        },
+        {
+          "name": "kaboom.gif",
+          "type": "blob",
+          "size": 6370.806640625,
+          "content": ""
+        },
+        {
+          "name": "kaboom.mp4",
+          "type": "blob",
+          "size": 4318.0908203125,
+          "content": null
+        },
+        {
+          "name": "out.jpg",
+          "type": "blob",
+          "size": 100.546875,
+          "content": null
+        },
+        {
+          "name": "tinykaboom.cpp",
+          "type": "blob",
+          "size": 5.224609375,
+          "content": "#define _USE_MATH_DEFINES\n#include <cmath>\n#include <algorithm>\n#include <limits>\n#include <iostream>\n#include <fstream>\n#include <vector>\n#include \"geometry.h\"\n\nconst float sphere_radius   = 1.5; // all the explosion fits in a sphere with this radius. The center lies in the origin.\nconst float noise_amplitude = 1.0; // amount of noise applied to the sphere (towards the center)\n\ntemplate <typename T> inline T lerp(const T &v0, const T &v1, float t) {\n    return v0 + (v1-v0)*std::max(0.f, std::min(1.f, t));\n}\n\nfloat hash(const float n) {\n    float x = sin(n)*43758.5453f;\n    return x-floor(x);\n}\n\nfloat noise(const Vec3f &x) {\n    Vec3f p(floor(x.x), floor(x.y), floor(x.z));\n    Vec3f f(x.x-p.x, x.y-p.y, x.z-p.z);\n    f = f*(f*(Vec3f(3.f, 3.f, 3.f)-f*2.f));\n    float n = p*Vec3f(1.f, 57.f, 113.f);\n    return lerp(lerp(\n                     lerp(hash(n +  0.f), hash(n +  1.f), f.x),\n                     lerp(hash(n + 57.f), hash(n + 58.f), f.x), f.y),\n                lerp(\n                    lerp(hash(n + 113.f), hash(n + 114.f), f.x),\n                    lerp(hash(n + 170.f), hash(n + 171.f), f.x), f.y), f.z);\n}\n\nVec3f rotate(const Vec3f &v) {\n    return Vec3f(Vec3f(0.00,  0.80,  0.60)*v, Vec3f(-0.80,  0.36, -0.48)*v, Vec3f(-0.60, -0.48,  0.64)*v);\n}\n\nfloat fractal_brownian_motion(const Vec3f &x) { // this is a bad noise function with lots of artifacts. TODO: find a better one\n    Vec3f p = rotate(x);\n    float f = 0;\n    f += 0.5000*noise(p); p = p*2.32;\n    f += 0.2500*noise(p); p = p*3.03;\n    f += 0.1250*noise(p); p = p*2.61;\n    f += 0.0625*noise(p);\n    return f/0.9375;\n}\n\nVec3f palette_fire(const float d) { // simple linear gradent yellow-orange-red-darkgray-gray. d is supposed to vary from 0 to 1\n    const Vec3f   yellow(1.7, 1.3, 1.0); // note that the color is \"hot\", i.e. has components >1\n    const Vec3f   orange(1.0, 0.6, 0.0);\n    const Vec3f      red(1.0, 0.0, 0.0);\n    const Vec3f darkgray(0.2, 0.2, 0.2);\n    const Vec3f     gray(0.4, 0.4, 0.4);\n\n    float x = std::max(0.f, std::min(1.f, d));\n    if (x<.25f)\n        return lerp(gray, darkgray, x*4.f);\n    else if (x<.5f)\n        return lerp(darkgray, red, x*4.f-1.f);\n    else if (x<.75f)\n        return lerp(red, orange, x*4.f-2.f);\n    return lerp(orange, yellow, x*4.f-3.f);\n}\n\nfloat signed_distance(const Vec3f &p) { // this function defines the implicit surface we render\n    float displacement = -fractal_brownian_motion(p*3.4)*noise_amplitude;\n    return p.norm() - (sphere_radius + displacement);\n}\n\nbool sphere_trace(const Vec3f &orig, const Vec3f &dir, Vec3f &pos) {         // Notice the early discard; in fact I know that the noise() function produces non-negative values,\n    if (orig*orig - pow(orig*dir, 2) > pow(sphere_radius, 2)) return false;  // thus all the explosion fits in the sphere. Thus this early discard is a conservative check.\n                                                                             // It is not necessary, just a small speed-up\n    pos = orig;\n    for (size_t i=0; i<128; i++) {\n        float d = signed_distance(pos);\n        if (d < 0) return true;\n        pos = pos + dir*std::max(d*0.1f, .01f); // note that the step depends on the current distance, if we are far from the surface, we can do big steps\n    }\n    return false;\n}\n\nVec3f distance_field_normal(const Vec3f &pos) { // simple finite differences, very sensitive to the choice of the eps constant\n    const float eps = 0.1;\n    float d = signed_distance(pos);\n    float nx = signed_distance(pos + Vec3f(eps, 0, 0)) - d;\n    float ny = signed_distance(pos + Vec3f(0, eps, 0)) - d;\n    float nz = signed_distance(pos + Vec3f(0, 0, eps)) - d;\n    return Vec3f(nx, ny, nz).normalize();\n}\n\nint main() {\n    const int   width    = 640;     // image width\n    const int   height   = 480;     // image height\n    const float fov      = M_PI/3.; // field of view angle\n    std::vector<Vec3f> framebuffer(width*height);\n\n#pragma omp parallel for\n    for (size_t j = 0; j<height; j++) { // actual rendering loop\n        for (size_t i = 0; i<width; i++) {\n            float dir_x =  (i + 0.5) -  width/2.;\n            float dir_y = -(j + 0.5) + height/2.;    // this flips the image at the same time\n            float dir_z = -height/(2.*tan(fov/2.));\n            Vec3f hit;\n            if (sphere_trace(Vec3f(0, 0, 3), Vec3f(dir_x, dir_y, dir_z).normalize(), hit)) { // the camera is placed to (0,0,3) and it looks along the -z axis\n                float noise_level = (sphere_radius-hit.norm())/noise_amplitude;\n                Vec3f light_dir = (Vec3f(10, 10, 10) - hit).normalize();                     // one light is placed to (10,10,10)\n                float light_intensity  = std::max(0.4f, light_dir*distance_field_normal(hit));\n                framebuffer[i+j*width] = palette_fire((-.2 + noise_level)*2)*light_intensity;\n            } else {\n                framebuffer[i+j*width] = Vec3f(0.2, 0.7, 0.8); // background color\n            }\n        }\n    }\n\n    std::ofstream ofs(\"./out.ppm\", std::ios::binary); // save the framebuffer to file\n    ofs << \"P6\\n\" << width << \" \" << height << \"\\n255\\n\";\n    for (size_t i = 0; i < height*width; ++i) {\n        for (size_t j = 0; j<3; j++) {\n            ofs << (char)(std::max(0, std::min(255, static_cast<int>(255*framebuffer[i][j]))));\n        }\n    }\n    ofs.close();\n\n    return 0;\n}\n\n"
+        }
+      ]
+    }
+  ]
+}

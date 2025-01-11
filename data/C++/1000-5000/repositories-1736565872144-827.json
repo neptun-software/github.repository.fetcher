@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "timestamp": 1736565872144,
+    "page": 827,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "koth/kcws",
+      "stars": 2082,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1767578125,
+          "content": ".idea\n.DS_*\ndatas\nlogs\nbazel-*\nner/address_logs\ntools/bazel.rc\ntools/python_bin_path.sh\nutil/python/python_include\nutil/python/python_lib\nu_company.txt\nresume_extractor/config.json\n"
+        },
+        {
+          "name": "BUILD.boost",
+          "type": "blob",
+          "size": 1.12109375,
+          "content": "# Description:\n#   The Boost library collection (http://www.boost.org)\n#\n# Most Boost libraries are header-only, in which case you only need to depend\n# on :boost. If you need one of the libraries that has a separately-compiled\n# implementation, depend on the appropriate libs rule.\n\npackage(default_visibility = [\"//visibility:public\"])\n\nlicenses([\"notice\"])  # Boost software license\n\n\ncc_library(\n    name = \"boost\",\n    hdrs = glob([\n        \"boost/**/*.hpp\",\n        \"boost/**/*.h\",\n        \"boost/**/*.ipp\",\n    ]),\n    includes = [\n    \".\"\n    ],\n)\n\ncc_library(\n    name = \"filesystem\",\n    srcs = glob([ \"libs/filesystem/src/*.cpp\"]),\n    deps = [\n        \":boost\",\n        \":system\",\n    ],\n)\n\ncc_library(\n    name = \"iostreams\",\n    srcs = glob([\"libs/iostreams/src/*.cpp\"]),\n    deps = [\n        \":boost\",\n        \"@bzip2_archive//:bz2lib\",\n        \"@zlib_archive//:zlib\",\n    ],\n)\n\ncc_library(\n    name = \"program_options\",\n    srcs = glob([ \"libs/program_options/src/*.cpp\"]),\n    deps = [\n        \":boost\",\n    ],\n)\n\ncc_library(\n    name = \"system\",\n    srcs = glob([\"libs/system/src/*.cpp\"]),\n    deps = [\n        \":boost\",\n    ],\n)\n"
+        },
+        {
+          "name": "BUILD.tf_dist",
+          "type": "blob",
+          "size": 0.6982421875,
+          "content": "# Bazel build file for binary tf\nlicenses([\"notice\"])\n\n\nconfig_setting(\n    name = \"darwin\",\n    values = {\"cpu\": \"darwin\"},\n    visibility = [\"//visibility:public\"],\n)\n\nfilegroup(\n   name=\"tf_unix_lib\",\n   srcs=glob(\n   [\"lib/unix/*.o\"]\n   )\n)\nfilegroup(\n   name=\"tf_mac_lib\",\n   srcs=glob(\n   [\"lib/mac/*.o\"],\n   exclude = [\"lib/mac/__.SYMDEF_*.o\"]\n   )\n)\ncc_library(\n  name=\"tensorflow\",\n  hdrs = glob([\"tensorflow/*\",\"google/*\"]),\n  includes = [\n    \".\",\n  ],\n  alwayslink=1,\n  visibility = [\"//visibility:public\"],\n  deps=[\n  '@protobuf//:protobuf'\n  ],\n  srcs=select({\n        \":darwin\": [\n            \":tf_mac_lib\",\n        ],\n        \"//conditions:default\": [\n           \":tf_unix_lib\",\n        ],\n    }),\n)"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.0166015625,
+          "content": "\n### 引用 \n\n \n本项目模型BiLSTM+CRF参考论文：http://www.aclweb.org/anthology/N16-1030 ,IDCNN+CRF参考论文：https://arxiv.org/abs/1702.02098\n\n\n### 构建\n\n1. 安装好bazel代码构建工具，安装好tensorflow（目前本项目需要tf 1.0.0alpha版本以上)\n2. 切换到本项目代码目录，运行./configure\n3. 编译后台服务 \n\n   > bazel build //kcws/cc:seg_backend_api\n\n\n### 训练\n\n1. 关注待字闺中公众号 回复 kcws 获取语料下载地址：\n   \n   ![logo](https://github.com/koth/kcws/blob/master/docs/qrcode_dzgz.jpg?raw=true \"待字闺中\")\n   \n   \n2. 解压语料到一个目录\n\n3. 切换到代码目录，运行:\n  > python kcws/train/process_anno_file.py <语料目录> pre_chars_for_w2v.txt\n  \n  > bazel build third_party/word2vec:word2vec\n  \n  > 先得到初步词表\n  \n  > ./bazel-bin/third_party/word2vec/word2vec -train pre_chars_for_w2v.txt -save-vocab pre_vocab.txt -min-count 3\n  \n  > 处理低频词\n  \n  > python kcws/train/replace_unk.py pre_vocab.txt pre_chars_for_w2v.txt chars_for_w2v.txt\n  > \n  > 训练word2vec\n  > \n  > ./bazel-bin/third_party/word2vec/word2vec -train chars_for_w2v.txt -output vec.txt -size 50 -sample 1e-4 -negative 5 -hs 1 -binary 0 -iter 5\n  > \n  > 构建训练语料工具\n  > \n  > bazel build kcws/train:generate_training\n  > \n  > 生成语料\n  > \n  > ./bazel-bin/kcws/train/generate_training vec.txt <语料目录> all.txt\n  > \n  > 得到train.txt , test.txt文件\n  > \n  > python kcws/train/filter_sentence.py all.txt\n  \n4. 安装好tensorflow,切换到kcws代码目录，运行:\n\n  > python kcws/train/train_cws.py --word2vec_path vec.txt --train_data_path <绝对路径到train.txt> --test_data_path test.txt --max_sentence_len 80 --learning_rate 0.001\n  （默认使用IDCNN模型，可设置参数”--use_idcnn False“来切换BiLSTM模型)\n  \n5. 生成vocab\n  > bazel  build kcws/cc:dump_vocab\n  \n  > ./bazel-bin/kcws/cc/dump_vocab vec.txt kcws/models/basic_vocab.txt\n  \n6. 导出训练好的模型\n >  python tools/freeze_graph.py --input_graph logs/graph.pbtxt  --input_checkpoint logs/model.ckpt --output_node_names  \"transitions,Reshape_7\"   --output_graph kcws/models/seg_model.pbtxt\n\n7. 词性标注模型下载  (临时方案，后续文档给出词性标注模型训练，导出等）\n\n   >  从 https://pan.baidu.com/s/1bYmABk 下载pos_model.pbtxt到kcws/models/目录下\n\n8. 运行web service\n >  ./bazel-bin/kcws/cc/seg_backend_api --model_path=kcws/models/seg_model.pbtxt(绝对路径到seg_model.pbtxt>)   --vocab_path=kcws/models/basic_vocab.txt   --max_sentence_len=80\n\n### 词性标注的训练说明：\n\nhttps://github.com/koth/kcws/blob/master/pos_train.md\n\n### 自定义词典\n目前支持自定义词典是在解码阶段，参考具体使用方式请参考kcws/cc/test_seg.cc\n字典为文本格式，每一行格式如下:\n><自定义词条>\\t<权重>\n\n比如：\n>蓝瘦香菇\t4\n\n权重为一个正整数，一般4以上，越大越重要\n \n### demo\nhttp://45.32.100.248:9090/\n\n附： 使用相同模型训练的公司名识别demo:\n\nhttp://45.32.100.248:18080\n\n\n\n\n"
+        },
+        {
+          "name": "WORKSPACE",
+          "type": "blob",
+          "size": 1.2587890625,
+          "content": "# Uncomment and update the paths in these entries to build the Android demo.\n#since support libraries are not published in Maven Central or jCenter, we'll have a local copy\n\n\nnew_http_archive(\n    name = \"boost\",\n    urls = [\n            #\"https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.bz2/download\",\n            \"https://dl.bintray.com/boostorg/release/1.64.0/source/boost_1_64_0.tar.bz2\",\n    ],\n    build_file = \"BUILD.boost\",\n    type = \"tar.bz2\",\n    strip_prefix = \"boost_1_64_0/\",\n    sha256 = \"7bcc5caace97baa948931d712ea5f37038dbb1c5d89b43ad4def4ed7cb683332\",\n)\n\n\nnew_http_archive(\n   name=\"tf\",\n   url = \"https://gitlab.com/yovnchine/tfrelates/raw/master/tf_dist_1.2.0_rc1_0604.zip\",\n   strip_prefix = \"tf_dist/\",\n   sha256 = \"269115820a2ea4b7260f2ff131ed47860809e3ff05da763704a004724cea9775\",\n   build_file=\"BUILD.tf_dist\",\n)\n\n\n#new_local_repository(\n#   name=\"tf\",\n#   path = \"/e/code/tf_dist\",\n#   build_file=\"BUILD.tf_dist\",\n#)\n\n\nhttp_archive(\n    name = \"protobuf\",\n    urls = [\n          \"https://github.com/google/protobuf/archive/2b7430d96aeff2bb624c8d52182ff5e4b9f7f18a.tar.gz\",\n    ],\n    sha256 = \"94789497712726816f154f8441ed4319573c78c3f8cc6398bb00f464ffd82bd2\",\n    strip_prefix = \"protobuf-2b7430d96aeff2bb624c8d52182ff5e4b9f7f18a\",\n)\n"
+        },
+        {
+          "name": "base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configure",
+          "type": "blob",
+          "size": 0.8154296875,
+          "content": "#!/usr/bin/env bash\n\nDO_NOT_SUBMIT_WARNING=\"Unofficial setting. DO NOT SUBMIT!!!\"\n\n## Set up python-related environment settings\nwhile true; do\n  fromuser=\"\"\n  if [ -z \"$PYTHON_BIN_PATH\" ]; then\n    default_python_bin_path=$(which python)\n    read -p \"Please specify the location of python. [Default is $default_python_bin_path]: \" PYTHON_BIN_PATH\n    fromuser=\"1\"\n    if [ -z \"$PYTHON_BIN_PATH\" ]; then\n      PYTHON_BIN_PATH=$default_python_bin_path\n    fi\n  fi\n  if [ -e \"$PYTHON_BIN_PATH\" ]; then\n    break\n  fi\n  echo \"Invalid python path. ${PYTHON_BIN_PATH} cannot be found\" 1>&2\n  if [ -z \"$fromuser\" ]; then\n    exit 1\n  fi\n  PYTHON_BIN_PATH=\"\"\n  # Retry\ndone\n\n\n# Invoke python_config and set up symlinks to python includes\n(./util/python/python_config.sh --setup \"$PYTHON_BIN_PATH\";) || exit -1\n\n\necho \"Configuration finished\"\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kcws",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pos_train.md",
+          "type": "blob",
+          "size": 1.7255859375,
+          "content": "### 词性标注训练过程\n\n\n- 1)准备单词word2vec训练样本\n\n\n``` \n    python kcws/train/prepare_pos.py  /e/data/people_2014  pos_lines.txt\n```\n\n\n\n- 2)使用word2vec导出即将使用的词词典\n\n``` \n    bazel build -c opt third_party/word2vec:word2vec\n\tbazel-bin/third_party/word2vec/word2vec -train pos_lines.txt -min-count 5 -save-vocab pre_word_vec.txt\n```\n- 3)替换单词中的UNK\n\n\n``` \n python kcws/train/replace_unk.py  pre_word_vec.txt pos_lines.txt pos_lines_with_unk.txt\n```\n\n- 4)训练词向量\n\n``` \nbazel-bin/third_party/word2vec/word2vec  -train pos_lines_with_unk.txt -output word_vec.txt -size 150 -window 5 -sample 1e-4 -negative 5 -hs 0 -binary 0  -cbow 0 -iter 3 -min-count 5 -hs 1\n```\n\n- 5)统计词性tag出现频次，生成词性tag集合\n  \n``` \npython kcws/train/stats_pos.py  /e/data/people_2014 pos_vocab.txt  lines_withpos.txt\n```\n\n- 6)生成训练样本\n  \n``` \n bazel build -c opt kcws/train:generate_pos_train\n```\n\n\n``` \n bazel-bin/kcws/train/generate_pos_train word_vec.txt char_vec.txt  pos_vocab.txt  /e/data/people_2014  pos_train.txt\n```\n\n以上char_vec.txt可使用分词中相同的文件\n\n\n \n- 7)去重，乱序，分开训练集，测试集\n\n   \n\n``` \nsort -u pos_train.txt>pos_train.u\nshuf pos_train.u >pos_train.txt\nhead -n 230000 pos_train.txt >train.txt\ntail -n 51362 pos_train.txt >test.txt\n``` \n\n- 8)训练\n\n``` \npython kcws/train/train_pos.py --train_data_path train.txt --test_data_path test.txt --log_dir pos_logs --word_word2vec_path word_vec.txt --char_word2vec_path char_vec.txt \n```\n\n\n- 9)模型导出\n\n```\npython tools/freeze_graph.py --input_graph pos_logs/graph.pbtxt --input_checkpoint pos_logs/model.ckpt --output_node_names \"transitions,Reshape_9\" --output_graph kcws/models/pos_model.pbtxt\n```\n"
+        },
+        {
+          "name": "tfmodel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "third_party",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "util",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

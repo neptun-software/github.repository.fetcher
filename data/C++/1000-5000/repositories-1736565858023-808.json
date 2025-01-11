@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "timestamp": 1736565858023,
+    "page": 808,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Neargye/nameof",
+      "stars": 2116,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.4921875,
+          "content": "build/\n.vscode/\n.vs/\n\n### C++ gitignore ###\n# Prerequisites\n*.d\n\n# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Compiled Dynamic libraries\n*.so\n*.dylib\n*.dll\n\n# Fortran module files\n*.mod\n*.smod\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n*.lib\n\n# Executables\n*.exe\n*.out\n*.app\n\n### CMake gitignore ###\nCMakeLists.txt.user\nCMakeCache.txt\nCMakeFiles\nCMakeScripts\nTesting\nMakefile\ncmake_install.cmake\ninstall_manifest.txt\ncompile_commands.json\nCTestTestfile.cmake\n_deps\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 4.8369140625,
+          "content": "﻿cmake_minimum_required(VERSION 3.14)\n\ninclude(GNUInstallDirs)\n\nset(ADDITIONAL_MODULES_DIR \"${CMAKE_CURRENT_LIST_DIR}/cmake\")\nlist(APPEND CMAKE_MODULE_PATH \"${ADDITIONAL_MODULES_DIR}\")\n\nproject(nameof\n    VERSION \"0.10.4\"\n    HOMEPAGE_URL \"https://github.com/Neargye/nameof\"\n    DESCRIPTION \"A library that provides nameof macros and functions to simply obtain the name of a variable, type, function, macro, and enum.\"\n    LANGUAGES CXX\n)\nset(CPACK_PACKAGE_VENDOR \"Daniil Goncharov\")\n\nif(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)\n    set(IS_TOPLEVEL_PROJECT TRUE)\nelse()\n    set(IS_TOPLEVEL_PROJECT FALSE)\nendif()\n\noption(NAMEOF_OPT_BUILD_EXAMPLES \"Build nameof examples\" ${IS_TOPLEVEL_PROJECT})\noption(NAMEOF_OPT_BUILD_TESTS \"Build and perform nameof tests\" ${IS_TOPLEVEL_PROJECT})\noption(NAMEOF_OPT_INSTALL \"Generate and install nameof target\" ${IS_TOPLEVEL_PROJECT})\n\nif(NAMEOF_OPT_BUILD_EXAMPLES)\n    add_subdirectory(example)\nendif()\n\nif(NAMEOF_OPT_BUILD_TESTS)\n    enable_testing()\n    add_subdirectory(test)\nendif()\n\ninclude(CMakePackageConfigHelpers)\n\nset(EXPORT_NAMESPACE \"${PROJECT_NAME}::\")\n\nadd_library(\"${PROJECT_NAME}\" INTERFACE)\nadd_library(\"${EXPORT_NAMESPACE}${PROJECT_NAME}\" ALIAS \"${PROJECT_NAME}\")\nset(INCLUDES \"${CMAKE_CURRENT_SOURCE_DIR}/include\")\n\ntarget_include_directories(${PROJECT_NAME}\n        INTERFACE\n            $<BUILD_INTERFACE:${INCLUDES}>\n            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)\n\nif(NAMEOF_OPT_INSTALL)\n    list(APPEND CMAKE_MODULE_PATH \"${ADDITIONAL_MODULES_DIR}/GenPkgConfig\")\n    include(GenPkgConfig)\n    include(CPackComponent)\n    include(CMakePackageConfigHelpers)\n    \n    string(REPLACE \"/${CMAKE_LIBRARY_ARCHITECTURE}\" \"\" CMAKE_INSTALL_LIBDIR_ARCHIND \"${CMAKE_INSTALL_LIBDIR}\")\n    install(TARGETS \"${PROJECT_NAME}\"\n        EXPORT ${PROJECT_NAME}\n        INCLUDES\n            DESTINATION \"${CMAKE_INSTALL_INCLUDEDIR}\"\n            # COMPONENT \"${SDK_COMPONENT_NAME}\" # component is not allowed for includes! Headers are installed separately! Includes only marks the headers for export\n    )\n\n    file(GLOB_RECURSE HEADERS \"${INCLUDES}/*.h\" \"${INCLUDES}/*.hxx\" \"${INCLUDES}/*.hpp\")\n    foreach(headerFile ${HEADERS})\n        get_filename_component(headerFileParentDir \"${headerFile}\" DIRECTORY)\n        file(RELATIVE_PATH headerFileRelParentDir \"${INCLUDES}\" \"${headerFileParentDir}\")\n\n        install(FILES \"${headerFile}\"\n            DESTINATION \"${CMAKE_INSTALL_INCLUDEDIR}/${headerFileRelParentDir}\"\n        )\n    endforeach()\n\n    set(CPACK_PACKAGE_NAME \"${PROJECT_NAME}\")\n    set(CPACK_PACKAGE_DESCRIPTION \"${PROJECT_DESCRIPTION}\")\n    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE \"all\")\n    set(CPACK_DEBIAN_PACKAGE_NAME \"lib${CPACK_PACKAGE_NAME}-dev\")\n    set(CPACK_RPM_PACKAGE_NAME \"lib${CPACK_PACKAGE_NAME}-devel\")\n    set(CPACK_PACKAGE_HOMEPAGE_URL \"${PROJECT_HOMEPAGE_URL}\")\n    set(CPACK_PACKAGE_MAINTAINER \"${CPACK_PACKAGE_VENDOR}\")\n    set(CPACK_DEBIAN_PACKAGE_DEPENDS \"\")\n    set(CPACK_DEBIAN_PACKAGE_MAINTAINER \"${CPACK_PACKAGE_MAINTAINER}\")\n    set(CPACK_PACKAGE_MAINTAINER \"${CPACK_PACKAGE_VENDOR}\")\n    set(CPACK_DEB_COMPONENT_INSTALL ON)\n    set(CPACK_RPM_COMPONENT_INSTALL ON)\n    set(CPACK_NSIS_COMPONENT_INSTALL ON)\n    set(CPACK_DEBIAN_COMPRESSION_TYPE \"xz\")\n\n    set(CPACK_RESOURCE_FILE_LICENSE \"${CMAKE_CURRENT_SOURCE_DIR}/LICENSE\")\n    set(CPACK_RESOURCE_FILE_README \"${CMAKE_CURRENT_SOURCE_DIR}/README.md\")\n\n    set(CMAKE_CONFIG_FILE_BASENAME \"${PROJECT_NAME}Config.cmake\")\n    set(CMAKE_EXPORT_FILE_BASENAME \"${PROJECT_NAME}Export.cmake\")\n    set(CMAKE_CONFIG_VERSION_FILE_BASENAME \"${PROJECT_NAME}ConfigVersion.cmake\")\n    set(CMAKE_CONFIG_VERSION_FILE_NAME \"${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CONFIG_VERSION_FILE_BASENAME}\")\n\n    export(TARGETS \"${PROJECT_NAME}\"\n        NAMESPACE \"${EXPORT_NAMESPACE}\"\n        FILE \"${CMAKE_EXPORT_FILE_BASENAME}\"\n        EXPORT_LINK_INTERFACE_LIBRARIES\n    )\n\n    install(EXPORT \"${PROJECT_NAME}\"\n        FILE \"${CMAKE_CONFIG_FILE_BASENAME}\"\n        NAMESPACE \"${EXPORT_NAMESPACE}\"\n        DESTINATION \"${CMAKE_INSTALL_LIBDIR_ARCHIND}/cmake/${PROJECT_NAME}\"\n    )\n\n    write_basic_package_version_file(\n        \"${CMAKE_CONFIG_VERSION_FILE_NAME}\"\n        #VERSION \"100500.100500.100500\"  # any version of same bitness suits. CMake cannot compare to infinity, so use a large number we expect to be greater than any future version\n        VERSION ${_VERSION}\n        COMPATIBILITY AnyNewerVersion\n        ARCH_INDEPENDENT\n    )\n    install(FILES \"${CMAKE_CONFIG_VERSION_FILE_NAME}\"\n        DESTINATION \"${CMAKE_INSTALL_LIBDIR_ARCHIND}/cmake/${PROJECT_NAME}\"\n    )\n\n    configure_pkg_config_file(\"${PROJECT_NAME}\"\n        NAME \"${PROJECT_NAME}\"\n        VERSION \"${PROJECT_VERSION}\"\n        DESCRIPTION \"${CPACK_PACKAGE_DESCRIPTION}\"\n        URL \"${CPACK_PACKAGE_HOMEPAGE_URL}\"\n        INSTALL_LIB_DIR \"${CMAKE_INSTALL_LIBDIR_ARCHIND}\"\n        INSTALL_INCLUDE_DIR \"${CMAKE_INSTALL_INCLUDEDIR}\"\n    )\n\n    include(CPack)\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "MIT License\n\nCopyright (c) 2016 - 2024 Daniil Goncharov\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.4169921875,
+          "content": "[![Github releases](https://img.shields.io/github/release/Neargye/nameof.svg)](https://github.com/Neargye/nameof/releases)\n[![Conan package](https://img.shields.io/badge/Conan-package-blueviolet)](https://conan.io/center/recipes/nameof)\n[![Vcpkg package](https://img.shields.io/badge/Vcpkg-package-blueviolet)](https://github.com/microsoft/vcpkg/tree/master/ports/nameof)\n[![License](https://img.shields.io/github/license/Neargye/nameof.svg)](LICENSE)\n[![Compiler explorer](https://img.shields.io/badge/compiler_explorer-online-blue.svg)](https://godbolt.org/z/s_ecko)\n[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)\n\n# Nameof C++\n\nHeader-only C++17 library provides nameof macros and functions to simply obtain the name of a variable, type, function, macro, and enum.\n\nIf you like this project, please consider donating to one of the funds that help victims of the war in Ukraine: https://u24.gov.ua.\n\n## Documentation\n\n* [Reference](doc/reference.md)\n* [Limitations](doc/limitations.md)\n* [Integration](#Integration)\n\n## [Features & Examples](example/example.cpp)\n\n* Nameof\n\n  ```cpp\n  // Name of variable.\n  NAMEOF(somevar) -> \"somevar\"\n\n  // Name of member variable.\n  NAMEOF(person.address.zip_code) -> \"zip_code\"\n\n  // Name of function.\n  NAMEOF(foo<int, float>()) -> \"foo\"\n\n  // Name of member function.\n  NAMEOF(somevar.some_method()) -> \"some_method\"\n  NAMEOF(somevar.some_method<int>()) -> \"some_method\"\n\n  // Name of macro.\n  NAMEOF(__LINE__) -> \"__LINE__\"\n  NAMEOF(NAMEOF(structvar)) -> \"NAMEOF\"\n\n  // Obtains full name of variable, function, macro.\n  NAMEOF_FULL(somevar.some_method<int>()) -> \"some_method<int>\"\n\n  // Obtains raw name of variable, function, macro.\n  NAMEOF_RAW(somevar.some_method<int>()) -> \"somevar.some_method<int>()\"\n  ```\n\n* Nameof enum\n\n  ```cpp\n  enum class Color { RED = 1, BLUE = 2, GREEN = 4 };\n\n  auto color = Color::RED;\n  // Name of enum variable.\n  NAMEOF_ENUM(color) -> \"RED\"\n  nameof::nameof_enum(color) -> \"RED\"\n\n  // Static storage enum variable to string.\n  // This version is much lighter on the compile times and is not restricted to the enum_range limitation.\n  NAMEOF_ENUM_CONST(Color::GREEN) -> \"GREEN\"\n  nameof::nameof_enum<Color::GREEN>() -> \"GREEN\"\n\n  // Enum flags variable to string.\n  NAMEOF_ENUM_FLAG(Color::GREEN | Color::BLUE) -> \"GREEN|BLUE\"\n  nameof::nameof_enum_flag<Color::GREEN | Color::BLUE>() -> \"GREEN|BLUE\"\n\n  // Obtains name of enum variable or default value if enum variable out of range.\n  NAMEOF_ENUM_OR(Color::GREEN) -> \"GREEN\"\n  NAMEOF_ENUM_OR((Color)0, \"none\") -> \"none\"\n  ```\n\n* Nameof type\n\n  ```cpp\n  const my::detail::SomeClass<int>& var_ref = var;\n  // Name of variable type.\n  NAMEOF_TYPE_EXPR(var_ref) -> \"my::detail::SomeClass<int>\"\n  nameof::nameof_type<decltype(var_ref)>() -> \"my::detail::SomeClass<int>\"\n  NAMEOF_FULL_TYPE_EXPR(var_ref) -> \"const my::detail::SomeClass<int>&\"\n  nameof::nameof_full_type<decltype(var_ref)>() -> \"const my::detail::SomeClass<int>&\"\n  NAMEOF_SHORT_TYPE_EXPR(var_ref) -> \"SomeClass\"\n  nameof::nameof_short_type<decltype(var_ref)>() -> \"SomeClass\"\n\n  using T = const my::detail::SomeClass<int>&;\n  // Name of type.\n  NAMEOF_TYPE(T) ->\"my::detail::SomeClass<int>\"\n  nameof::nameof_type<T>() -> \"my::detail::SomeClass<int>\"\n  NAMEOF_FULL_TYPE(T) -> \"const my::detail::SomeClass<int>&\"\n  nameof::nameof_full_type<T>() -> \"const my::detail::SomeClass<int>&\"\n  NAMEOF_SHORT_TYPE(T) -> \"SomeClass\"\n  nameof::nameof_short_type<T>() -> \"SomeClass\"\n\n  my::detail::Base* ptr = new my::detail::Derived();\n  // Name of type, using rtti.\n  NAMEOF_TYPE_RTTI(*ptr) -> \"my::detail::Derived\"\n  NAMEOF_FULL_TYPE_RTTI(*ptr) -> \"volatile const my::detail::Derived&\"\n  NAMEOF_SHORT_TYPE_RTTI(*ptr) -> \"Derived\"\n\n  struct A {\n    int this_is_the_name;\n  };\n  // Obtains name of member.\n  NAMEOF_MEMBER(&A::this_is_the_name) -> \"this_is_the_name\"\n  nameof::nameof_member(&A::this_is_the_name) -> \"this_is_the_name\"\n\n  int someglobalvariable = 0;\n  // Obtains name of a function, a global or class static variable.\n  NAMEOF_POINTER(&someglobalconstvariable) == \"someglobalconstvariable\"\n  nameof::nameof_pointer(&someglobalconstvariable) == \"someglobalconstvariable\"\n\n  constexpr auto global_ptr = &someglobalvariable;\n  NAMEOF_POINTER(global_ptr) == \"someglobalconstvariable\"\n  nameof::nameof_pointer(global_ptr) == \"someglobalconstvariable\"\n  ```\n\n## Remarks\n\n* Before use, read the [limitations](doc/limitations.md) of functionality.\n\n## Integration\n\nYou should add required file [nameof.hpp](include/nameof.hpp).\n\nIf you are using [vcpkg](https://github.com/Microsoft/vcpkg/) on your project for external dependencies, then you can use the [nameof package](https://github.com/microsoft/vcpkg/tree/master/ports/nameof).\n\nIf you are using [Conan](https://www.conan.io/) to manage your dependencies, merely add `nameof/x.y.z` to your conan's requires, where `x.y.z` is the release version you want to use.\n\nArchlinux users can install `nameof` by package manager AUR, using the following command: `yay -S nameof`.\n\nAlternatively, you can use something like [CPM](https://github.com/TheLartians/CPM) which is based on CMake's `Fetch_Content` module.\n\n```cmake\nCPMAddPackage(\n    NAME nameof\n    GITHUB_REPOSITORY Neargye/nameof\n    GIT_TAG x.y.z # Where `x.y.z` is the release version you want to use.\n)\n```\n\n## Compiler compatibility\n\nCheck in the [reference](doc/reference.md) for each features.\n\n## Licensed under the [MIT License](LICENSE)\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

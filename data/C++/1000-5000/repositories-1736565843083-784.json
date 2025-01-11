@@ -1,0 +1,126 @@
+{
+  "metadata": {
+    "timestamp": 1736565843083,
+    "page": 784,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "leanprover/lean3",
+      "stars": 2151,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".appveyor.yml",
+          "type": "blob",
+          "size": 2.1669921875,
+          "content": "image: Visual Studio 2017\n\nenvironment:\n  MSYSTEM: MINGW64  # use MSYS2 shell\n  matrix:\n  - CFG: MINGW64\n    UPLOAD: ON\n  - CFG: MSVC\n\ncache: c:\\tools\\vcpkg\\installed\\\n\ninstall:\n  # upgrade git for vcpkg: https://github.com/appveyor/ci/issues/2097\n  - if %CFG% == MSVC (choco upgrade git -y & vcpkg install mpir:x64-windows)\n\nbuild_script:\n  - call \"C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\VC\\Auxiliary\\Build\\vcvars64.bat\"\n  - cd %APPVEYOR_BUILD_FOLDER% && mkdir build && cd build\n  # disable slow LTO\n  - if %CFG% == MSVC (cmake ../src\n      -DCMAKE_BUILD_TYPE=Release\n      -DCMAKE_TOOLCHAIN_FILE=c:/tools/vcpkg/scripts/buildsystems/vcpkg.cmake\n      -DLEAN_EXTRA_CXX_FLAGS=/GL-\n      -DLEAN_EXTRA_LINKER_FLAGS_MSVC=/LTCG:OFF\n      -G \"NMake Makefiles\" &&\n      cmake --build .)\n  - if %CFG% == MINGW64 (C:\\msys64\\usr\\bin\\bash -lc \"exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER/build &&\n      OPTIONS='';\n      if [[ $APPVEYOR_SCHEDULED_BUILD == True ]]; then . ../script/setup_nightly.sh; fi &&\n      cmake ../src -DINCLUDE_MSYS2_DLLS=ON -DCMAKE_BUILD_TYPE=Release $OPTIONS -G 'Unix Makefiles' &&\n      cmake --build . &&\n      cpack\")\n\ntest_script:\n  - C:\\msys64\\usr\\bin\\bash -lc \"exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER/build && ctest -j4 --output-on-failure\"\n  # don't test packages when building nightly\n  - C:\\msys64\\usr\\bin\\bash -lc \"exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER/packages &&\n      if [[ ! -f ../build/nightly.sh ]]; then\n        ../bin/leanpkg configure &&\n        for d in _target/deps/*; do (cd $d; ../../../../bin/leanpkg test || exit 1); done;\n      fi\"\n  - C:\\msys64\\usr\\bin\\bash -lc \"exec 0</dev/null && cd $APPVEYOR_BUILD_FOLDER &&\n      if [[ $UPLOAD == ON && $GH_TOKEN && $APPVEYOR_REPO_BRANCH == master && -f build/nightly.sh ]]; then\n        . build/nightly.sh &&\n        bash script/deploy_nightly.sh build/lean-*-windows.zip;\n      fi\"\n\nartifacts:\n  - path: build\\lean-*-windows.zip\n    name: binary\n\ndeploy:\n  description: 'Lean release'\n  provider: GitHub\n  auth_token:\n    secure: d+yPrDEAbiNrcf3a0PDNYEn/ieOOP6M7cP9zje+QkJEjHFdjBjWMe8b3qrC1hrus\n  artifact: binary\n  draft: false\n  prerelease: false\n  on:\n    appveyor_repo_tag: true\n    UPLOAD: ON\n"
+        },
+        {
+          "name": ".clang-format",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": "---\n\nBreakBeforeBraces: 'Attach'\n\nIndentWidth: 4\n"
+        },
+        {
+          "name": ".codecov.yml",
+          "type": "blob",
+          "size": 0.1494140625,
+          "content": "comment: off\n\ncoverage:\n  status:\n    project:\n      default:\n        threshold: 10%\n    patch:\n      default:\n        target: 0%\n        threshold: 10%\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "doc/changes.md merge=union\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2509765625,
+          "content": "*~\n\\#*\n.#*\n*.olean\n*.lock\nbuild\nGPATH\nGRTAGS\nGSYMS\nGTAGS\n.projectile\n.lean_options\n.vs\nsrc/emacs/dependencies\ncompile_commands.json\n*.idea\ntasks.json\nsettings.json\n.gdb_history\n.vscode\n/*.nix\n/library/init/version.lean\nCMakeSettings.json\nCppProperties.json\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 4.669921875,
+          "content": "language: cpp\nsudo: true\ncache: apt\ndist: trusty\ngroup: deprecated-2017Q3\naddons:\n  apt:\n    sources: &apt_sources\n      - ubuntu-toolchain-r-test\n      - sourceline: 'ppa:kalakris/cmake' # cmake 2.8 for precise\n      - sourceline: 'ppa:adrozdoff/cmake' # cmake 3 for trusty\n      - sourceline: 'ppa:h-rayflood/llvm'\n      - sourceline: ppa:hvr/z3   # z3 for the smt interface package\n    packages: &default_packages\n      - cmake\n      - libgmp-dev\n      - libgoogle-perftools-dev\n      - g++-4.9\n      - clang-3.4\n\nmatrix:\n  include:\n   - os: linux\n     dist: precise\n     env:\n       CMAKE_CXX_COMPILER=g++-4.9\n       CMAKE_BUILD_TYPE=Release\n       UPLOAD=ON\n       STATIC=ON\n       FIRST=1\n\n   - os: linux\n     env:\n       CMAKE_CXX_COMPILER=clang++-3.4\n       CMAKE_BUILD_TYPE=Release\n       LEAN_EXTRA_MAKE_OPTS=-t0\n       TCMALLOC=ON\n\n   - os: linux\n     addons: &gcc6_addons\n       apt:\n         sources: *apt_sources\n         packages:\n           - *default_packages\n           - g++-6\n           - gcc-6\n     env:\n       CMAKE_CXX_COMPILER=g++-6\n       CMAKE_BUILD_TYPE=Release\n       TCMALLOC=ON\n\n   - os: linux\n     addons: *gcc6_addons\n     env:\n       CMAKE_CXX_COMPILER=g++-6\n       CMAKE_BUILD_TYPE=Release\n       TESTCOV=ON\n\n   - os: linux\n     addons: *gcc6_addons\n     env:\n       CMAKE_CXX_COMPILER=g++-6\n       CMAKE_BUILD_TYPE=Release\n       MULTI_THREAD=OFF\n\n   - os: linux\n     addons:\n       apt:\n         sources: *apt_sources\n         packages:\n           - *default_packages\n           - z3\n     env:\n       CMAKE_CXX_COMPILER=g++-4.9\n       CMAKE_BUILD_TYPE=Release\n       TEST=OFF\n       TEST_LEANPKG_REGISTRY=ON\n\n   - os: linux\n     env:\n       CMAKE_CXX_COMPILER=clang++-3.4\n       CMAKE_BUILD_TYPE=Debug\n       TCMALLOC=ON\n\n   - os: linux\n     dist: precise\n     env:\n       CMAKE_CXX_COMPILER=g++-4.9\n       CMAKE_BUILD_TYPE=Debug\n\n   - os: osx\n     env:\n       CMAKE_CXX_COMPILER=clang++\n       CMAKE_BUILD_TYPE=Release\n       UPLOAD=ON\n       TEST_LEANPKG_REGISTRY=ON\n\n   - os: osx\n     env:\n       CMAKE_CXX_COMPILER=g++\n       CMAKE_BUILD_TYPE=Debug\n\nbefore_install:\n  - |\n    if [[ $TRAVIS_OS_NAME == osx ]]; then\n      brew update &&\n      (brew install gcc || brew link --overwrite gcc) &&\n      brew install gmp &&\n      # workaround for https://github.com/travis-ci/travis-ci/issues/6307\n      command curl -sSL https://rvm.io/mpapis.asc | gpg --import -\n      command curl -sSL https://rvm.io/pkuczynski.asc | gpg --import -\n      rvm get head || true\n    fi\n\nscript:\n  - set -e\n  - mkdir -p build\n  - cd build\n  - if [[ $TESTCOV != ON ]]; then TESTCOV=OFF; fi\n  - if [[ $TCMALLOC != ON ]]; then TCMALLOC=OFF; fi\n  - if [[ $STATIC != ON ]]; then STATIC=OFF; fi\n  - if [[ $MULTI_THREAD != OFF ]]; then MULTI_THREAD=ON; fi\n  - OPTIONS=\"\"\n  - |\n    if [[ $TRAVIS_EVENT_TYPE == cron ]]\n    then\n      # trigger AppVeyor build from first Travis job because they can't be bothered to let us set up a cron build\n      [[ -n $FIRST ]] && curl -H \"Authorization: Bearer $APPVEYOR_TOKEN\" -H \"Content-Type: application/json\" https://ci.appveyor.com/api/builds -d '{\"accountName\": \"leodemoura\", \"projectSlug\": \"lean\", \"branch\": \"master\", \"environmentVariables\": {\"APPVEYOR_SCHEDULED_BUILD\": \"True\"}}'\n      git fetch --unshallow --tags origin\n      . ../script/setup_nightly.sh\n    fi\n  - cmake -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE\n          -DCMAKE_CXX_COMPILER=$CMAKE_CXX_COMPILER\n          -DTESTCOV=$TESTCOV\n          -DTCMALLOC=$TCMALLOC\n          -DMULTI_THREAD=$MULTI_THREAD\n          -DSTATIC=$STATIC\n          -DLEAN_EXTRA_MAKE_OPTS=$LEAN_EXTRA_MAKE_OPTS\n          $OPTIONS\n          ../src\n  - make -j2\n  - if [[ $TEST != OFF ]]; then yes \"A\" | travis_wait 60 ctest -j2 --output-on-failure; fi\n  - |\n    # don't test packages when building nightly\n    if [[ $TEST_LEANPKG_REGISTRY == ON && -z $LEAN_VERSION_STRING ]]; then\n      (cd ../packages\n       if [[ $TRAVIS_OS_NAME == linux ]]; then ../bin/leanpkg add \"https://github.com/leanprover/smt2_interface\"; fi\n       ../bin/leanpkg configure\n       for d in _target/deps/*; do (cd $d; ../../../../bin/leanpkg test); done)\n    fi\n  - if [[ $UPLOAD == ON ]]; then cpack; fi\n  - if [[ $UPLOAD == ON && $GH_TOKEN && $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == master ]]; then (cd ..; bash script/deploy_nightly.sh build/lean-*); fi\n  - cd ..\n\nafter_script:\n  - if [[ $TESTCOV == ON ]]; then bash <(curl -s https://codecov.io/bash) -x gcov-6; fi\n\nnotifications:\n  email:\n    recipients:\n     - lean-build@googlegroups.com\n    on_success: change\n    on_failure: always\n\ndeploy:\n  provider: releases\n  api_key: $GH_TOKEN\n  file_glob: true\n  file: build/lean-*\n  skip_cleanup: true\n  overwrite: true\n  on:\n    condition: $UPLOAD = ON && $GH_TOKEN\n    repo: leanprover/lean\n    tags: true\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 8.9453125,
+          "content": "Apache License 2.0 (Apache)\nApache License\nVersion 2.0, January 2004\nhttp://www.apache.org/licenses/\n\nTERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n1. Definitions.\n\n\"License\" shall mean the terms and conditions for use, reproduction, and distribution as defined by Sections 1 through 9 of this document.\n\n\"Licensor\" shall mean the copyright owner or entity authorized by the copyright owner that is granting the License.\n\n\"Legal Entity\" shall mean the union of the acting entity and all other entities that control, are controlled by, or are under common control with that entity. For the purposes of this definition, \"control\" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.\n\n\"You\" (or \"Your\") shall mean an individual or Legal Entity exercising permissions granted by this License.\n\n\"Source\" form shall mean the preferred form for making modifications, including but not limited to software source code, documentation source, and configuration files.\n\n\"Object\" form shall mean any form resulting from mechanical transformation or translation of a Source form, including but not limited to compiled object code, generated documentation, and conversions to other media types.\n\n\"Work\" shall mean the work of authorship, whether in Source or Object form, made available under the License, as indicated by a copyright notice that is included in or attached to the work (an example is provided in the Appendix below).\n\n\"Derivative Works\" shall mean any work, whether in Source or Object form, that is based on (or derived from) the Work and for which the editorial revisions, annotations, elaborations, or other modifications represent, as a whole, an original work of authorship. For the purposes of this License, Derivative Works shall not include works that remain separable from, or merely link (or bind by name) to the interfaces of, the Work and Derivative Works thereof.\n\n\"Contribution\" shall mean any work of authorship, including the original version of the Work and any modifications or additions to that Work or Derivative Works thereof, that is intentionally submitted to Licensor for inclusion in the Work by the copyright owner or by an individual or Legal Entity authorized to submit on behalf of the copyright owner. For the purposes of this definition, \"submitted\" means any form of electronic, verbal, or written communication sent to the Licensor or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, the Licensor for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by the copyright owner as \"Not a Contribution.\"\n\n\"Contributor\" shall mean Licensor and any individual or Legal Entity on behalf of whom a Contribution has been received by Licensor and subsequently incorporated within the Work.\n\n2. Grant of Copyright License.\n\nSubject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare Derivative Works of, publicly display, publicly perform, sublicense, and distribute the Work and such Derivative Works in Source or Object form.\n\n3. Grant of Patent License.\n\nSubject to the terms and conditions of this License, each Contributor hereby grants to You a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by such Contributor that are necessarily infringed by their Contribution(s) alone or by combination of their Contribution(s) with the Work to which such Contribution(s) was submitted. If You institute patent litigation against any entity (including a cross-claim or counterclaim in a lawsuit) alleging that the Work or a Contribution incorporated within the Work constitutes direct or contributory patent infringement, then any patent licenses granted to You under this License for that Work shall terminate as of the date such litigation is filed.\n\n4. Redistribution.\n\nYou may reproduce and distribute copies of the Work or Derivative Works thereof in any medium, with or without modifications, and in Source or Object form, provided that You meet the following conditions:\n\n1. You must give any other recipients of the Work or Derivative Works a copy of this License; and\n\n2. You must cause any modified files to carry prominent notices stating that You changed the files; and\n\n3. You must retain, in the Source form of any Derivative Works that You distribute, all copyright, patent, trademark, and attribution notices from the Source form of the Work, excluding those notices that do not pertain to any part of the Derivative Works; and\n\n4. If the Work includes a \"NOTICE\" text file as part of its distribution, then any Derivative Works that You distribute must include a readable copy of the attribution notices contained within such NOTICE file, excluding those notices that do not pertain to any part of the Derivative Works, in at least one of the following places: within a NOTICE text file distributed as part of the Derivative Works; within the Source form or documentation, if provided along with the Derivative Works; or, within a display generated by the Derivative Works, if and wherever such third-party notices normally appear. The contents of the NOTICE file are for informational purposes only and do not modify the License. You may add Your own attribution notices within Derivative Works that You distribute, alongside or as an addendum to the NOTICE text from the Work, provided that such additional attribution notices cannot be construed as modifying the License.\n\nYou may add Your own copyright statement to Your modifications and may provide additional or different license terms and conditions for use, reproduction, or distribution of Your modifications, or for any such Derivative Works as a whole, provided Your use, reproduction, and distribution of the Work otherwise complies with the conditions stated in this License.\n\n5. Submission of Contributions.\n\nUnless You explicitly state otherwise, any Contribution intentionally submitted for inclusion in the Work by You to the Licensor shall be under the terms and conditions of this License, without any additional terms or conditions. Notwithstanding the above, nothing herein shall supersede or modify the terms of any separate license agreement you may have executed with Licensor regarding such Contributions.\n\n6. Trademarks.\n\nThis License does not grant permission to use the trade names, trademarks, service marks, or product names of the Licensor, except as required for reasonable and customary use in describing the origin of the Work and reproducing the content of the NOTICE file.\n\n7. Disclaimer of Warranty.\n\nUnless required by applicable law or agreed to in writing, Licensor provides the Work (and each Contributor provides its Contributions) on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely responsible for determining the appropriateness of using or redistributing the Work and assume any risks associated with Your exercise of permissions under this License.\n\n8. Limitation of Liability.\n\nIn no event and under no legal theory, whether in tort (including negligence), contract, or otherwise, unless required by applicable law (such as deliberate and grossly negligent acts) or agreed to in writing, shall any Contributor be liable to You for damages, including any direct, indirect, special, incidental, or consequential damages of any character arising as a result of this License or out of the use or inability to use the Work (including but not limited to damages for loss of goodwill, work stoppage, computer failure or malfunction, or any and all other commercial damages or losses), even if such Contributor has been advised of the possibility of such damages.\n\n9. Accepting Warranty or Additional Liability.\n\nWhile redistributing the Work or Derivative Works thereof, You may choose to offer, and charge a fee for, acceptance of support, warranty, indemnity, or other liability obligations and/or rights consistent with this License. However, in accepting such obligations, You may act only on Your own behalf and on Your sole responsibility, not on behalf of any other Contributor, and only if You agree to indemnify, defend, and hold each Contributor harmless for any liability incurred by, or claims asserted against, such Contributor by reason of your accepting any such warranty or additional liability.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.4931640625,
+          "content": "**This repository has been frozen. [Lean 4](https://github.com/leanprover/lean4) is now the official release.**\n\nAbout\n-----\n\n- [Homepage](http://leanprover.github.io)\n- [Theorem Proving in Lean](https://leanprover.github.io/theorem_proving_in_lean/index.html)\n- [FAQ](doc/faq.md)\n\nInstallation\n------------\n\nStable and nightly binary releases of Lean are available on the [homepage](https://leanprover.github.io/download/). For building Lean from source, see the [build instructions](doc/make/index.md).\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extras",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "leanpkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "library",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packages",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tmp",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

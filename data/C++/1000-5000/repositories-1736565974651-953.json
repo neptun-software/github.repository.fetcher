@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736565974651,
+    "page": 953,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ppwwyyxx/OpenPano",
+      "stars": 1903,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3115234375,
+          "content": "Eigen/\nobj\nmain\ndata/\n*.png\n*.zip\n.tags\noutput\n*.pyc\nbuild/\nCMakeCache.txt\nCMakeFiles/\nsrc/CMakeFiles/\nsrc/*.jpg\nsrc/image_stitching\nMakeFile\nsrc/MakeFile\nlog\n*~\n*.o\n*-report\n*.so\n*.vcxproj\n*.vcxproj.*\n*.VC\n*.VC.*\n*.sln\nWin32/\nipch/\nDebug\ncmake_install.cmake\nsrc/cmake_install.cmake\n.vs/\n\nexample-data\nexample-data.tgz\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.7099609375,
+          "content": "sudo: false\n\nlanguage: cpp\n\nos:\n  - linux\n\ncompiler:\n  - gcc\n    #- clang\n\nenv:\n  - TASK=build\n\n# dependent apt packages\naddons:\n  apt:\n    sources:\n      - ubuntu-toolchain-r-test\n      - llvm-toolchain-precise-3.7\n        #- debian-sid\n    packages:\n      - g++-4.8\n        #- clang-3.7\n        #- libomp-dev\n      - libeigen3-dev\n      - libjpeg-dev\n\nbefore_script:\n  - if [ \"$CXX\" == \"g++\" ]; then export CXX=\"g++-4.8\"; fi\n  - if [ \"$CXX\" == \"clang++\" ]; then export CXX=\"clang++-3.7\"; fi\n  - export OMP_NUM_THREADS=4\n\nscript:\n  - make -j -C src\n  - cd src && ./run_test.py\n\nnotifications:\n# Emails are sent to the committer's git-configured email address by default,\n  email:\n    on_success: change\n    on_failure: change\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.46484375,
+          "content": "cmake_minimum_required (VERSION 3.20)\nproject (OpenPano LANGUAGES CXX)\n\noption(BUILD_SHARED_LIBS \"Build using shared libraries\" ON)\n# set a default build type if none was provided\n# this has to be done before the project() instruction!\nif(NOT CMAKE_BUILD_TYPE)\n\tset(CMAKE_BUILD_TYPE Release CACHE STRING \"Choose the type of build (Debug or Release)\" FORCE)\nendif()\n\nif (MSVC)\n\tif(MSVC_VERSION LESS 1800) # 1700 = VS 2013\n\t\tmessage(FATAL_ERROR \"The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.\")\n\tendif()\n\tset(OBJ_EXT obj)\nelse()\n\tinclude(CheckCXXCompilerFlag)\n\tCHECK_CXX_COMPILER_FLAG(\"-std=c++11\" COMPILER_SUPPORTS_CXX11)\n\tCHECK_CXX_COMPILER_FLAG(\"-std=c++0x\" COMPILER_SUPPORTS_CXX0X)\n\tif(COMPILER_SUPPORTS_CXX11)\n\t\tset(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -std=c++11\")\n\telseif(COMPILER_SUPPORTS_CXX0X)\n\t\tset(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -std=c++0x\")\n\telse()\n\t\tmessage(FATAL_ERROR \"The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.\")\n\tendif()\n\tset(OBJ_EXT o)\nendif()\nif (WIN32)\n\tadd_definitions( -DUNICODE -D_UNICODE)\nendif()\n\n\n# compiler options:\nif(MSVC)\n\tadd_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DWIN32_LEAN_AND_MEAN -DVC_EXTRALEAN -DMSVC)\n\t# /Zo makes debug symbol in pdb in release mode in VS2015\n\tadd_definitions(/fp:fast /GR- /Os /Zo /arch:AVX /openmp)\nelse()\n\tadd_definitions(-O3 -march=native -Wall -Wextra)\nendif()\nadd_definitions(-DDEBUG)\n\n\nadd_subdirectory(src)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015-2017 Yuxin Wu\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.0166015625,
+          "content": "# OpenPano\n\n![cmu0](results/CMU0-all.jpg)\n\n## Introduction\n\nOpenPano is a panorama stitching program written in C++ from scratch (without any vision libraries). It mainly follows the routine\ndescribed in the paper [Automatic Panoramic Image Stitching using Invariant Features](http://matthewalunbrown.com/papers/ijcv2007.pdf),\nwhich is also the one used by [AutoStitch](http://matthewalunbrown.com/autostitch/autostitch.html).\n\n## Installation\n\nWe need the following dependencies:\n* gcc >= 5, clang >= 10 or visual studio >= 2015. CMake >= 3.20\n* [Eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)\n* libjpeg (optional, if you only need png format)\n* [FLANN](http://www.cs.ubc.ca/research/flann/) (already included in the repository, slightly modified)\n* [CImg](http://cimg.eu/) (optional. already included in the repository)\n\nEigen, CImg and FLANN are header-only, to simplify the compilation on different platforms.\nCImg and libjpeg are only used to read and write images, so you can easily get rid of them.\n\nOn ArchLinux, install dependencies by: `sudo pacman -S gcc sed cmake make libjpeg eigen`\n\nOn Ubuntu, install dependencies by: `sudo apt install build-essential sed cmake libjpeg-dev libeigen3-dev`\n\n### Compile:\n#### Linux / OSX / WSL (bash on windows)\nUse cmake (a good default to try):\n```\n$ cmake -B build && make -C build\n# Binary will be found at ./build/src/image-stitching\n```\nor, use make (more customizable. You can modify Makefile when you run into problems.):\n```\n$ make -C src\n# Binary will be found at ./src/image-stitching\n```\nThe default clang on OSX doesn't contain openmp support.\nYou may need gcc or different clang. See [#16](https://github.com/ppwwyyxx/OpenPano/issues/16).\n\n\n#### Windows (for VS2015)\n* Install cmake, VS2015\n* Set environment variable `Eigen3_DIR` to `{YOUR_EIGEN3_DIRECTORY}/eigen3/cmake`.\n* Open Visual Studio [Developer Command Prompt](https://msdn.microsoft.com/en-us/library/ms229859(v=vs.110).aspx).\n* `cd path/to/OpenPano`\n* `cmake .`\n* Open the VS2015 project and compile the project\n* copy `config.cfg` to the directory containing `image-stitching.exe`\n* The author have never used Visual Studio and this windows build process may not work for you. Feel\n\tfree to submit PR to improve the build process.\n\n## Usage\n\n```\n$ ./image-stitching <file1> <file2> ...\n```\n\nThe output file is ``out.jpg``. You can play with the [example data](https://github.com/ppwwyyxx/OpenPano/releases/tag/0.1) to start with.\n\nBefore dealing with very large images (4 megapixels or more), it's better to manually downscale them to save time.\n\nIn cylinder/translation mode, the input file names need to have the correct order.\n\n### Configuration:\n\nThe program expects to find the config file `config.cfg` in the working directory.\nThree modes are available (set/unset them in the top of the config file):\n+ __cylinder__ mode. Requirements:\n\t+ You stay at the same spot and __only__ turn left (or right) when taking the images (as is usually done), no\n\t\ttranslations or other type of rotations allowed.\n\t+ Images are taken with the same camera, with a known ``FOCAL_LENGTH`` set in config.\n\t+ Images are given in the left-to-right order. (I might fix this in the future)\n\n+ __camera estimation mode__. Requirements:\n  * You stay at the same spot when taking the images, and can turn your camera left-right or\n    up-down.\n  * Don't use too few images.\n  * It runs slower because it needs to perform pairwise matches.\n\n+ __translation mode__. Simply stitch images together by affine transformation. Requirements:\n  * Camera performs pure translation.\n  * The images are roughly at the same depth.\n  * Input images are ordered according to the translation movement.\n\nSome options you may care:\n+ __FOCAL_LENGTH__: focal length of your camera in [35mm equivalent](https://en.wikipedia.org/wiki/35_mm_equivalent_focal_length). Only useful in cylinder mode.\n+ __ORDERED_INPUT__: whether input images are ordered sequentially. has to be `1` in CYLINDER and TRANS mode.\n+ __CROP__: whether to crop the final image to avoid irregular white border.\n\nOther parameters are quality-related.\nThe default values are generally good for images with more than 0.7 megapixels.\nIf your images are too small and cannot produce satisfactory results,\nit might be better to resize your images rather than tune the parameters.\n\n\n## Examples ([All original data available for __download__](https://github.com/ppwwyyxx/OpenPano/releases/tag/0.1))\n\nZijing Apartment in Tsinghua University:\n![dorm](results/apartment.jpg)\n\n\"Myselves\":\n![myself](results/myself.jpg)\n\n<!--\n   -Zijing Playground in Tsinghua University:\n   -![planet](https://github.com/ppwwyyxx/panorama/raw/master/results/planet.jpg)\n\t -->\n\nCarnegie Mellon University from 38 images\n![apple](results/apple.jpg)\n\nNewell-Simon Hall in CMU (this one is hard because objects are closer):\n![nsh](results/NSH-all.jpg)\n\nA full-view pano built from UAV images:\n![uav](results/uav.jpg)\n\nFor more examples, see [results](results).\n\n## Speed & Memory\nTested on Intel Core i7-6700HQ, with `ESTIMATE_CAMERA` mode:\n\n+ 11 ordered images of size 600x400: 3.2s.\n+ 13 ordered images of size 1500x1112: 6s.\n+ 38 unordered images of size 1300x867 (high vertical FOV): 51s.\n\nMemory consumption is known to be huge with default libc allocator.\nSimply using a modern allocator (e.g. tcmalloc, jemalloc) can help a lot.\nAlso, setting `LAZY_READ` to 1 can save memory at the cost of a minor slow down.\n\nPeak memory in bytes (assume each input has the same w & h):\n\n+ Without `LAZY_READ` option: max(finalw \\* finalh \\* 12, #photos \\* w \\* h \\* 12 + #photos \\* #matched\\_pairs * 96 + #keypoints * 520)\n+ With `LAZY_READ` option: max(finalw \\* finalh \\* 16, #threads \\* w \\* h \\* 12, #photos \\* #matched\\_pairs * 96 + #keypoints * 520)\n\n## Algorithms\n+ Features: [SIFT](http://en.wikipedia.org/wiki/Scale-invariant_feature_transform)\n+ Transformation: use [RANSAC](http://en.wikipedia.org/wiki/RANSAC) to estimate a homography or affine transformation.\n+ Optimization: focal estimation, [bundle adjustment](https://en.wikipedia.org/wiki/Bundle_adjustment), and some straightening tricks.\n\nFor details, see [my blog post](http://ppwwyyxx.com/blog/2016/How-to-Write-a-Panorama-Stitcher/).\n\n## Quality Guidelines\n\nTo get the best stitching quality:\n+ While rotating the camera for different shots, try to keep the position of camera lens static.\n+ Keep the exposure parameters unchanged.\n+ Do not shoot on moving objects.\n+ Objects far away will stitch better.\n+ The algorithm doesn't work well with wide-angle cameras where images are distorted heavily. Camera\n\tparameters are needed to undistort the images.\n\n## TODOs\n+ Github Actions for macOS and Windows\n+ apply pairwise matching for translation mode as well\n+ run bundle adjustment on sphere lens instead of perspective lens\n+ improve feature detector and matching\n+ use LAZY_READ & 1 byte image in both blender to reduce peak memory\n+ clean up use of copies of `ImageRef`\n+ faster gaussian blur kernel\n+ port some hotspot (e.g. `dist.cc`) to neon\n+ support read/write EXIF metadata to:\n\t+ get focal length, distortion, etc\n\t+ allow pano to be viewed on Facebook\n+ python bindings\n"
+        },
+        {
+          "name": "results",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

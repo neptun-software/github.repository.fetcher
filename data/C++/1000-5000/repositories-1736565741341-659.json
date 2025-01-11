@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736565741341,
+    "page": 659,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cnjinhao/nana",
+      "stars": 2363,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1435546875,
+          "content": "*.sln text eol=crlf\n*.vcxproj text eol=crlf\n*.vcxproj.filters text eol=crlf\n*.vcxproj.user text eol=crlf\n*.bat text eol=crlf\nMakefile text eolf=lf\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.5908203125,
+          "content": "#This .gitignore created by Ariel Vina-Rodriguez\n#ignore thumbnails created by windows\nThumbs.db\n#Ignore files build by Visual Studio\nbii/build/*\nbii/cmake/*\nbii/deps/*\nbuild/vc2013-bkl/*\nbuild/makefile-bkl/*\nbuild/compile_commands.json\nbuild/install_manifest.txt\n*.obj\n*.exe\n*.pdb\n*.user\n*.aps\n*.pch\n*.vspscc\n*_i.c\n*_p.c\n*.ncb\n*.tlb\n*.tlh\n*.bak\n*.cache\n*.ilk\n*.log\n[Bb]in\n[Bb]in/\n[Dd]ebug*/\n*.lib\n*.a\n*.sbr\nobj/\n[Rr]elease*/\n_ReSharper*/\n[Tt]est[Rr]esult*\n*.suo\n*.sdf\nlib/\n*.ninja*\nCMakeCache.txt\nCMakeFiles/\ncmake-build-debug/\ncmake-build-*/\n.idea/\ncmake_install.cmake\n*.DS_Store\n\n*.db\n*.opendb\n.vscode\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 2.2431640625,
+          "content": "sudo: false\nlanguage: generic\n\ncache:\n  apt: true\n  directories:\n    - /tmp/tools\n\nmatrix:\n  include:\n    - env: CXX=g++-8\n      addons:\n        apt:\n          packages:\n            - g++-8\n            - libjpeg8-dev\n            - libpng-dev\n            - libasound2-dev\n            - alsa-utils\n            - alsa-oss\n            - libx11-dev\n            - libxft-dev\n            - libxcursor-dev\n          sources:\n            - ubuntu-toolchain-r-test\n            \n  allow_failures:\t\t\n    - env: CXX=clang++-3.8 CC=clang-3.8\n      addons:\n        apt:\n          packages:\n            - clang-3.8\n            - libjpeg8-dev\n            - libpng-dev\n            - libasound2-dev\n            - alsa-utils\n            - alsa-oss\n            - libx11-dev\n            - libxft-dev\n            - libxcursor-dev\n          sources: \n            - ubuntu-toolchain-r-test\n            - llvm-toolchain-precise \n\nbefore_install:\n  # donwload nana-demo first\n  # we are in:  'user'/nana/\n  - cd ..\n  # we are in:   'user'/\n  - git clone --depth=1 --branch=master https://github.com/qPCR4vir/nana-demo.git nana-demo\n  # now we have 'user'/nana-demo, 'user'/nana/  and we are in: 'user'/\n  - export PATH=\"$HOME/bin:$PATH\"\n  - wget --no-check-certificate --no-clobber -O /tmp/tools/cmake https://cmake.org/files/v3.12/cmake-3.12.0-rc3-Linux-x86_64.sh || true\n  - chmod -R +x /tmp/tools\n\ninstall:\n  - /tmp/tools/cmake --prefix=\"$HOME\" --exclude-subdir\n\nbefore_script :\n  - mkdir demo-build\n  - cd demo-build\n  # now we have 'user'/nana-demo, 'user'/nana/ , 'user'/demo-build/ and we are in: 'user'/demo-build/\n\nservices:\n  # travis don't have a physical monitor. We need to install an emulator:\n  # https://docs.travis-ci.com/user/gui-and-headless-browsers/\n  - xvfb\n\nscript:\n  - cmake -G\"Unix Makefiles\" ../nana-demo -DCMAKE_INSTALL_PREFIX=.. -DNANA_CMAKE_ENABLE_JPEG=ON -DNANA_CMAKE_FIND_BOOST_FILESYSTEM=OFF -DNANA_CMAKE_AUTOMATIC_GUI_TESTING=ON -DNANA_CMAKE_INSTALL=OFF\n  - make install\n  - ctest --verbose  # todo set correct working directory, and show output\n  # we have installed in 'user'/ ('user'/demo-build/..), and cmake created 'user'/nana-test/\n  # todo: separate resources from sources (a directory for images)\n  - ls\n  # we were still in: 'user'/demo-build/\n  - cd ../nana-test/bin\n  - ls -lh\n\n\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 5.865234375,
+          "content": "# CMake configuration for Nana\n# Contributors:\n#   Andrew Kornilov (ierofant) - original version\n#   Jinhao\n#   Ariel Vina-Rodriguez (qPCR4vir)\n#   (King_DuckZ)\n#   Robert Hauck - Enable support for PNG/Freetype\n#   Pavel O. - fix compilation with boost::filesystem (#281)\n#   Frostbane - Add option for compiling a shared library (#263,#265)\n#   Qiangqiang Wu - Add biicode support: todo migrate to https://conan.io/\n#\n# Nana uses some build systems: MS-VS solution, MAKE, bakefile, codeblock, etc. manually optimized.\n# Maybe CMake will be used in the future to generate some of them in the central nana repository.\n# But by now CMake is just one option and all the other build system\n# files/projects distributed are manually writen. This current CMakeList.txt reflect this fact and that is why we don't\n# generate here configurated *.h files or explicitly enumerate the sources files: anyway this CM-list\n# will be \"touched\" to force a re-run of cmake.\n\n# https://cliutils.gitlab.io/modern-cmake/\n# https://cmake.org/cmake-tutorial/\n# https://cmake.org/cmake/help/v3.12/module/CMakeDependentOption.html?highlight=cmakedependentoption\n# cmake 3.12 have more better modern c++ support\n\ncmake_minimum_required(VERSION 3.12  FATAL_ERROR)\nproject(nana VERSION      1.7.3\n        DESCRIPTION \"C++ GUI library\"\n        HOMEPAGE_URL http://nanapro.org\n        LANGUAGES CXX         )\n\n#######################     Main setting of Nana targets, sources and installs    #####################\n\nadd_library(nana)\nadd_library(nana::nana ALIAS nana)\ntarget_compile_features(nana PUBLIC cxx_std_17)\n# set(CMAKE_CXX_STANDARD 17)\n\n#  need after cxx_std_14 or cxx_std_17 ??\ntarget_compile_features(nana\n        PUBLIC cxx_nullptr\n        PUBLIC cxx_range_for\n        PUBLIC cxx_lambdas\n        PUBLIC cxx_decltype_auto\n        PUBLIC cxx_defaulted_functions\n        PUBLIC cxx_deleted_functions\n        PUBLIC cxx_auto_type\n        PUBLIC cxx_decltype_incomplete_return_types\n        PUBLIC cxx_defaulted_move_initializers\n        PUBLIC cxx_noexcept\n        PUBLIC cxx_rvalue_references\n        )\n\n###    collect all source sub-directories in a list to avoid duplication    ###\n\n# By using CMAKE_CURRENT_LIST_DIR here you can compile and consume nana by just:\n# add_subdirectory(../nana ../cmake-nana-build-${CONFIG} ) or simmilar\n# in your own CMakeLists.txt, and them :\n# target_link_libraries(yourApp PRIVATE nana )\n\nset(NANA_SOURCE_DIR         ${CMAKE_CURRENT_LIST_DIR}/source)\nset(NANA_SOURCE_SUBDIRS     /.\n                            /detail\n                            /detail/posix\n                            /filesystem\n                            /gui\n                            /gui/detail\n                            /gui/widgets\n                            /gui/widgets/skeletons\n                            /paint\n                            /paint/detail\n                            /system\n                            /threads\n                            )\nif(NANA_CMAKE_ENABLE_AUDIO)\n    list(APPEND NANA_SOURCE_SUBDIRS\n                            /audio\n                            /audio/detail\n                            )\nendif()\n\n# collect all source files in the source-sub-dir\nforeach(subdir ${NANA_SOURCE_SUBDIRS})\n    aux_source_directory(${NANA_SOURCE_DIR}${subdir} SOURCES) # todo: use GLOB to add headers too ??\nendforeach()\n\ntarget_sources(nana PRIVATE ${SOURCES})\n\n###    collect all headers sub-directories in a list to avoid duplication   ###\n# To show .h files in Visual Studio, add them to the list of sources in add_executable / add_library / target_sources\n# and Use SOURCE_GROUP if all your sources are in the same directory\nset(NANA_INCLUDE_DIR        ${CMAKE_CURRENT_LIST_DIR}/include)\nset(NANA_INCLUDE_SUBDIRS    /.\n                            /filesystem\n                            /gui\n                            /gui/detail\n                            /gui/widgets\n                            /gui/widgets/skeletons\n                            /paint\n                            /paint/detail\n                            /pat\n                            /system\n                            /threads\n                            )\nif(NANA_CMAKE_ENABLE_AUDIO)\n    list(APPEND NANA_INCLUDE_SUBDIRS\n                            /audio\n                            /audio/detail\n                            )\nendif()\n\nforeach(subdir ${NANA_INCLUDE_SUBDIRS})\n    aux_source_directory(${NANA_INCLUDE_DIR}/nana${subdir} HEADERS)  # todo: use GLOB to add headers too !!!!!!!\nendforeach()\n\n###  Some nana compilation options   ###\noption(NANA_CMAKE_AUTOMATIC_GUI_TESTING \"Activate automatic GUI testing?\" OFF)\noption(NANA_CMAKE_ENABLE_MINGW_STD_THREADS_WITH_MEGANZ \"replaced boost.thread with meganz's mingw-std-threads.\" OFF) # deprecate?\noption(NANA_CMAKE_ENABLE_CONF \"enable config.hpp\" OFF)\n\n######## Nana options\n\nif(NOT NANA_CMAKE_ENABLE_CONF)\n    target_compile_definitions(nana PRIVATE NANA_IGNORE_CONF)    # really ??\nendif()\nif(NANA_CMAKE_AUTOMATIC_GUI_TESTING)\n    target_compile_definitions(nana PUBLIC NANA_AUTOMATIC_GUI_TESTING)\n    # todo: enable_testing()       #  ??\nendif()\n\nlist (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/build/cmake/Modules)\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/install_nana.cmake)   # includes and libs, or just expose the nana target\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/OS.cmake)             # windows, unix, linux, apple, ...\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/shared_libs.cmake)    # static vs shared\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/compilers.cmake)      # VC, gcc, clang\n\n############# Optional libraries    #####################\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/enable_png.cmake)\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/enable_jpeg.cmake)\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/enable_audio.cmake)\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/select_filesystem.cmake)\ninclude(${CMAKE_CURRENT_LIST_DIR}/build/cmake/verbose.cmake)        # Just for information\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.306640625,
+          "content": "Boost Software License - Version 1.0 - August 17th, 2003\n\nPermission is hereby granted, free of charge, to any person or organization\nobtaining a copy of the software and accompanying documentation covered by\nthis license (the \"Software\") to use, reproduce, display, distribute,\nexecute, and transmit the Software, and to prepare derivative works of the\nSoftware, and to permit third-parties to whom the Software is furnished to\ndo so, all subject to the following:\n\nThe copyright notices in the Software and this entire statement, including\nthe above license grant, this restriction and the following disclaimer,\nmust be included in all copies of the Software, in whole or in part, and\nall derivative works of the Software, unless such copies or derivative\nworks are solely in the form of machine-executable object code generated by\na source language processor.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT\nSHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE\nFOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,\nARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\nDEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.9833984375,
+          "content": "# Nana C++ Library \n\n[![Licence](https://img.shields.io/badge/license-BSL-blue.svg?style=flat)](LICENSE)\n\n\nNana is a C++ standard-like GUI library designed to allow developers to easily create cross-platform GUI applications with modern C++ style. Currently it is regularly tested on Linux(X11) and Windows, and experimentally on macOS and FreeBSD. The [nana repository](https://github.com/cnjinhao/nana) contains the entire source of the library. You can browse the source code and submit your pull request for contributing.\n\n## License\n\nNana is licensed under the [Boost Software License](http://www.boost.org/LICENSE_1_0.txt)\n\n## Members\n\nJinhao, [Ariel Viña Rodríguez].\n\n[Ariel Viña Rodríguez]: http://qpcr4vir.github.io/\n\n## Documentation\n\nThe best way to get help with Nana library is by visiting https://nana.acemind.cn/documentation\n\n## Examples\n\nHere are some examples to give you an idea how to use the Nana C++ Library.\n\n### Create a window\n\nThe `form` class provides methods to manipulating a window.\n```C++\n#include <nana/gui.hpp>\n\nint main()\n{\n    nana::form fm;\n    fm.show();\n    nana::exec();\n}\n```\n\n\n## Sending a Pull Request ?\n\nThis project encourage you to contribute through sending a pull request! There is a simple rule: please **don't** directly commit your contributions to the **master** branch. According to your commits, please choose the **hotfixes** branch or the **develop** branch. Thank you!\n\n## Introduction to the Repository\n\nThere are two main branches with an infinite lifetime:\n* **master** is the main branch and it is marked as every version release.\n* **develop** is also another main branch where the source code reflects a state with the lastest delivered developement changes for the next release.\n\nOther branches:\n* **features** are used to develop new features for the upcoming or a distant future release. Feature branches are named as 'feature-FEATURENAME'.\n* **hotfix** is meant to prepare for a new release, and fixes some bugs from the corresponding tag on the master branch.\n"
+        },
+        {
+          "name": "appveyor.yml",
+          "type": "blob",
+          "size": 0.1083984375,
+          "content": "version: 1.0.{build}\nimage:\n  - Visual Studio 2017\nbuild:\n  project: build\\vc2017\\nana.sln\n  verbosity: minimal"
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extrlib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "how-to-install.txt",
+          "type": "blob",
+          "size": 0.892578125,
+          "content": "﻿Please refer to the Library Installation Documentation for the detailed installation instructions.\nhttps://github.com/qPCR4vir/nana-docs/wiki/Installation\nNOTE: The method of library installation for VC2003/2005/2008/2010/2012 is only for the version older than 0.8. Since version 0.8, the library only works in VC2013 and later. If you have not VC2013 installed, please choose the latest Codeblocks instead.\n\nUsing Clang\nhttps://github.com/cnjinhao/nana/wiki/Compiling-Nana-with-Clang-8.0\n\n请参考库安装文档获取详细的安装步骤。\nhttps://github.com/qPCR4vir/nana-docs/wiki/Installation\n注意: 针对VC2003/2005/2008/2010/2012的安装方法只适用于低于0.8的版本。从0.8版起，该库对Visual C++的最低版本要求是2013。如果您没有安装VC2013，可以使用最新版的CodeBlocks代替。\n\n\n使用 Clang\nhttps://github.com/cnjinhao/nana/wiki/Compiling-Nana-with-Clang-8.0"
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "source",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
