@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "timestamp": 1736562978829,
+    "page": 591,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "arachnys/cabot",
+      "stars": 5607,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".coveragerc",
+          "type": "blob",
+          "size": 0.076171875,
+          "content": "[run]\nbranch = True\nplugins =\n    django_coverage_plugin\n\nomit = *migrations*\n"
+        },
+        {
+          "name": ".foreman",
+          "type": "blob",
+          "size": 0.068359375,
+          "content": "# vi: set ft=yaml :\n\nprocfile: Procfile.dev\nenv: conf/development.env\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.248046875,
+          "content": ".dotcloud/*\ndev.db\nvenv/*\nbackups/*\nstatic/\ncabot/.collectstatic/\nnode_modules/*\n.python-eggs/*\ncabot.egg-info\ncabot/static/\n.env\n.DS_Store\ncelerybeat-schedule\n*.pyc\n*.swp\n*.orig\n.vagrant\nconf/*.env\ndist/\nlocal_config.yml\nbuild/\n\n.idea\nPipfile.lock\n.tox/"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.6171875,
+          "content": "sudo: required\nservices:\n - docker\n\nbefore_install:\n - sudo pip install tox\n\n# setup databases\nbefore_script:\n - cp conf/development.env.example conf/development.env\n - docker-compose build\n\nscript:\n - tox\n - docker-compose -f docker-compose-test.yml run --rm --entrypoint bin/test_with_coverage test -v2\n - git checkout $(git describe --abbrev=0 --tags `git describe --tags`^) && docker-compose build web\n - docker-compose run --rm web true\n - git checkout - && docker-compose build web\n - docker-compose run --rm web true\n\nafter_success:\n  - sudo pip install codecov\n  - sudo pip install django_coverage_plugin==1.4.2\n  - codecov\n"
+        },
+        {
+          "name": "CHANGES",
+          "type": "blob",
+          "size": 7.1044921875,
+          "content": "Version 0.11.16\n---------------\n\n* Upgrade celery and kombu\n\nVersion 0.11.15\n---------------\n\n* Fix dockerfile\n* Add support for changing default celery queue name (using CELERY_DEFAULT_QUEUE env variable)\n\nVersion 0.11.14\n---------------\n\n* Add support for celery SQS backend\n\nVersion 0.11.13\n---------------\n\n* Fix bug where jenkins checks were always passing\n* Reduce Arachnys branding a bit\n* Fix 404 page for logged out users\n* Style forms with django-bootstrap-form\n* [[#605](https://github.com/arachnys/cabot/issues/605)] Fix http check forms auto-filling username/password\n* [[#607](https://github.com/arachnys/cabot/issues/607)] Fix checks for websites service non utf-8 content\n\nVersion 0.11.12\n---------------\n\n* Upgrade django to 1.11.11\n* Debounce JenkinsCheck on the number of job failures\n  - Previously it would fail after cabot checked the jenkins api N times, even if the jenkins job had only failed once\n\nVersion 0.11.11\n---------------\n\n* Fix /api/oncall endpoint not working with basic auth\n\nVersion 0.11.10\n---------------\n\n* Add /api/oncall endpoint\n\nVersion 0.11.9\n--------------\n\n* Fix issue where Jenkins environment variables were required on first launch\n\nVersion 0.11.8\n--------------\n\n* Bump cabot-alert-slack to 0.8.2\n* Update LDAP dependencies\n* Add ENABLE_SUBSCRIPTION and ENABLE_DUTY_ROTA options\n* [[#556](https://github.com/arachnys/cabot/issues/556)] Fix issue with HttpStatusCheck with unicode content\n\nVersion 0.11.7\n--------------\n\n* Fix check plugins not displaying checks correctly on service details page\n\nVersion 0.11.6\n--------------\n\n* Add cloudwatch check plugin to dockerfile by default\n  - Can be enabled by adding \"cabot_check_cloudwatch\" to CABOT_PLUGINS_ENABLED\n\nVersion 0.11.5\n--------------\n\n* Fix multiple jenkins configs not working properly\n  - Due to caching on the client, the first config to be checked would always be used\n\nVersion 0.11.4\n--------------\n\n* Switch from jenkinsapi to python-jenkins\n  - Fixes performance regression introduced in 0.11\n\nVersion 0.11.3\n--------------\n\n* [[#551](https://github.com/arachnys/cabot/issues/551)] Fix in-progress jenkins jobs being marked as failing\n\nVersion 0.11.2\n--------------\n\n* Fix pypi source distribution missing requirements for setup.py\n\nVersion 0.11.1\n--------------\n\n* Fix migration disassociating checks from services/instances\n* Fix migration requiring jenkins environment variables are set\n* Reduce time to store old check results to 7 days\n  - Currently stores for 2 months, but there's no actual way to view the old data.\n\nVersion 0.11.0\n--------------\n\n*** BROKEN RELEASE - MIGRATIONS DON'T WORK CORRECTLY ***\n\n* Jenkins support:\n  - Fail Jenkins checks when job is unknown\n  - Use [jenkinsapi](https://pypi.python.org/pypi/jenkinsapi) to talk to Jenkins\n  - Add option to specify multiple Jenkins backends\n  > NOTE: This update will delete any recent status check results for jenkins checks\n* Add view for public services\n* Add support for Google OAuth login\n* Add ability to add custom check plugins\n  - See https://gitlab.com/as-public/cabot-check-skeleton for an example\n* Remove deprecated Fabfile and Shell scripts\n\nVersion 0.10.8\n--------------\n\n* Update slack alert to 0.8.1\n  - fixes names not linking\n  - only shows the acknowledge button if \"SLACK_INTERACTIVE_MESSAGES\" is set\n    - (The feature only works if set up correctly on the slack end)\n* Update to django 1.11 (with working django-polymorphic this time)\n\nVersion 0.10.7\n--------------\n\n* Update slack alert plugin\n  - Now shows an \"acknowledge\" button within slack\n* Fix alert tests not triggering if:\n  - A user had acknowledged working on the service\n  - A legitimate alert had been sent recently\n* Add support for GitHub OAuth logins\n  - See http://cabotapp.com/use/users.html\n\nVersion 0.10.6\n--------------\n\n* Fix plugin urls being overridden by plugin settings urls\n  - This fixes e.g. the twilio callback url not working\n* Fix profile settings sidebar links not working\n\nVersion 0.10.5\n--------------\n\n* Fix bug which caused status graphs to sometimes not render\n* Fix issue with complex recurring calendar - `'vDDDLists' object is not iterable`\n* Fix css regression in logo/title\n\nVersion 0.10.4\n--------------\n\n* Fix basic auth passwords getting reset when editing checks\n* Fix plugin alert tests alerting the current duty officer\n  - They should now always alert only the user that runs the test\n\nVersion 0.10.3\n--------------\n\n* Add plugin settings views with the ability to test alerts.\n* Allow user filter for LDAP to be configured\n  - Set the AUTH_LDAP_USER_FILTER setting to change it (defaults to \"(uid=%(user)s)\")\n* Update cabot-alert-hipchat plugin to 2.0.2\n  - Fixes bug when both HIPCHAT_URL and HIPCHAT_DOMAIN were set\n\nVersion 0.10.2\n--------------\n\n* Update cabot-alert-hipchat plugin to 2.0.1\n  - Supports Hipchat API v2\n  - If HIPCHAT_URL is set, it will use the old v1 api\n  - Use HIPCHAT_DOMAIN for custom hipchat v2 deployments\n* Add interactive api docs (using djangorestframework 3.6) at /docs\n\nVersion 0.10.1\n--------------\n\n* [BUGFIX] Update cabot_alert_twilio to 1.3.1\n  - 1.3.0 was still broken on django 1.10\n\nVersion 0.10.0\n--------------\n\n* Add feedback notifications when updated profile\n* Automatically reload plugins after migrating\n* Add cabot_alert_slack as default plugin\n* Upgrade to Django 1.10\n* Upgrade to Celery 4\n\nVersion 0.9.2\n-------------\n\n* Add /about endpoint\n* Fix rota bug when ical had no timezone\n* Add User Profile settings link to user dropdown\n\nVersion 0.9.1\n-------------\n\n* Update cabot-alert-twilio to 1.3.0 to work on django 1.10\n* Fix Alert preferences form breaking on django 1.8\n* Add `cabot` executable instead of using python manage.py (for e.g. migrating)\n\nVersion 0.9.0\n-------------\n\n* Upgrade to Django 1.9\n\nVersion 0.8.7\n-------------\n\n* Fix Alert preferences form breaking on django 1.8\n\nVersion 0.8.6\n-------------\n\n* Add first time setup page\n* Remove create_cabot_superuser management command (redundant with first time setup)\n\nVersion 0.8.5\n-------------\n\n* More severe alerts should trigger even if a less severe alert was recently sent\n* Update production.env.example email settings\n* Convert environment vars to boolean nicely\n\n> Note: You may have to update your settings if they contain invalid boolean values\n\nVersion 0.8.4\n-------------\n\n* Fix setup.py packaging\n* Use whitenoise to serve static files\n\n> Note: You may have to update your webserver settings for static files to work properly\n\nVersion 0.8.3\n-------------\n\n* BUG: Add missing context processor\n\nVersion 0.8.2\n-------------\n\n* Remove django-smtp-ssl dependency\n* Build docker image from alpine\n* Refactor docker-compose files\n* Fix db_clean task failing on large results tables\n* Wait for docker containers to start in docker-entrypoint.sh\n* Update CABOT_PLUGINS_ENABLED to compatible plugin versions\n* Automatically initialise database, assets and superuser on docker container start\n\nVersion 0.8.1\n-------------\n\n* Fix all workers running celery beat\n* Update django-compressor to run on django 1.8\n* Fix typo in url testcase\n* Update wsgi.py to work with django 1.8\n\nVersion 0.8.0\n-------------\n\n* Upgraded to Django 1.8\n\nVersion 0.7.0\n-------------\n\n* Upgraded to Django 1.7\n\nVersion 0.6.0\n-------------\n\n* Versioning Introduced.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.798828125,
+          "content": "FROM node:4-alpine\n\nENV PYTHONUNBUFFERED 1\n\nRUN mkdir /code\n\nWORKDIR /code\n\nRUN apk add --no-cache \\\n        python-dev \\\n        py-pip \\\n        postgresql-dev \\\n        gcc \\\n        curl \\\n        curl-dev \\\n        libcurl \\\n        musl-dev \\\n        libffi-dev \\\n        openldap-dev \\\n        ca-certificates \\\n        bash\n\nRUN npm config set unsafe-perm true\nRUN npm install -g \\\n        --registry http://registry.npmjs.org/ \\\n        coffee-script \\\n        less@1.3\n\nRUN pip install --upgrade pip\n\nCOPY requirements.txt ./\nRUN pip install --no-cache-dir -r requirements.txt\n\nCOPY requirements-dev.txt ./\nRUN pip install --no-cache-dir -r requirements-dev.txt\n\nCOPY requirements-plugins.txt ./\nRUN pip install --no-cache-dir -r requirements-plugins.txt\n\nADD . /code/\n\nENTRYPOINT [\"./docker-entrypoint.sh\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.1015625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Arachnys Information Services Ltd and individual contributors.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.177734375,
+          "content": "recursive-include cabot/.collectstatic *\nrecursive-include cabot/templates *\ninclude requirements.txt\ninclude requirements-plugins.txt\ninclude requirements-dev.txt\ninclude README.md\n"
+        },
+        {
+          "name": "Pipfile",
+          "type": "blob",
+          "size": 0.5126953125,
+          "content": "[[source]]\nurl = \"https://pypi.python.org/simple\"\nverify_ssl = true\n\n[packages]\namqp = \">=2.1.4\"\ncelery = \">=4,<5\"\ndjangorestframework = \"*\"\ndjango-jsonify = \"*\"\ndjango-filter = \"*\"\ndjango-auth-ldap = \"*\"\nanyjson = \"*\"\ndj-database-url = \"*\"\nfreezegun = \"*\"\ngevent = \"*\"\ngunicorn = \"*\"\nicalendar = \"*\"\npsycopg2 = \"*\"\npython-dateutil = \"*\"\npytz = \"*\"\nredis = \"*\"\nrequests = \"*\"\ntwilio = \">=5,<6\"\nwhitenoise = \"*\"\ncoreapi = \"*\"\nDjango = \">=1.11,<2\"\ndjango_polymorphic = \"*\"\ndjango_compressor = \"*\"\nMarkdown = \"*\"\nPygments = \"*\"\n"
+        },
+        {
+          "name": "Procfile",
+          "type": "blob",
+          "size": 0.18359375,
+          "content": "web:       gunicorn cabot.wsgi:application --config gunicorn.conf\ncelery:    celery worker -A cabot --loglevel=INFO --concurrency=16 -Ofair\nbeat:      celery beat -A cabot --loglevel=INFO\n"
+        },
+        {
+          "name": "Procfile.dev",
+          "type": "blob",
+          "size": 0.16015625,
+          "content": "web:       python manage.py runserver 0.0.0.0:$PORT\ncelery:    celery -A cabot worker --loglevel=DEBUG -c 8 -Ofair\nbeat:      celery -A cabot beat --loglevel=DEBUG\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.2841796875,
+          "content": "Cabot\n=====\n[![Build Status](https://travis-ci.org/arachnys/cabot.svg?branch=master)](https://travis-ci.org/arachnys/cabot) \n[![PyPI version](https://badge.fury.io/py/cabot.svg)](https://badge.fury.io/py/cabot)\n[![Coverage Status](https://codecov.io/github/arachnys/cabot/coverage.svg?branch=master)](https://codecov.io/github/arachnys/cabot?branch=master)\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)\n[![Gitter](https://img.shields.io/gitter/room/arachnys/cabot.svg)](https://gitter.im/arachnys/cabot)\n\n## Maintainers wanted\n\n**Cabot is stable and used by hundreds of companies and individuals in production, but it is not actively maintained. We would like to hand over maintenance of the project to one or more responsible and experienced maintainers. Please email cabot@arachnys.com with some information about yourself (github profile and/or CV) if you are interested.**\n\n## Why choose Cabot\n\nCabot is a free, open-source, self-hosted infrastructure monitoring platform that provides some of the best features of [PagerDuty](http://www.pagerduty.com), [Server Density](http://www.serverdensity.com), [Pingdom](http://www.pingdom.com) and [Nagios](http://www.nagios.org) without their cost and complexity. (Nagios, I'm mainly looking at you.)\n\nIt provides a web interface that allows you to monitor services (e.g. \"Stage Redis server\", \"Production ElasticSearch cluster\") and send telephone, sms or hipchat/email alerts to your on-duty team if those services start misbehaving or go down - all without writing a line of code. Best of all, you can use data that you're already pushing to Graphite/statsd to generate alerts, rather than implementing and maintaining a whole new system of data collectors.\n\nYou can alert based on:\n\n*   Metrics from [Graphite](https://github.com/graphite-project/graphite-web)\n*   Status code and response content of web endpoints\n*   [Jenkins](http://jenkins-ci.org) build statuses\n\nWe built Cabot as a Christmas project at [Arachnys](https://www.arachnys.com) because we couldn't wrap our heads around Nagios, and nothing else out there seemed to fit our use case. We're open-sourcing it in the hope that others find it useful.\n\nCabot is written in Python and uses [Django](https://www.djangoproject.com/), [Bootstrap](http://getbootstrap.com/), [Font Awesome](http://fontawesome.io) and a whole host of other goodies under the hood.\n\n## Screenshots\n\n### Services dashboard\n\n![Services dashboard](https://dl.dropboxusercontent.com/s/cgpxe3929is2uar/cabot-service-dashboard.png?dl=1&token_hash=AAHrlDisUzWRxpg892LhlKQWFRNSkZKD7l_zdSxND-YKhw)\n\n### Single service overview\n\n![Individual service overview](https://dl.dropboxusercontent.com/s/541p0kbq3pwone6/cabot-service-status.png?dl=1&token_hash=AAGpSI6lyHm3-xCQSFOyyZ_SkJOzfdMIxfa-gYgCVS25pw)\n\n## Quickstart\n\nUsing Docker: Deploy in 5 minutes or less using [official quickstart guide at cabotapp.com](http://cabotapp.com/qs/quickstart.html). (See also https://hub.docker.com/r/cabotapp/cabot/)\n\n## How it works\n\nDocs have moved to [cabotapp.com](http://cabotapp.com)\n\nSections:\n\n*   [Configuration](http://cabotapp.com/use/configuration.html)\n*   [Deployment](http://cabotapp.com/use/deployment.html)\n*   [Services](http://cabotapp.com/use/services.html)\n*   [Graphite checks](http://cabotapp.com/use/graphite-checks.html)\n*   [Jenkins checks](http://cabotapp.com/use/jenkins-checks.html)\n*   [HTTP checks](http://cabotapp.com/use/http-checks.html)\n*   [Alerting](http://cabotapp.com/use/alerting.html)\n*   [Users](http://cabotapp.com/use/users.html)\n*   [Rota](http://cabotapp.com/use/rota.html)\n\nFor those who want to contribute:\n\n*   [Help develop](http://cabotapp.com/dev/get-started.html)\n*   [Contribute code](http://cabotapp.com/dev/contribute-code.html)\n\n## FAQ\n\n### Why \"Cabot\"?\n\nMy dog is called Cabot and he loves monitoring things. Mainly the presence of food in his immediate surroundings, or perhaps the frequency of squirrel visits to our garden. He also barks loudly to alert us on certain events (e.g. the postman coming to the door).\n\n![Cabot watching... something](https://dl.dropboxusercontent.com/sc/w0k0185wur929la/RN6X-PkZIl/0?dl=1&token_hash=AAEvyK-dMHsvMPwMsx89tSHXsUlMC8WN_fIu_H1Vo9wxWA)\n\nIt's just a lucky coincidence that his name sounds like he could be an automation tool.\n\n## API\n\nThe API has automatically generated documentation available by browsing https://cabot.yourcompany.com/api.  The browsable documentation displays example GET requests and lists other allowed HTTP methods.  \n\nTo view individual items, append the item `id` to the url.  For example, to view `graphite_check` 1, browse:\n```\n/api/graphite_checks/1/\n```\n\n### Authentication\n\nThe API allows HTTP basic auth using standard Django usernames and passwords as well as session authentication (by submitting the login form on the login page).  The API similarly uses standard Django permissions to allow and deny API access.\n\nAll resources are GETable by any authenticated user, but individual permissions must be granted for POST, PUT, and other write methods.\n\nAs an example, for POST access to all `status_check` subclasses, add the following permissions:\n```\ncabotapp | status check | Can add graphite status check\ncabotapp | status check | Can add http status check\ncabotapp | status check | Can add icmp status check\ncabotapp | status check | Can add jenkins status check\n```\n\nAccess the Django admin page at https://cabot.yourcompany.com/admin to add/remove users, change user permissions, add/remove groups for group-based permission control, and change group permissions.\n\n### Sorting and Filtering\n\nSorting and filtering can be used by both REST clients and on the browsable API.  All fields visible in the browsable API can be used for filtering and sorting.\n\nGet all `jenkins_checks` with debounce enabled and CRITICAL importance:\n```\nhttps://cabot.yourcompany.com/api/jenkins_checks/?debounce=1&importance=CRITICAL\n```\n\nSort `graphite_checks` by `name` field, ascending:\n```\nhttps://cabot.yourcompany.com/api/graphite_checks/?ordering=name\n```\n\nSort by `name` field, descending:\n```\nhttps://cabot.yourcompany.com/api/graphite_checks/?ordering=-name\n```\n\nOther (non-Cabot specific) examples are available in the [Django REST Framework](http://www.django-rest-framework.org/api-guide/filtering#djangofilterbackend) documentation.\n\n## License\n\nSee `LICENSE` file in this repo.\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 1.763671875,
+          "content": "# -*- mode: ruby -*-\n# vi: set ft=ruby :\nrequire 'yaml'\n\n# Load local config overrides\nlocal_config = File.file?(\"local_config.yml\") ? YAML.load(File.read(\"local_config.yml\")) : {}\n\nVagrant::configure(\"2\") do |config|\n  # All Vagrant configuration is done here. The most common configuration\n  # options are documented and commented below. For a complete reference,\n  # please see the online documentation at vagrantup.com.\n\n  # Every Vagrant virtual environment requires a box to build off of.\n  config.vm.box = local_config[\"box\"] || \"hashicorp/precise64\"\n\n  # Virtualbox\n  config.vm.provider \"virtualbox\" do |vb|\n    vb.customize [\n      \"modifyvm\", :id,\n      \"--memory\", local_config['ram'] || \"1024\",\n      \"--cpus\", local_config['cpu'] || 1,\n      \"--ioapic\", \"on\",\n    ]\n  end\n\n  #vmware_fusion\n  config.vm.provider \"vmware_fusion\" do |v|\n    v.vmx[\"memsize\"] = local_config['ram'] || \"1024\"\n    v.vmx[\"numvcpus\"] = local_config['cpu'] || 1\n  end\n\n  # Boot with a GUI so you can see the screen. (Default is headless)\n  # config.vm.boot_mode = :gui\n\n  # Assign this VM to a host-only network IP, allowing you to access it\n  # via the IP. Host-only networks can talk to the host machine as well as\n  # any other machines on the same network, but cannot be accessed (through this\n  # network interface) by any external networks.\n  config.vm.network \"forwarded_port\", guest: 5001, host: 5001\n\n  # Share an additional folder to the guest VM. The first argument is\n  # an identifier, the second is the path on the guest to mount the\n  # folder, and the third is the path on the host to the actual folder.\n  config.vm.synced_folder \"./\", \"/vagrant\", create: true\n\n  # Provision the development environment\n  config.vm.provision :shell do |shell|\n    shell.inline = 'sudo /vagrant/bin/provision'\n  end\nend\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cabot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose-base.yml",
+          "type": "blob",
+          "size": 0.1494140625,
+          "content": "version: '2'\nservices:\n  base:\n    build: .\n    image: cabot:web\n    command: \"false\"\n    volumes:\n     - .:/code\n    env_file:\n      - conf/default.env\n"
+        },
+        {
+          "name": "docker-compose-test.yml",
+          "type": "blob",
+          "size": 0.2412109375,
+          "content": "version: '2'\nservices:\n  test:\n    extends:\n      file: docker-compose-base.yml\n      service: base\n    entrypoint: /usr/bin/python\n    command: manage.py test -v2\n    env_file:\n        - conf/test.env\n  sut:\n    image: ubuntu\n    command: \"true\"\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.9658203125,
+          "content": "version: '2'\nservices:\n  web:\n    extends:\n      file: docker-compose-base.yml\n      service: base\n    env_file:\n      - conf/development.env\n    command: python manage.py runserver 0.0.0.0:5001\n    ports:\n      - \"5001:5001\"\n    links:\n      - redis\n      - db\n\n  worker:\n    extends:\n      file: docker-compose-base.yml\n      service: base\n    env_file:\n      - conf/development.env\n    command: celery worker -A cabot --loglevel=DEBUG --concurrency=16 -Ofair\n    environment:\n      - SKIP_INIT=1\n      - WAIT_FOR_MIGRATIONS=1\n    links:\n      - redis\n      - db\n\n  beat:\n    extends:\n      file: docker-compose-base.yml\n      service: base\n    env_file:\n      - conf/development.env\n    command: celery beat -A cabot --loglevel=DEBUG\n    environment:\n      - SKIP_INIT=1\n      - WAIT_FOR_MIGRATIONS=1\n    links:\n      - redis\n      - db\n\n  redis:\n    image: redis:alpine\n\n  db:\n    image: postgres:alpine\n    volumes:\n      - datavolume:/var/lib/postgresql/data\n\nvolumes:\n  datavolume:\n"
+        },
+        {
+          "name": "docker-entrypoint.sh",
+          "type": "blob",
+          "size": 1.044921875,
+          "content": "#!/bin/bash\nset -e\n\nfunction wait_for_broker {\n  set +e\n  for try in {1..60} ;  do\n    python -c \"from kombu import Connection; x=Connection('$CELERY_BROKER_URL', timeout=1); x.connect()\" && break\n    echo \"Waiting for celery broker to respond...\"\n    sleep 1\n  done\n}\n\nfunction wait_for_database {\n  set +e\n  for try in {1..60} ; do\n    python -c \"from django.db import connection; connection.connect()\" && break\n    echo \"Waiting for database to respond...\"\n    sleep 1\n  done\n}\n\nfunction wait_for_migrations {\n  set +e\n  for try in {1..60} ; do\n    # Kind of ugly but not sure if there's another way to determine if migrations haven't run.\n    # showmigrations -p returns a checkbox list of migrations, empty checkboxes mean they haven't been run\n    python manage.py showmigrations -p | grep \"\\[ \\]\" &> /dev/null || break\n    echo \"Waiting for database migrations to be run...\"\n    sleep 1\n  done\n}\n\n\nwait_for_broker\nwait_for_database\n\nif [ -z \"$SKIP_INIT\" ]; then\n  /code/bin/build-app\nfi\n\nif [ -n \"$WAIT_FOR_MIGRATIONS\" ]; then\n  wait_for_migrations\nfi\n\nexec \"$@\"\n"
+        },
+        {
+          "name": "example_local_config.yml",
+          "type": "blob",
+          "size": 0.4541015625,
+          "content": "---\n# Example Local Vagrant config\n# With this file, you can override the amount of RAM and CPUs allocated\n# to the VM, as well as change the base box it uses. Just copy it to\n# local_config.yml and edit with whatever values you want.\n#\n# Note that it doesn't take effect until you vagrant destroy && vagrant up\n\n# double your pleasure double your CPU and RAM\nram: 2048\ncpu: 2\n# hashicorp ubuntu doesn't support VMWare, so use box-cutter\nbox: box-cutter/ubuntu1404\n"
+        },
+        {
+          "name": "gunicorn.conf",
+          "type": "blob",
+          "size": 0.109375,
+          "content": "# -*- mode: python -*-\n# vi: set ft=python :\n\nimport os\n\nbind = '127.0.0.1:%s' % os.environ['PORT']\nworkers = 3\n"
+        },
+        {
+          "name": "makemigrations",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "#!/bin/bash\nrm dev.db\nforeman run python manage.py syncdb\nforeman run python manage.py migrate\n"
+        },
+        {
+          "name": "manage.py",
+          "type": "blob",
+          "size": 0.2431640625,
+          "content": "#!/usr/bin/env python\nimport os\nimport sys\n\n\nif __name__ == \"__main__\":\n    os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"cabot.settings\")\n\n    from django.core.management import execute_from_command_line\n\n    execute_from_command_line(sys.argv)\n"
+        },
+        {
+          "name": "requirements-dev.txt",
+          "type": "blob",
+          "size": 0.091796875,
+          "content": "coverage==4.3.4\ndjango_coverage_plugin==1.5.0\nfreezegun==0.3.9\nmock==2.0.0\nipdb\nisort==4.2.15\n"
+        },
+        {
+          "name": "requirements-plugins.txt",
+          "type": "blob",
+          "size": 0.1298828125,
+          "content": "cabot_alert_email==1.4.3\ncabot_alert_hipchat==2.0.3\ncabot_alert_twilio==1.3.3\ncabot_alert_slack==0.8.3\ncabot_check_cloudwatch==0.1.2\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 1.140625,
+          "content": "amqp==2.1.4\nanyjson==0.3.3\nappdirs==1.4.3\nbilliard==3.5.0.2\nboto==2.49.0\nboto3==1.9.86\nbotocore==1.12.86\ncelery==4.2.1\ncoreapi==2.3.0\ncoreschema==0.0.4\ndj-database-url==0.4.2\nDjango==1.11.29\ndjango-appconf==1.0.2\ndjango-auth-ldap==1.2.16\ndjango-autocomplete-light==3.2.10\ndjango-bootstrap-form==3.4\ndjango-compressor==2.2\ndjango-filter==1.0.4\ndjango-jsonify==0.3.0\ndjango-polymorphic==1.3\ndjangorestframework==3.6.2\ndocutils==0.14\nfutures==3.2.0\ngevent==1.2.1\ngreenlet==0.4.12\ngunicorn==19.7.1\nhttplib2==0.10.3\nicalendar==3.11.3\nitypes==1.1.0\nJinja2==2.9.6\njmespath==0.9.3\nkombu==4.2.2.post1\nMarkdown==2.6.8\nMarkupSafe==1.0\nmulti-key-dict==2.0.3\noauthlib==3.0.0\npackaging==16.8\npbr==5.1.1\npsycopg2==2.7.1\npyasn1==0.4.5\npyasn1-modules==0.2.3\npycurl==7.43.0.1\nPygments==2.2.0\nPyJWT==1.7.1\npyparsing==2.2.0\nPySocks==1.6.7\npython-dateutil==2.6.0\npython-jenkins==0.4.15\npython-ldap==3.1.0\npython-openid==2.2.5\npytz==2017.2\nrcssmin==1.0.6\nredis==2.10.5\nrequests==2.13.0\nrequests-oauthlib==1.2.0\nrjsmin==1.0.12\ns3transfer==0.1.13\nsix==1.10.0\nsocial-auth-app-django==1.1.0\nsocial-auth-core==3.0.0\ntwilio==5.7.0\nuritemplate==3.0.0\nurllib3==1.24.1\nvine==1.1.3\nwhitenoise==3.3.0\n"
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 0.22265625,
+          "content": "[isort]\nknown_first_party = cabot\nmulti_line_output = 0\nknown_django = django,polymorphic,rest_framework\nsections = FUTURE,STDLIB,THIRDPARTY,DJANGO,FIRSTPARTY,LOCALFOLDER\ndefault_section = THIRDPARTY\nskip_glob =\t**/migrations/*\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.07421875,
+          "content": "#!/usr/bin/env python\nimport os\nfrom setuptools import setup, find_packages\nfrom os import environ as env\nimport subprocess\n\nfrom pip.req import parse_requirements\n\nrequirements = [str(req.req) for req in parse_requirements('requirements.txt', session=False)]\nrequirements_plugins = [str(req.req) for req in parse_requirements('requirements-plugins.txt', session=False)]\n\ntry:\n    VERSION = subprocess.check_output(['git', 'describe', '--tags']).strip()\nexcept subprocess.CalledProcessError:\n    VERSION = '0.dev'\n\nsetup(\n    name='cabot',\n    version=VERSION,\n    description=\"Self-hosted, easily-deployable monitoring and alerts service\"\n                \" - like a lightweight PagerDuty\",\n    long_description=open('README.md').read(),\n    author=\"Arachnys\",\n    author_email='info@arachnys.com',\n    url='http://cabotapp.com',\n    license='MIT',\n    install_requires=requirements + requirements_plugins,\n    packages=find_packages(),\n    include_package_data=True,\n    entry_points={\n        'console_scripts': [\n            'cabot = cabot.entrypoint:main',\n        ],\n    },\n    zip_safe=False\n)\n"
+        },
+        {
+          "name": "setup_dev.sh",
+          "type": "blob",
+          "size": 0.0830078125,
+          "content": "#!/bin/bash\nforeman run python manage.py syncdb\nforeman run python manage.py migrate\n"
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 2.6689453125,
+          "content": "[tox]\nenvlist = config,flake8,bashate\nskipsdist = True\n\n[testenv]\nwhitelist_externals =\n    bash\n\n[testenv:config]\ncommands =\n    /bin/bash -c 'set -euo pipefail && . ./conf/production.env.example'\n    /bin/bash -c 'set -euo pipefail && . ./conf/development.env.example'\n\n[testenv:bashate]\ndeps = bashate==0.5.1\ncommands =\n    # Run bashate check for all bash scripts\n    # Ignores the following rules:\n    #     E003: Indent not multiple of 4 (we use multiples of 2)\n    #     E006: Line longer than 79 columns\n    bash -c \"grep --recursive --binary-files=without-match \\\n        --files-with-match '^.!.*\\(ba\\)\\?sh$' \\\n        --exclude-dir .tox \\\n        --exclude-dir .git \\\n        {toxinidir} | xargs bashate --error . --verbose --ignore=E003,E006\"\n\n[testenv:flake8]\ndeps =\n\tflake8\n\tflake8-debugger\ncommands = flake8 {posargs}\n\n[testenv:isort]\ndeps = isort==4.2.15\ncommands =\n    bash -c \"find {toxinidir} \\\n        -type d \\\n            \\( \\\n              -path {toxinidir}/.git -o \\\n              -path {toxinidir}/.tox -o \\\n              -path {toxinidir}/.venv -o \\\n              -path {toxinidir}/plugins -o \\\n              -path {toxinidir}/node_modules \\\n            \\) -prune -o \\\n        -name '*.py' \\\n        -print | xargs isort {posargs:--check-only} --verbose\"\n\n[flake8]\nexclude = .venv,venv,.tox,dist,doc,build,*.egg,docs,setup.py,*/migrations/\nignore = E121,E123,E125,E126,E127,E128,E131,E222,E226,E231,E251,E261,E265,E302,E305,E402,E714,E722,F401,F403,F405,F841,W391,W605\nmax-line-length = 160\n# E121 continuation line under-indented for hanging indent\n# E123 closing bracket does not match indentation of opening bracket's line\n# E125 continuation line with same indent as next logical line\n# E126 continuation line over-indented for hanging indent\n# E127 continuation line over-indented for visual indent\n# E128 continuation line under-indented for visual indent\n# E131 continuation line unaligned for hanging indent\n# E222 multiple spaces after operator\n# E226 missing whitespace around arithmetic operator\n# E231 missing whitespace after\n# E251 unexpected spaces around keyword / parameter equals\n# E261 at least two spaces before inline comment\n# E265 block comment should start with '# '\n# E302 expected 2 blank lines, found 1\n# E305 expected 2 blank lines after class or function definition, found 1\n# E402 module level import not at top of file\n# E714 test for object identity should be 'is not'\n# E722 do not use bare except\n# F401 Imported but unused\n# F403 'from module import *' used; unable to detect undefined names\n# F405 foo may be undefined, or defined from star imports\n# F841 local variable 'foo' is assigned to but never used\n# W391 blank line at end of file\n# W605 invalid escape sequence\n"
+        },
+        {
+          "name": "upstart",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

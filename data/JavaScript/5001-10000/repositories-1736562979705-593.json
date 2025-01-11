@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp": 1736562979705,
+    "page": 593,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "imagemin/imagemin",
+      "stars": 5596,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "root = true\n\n[*]\nindent_style = tab\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.yml]\nindent_style = space\nindent_size = 2\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "* text=auto eol=lf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "node_modules\nyarn.lock\n"
+        },
+        {
+          "name": ".npmrc",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "package-lock=false\n"
+        },
+        {
+          "name": "fixture-corrupt.jpg",
+          "type": "blob",
+          "size": 46.7392578125,
+          "content": null
+        },
+        {
+          "name": "fixture.jpg",
+          "type": "blob",
+          "size": 49.791015625,
+          "content": null
+        },
+        {
+          "name": "fixture.svg",
+          "type": "blob",
+          "size": 0.162109375,
+          "content": "<svg height=\"100\" width=\"100\">\n\t<circle cx=\"50\" cy=\"50\" r=\"40\" stroke=\"black\" stroke-width=\"3\" fill=\"red\" />\n\tSorry, your browser does not support inline SVG.\n</svg>\n"
+        },
+        {
+          "name": "index.js",
+          "type": "blob",
+          "size": 2.5224609375,
+          "content": "import fsPromises from 'node:fs/promises';\nimport path from 'node:path';\nimport {fileTypeFromBuffer} from 'file-type';\nimport {globby} from 'globby';\nimport pPipe from 'p-pipe';\nimport changeFileExtension from 'change-file-extension';\nimport {isNotJunk} from 'junk';\nimport convertToUnixPath from 'slash';\nimport {assertUint8Array} from 'uint8array-extras';\nimport {isBrowser} from 'environment';\nimport ow from 'ow';\nimport {imageDimensionsFromData} from 'image-dimensions';\n\nconst handleFile = async (sourcePath, {destination, plugins = []}) => {\n\tow(plugins, ow.optional.array.message('The `plugins` option should be an `Array`'));\n\n\tlet data = await fsPromises.readFile(sourcePath);\n\n\tconst dimensions = imageDimensionsFromData(data);\n\tif (dimensions === undefined || (dimensions.width !== 0 && dimensions.height !== 0)) {\n\t\tdata = await (plugins.length > 0 ? pPipe(...plugins)(data) : data);\n\t}\n\n\tconst {ext} = await fileTypeFromBuffer(data) ?? {ext: path.extname(sourcePath)};\n\tlet destinationPath = destination ? path.join(destination, path.basename(sourcePath)) : undefined;\n\tdestinationPath = ext === 'webp' ? changeFileExtension(destinationPath, 'webp') : destinationPath;\n\n\tconst returnValue = {\n\t\tdata: new Uint8Array(data),\n\t\tsourcePath,\n\t\tdestinationPath,\n\t};\n\n\tif (!destinationPath) {\n\t\treturn returnValue;\n\t}\n\n\tawait fsPromises.mkdir(path.dirname(returnValue.destinationPath), {recursive: true});\n\tawait fsPromises.writeFile(returnValue.destinationPath, returnValue.data);\n\n\treturn returnValue;\n};\n\nexport default async function imagemin(input, {glob = true, ...options} = {}) {\n\tif (isBrowser) {\n\t\tthrow new Error('This package does not work in the browser.');\n\t}\n\n\tow(input, ow.array);\n\n\tconst unixFilePaths = input.map(path => convertToUnixPath(path));\n\tconst filePaths = glob ? await globby(unixFilePaths, {onlyFiles: true}) : input;\n\n\treturn Promise.all(\n\t\tfilePaths\n\t\t\t.filter(filePath => isNotJunk(path.basename(filePath)))\n\t\t\t.map(async filePath => {\n\t\t\t\ttry {\n\t\t\t\t\treturn await handleFile(filePath, options);\n\t\t\t\t} catch (error) {\n\t\t\t\t\terror.message = `Error occurred when handling file: ${input}\\n\\n${error.stack}`;\n\t\t\t\t\tthrow error;\n\t\t\t\t}\n\t\t\t}),\n\t);\n}\n\nimagemin.buffer = async (data, {plugins = []} = {}) => {\n\tif (isBrowser) {\n\t\tthrow new Error('This package does not work in the browser.');\n\t}\n\n\tassertUint8Array(data);\n\n\tif (plugins.length === 0) {\n\t\treturn new Uint8Array(data);\n\t}\n\n\t// The `new Uint8Array` can be removed if all plugins are changed to return `Uint8Array` instead of `Buffer`.\n\treturn new Uint8Array(await pPipe(...plugins)(data));\n};\n"
+        },
+        {
+          "name": "license",
+          "type": "blob",
+          "size": 1.056640625,
+          "content": "MIT License\n\nCopyright (c) Imagemin (github.com/imagemin)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.916015625,
+          "content": "{\n\t\"name\": \"imagemin\",\n\t\"version\": \"9.0.0\",\n\t\"description\": \"Minify images seamlessly\",\n\t\"license\": \"MIT\",\n\t\"repository\": \"imagemin/imagemin\",\n\t\"funding\": \"https://github.com/sponsors/sindresorhus\",\n\t\"type\": \"module\",\n\t\"exports\": \"./index.js\",\n\t\"engines\": {\n\t\t\"node\": \">=18\"\n\t},\n\t\"scripts\": {\n\t\t\"test\": \"xo && ava\"\n\t},\n\t\"files\": [\n\t\t\"index.js\"\n\t],\n\t\"keywords\": [\n\t\t\"minify\",\n\t\t\"compress\",\n\t\t\"image\",\n\t\t\"images\",\n\t\t\"jpeg\",\n\t\t\"jpg\",\n\t\t\"png\",\n\t\t\"gif\",\n\t\t\"svg\"\n\t],\n\t\"dependencies\": {\n\t\t\"change-file-extension\": \"^0.1.1\",\n\t\t\"environment\": \"^1.0.0\",\n\t\t\"file-type\": \"^19.0.0\",\n\t\t\"globby\": \"^14.0.1\",\n\t\t\"image-dimensions\": \"^2.3.0\",\n\t\t\"junk\": \"^4.0.1\",\n\t\t\"ow\": \"^2.0.0\",\n\t\t\"p-pipe\": \"^4.0.0\",\n\t\t\"slash\": \"^5.1.0\",\n\t\t\"uint8array-extras\": \"^1.1.0\"\n\t},\n\t\"devDependencies\": {\n\t\t\"ava\": \"^6.1.2\",\n\t\t\"del\": \"^7.1.0\",\n\t\t\"imagemin-jpegtran\": \"^7.0.0\",\n\t\t\"imagemin-svgo\": \"^11.0.1\",\n\t\t\"imagemin-webp\": \"^8.0.0\",\n\t\t\"tempy\": \"^3.1.0\",\n\t\t\"xo\": \"^0.58.0\"\n\t}\n}\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 1.5693359375,
+          "content": "# imagemin\n\n> Minify images seamlessly\n\n## Install\n\n```sh\nnpm install imagemin\n```\n\n## Usage\n\n```js\nimport imagemin from 'imagemin';\nimport imageminJpegtran from 'imagemin-jpegtran';\nimport imageminPngquant from 'imagemin-pngquant';\n\nconst files = await imagemin(['images/*.{jpg,png}'], {\n\tdestination: 'build/images',\n\tplugins: [\n\t\timageminJpegtran(),\n\t\timageminPngquant({\n\t\t\tquality: [0.6, 0.8]\n\t\t})\n\t]\n});\n\nconsole.log(files);\n//=> [{data: <Uint8Array 89 50 4e …>, destinationPath: 'build/images/foo.jpg'}, …]\n```\n\n## API\n\n### imagemin(input, options?)\n\nReturns `Promise<object[]>` in the format `{data: Uint8Array, sourcePath: string, destinationPath: string}`.\n\n#### input\n\nType: `string[]`\n\nFile paths or [glob patterns](https://github.com/sindresorhus/globby#globbing-patterns).\n\n#### options\n\nType: `object`\n\n##### destination\n\nType: `string`\n\nSet the destination folder to where your files will be written. If no destination is specified, no files will be written.\n\n##### plugins\n\nType: `Array`\n\nThe [plugins](https://www.npmjs.com/browse/keyword/imageminplugin) to use.\n\n##### glob\n\nType: `boolean`\\\nDefault: `true`\n\nEnable globbing when matching file paths.\n\n### imagemin.buffer(data, options?)\n\nReturns `Promise<Uint8Array>`.\n\n#### data\n\nType: `Uint8Array`\n\nThe image data to optimize.\n\n#### options\n\nType: `object`\n\n##### plugins\n\nType: `Array`\n\n[Plugins](https://www.npmjs.com/browse/keyword/imageminplugin) to use.\n\n## Related\n\n- [imagemin-cli](https://github.com/imagemin/imagemin-cli) - CLI for this module\n- [gulp-imagemin](https://github.com/sindresorhus/gulp-imagemin) - Gulp plugin\n"
+        },
+        {
+          "name": "test.js",
+          "type": "blob",
+          "size": 5.9365234375,
+          "content": "import fs, {promises as fsPromises} from 'node:fs';\nimport path from 'node:path';\nimport {fileURLToPath} from 'node:url';\nimport {deleteAsync} from 'del';\nimport imageminJpegtran from 'imagemin-jpegtran';\nimport imageminWebp from 'imagemin-webp';\nimport imageminSvgo from 'imagemin-svgo';\nimport {temporaryDirectory, temporaryFile} from 'tempy';\nimport test from 'ava';\nimport {fileTypeFromBuffer} from 'file-type';\nimport imagemin from './index.js';\n\nconst __dirname = path.dirname(fileURLToPath(import.meta.url));\n\ntest('optimize a file', async t => {\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\tconst files = await imagemin(['fixture.jpg'], {\n\t\tplugins: [imageminJpegtran()],\n\t});\n\n\tt.is(files[0].destinationPath, undefined);\n\tt.true(files[0].data.length < buffer.length);\n\n\tconst fileType = await fileTypeFromBuffer(files[0].data);\n\tt.is(fileType?.ext, 'jpg');\n});\n\ntest('optimize a buffer', async t => {\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\n\tconst data = await imagemin.buffer(buffer, {\n\t\tplugins: [imageminJpegtran()],\n\t});\n\n\tt.true(data.length < buffer.length);\n\n\tconst fileType = await fileTypeFromBuffer(data);\n\tt.is(fileType?.ext, 'jpg');\n});\n\ntest('output error on corrupt images', async t => {\n\tawait t.throwsAsync(imagemin(['fixture-corrupt.jpg'], {\n\t\tplugins: [imageminJpegtran()],\n\t}), {message: /Corrupt JPEG data/});\n});\n\ntest('throw on wrong input', async t => {\n\tawait t.throwsAsync(imagemin('foo'), {message: /Expected argument to be of type `array`/});\n\tawait t.throwsAsync(imagemin.buffer('foo'), {message: /Expected `Uint8Array`, got `string`/});\n});\n\ntest('return original file if no plugins are defined', async t => {\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\tconst files = await imagemin(['fixture.jpg']);\n\n\tt.is(files[0].destinationPath, undefined);\n\tt.deepEqual(files[0].data, new Uint8Array(buffer));\n\n\tconst fileType = await fileTypeFromBuffer(files[0].data);\n\tt.is(fileType?.ext, 'jpg');\n});\n\ntest('return original buffer if no plugins are defined', async t => {\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\tconst data = await imagemin.buffer(buffer);\n\n\tt.deepEqual(data, new Uint8Array(buffer));\n\n\tconst fileType = await fileTypeFromBuffer(data);\n\tt.is(fileType?.ext, 'jpg');\n});\n\n// TODO: Fix the test.\ntest.failing('return processed buffer even it is a bad optimization', async t => {\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.svg'));\n\tt.false(buffer.includes('http://www.w3.org/2000/svg'));\n\n\tconst data = await imagemin.buffer(buffer, {\n\t\tplugins: [\n\t\t\timageminSvgo({\n\t\t\t\tplugins: [{\n\t\t\t\t\taddAttributesToSVGElement: {\n\t\t\t\t\t\tattributes: [{\n\t\t\t\t\t\t\txmlns: 'http://www.w3.org/2000/svg',\n\t\t\t\t\t\t}],\n\t\t\t\t\t},\n\t\t\t\t}],\n\t\t\t}),\n\t\t],\n\t});\n\n\tt.true(data.includes('xmlns=\"http://www.w3.org/2000/svg\"'));\n\tt.true(data.length > buffer.length);\n});\n\ntest('output at the specified location', async t => {\n\tconst temporary = temporaryDirectory();\n\tconst destinationTemporary = temporaryDirectory();\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\n\tawait fsPromises.mkdir(temporary, {recursive: true});\n\tawait fsPromises.writeFile(path.join(temporary, 'fixture.jpg'), buffer);\n\n\tconst files = await imagemin(['fixture.jpg', `${temporary}/*.jpg`], {\n\t\tdestination: destinationTemporary,\n\t\tplugins: [imageminJpegtran()],\n\t});\n\n\tt.true(fs.existsSync(files[0].destinationPath));\n\tt.true(fs.existsSync(files[1].destinationPath));\n\n\tawait deleteAsync([temporary, destinationTemporary], {force: true});\n});\n\ntest('output at the specified location when input paths contain Windows path delimiter', async t => {\n\tconst temporary = temporaryDirectory();\n\tconst destinationTemporary = temporaryDirectory();\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\n\tawait fsPromises.mkdir(temporary, {recursive: true});\n\tawait fsPromises.writeFile(path.join(temporary, 'fixture.jpg'), buffer);\n\n\tconst fileNameWithWindowsPathDelimiter = `${temporary}\\\\*.jpg`;\n\n\tconst files = await imagemin([fileNameWithWindowsPathDelimiter], {\n\t\tdestination: destinationTemporary,\n\t\tplugins: [imageminJpegtran()],\n\t});\n\n\tt.true(fs.existsSync(files[0].destinationPath));\n\n\tawait deleteAsync([temporary, destinationTemporary], {force: true});\n});\n\ntest('set webp ext', async t => {\n\tconst temporary = temporaryFile();\n\tconst files = await imagemin(['fixture.jpg'], {\n\t\tdestination: temporary,\n\t\tplugins: [imageminWebp()],\n\t});\n\n\tt.is(path.extname(files[0].destinationPath), '.webp');\n\tawait deleteAsync(temporary, {force: true});\n});\n\ntest('set svg ext', async t => {\n\tconst temporary = temporaryFile();\n\tconst files = await imagemin(['fixture.svg'], {\n\t\tdestination: temporary,\n\t\tplugins: [imageminSvgo()],\n\t});\n\n\tt.is(path.extname(files[0].destinationPath), '.svg');\n\tawait deleteAsync(temporary, {force: true});\n});\n\ntest('ignores junk files', async t => {\n\tconst temporary = temporaryDirectory();\n\tconst destinationTemporary = temporaryDirectory();\n\tconst buffer = await fsPromises.readFile(path.join(__dirname, 'fixture.jpg'));\n\n\tawait fsPromises.mkdir(temporary, {recursive: true});\n\tawait fsPromises.writeFile(path.join(temporary, '.DS_Store'), '');\n\tawait fsPromises.writeFile(path.join(temporary, 'Thumbs.db'), '');\n\tawait fsPromises.writeFile(path.join(temporary, 'fixture.jpg'), buffer);\n\n\tawait t.notThrowsAsync(imagemin([`${temporary}/*`], {\n\t\tdestination: destinationTemporary,\n\t\tplugins: [imageminJpegtran()],\n\t}));\n\n\tt.true(fs.existsSync(path.join(destinationTemporary, 'fixture.jpg')));\n\tt.false(fs.existsSync(path.join(destinationTemporary, '.DS_Store')));\n\tt.false(fs.existsSync(path.join(destinationTemporary, 'Thumbs.db')));\n\n\tawait deleteAsync([temporary, destinationTemporary], {force: true});\n});\n\ntest('glob option', async t => {\n\tconst files = await imagemin(['fixture.jpg'], {\n\t\tglob: false,\n\t\tplugins: [imageminJpegtran()],\n\t});\n\n\tconst fileType = await fileTypeFromBuffer(files[0].data);\n\tt.is(fileType?.ext, 'jpg');\n});\n"
+        }
+      ]
+    }
+  ]
+}

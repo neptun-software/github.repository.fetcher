@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "timestamp": 1736562874457,
+    "page": 450,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "fkling/astexplorer",
+      "stars": 6250,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "[*.js]\nquote_type = single\n"
+        },
+        {
+          "name": ".eslintrc",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "extends:\n  - eslint:recommended\n  - plugin:react/recommended\n  - plugin:import/errors\n  - plugin:import/warnings\n\nparserOptions:\n  ecmaVersion: 2018\n  sourceType: module\n  ecmaFeatures:\n    jsx: true\n    experimentalObjectRestSpread: true\n\nplugins:\n  - react\n  - import\n  - require-in-package\n\nrules:\n  comma-dangle: [\"error\", \"always-multiline\"]\n  new-cap: \"off\"\n  no-path-concat: \"off\"\n  no-undef: \"error\"\n  no-underscore-dangle: \"off\"\n  no-unused-vars:\n    - \"warn\"\n    - varsIgnorePattern: \"^_\"\n      argsIgnorePattern: \"^_\"\n  no-use-before-define: \"off\"\n  quotes: [\"error\", \"single\", \"avoid-escape\"]\n  strict: \"off\"\n  import/no-unresolved: [\"error\", {commonjs: true, amd: true}]\n  import/named: \"error\"\n  import/default: \"error\"\n  import/namespace: \"error\"\n  import/export: \"error\"\n  require-in-package/require-in-package: \"error\"\n  react/display-name: off\n\nsettings:\n  import/resolver: \"webpack\"\n  import/ignore:\n    - node_modules\n    - \\.json\n\nenv:\n  browser: true\n  node: true\n\nglobals:\n  loadjs: true\n  Promise: true\n  Map: true\n  Set: true\n  WeakMap: true\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "/out\nnode_modules\n.idea\npackage-lock.json\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 2.4130859375,
+          "content": "stages:\n  - build-dev\n  - review\n  - latest\n  - build-prod\n  - staging\n  - production\n\nbuild-dev:\n  image: node:lts\n  stage: build-dev\n  cache:\n    key: build\n    paths:\n      - website/node_modules\n  script:\n    - cd website/\n    - yarn install --frozen-lockfile\n    - yarn build-dev\n    - cd ..\n    - ./scripts/inject-rev.sh out/index.html\n  artifacts:\n    expire_in: 1 days\n    paths:\n      - out\n\nreview:\n  stage: review\n  script:\n    - rsync -av out/ /data/astexplorer/website-new/$CI_BUILD_REF_SLUG\n    - rm -rf out/\n  variables:\n    GIT_STRATEGY: none\n  environment:\n    name: review/$CI_BUILD_REF_NAME\n    url: https://$CI_BUILD_REF_SLUG.astexplorer.net\n    on_stop: stop_review\n  only:\n    - branches\n  except:\n    - master\n  tags:\n    - astexplorer\n\nstop_review:\n  stage: review\n  script:\n    - rm -rf public /data/astexplorer/website-new/$CI_BUILD_REF_SLUG\n  variables:\n    GIT_STRATEGY: none\n  when: manual\n  environment:\n    name: review/$CI_BUILD_REF_NAME\n    action: stop\n  only:\n    - branches\n  except:\n    - master\n  tags:\n    - astexplorer\n\nlatest:\n  stage: latest\n  script:\n    - rsync -rv --delete out/ /data/astexplorer/website-new/master/\n    - rm -rf out/\n  variables:\n    GIT_STRATEGY: none\n  environment:\n    name: master\n    url: http://master.astexplorer.net\n  only:\n    - master\n  tags:\n    - astexplorer\n\nbuild-prod:\n  image: node:lts\n  stage: build-prod\n  dependencies: []\n  script:\n    - cd website/\n    - yarn install --frozen-lockfile\n    - yarn build\n    - cd ..\n    - ./scripts/inject-rev.sh out/index.html\n  cache:\n    key: build\n    paths:\n      - website/node_modules\n  when: manual\n  allow_failure: false\n  artifacts:\n    expire_in: 7 days\n    paths:\n      - out\n\nstaging:\n  stage: staging\n  dependencies:\n    - build-prod\n  variables:\n    GIT_STRATEGY: none\n    deploy_path: /data/astexplorer/website-new/staging/\n  script:\n    - ./scripts/check-conflicts.sh out/ $deploy_path\n    - rsync -rv out/ $deploy_path\n    - rm -rf out/\n  environment:\n    name: staging\n    url: http://staging.astexplorer.net\n  only:\n    - master\n  tags:\n    - astexplorer\n\nproduction:\n  stage: production\n  dependencies:\n    - build-prod\n  variables:\n    deploy_path: /data/astexplorer/website-production/\n  script:\n    - ./scripts/check-conflicts.sh out/ $deploy_path\n    - rsync -rv out/ $deploy_path\n    - rm -rf out/\n  environment:\n    name: production\n    url: https://astexplorer.net/\n  when: manual\n  only:\n    - master\n  tags:\n    - astexplorer\n"
+        },
+        {
+          "name": ".gitpod.yml",
+          "type": "blob",
+          "size": 0.1435546875,
+          "content": "\ntasks:\n  - init: cd website && yarn \n    command: yarn dev\n  - init: fish\n\nports:\n  - port: 8080\n    onOpen: open-preview\n    visibility: public\n\n"
+        },
+        {
+          "name": ".tool-versions",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "nodejs lts-gallium\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.388671875,
+          "content": "sudo: false\nlanguage: node_js\nnode_js:\n  - node\ncache:\n  yarn: true\n  directories:\n    - website/node_modules\nbefore_install:\n  - curl -o- -L https://yarnpkg.com/install.sh | bash\n  - export PATH=$HOME/.yarn/bin:$PATH\ninstall:\n  - cd website\n  - yarn install --production=false\nbefore_script:\n  - yarn lint\nscript:\n  - yarn watch -- --no-watch\nenv:\n  - NODE_ENV=development\n  - NODE_ENV=production\n"
+        },
+        {
+          "name": "CNAME",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "astexplorer.net\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.111328125,
+          "content": "The MIT License\n\nCopyright (c) 2014-2021 Felix Kling and astexplorer contributors https://astexplorer.net\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the “Software”), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.0087890625,
+          "content": "## AST explorer\n\n[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/fkling/astexplorer)\n[![Join the chat at https://gitter.im/astexplorer/Lobby](https://badges.gitter.im/astexplorer/Lobby.svg)](https://gitter.im/astexplorer/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n[![Build Status](https://travis-ci.org/fkling/astexplorer.svg?branch=master)](https://travis-ci.org/fkling/astexplorer)\n\nPaste or drop code into the editor and inspect the generated AST on https://astexplorer.net/\n\nThe AST explorer provides following code parsers:\n\n- CSS:\n  - [cssom][]\n  - [csstree][]\n  - [postcss][] + [postcss-safe-parser][] & [postcss-scss][]\n  - [rework][]\n- [GraphQL][]\n- Graphviz:\n  - [redot][]\n- Handlebars:\n  - [glimmer][]\n  - [handlebars][]\n  - [ember-template-recast][]\n- HTML:\n  - [htmlparser2][]\n  - [parse5][]\n  - [@angular/compiler][]\n  - [@angular-eslint/template-parser][]\n  - [svelte][]\n  - [posthtml][]\n  - [hyntax][]\n- Vue:\n  - [vue-template-compiler][]\n  - [@vue/compiler-core][]\n  - [vue-eslint-parser][]\n- [ICU][]\n- Java\n  - [java-parser][]\n- JavaScript:\n  - [acorn][] + [acorn-jsx][]\n  - [babel-eslint][]\n  - [babylon][]\n  - [espree][]\n  - [esformatter][]\n  - [esprima][]\n  - [flow-parser][]\n  - [hermes-parser][]\n  - [meriyah][]\n  - [recast][]\n  - [seafox][]\n  - [shift][]\n  - [swc][]\n  - [traceur][]\n  - [typescript][]\n  - [typescript-eslint-parser][]\n  - [uglify-js][]\n- JSON:\n  - [JSON][]\n  - [Momoa][]\n- Lua:\n  - [luaparse][]\n- Markdown:\n  - [remark][]\n- [MDX][]:\n  - [mdxhast][]\n- Monkey\n  - [monkey][]\n- PHP\n  - [php-parser][]\n- [Pug][]\n- Regular Expressions:\n  - [regexp-tree][]\n  - [regexpp][]\n  - [regjsparser][]\n- Protocol Buffers:\n  - [pbkit][]\n- Scala\n  - [Scalameta][]\n- Solidity:\n  - [solidity-parser-antlr][]\n- SQL:\n  - [sqlite-parser][]\n- Svelte:\n  - [svelte][]\n- [WebIDL][]\n- YAML:\n  - [yaml][]\n  - [yaml-ast-parser][]\n\n### Experimental / custom syntax\n\nDepending on the parser settings, it not only supports ES5/CSS3 but also\n\n- ES6: [arrow functions](https://github.com/lukehoban/es6features#arrows), [destructuring](https://github.com/lukehoban/es6features#destructuring),\n  [classes](https://github.com/lukehoban/es6features#classes), ...\n- ES7 proposals: [async/await](https://github.com/lukehoban/ecmascript-asyncawait), [object rest / spread](https://github.com/sebmarkbage/ecmascript-rest-spread), ...\n- [JSX](https://facebook.github.io/jsx/), known through [React](https://facebook.github.io/react/).\n- Typed JavaScript ([Flow](http://flowtype.org/) and [TypeScript](http://typescriptlang.org/))\n- [SASS](http://sass-lang.com/)\n\n### Transforms\n\nSince future syntax is supported, the AST explorer is a useful tool for\ndevelopers who want to create AST transforms. In fact, following transformers\nare included so you can prototype your own plugins:\n\n- JavaScript\n  - [babel][] (v5, v6)\n  - [ESLint][] (v1, v2, v3)\n  - [jscodeshift][]\n  - [tslint][]\n- HTML\n  - [posthtml][]\n- CSS\n  - [postcss][]\n- MDX\n  - [mdx][]\n- Regular Expressions\n  - [regexp-tree][]\n- Handlebars\n  - [glimmer][]\n\n### More Features\n\n- Save and fork code snippets. Copy the URL to share them.\n- Copying an AST or dropping a file containing an AST into the window will\n  parse the AST and update the code using [escodegen][].\n- Otherwise, the content of text editor will be replaced with the content of the\n  file (i.e. you can drag and drop JS files).\n- Choose between multiple parsers and configure them.\n- shift+click on a node expands the full subtree.\n- Hovering over a node highlights the corresponding text in the source code\n- Editing the source or moving the cursor around will automatically highlight\n  the corresponding AST node (or its ancestors of it isn't expanded)\n- You can use `$node` in the console to refer to the last opened/toggled AST\n  node.\n\n[acorn-jsx]: https://github.com/RReverser/acorn-jsx\n[acorn]: https://github.com/ternjs/acorn\n[@angular/compiler]: https://angular.io/\n[@angular-eslint/template-parser]: https://github.com/angular-eslint/angular-eslint/tree/master/packages/template-parser\n[babel-eslint]: https://github.com/babel/babel-eslint\n[babel]: https://babeljs.io/docs/advanced/plugins/\n[babylon]: https://babeljs.io/\n[cssom]: https://github.com/NV/CSSOM\n[csstree]: https://github.com/csstree/csstree\n[ember-template-recast]: https://github.com/ember-template-lint/ember-template-recast\n[escodegen]: https://github.com/estools/escodegen\n[eslint]: http://eslint.org/\n[espree]: https://github.com/eslint/espree\n[esprima]: https://github.com/jQuery/esprima\n[flow-parser]: https://github.com/facebook/flow/tree/master/src/parser\n[graphql]: https://facebook.github.io/graphql/\n[hermes-parser]: https://github.com/facebook/hermes/tree/master/tools/hermes-parser/js/hermes-parser\n[htmlparser2]: https://github.com/fb55/htmlparser2\n[jscodeshift]: https://github.com/facebook/jscodeshift\n[luaparse]: https://fstirlitz.github.io/luaparse/\n[meriyah]: https://github.com/meriyah/meriyah/\n[parse5]: https://github.com/inikulin/parse5\n[pbkit]: https://github.com/pbkit/pbkit\n[postcss-safe-parser]: https://github.com/postcss/postcss-safe-parser\n[postcss-scss]: https://github.com/postcss/postcss-scss\n[postcss]: https://github.com/postcss/postcss\n[posthtml]: https://github.com/posthtml/posthtml\n[recast]: https://github.com/benjamn/recast\n[seafox]: https://github.com/KFlash/seafox\n[rework]: https://github.com/reworkcss/rework\n[shift]: https://github.com/shapesecurity/shift-parser-js\n[swc]: https://github.com/swc-project/swc\n[traceur]: https://github.com/google/traceur-compiler\n[typescript]: https://github.com/Microsoft/TypeScript/\n[typescript-eslint-parser]: https://github.com/eslint/typescript-eslint-parser/\n[tslint]: https://palantir.github.io/tslint/\n[uglify-js]: https://github.com/mishoo/UglifyJS2\n[webidl]: https://github.com/darobin/webidl2.js\n[redot]: https://github.com/redotjs/redot\n[remark]: https://github.com/remarkjs/remark\n[regexp-tree]: https://github.com/DmitrySoshnikov/regexp-tree\n[regexpp]: https://github.com/mysticatea/regexpp\n[regjsparser]: https://github.com/jviereck/regjsparser\n[php-parser]: https://github.com/glayzzle/php-parser\n[pug]: https://github.com/pugjs/pug\n[glimmer]: https://github.com/glimmerjs/glimmer-vm\n[handlebars]: http://handlebarsjs.com/\n[icu]: https://formatjs.io/docs/intl-messageformat-parser/\n[json]: https://github.com/vtrushin/json-to-ast\n[Momoa]: https://github.com/humanwhocodes/momoa\n[sqlite-parser]: https://github.com/codeschool/sqlite-parser\n[yaml]: https://github.com/eemeli/yaml\n[yaml-ast-parser]: https://github.com/mulesoft-labs/yaml-ast-parser\n[esformatter]: https://github.com/millermedeiros/esformatter-parser#readme\n[mdx]: https://mdxjs.com/\n[mdxhast]: https://mdxjs.com/advanced/ast#mdxhast\n[mdx]: https://mdxjs.com/advanced/sync-api\n[monkey]: https://github.com/gengjiawen/monkey-rust\n[scalameta]: http://scalameta.org/\n[solidity-parser-antlr]: https://github.com/federicobond/solidity-parser-antlr\n[vue-template-compiler]: https://github.com/vuejs/vue/tree/dev/packages/vue-template-compiler\n[@vue/compiler-core]: https://github.com/vuejs/vue-next/blob/master/packages/compiler-core/README.md\n[vue-eslint-parser]: https://github.com/mysticatea/vue-eslint-parser\n[svelte]: https://github.com/sveltejs/svelte\n[hyntax]: https://github.com/nik-garmash/hyntax\n[java-parser]: https://github.com/jhipster/prettier-java/tree/master/packages/java-parser\n\n### Contributions\n\nI'm happy about any feedback, feature request or PR to make this tool as useful\nas possible!\n\n---\n\n#### How to add a new parser\n\n1. Go to `website/`.\n2. Install the new parser as dependency: `yarn add theParser`\n3. Copy one of the existing examples in `src/parsers/{language}`.\n4. Adjust the code as necessary:\n\n- Update metadata.\n- Load the right parser (`loadParser`).\n- Call the right parsing method with the right/necessary options in `parse`.\n- Implement the `nodeToRange` method (this is for highlighting).\n- Implement the `getNodeName` method (this is for quick look through the tree).\n- Implement `opensByDefault` method for auto-expansion of specific properties.\n- Define `_ignoredProperties` set or implement `forEachProperty` generator method for filtering.\n- Provide a `renderSettings` method if applicable.\n\n#### How to add a new transformer\n\n0. Go to `website/`.\n1. Install the new transformer as dependency.\n1. Copy one of the existing examples in `src/parsers/{language}/transformers`.\n1. Adjust the code as necessary:\n\n- Update metadata and `defaultParserID`.\n- Load the right transformer (`loadTransformer`).\n- Call the transformation method in `transform`.\n- Change sample transformation code in `codeExample.txt`.\n\n#### Build your own version for development\n\n**IMPORTANT:** For various reasons the project still requires Node.js version\n16 (see `.tools-versions`). If you use a tool like\n[`asdf`](https://asdf-vm.com/) switching versions will happen automatically.\n\n1. Clone the repository.\n2. Go to `website/`.\n3. Install all dependencies with `yarn install`\n\nRun `yarn run build` for the final minimized version.\nRun `yarn run watch` for incremental builds.\n\nRun `yarn start` to start a simple static webserver.\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "website",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736562919748,
+    "page": 512,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jesse-ai/jesse",
+      "stars": 5899,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.2451171875,
+          "content": "__pycache__\n*.pyc\n*.pyo\n*.pyd\n.Python\nenv\npip-log.txt\npip-delete-this-directory.txt\n.tox\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*,cover\n*.log\n.git\n*.md\n!README*.md\nREADME-secret.md\n.travis.yml\nDockerfile\ndocker-compose.yml\n.idea\nvenv\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 2.1123046875,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\nshare/python-wheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.nox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n*.py,cover\n.hypothesis/\n.pytest_cache/\ncover/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\ndb.sqlite3-journal\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\n.pybuilder/\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# IPython\nprofile_default/\nipython_config.py\n\n# pyenv\n#   For a library or package, you might want to ignore these files since the code is\n#   intended to run in multiple environments; otherwise, check them in:\n# .python-version\n\n# pipenv\n#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.\n#   However, in case of collaboration, if having platform-specific dependencies or dependencies\n#   having no cross-platform support, pipenv may install dependencies that don't work, or not\n#   install all needed dependencies.\n#Pipfile.lock\n\n# PEP 582; used by e.g. github.com/David-OConnor/pyflow\n__pypackages__/\n\n# Celery stuff\ncelerybeat-schedule\ncelerybeat.pid\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.dmypy.json\ndmypy.json\n\n# Pyre type checker\n.pyre/\n\n# pytype static type analyzer\n.pytype/\n\n# Cython debug symbols\ncython_debug/\n\n# IDE\n/.vscode\n/.idea\n\n.DS_Store\n/storage/*.key\n/storage/*.sqlite\n/storage/*.gz\n/.vagrant\ntesting-*.py\n/storage/full-reports/*.html\n/storage/logs/*\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.6982421875,
+          "content": "language: python\ndist: focal\ncache:\n  directories:\n  - $HOME/.cache/pip\n  - $HOME/ta-lib\npython:\n  - \"3.7\"\n  - \"3.8\"\n  - \"3.9\"\nbefore_install:\n  - cd\n  - pip3 install Cython numpy\n  - if [ ! -f \"$HOME/ta-lib/src\" ]; then wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz -q && tar -xzf ta-lib-0.4.0-src.tar.gz; fi\n  - cd ta-lib/\n  - ./configure --prefix=/usr\n  - if [ ! -f \"$HOME/ta-lib/src\" ]; then make; fi\n  - sudo make install\n  - cd\n# command to install dependencies\ninstall:\n  - pip install codecov\n  - pip install pytest-cov\n  - cd $TRAVIS_BUILD_DIR\n  - pip install -r requirements.txt\n  - pip install -e .\n\n# command to run tests\nscript:\n  - pytest --cov=./\n\nafter_success:\n  - codecov\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.84765625,
+          "content": "ARG TEST_BUILD=0\nFROM python:3.11-slim-bullseye AS jesse_basic_env\nENV PYTHONUNBUFFERED 1\n\nRUN apt-get update \\\n    && apt-get -y install git build-essential libssl-dev \\\n    && apt-get clean \\\n    && pip install --upgrade pip\n\nRUN pip3 install Cython numpy\n\n# Prepare environment\nRUN mkdir /jesse-docker\nWORKDIR /jesse-docker\n\n# Install TA-lib\nCOPY docker_build_helpers/* /tmp/\nRUN cd /tmp && /tmp/install_ta-lib.sh && rm -r /tmp/*ta-lib*\nENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH\n\n# Install dependencies\nCOPY requirements.txt /jesse-docker\nRUN pip3 install -r requirements.txt\n\n# Build\nCOPY . /jesse-docker\nRUN pip3 install -e .\n\nFROM jesse_basic_env AS jesse_with_test_0\nWORKDIR /home\n\nFROM jesse_basic_env AS jesse_with_test_1\nRUN pip3 install codecov pytest-cov\nENTRYPOINT pytest --cov=./ # && codecov\n\nFROM jesse_with_test_${TEST_BUILD} AS jesse_final\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2020 Jesse.Trade\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": "include jesse/static/*\ninclude jesse/static/**/*\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.23046875,
+          "content": "<div align=\"center\">\n<br>\n<p align=\"center\">\n<img src=\"assets/jesse-logo.png\" alt=\"Jesse\" height=\"72\" />\n</p>\n\n<p align=\"center\">\nAlgo-trading was 😵‍💫, we made it 🤩\n</p>\n</div>\n\n# Jesse\n[![PyPI](https://img.shields.io/pypi/v/jesse)](https://pypi.org/project/jesse)\n[![Downloads](https://pepy.tech/badge/jesse)](https://pepy.tech/project/jesse)\n[![Docker Pulls](https://img.shields.io/docker/pulls/salehmir/jesse)](https://hub.docker.com/r/salehmir/jesse)\n[![GitHub](https://img.shields.io/github/license/jesse-ai/jesse)](https://github.com/jesse-ai/jesse)\n[![coverage](https://codecov.io/gh/jesse-ai/jesse/graph/badge.svg)](https://codecov.io/gh/jesse-ai/jesse)\n\n---\n\nJesse is an advanced crypto trading framework that aims to **simplify** **researching** and defining **YOUR OWN trading strategies** for backtesting, optimizing, and live trading.\n\n## What is Jesse?\nWatch this video to get a quick overview of Jesse:\n\n[![Jesse Overview](https://img.youtube.com/vi/0EqN3OOqeJM/0.jpg)](https://www.youtube.com/watch?v=0EqN3OOqeJM)\n\n## Why Jesse?\nIn short, Jesse is more **accurate** than other solutions, and way more **simple**. \nIn fact, it is so simple that in case you already know Python, you can get started today, in **matter of minutes**, instead of **weeks and months**. \n\n## Key Features\n\n- 📝 **Simple Syntax**: Define both simple and advanced trading strategies with the simplest syntax in the fastest time.\n- 📊 **Comprehensive Indicator Library**: Access a complete library of technical indicators with easy-to-use syntax.\n- 📈 **Smart Ordering**: Supports market, limit, and stop orders, automatically choosing the best one for you.\n- ⏰ **Multiple Timeframes and Symbols**: Backtest and livetrade multiple timeframes and symbols simultaneously without look-ahead bias.\n- 🔒 **Self-Hosted and Privacy-First**: Designed with your privacy in mind, fully self-hosted to ensure your trading strategies and data remain secure.\n- 🛡️ **Risk Management**: Built-in helper functions for robust risk management.\n- 📋 **Metrics System**: A comprehensive metrics system to evaluate your trading strategy's performance.\n- 🔍 **Debug Mode**: Observe your strategy in action with a detailed debug mode.\n- 🔧 **Optimize Mode**: Fine-tune your strategies using AI, without needing a technical background.\n- 📈 **Leveraged and Short-Selling**: First-class support for leveraged trading and short-selling.\n- 🔀 **Partial Fills**: Supports entering and exiting positions in multiple orders, allowing for greater flexibility.\n- 🔔 **Advanced Alerts**: Create real-time alerts within your strategies for effective monitoring.\n- 🤖 **JesseGPT**: Jesse has its own GPT, JesseGPT, that can help you write strategies, optimize them, debug them, and much more.\n- 🔧 **Built-in Code Editor**: Write, edit, and debug your strategies with a built-in code editor.\n- 📺 **Youtube Channel**: Jesse has a Youtube channel with screencast tutorials that go through example strategies step by step.\n\n## Example Strategy\n\n```py\nclass SMACrossover(Strategy):\n    @property\n    def slow_sma(self):\n        return ta.sma(self.candles, 200)\n\n    @property\n    def fast_sma(self):\n        return ta.sma(self.candles, 50)\n\n    def should_long(self) -> bool:\n        # Fast SMA above Slow SMA\n        return self.fast_sma > self.slow_sma\n\n    def should_short(self) -> bool:\n        # Fast SMA below Slow SMA\n        return self.fast_sma < self.slow_sma\n\n    def go_long(self):\n        # Open long position and use entire balance to buy\n        qty = utils.size_to_qty(self.balance, self.price, fee_rate=self.fee_rate)\n\n        self.buy = qty, self.price\n\n    def go_short(self):\n        # Open short position and use entire balance to sell\n        qty = utils.size_to_qty(self.balance, self.price, fee_rate=self.fee_rate)\n\n        self.sell = qty, self.price\n\n    def update_position(self):\n        # If there exist long position, but the signal shows Death Cross, then close the position, and vice versa.\n        if self.is_long and self.fast_sma < self.slow_sma:\n            self.liquidate()\n    \n        if self.is_short and self.fast_sma > self.slow_sma:\n            self.liquidate()\n```\n\n## Getting Started\nHead over to the \"getting started\" section of the [documentation](https://docs.jesse.trade/docs/getting-started). The \ndocumentation is **short yet very informative**. \n\n## Resources\n\n- [⚡️ Website](https://jesse.trade)\n- [🎓 Documentation](https://docs.jesse.trade)\n- [🎥 Youtube channel (screencast tutorials)](https://jesse.trade/youtube)\n- [🛟 Help center](https://jesse.trade/help)\n- [💬 Discord community](https://jesse.trade/discord)\n- [🤖 JesseGPT](https://jesse.trade/gpt) (Requires a free account)\n\n## What's next?\n\nYou can see the project's **[roadmap here](https://docs.jesse.trade/docs/roadmap.html)**. **Subscribe** to our mailing list at [jesse.trade](https://jesse.trade) to get the good stuff as soon they're released. Don't worry, We won't send you spam—Pinky promise.\n\n## Disclaimer\nThis software is for educational purposes only. USE THE SOFTWARE AT **YOUR OWN RISK**. THE AUTHORS AND ALL AFFILIATES ASSUME **NO RESPONSIBILITY FOR YOUR TRADING RESULTS**. **Do not risk money that you are afraid to lose**. There might be **bugs** in the code - this software DOES NOT come with **ANY warranty**.\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "codecov.yml",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "ignore:\n  - \"tests/**\"\n"
+        },
+        {
+          "name": "docker_build_helpers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jesse",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.4892578125,
+          "content": "arrow~=1.2.1\nblinker~=1.4\nclick~=8.0.3\nnewtulipy~=0.4.6\nnumpy~=1.26.4\npandas~=2.2.3\npeewee~=3.14.8\npsycopg2-binary~=2.9.9\npydash~=6.0.0\nfnc~=0.5.3\npytest~=6.2.5\nrequests~=2.32.0\nscipy~=1.15.0\nstatsmodels~=0.14.4\nTA-Lib==0.4.31\ntabulate~=0.8.9\ntimeloop~=1.0.2\nwebsocket-client~=1.8.0\nwsaccel~=0.6.6\nsimplejson~=3.16.0\naioredis~=1.3.1\nredis~=4.1.4\nfastapi~=0.111.1\nuvicorn~=0.29.0\nwebsockets>=10.0.0\npython-dotenv~=0.19.2\naiofiles~=0.7.0\nnumba~=0.61.0rc2\nPyJWT~=2.8.0\ncryptography~=42.0.5\necdsa>=0.16.0\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.28515625,
+          "content": "from setuptools import setup, find_packages\n\n# also change in version.py\nVERSION = \"1.4.9\"\nDESCRIPTION = \"A trading framework for cryptocurrencies\"\nwith open(\"requirements.txt\", \"r\", encoding=\"utf-8\") as f:\n    REQUIRED_PACKAGES = f.read().splitlines()\n\nwith open(\"README.md\", \"r\", encoding=\"utf-8\") as f:\n    LONG_DESCRIPTION = f.read()\n\nsetup(\n    name='jesse',\n    version=VERSION,\n    author=\"Saleh Mir\",\n    author_email=\"saleh@jesse.trade\",\n    packages=find_packages(),\n    description=DESCRIPTION,\n    long_description=LONG_DESCRIPTION,\n    long_description_content_type=\"text/markdown\",\n    url=\"https://jesse.trade\",\n    project_urls={\n        'Documentation': 'https://docs.jesse.trade',\n        'Say Thanks!': 'https://jesse.trade/discord',\n        'Source': 'https://github.com/jesse-ai/jesse',\n        'Tracker': 'https://github.com/jesse-ai/jesse/issues',\n    },\n    install_requires=REQUIRED_PACKAGES,\n    entry_points='''\n        [console_scripts]\n        jesse=jesse.__init__:cli\n    ''',\n    classifiers=[\n        \"Programming Language :: Python :: 3\",\n        \"License :: OSI Approved :: MIT License\",\n        \"Operating System :: OS Independent\",\n    ],\n    python_requires='>=3.10',\n    include_package_data=True,\n    package_data={\n        '': ['*.dll', '*.dylib', '*.so', '*.json'],\n    },\n)\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
