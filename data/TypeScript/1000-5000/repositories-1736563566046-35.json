@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "timestamp": 1736563566046,
+    "page": 35,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "NarrativeScience-old/log.io",
+      "stars": 4827,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3076171875,
+          "content": "# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.\n\n# dependencies\nnode_modules/\n/.pnp\n.pnp.js\n\n# testing\n/coverage\n\n# production\nbuild/\nlib/\n\n# misc\n.DS_Store\n.env.local\n.env.development.local\n.env.test.local\n.env.production.local\n\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.5439453125,
+          "content": "Copyright 2020 Narrative Science\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.9931640625,
+          "content": "Log.io - Real-time log monitoring in your browser\n=================================================\n\nPowered by [node.js](http://nodejs.org) + [socket.io](http://socket.io)\n\n[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache2.0)\n[![Version](https://img.shields.io/badge/node-%3E%3D%2012-brightgreen)](https://nodejs.org/)\n[![Node](https://img.shields.io/npm/v/log.io)](https://www.npmjs.com/package/log.io)\n\n\n## How does it work?\n\nA **file input** watches log files for changes, sends new messages to the **server** via TCP, which broadcasts to **browsers** via socket.io.\n\nUsers can watch adhoc log streams by activating inputs and binding them to multiple screens via the web UI.\n\n## Terminology\n\n**Stream** - A logical designation for a group of messages that relate to one another.  Examples include an application name, a topic name, or a backend service name.\n\n**Source** - A physical designation for a group of messages that originate from the same source.  Examples include a server name, a service provider name, or a filename.\n\n**Input** - A (stream, source) pair.\n\nWhile originally designed to represent backend service logs spread across multiple servers, the stream/source abstraction is intentionally open-ended to allow users to define a system topology for their specific use case.\n\n## Install & run server\n\nInstall via npm\n\n```\nnpm install -g log.io\n```\n\nConfigure hosts & ports (see example below)\n\n```\nnano ~/.log.io/server.json\n```\n\nRun server\n\n```\nlog.io-server\n```\n\nBrowse to http://localhost:6688\n\n## Install & run file input\n\nInstall via npm\n\n```\nnpm install -g log.io-file-input\n```\n\nConfigure file input (see example below)\n\n```\nnano ~/.log.io/inputs/file.json\n```\n\nRun file input\n\n```\nlog.io-file-input\n```\n\n## Server configuration\n\nThere are two servers: the message server, which receives TCP messages from message inputs, and the HTTP server, which receives requests from browsers.  By default, the application looks for configuration in `~/.log.io/server.json`, and can be overridden with the environment variable `LOGIO_SERVER_CONFIG_PATH`.\n\nSample configuration file:\n\n```json\n{\n  \"messageServer\": {\n    \"port\": 6689,\n    \"host\": \"127.0.0.1\"\n  },\n  \"httpServer\": {\n    \"port\": 6688,\n    \"host\": \"127.0.0.1\"\n  },\n  \"debug\": false,\n  \"basicAuth\": {\n    \"realm\": \"abc123xyz\",\n    \"users\": {\n      \"username1\": \"password1\"\n    }\n  }\n}\n```\n`basicAuth` and `debug` are both optional keys that can be omitted.\n\n## File input configuration\n\nInputs are created by associating file paths with stream and source names in a configuration file.  By default, the file input looks for configuration in `~/.log.io/inputs/file.json`, and can be overridden with the environment variable `LOGIO_FILE_INPUT_CONFIG_PATH`.\n\nInput paths can be a file path, directory path or a [glob](https://en.wikipedia.org/wiki/Glob_(programming)).  Additionally, watcher options can be provided for more fine-grained control over file watching mechanics and performance. See the [chokidar](https://github.com/paulmillr/chokidar) documentation for more information.\n\nSample configuration file:\n\n```json\n{\n  \"messageServer\": {\n    \"host\": \"127.0.0.1\",\n    \"port\": 6689\n  },\n  \"inputs\": [\n    {\n      \"source\": \"server1\",\n      \"stream\": \"app1\",\n      \"config\": {\n        \"path\": \"log.io-demo/file-generator/app1-server1.log\"\n      }\n    },\n    {\n      \"source\": \"server2\",\n      \"stream\": \"system-logs\",\n      \"config\": {\n        \"path\": \"/var/log/**/*.log\",\n        \"watcherOptions\": {\n          \"ignored\": \"*.txt\",\n          \"depth\": 99,\n        }\n      }\n    }\n  ]\n}\n\n```\n\n\n## Server TCP interface\n\nThe file input connects to the server via TCP, and writes properly formatted strings to the socket.  Custom inputs can send messages to the server using the following commands, each of which ends with a null character:\n\nSend a log message\n\n```\n+msg|streamName1|sourceName1|this is log message\\0\n```\n\nRegister a new input\n\n```\n+input|streamName1|sourceName1\\0\n```\n\nRemove an existing input\n\n```\n-input|streamName1|sourceName1\\0\n```\n"
+        },
+        {
+          "name": "inputs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ui",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "timestamp": 1736568705940,
+    "page": 800,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgwOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "arakasi72/rtinst",
+      "stars": 1224,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.041015625,
+          "content": "MIT License\n\nCopyright (c) 2015 arakasi72\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.8408203125,
+          "content": "## rtinst\n\n### Note: Now installs Lets Encrypt SSL certificates\n\n#### 30 Second Guide\n\nUbuntu and Debian Seedbox Installation\n\nDownload and run setup (if logged in directly as root, do not need to use sudo)\n\n\tsudo bash -c \"$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/arakasi72/rtinst/master/rtsetup)\"\n\nand then to run the main script, ([check the options you can use](https://github.com/arakasi72/rtinst/wiki/Guide#21-main-script-options)):\n\n\tsudo rtinst\n\nIt takes about 10 minutes to run, depending on your server setup. After you have run the script and everything is working, I suggest a reboot, the script does not automate this reboot, you need to do it manually using the reboot command.\n\n[A detailed installation guide](https://github.com/arakasi72/rtinst/wiki/Installing-rtinst)\n\n[A detailed user guide](https://github.com/arakasi72/rtinst/wiki/Guide)\n\n**IMPORTANT: NOTE THE NEW SSH PORT AND MAKE SURE YOU CAN SSH INTO YOUR SERVER BEFORE CLOSING THE EXISTING SESSION**\n\n\nCurrent release has been tested with clean installs of: \n\n\tUbuntu 16\n\tUbuntu 17\n\tUbuntu 18\n\tUbuntu 19\n\tUbuntu 20\n\tDebian 9 \"Stretch\"\n\tDebian 10 \"Buster\"\n\nServices that will be installed and configured are\n\n\t1. vsftpd - ftp server\n\t2. libtorrent/rtorrent\n\t3. rutorrent\n\t4. Nginx (webserver)\n\t5. autodl-irssi\n\t6. webmin (optional see section 3.7 in main guide)\n\n\n[rtinst installation guide](https://github.com/arakasi72/rtinst/wiki/Installing-rtinst)\n\n[Additional information on all the features](https://github.com/arakasi72/rtinst/wiki/Guide)\n\nTo see latest updates to the script go to [Change Log](https://github.com/arakasi72/rtinst/wiki/Change-Log)\n\n-------------------------------------------------------------------------\n\n Copyright (c) 2015 arakasi72 (https://github.com/arakasi72)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions: \n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software. \n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n --> Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php\n"
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rtsetup",
+          "type": "blob",
+          "size": 3.1220703125,
+          "content": "#!/bin/bash\n\n######################################################################\n#\n#  Copyright (c) 2015 arakasi72 (https://github.com/arakasi72)\n#\n#  --> Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php\n#\n######################################################################\n\nPATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/bin:/sbin\n\nrundir=$(dirname $(readlink -f $0))\nbranch=$1\n\n# function to ask user for y/n response\nask_user(){\nlocal answer\nwhile true\n  do\n    read answer\n    case $answer in [Yy]* ) return 0 ;;\n                    [Nn]* ) return 1 ;;\n                        * ) echo \"Enter y or n\";;\n    esac\n  done\n}\n\nif [ \"$(id -u)\" != \"0\" ]; then\n  echo \"Must be run as root, directly or with sudo\"\n  exit 1\nfi\n\n# kill apt-daily.service if running \nif [[ $(systemctl list-units --all apt-daily.service | fgrep -c apt-daily.service) -gt 0 ]]; then\n  systemctl stop apt-daily.service > /dev/null 2>&1\n  systemctl kill --kill-who=all apt-daily.service > /dev/null 2>&1\n  sleep 5\nfi\n\napt-get -qq update\n\nif [ $(dpkg-query -W -f='${Status}' git 2>/dev/null | grep -c \"ok installed\") -eq 0 ]; then\necho \"Installing git\"\napt-get -yqq install git 2>&1 >> /dev/null\nfi\n\nif [ $(dpkg-query -W -f='${Status}' ca-certificates 2>/dev/null | grep -c \"ok installed\") -eq 0 ]; then\necho \"Installing ca-certificates\"\napt-get -yqq install ca-certificates 2>&1 >> /dev/null\nfi\n\n\nif [ -d /etc/rtinst ] && [ -z $branch ]; then\n  cd /etc/rtinst\n  branch=$(basename \"$(git symbolic-ref -q HEAD)\")\n  if [ -z $branch ]; then\n    branch=$(git describe --tags --exact-match)\n    if [ ${branch:0:1} = v ]; then\n      latest=$(curl -s \"https://api.github.com/repos/arakasi72/rtinst/releases/latest\" | awk -F '\"' '/tag_name/{print $4}')\n      if [ $branch != $latest ]; then\n        echo \"Updating from $branch to $latest\"\n        branch=$latest\n      else\n        echo \"Already using the latest version, rtinst $branch\"\n        echo -n \"Do you wish to reinstall rtinst y/n? \"\n        if ! ask_user; then\n          exit\n        fi\n      fi\n    fi\n  fi\n  if [ $(git ls-remote --tags --heads https://github.com/arakasi72/rtinst.git $branch | wc -l) -eq 0 ]; then\n    echo \"$branch has been deleted, using latest numbered release instead\"\n    branch=release\n  fi\nfi\n\nif [ -z $branch ] || [ $branch = release ]; then\n  branch=$(basename \"$(git ls-remote --tags https://github.com/arakasi72/rtinst.git | grep -o 'refs/tags/v.*' | sort -V | tail -1)\")\n  if [ -z $branch ]; then\n    echo \"Could not find a numbered release, using master instead\"\n    branch=master\n  fi\nfi\n\nif [ $(git ls-remote --tags --heads https://github.com/arakasi72/rtinst.git $branch | wc -l) -eq 0 ]; then\n  echo \"Could not find $branch, please try again\"\n  exit\nfi\n\necho \"Installing rtinst $branch\"\ncd\nrm -fr /etc/rtinst\ngit clone -q https://github.com/arakasi72/rtinst.git /etc/rtinst\ncd /etc/rtinst\ngit checkout $branch > /dev/null 2>&1\ncd\nln -sf /etc/rtinst/scripts/* /usr/local/bin\nln -sf /etc/rtinst/rtsetup /usr/local/bin\n\necho \"Installation complete\"\necho\necho \"You can now run rtinst and the additional supporting scripts\"\n\nif [ \"$rundir\" != \"/etc/rtinst\" ]; then\n    rm -f $rundir/rtsetup\nfi\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

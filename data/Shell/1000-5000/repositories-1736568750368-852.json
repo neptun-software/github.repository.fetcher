@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": 1736568750368,
+    "page": 852,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "visionmedia/deploy",
+      "stars": 1153,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.037109375,
+          "content": ".DS_Store\nnode_modules\n*.sock\ntesting\n"
+        },
+        {
+          "name": "History.md",
+          "type": "blob",
+          "size": 1.3115234375,
+          "content": "\n0.6.0 / 2012-06-19 \n==================\n\n  * Changed `console` command to cd to current [bronson]\n  * Changed `run` command to cd to current [bronson]\n\n0.5.0 / 2012-04-29 \n==================\n\n  * Added forward agent directive support [bronson]\n\n0.4.0 / 2011-07-27 \n==================\n\n  * Added console command [bronson]\n\n0.3.2 / 2011-06-16 \n==================\n\n  * Trying `git fetch --all` to solve a ref issue we are having\n\n0.3.1 / 2011-06-08 \n==================\n\n  * Fixed multi-arg refs\n\n0.3.0 / 2011-06-08 \n==================\n\n  * Added optional ref support, defaults to latest tag\n  * Added `-T, --no-tests`\n  * Changed `branch` setting to `ref`\n\n0.2.0 / 2011-06-07 \n==================\n\n  * Added `$SHARED` env var\n  * Added; revert on failed tests\n  * Added `test` hook\n  * Changed; hooks are executed relative to `$path/current`\n  * Changed; use ○ instead of ... for logs\n  * Fixed hook pipe exit\n  * Fixed hook commands cut issue\n\n0.1.0 / 2011-06-06 \n==================\n\n  * Added; `tee` hook command stdio into __$LOG__\n  * Changed hook message, looked like an error before\n\n0.0.4 / 2011-06-03 \n==================\n\n  * ln -sfn. Closes #1\n\n0.0.3 / 2011-06-02 \n==================\n\n  * Fixed rev support\n\n0.0.2 / 2011-05-28 \n==================\n\n  * Added `update` command\n\n0.0.1 / 2011-05-28 \n==================\n\n  * Initial release\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.1298828125,
+          "content": "\nPREFIX ?= /usr/local\n\ninstall: bin/deploy\n\t@cp -p $< $(PREFIX)/$<\n\nuninstall:\n\trm -f $(PREFIX)/bin/deploy\n\n.PHONY: install uninstall"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 4.5888671875,
+          "content": "\n# deploy\n\n  Minimalistic deployment shell script.\n\n## Installation\n\n    $ make install\n\n  Visit the [wiki](https://github.com/visionmedia/deploy/wiki) for additional usage information.\n\n## Usage\n\n\n      Usage: deploy [options] <env> [command]\n\n      Options:\n\n        -C, --chdir <path>   change the working directory to <path>\n        -c, --config <path>  set config path. defaults to ./deploy.conf\n        -T, --no-tests       ignore test hook\n        -V, --version        output program version\n        -h, --help           output help information\n\n      Commands:\n\n        setup                run remote setup commands\n        update               update deploy to the latest release\n        revert [n]           revert to [n]th last deployment or 1\n        config [key]         output config file or [key]\n        curr[ent]            output current release commit\n        prev[ious]           output previous release commit\n        exec|run <cmd>       execute the given <cmd>\n        console              open an ssh session to the host\n        list                 list previous deploy commits\n        [ref]                deploy to [ref], the 'ref' setting, or latest tag\n\n## Configuration\n\n By default `deploy(1)` will look for _./deploy.conf_, consisting of one or more environments, `[stage]`, `[production]`, etc, followed by directives.\n\n    [stage]\n    key /path/to/some.pem\n    user deployer\n    host n.n.n.n\n    port nn\n    repo git@github.com:visionmedia/express.git\n    path /var/www/myapp.com\n    ref origin/master\n    post-deploy /var/www/myapp.com/update.sh\n\n## Directives\n\n### key (optional)\n\n  Path to identity file used by `ssh -i`.\n\n      key /path/to/some.pem\n\n### ref (optional)\n\n  When specified, __HEAD__ is reset to `ref`. When deploying\n  production typically this will _not_ be used, as `deploy(1)` will\n  utilize the most recent tag by default, however this is useful\n  for a staging environment, as shown below where __HEAD__ is updated\n  and set to the develop branch.\n\n        ref origin/develop\n\n### user\n\n  User for deployment.\n\n       user deployer\n\n### host\n\n  Server hostname.\n\n       host 50.17.255.50\n\n### port (optional)\n\n  Server port.\n\n       port 22\n\n### repo\n\n  GIT repository to clone.\n\n       repo git@github.com:visionmedia/express.git\n\n### path\n\n  Deployment path.\n\n        path /var/www/myapp.com\n\n### forward-agent\n\n  Webhosts normally use read-only deploy keys to access private git repositories.\n  If you'd rather use the credentials of the person invoking the deploy\n  command, put `forward-agent yes` in the relevant config sections.\n  Now the deploy script will invoke `ssh -A` when deploying and there's\n  no need to keep SSH keys on your servers.\n\n### needs_tty\n\n  If your deployment scripts require any user interaction (which they shouldn't, but\n  often do) you'll probably want SSH to allocate a tty for you. Put `needs_tty yes`\n  in the config section if you'd like the deploy script to invoke `ssh -t` and ensure\n  you have a tty available.\n\n## Hooks\n\n  All hooks are arbitrary commands, executed relative to `path/current`,\n  aka the previous deployment for `pre-deploy`, and the new deployment\n  for `post-deploy`. Of course you may specify absolute paths as well.\n\n### pre-deploy\n\n      pre-deploy ./bin/something\n\n### post-deploy\n\n      post-deploy ./bin/restart\n\n### test\n\n  Post-deployment test command after `post-deploy`. If this\n  command fails, `deploy(1)` will attempt to revert to the previous\n  deployment, ignoring tests (for now), as they are assumed to have run correctly.\n\n      test ./something\n\n## License\n\n(The MIT License)\n\nCopyright (c) 2011 TJ Holowaychuk &lt;tj@vision-media.ca&gt;\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n'Software'), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

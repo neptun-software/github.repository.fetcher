@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "timestamp": 1736568832282,
+    "page": 10,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "EtherDream/jsproxy",
+      "stars": 9340,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0029296875,
+          "content": "._*"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2019 EtherDream\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.28515625,
+          "content": "\n# 更新\n\n* 2019-07-24 [v0.1.0](https://github.com/EtherDream/jsproxy/blob/master/changelogs/v0.1.0.md) 发布，主要修复了缓存失效的问题。网络接口和之前版本不兼容，请及时更新服务端和 cfworker。\n\n* 2019-06-22 [cfworker 无服务器版](cf-worker) 发布，长期使用演示服务的请使用该版本。\n\n[查看更多](changelogs)\n\n\n# 安装\n\n```bash\ncurl https://raw.githubusercontent.com/EtherDream/jsproxy/0.1.0/i.sh | bash\n```\n\n* 自动安装目前只支持 Linux x64，并且需要 root 权限\n\n* 安装过程中 80 端口能被外网访问（申请 HTTPS 证书）\n\n无法满足上述条件，或想了解安装细节，可尝试[手动安装](docs/setup.md)。\n\n测试: `https://服务器IP.xip.io:8443`（具体参考脚本输出）\n\n\n### 自定义域名\n\n将域名 `example.com` 解析到服务器 IP，然后执行：\n\n```bash\ncurl https://raw.githubusercontent.com/EtherDream/jsproxy/master/i.sh | bash -s example.com\n```\n\n访问: `https://example.com:8443`\n\n\n### 自定义端口\n\n默认端口为 8443 (HTTPS) 和 8080 (HTTP) ，如需改成 443 和 80，推荐使用端口转发：\n\n```bash\niptables -A PREROUTING -t nat -p tcp --dport 443 -j REDIRECT --to-ports 8443\niptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 8080\n```\n\n同时修改 `www.conf` 中的 `:8443` 为 `:443`。\n\n\n### 使用 GitHub Pages 前端\n\n本项目支持前后端分离，前端部分（`www` 目录下的文件）可部署在第三方 Web 服务器上。\n\n例如演示站点的前端部署于 GitHub Pages 服务，从而可使用个性域名（*.github.io），还能减少一定的流量开销。\n\nFork 本项目，进入 `gh-pages` 分支（该分支内容和 `www` 目录相同），编辑 `conf.js` 文件：\n\n* 节点列表（`node_map` 字段，包括节点 id 和节点主机）\n\n* 默认节点（`node_default` 字段，指定节点 id）\n\n访问 `https://用户名.github.io/jsproxy` 预览。\n\n\n# 维护\n\n```sh\n# 切换到 jsproxy 用户\nsu - jsproxy\n\n# 重启服务\n./run.sh reload\n\n# 关闭服务（参数和 nginx -s 相同）\n./run.sh quit\n\n# 启动服务\n./run.sh\n\n# 查看代理日志\ntail server/nginx/logs/proxy.log\n```\n\n目前暂未实现开机自启动。\n\n\n# 禁止外链\n\n默认情况下，代理接口允许所有 `github.io` 子站点调用，这可能导致不必要的流量消耗。\n\n如果希望只给自己网站使用，可编辑 `allowed-sites.conf`。（重启服务生效）\n\n\n# 安全策略\n\n如果不希望代理访问内网（避免 SSRF 风险），可执行 `setup-ipset.sh`：\n\n```bash\n/home/jsproxy/server/setup-ipset.sh\n```\n\n> 需要 root 权限，依赖 `ipset` 命令\n\n该脚本可禁止 `jsporxy` 用户访问保留 IP 段（针对 TCP）。nginx 之外的程序也生效，但不影响其他用户。\n\n\n# 相关文章\n\n* [基于 JS Hook 技术，打造最先进的在线代理](https://github.com/EtherDream/jsproxy/blob/master/docs/blogs/js-hook.md)\n\n\n# 项目特点\n\n相比传统在线代理，本项目具有以下特点：\n\n## 服务端开销低\n\n传统在线代理几乎都是在服务端替换 HTML/JS/CSS 等资源中的 URL。这不仅需要对内容做大量的分析和处理，还需对流量进行解压和再压缩，消耗大量 CPU 资源。并且由于逻辑较复杂，通常使用 Python/PHP 等编程语言自己实现。\n\n为降低服务端开销，本项目使用浏览器的一个黑科技 —— Service Worker。它能让 JS 拦截网页产生的请求，并能自定义返回内容，相当于在浏览器内部实现一个反向代理。这使得绝大部分的内容处理都可以在浏览器上完成，服务器只需纯粹的转发流量。\n\n因此本项目服务端直接使用 nginx，并且转发过程不修改内容（只修改 HTTP 头），避免了内容处理产生的巨大开销。同时得益于 nginx 丰富的功能，很多常用需求无需重新造轮子，通过简单配置即可实现。并且无论性能还是稳定性，都远高于自己实现。\n\n## API 虚拟化\n\n传统在线代理大多只针对静态 URL 的替换，忽视了动态 URL 以及和 URL 相关的网页 API。例如 a.com 反向代理 google.com，但页面中 JS 读取 `document.domain` 得到的仍是 a.com。这可能导致某些业务逻辑出现问题。\n\n为缓解这个问题，本代理在页面头部注入一个 JS，用以重写绝大部分和 URL 相关的 API，使得页面中的 JS 获取到的仍是原始 URL：\n\n![](https://raw.githubusercontent.com/EtherDream/jsproxy-localtest/temp/hook.png)\n\n对于有些无法重写的 API，例如 `location`，本代理会将代码中字面出现的 `location` 替换成 `__location`，从而将操作转移到自定义对象上。当然对于非字面的情况（例如 `this['lo' + 'cation']`），目前还无法处理。\n\n\n# 类似项目\n\n目前找到的都是传统后端替换 URL 的方案。当然后端替换也有不少优点，例如浏览器兼容性高，甚至低版本的 IE 都可以使用。\n\n## zmirror\n\nGitHub: https://github.com/aploium/zmirror\n\n## php-proxy\n\nGitHub: https://github.com/jenssegers/php-proxy\n\n\n# 项目意义\n\n本项目主要用于以下技术的研究：\n\n* 网站镜像 / 沙盒化\n\n* 钓鱼网站检测技术\n\n* 前端资源访问加速\n\n当然请勿将本项目用于非法用途，否则后果自负。\n\nDemo 页面文明使用，不要进行登陆等涉及隐私的操作。\n\n\n# License\n\nMIT\n"
+        },
+        {
+          "name": "acme",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "allowed-sites.conf",
+          "type": "blob",
+          "size": 0.6904296875,
+          "content": "#\n# 授权哪些站点可使用本服务，防止外链\n#\n# 本服务会校验 HTTP 请求头 origin 字段，如果不在该列表，则拒绝代理\n# 每个 URL 对应一个短别名，用于日志记录\n# 注意 URL 不包含路径部分（结尾没有 /）\n#\nhttp://127.0.0.1                  '127';\nhttp://127.0.0.1:8080             '127';\nhttp://localhost                  'lo';\nhttp://localhost:8080             'lo';\n\n# 接口和网站同源，这种情况下 origin 为空\n''                                'mysite';\n\n# ~ 开头为正则匹配，此处允许 github.io 所有子站点\n~^https://([\\w-]+)\\.github\\.io$   'gh-$1';\n\n# 允许任何站点使用\n# ~(.*)                             '$1';\n"
+        },
+        {
+          "name": "api.conf",
+          "type": "blob",
+          "size": 2.1376953125,
+          "content": "set                   $_level     '';\nset                   $_switched  '';\nset                   $_url       '';\nset                   $_ver       '';\nset                   $_ref       '';\nset                   $_type      '';\nset                   $_mode      '';\nset                   $_bodyhash  '';\n\nerror_page            500 502 504 /error;\n\nlocation = /error {\n  internal;\n  access_log          off;\n  more_set_headers\n    'access-control-allow-origin: *'\n    'access-control-expose-headers: gateway-err--'\n    'gateway-err--: {\"msg\": \"$arg_msg\", \"addr\": \"$upstream_addr\", \"url\": \"$arg_url\"}'\n  ;\n  return              204;\n}\n\n\nlocation = /preflight {\n  internal;\n  access_log          off;\n  more_set_headers\n    'access-control-allow-origin: *'\n    'access-control-allow-methods: GET,POST,PUT,PATCH,TRACE,DELETE,HEAD,OPTIONS'\n    'access-control-max-age: 1728000'\n  ;\n  return              204;\n}\n\n# 该接口已作废\nlocation = /http {\n  access_log          off;\n  more_set_headers    'access-control-allow-origin: *';\n  return              200  \"\b\b该接口已作废，请更新前端脚本\";\n}\n\n# HTTP(S) Proxy\nlocation /http/ {\n  # see ./allowed-sites.conf\n  if ($_origin_id = '') {\n    rewrite             ^   /error?msg=ORIGIN_NOT_ALLOWED;\n  }\n  if ($http_x_jsproxy) {\n    rewrite             ^   /error?msg=CIRCULAR_DEPENDENCY;\n  }\n  proxy_set_header      x-jsproxy   1;\n  proxy_set_header      Connection  $http_connection;\n  \n\n  if ($http_access_control_request_methods) {\n    rewrite             ^   /preflight;\n  }\n\n  access_by_lua_file    ../lua/http-dec-req-hdr.lua;\n\n  proxy_cache           my_cache;\n  proxy_pass            $_url;\n\n  more_set_headers\n    'server: $upstream_http_server'\n    'content-security-policy'\n    'content-security-policy-report-only'\n    'x-frame-options'\n    'alt-svc'\n    'clear-site-data'\n  ;\n  header_filter_by_lua_file   ../lua/http-enc-res-hdr.lua;\n  body_filter_by_lua_file     ../lua/http-body-hash.lua;\n}\n\n\n# WebSocket Proxy\nlocation = /ws {\n  access_by_lua_file    ../lua/ws-dec-req-hdr.lua;\n  proxy_set_header      Upgrade     $http_upgrade;\n  proxy_set_header      Connection  $http_connection;\n  proxy_pass            $_url;\n}"
+        },
+        {
+          "name": "cert",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cf-worker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "changelogs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "i.sh",
+          "type": "blob",
+          "size": 5.3076171875,
+          "content": "#!/usr/bin/env bash\n\n{ # this ensures the entire script is downloaded #\n\nJSPROXY_VER=0.1.0\nOPENRESTY_VER=1.15.8.1\n\nSRC_URL=https://raw.githubusercontent.com/EtherDream/jsproxy/$JSPROXY_VER\nBIN_URL=https://raw.githubusercontent.com/EtherDream/jsproxy-bin/master\nZIP_URL=https://codeload.github.com/EtherDream/jsproxy/tar.gz\n\nSUPPORTED_OS=\"Linux-x86_64\"\nOS=\"$(uname)-$(uname -m)\"\nUSER=$(whoami)\n\nINSTALL_DIR=/home/jsproxy\nNGX_DIR=$INSTALL_DIR/openresty\n\nDOMAIN_SUFFIX=(\n  xip.io\n  nip.io\n  sslip.io\n)\n\nGET_IP_API=(\n  https://api.ipify.org\n  https://bot.whatismyipaddress.com/\n)\n\nCOLOR_RESET=\"\\033[0m\"\nCOLOR_RED=\"\\033[31m\"\nCOLOR_GREEN=\"\\033[32m\"\nCOLOR_YELLOW=\"\\033[33m\"\n\noutput() {\n  local color=$1\n  shift 1\n  local sdata=$@\n  local stime=$(date \"+%H:%M:%S\")\n  printf \"$color[jsproxy $stime]$COLOR_RESET $sdata\\n\"\n}\nlog() {\n  output $COLOR_GREEN $1\n}\nwarn() {\n  output $COLOR_YELLOW $1\n}\nerr() {\n  output $COLOR_RED $1\n}\n\ngen_cert() {\n  local ip=\"\"\n\n  for i in ${GET_IP_API[@]}; do\n    log \"服务器公网 IP 获取中，通过接口 $i\"\n    ip=$(curl -s $i)\n\n    if [[ ! $ip ]]; then\n      warn \"获取失败\"\n      continue\n    fi\n\n    if ! grep -qP \"^\\d+\\.\\d+\\.\\d+\\.\\d+$\" <<< $ip; then\n      warn \"无效 IP：$ip\"\n      continue\n    fi\n\n    break\n  done\n\n  if [[ $ip ]]; then\n    log \"服务器公网 IP: $ip\"\n  else\n    err \"服务器公网 IP 获取失败，无法申请证书\"\n    exit 1\n  fi\n\n  log \"安装 acme.sh 脚本 ...\"\n  curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh | INSTALLONLINE=1  sh\n\n  local acme=~/.acme.sh/acme.sh\n\n  local domains=()\n\n  if [[ $@ ]]; then\n    for i in $@; do\n      domains+=($i)\n    done\n  else\n    warn \"未指定域名，使用公共测试域名\"\n    for i in ${DOMAIN_SUFFIX[@]}; do\n      domains+=($ip.$i)\n    done\n  fi\n\n  for domain in ${domains[@]}; do\n    echo \"校验域名 $domain ...\"\n\n    local ret=$(getent ahosts $domain | head -n1 | awk '{print $1}')\n    if [[ $ret != $ip ]]; then\n      err \"域名 $domain 解析结果: $ret，非本机公网 IP: $ip\"\n      continue\n    fi\n\n    log \"尝试为域名 $domain 申请证书 ...\"\n\n    local dist=server/cert/$domain\n    mkdir -p $dist\n\n    $acme \\\n      --issue \\\n      -d $domain \\\n      --keylength ec-256 \\\n      --webroot server/acme\n\n    $acme \\\n      --install-cert \\\n      -d $domain \\\n      --ecc \\\n      --key-file $dist/ecc.key \\\n      --fullchain-file $dist/ecc.cer\n\n    if [ -s $dist/ecc.key ] && [ -s $dist/ecc.cer ]; then\n      echo \"# generated by i.sh\nlisten                8443 ssl http2;\nssl_certificate       cert/$domain/ecc.cer;\nssl_certificate_key   cert/$domain/ecc.key;\n\" > server/cert/cert.conf\n\n      local url=https://$domain:8443\n      echo \"\n$url  'mysite';\" >> server/allowed-sites.conf\n\n      log \"证书申请完成，重启服务 ...\"\n      server/run.sh reload\n\n      log \"在线预览: $url\"\n      break\n    fi\n\n    err \"证书申请失败！（80 端口是否添加到防火墙）\"\n    rm -rf $dist\n  done\n}\n\n\ninstall() {\n  cd $INSTALL_DIR\n\n  log \"下载 nginx 程序 ...\"\n  curl -O $BIN_URL/$OS/openresty-$OPENRESTY_VER.tar.gz\n  tar zxf openresty-$OPENRESTY_VER.tar.gz\n  rm -f openresty-$OPENRESTY_VER.tar.gz\n\n  local ngx_exe=$NGX_DIR/nginx/sbin/nginx\n  local ngx_ver=$($ngx_exe -v 2>&1)\n\n  if [[ \"$ngx_ver\" != *\"nginx version:\"* ]]; then\n    err \"$ngx_exe 无法执行！尝试编译安装\"\n    exit 1\n  fi\n  log \"$ngx_ver\"\n  log \"nginx path: $NGX_DIR\"\n\n  log \"下载代理服务 ...\"\n  curl -o jsproxy.tar.gz $ZIP_URL/$JSPROXY_VER\n  tar zxf jsproxy.tar.gz\n  rm -f jsproxy.tar.gz\n\n  log \"下载静态资源 ...\"\n  curl -o www.tar.gz $ZIP_URL/gh-pages\n  tar zxf www.tar.gz -C jsproxy-$JSPROXY_VER/www --strip-components=1\n  rm -f www.tar.gz\n\n  if [ -x server/run.sh ]; then\n    warn \"尝试停止当前服务 ...\"\n    server/run.sh quit\n  fi\n\n  if [ -d server ]; then\n    local backup=\"$INSTALL_DIR/bak/$(date +%Y_%m_%d_%H_%M_%S)\"\n    warn \"当前 server 目录备份到 $backup\"\n    mkdir -p $backup\n    mv server $backup\n  fi\n\n  mv jsproxy-$JSPROXY_VER server\n\n  log \"启动服务 ...\"\n  server/run.sh\n\n  log \"服务已开启\"\n  \n  shift 1\n  gen_cert $@\n}\n\nmain() {\n  log \"自动安装脚本开始执行\"\n\n  if [[ \"$SUPPORTED_OS\" != *\"$OS\"* ]]; then\n    err \"当前系统 $OS 不支持自动安装。尝试编译安装\"\n    exit 1\n  fi\n\n  if [[ \"$USER\" != \"root\" ]]; then\n    err \"自动安装需要 root 权限。如果无法使用 root，尝试编译安装\"\n    exit 1\n  fi\n\n  local cmd\n  if [[ $0 == *\"i.sh\" ]]; then\n    warn \"本地调试模式\"\n\n    local dst=/home/jsproxy/i.sh\n    cp $0 $dst\n    chown jsproxy:nobody $dst\n    if [[ $1 == \"-s\" ]]; then\n      shift 1\n    fi\n    cmd=\"bash $dst install $@\"\n  else\n    cmd=\"curl -s $SRC_URL/i.sh | bash -s install $@\"\n  fi\n\n  iptables \\\n    -t nat \\\n    -I PREROUTING 1 \\\n    -p tcp --dport 80 \\\n    -j REDIRECT \\\n    --to-ports 8080\n\n  if ! id -u jsproxy > /dev/null 2>&1 ; then\n    log \"创建用户 jsproxy ...\"\n    groupadd nobody > /dev/null 2>&1\n    useradd jsproxy -g nobody --create-home\n  fi\n\n  log \"切换到 jsproxy 用户，执行安装脚本 ...\"\n  su - jsproxy -c \"$cmd\"\n\n  local line=$(iptables -t nat -nL --line-numbers | grep \"tcp dpt:80 redir ports 8080\")\n  iptables -t nat -D PREROUTING ${line%% *}\n\n  log \"安装完成。后续维护参考 https://github.com/EtherDream/jsproxy\"\n}\n\n\nif [[ $1 == \"install\" ]]; then\n  install $@\nelse\n  main $@\nfi\n\n} # this ensures the entire script is downloaded #\n"
+        },
+        {
+          "name": "log-svc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "log.conf",
+          "type": "blob",
+          "size": 1.4794921875,
+          "content": "#\n# 日志格式定义\n# https://nginx.org/en/docs/http/ngx_http_log_module.html\n#\n# 分隔: tab (\\t)\n# 前缀: 格式版本。格式变化时递增，方便解析\n# 备注:\n# _origin_id\n#   请求源的别名，参考 allowed-sites.conf\n# _ver\n#   前端配置的版本，定义于 www/conf.js\n# remote_addr\n#   用户 IP，目前未考虑 XFF\n# _level\n#   实验中。记录切换状态（首次请求为 1。切换失败再次请求为 0，表示不接受切换）\n# _switched\n#   实验中。记录是否切换到廉价节点（未切换则为空，有切换则记录资源体积大小）\n# _bodyhash\n#   返回内容的 SHA256，用于统计重复内容\n# upstream_http_access_control_allow_origin\n#   统计 acao = * 的站点，用于加入可直连列表\n# _ref\n#   请求 referer，不包括 `https://example.com/-----` 部分\n# _mode\n#   前端 request.mode 属性\n# _type\n#   前端 request.destination 属性\n#\nlog_format              log_proxy escape=none\n  '02\t'\n  '$time_iso8601\t'\n  '$_origin_id\t'\n  '$_ver\t'\n  '$remote_addr\t'\n  '$_level\t'\n  '$_switched\t'\n  '$upstream_cache_status\t'\n  '$request_time\t'\n  '$request_length\t'\n  '$bytes_sent\t'\n  '$request_method\t'\n  '$_url\t'\n  '$status\t'\n  '$_bodyhash\t'\n  '$upstream_http_access_control_allow_origin\t'\n  '$http_user_agent\t'\n  '$_ref\t'\n  '$_mode\t'\n  '$_type'\n;\n\nlog_format              log_www escape=none\n  '01\t'\n  '$time_iso8601\t'\n  '$remote_addr\t'\n  '$request_time\t'\n  '$request_method\t'\n  '$uri\t'\n  '$http_host\t'\n  '$status\t'\n  '$http_user_agent'\n;\n"
+        },
+        {
+          "name": "lua",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mime.types",
+          "type": "blob",
+          "size": 5.1083984375,
+          "content": "\ntypes {\n    text/html                                        html htm shtml;\n    text/css                                         css;\n    text/xml                                         xml;\n    image/gif                                        gif;\n    image/jpeg                                       jpeg jpg;\n    application/javascript                           js;\n    application/atom+xml                             atom;\n    application/rss+xml                              rss;\n\n    text/mathml                                      mml;\n    text/plain                                       txt;\n    text/vnd.sun.j2me.app-descriptor                 jad;\n    text/vnd.wap.wml                                 wml;\n    text/x-component                                 htc;\n\n    image/png                                        png;\n    image/svg+xml                                    svg svgz;\n    image/tiff                                       tif tiff;\n    image/vnd.wap.wbmp                               wbmp;\n    image/webp                                       webp;\n    image/x-icon                                     ico;\n    image/x-jng                                      jng;\n    image/x-ms-bmp                                   bmp;\n\n    font/woff                                        woff;\n    font/woff2                                       woff2;\n\n    application/java-archive                         jar war ear;\n    application/json                                 json;\n    application/mac-binhex40                         hqx;\n    application/msword                               doc;\n    application/pdf                                  pdf;\n    application/postscript                           ps eps ai;\n    application/rtf                                  rtf;\n    application/vnd.apple.mpegurl                    m3u8;\n    application/vnd.google-earth.kml+xml             kml;\n    application/vnd.google-earth.kmz                 kmz;\n    application/vnd.ms-excel                         xls;\n    application/vnd.ms-fontobject                    eot;\n    application/vnd.ms-powerpoint                    ppt;\n    application/vnd.oasis.opendocument.graphics      odg;\n    application/vnd.oasis.opendocument.presentation  odp;\n    application/vnd.oasis.opendocument.spreadsheet   ods;\n    application/vnd.oasis.opendocument.text          odt;\n    application/vnd.openxmlformats-officedocument.presentationml.presentation\n                                                     pptx;\n    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet\n                                                     xlsx;\n    application/vnd.openxmlformats-officedocument.wordprocessingml.document\n                                                     docx;\n    application/vnd.wap.wmlc                         wmlc;\n    application/x-7z-compressed                      7z;\n    application/x-cocoa                              cco;\n    application/x-java-archive-diff                  jardiff;\n    application/x-java-jnlp-file                     jnlp;\n    application/x-makeself                           run;\n    application/x-perl                               pl pm;\n    application/x-pilot                              prc pdb;\n    application/x-rar-compressed                     rar;\n    application/x-redhat-package-manager             rpm;\n    application/x-sea                                sea;\n    application/x-shockwave-flash                    swf;\n    application/x-stuffit                            sit;\n    application/x-tcl                                tcl tk;\n    application/x-x509-ca-cert                       der pem crt;\n    application/x-xpinstall                          xpi;\n    application/xhtml+xml                            xhtml;\n    application/xspf+xml                             xspf;\n    application/zip                                  zip;\n\n    application/octet-stream                         bin exe dll;\n    application/octet-stream                         deb;\n    application/octet-stream                         dmg;\n    application/octet-stream                         iso img;\n    application/octet-stream                         msi msp msm;\n\n    audio/midi                                       mid midi kar;\n    audio/mpeg                                       mp3;\n    audio/ogg                                        ogg;\n    audio/x-m4a                                      m4a;\n    audio/x-realaudio                                ra;\n\n    video/3gpp                                       3gpp 3gp;\n    video/mp2t                                       ts;\n    video/mp4                                        mp4;\n    video/mpeg                                       mpeg mpg;\n    video/quicktime                                  mov;\n    video/webm                                       webm;\n    video/x-flv                                      flv;\n    video/x-m4v                                      m4v;\n    video/x-mng                                      mng;\n    video/x-ms-asf                                   asx asf;\n    video/x-ms-wmv                                   wmv;\n    video/x-msvideo                                  avi;\n}\n"
+        },
+        {
+          "name": "nginx.conf",
+          "type": "blob",
+          "size": 1.7626953125,
+          "content": "http {\n  include                 log.conf;\n  server {\n    listen                8080;\n    include               cert/cert.conf;\n    include               api.conf;\n    include               www.conf;\n  }\n\n  # https://nginx.org/en/docs/http/ngx_http_core_module.html\n  resolver                1.1.1.1 ipv6=off;\n  resolver_timeout        10s;\n\n  keepalive_timeout       60;\n  keepalive_requests      2048;\n  server_tokens           off;\n  underscores_in_headers  on;\n\n  # https://nginx.org/en/docs/http/ngx_http_ssl_module.html\n  ssl_protocols           TLSv1.2 TLSv1.3;\n  ssl_ciphers             TLS13-CHACHA20-POLY1305-SHA256:TLS13-AES-256-GCM-SHA384:TLS13-AES-128-GCM-SHA256:EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH;\n  ssl_session_cache       shared:SSL:30m;\n  ssl_session_timeout     1d;\n  ssl_prefer_server_ciphers on;\n\n  # https://nginx.org/en/docs/http/ngx_http_limit_req_module.html\n  limit_req_log_level     warn;\n  limit_req_zone          $binary_remote_addr zone=reqip:16m rate=100r/s;\n  limit_req               zone=reqip burst=200 nodelay;\n\n  access_log              logs/proxy.log log_proxy buffer=64k flush=1s;\n\n  # https://nginx.org/cn/docs/http/ngx_http_proxy_module.html\n  # 1MB = 8000key\n  proxy_cache_path        cache\n    levels=1:2\n    keys_zone=my_cache:32m\n    max_size=20g\n    inactive=6h\n    use_temp_path=off\n  ;\n  proxy_http_version      1.1;\n  proxy_ssl_server_name   on;\n\n  proxy_buffer_size       16k;\n  proxy_buffers           4 32k;\n  proxy_busy_buffers_size 64k;\n  proxy_send_timeout      30s;\n  proxy_read_timeout      30s;\n  proxy_connect_timeout   10s;\n\n  lua_load_resty_core     off;\n\n  map $http_origin $_origin_id {\n    include               allowed-sites.conf;\n  }\n}\n\n# https://nginx.org/en/docs/ngx_core_module.html\nevents {\n  worker_connections      4096;\n}"
+        },
+        {
+          "name": "nginx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run.sh",
+          "type": "blob",
+          "size": 0.3017578125,
+          "content": "#\n# 该脚本封装 nginx 调用，可在任意位置执行\n#\n# 启动：./run.sh \n# 重启：./run.sh -s reload\n# 关闭：./run.sh -s quit \n# \nNGX_BIN=~/openresty/nginx/sbin/nginx\nCUR_DIR=$(cd `dirname $0` && pwd)\n\nif [ $1 ]; then\n  PARAM=\"-s $1\"\nfi\n\n$NGX_BIN -c $CUR_DIR/nginx.conf -p $CUR_DIR/nginx $PARAM"
+        },
+        {
+          "name": "setup-ipset.sh",
+          "type": "blob",
+          "size": 0.80859375,
+          "content": "#\n# 该脚本用于禁止 jsporxy 用户访问内网，防止 SSRF 攻击\n# 需要 root 权限运行，依赖 ipset 命令\n#\nif [[ $(iptables -L | grep \"anti ssrf\") ]]; then\n  exit\nfi\n\nipset create ngx-ban-dstip hash:net\n\niptables \\\n  -m comment --comment \"anti ssrf\" \\\n  -A OUTPUT \\\n  -p tcp --syn \\\n  -m owner --uid-owner jsproxy \\\n  -m set --match-set ngx-ban-dstip dst \\\n  -j REJECT\n\n# https://en.wikipedia.org/wiki/Reserved_IP_addresses\nREV_NET=(\n  0.0.0.0/8\n  10.0.0.0/8\n  100.64.0.0/10\n  127.0.0.0/8\n  169.254.0.0/16\n  172.16.0.0/12\n  192.0.0.0/24\n  192.0.2.0/24\n  192.88.99.0/24\n  192.168.0.0/16\n  198.18.0.0/15\n  198.51.100.0/24\n  203.0.113.0/24\n  224.0.0.0/4\n  240.0.0.0/4\n  255.255.255.255/32\n)\n\nfor v in ${REV_NET[@]}; do\n  ipset add ngx-ban-dstip $v\ndone\n\n# 可屏蔽更多的网段：\n# ipset add ngx-ban-dstip xxx"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "www.conf",
+          "type": "blob",
+          "size": 1.2333984375,
+          "content": "#\n# 提供 www 目录的静态资源服务\n#\ninclude               mime.types;\nsendfile              on;\ncharset               utf-8;\n\n# 安装步骤多，节省的流量不多，暂时不开\n# brotli_static         on;\n# gzip_static           on;\ngzip                  on;\n\nlog_not_found         off;\nerror_page            404 = /404.html;\n\nlocation = /404.html {\n  internal;\n  root                ../www;\n\n  # http 重定向到 https（忽略 localhost 或 IP 访问）\n  access_by_lua_block {\n    if ngx.var.scheme == 'https' then\n      return\n    end\n    local host = ngx.var.host\n    if host == 'localhost' then\n      return\n    end\n    if ngx.re.match(host, [[^\\d+\\.\\d+\\.\\d+\\.\\d+$]]) then\n      return\n    end\n    local url = host .. ':8443' .. ngx.var.request_uri\n    ngx.redirect('https://' .. url, 301)\n  }\n\n  # 永久重定向申请: https://hstspreload.org/\n  more_set_headers\n    'strict-transport-security: max-age=99999999; includeSubDomains; preload'\n  ;\n}\n\nlocation / {\n  access_log          logs/access.log log_www buffer=64k flush=1s;\n  root                ../www;\n  index               404.html;\n}\n\n# HTTPS 证书申请验证\nlocation /.well-known/acme-challenge/ {\n  access_log          logs/acme.log combined;\n  root                ../acme;\n}"
+        },
+        {
+          "name": "www",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

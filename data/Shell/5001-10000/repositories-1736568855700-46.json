@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp": 1736568855700,
+    "page": 46,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "BtbN/FFmpeg-Builds",
+      "stars": 8028,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.04296875,
+          "content": "/Dockerfile*\n/ffbuild/\n/artifacts/\n/.cache/\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "Copyright 2020-2021 BtbN <btbn@btbn.de>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.68359375,
+          "content": "# FFmpeg Static Auto-Builds\n\nStatic Windows (x86_64) and Linux (x86_64) Builds of ffmpeg master and latest release branch.\n\nWindows builds are targetting Windows 7 and newer, provided UCRT is installed.\nThe minimum supported version is Windows 10 22H2, no guarantees on anything older.\n\nLinux builds are targetting RHEL/CentOS 8 (glibc-2.28 + linux-4.18) and anything more recent.\n\n## Auto-Builds\n\nBuilds run daily at 12:00 UTC (or GitHubs idea of that time) and are automatically released on success.\n\n**Auto-Builds run ONLY for win64 and linux(arm)64. There are no win32/x86 auto-builds, though you can produce win32 builds yourself following the instructions below.**\n\n### Release Retention Policy\n\n- The last build of each month is kept for two years.\n- The last 14 daily builds are kept.\n- The special \"latest\" build floats and provides consistent URLs always pointing to the latest build.\n\n## Package List\n\nFor a list of included dependencies check the scripts.d directory.\nEvery file corresponds to its respective package.\n\n## How to make a build\n\n### Prerequisites\n\n* bash\n* docker\n\n### Build Image\n\n* `./makeimage.sh target variant [addin [addin] [addin] ...]`\n\n### Build FFmpeg\n\n* `./build.sh target variant [addin [addin] [addin] ...]`\n\nOn success, the resulting zip file will be in the `artifacts` subdir.\n\n### Targets, Variants and Addins\n\nAvailable targets:\n* `win64` (x86_64 Windows)\n* `win32` (x86 Windows)\n* `linux64` (x86_64 Linux, glibc>=2.28, linux>=4.18)\n* `linuxarm64` (arm64 (aarch64) Linux, glibc>=2.28, linux>=4.18)\n\nThe linuxarm64 target will not build some dependencies due to lack of arm64 (aarch64) architecture support or cross-compiling restrictions.\n\n* `davs2` and `xavs2`: aarch64 support is broken.\n* `libmfx` and `libva`: Library for Intel QSV, so there is no aarch64 support.\n\nAvailable variants:\n* `gpl` Includes all dependencies, even those that require full GPL instead of just LGPL.\n* `lgpl` Lacking libraries that are GPL-only. Most prominently libx264 and libx265.\n* `nonfree` Includes fdk-aac in addition to all the dependencies of the gpl variant.\n* `gpl-shared` Same as gpl, but comes with the libav* family of shared libs instead of pure static executables.\n* `lgpl-shared` Same again, but with the lgpl set of dependencies.\n* `nonfree-shared` Same again, but with the nonfree set of dependencies.\n\nAll of those can be optionally combined with any combination of addins:\n* `4.4`/`5.0`/`5.1`/`6.0`/`6.1`/`7.0` to build from the respective release branch instead of master.\n* `debug` to not strip debug symbols from the binaries. This increases the output size by about 250MB.\n* `lto` build all dependencies and ffmpeg with -flto=auto (HIGHLY EXPERIMENTAL, broken for Windows, sometimes works for Linux)\n"
+        },
+        {
+          "name": "addins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 2.6484375,
+          "content": "#!/bin/bash\nset -xe\nshopt -s globstar\ncd \"$(dirname \"$0\")\"\nsource util/vars.sh\n\nsource \"variants/${TARGET}-${VARIANT}.sh\"\n\nfor addin in ${ADDINS[*]}; do\n    source \"addins/${addin}.sh\"\ndone\n\nif docker info -f \"{{println .SecurityOptions}}\" | grep rootless >/dev/null 2>&1; then\n    UIDARGS=()\nelse\n    UIDARGS=( -u \"$(id -u):$(id -g)\" )\nfi\n\nrm -rf ffbuild\nmkdir ffbuild\n\nFFMPEG_REPO=\"${FFMPEG_REPO:-https://github.com/FFmpeg/FFmpeg.git}\"\nFFMPEG_REPO=\"${FFMPEG_REPO_OVERRIDE:-$FFMPEG_REPO}\"\nGIT_BRANCH=\"${GIT_BRANCH:-master}\"\nGIT_BRANCH=\"${GIT_BRANCH_OVERRIDE:-$GIT_BRANCH}\"\n\nBUILD_SCRIPT=\"$(mktemp)\"\ntrap \"rm -f -- '$BUILD_SCRIPT'\" EXIT\n\ncat <<EOF >\"$BUILD_SCRIPT\"\n    set -xe\n    cd /ffbuild\n    rm -rf ffmpeg prefix\n\n    git clone --filter=blob:none --branch='$GIT_BRANCH' '$FFMPEG_REPO' ffmpeg\n    cd ffmpeg\n\n    ./configure --prefix=/ffbuild/prefix --pkg-config-flags=\"--static\" \\$FFBUILD_TARGET_FLAGS \\$FF_CONFIGURE \\\n        --extra-cflags=\"\\$FF_CFLAGS\" --extra-cxxflags=\"\\$FF_CXXFLAGS\" --extra-libs=\"\\$FF_LIBS\" \\\n        --extra-ldflags=\"\\$FF_LDFLAGS\" --extra-ldexeflags=\"\\$FF_LDEXEFLAGS\" \\\n        --cc=\"\\$CC\" --cxx=\"\\$CXX\" --ar=\"\\$AR\" --ranlib=\"\\$RANLIB\" --nm=\"\\$NM\" \\\n        --extra-version=\"\\$(date +%Y%m%d)\"\n    make -j\\$(nproc) V=1\n    make install install-doc\nEOF\n\n[[ -t 1 ]] && TTY_ARG=\"-t\" || TTY_ARG=\"\"\n\ndocker run --rm -i $TTY_ARG \"${UIDARGS[@]}\" -v \"$PWD/ffbuild\":/ffbuild -v \"$BUILD_SCRIPT\":/build.sh \"$IMAGE\" bash /build.sh\n\nif [[ -n \"$FFBUILD_OUTPUT_DIR\" ]]; then\n    mkdir -p \"$FFBUILD_OUTPUT_DIR\"\n    package_variant ffbuild/prefix \"$FFBUILD_OUTPUT_DIR\"\n    rm -rf ffbuild\n    exit 0\nfi\n\nmkdir -p artifacts\nARTIFACTS_PATH=\"$PWD/artifacts\"\nBUILD_NAME=\"ffmpeg-$(./ffbuild/ffmpeg/ffbuild/version.sh ffbuild/ffmpeg)-${TARGET}-${VARIANT}${ADDINS_STR:+-}${ADDINS_STR}\"\n\nmkdir -p \"ffbuild/pkgroot/$BUILD_NAME\"\npackage_variant ffbuild/prefix \"ffbuild/pkgroot/$BUILD_NAME\"\n\n[[ -n \"$LICENSE_FILE\" ]] && cp \"ffbuild/ffmpeg/$LICENSE_FILE\" \"ffbuild/pkgroot/$BUILD_NAME/LICENSE.txt\"\n\ncd ffbuild/pkgroot\nif [[ \"${TARGET}\" == win* ]]; then\n    OUTPUT_FNAME=\"${BUILD_NAME}.zip\"\n    docker run --rm -i $TTY_ARG \"${UIDARGS[@]}\" -v \"${ARTIFACTS_PATH}\":/out -v \"${PWD}/${BUILD_NAME}\":\"/${BUILD_NAME}\" -w / \"$IMAGE\" zip -9 -r \"/out/${OUTPUT_FNAME}\" \"$BUILD_NAME\"\nelse\n    OUTPUT_FNAME=\"${BUILD_NAME}.tar.xz\"\n    docker run --rm -i $TTY_ARG \"${UIDARGS[@]}\" -v \"${ARTIFACTS_PATH}\":/out -v \"${PWD}/${BUILD_NAME}\":\"/${BUILD_NAME}\" -w / \"$IMAGE\" tar cJf \"/out/${OUTPUT_FNAME}\" \"$BUILD_NAME\"\nfi\ncd -\n\nrm -rf ffbuild\n\nif [[ -n \"$GITHUB_ACTIONS\" ]]; then\n    echo \"build_name=${BUILD_NAME}\" >> \"$GITHUB_OUTPUT\"\n    echo \"${OUTPUT_FNAME}\" > \"${ARTIFACTS_PATH}/${TARGET}-${VARIANT}${ADDINS_STR:+-}${ADDINS_STR}.txt\"\nfi\n"
+        },
+        {
+          "name": "download.sh",
+          "type": "blob",
+          "size": 1.5341796875,
+          "content": "#!/bin/bash\nset -xe\ncd \"$(dirname \"$0\")\"\nsource util/vars.sh dl only\n\nif docker info -f \"{{println .SecurityOptions}}\" | grep rootless >/dev/null 2>&1; then\n    UIDARGS=()\nelse\n    UIDARGS=( -u \"$(id -u):$(id -g)\" )\nfi\n\n[[ -t 1 ]] && TTY_ARG=\"-t\" || TTY_ARG=\"\"\n\nDL_SCRIPT_DIR=\"$(mktemp -d)\"\ntrap \"rm -rf -- '$DL_SCRIPT_DIR'\" EXIT\n\nmkdir -p \"${PWD}\"/.cache/downloads\n\nfor STAGE in scripts.d/*.sh scripts.d/*/*.sh; do\n\tSTAGENAME=\"$(basename \"$STAGE\" | sed 's/.sh$//')\"\n\n\tcat <<-EOF >\"${DL_SCRIPT_DIR}/${STAGENAME}.sh\"\n\t\tset -xe -o pipefail\n\t\tshopt -s dotglob\n\n\t\tsource /dl_functions.sh\n\t\tsource \"/$STAGE\"\n\t\tSTG=\"\\$(ffbuild_dockerdl)\"\n\n\t\tif [[ -z \"\\$STG\" ]]; then\n\t\t\texit 0\n\t\tfi\n\n\t\tDLHASH=\"\\$(sha256sum <<<\"\\$STG\" | cut -d\" \" -f1)\"\n\t\tDLNAME=\"$STAGENAME\"\n\n\t\tif [[ \"$1\" == \"hashonly\" ]]; then\n\t\t\techo \"\\$DLHASH\"\n\t\t\texit 0\n\t\tfi\n\n\t\tTGT=\"/dldir/\\${DLNAME}_\\${DLHASH}.tar.xz\"\n\t\tif [[ -f \"\\$TGT\" ]]; then\n\t\t\trm -f \"/dldir/\\${DLNAME}.tar.xz\"\n\t\t\tln -s \"\\${DLNAME}_\\${DLHASH}.tar.xz\" \"/dldir/\\${DLNAME}.tar.xz\"\n\t\t\texit 0\n\t\tfi\n\n\t\tWORKDIR=\"\\$(mktemp -d)\"\n\t\ttrap \"rm -rf -- '\\$WORKDIR'\" EXIT\n\t\tcd \"\\$WORKDIR\"\n\n\t\teval \"\\$STG\"\n\n\t\ttar cpJf \"\\$TGT.tmp\" .\n\t\tmv \"\\$TGT.tmp\" \"\\$TGT\"\n\t\trm -f \"/dldir/\\${DLNAME}.tar.xz\"\n\t\tln -s \"\\${DLNAME}_\\${DLHASH}.tar.xz\" \"/dldir/\\${DLNAME}.tar.xz\"\n\tEOF\ndone\n\ndocker run -i $TTY_ARG --rm \"${UIDARGS[@]}\" -v \"${DL_SCRIPT_DIR}\":/stages -v \"${PWD}/.cache/downloads\":/dldir -v \"${PWD}/scripts.d\":/scripts.d -v \"${PWD}/util/dl_functions.sh\":/dl_functions.sh \"${REGISTRY}/${REPO}/base:latest\" \\\n\tbash -c 'set -xe && for STAGE in /stages/*.sh; do bash $STAGE; done'\n"
+        },
+        {
+          "name": "generate.sh",
+          "type": "blob",
+          "size": 3.5498046875,
+          "content": "#!/bin/bash\nset -e\nshopt -s globstar\ncd \"$(dirname \"$0\")\"\nsource util/vars.sh\n\nexport LC_ALL=C.UTF-8\n\nrm -f Dockerfile Dockerfile.{dl,final,dl.final}\n\nlayername() {\n    printf \"layer-\"\n    basename \"$1\" | sed 's/.sh$//'\n}\n\nto_df() {\n    _of=\"${TODF:-Dockerfile}\"\n    printf \"$@\" >> \"$_of\"\n    echo >> \"$_of\"\n}\n\n###\n### Generate main Dockerfile\n###\n\nexec_dockerstage() {\n    SCRIPT=\"$1\"\n    (\n        SELF=\"$SCRIPT\"\n        STAGENAME=\"$(basename \"$SCRIPT\" | sed 's/.sh$//')\"\n        source util/dl_functions.sh\n        source \"$SCRIPT\"\n\n        ffbuild_enabled || exit 0\n\n        to_df \"ENV SELF=\\\"$SELF\\\" STAGENAME=\\\"$STAGENAME\\\"\"\n\n        STG=\"$(ffbuild_dockerdl)\"\n        if [[ -n \"$STG\" ]]; then\n            HASH=\"$(sha256sum <<<\"$STG\" | cut -d\" \" -f1)\"\n            export SELFCACHE=\".cache/downloads/${STAGENAME}_${HASH}.tar.xz\"\n        fi\n\n        ffbuild_dockerstage || exit $?\n    )\n}\n\nexport TODF=\"Dockerfile\"\n\nto_df \"FROM ${REGISTRY}/${REPO}/base-${TARGET}:latest AS base\"\nto_df \"ENV TARGET=$TARGET VARIANT=$VARIANT REPO=$REPO ADDINS_STR=$ADDINS_STR\"\nto_df \"COPY --link util/run_stage.sh /usr/bin/run_stage\"\n\nfor addin in \"${ADDINS[@]}\"; do\n(\n    source addins/\"${addin}.sh\"\n    type ffbuild_dockeraddin &>/dev/null && ffbuild_dockeraddin || true\n)\ndone\n\nPREVLAYER=\"base\"\nfor ID in $(ls -1d scripts.d/??-* | sed -s 's|^.*/\\(..\\).*|\\1|' | sort -u); do\n    LAYER=\"layer-$ID\"\n\n    for STAGE in scripts.d/$ID-*; do\n        to_df \"FROM $PREVLAYER AS $(layername \"$STAGE\")\"\n\n        if [[ -f \"$STAGE\" ]]; then\n            exec_dockerstage \"$STAGE\"\n        else\n            for STAGE in \"${STAGE}\"/??-*; do\n                exec_dockerstage \"$STAGE\"\n            done\n        fi\n    done\n\n    to_df \"FROM $PREVLAYER AS $LAYER\"\n    for STAGE in scripts.d/$ID-*; do\n        if [[ -f \"$STAGE\" ]]; then\n            SCRIPT=\"$STAGE\"\n        else\n            SCRIPTS=( \"$STAGE\"/??-* )\n            SCRIPT=\"${SCRIPTS[-1]}\"\n        fi\n\n        (\n            SELF=\"$SCRIPT\"\n            SELFLAYER=\"$(layername \"$STAGE\")\"\n            source \"$SCRIPT\"\n            ffbuild_enabled || exit 0\n            ffbuild_dockerlayer || exit $?\n            TODF=\"Dockerfile.final\" PREVLAYER=\"__PREVLAYER__\" \\\n                ffbuild_dockerfinal || exit $?\n        )\n    done\n\n    PREVLAYER=\"$LAYER\"\ndone\n\nto_df \"FROM base\"\nsed \"s/__PREVLAYER__/$PREVLAYER/g\" Dockerfile.final | sort -u >> Dockerfile\nrm Dockerfile.final\n\n###\n### Compile list of configure arguments and add them to the final Dockerfile\n###\n\nget_output() {\n    (\n        SELF=\"$1\"\n        source $1\n        if ffbuild_enabled; then\n            ffbuild_$2 || exit 0\n        else\n            ffbuild_un$2 || exit 0\n        fi\n    )\n}\n\nsource \"variants/${TARGET}-${VARIANT}.sh\"\n\nfor addin in ${ADDINS[*]}; do\n    source \"addins/${addin}.sh\"\ndone\n\nfor script in scripts.d/**/*.sh; do\n    FF_CONFIGURE+=\" $(get_output $script configure)\"\n    FF_CFLAGS+=\" $(get_output $script cflags)\"\n    FF_CXXFLAGS+=\" $(get_output $script cxxflags)\"\n    FF_LDFLAGS+=\" $(get_output $script ldflags)\"\n    FF_LDEXEFLAGS+=\" $(get_output $script ldexeflags)\"\n    FF_LIBS+=\" $(get_output $script libs)\"\ndone\n\nFF_CONFIGURE=\"$(xargs <<< \"$FF_CONFIGURE\")\"\nFF_CFLAGS=\"$(xargs <<< \"$FF_CFLAGS\")\"\nFF_CXXFLAGS=\"$(xargs <<< \"$FF_CXXFLAGS\")\"\nFF_LDFLAGS=\"$(xargs <<< \"$FF_LDFLAGS\")\"\nFF_LDEXEFLAGS=\"$(xargs <<< \"$FF_LDEXEFLAGS\")\"\nFF_LIBS=\"$(xargs <<< \"$FF_LIBS\")\"\n\nto_df \"ENV \\\\\"\nto_df \"    FF_CONFIGURE=\\\"$FF_CONFIGURE\\\" \\\\\"\nto_df \"    FF_CFLAGS=\\\"$FF_CFLAGS\\\" \\\\\"\nto_df \"    FF_CXXFLAGS=\\\"$FF_CXXFLAGS\\\" \\\\\"\nto_df \"    FF_LDFLAGS=\\\"$FF_LDFLAGS\\\" \\\\\"\nto_df \"    FF_LDEXEFLAGS=\\\"$FF_LDEXEFLAGS\\\" \\\\\"\nto_df \"    FF_LIBS=\\\"$FF_LIBS\\\"\"\n"
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "makeimage.sh",
+          "type": "blob",
+          "size": 2.076171875,
+          "content": "#!/bin/bash\nset -xeo pipefail\ncd \"$(dirname \"$0\")\"\nsource util/vars.sh\n\nTMPCFG=\"$(mktemp --suffix=.toml)\"\ncat <<EOF >\"$TMPCFG\"\n[worker.oci]\n  max-parallelism = 4\nEOF\ntrap \"rm -f '$TMPCFG'\" EXIT\n\ndocker buildx inspect ffbuilder &>/dev/null || docker buildx create \\\n    --bootstrap \\\n    --name ffbuilder \\\n    --config \"$TMPCFG\" \\\n    --driver-opt network=host \\\n    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SIZE=-1 \\\n    --driver-opt env.BUILDKIT_STEP_LOG_MAX_SPEED=-1\n\nif [[ -z \"$QUICKBUILD\" ]]; then\n    BASE_IMAGE_TARGET=\"${PWD}/.cache/images/base\"\n    if [[ ! -d \"${BASE_IMAGE_TARGET}\" ]]; then\n        docker buildx --builder ffbuilder build \\\n            --cache-from=type=local,src=.cache/\"${BASE_IMAGE/:/_}\" \\\n            --cache-to=type=local,mode=max,dest=.cache/\"${BASE_IMAGE/:/_}\" \\\n            --load --tag \"${BASE_IMAGE}\" \\\n            \"images/base\"\n        mkdir -p \"${BASE_IMAGE_TARGET}\"\n        docker image save \"${BASE_IMAGE}\" | tar -x -C \"${BASE_IMAGE_TARGET}\"\n    fi\n\n    IMAGE_TARGET=\"${PWD}/.cache/images/base-${TARGET}\"\n    if [[ ! -d \"${IMAGE_TARGET}\" ]]; then\n        docker buildx --builder ffbuilder build \\\n            --cache-from=type=local,src=.cache/\"${TARGET_IMAGE/:/_}\" \\\n            --cache-to=type=local,mode=max,dest=.cache/\"${TARGET_IMAGE/:/_}\" \\\n            --build-arg GH_REPO=\"${REGISTRY}/${REPO}\" \\\n            --build-context \"${BASE_IMAGE}=oci-layout://${BASE_IMAGE_TARGET}\" \\\n            --load --tag \"${TARGET_IMAGE}\" \\\n            \"images/base-${TARGET}\"\n        mkdir -p \"${IMAGE_TARGET}\"\n        docker image save \"${TARGET_IMAGE}\" | tar -x -C \"${IMAGE_TARGET}\"\n    fi\n\n    CONTEXT_SRC=\"oci-layout://${IMAGE_TARGET}\"\nelse\n    CONTEXT_SRC=\"docker-image://${TARGET_IMAGE}\"\nfi\n\n./download.sh\n./generate.sh \"$TARGET\" \"$VARIANT\" \"${ADDINS[@]}\"\n\ndocker buildx --builder ffbuilder build \\\n    --cache-from=type=local,src=.cache/\"${IMAGE/:/_}\" \\\n    --cache-to=type=local,mode=max,dest=.cache/\"${IMAGE/:/_}\" \\\n    --build-context \"${TARGET_IMAGE}=${CONTEXT_SRC}\" \\\n    --load --tag \"$IMAGE\" .\n\nif [[ -z \"$NOCLEAN\" ]]; then\n    docker buildx rm -f ffbuilder\n    rm -rf .cache/images\nfi\n"
+        },
+        {
+          "name": "patches",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts.d",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "util",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "variants",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

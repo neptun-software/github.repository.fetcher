@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": 1736568601681,
+    "page": 665,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "fritz-smh/yi-hack",
+      "stars": 1406,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0234375,
+          "content": "sd/test/http/index.html\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.0986328125,
+          "content": "===============\nYi-hack project\n===============\n\nPersonnal note - 4 october 2016\n===============================\n\nHi, I am Fritz, the one who created this project. Since summer 2016, I have a lot of other topics to work on (especially the Domogik home automation project) and I have nearly to time for this project.\n\nI would like to say THANK YOU to the people who are currently helping the others in the issues opened and who have submitted some pull requests! Your help is really welcome and I am very happy that this project  is interesting to many people !!!\n\nThanks again to all of you, users and contributors !\n\nIf one of the regular contributor wish to got some administrator permissions to this repository, please, just create an issue and I will be happy to give you the access.\n\n-- Fritz\n\nPurpose\n=======\n\nThis project is a collection of scripts and binaries file to hack your Xiaomi Yi Ants camera.\n\n![Alt text](yi.jpg?raw=true \"Yi camera\")\n\nThis camera has the default following features :\n* wifi\n* night vision\n* motion detection : a video file is generated if a motion have been detected in the last 60 seconds.\n* send video data over the network on Chinese servers in the cloud to allow people to view camera data from their smartphone wherever they are.\n* setup thanks to a smartphone application.\n* local video storage on a SD card\n* no RTSP server in the last firmwares\n\nThis hack includes :\n* ntpclient (set date and time over internet)\n* Base firmware is : M release.\n* no more cloud feature (nothing goes out of your local network)\n* no more need to use a smartphone application\n* RTSP server activated\n* Telnet server activated\n* HTTP server activated\n* FTP server activated\n* No more (chinese) voices on startup\n\nWarning about some models that are usable only in China\n=======================================================\n\nIf you have some issues to use your camera, even without this firmware, please read this webpage : https://diy.2pmc.net/solved-xiaomi-xiao-yi-ant-home-camera-can-used-china/ (more information about users issues here : https://github.com/fritz-smh/yi-hack/issues/8 )\n\nInstallation on the Yi camera\n=============================\n\nThe memory card must stay in the camera ! If you remove it, the camera will start without using the hack.\n\nPrepare the memory card\n-----------------------\n\nClone this repository on a computer :\n\n    git clone http://github.com/fritz-smh/yi-hack.git\n    \nThen, format a micro SD card in fat32 (vfat) format and copy the content of the **yi-hack/sd/** folder at the root of your memory card.\n\nThe memory card will so contain :\n\n* home : the official firmware file compliant with this hack\n* test : the folder which contains the hack scripts and binaries\n* record : this folder will only be created when some video records will be added on the memory card by the camera\n* record_sub : this folder will only be created when some video records will be added on the memory card by the camera\n\nConfigure the Yi camera on the memory card\n------------------------------------------\n\nYou will need to set a static IP adresse to the camera. To check for the available IPs on your network, you can use the **Fing** application to scan the network on your Android smartphone.\n\nTo configure the wifi network to use, edit the file **test/wpa_supplicant.conf**.\n\nTo configure your IP address, open the file **test/yi-hack.cfg** and set the values.\n\nStart the camera\n----------------\n\n* If plugged, unplug the Yi camera\n* Insert the memory card in the Yi camera\n* Plug the Yi camera\n\nThe camera will start. The led will indicate the current status :\n* yellow : camera startup\n* blue blinking : network configuration in progress (connec to wifi, set up the IP address)\n* blue : network configuration is OK. Camera is ready to use.\n\nYou can test is your camera is up and running this hack with your browser on url **http://ip/**. You should see this page :\n\n![Alt text](http_server.png?raw=true \"Yi camera HTTP server\")\n\nWarning : changes done on the original camera filesystem\n--------------------------------------------------------\n\nOne change is needed on the camera filesystem which will not be reverted by removing the memory card : the file **/home/timeout.g726** is renamed to **/home/timeout.g726.OFF**.\n\nThis is done because a process (rmm) tries to connect to the cloud process without success (as it is not started) and raise the play of a chinese voice timeout file. If this file would not be renamed, you would be bothered with this message.\n\n\nHow can I know which is the version of a firmware 'home' file ?\n===============================================================\n\nJust do : **strings home  | grep version**. Example :\n\n    $ strings home  | grep 1.8.5\n    version=1.8.5.1M_201512011815\n\n\nUse the camera\n==============\n\nDomogik\n-------\n\nYou can easily use the Yi camera with the Domogik (http://www.domogik.org) home automation solution. You just need to install the **domogik-plugin-yi** package.\n\nAccess the video stream over RTSP\n---------------------------------\n\nRTSP server is on port 554.\n\nYou can access the video over RTSP on 3 urls : \n* High definition video and audio (h264) : http://ip:554/ch0_0.h264\n* Low definition video and audio (h264) : http://ip:554/ch0_1.h264\n* Audio (h264) : http://ip:554/ch0_3.h264\n\nThere is no login and password and currently no way to set it.\n\nAccess the history of motion detection\n--------------------------------------\n\nEach time a motion is detected, the camera will generate a video file (60s max). This file is stored on the memory card and can be accessed over :\n* http server\n* ftp server\n\nThe simplest way is to browse the file from the http server.\n\nTo know if a motion have been detected in the last minute, you can check the url http://ip/motion (GET). It can give : \n* when no motion is detected : an empty content\n* when motion is detected : a file path to the video file from the root of the http server\n\nTelnet server\n-------------\n\nThe telnet server is on port 23.\n\nDefault login/password : \n* login = root\n* password = 1234qwer (unless you specified another password in yi-hack.cfg file)\n\nFtp server\n----------\n\nThe ftp server is on port 21.\n\nThere is no login/password required.\n\n\nI want more !\n=============\n\nSome scripts are provided in the **sd/test/scripts** folder. Please read the **README.md** file in this folder for more informations.\n\nUninstall the hack\n==================\n\nFirst, remove the SD card. But keep in mind that the timeout sound has been altered.\n\nIf you want the timeout sound back:\nEdit equip_test.sh to look like this:\n\n    #!/bin/sh\n    ######################################################\n    # Xiaomi Yi hack restore\n    ######################################################\n     \n    ### Rename back the timeout sound file ...\n    [ -f /home/timeout.g726.OFF ] && mv /home/timeout.g726.OFF /home/timeout.g726\n     \n    sync\n\nThen reboot the camera so the script runs. After remove the stuff from sd card and you are all original.\n\n\nHow it works ?\n==============\n\nHack content\n------------\n\n```\nhome                           Official firmware \ntest/                          Yi hack folder\n  yi-hack.cfg                  Yi hack configuration file\n  equip_test.sh                This script is called on camera startup and will launch all the needed processes\n  check_motion.sh              This script will check each minute if a motion video has been recorded and fill the **motion** file of the http server\n  rtspsrvK|L|M                 The various RTSP server binary releases (the final letter is corresponding to the firmware)\n  http/                        HTTP server folder\n    index.html                 HTTP server home page\n    record/                    Mount point to access video records\n    server                     HTTP server binary\n  wpa_supplicant.conf          Configuration file for wifi  \n  log.txt                      Log file of the hack (filled by equip_test.sh)\n````\n\n\nequip_test.sh\n-------------\n\n**TODO**\n\ncheck_motion.sh\n---------------\n\nScript that runs from equip_test.sh and tell us if a new video was created in the last minute (a video file is created in case of motion detection).\n\nIf a file is found, it adds the name of the file to the section GET /motion on the http server.\n\n\n"
+        },
+        {
+          "name": "http_server.png",
+          "type": "blob",
+          "size": 38.2119140625,
+          "content": null
+        },
+        {
+          "name": "sd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "yi.jpg",
+          "type": "blob",
+          "size": 14.2392578125,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": 1736568749697,
+    "page": 850,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rogaha/docker-desktop",
+      "stars": 1154,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 1.2412109375,
+          "content": "# Changelog\n\n## 0.4.0 (2014-08-19)\n + OS: Upgraded from 12.10 to 14.04\n + Fixed Issue: Added a packet (Xvfb) to make the program work under ubuntu 14.04 (by @clu2)\n + Fixed Issue: Fix login PAM issue with ssh\n\n## 0.3.0 (2013-07-18)\n + Funcionality: Allow users to configure the screen resolution \n + Funcionality: Allow users to create multi-sessions \n * X Screen: Xpra + Xephyr \n + X Window Manager: Fluxbox\n\n## 0.2.0 (2013-07-10)\n + Funcionality: Allow user's disconnection and reconnection without disrupting the session and its application's status  \n + Funcionality: Applications are rootless (It appears on your desktop as normal windows managed by your window manager)\n + Funcionality: A new password is generated every time that a new container is created\n * X Screen: Xpra instead of Xephyr \n - X Window Manager: Remove Fluxbox\n - Applications: Fix the locale warning messages\n - Applications: Fix the error javaldx: Could not find a Java Runtime Environment! from Libreoffice\n + Add a changelog\n\n## 0.1.0 (2013-06-28)\n + Funcionality: Allow users to connect remotely to their virtual desktop running inside a docker container over ssh\n + X Screen: Xephyr\n + X Window Manager: Fluxbox\n + X File Manager: ROX-Filer\n + Applications: Libreoffice, Firefox and xterm\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 2.5361328125,
+          "content": "# This file creates a container that runs X11 and SSH services\n# The ssh is used to forward X11 and provide you encrypted data\n# communication between the docker container and your local \n# machine.\n#\n# Xpra allows to display the programs running inside of the\n# container such as Firefox, LibreOffice, xterm, etc. \n# with disconnection and reconnection capabilities\n#\n# Xephyr allows to display the programs running inside of the\n# container such as Firefox, LibreOffice, xterm, etc. \n#\n# Fluxbox and ROX-Filer creates a very minimalist way to \n# manages the windows and files.\n#\n# Author: Roberto Gandolfo Hashioka\n# Date: 07/28/2013\n\n\nFROM ubuntu:16.04\nMAINTAINER Roberto G. Hashioka \"roberto_hashioka@hotmail.com\"\n\nRUN apt-get update -y\nRUN apt-get upgrade -y\n\n# Set the env variable DEBIAN_FRONTEND to noninteractive\nENV DEBIAN_FRONTEND noninteractive\n\n# Installing the environment required: xserver, xdm, flux box, roc-filer and ssh\nRUN apt-get install -y xpra rox-filer openssh-server pwgen xserver-xephyr xdm fluxbox xvfb locales sudo\n\n# Configuring xdm to allow connections from any IP address and ssh to allow X11 Forwarding. \nRUN sed -i 's/DisplayManager.requestPort/!DisplayManager.requestPort/g' /etc/X11/xdm/xdm-config\nRUN sed -i '/#any host/c\\*' /etc/X11/xdm/Xaccess\nRUN echo X11Forwarding yes >> /etc/ssh/ssh_config\n\n# Fix PAM login issue with sshd\nRUN sed -i 's/session    required     pam_loginuid.so/#session    required     pam_loginuid.so/g' /etc/pam.d/sshd\n\n# Upstart and DBus have issues inside docker. We work around in order to install firefox.\nRUN dpkg-divert --local --rename --add /sbin/initctl && ln -sf /bin/true /sbin/initctl\n\n# Installing fuse package (libreoffice-java dependency) and it's going to try to create\n# a fuse device without success, due the container permissions. || : help us to ignore it. \n# Then we are going to delete the postinst fuse file and try to install it again!\n# Thanks Jerome for helping me with this workaround solution! :)\n# Now we are able to install the libreoffice-java package  \nRUN apt-get -y install fuse  || :\nRUN rm -rf /var/lib/dpkg/info/fuse.postinst\nRUN apt-get -y install fuse\n\n# Installing the apps: Firefox, flash player plugin, LibreOffice and xterm\n# libreoffice-base installs libreoffice-java mentioned before\nRUN apt-get install -y libreoffice-base firefox libreoffice-gtk libreoffice-calc xterm\n\n# Set locale (fix the locale warnings)\nRUN localedef -v -c -i en_US -f UTF-8 en_US.UTF-8 || :\n\n# Copy the files into the container\nADD . /src\n\nEXPOSE 22\n# Start xdm and ssh services.\nCMD [\"/bin/bash\", \"/src/startup.sh\"]\n"
+        },
+        {
+          "name": "MAINTAINER",
+          "type": "blob",
+          "size": 0.103515625,
+          "content": "Roberto Hashioka <roberto_hashioka@hotmail.com> (@rogaha)\nPaim Pozhil <paimpozhil@blaze.ws> (@paimpozhil)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.9345703125,
+          "content": "DOCKER-DESKTOP\n==============\n\n## Description\n\nThis Dockerfile creates a docker image and once it's executed it creates a container that runs X11 and SSH services.\nThe ssh is used to forward X11 and provide you encrypted data communication between the docker container and your local machine.\n\nXpra + Xephyr allows to display the applications running inside of the container such as Firefox, LibreOffice, xterm, etc. with recovery connection capabilities. Xpra also uses a custom protocol that is self-tuning and relatively latency-insensitive, and thus is usable over worse links than standard X.\n\nThe applications can be rootless, so the client machine manages the windows that are displayed.\n\nFluxbox and ROX-Filer creates a very minimalist way to manage windows and files. \n\n\n![Docker L](image/docker-desktop.png \"Docker-Desktop\")\n\nOBS: The client machine needs to have a X11 server installed (Xpra). See the \"Notes\" below. \n\n## Docker Installation\n\n### On Ubuntu:\nDocker is available as a Ubuntu PPA (Personal Package Archive), hosted on launchpad which makes installing Docker on Ubuntu very easy.\n\n```\n# Add the PPA sources to your apt sources list.\nsudo apt-get install python-software-properties && sudo add-apt-repository ppa:dotcloud/lxc-docker\n \n# Update your sources\nsudo apt-get update\n \n# Install, you will see another warning that the package cannot be authenticated. Confirm install.\nsudo apt-get install lxc-docker\n```\n### On Windows:\nRequirements:\n- Installation Tutorial (http://docs.docker.io/en/latest/installation/windows/)\n\n### On Mac OS X:\nRequirements:\n- Installation Tutorial (http://docs.docker.io/en/latest/installation/vagrant/)\n\n## Installation\n\n\n### Building the docker image\n\n```\n$ docker build -t rogaha/docker-desktop git://github.com/rogaha/docker-desktop.git\n\nOR\n\n$ git clone https://github.com/rogaha/docker-desktop.git\n$ cd docker-desktop\n$ docker build -t [username]/docker-desktop .\n```\n\n### Running the docker image created (-d: detached mode, -P: expose the port 22 on the host machine)\n\n```\n$ CONTAINER_ID=$(docker run -d -P [username]/docker-desktop)\n```\n\n### Getting the password generated during runtime\n\n```\n$ echo $(docker logs $CONTAINER_ID | sed -n 1p)\nUser: docker Password: xxxxxxxxxxxx\n# where xxxxxxxxxxxx is the password created by PWGen that contains at least one capital letter and one number\n```\n\n## Usage\n\n### Getting the container's external ssh port \n\n```\n$ docker port $CONTAINER_ID 22\n49153 # This is the external port that forwards to the ssh service running inside of the container as port 22\n```\n\n### Connecting to the container \n\n#### Starting the a new session \n\n```\n$ ifconfig | grep \"inet addr:\" \ninet addr:192.168.56.102  Bcast:192.168.56.255  Mask:255.255.255.0 # This is the LAN's IP for this machine\n\n$ ssh docker@192.168.56.102 -p 49153 \"sh -c './docker-desktop -s 800x600 -d 10 > /dev/null 2>&1 &'\" # Here is where we use the external port\ndocker@192.168.56.102's password: xxxxxxxxxxxx \n\n$ ./docker-desktop -h\n\n-----------------------------------------------------------\nUsage: docker-desktop [-s screen_size] [-d session_number]\n-s : screen resolution (Default = 800x600\n-d : session number (Default = 10)\n-h : help\n-----------------------------------------------------------\n```\n\n#### Attaching to the session started\n\n```\n$ xpra --ssh=\"ssh -p 49153\" attach ssh:docker@192.168.56.102:10 # user@ip_address:session_number\ndocker@192.168.56.102's password: xxxxxxxxxxxx \n\n```\nIf you want to execute rootless programs, you just need to connect to the container via ssh and type: \nDISPLAY=:[session_number] [program_name] & \n\nEg. DISPLAY=:10 firefox &\n\n## Notes\n\n### On Windows:\nRequirements:\n- Xpra <= 14.0 (https://www.xpra.org/dists/windows/)\n- Path: C:\\Program Files(x86)\\Xpra\\Xpra_cmd.exe\n\n### On OS X:\nRequirements:\n- Xpra Version <= 14.0 (https://www.xpra.org/dists/osx/x86/)\n- Path: /Applications/Xpra.app/Contents/Helpers/xpra\n\n\n### On Linux:\nRequirements:\n- Xpra: You can use apt-get to install it -> apt-get install xpra\n- Path: /usr/bin/xpra\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "image",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "startup.sh",
+          "type": "blob",
+          "size": 0.7822265625,
+          "content": "#!/bin/bash\n\n# Create the directory needed to run the sshd daemon\nmkdir /var/run/sshd \n\n# Add docker user and generate a random password with 12 characters that includes at least one capital letter and number.\nDOCKER_PASSWORD=`pwgen -c -n -1 12`\necho User: docker Password: $DOCKER_PASSWORD\nDOCKER_ENCRYPYTED_PASSWORD=`perl -e 'print crypt('\"$DOCKER_PASSWORD\"', \"aa\"),\"\\n\"'`\nuseradd -m -d /home/docker -p $DOCKER_ENCRYPYTED_PASSWORD docker\nsed -Ei 's/adm:x:4:/docker:x:4:docker/' /etc/group\nadduser docker sudo\n\n# Set the default shell as bash for docker user.\nchsh -s /bin/bash docker\n\n# Copy the config files into the docker directory\ncd /src/config/ && sudo -u docker cp -R .[a-z]* [a-z]* /home/docker/\n\n# restarts the xdm service\n/etc/init.d/xdm restart\n\n# Start the ssh service\n/usr/sbin/sshd -D\n"
+        }
+      ]
+    }
+  ]
+}

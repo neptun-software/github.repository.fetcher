@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "timestamp": 1736568677284,
+    "page": 752,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "sbwml/luci-app-mosdns",
+      "stars": 1285,
+      "defaultBranch": "v5",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.4921875,
+          "content": "# luci-app-mosdns\n\n[MosDNS](https://github.com/IrineSistiana/mosdns) is a plug-in DNS forwarder. Users can splicing plug-ins as needed to customize their own DNS processing logic.\n\n## DNS protocol standard\n\n**General DNS (UDP):** `119.29.29.29` **&** `udp://119.29.29.29:53`\n\n**General DNS (TCP):** `tcp://119.29.29.29` **&** `tcp://119.29.29.29:53`\n\n**DNS-over-TLS:** `tls://120.53.53.53` **&** `tls://120.53.53.53:853`\n\n**DNS-over-HTTPS:** `https://120.53.53.53/dns-query`\n\n**DNS-over-HTTPS (HTTP/3):** `h3://dns.alidns.com/dns-query`\n\n**DNS-over-QUIC:** `quic://dns.alidns.com` **&** `doq://dns.alidns.com`\n\n--------------\n\n## How to build\n\n- Enter in your openwrt dir\n\n- Openwrt official SnapShots\n\n  * requires golang 1.22.x or latest version\n  ```shell\n  rm -rf feeds/packages/lang/golang\n  git clone https://github.com/sbwml/packages_lang_golang -b 23.x feeds/packages/lang/golang\n  ```\n\n  ```shell\n  # remove v2ray-geodata package from feeds (openwrt-22.03 & master)\n  rm -rf feeds/packages/net/v2ray-geodata\n\n  git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns\n  git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata\n  make menuconfig # choose LUCI -> Applications -> luci-app-mosdns\n  make package/mosdns/luci-app-mosdns/compile V=s\n  ```\n\n- Non-Openwrt official source\n\n  ```shell\n  # drop mosdns and v2ray-geodata packages that come with the source\n  find ./ | grep Makefile | grep v2ray-geodata | xargs rm -f\n  find ./ | grep Makefile | grep mosdns | xargs rm -f\n\n  git clone https://github.com/sbwml/luci-app-mosdns -b v5 package/mosdns\n  git clone https://github.com/sbwml/v2ray-geodata package/v2ray-geodata\n  make menuconfig # choose LUCI -> Applications -> luci-app-mosdns\n  make package/mosdns/luci-app-mosdns/compile V=s\n  ```\n\n--------------\n\n## How to install prebuilt packages\n\n- Login OpenWrt terminal (SSH)\n\n- Install `curl` package\n  ```shell\n  opkg update\n  opkg install curl\n  ```\n\n- Execute install script (Multi-architecture support)\n  ```shell\n  sh -c \"$(curl -ksS https://raw.githubusercontent.com/sbwml/luci-app-mosdns/v5/install.sh)\"\n  ```\n\n--------------\n\n## Preview Images\n\n![1](https://github.com/sbwml/luci-app-mosdns/assets/16485166/3118d6eb-cc47-4411-8fd7-f84fe60b84ed)\n\n![2](https://github.com/sbwml/luci-app-mosdns/assets/16485166/a23da446-7751-4944-a2d0-56049142729c)\n\n![3](https://github.com/sbwml/luci-app-mosdns/assets/16485166/941d2bc9-5e12-42bf-980e-3faebe83e6e8)\n\n![4](https://github.com/sbwml/luci-app-mosdns/assets/16485166/aaefee1f-6396-4b99-badf-86fe1a49cf4b)\n"
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 5.123046875,
+          "content": "#!/bin/sh\nRED_COLOR='\\e[1;31m'\nGREEN_COLOR='\\e[1;32m'\nRES='\\e[0m'\n\n# OpenWrt Info\nif [ -f /etc/openwrt_release ]; then\n\t. /etc/openwrt_release\n\tversion=$(echo ${DISTRIB_RELEASE%%.*})\n\tplatform=$(echo $DISTRIB_ARCH)\nelse\n\techo -e \"${RED_COLOR}Unknown OpenWRT Version${RES}\"\n\texit 1\nfi\n\n# Check\nif [ ! -d \"/usr/share/luci/menu.d\" ]; then\n\techo -e \"${RED_COLOR}OpenWrt LuCI version is not supports.${RES}\"\n\techo -e \"${RED_COLOR}Minimum OpenWrt Version: openwrt-21.02 or latest${RES}\"\n\texit 1\nfi\n\n# TMP\nTMPDIR=$(mktemp -d) || exit 1\n\n# GitHub mirror\nip_info=$(curl -sk https://ip.cooluc.com)\ncountry_code=$(echo $ip_info | sed -r 's/.*country_code\":\"([^\"]*).*/\\1/')\nif [ $country_code = \"CN\" ]; then\n\tgoogle_status=$(curl -I -4 -m 3 -o /dev/null -s -w %{http_code} http://www.google.com/generate_204)\n\tif [ ! $google_status = \"204\" ];then\n\t\tmirror=\"https://gh-proxy.com/\"\n\tfi\nfi\n\n# Check\nCHECK() (\n\techo -e \"\\r\\n${GREEN_COLOR}Checking available space  ...${RES}\"\n\tROOT_SPACE=$(df -m /usr | awk 'END{print $4}')\n\tif [ $ROOT_SPACE -lt 40 ]; then\n\t\techo -e \"\\r\\n${RED_COLOR}Error, The system storage space is less than 40MB.${RES}\"\n\t\texit 1;\n\tfi\n\techo -e \"\\r\\n${GREEN_COLOR}Checking platform  ...${RES}\\r\\n\"\n\tprebuilt=\"aarch64_cortex-a53 aarch64_cortex-a72 aarch64_generic arm_arm1176jzf-s_vfp arm_arm926ej-s arm_cortex-a15_neon-vfpv4 arm_cortex-a5_vfpv4 arm_cortex-a7 arm_cortex-a7_neon-vfpv4 arm_cortex-a8_vfpv3 arm_cortex-a9 arm_cortex-a9_neon arm_cortex-a9_vfpv3-d16 arm_fa526 arm_mpcore arm_xscale i386_pentium-mmx i386_pentium4 mips64_octeonplus mips_24kc mips_4kec mips_mips32 mipsel_24kc mipsel_24kc_24kf mipsel_74kc mipsel_mips32 x86_64\"\n\tverif=$(expr match \"$prebuilt\" \".*\\($platform\\)\")\n\tif [[ ! $verif ]]; then\n\t\techo -e \"${RED_COLOR}Error! The current \\\"$platform\\\" platform is not currently supported.${RES}\"\n\t\texit 1;\n\tfi\n)\n\nDOWNLOAD() (\n\techo -e \"\\r\\n${GREEN_COLOR}Download Packages ...${RES}\\r\\n\"\n\t# get repos info\n\tmosdns_version=`curl -sk https://api.github.com/repos/sbwml/luci-app-mosdns/releases | grep \"tag_name\" | grep v5 | head -n 1 | awk -F \":\" '{print $2}' | sed 's/\\\"//g;s/,//;s/ //'`\n\tcurl -sk --connect-timeout 10 \"https://api.github.com/repos/sbwml/luci-app-mosdns/releases\" | grep \"browser_download_url\" | grep \"$mosdns_version\" > $TMPDIR/releases.txt\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Failed to get version information, Please check the network status.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n\tmosdns=$(cat $TMPDIR/releases.txt | grep \"browser_download_url\" | grep mosdns_5 | grep $platform.ipk | head -1 | awk '{print $2}' | sed 's/\\\"//g')\n\tv2dat=$(cat $TMPDIR/releases.txt | grep \"browser_download_url\" | grep v2dat_ | grep $platform.ipk | head -1 | awk '{print $2}' | sed 's/\\\"//g')\n\tluci_app=$(cat $TMPDIR/releases.txt | grep \"browser_download_url\" | grep luci-app-mosdns_ | head -1 | awk '{print $2}' | sed 's/\\\"//g')\n\tluci_i18n=$(cat $TMPDIR/releases.txt | grep \"browser_download_url\" | grep luci-i18n-mosdns-zh-cn | head -1 | awk '{print $2}' | sed 's/\\\"//g')\n\tgeoip=$(cat $TMPDIR/releases.txt | grep \"browser_download_url\" | grep v2ray-geoip | head -1 | awk '{print $2}' | sed 's/\\\"//g')\n\tgeosite=$(cat $TMPDIR/releases.txt | grep \"browser_download_url\" | grep v2ray-geosite | head -1 | awk '{print $2}' | sed 's/\\\"//g')\n\n\t# download\n\techo -e \"${GREEN_COLOR}Download $mosdns ...${RES}\"\n\tcurl --connect-timeout 30 -m 600 -kLo \"$TMPDIR/mosdns_$platform.ipk\" $mirror$mosdns\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Error! download $mosdns failed.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n\techo -e \"${GREEN_COLOR}Download $v2dat ...${RES}\"\n\tcurl --connect-timeout 30 -m 600 -kLo \"$TMPDIR/v2dat_$platform.ipk\" $mirror$v2dat\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Error! download $v2dat failed.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n\techo -e \"${GREEN_COLOR}Download $luci_app ...${RES}\"\n\tcurl --connect-timeout 30 -m 600 -kLo \"$TMPDIR/luci-app-mosdns.ipk\" $mirror$luci_app\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Error! download $luci_app failed.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n\techo -e \"${GREEN_COLOR}Download $luci_i18n ...${RES}\"\n\tcurl --connect-timeout 30 -m 600 -kLo \"$TMPDIR/luci-i18n-mosdns-zh-cn.ipk\" $mirror$luci_i18n\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Error! download $luci_i18n failed.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n\techo -e \"${GREEN_COLOR}Download $geoip ...${RES}\"\n\tcurl --connect-timeout 30 -m 600 -kLo \"$TMPDIR/geoip.ipk\" $mirror$geoip\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Error! download $geoip failed.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n\techo -e \"${GREEN_COLOR}Download $geosite ...${RES}\"\n\tcurl --connect-timeout 30 -m 600 -kLo \"$TMPDIR/geosite.ipk\" $mirror$geosite\n\tif [ $? -ne 0 ]; then\n\t\techo -e \"${RED_COLOR}Error! download $geosite failed.${RES}\"\n\t\trm -rf $TMPDIR\n\t\texit 1\n\tfi\n)\n\nINSTALL() (\n\t# Install\n\techo -e \"\\r\\n${GREEN_COLOR}Install Packages ...${RES}\\r\\n\"\n\topkg install --force-overwrite $TMPDIR/geoip.ipk\n\topkg install --force-overwrite $TMPDIR/geosite.ipk\n\topkg install $TMPDIR/v2dat_$platform.ipk\n\topkg install $TMPDIR/mosdns_$platform.ipk\n\topkg install $TMPDIR/luci-app-mosdns.ipk\n\topkg install $TMPDIR/luci-i18n-mosdns-zh-cn.ipk\n\trm -rf $TMPDIR /tmp/luci-*\n\techo -e \"${GREEN_COLOR}Done!${RES}\"\n)\n\nCHECK && DOWNLOAD && INSTALL\n"
+        },
+        {
+          "name": "luci-app-mosdns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mosdns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v2dat",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

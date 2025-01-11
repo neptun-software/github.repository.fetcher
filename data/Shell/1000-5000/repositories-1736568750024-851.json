@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "timestamp": 1736568750024,
+    "page": 851,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "aikuyun/iterm2-zmodem",
+      "stars": 1154,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.MD",
+          "type": "blob",
+          "size": 1.0234375,
+          "content": "# 项目介绍\n\n在 mac 下，实现与服务器进行便捷的文件上传和下载操作。\n\n\n# 步骤\n\n1.安装支持rz和sz命令的lrzsz：`brew install lrzsz`\n\n> 等了挺长时间的。\n\n2.在本地/usr/local/bin/目录下保存iterm2-send-zmodem.sh 和iterm2-recv-zmodem.sh两个脚本\n\n3.设置一下两个脚本的权限，一般 chmod 777 就行了\n\n```bash\nchmod 777 /usr/local/bin/iterm2-*\n```\n\n4.设置Iterm2的Tirgger特性，profiles->default->editProfiles->Advanced中的Tirgger\n\n添加两条trigger，分别设置 Regular expression，Action，Parameters，Instant如下：\n\n```\n1.第一条\n        Regular expression: rz waiting to receive.\\*\\*B0100\n        Action: Run Silent Coprocess\n        Parameters: /usr/local/bin/iterm2-send-zmodem.sh\n        Instant: checked\n2.第二条\n        Regular expression: \\*\\*B00000000000000\n        Action: Run Silent Coprocess\n        Parameters: /usr/local/bin/iterm2-recv-zmodem.sh\n        Instant: checked\n```\n\n![如图](https://github.com/aikuyun/iterm2-zmodem/blob/master/imgs/01.png)\n"
+        },
+        {
+          "name": "imgs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "iterm2-recv-zmodem.sh",
+          "type": "blob",
+          "size": 0.986328125,
+          "content": "#!/bin/bash\n# 这个脚本来自 github，删掉了一些 ** 言论。\n\nosascript -e 'tell application \"iTerm2\" to version' > /dev/null 2>&1 && NAME=iTerm2 || NAME=iTerm\nif [[ $NAME = \"iTerm\" ]]; then\n\tFILE=$(osascript -e 'tell application \"iTerm\" to activate' -e 'tell application \"iTerm\" to set thefile to choose folder with prompt \"Choose a folder to place received files in\"' -e \"do shell script (\\\"echo \\\"&(quoted form of POSIX path of thefile as Unicode text)&\\\"\\\")\")\nelse\n\tFILE=$(osascript -e 'tell application \"iTerm2\" to activate' -e 'tell application \"iTerm2\" to set thefile to choose folder with prompt \"Choose a folder to place received files in\"' -e \"do shell script (\\\"echo \\\"&(quoted form of POSIX path of thefile as Unicode text)&\\\"\\\")\")\nfi\n\nif [[ $FILE = \"\" ]]; then\n\techo Cancelled.\n\t# Send ZModem cancel\n\techo -e \\\\x18\\\\x18\\\\x18\\\\x18\\\\x18\n\tsleep 1\n\techo\n\techo \\# Cancelled transfer\nelse\n\tcd \"$FILE\"\n\t/usr/local/bin/rz -E -e -b --bufsize 4096\n\tsleep 1\n\techo\n\techo\n\techo \\# Sent \\-\\> $FILE\nfi\n"
+        },
+        {
+          "name": "iterm2-send-zmodem.sh",
+          "type": "blob",
+          "size": 0.9365234375,
+          "content": "#!/bin/bash\n# 这个脚本来自 github，删掉了一些 ** 言论。\n\nosascript -e 'tell application \"iTerm2\" to version' > /dev/null 2>&1 && NAME=iTerm2 || NAME=iTerm\nif [[ $NAME = \"iTerm\" ]]; then\n\tFILE=`osascript -e 'tell application \"iTerm\" to activate' -e 'tell application \"iTerm\" to set thefile to choose file with prompt \"Choose a file to send\"' -e \"do shell script (\\\"echo \\\"&(quoted form of POSIX path of thefile as Unicode text)&\\\"\\\")\"`\nelse\n\tFILE=`osascript -e 'tell application \"iTerm2\" to activate' -e 'tell application \"iTerm2\" to set thefile to choose file with prompt \"Choose a file to send\"' -e \"do shell script (\\\"echo \\\"&(quoted form of POSIX path of thefile as Unicode text)&\\\"\\\")\"`\nfi\nif [[ $FILE = \"\" ]]; then\n\techo Cancelled.\n\t# Send ZModem cancel\n\techo -e \\\\x18\\\\x18\\\\x18\\\\x18\\\\x18\n\tsleep 1\n\techo\n\techo \\# Cancelled transfer\nelse\n\t/usr/local/bin/sz \"$FILE\" --escape --binary --bufsize 4096\n\tsleep 1\n\techo\n\techo \\# Received $FILE\nfi\n"
+        }
+      ]
+    }
+  ]
+}

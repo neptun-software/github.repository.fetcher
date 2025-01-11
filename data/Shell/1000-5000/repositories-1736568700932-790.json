@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736568700932,
+    "page": 790,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc5OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "adyanth/openwrt-tailscale-enabler",
+      "stars": 1235,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "tailscale-enabler*.tgz\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0498046875,
+          "content": "MIT License\n\nCopyright (c) 2022 Adyanth Hosavalike\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.3564453125,
+          "content": "# Tailscale on OpenWRT\r\n\r\n1. Extract the contents of root to your filesystem root:\r\n```\r\ntar x -zvC / -f openwrt-tailscale-enabler-<tag>.tgz\r\n```\r\n\r\n2. Install the prerequisites for wget and tailscale:\r\n```\r\nopkg update\r\nopkg install libustream-openssl ca-bundle kmod-tun\r\n```\r\n\r\n3. Run tailscale for the first time:\r\n```\r\n/etc/init.d/tailscale start\r\ntailscale up --accept-dns=false --advertise-routes=10.0.0.0/24\r\n```\r\n\r\nBoth of these commands download the tailscale package to get the binaries to /tmp.\r\nThe /etc/init.d/tailscale will start the tailscale daemon. \r\nThe next command uses the tailscale CLI to configure the login and add some settings to prevent dns changes and advertise routes. Use the URL printed to login to tailscale.\r\n\r\n4. Enable tailscale at boot:\r\n```\r\n/etc/init.d/tailscale enable\r\n```\r\n\r\nVerify by looking for an entry here:\r\n```\r\nls /etc/rc.d/S*tailscale*\r\n```\r\n\r\n5. Reboot the router and verify that it shows up online on the [Tailscale Admin portal](https://login.tailscale.com/admin/machines).\r\n\r\n6. To update the version of tailscale, grab the latest version [here](https://pkgs.tailscale.com/stable/#static) of the form `1.2.10_mips` and replace the same in `/usr/bin/tailscale` and `/usr/bin/tailscaled`: `version=\"1.2.10_mips\"`.\r\n\r\nNote: You need to have atleast 11+16 = ~27 MB of free space in `/tmp` (which is usually in RAM) to be able to use this.\r\n"
+        },
+        {
+          "name": "etc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "generate-tar.sh",
+          "type": "blob",
+          "size": 0.2998046875,
+          "content": "#!/bin/sh\n\nif [ \"$#\" -ne 1 ]; then\n    echo \"[ERR] Please pass in the tag for the file name.\"\n    exit 1\nfi\n\nfilename=\"openwrt-tailscale-enabler-$1.tgz\"\n\n# Falls back to busybox tar syntax if running on openwrt busybox tar rather than GNU tar\ntar -czvf $filename usr/ etc/ || tar c -zvf $filename usr/ etc/\n"
+        },
+        {
+          "name": "usr",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "timestamp": 1736568952778,
+    "page": 61,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjYz",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "itzg/docker-minecraft-server",
+      "stars": 10278,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0458984375,
+          "content": "data\ntestdata\nexamples\nk8s-examples\n.idea\n.git\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.0625,
+          "content": "[start-*]\nindent_size = 2\nindent_style = space\nend_of_line = lf\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.064453125,
+          "content": "# Auto detect text files and perform LF normalization\r\n* text=lf\r\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0673828125,
+          "content": ".vscode\n/data/\n/.idea/\n*.iml\n/gh-md-toc\npersonal-build-and-develop.*\n"
+        },
+        {
+          "name": ".readthedocs.yaml",
+          "type": "blob",
+          "size": 0.2470703125,
+          "content": "# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details\r\nversion: 2\r\n\r\nbuild:\r\n  os: ubuntu-22.04\r\n  tools:\r\n    python: \"3.11\"\r\n\r\nmkdocs:\r\n  configuration: mkdocs.yml\r\n\r\npython:\r\n  install:\r\n    - requirements: docs/requirements.txt"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 3.212890625,
+          "content": "ARG BASE_IMAGE=eclipse-temurin:21-jre\r\nFROM ${BASE_IMAGE}\r\n\r\n# hook into docker BuildKit --platform support\r\n# see https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope\r\nARG TARGETOS\r\nARG TARGETARCH\r\nARG TARGETVARIANT\r\n\r\n# The following three arg/env vars get used by the platform specific \"install-packages\" script\r\nARG EXTRA_DEB_PACKAGES=\"\"\r\nARG EXTRA_DNF_PACKAGES=\"\"\r\nARG EXTRA_ALPINE_PACKAGES=\"\"\r\nARG FORCE_INSTALL_PACKAGES=1\r\nRUN --mount=target=/build,source=build \\\r\n    TARGET=${TARGETARCH}${TARGETVARIANT} \\\r\n    /build/run.sh install-packages\r\n\r\nRUN --mount=target=/build,source=build \\\r\n    /build/run.sh setup-user\r\n\r\nCOPY --chmod=644 files/sudoers* /etc/sudoers.d\r\n\r\nEXPOSE 25565\r\n\r\nARG APPS_REV=1\r\nARG GITHUB_BASEURL=https://github.com\r\n\r\nARG EASY_ADD_VERSION=0.8.8\r\nADD ${GITHUB_BASEURL}/itzg/easy-add/releases/download/${EASY_ADD_VERSION}/easy-add_${TARGETOS}_${TARGETARCH}${TARGETVARIANT} /usr/bin/easy-add\r\nRUN chmod +x /usr/bin/easy-add\r\n\r\nARG RESTIFY_VERSION=1.7.5\r\nRUN easy-add --var os=${TARGETOS} --var arch=${TARGETARCH}${TARGETVARIANT} \\\r\n  --var version=${RESTIFY_VERSION} --var app=restify --file {{.app}} \\\r\n  --from ${GITHUB_BASEURL}/itzg/{{.app}}/releases/download/{{.version}}/{{.app}}_{{.version}}_{{.os}}_{{.arch}}.tar.gz\r\n\r\nARG RCON_CLI_VERSION=1.6.9\r\nRUN easy-add --var os=${TARGETOS} --var arch=${TARGETARCH}${TARGETVARIANT} \\\r\n  --var version=${RCON_CLI_VERSION} --var app=rcon-cli --file {{.app}} \\\r\n  --from ${GITHUB_BASEURL}/itzg/{{.app}}/releases/download/{{.version}}/{{.app}}_{{.version}}_{{.os}}_{{.arch}}.tar.gz\r\n\r\nARG MC_MONITOR_VERSION=0.15.0\r\nRUN easy-add --var os=${TARGETOS} --var arch=${TARGETARCH}${TARGETVARIANT} \\\r\n  --var version=${MC_MONITOR_VERSION} --var app=mc-monitor --file {{.app}} \\\r\n  --from ${GITHUB_BASEURL}/itzg/{{.app}}/releases/download/{{.version}}/{{.app}}_{{.version}}_{{.os}}_{{.arch}}.tar.gz\r\n\r\nARG MC_SERVER_RUNNER_VERSION=1.12.3\r\nRUN easy-add --var os=${TARGETOS} --var arch=${TARGETARCH}${TARGETVARIANT} \\\r\n  --var version=${MC_SERVER_RUNNER_VERSION} --var app=mc-server-runner --file {{.app}} \\\r\n  --from ${GITHUB_BASEURL}/itzg/{{.app}}/releases/download/{{.version}}/{{.app}}_{{.version}}_{{.os}}_{{.arch}}.tar.gz\r\n\r\nARG MC_HELPER_VERSION=1.40.9\r\nARG MC_HELPER_BASE_URL=${GITHUB_BASEURL}/itzg/mc-image-helper/releases/download/${MC_HELPER_VERSION}\r\n# used for cache busting local copy of mc-image-helper\r\nARG MC_HELPER_REV=1\r\nRUN curl -fsSL ${MC_HELPER_BASE_URL}/mc-image-helper-${MC_HELPER_VERSION}.tgz \\\r\n  | tar -C /usr/share -zxf - \\\r\n  && ln -s /usr/share/mc-image-helper-${MC_HELPER_VERSION}/bin/mc-image-helper /usr/bin\r\n\r\nVOLUME [\"/data\"]\r\nWORKDIR /data\r\n\r\nSTOPSIGNAL SIGTERM\r\n\r\n# End user MUST set EULA and change RCON_PASSWORD\r\nENV TYPE=VANILLA VERSION=LATEST EULA=\"\" UID=1000 GID=1000 LC_ALL=en_US.UTF-8\r\n\r\nCOPY --chmod=755 scripts/start* /\r\nCOPY --chmod=755 bin/ /usr/local/bin/\r\nCOPY --chmod=755 bin/mc-health /health.sh\r\nCOPY --chmod=644 files/* /image/\r\nCOPY --chmod=755 files/auto /auto\r\n\r\nRUN curl -fsSL -o /image/Log4jPatcher.jar https://github.com/CreeperHost/Log4jPatcher/releases/download/v1.0.1/Log4jPatcher-1.0.1.jar\r\n\r\nRUN dos2unix /start* /auto/*\r\n\r\nENTRYPOINT [ \"/start\" ]\r\nHEALTHCHECK --start-period=2m --retries=2 --interval=30s CMD mc-health\r\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 11.0576171875,
+          "content": "Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"{}\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright {yyyy} {name of copyright owner}\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.00390625,
+          "content": "[![Docker Pulls](https://img.shields.io/docker/pulls/itzg/minecraft-server.svg)](https://hub.docker.com/r/itzg/minecraft-server/)\n[![Docker Stars](https://img.shields.io/docker/stars/itzg/minecraft-server.svg?maxAge=2592000)](https://hub.docker.com/r/itzg/minecraft-server/)\n[![GitHub Issues](https://img.shields.io/github/issues-raw/itzg/docker-minecraft-server.svg)](https://github.com/itzg/docker-minecraft-server/issues)\n[![Discord](https://img.shields.io/discord/660567679458869252?label=Discord&logo=discord)](https://discord.gg/DXfKpjB)\n[![Build and Publish](https://github.com/itzg/docker-minecraft-server/actions/workflows/build-multiarch.yml/badge.svg)](https://github.com/itzg/docker-minecraft-server/actions/workflows/build-multiarch.yml)\n[![](https://img.shields.io/badge/Donate-Buy%20me%20a%20coffee-orange.svg)](https://www.buymeacoffee.com/itzg)\n[![Documentation Status](https://readthedocs.org/projects/docker-minecraft-server/badge/?version=latest)](https://docker-minecraft-server.readthedocs.io/en/latest/?badge=latest)\n\n [![Read the docs](docs/img/docs-banner.png)](https://docker-minecraft-server.readthedocs.io/)\n\nThere you will find things like\n- [Quick start with Docker Compose](https://docker-minecraft-server.readthedocs.io/en/latest/#using-docker-compose)\n- Running [different versions of Minecraft](https://docker-minecraft-server.readthedocs.io/en/latest/versions/minecraft/) and using [various server types](https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/)\n- [Setting server properties via container environment variables](https://docker-minecraft-server.readthedocs.io/en/latest/configuration/server-properties/)\n- [Managing mods and plugins with automated downloads and cleanup](https://docker-minecraft-server.readthedocs.io/en/latest/mods-and-plugins/)\n- [Using various modpack providers/platforms](https://docker-minecraft-server.readthedocs.io/en/latest/types-and-platforms/)\n- ...and much more\n\nThere are also many examples located in [the examples directory](examples) of this repo."
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose-mkdocs.yml",
+          "type": "blob",
+          "size": 0.447265625,
+          "content": "# This composition can be used to serve up the rendered mkdocs for local authoring.\r\n#\r\n# docker compose -f docker-compose-mkdocs.yml -p mkdocs up\r\n#\r\n# and then access http://localhost:8000\r\n\r\nservices:\r\n  mkdocs:\r\n    build:\r\n      context: .\r\n      dockerfile: docs/Dockerfile\r\n    volumes:\r\n      - ./mkdocs.yml:/mkdocs/mkdocs.yml\r\n      - ./docs:/mkdocs/docs\r\n    command:\r\n      - serve\r\n      - --dev-addr=0.0.0.0:8000\r\n    ports:\r\n      - \"8000:8000\""
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.2392578125,
+          "content": "services:\r\n  mc:\r\n    image: itzg/minecraft-server\r\n    environment:\r\n      EULA: \"true\"\r\n    ports:\r\n      - \"25565:25565\"\r\n    volumes:\r\n      - data:/data\r\n    stdin_open: true\r\n    tty: true\r\n    restart: unless-stopped\r\nvolumes:\r\n  data: {}"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "files",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kustomize",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mkdocs.yml",
+          "type": "blob",
+          "size": 2.3583984375,
+          "content": "---\r\nsite_name: Minecraft Server on Docker (Java Edition)\r\nsite_url: https://docker-minecraft-server.readthedocs.io/en/latest/\r\nsite_description: Documentation for Minecraft Server on Docker\r\nrepo_url: https://github.com/itzg/docker-minecraft-server\r\nedit_uri: blob/master/docs/\r\ntheme:\r\n  name: material\r\n  features:\r\n    - navigation.tracking\r\n    - navigation.tabs\r\n    - navigation.tabs.sticky\r\n    - navigation.sections\r\n    - navigation.expand\r\n    - navigation.top\r\n    - navigation.indexes\r\n  locale: en\r\n  palette:\r\n\r\n    # Palette toggle for automatic mode\r\n    - media: \"(prefers-color-scheme)\"\r\n      toggle:\r\n        icon: material/brightness-auto\r\n        name: Switch to light mode\r\n\r\n    # Palette toggle for light mode\r\n    - media: \"(prefers-color-scheme: light)\"\r\n      scheme: default\r\n      toggle:\r\n        icon: material/brightness-7\r\n        name: Switch to dark mode\r\n\r\n    # Palette toggle for dark mode\r\n    - media: \"(prefers-color-scheme: dark)\"\r\n      scheme: slate\r\n      toggle:\r\n        icon: material/brightness-4\r\n        name: Switch to system preference\r\n\r\n  highlightjs: true\r\n  hljs_languages:\r\n    - yaml\r\n    - bash\r\n    - java\r\n    - docker\r\n    - shell\r\n    - json\r\n\r\nextra_css:\r\n  - css/extra.css\r\nmarkdown_extensions:\r\n  - admonition\r\n  - toc:\r\n      permalink: true\r\n  - attr_list\r\n  - def_list\r\n  - footnotes\r\n  - tables\r\n  - pymdownx.emoji:\r\n      emoji_index: !!python/name:material.extensions.emoji.twemoji\r\n      emoji_generator: !!python/name:material.extensions.emoji.to_svg\r\n  - pymdownx.highlight:\r\n      anchor_linenums: true\r\n      line_spans: __span\r\n      pygments_lang_class: true\r\n  - pymdownx.inlinehilite\r\n  - pymdownx.details\r\n  - pymdownx.snippets\r\n  - pymdownx.superfences\r\n  - mdx_gh_links:\r\n      user: camalot\r\n      repo: mkdocs-test\r\n  - mkdocs-click\r\ncopyright: Copyright &copy; itzg 2024.\r\nplugins:\r\n  - search\r\n  - autorefs\r\n  - mkdocstrings:\r\n      handlers:\r\n        python:\r\n          options:\r\n            docstring_section_style: list\r\n            members_order: source\r\n            show_root_heading: true\r\n            show_source: false\r\n            show_signature_annotations: true\r\n  # https://github.com/ultrabug/mkdocs-static-i18n\r\n  - i18n:\r\n      languages:\r\n        - locale: en\r\n          name: English\r\n          build: true\r\n          default: true\r\n  - literate-nav:\r\n      nav_file: README.md\r\n      implicit_index: true\r\n"
+        },
+        {
+          "name": "notes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

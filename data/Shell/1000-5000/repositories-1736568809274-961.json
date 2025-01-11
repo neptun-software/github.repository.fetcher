@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "timestamp": 1736568809274,
+    "page": 961,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "pentestmonkey/unix-privesc-check",
+      "stars": 1047,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.3310546875,
+          "content": "Shell script to check for simple privilege escalation vectors on Unix systems\n\nUnix-privesc-checker is a script that runs on Unix systems (tested on Solaris 9, HPUX 11, Various Linuxes, FreeBSD 6.2).  It tries to find misconfigurations that could allow local unprivileged users to escalate privileges to other users or to access local apps (e.g. databases).  \n\nIt is written as a single shell script so it can be easily uploaded and run (as opposed to un-tarred, compiled and installed).  It can run either as a normal user or as root (obviously it does a better job when running as root because it can read more files).\n\nAlso see: http://pentestmonkey.net/tools/unix-privesc-check/\n\nThis project contains two branches that are actively maintained:\n* Branch \"1_x\", that contains a single shell script, \"unix-privesc-check\" that needs to be uploaded and run on the target system.  The script runs fairly quickly.  The code, while a bit ugly is stable and mature.  https://github.com/pentestmonkey/unix-privesc-check/tree/1_x\n* Branch \"master\", that contains a script \"upc.sh\" and some subdirectories that need to be uploaded and run on the target system.  The script is generally slower, but more thorough in some ways.  The code is much nicer, though somewhat experimental.  https://github.com/pentestmonkey/unix-privesc-check/tree/master\n\nIf in doubt, try both.\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "upc.sh",
+          "type": "blob",
+          "size": 3.32421875,
+          "content": "#!/bin/sh\n# $Revision$\n#\n# This program is free software; you can redistribute it and/or modify\n# it under the terms of the GNU General Public License as published by\n# the Free Software Foundation; either version 2 of the License, or\n# (at your option) any later version.\n#\n# This program is distributed in the hope that it will be useful,\n# but WITHOUT ANY WARRANTY; without even the implied warranty of\n# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n# GNU General Public License for more details.\n#\n# You should have received a copy of the GNU General Public License\n# along with this program; if not, write to the Free Software\n# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA\n#\n# (c) Tim Brown, 2012\n# <mailto:timb@nth-dimension.org.uk>\n# <http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>\n\n. lib/misc/stdio\n\nheader () {\n\tVERSION=\"2.1\"\n\tSVNVERSION=\"$Revision$\" # Don't change this line.  Auto-updated.\n\tSVNVNUM=\"`echo $SVNVERSION | sed \\\"s/[^0-9]//g\\\"`\"\n\tif [ -n \"${SVNVNUM}\" ]; then\n\t\tVERSION=\"${VERSION}-svn-${SVNVNUM}\"\n\tfi\n\tprintf \"unix-privesc-check v${VERSION} ( http://code.google.com/p/unix-privesc-check )\\n\\n\"\n}\n\nversion () {\n\theader\n\tpreamble\n\tprintf \"Brought to you by:\\n\"\n\tcat doc/AUTHORS\n\texit 1\n}\n\npreamble () {\n\tprintf \"Shell script to check for simple privilege escalation vectors on UNIX systems.\\n\\n\"\n}\n\nusage () {\n\theader\n\tpreamble\n\tprintf \"Usage: ${0}\\n\"\n\tprintf \"\\n\"\n\tprintf \"\\t--help\\tdisplay this help and exit\\n\"\n\tprintf \"\\t--version\\tdisplay version and exit\\n\"\n\tprintf \"\\t--color\\tenable output coloring\\n\"\n\tprintf \"\\t--verbose\\tverbose level (0-2, default: 1)\\n\"\n\tprintf \"\\t--type\\tselect from one of the following check types:\\n\"\n\tfor checktype in lib/checks/enabled/*\n\tdo\n\t\tprintf \"\\t\\t`basename ${checktype}`\\n\"\n\tdone\n\tprintf \"\\t--checks\\tprovide a comma separated list of checks to run, select from the following checks:\\n\"\n\tfor check in lib/checks/*\n\tdo\n\t\tif [ \"`basename \\\"${check}\\\"`\" != \"enabled\" ]\n\t\tthen\n\t\t\tprintf \"\\t\\t`basename ${check}`\\n\"\n\t\tfi\n\tdone\n\texit 1\n}\n\n# TODO make it use lib/misc/validate\nCHECKS=\"\"\nTYPE=\"all\"\nCOLORING=\"0\"\nVERBOSE=\"1\"\nwhile [ -n \"${1}\" ]\ndo\n\tcase \"${1}\" in\n\t\t--help|-h)\n\t\t\tusage\n\t\t\t;;\n\t\t--version|-v|-V)\n\t\t\tversion\n\t\t\t;;\n\t\t--color)\n\t\t\tCOLORING=\"1\"\n\t\t\t;;\n\t\t--verbose)\n\t\t\tshift\n\t\t\tVERBOSE=\"${1}\"\n\t\t\t;;\n\t\t--type|-t)\n\t\t\tshift\n\t\t\tTYPE=\"${1}\"\n\t\t\t;;\n\t\t--checks|-c)\n\t\t\tshift\n\t\t\tCHECKS=\"${1}\"\n\t\t\t;;\n\tesac\n\tshift\ndone\nheader\nif [ \"${VERBOSE}\" != \"0\" -a \"${VERBOSE}\" != \"1\" -a \"${VERBOSE}\" != \"2\" ]\nthen\n\tstdio_message_error \"upc\" \"the provided verbose level ${VERBOSE} is invalid - use 0, 1 or 2 next time\"\n\tVERBOSE=\"1\"\nfi\nif [ -n \"${CHECKS}\" ]\nthen\n\tfor checkfilename in `printf \"${CHECKS}\" | tr -d \" \" | tr \",\" \" \"`\n\tdo\n\t\tif [ ! -e \"lib/checks/${checkfilename}\" ]\n\t\tthen\n\t\t\tstdio_message_error \"upc\" \"the provided check name '${checkfilename}' does not exist\"\n\t\telse\n\t\t\t. \"lib/checks/${checkfilename}\"\n\t\t\t`basename \"${checkfilename}\"`_init\n\t\t\t`basename \"${checkfilename}\"`_main\n\t\t\t`basename \"${checkfilename}\"`_fini\n\t\tfi\n\tdone\nelse\n\tif [ ! -d \"lib/checks/enabled/${TYPE}\" ]\n\tthen\n\t\tstdio_message_error \"upc\" \"the provided check type '${TYPE}' does not exist\"\n\telse\n\t\tfor checkfilename in lib/checks/enabled/${TYPE}/*\n\t\tdo\n\t\t\t. \"${checkfilename}\"\n\t\t\t`basename \"${checkfilename}\"`_init\n\t\t\t`basename \"${checkfilename}\"`_main\n\t\t\t`basename \"${checkfilename}\"`_fini\n\t\tdone\n\tfi\nfi\nexit 0\n"
+        }
+      ]
+    }
+  ]
+}

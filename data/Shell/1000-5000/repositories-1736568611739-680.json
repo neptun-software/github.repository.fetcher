@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "timestamp": 1736568611739,
+    "page": 680,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY4OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "keroserene/rickrollrc",
+      "stars": 1389,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0087890625,
+          "content": "unused/*\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0419921875,
+          "content": "# rickrollrc\n\nBash script which [rickrolls](http://en.wikipedia.org/wiki/Rickrolling) your\nterminal by playing Rick Astley’s “Never Gonna Give You Up” with ANSI 256-color\ncoded UTF-8 characters + audio (if available).\n\n## How to Roll\nTo start rickrollin’ immediately:\n\n    curl -s -L https://raw.githubusercontent.com/keroserene/rickrollrc/master/roll.sh | bash\n\nHere is the clandestine command you can give to your friends 😈\n\n    curl -s -L https://bit.ly/3zvELNz | bash\n\n![rickroll in xterm](http://i.imgur.com/ZAsQWtP.png)\n![rickroll in mac](http://i.imgur.com/yDLaZna.png)\n\nFor the record: It is not actually a good idea to make a habit of\n\n    curl $(random_script_from_the_internets) | bash\"\n\nNevertheless, for the enhanced experience, I highly recommend the following:\n\n    ./roll.sh inject\n\nWhich essentially just does:\n\n    echo \"curl -s -L http://bit.ly/10hA8iC | bash\" >> ~/.bashrc\n\nFor a salutary lesson in the importance of taking care what you\nexecute in your terminal, inspired by the classic\n[sl](http://www.tkl.iis.u-tokyo.ac.jp/~toyoda/index_e.html), save the\ncommand in a shell script called `suod` somewhere on your `PATH`. It’s\nrecommended to download the script for faster startup, to avoid\nspoiling the surprise when you accidentally execute it for the nth\ntime (and also, unless you really like living dangerously, for\nsecurity, in case we are demonically possessed to replace `roll.sh`\nwith something evil).\n\n## Misc.\n\nThis has been tested on Arch, Debian, Ubuntu, Mac and Cygwin (so far).\nTo enable sound in Cygwin, install the **sox** package.\n\nSince this is a colorful hobby, you need to ensure 256-color mode is enabled or\nAstley will look sad.\n\nFor example, if you use GNU screen, ensure your ~/.screenrc contains something\nlike:\n\n    termcapinfo xterm 'Co#256:AB=\\E[48;5;%dm:AF=\\E[38;5;%dm'\n    defbce \"on\"\n\nKudos to jart for our lovely hiptext shenanigans.\nPlease see our sister project: [hiptext](https://github.com/jart/hiptext), which\ngenerates ANSI color codes for any image or video.\n\n<3,\n\n~serene ([@kiserene](http://twitter.com/kiserene))\n"
+        },
+        {
+          "name": "roll.sh",
+          "type": "blob",
+          "size": 3,
+          "content": "#!/bin/bash\n# Rick Astley in your Terminal.\n# By Serene and Justine Tunney <3\nversion='1.2'\nrick='https://keroserene.net/lol'\nvideo=\"$rick/astley80.full.bz2\"\n# TODO: I'll let someone with mac or windows machine send a pull request\n# to get gsm going again :)\naudio_gsm=\"$rick/roll.gsm\"\naudio_raw=\"$rick/roll.s16\"\naudpid=0\nNEVER_GONNA='curl -s -L http://bit.ly/10hA8iC | bash'\nMAKE_YOU_CRY=\"$HOME/.bashrc\"\nred='\\x1b[38;5;9m'\nyell='\\x1b[38;5;216m'\ngreen='\\x1b[38;5;10m'\npurp='\\x1b[38;5;171m'\necho -en '\\x1b[s'  # Save cursor.\n\nhas?() { hash $1 2>/dev/null; }\ncleanup() { (( audpid > 1 )) && kill $audpid 2>/dev/null; }\nquit() { echo -e \"\\x1b[2J \\x1b[0H ${purp}<3 \\x1b[?25h \\x1b[u \\x1b[m\"; }\n\nusage () {\n  echo -en \"${green}Rick Astley performs ♪ Never Gonna Give You Up ♪ on STDOUT.\"\n  echo -e \"  ${purp}[v$version]\"\n  echo -e \"${yell}Usage: ./astley.sh [OPTIONS...]\"\n  echo -e \"${purp}OPTIONS : ${yell}\"\n  echo -e \" help   - Show this message.\"\n  echo -e \" inject - Append to ${purp}${USER}${yell}'s bashrc. (Recommended :D)\"\n}\nfor arg in \"$@\"; do\n  if [[ \"$arg\" == \"help\"* || \"$arg\" == \"-h\"* || \"$arg\" == \"--h\"* ]]; then\n    usage && exit\n  elif [[ \"$arg\" == \"inject\" ]]; then\n    echo -en \"${red}[Inject] \"\n    echo $NEVER_GONNA >> $MAKE_YOU_CRY\n    echo -e \"${green}Appended to $MAKE_YOU_CRY. <3\"\n    echo -en \"${yell}If you've astley overdosed, \"\n    echo -e \"delete the line ${purp}\\\"$NEVER_GONNA\\\"${yell}.\"\n    exit\n  else\n    echo -e \"${red}Unrecognized option: \\\"$arg\\\"\"\n    usage && exit\n  fi\ndone\ntrap \"cleanup\" INT\ntrap \"quit\" EXIT\n\n# Bean streamin' - agnostic to curl or wget availability.\nobtainium() {\n  if has? curl; then curl -s $1\n  elif has? wget; then wget -q -O - $1\n  else echo \"Cannot has internets. :(\" && exit\n  fi\n}\necho -en \"\\x1b[?25l \\x1b[2J \\x1b[H\"  # Hide cursor, clear screen.\n\n#echo -e \"${yell}Fetching audio...\"\nif has? afplay; then\n  # On Mac OS, if |afplay| available, pre-fetch compressed audio.\n  [ -f /tmp/roll.s16 ] || obtainium $audio_raw >/tmp/roll.s16\n  afplay /tmp/roll.s16 &\nelif has? aplay; then\n  # On Linux, if |aplay| available, stream raw sound.\n  obtainium $audio_raw | aplay -Dplug:default -q -f S16_LE -r 8000 &\nelif has? play; then\n  # On Cygwin, if |play| is available (via sox), pre-fetch compressed audio.\n  obtainium $audio_gsm >/tmp/roll.gsm.wav\n  play -q /tmp/roll.gsm.wav &\nfi\naudpid=$!\n\n#echo -e \"${yell}Fetching video...\"\n# Sync FPS to reality as best as possible. Mac's freebsd version of date cannot\n# has nanoseconds so inject python. :/\npython <(cat <<EOF\nimport sys\nimport time\nfps = 25; time_per_frame = 1.0 / fps\nbuf = ''; frame = 0; next_frame = 0\nbegin = time.time()\ntry:\n  for i, line in enumerate(sys.stdin):\n    if i % 32 == 0:\n      frame += 1\n      sys.stdout.write(buf); buf = ''\n      elapsed = time.time() - begin\n      repose = (frame * time_per_frame) - elapsed\n      if repose > 0.0:\n        time.sleep(repose)\n      next_frame = elapsed / time_per_frame\n    if frame >= next_frame:\n      buf += line\nexcept KeyboardInterrupt:\n  pass\nEOF\n) < <(obtainium $video | bunzip2 -q 2> /dev/null)\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736568750915,
+    "page": 853,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "riscv-software-src/riscv-tools",
+      "stars": 1152,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.4677734375,
+          "content": "[submodule \"riscv-isa-sim\"]\n\tpath = riscv-isa-sim\n\turl = https://github.com/riscv/riscv-isa-sim.git\n[submodule \"riscv-pk\"]\n\tpath = riscv-pk\n\turl = https://github.com/riscv/riscv-pk.git\n[submodule \"riscv-opcodes\"]\n\tpath = riscv-opcodes\n\turl = https://github.com/riscv/riscv-opcodes.git\n[submodule \"riscv-tests\"]\n\tpath = riscv-tests\n\turl = https://github.com/riscv/riscv-tests.git\n[submodule \"riscv-openocd\"]\n\tpath = riscv-openocd\n\turl = https://github.com/riscv/riscv-openocd.git\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 3.3056640625,
+          "content": "language: cpp\n# run on new infrastructure\nsudo: false\ncache: apt\n# required packages to install\naddons:\n  apt:\n    sources:\n      - ubuntu-toolchain-r-test\n    packages:\n      - gcc-4.8\n      - g++-4.8\n      - gperf\n      - autoconf\n      - automake\n      - autotools-dev\n      - libmpc-dev\n      - libmpfr-dev\n      - libgmp-dev\n      - gawk\n      - build-essential\n      - bison\n      - flex\n      - texinfo\n      - help2man\n      - python-pexpect\n      - libusb-1.0-0-dev\n      - device-tree-compiler\n\nenv:\n  global:\n    - RISCV=\"/home/travis/riscv_install\"\n    - MAKEFLAGS=\"-j2\"\n    - PATH=\"$TRAVIS_BUILD_DIR/.build/riscv64-unknown-elf/buildtools/bin:$PATH\"\n    - PATH=\"/home/travis/riscv_install/bin:$PATH\"\n    - CROSSTOOL_VERSION=1.24.0-rc3\n\nbefore_install:\n  # make install destination\n  - mkdir -p $RISCV\n  # don't forget to clone riscv-tests/env\n  - cd riscv-tests\n  - git submodule update --init\n  - cd ..\n  # openocd also needs submodules\n  - cd riscv-openocd\n  - git submodule update --init\n  - cd ..\n  - unset CC CXX\n\n# extra time duing long builds\ninstall: travis_wait\n\n# pexpect ends up in /usr/lib/python2.7/dist-packages, which is not part of the\n# default python path.\nscript:\n  - mkdir ~/src\n  - curl http://crosstool-ng.org/download/crosstool-ng/crosstool-ng-$CROSSTOOL_VERSION.tar.xz | tar -xJp\n  - cd crosstool-ng-$CROSSTOOL_VERSION; ./configure --prefix=$RISCV; cd ..\n  - make -C crosstool-ng-$CROSSTOOL_VERSION\n  - make -C crosstool-ng-$CROSSTOOL_VERSION install\n  - ct-ng riscv64-unknown-elf\n  - echo CT_CC_GCC_USE_GRAPHITE=n >> .config\n  - echo CT_ISL_NEEDED=n >> .config\n  - echo CT_ISL=n >> .config\n  - echo CT_MULTILIB=n >> .config\n  # Newlib download fails periodically, so retry the build a few times.\n  - travis_wait 100 ct-ng build || travis_wait 100 ct-ng build || travis_wait 100 ct-ng build\n  - which riscv64-unknown-elf-gcc\n  # Work around toolchain path issues\n  - cp .build/riscv64-unknown-elf/build/build-libc/riscv64-unknown-elf/libgloss/riscv/crt0.o .build/riscv64-unknown-elf/buildtools/lib/gcc/riscv64-unknown-elf/8.3.0\n  - cp -r .build/src/newlib-3.1.0.20181231/newlib/libc/include .build/riscv64-unknown-elf/buildtools/lib/gcc/riscv64-unknown-elf/8.3.0/../../../../riscv64-unknown-elf/include\n  - cp .build/riscv64-unknown-elf/build/build-libc/riscv64-unknown-elf/newlib/libm.a .build/riscv64-unknown-elf/buildtools/lib/gcc/riscv64-unknown-elf/8.3.0\n  - cp .build/riscv64-unknown-elf/build/build-libc/riscv64-unknown-elf/newlib/libc.a .build/riscv64-unknown-elf/buildtools/lib/gcc/riscv64-unknown-elf/8.3.0\n  - cp .build/riscv64-unknown-elf/build/build-libc/riscv64-unknown-elf/libgloss/riscv/libgloss.a .build/riscv64-unknown-elf/buildtools/lib/gcc/riscv64-unknown-elf/8.3.0\n  # Remove new autotools from path\n  - rm -f .build/riscv64-unknown-elf/buildtools/bin/automake*\n  - rm -f .build/riscv64-unknown-elf/buildtools/bin/aclocal*\n  # Actually build this repo\n  - ./build.sh\n  # Put compiler in expected place for debug tests\n  - ln -s $TRAVIS_BUILD_DIR/.build/riscv64-unknown-elf/buildtools/bin/riscv64-unknown-elf-gcc $RISCV/bin\n  - ln -s $TRAVIS_BUILD_DIR/.build/riscv64-unknown-elf/build/build-gdb-cross/gdb/gdb $RISCV/bin/riscv64-unknown-elf-gdb\n  # Run debug tests.  Currently we expect 11 failures.\n  - PYTHONPATH=$PYTHONPATH:/usr/lib/python2.7/dist-packages make -C riscv-tests/build debug-check | grep \"11 tests returned fail\"\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.1298828125,
+          "content": "riscv-tools [![Build Status](https://travis-ci.org/riscv/riscv-tools.svg?branch=master)](https://travis-ci.org/riscv/riscv-tools)\n===========================================================================\n\nThis repository houses a set of RISC-V simulators and other tools,\nincluding the following projects:\n\n* [Spike](https://github.com/riscv/riscv-isa-sim/), the ISA simulator\n* [riscv-tests](https://github.com/riscv/riscv-tests/), a battery of\nISA-level tests\n* [riscv-opcodes](https://github.com/riscv/riscv-opcodes/), the\nenumeration of all RISC-V opcodes executable by the simulator\n* [riscv-pk](https://github.com/riscv/riscv-pk/), which contains `bbl`,\na boot loader for Linux and similar OS kernels, and `pk`, a proxy kernel that\nservices system calls for a target-machine application by forwarding them to\nthe host machine\n\nSeveral RISC-V tools that were previously maintained through this\nrepository have since been upstreamed to their parent projects and are\nno longer included here.  Your favorite software distribution should\nalready have packages for these upstream tools, but if it doesn't then\nhere are a handful of my favorites:\n\n* Your favorite software distribution may already have packages that\n  include a RISC-V cross compiler, which is probably the fastest way to\n  get started.  As of writing this README (March, 2019) I can trivially\n  find packages for ALT Linux, Arch Linux, Debian, Fedora, FreeBSD,\n  Mageia, OpenMandriva, openSUSE, and Ubuntu.\n  [pkgs.org](https://pkgs.org/) appears to be a good place to find an up\n  to date list, just search for \"riscv\".\n* [crosstool-ng](http://crosstool-ng.github.io/docs/) can build RISC-V\n  cross compilers of various flavors.\n* The [RISC-V Port of\n  OpenEmbedded](https://github.com/riscv/meta-riscv#quick-start)\n  builds a cross compiler, Linux kernel, and enough of userspace to do\n  many interesting things.\n* [buildroot](https://github.com/buildroot/buildroot) is a lighter\n  weight cross compiled Linux distribution.\n\nThis repository uses crosstool-ng to configure a `riscv64-unknown-elf`\ntoolchain.\n\n# <a name=\"quickstart\"></a>Quickstart\n\n\t$ git submodule update --init --recursive\n\t$ export RISCV=/path/to/install/riscv/toolchain\n\t$ ./build.sh\n\n\nUbuntu packages needed:\n\n\t$ sudo apt-get install autoconf automake autotools-dev curl libmpc-dev libmpfr-dev libgmp-dev libusb-1.0-0-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev device-tree-compiler pkg-config libexpat-dev\n\nFedora packages needed:\n\n\t$ sudo dnf install autoconf automake @development-tools curl dtc libmpc-devel mpfr-devel gmp-devel libusb-devel gawk gcc-c++ bison flex texinfo gperf libtool patchutils bc zlib-devel expat-devel\n\n_Note:_ This requires a compiler with C++11 support (e.g. GCC >= 4.8).\nTo use a compiler different than the default, use:\n\n\t$ CC=gcc-5 CXX=g++-5 ./build.sh\n\n_Note for OS X:_ We recommend using [Homebrew](https://brew.sh) to install the dependencies (`libusb dtc gawk gnu-sed gmp mpfr libmpc isl wget automake md5sha1sum`) or even to install the tools [directly](https://github.com/riscv/homebrew-riscv). This repo will build with Apple's command-line developer tools (clang) in addition to gcc.\n"
+        },
+        {
+          "name": "build-rv32ima.sh",
+          "type": "blob",
+          "size": 0.45703125,
+          "content": "#! /bin/bash\n#\n# Script to build RISC-V ISA simulator, proxy kernel, and GNU toolchain.\n# Tools will be installed to $RISCV.\n\n. build.common\n\necho \"Starting RISC-V Toolchain build process\"\n\nbuild_project riscv-isa-sim --prefix=$RISCV --with-isa=rv32ima\nCC= CXX= build_project riscv-pk --prefix=$RISCV --host=riscv32-unknown-elf\nbuild_project riscv-openocd --prefix=$RISCV --enable-remote-bitbang --disable-werror\n\necho -e \"\\\\nRISC-V Toolchain installation completed!\"\n"
+        },
+        {
+          "name": "build-spike-only.sh",
+          "type": "blob",
+          "size": 0.24609375,
+          "content": "#! /bin/bash\n#\n# Script to build RISC-V ISA simulator, proxy kernel, and GNU toolchain.\n\n. build.common\n\necho \"Starting RISC-V Toolchain build process\"\n\nbuild_project riscv-isa-sim --prefix=$RISCV\n\necho -e \"\\\\nRISC-V Toolchain installation completed!\"\n"
+        },
+        {
+          "name": "build-spike-pk.sh",
+          "type": "blob",
+          "size": 0.5009765625,
+          "content": "#! /bin/bash\n#\n# Script to build RISC-V ISA simulator, proxy kernel, and GNU toolchain.\n# Tools will be installed to $RISCV.\n\n. build.common\n\nif [ ! `which riscv64-unknown-elf-gcc` ]\nthen\n  echo \"riscv64-unknown-elf-gcc doesn't appear to be installed; use the full-on build.sh\"\n  exit 1\nfi\n\necho \"Starting RISC-V Toolchain build process\"\n\nbuild_project riscv-isa-sim --prefix=$RISCV\nCC= CXX= build_project riscv-pk --prefix=$RISCV --host=riscv64-unknown-elf\n\necho -e \"\\\\nRISC-V Toolchain installation completed!\"\n"
+        },
+        {
+          "name": "build.common",
+          "type": "blob",
+          "size": 0.9990234375,
+          "content": "# Script to build RISC-V ISA simulator, proxy kernel, and GNU toolchain.\n# Tools will be installed to $RISCV.\n\nif [ \"x$RISCV\" = \"x\" ]\nthen\n  echo \"Please set the RISCV environment variable to your preferred install path.\"\n  exit 1\nfi\n\n# Use gmake instead of make if it exists.\nMAKE=`command -v gmake || command -v make`\n\nPATH=\"$RISCV/bin:$PATH\"\n#GCC_VERSION=`gcc -v 2>&1 | tail -1 | awk '{print $3}'`\n\nset -e\n\nfunction build_project {\n  PROJECT=\"$1\"\n  shift\n  echo\n  if [ -e \"$PROJECT/build\" ]\n  then\n    echo \"Removing existing $PROJECT/build directory\"\n    rm -rf \"$PROJECT/build\"\n  fi\n  if [ ! -e \"$PROJECT/configure\" ]\n  then\n    (\n      cd \"$PROJECT\"\n      find . -iname configure.ac | sed s/configure.ac/m4/ | xargs mkdir -p\n      autoreconf -i\n    )\n  fi\n  mkdir -p \"$PROJECT/build\"\n  cd \"$PROJECT/build\"\n  echo \"Configuring project $PROJECT\"\n  ../configure $* > build.log\n  echo \"Building project $PROJECT\"\n  $MAKE >> build.log\n  echo \"Installing project $PROJECT\"\n  $MAKE install >> build.log\n  cd - > /dev/null\n}\n"
+        },
+        {
+          "name": "build.log",
+          "type": "blob",
+          "size": 9417.1201171875,
+          "content": ""
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.7705078125,
+          "content": "#! /bin/bash\n#\n# Script to build RISC-V ISA simulator, proxy kernel, and GNU toolchain.\n# Tools will be installed to $RISCV.\n\n. build.common\n\necho \"Starting RISC-V Toolchain build process\"\n\ncheck_version() {\n    $1 --version | awk \"NR==1 {if (\\$NF>$2) {exit 0} exit 1}\" || (\n        echo $3 requires at least version $2 of $1. Aborting.\n        exit 1\n    )\n}\n\ncheck_version automake 1.14 \"OpenOCD build\"\ncheck_version autoconf 2.64 \"OpenOCD build\"\nbuild_project riscv-openocd --prefix=$RISCV --enable-remote-bitbang --enable-jtag_vpi --disable-werror\n\nbuild_project riscv-isa-sim --prefix=$RISCV\nCC= CXX= build_project riscv-pk --prefix=$RISCV --host=riscv64-unknown-elf\nbuild_project riscv-tests --prefix=$RISCV/riscv64-unknown-elf\n\necho -e \"\\\\nRISC-V Toolchain installation completed!\"\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "regression.sh",
+          "type": "blob",
+          "size": 0.9560546875,
+          "content": "#! /bin/bash\n#\n# Script to build RISC-V tools and then test (some of) them.\n\nset -ex\n\necho \"Starting RISC-V Toolchain Regression\"\n\n# build the tools\nexport base_dir=${PWD}\nmkdir -p regression_install\nexport RISCV=${base_dir}/regression_install\n./build.sh\n\n# test the tools\nexport PATH=\"$RISCV/bin:$PATH\"\nmake -C ${base_dir}/riscv-tests/isa/ run\nmake -C ${base_dir}/riscv-tests/benchmarks/ run riscv\nmake -C ${base_dir}/riscv-tests/debug/ all-tests\n\n# test the pk\necho -e '#include <stdio.h>\\n int main(void) { printf(\"Hello world!\\\\n\"); return 0; }' > hello.c\nriscv64-unknown-elf-gcc -o hello hello.c\nspike pk hello\n\n# test glibc+pk\nrm -rf ${base_dir}/riscv-gnu-toolchain/build\nmkdir ${base_dir}/riscv-gnu-toolchain/build\ncd ${base_dir}/riscv-gnu-toolchain/build\n../configure --prefix=$RISCV\nmake linux\ncd ${base_dir}; rm hello\nriscv64-unknown-linux-gnu-gcc -static -Wl,-Ttext-segment,0x10000 -o hello hello.c\nspike pk hello\n\n\necho -e \"\\\\nRISC-V Toolchain regression completed!\"\n"
+        },
+        {
+          "name": "riscv-isa-sim",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "riscv-opcodes",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "riscv-openocd",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "riscv-pk",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "riscv-tests",
+          "type": "commit",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

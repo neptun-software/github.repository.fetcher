@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736568761537,
+    "page": 873,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg3OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "pristineio/webrtc-build-scripts",
+      "stars": 1125,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": "# default to text file with UNIX style\n* text=auto eol=lf\n\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2431640625,
+          "content": "# Uneccessary files\n.DS_Store\n*~\n*.swp\n\n# No binaries\n*.bin\n\n# Vagrant\n.vagrant\n \n# Do not want to check in depot_tools or webrtc source code\nandroid/depot_tools/\nandroid/webrtc/\nios/depot_tools/\nios/webrtc/\nubuntu-xenial-16.04-cloudimg-console.log\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4599609375,
+          "content": "Copyright (c) 2014-2015, Pristine, Inc.\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the {organization} nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.875,
+          "content": "## PSA - WebRTC builds have moved to using GN instead of GYP. Android build script is adapted, but iOS script is still break. Feel free to fork and update them.\n\n## WebRTC Build Scripts\n\n[![Join the chat at https://gitter.im/pristineio/webrtc-build-scripts](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pristineio/webrtc-build-scripts?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)</br>\nA set of build scripts useful for building WebRTC libraries for Android and iOS.\n\nBugs: Please submit the [revision](https://code.google.com/p/webrtc/source/list) number that you are using. There are frequent updates to this project so please watch the changelist for bug fixes.\n\n### Android ARMv7, ARMv8, x86, x86_64 Builds -- [Guide here](http://tech.pristine.io/build-android-apprtc/)\n\nThe following instructions are for building the native WebRTC libraries for Android.\n\n\n#### Getting Started\n##### On Linux\nThe scripts can probably work on most distros, although we only have experience with Ubuntu 12.04 and 14.04 on 64 bit machines.\n\nThis is only required once.\n```shell\n\n# Source all the routines\nsource android/build.sh\n\n# Install any dependencies needed\ninstall_dependencies\n\n# Pull WebRTC\nget_webrtc\n```\n\n##### On Mac or Windows\nIf you don't have a Ubuntu machine available, or you are too lazy to setup a virtual machine manually, you can build WebRTC for Android on your Mac or Windows PC through our Vagrant script.\n\nFirst of all, you need to [download and install](http://www.vagrantup.com/downloads.html) Vagrant. After that, from the `/android` directory, you need to execute the following in you shell:\n\n```shell\n\n# If you need to use private SSH keys from your host computer \n# Execute this line of code to ensure your private key is added to your identity\nssh-add -L\n\n# If there are no identities, add them by:\nssh-add ~/.ssh/id_rsa\n\n# Boot up and provision the Vagrant box\nvagrant up\n\n# SSH into the Vagrant box\nvagrant ssh\n\n# Installs the required dependencies on the machine\ninstall_dependencies\n\n```\nOn Windows machines you may face issues with long path names on the VM that aren't handled correctly. A work around is to copy the script to another directory (not the one shared between the VM and Windows host), and build there:\n\n```shell\n\nmkdir mybuild\ncd mybuild\ncp /vagrant/build.sh .\nsource ./build.sh\nget_webrtc\nbuild_apprtc\n\n```\n\n#### Building the libraries\n\nThen you can build the Android example\n\n```shell\n# Pull WebRTC\nget_webrtc\n\n# Build apprtc\nbuild_apprtc\n\n# Build in debug mode\nexport WEBRTC_DEBUG=true\nbuild_apprtc\n```\n\nYou can build for armv7, armv8, x86, x86_64 platform\n\n```shell\nexport WEBRTC_ARCH=armv7 #or armv8, x86, or x86_64\nprepare_gyp_defines &&\nexecute_build\n```\n\nYou can build a particular [revision](https://code.google.com/p/webrtc/source/list)\n\n```shell\n# Pull WebRTC\nget_webrtc 6783\n\n# Build apprtc\nbuild_apprtc\n```\n\nWhen the scripts are done you can find the .jar and .so file in $WEBRTC_ROOT under \"libjingle\\_peerconnection\\_builds\".\n\n\n\n### iOS (armv7, arm64, i386) and Mac (X86_64) -- [Guide here](http://tech.pristine.io/build-ios-apprtc/)\nThese steps must be run on Mac OSX\n\nSource the [ios build scripts](https://github.com/pristineio/webrtc-build-scripts/blob/master/ios/build.sh) or  [open the Xcode project](https://github.com/pristineio/webrtc-build-scripts/tree/master/ios/WebRTC.xcodeproj)\n\n```shell\nsource ios/build.sh\n```\n\nSpecify if you want to build for Debug/Profile/Release by setting either WEBRTC_DEBUG, WEBRTC_PROFILE, WEBRTC_RELEASE as an environment variable in your bash or xcode scheme run settings.\n```shell\nWEBRTC_DEBUG=true\nWEBRTC_PROFILE=true \n#or\nWEBRTC_RELEASE=true\n```\n\n\n#### Building the libraries\n\nThen you can build the iOS example\n```shell\n# We use the term webrtc dance a lot to build \ndance\n\n# Or in two steps\nget_webrtc\n# Make changes then build WebRTC\nbuild_webrtc\n```\nMac example\n```shell\n# Get WebRTC\nget_webrtc\n# Make changes then build WebRTC\nbuild_webrtc_mac\n```\n\n\nCheck which [revision](https://code.google.com/p/webrtc/source/list) you are using at ./webrtc-build-scripts/ios/webrtc/libWebRTC-LATEST-Universal-Debug.a.version.txt\n\n\nOpen the [xcode project](https://github.com/pristineio/webrtc-build-scripts/tree/master/ios/WebRTC.xcodeproj), and execute the [AppRTC Demo](https://code.google.com/p/webrtc/source/browse/#svn%2Ftrunk%2Ftalk%2Fexamples%2Fobjc%2FAppRTCDemo) on any iOS 7 device or simulator\n```shell\nopen ./webrtc-build-scripts/ios/WebRTC.xcodeproj\n```\n\nYou can also build a particular [revision](https://code.google.com/p/webrtc/source/list)\n```shell\n    #Pull WebRTC\n    update2Revision 6783\n```\nMake changes then,\n```shell\n    #Build WebRTC\n    build_webrtc\n```\nMake sure you label your new binaries that are generated in \n```shell\n./webrtc-build-scripts/ios/webrtc/libjingle_peerconnection_builds \n```\n\n##### Cocoapods!!\n[![Version](https://img.shields.io/cocoapods/v/libjingle_peerconnection.svg?style=flat)](http://cocoadocs.org/docsets/libjingle_peerconnection)\n[![License](https://img.shields.io/cocoapods/l/libjingle_peerconnection.svg?style=flat)](http://cocoadocs.org/docsets/libjingle_peerconnection)\n[![Platform](https://img.shields.io/cocoapods/p/libjingle_peerconnection.svg?style=flat)](http://cocoadocs.org/docsets/libjingle_peerconnection)\n\n###### Usage\n\nTo run the example AppRTC Demo project, clone the repo, and run `pod install` from the Example directory first.\n\n###### Requirements\nA fast internet connection.... for your own sanity\n\n###### Installation\n\nlibjingle_peerconnection starting from revision 6931 is available through [CocoaPods](http://cocoapods.org). To install\nit, simply add the following line to your Podfile:\n\n    pod \"libjingle_peerconnection\"\n\niOS  ARM64 builds are available as of 7810.0.0\n\nmac x86_64 builds are available as of 7759.0.0\n\n###Linux x86, x86_64 Builds\n\nThe following instructions are for building the native WebRTC libraries for Linux.\n\n\n#### Getting Started\n##### On Linux\nThe scripts can probably work on most distros, although we only have experience with Ubuntu 12.04, 14.04, 16.04 and 16.10 on 64 bit machines.\n\nThis is only required once.\n```shell\n\n# Source all the routines\nsource linux/build.sh\n\n# Install any dependencies needed\ninstall_dependencies\n\n# Pull WebRTC\nget_webrtc\n\n# Build apprtc\nbuild_apprtc\n```\n\nYou can build for arm-linaro-gnueabihf, x86, x86_64 platform\n\n```shell\nexport WEBRTC_ARCH=x86 #, arm-linaro-gnueabihf or x86_64\nprepare_gyp_defines &&\nexecute_build\n```\n\nYou can build a particular revision\n\n```shell\n# Pull WebRTC\nget_webrtc 6783\n\n# Build apprtc\nbuild_apprtc\n```\n\n###### Versioning\n\nThe versioning can be explained as follows:\n\n \n[6931](https://code.google.com/p/webrtc/source/detail?r=6931).2.0 \n\n6931 reflects the SVN revision from the WebRTC root Google Code Project\n\n2 reflects a Release Build (0 for Debug, 1 for Profile)\n\nProfile builds are no longer built by default\n\nThe minor 0 reflects any changes I might need to make to the sample xcode project itself to work (incremented normally)\n\n\n"
+        },
+        {
+          "name": "android",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ios",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "linux",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

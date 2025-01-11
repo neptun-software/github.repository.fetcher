@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": 1736568582415,
+    "page": 632,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "OneSizeFitsQuorum/MIT6.824-2021",
+      "stars": 1468,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".check-build",
+          "type": "blob",
+          "size": 2.873046875,
+          "content": "#!/usr/bin/env bash\n\nset -eu\n\nREFERENCE_FILES=(\n    # lab 1\n    src/mrapps/crash.go\n    src/mrapps/indexer.go\n    src/mrapps/mtiming.go\n    src/mrapps/nocrash.go\n    src/mrapps/rtiming.go\n    src/mrapps/wc.go\n    src/main/mrsequential.go\n    src/main/mrcoordinator.go\n    src/main/mrworker.go\n\n    # lab 2\n    src/raft/persister.go\n    src/raft/test_test.go\n    src/raft/config.go\n    src/labrpc/labrpc.go\n\n    # lab 3\n    src/kvraft/test_test.go\n    src/kvraft/config.go\n\n    # lab 4a\n    src/shardctrler/test_test.go\n    src/shardctrler/config.go\n\n    # lab 4b\n    src/shardkv/test_test.go\n    src/shardkv/config.go\n)\n\nmain() {\n    upstream=\"$1\"\n    labnum=\"$2\"\n\n    # make sure we have reference copy of lab, in FETCH_HEAD\n    git fetch \"$upstream\" 2>/dev/null || die \"unable to git fetch $upstream\"\n\n    # copy existing directory\n    tmpdir=\"$(mktemp -d)\"\n    find src -type s -delete # cp can't copy sockets\n    cp -r src \"$tmpdir\"\n    orig=\"$PWD\"\n    cd \"$tmpdir\"\n\n    # check out reference files\n    for f in ${REFERENCE_FILES[@]}; do\n        mkdir -p \"$(dirname $f)\"\n        git --git-dir=\"$orig/.git\" show \"FETCH_HEAD:$f\" > \"$f\"\n    done\n\n    case $labnum in\n        \"lab1\") check_lab1;;\n        \"lab2a\"|\"lab2b\"|\"lab2c\"|\"lab2d\") check_lab2;;\n        \"lab3a\"|\"lab3b\") check_lab3;;\n        \"lab4a\") check_lab4a;;\n        \"lab4b\") check_lab4b;;\n        *) die \"unknown lab: $labnum\";;\n    esac\n\n    cd\n    rm -rf \"$tmpdir\"\n}\n\ncheck_lab1() {\n    check_cmd cd src/mrapps\n    check_cmd go build -buildmode=plugin wc.go\n    check_cmd go build -buildmode=plugin indexer.go\n    check_cmd go build -buildmode=plugin mtiming.go\n    check_cmd go build -buildmode=plugin rtiming.go\n    check_cmd go build -buildmode=plugin crash.go\n    check_cmd go build -buildmode=plugin nocrash.go\n    check_cmd cd ../main\n    check_cmd go build mrcoordinator.go\n    check_cmd go build mrworker.go\n    check_cmd go build mrsequential.go\n}\n\ncheck_lab2() {\n    check_cmd cd src/raft\n    check_cmd go test -c\n}\n\ncheck_lab3() {\n    check_cmd cd src/kvraft\n    check_cmd go test -c\n}\n\ncheck_lab4a() {\n    check_cmd cd src/shardctrler\n    check_cmd go test -c\n}\n\ncheck_lab4b() {\n    check_cmd cd src/shardkv\n    check_cmd go test -c\n    # also check other labs/parts\n    cd \"$tmpdir\"\n    check_lab4a\n    cd \"$tmpdir\"\n    check_lab3\n    cd \"$tmpdir\"\n    check_lab2\n}\n\ncheck_cmd() {\n    if ! \"$@\" >/dev/null 2>&1; then\n        echo \"We tried building your source code with testing-related files reverted to original versions, and the build failed. This copy of your code is preserved in $tmpdir for debugging purposes. Please make sure the code you are trying to hand in does not make changes to test code.\" >&2\n        echo >&2\n        echo \"The build failed while trying to run the following command:\" >&2\n        echo >&2\n        echo \"$ $@\" >&2\n        echo \"  (cwd: ${PWD#$tmpdir/})\" >&2\n        exit 1\n    fi\n}\n\ndie() {\n    echo \"$1\" >&2\n    exit 1\n}\n\nmain \"$@\"\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "pkg/\napi.key\n*-handin.tar.gz\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.8525390625,
+          "content": "# This is the Makefile helping you submit the labs.\n# Just create 6.824/api.key with your API key in it,\n# and submit your lab with the following command:\n#     $ make [lab1|lab2a|lab2b|lab2c|lab2d|lab3a|lab3b|lab4a|lab4b]\n\nLABS=\" lab1 lab2a lab2b lab2c lab2d lab3a lab3b lab4a lab4b \"\n\n%: check-%\n\t@echo \"Preparing $@-handin.tar.gz\"\n\t@if echo $(LABS) | grep -q \" $@ \" ; then \\\n\t\techo \"Tarring up your submission...\" ; \\\n\t\ttar cvzf $@-handin.tar.gz \\\n\t\t\t\"--exclude=src/main/pg-*.txt\" \\\n\t\t\t\"--exclude=src/main/diskvd\" \\\n\t\t\t\"--exclude=src/mapreduce/824-mrinput-*.txt\" \\\n\t\t\t\"--exclude=src/main/mr-*\" \\\n\t\t\t\"--exclude=mrtmp.*\" \\\n\t\t\t\"--exclude=src/main/diff.out\" \\\n\t\t\t\"--exclude=src/main/mrmaster\" \\\n\t\t\t\"--exclude=src/main/mrsequential\" \\\n\t\t\t\"--exclude=src/main/mrworker\" \\\n\t\t\t\"--exclude=*.so\" \\\n\t\t\tMakefile src; \\\n\t\tif ! test -e api.key ; then \\\n\t\t\techo \"Missing $(PWD)/api.key. Please create the file with your key in it or submit the $@-handin.tar.gz via the web interface.\"; \\\n\t\telse \\\n\t\t\techo \"Are you sure you want to submit $@? Enter 'yes' to continue:\"; \\\n\t\t\tread line; \\\n\t\t\tif test \"$$line\" != \"yes\" ; then echo \"Giving up submission\"; exit; fi; \\\n\t\t\tif test `stat -c \"%s\" \"$@-handin.tar.gz\" 2>/dev/null || stat -f \"%z\" \"$@-handin.tar.gz\"` -ge 20971520 ; then echo \"File exceeds 20MB.\"; exit; fi; \\\n\t\t\tmv api.key api.key.fix ; \\\n\t\t\tcat api.key.fix | tr -d '\\n' > api.key ; \\\n\t\t\trm api.key.fix ; \\\n\t\t\tcurl -F file=@$@-handin.tar.gz -F \"key=<api.key\" \\\n\t\t\thttps://6824.scripts.mit.edu/2021/handin.py/upload > /dev/null || { \\\n\t\t\t\techo ; \\\n\t\t\t\techo \"Submit seems to have failed.\"; \\\n\t\t\t\techo \"Please upload the tarball manually on the submission website.\"; } \\\n\t\tfi; \\\n\telse \\\n\t\techo \"Bad target $@. Usage: make [$(LABS)]\"; \\\n\tfi\n\n.PHONY: check-%\ncheck-%:\n\t@echo \"Checking that your submission builds correctly...\"\n\t@./.check-build git://g.csail.mit.edu/6.824-golabs-2021 $(patsubst check-%,%,$@)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.373046875,
+          "content": "## 实现\n稳定通过 6.824 lab 所有的测试，并尽可能的提升了代码可读性。\n\n## 文档\n- [x] [Lab1](docs/lab1.md)\n- [x] [Lab2](docs/lab2.md)\n- [x] [Lab3](docs/lab3.md)\n- [x] [Lab4](docs/lab4.md)\n    - [x] [Challenge1](docs/lab4.md)\n    - [x] [Challenge2](docs/lab4.md)\n\n## 注意\n不保证绝对的 bug-free，但每个 lab 均测试 500 次以上，无一 fail。"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

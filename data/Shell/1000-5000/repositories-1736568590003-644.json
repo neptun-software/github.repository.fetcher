@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736568590003,
+    "page": 644,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY0OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rufengsuixing/luci-app-adguardhome",
+      "stars": 1440,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.064453125,
+          "content": "# Auto detect text files and perform LF normalization\n* text=auto\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0068359375,
+          "content": "\n*.bak\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.6689453125,
+          "content": "# Copyright (C) 2018-2019 Lienol\n#\n# This is free software, licensed under the Apache License, Version 2.0 .\n#\n\ninclude $(TOPDIR)/rules.mk\n\nPKG_NAME:=luci-app-adguardhome\nPKG_VERSION:=1.8\nPKG_RELEASE:=11\n\nPKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)\n\ninclude $(INCLUDE_DIR)/package.mk\n\ndefine Package/luci-app-adguardhome\n\tSECTION:=luci\n\tCATEGORY:=LuCI\n\tSUBMENU:=3. Applications\n\tTITLE:=LuCI app for adguardhome\n\tPKG_MAINTAINER:=<https://github.com/rufengsuixing/luci-app-adguardhome>\n\tPKGARCH:=all\n\tDEPENDS:=+!wget&&!curl:wget\nendef\n\ndefine Package/luci-app-adguardhome/description\n\tLuCI support for adguardhome\nendef\n\ndefine Build/Prepare\nendef\n\ndefine Build/Compile\nendef\n\ndefine Package/luci-app-adguardhome/conffiles\n/usr/share/AdGuardHome/links.txt\n/etc/config/AdGuardHome\nendef\n\ndefine Package/luci-app-adguardhome/install\n    $(INSTALL_DIR) $(1)/usr/lib/lua/luci\n\tcp -pR ./luasrc/* $(1)/usr/lib/lua/luci\n\t$(INSTALL_DIR) $(1)/\n\tcp -pR ./root/* $(1)/\n\t$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n\n\tpo2lmo ./po/zh-cn/AdGuardHome.po $(1)/usr/lib/lua/luci/i18n/AdGuardHome.zh-cn.lmo\nendef\n\ndefine Package/luci-app-adguardhome/postinst\n#!/bin/sh\n\t/etc/init.d/AdGuardHome enable >/dev/null 2>&1\n\tenable=$(uci get AdGuardHome.AdGuardHome.enabled 2>/dev/null)\n\tif [ \"$enable\" == \"1\" ]; then\n\t\t/etc/init.d/AdGuardHome reload\n\tfi\n\trm -f /tmp/luci-indexcache\n\trm -f /tmp/luci-modulecache/*\nexit 0\nendef\n\ndefine Package/luci-app-adguardhome/prerm\n#!/bin/sh\nif [ -z \"$${IPKG_INSTROOT}\" ]; then\n     /etc/init.d/AdGuardHome disable\n     /etc/init.d/AdGuardHome stop\nuci -q batch <<-EOF >/dev/null 2>&1\n\tdelete ucitrack.@AdGuardHome[-1]\n\tcommit ucitrack\nEOF\nfi\nexit 0\nendef\n\n$(eval $(call BuildPackage,luci-app-adguardhome))\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.283203125,
+          "content": "# luci-app-adguardhome\n复杂的AdGuardHome的openwrt的luci界面\n\n - 可以管理网页端口\n - luci下载/更新核心版本（支持自定义链接下载）\n   - 如果为tar.gz文件需要与官方的文件结构一致\n   - 或者直接为主程序二进制\n - upx 压缩核心（xz依赖，脚本自动下载，如果opkg源无法连接，请在编译时加入此包）\n - dns重定向\n   - 作为dnsmasq的上游服务器(在AGH中统计到的ip都为127.0.0.1，无法统计客户端及对应调整设置，ssr-plus正常)\n   - 重定向53端口到 AdGuardHome（ipv6需要开启ipv6 nat redirect 否则如果客户端使用ipv6过滤无效，不以dnsmasq为上游ssr-plus失效）\n   - 使用53端口替换 dnsmasq(需要设置AGH的dnsip为0.0.0.0, AGH和dnsmasq的端口将被交换，不以dnsmasq为上游ssr-plus失效)\n - 自定义执行文件路径（支持tmp，每次重启后自动下载bin）\n - 自定义配置文件路径\n - 自定义工作路径\n - 自定义运行日志路径\n - gfwlist 删除/添加/定义上游dns服务器 另外安利一下https://github.com/rufengsuixing/luci-app-autoipsetadder\n - 修改网页登陆密码\n - 倒序/正序 查看/删除/备份 每3秒更新显示运行日志 + 本地浏览器时区转换\n - 手动修改配置文件\n   - 支持yaml编辑器\n   - 模板快速配置\n - 系统升级保留勾选文件\n - 开机启动后当网络准备好时重启adh(3分钟超时，主要用于防止过滤器更新失败)\n - 关机时备份勾选的工作目录中的文件（须知：在ipk更新的时候也会触发备份）\n - 计划任务（以下为默认值，时间和参数可以在计划任务中调整）\n   - 自动更新核心（最好谨慎使用）(3:30/天)\n   - 自动截短查询日志 (每小时 限制到2000行)\n   - 自动截短运行日志（3:30/天 限制到2000行）\n   - 自动更新ipv6主机并重启adh （每小时，无更新不重启)\n   - 自动更新gfw列表并重启adh （3:30/天，无更新不重启)\n#### 已知问题：\n - db数据库不支持放在不支持mmap的文件系统上比如 jffs2 data-stk-oo，请修改工作目录，本软件如果检测到jffs2会自动ln(软连接)到/tmp，将会导致重启丢失dns数据库\n - AdGuardHome 不支持ipset 设置，在使用ipset的情况下，无法替代dnsmasq只能作为dnsmasq上游存在，如果你想要这个功能就去投票吧<br>\n https://github.com/AdguardTeam/AdGuardHome/issues/1191\n - 反馈出现大量127.0.0.1查询了localhost的请求，问题出现原因是ddns插件，如果不用ddns插件，请删除或者注释掉\\etc\\hotplug.d\\iface\\95-ddns的内容，如果还有其他来自本机的异常查询情况，高级玩家可以使用kmod来查找原因https://github.com/rufengsuixing/kmod-plog-port\n - 如果出现需要多次提交才有反应的现象请及时提交issue\n#### 使用方法\n - 下载release，使用opkg安装即可\n - 或者编译op时clone本项目加入软件包并勾选\n#### 关于压缩\n本着较真的想法，我测试了在jffs2的压缩文件系统上进行upx压缩结果的内存占用与空间占用(单位kb，使用最好压缩)<br>\n文件大小<br>\n源文件   14112 使用upx 压缩后 5309 <br>\n实际占用 6260  使用upx 压缩后 5324 差值为 936<br>\nVmRSS运存占用值<br>\n不压缩   14380 使用upx 压缩后 18496 差值 -4116 <br>\n对于压缩文件系统来说开启收益有，但不大<br>\n如果是非压缩文件系统，性价比还是比较高的<br>\n所以压缩是用运存空间来换rom空间，觉得值得就可以开启\n#### 关于ssr配合\n  - 方法一gfw代理：dns重定向-作为dnsmasq的上游服务器 \n  - 方法二gfw代理：手动设置adh上游dns为自己即127.0.0.1:[自己监听的端口]，然后使用 dns重定向-使用53端口替换dnsmasq，（因为端口互换后就是dnsmasq为上游了）\n  - 方法三国外ip代理：任意重定向方式，adh加入gfw列表，开启计划任务定时更新gfw即可\n  - 方法四gfw代理：dns重定向-重定向53端口到AdGuardHome,设置adh上游dns 为127.0.0.1:53\n#### 项目已经基本稳定，有bug欢迎主动反馈\n\nComplex openwrt AdGuardHome luci\n\n - can manage browser port\n - download/update core in luci\n - compress core with upx\n - redirect dns\n   - as the upstream of dnsmasq\n   - redirect port 53 to AdGuardHome（ipv6 need to install ipv6 nat redirect or  if client use ipv6 redirect is invalid）\n   - replace dnsmasq with port 53 (need to set AGH,dnsip=0.0.0.0,the port of dnsmasq and AGH will be exchange)\n - change bin path\n - change config path\n - change work dir(support tmp,auto redownload after reboot)\n - change runtime log path\n - gfwlist query to specific dns server\n - modify browser login passord\n - Positive/reverse order see/del/backup runtime log which update every 3 second\n - modify config manually(support yaml editor)\n - use template to fast config(when no config file)\n - Keep bin file and config when system upgrade (database and querylog can be choose) \n - when boot wait for network access （3min timeout）\n - backup workdir when shutdown\n#### known issues:\n - db database not support filesystem which not support mmap such as jffs2 and data-stk-oo,please modify work dir,if jffs2 is found,will auto ln (soft link)the dbs to /tmp ,will lost dns database after reboot\n - AdGuardhome not support ipset,when we use ipset ,it can\\`t be the repacement of dnsmasq but the upstream of dnsmasq ,if you want it,vote for it.<br>\n https://github.com/AdguardTeam/AdGuardHome/issues/1191<br>\n - find so many localhost query from 127.0.0.1,the ddns plugin is the reason,if you don\\`t use ddns, please remove or comment \\etc\\hotplug.d\\iface\\95-ddns\n#### usage\n - download release，install it with opkg\n - or when make op,clone the code to the package path and set it as y or m\n\n#### pic\nexample in zh-cn:<br>\n![Screenshot_2019-12-23 newifi-d1 - 基础设置 - LuCI](https://user-images.githubusercontent.com/22387141/71361626-81d60900-25ce-11ea-91d5-ac4e35d5c41e.png)\n![图片](https://user-images.githubusercontent.com/22387141/71361650-90242500-25ce-11ea-9727-9306a3da1357.png)\n![Screenshot_2019-12-23 newifi-d1 - 日志 - LuCI(1)](https://user-images.githubusercontent.com/22387141/71361700-b944b580-25ce-11ea-8562-f68c28952b2b.png)\n![Screenshot_2019-12-23 newifi-d1 - 手动设置 - LuCI](https://user-images.githubusercontent.com/22387141/71361704-bb0e7900-25ce-11ea-8042-6dd396607030.png)\n"
+        },
+        {
+          "name": "luasrc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "po",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "root",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

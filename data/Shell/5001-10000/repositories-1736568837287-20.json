@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "timestamp": 1736568837287,
+    "page": 20,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kylemanna/docker-openvpn",
+      "stars": 8810,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0029296875,
+          "content": "*~\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.845703125,
+          "content": "# Disallowing packages: openvpn\n# If you require these packages, please review the package approval process at: https://github.com/travis-ci/apt-package-whitelist#package-approval-process\n#addons:\n#    apt:\n#        sources:\n#            - ubuntu-toolchain-r-test\n#        packages:\n#            - openvpn\n\nservices:\n    - docker\n\nbefore_install:\n    - docker --version\n\ninstall:\n    - git clone https://github.com/docker-library/official-images.git official-images\n\n# Assist with ci test debugging:\n#   - DEBUG=1\nbefore_script:\n    - image=\"kylemanna/openvpn\"\n    - docker build -t \"$image\" .\n    - docker inspect \"$image\"\n    - docker run --rm \"$image\" openvpn --version || true # why does it return 1?\n    - docker run --rm \"$image\" openssl version\n\nscript:\n    - official-images/test/run.sh \"$image\"\n    - test/run.sh \"$image\"\n\nafter_script:\n    - docker images\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.75390625,
+          "content": "# Contributing to docker-openvpn\n\nCommunity contributions are welcome and help move the project along.  Please review this document before sending any pull requests.\n\nThanks!\n\n## Bug Fixes\n\nAll bug fixes are welcome.  Please try to add a test if the bug is something that should have been fixed already.  Oops.\n\n## Feature Additions\n\nNew features are welcome provided that the feature has a general audience and is reasonably simple.  The goal of the repository is to support a wide audience and be simple enough.\n\nPlease add new documentation in the `docs` folder for any new features.  Pull requests for missing documentation is welcome as well.  Keep the `README.md` focused on the most popular use case, details belong in the docs directory.\n\nIf you have a special feature, you're likely to try but it will likely be rejected if not too many people seem interested.\n\n## Tests\n\nIn an effort to not repeat bugs (and break less popular features), unit tests are run on [Travis CI](https://travis-ci.org/kylemanna/docker-openvpn).  The goal of the tests are to be simple and to be placed in the `test/tests` directory where it will be automatically run.  Review existing tests for an example.\n\n## Style\n\nThe style of the repo follows that of the Linux kernel, in particular:\n\n* Pull requests should be rebased to small atomic commits so that the merged history is more coherent\n* The subject of the commit should be in the form \"`<subsystem>: <subject>`\"\n* More details in the body\n* Match surrounding coding style (line wrapping, spaces, etc)\n\nMore details in the [SubmittingPatches](https://www.kernel.org/doc/html/latest/process/submitting-patches.html) document included with the Linux kernel.  In particular the following sections:\n\n* `2) Describe your changes`\n* `3) Separate your changes`\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.900390625,
+          "content": "# Original credit: https://github.com/jpetazzo/dockvpn\n\n# Smallest base image\nFROM alpine:latest\n\nLABEL maintainer=\"Kyle Manna <kyle@kylemanna.com>\"\n\n# Testing: pamtester\nRUN echo \"http://dl-cdn.alpinelinux.org/alpine/edge/testing/\" >> /etc/apk/repositories && \\\n    apk add --update openvpn iptables bash easy-rsa openvpn-auth-pam google-authenticator pamtester libqrencode && \\\n    ln -s /usr/share/easy-rsa/easyrsa /usr/local/bin && \\\n    rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /var/cache/distfiles/*\n\n# Needed by scripts\nENV OPENVPN=/etc/openvpn\nENV EASYRSA=/usr/share/easy-rsa \\\n    EASYRSA_CRL_DAYS=3650 \\\n    EASYRSA_PKI=$OPENVPN/pki\n\nVOLUME [\"/etc/openvpn\"]\n\n# Internally uses port 1194/udp, remap using `docker run -p 443:1194/tcp`\nEXPOSE 1194/udp\n\nCMD [\"ovpn_run\"]\n\nADD ./bin /usr/local/bin\nRUN chmod a+x /usr/local/bin/*\n\n# Add support for OTP authentication using a PAM module\nADD ./otp/openvpn /etc/pam.d/\n"
+        },
+        {
+          "name": "Dockerfile.aarch64",
+          "type": "blob",
+          "size": 1.01953125,
+          "content": "# Original credit: https://github.com/jpetazzo/dockvpn\n\n# Smallest base image\nFROM aarch64/alpine:3.5\n\nLABEL maintainer=\"Kyle Manna <kyle@kylemanna.com>\"\n\nRUN echo \"http://dl-4.alpinelinux.org/alpine/edge/community/\" >> /etc/apk/repositories && \\\n    echo \"http://dl-4.alpinelinux.org/alpine/edge/testing/\" >> /etc/apk/repositories && \\\n    apk add --update openvpn iptables bash easy-rsa openvpn-auth-pam google-authenticator pamtester && \\\n    ln -s /usr/share/easy-rsa/easyrsa /usr/local/bin && \\\n    rm -rf /tmp/* /var/tmp/* /var/cache/apk/* /var/cache/distfiles/*\n\n# Needed by scripts\nENV OPENVPN /etc/openvpn\nENV EASYRSA /usr/share/easy-rsa\nENV EASYRSA_PKI $OPENVPN/pki\n\n# Prevents refused client connection because of an expired CRL\nENV EASYRSA_CRL_DAYS 3650\n\nVOLUME [\"/etc/openvpn\"]\n\n# Internally uses port 1194/udp, remap using `docker run -p 443:1194/tcp`\nEXPOSE 1194/udp\n\nCMD [\"ovpn_run\"]\n\nADD ./bin /usr/local/bin\nRUN chmod a+x /usr/local/bin/*\n\n# Add support for OTP authentication using a PAM module\nADD ./otp/openvpn /etc/pam.d/\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Kyle Manna\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.3876953125,
+          "content": "# OpenVPN for Docker\n\n[![Build Status](https://travis-ci.org/kylemanna/docker-openvpn.svg)](https://travis-ci.org/kylemanna/docker-openvpn)\n[![Docker Stars](https://img.shields.io/docker/stars/kylemanna/openvpn.svg)](https://hub.docker.com/r/kylemanna/openvpn/)\n[![Docker Pulls](https://img.shields.io/docker/pulls/kylemanna/openvpn.svg)](https://hub.docker.com/r/kylemanna/openvpn/)\n[![ImageLayers](https://images.microbadger.com/badges/image/kylemanna/openvpn.svg)](https://microbadger.com/#/images/kylemanna/openvpn)\n[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkylemanna%2Fdocker-openvpn.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkylemanna%2Fdocker-openvpn?ref=badge_shield)\n\n\nOpenVPN server in a Docker container complete with an EasyRSA PKI CA.\n\nExtensively tested on [Digital Ocean $5/mo node](http://bit.ly/1C7cKr3) and has\na corresponding [Digital Ocean Community Tutorial](http://bit.ly/1AGUZkq).\n\n#### Upstream Links\n\n* Docker Registry @ [kylemanna/openvpn](https://hub.docker.com/r/kylemanna/openvpn/)\n* GitHub @ [kylemanna/docker-openvpn](https://github.com/kylemanna/docker-openvpn)\n\n## Quick Start\n\n* Pick a name for the `$OVPN_DATA` data volume container. It's recommended to\n  use the `ovpn-data-` prefix to operate seamlessly with the reference systemd\n  service.  Users are encourage to replace `example` with a descriptive name of\n  their choosing.\n\n      OVPN_DATA=\"ovpn-data-example\"\n\n* Initialize the `$OVPN_DATA` container that will hold the configuration files\n  and certificates.  The container will prompt for a passphrase to protect the\n  private key used by the newly generated certificate authority.\n\n      docker volume create --name $OVPN_DATA\n      docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_genconfig -u udp://VPN.SERVERNAME.COM\n      docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn ovpn_initpki\n\n* Start OpenVPN server process\n\n      docker run -v $OVPN_DATA:/etc/openvpn -d -p 1194:1194/udp --cap-add=NET_ADMIN kylemanna/openvpn\n\n* Generate a client certificate without a passphrase\n\n      docker run -v $OVPN_DATA:/etc/openvpn --rm -it kylemanna/openvpn easyrsa build-client-full CLIENTNAME nopass\n\n* Retrieve the client configuration with embedded certificates\n\n      docker run -v $OVPN_DATA:/etc/openvpn --rm kylemanna/openvpn ovpn_getclient CLIENTNAME > CLIENTNAME.ovpn\n\n## Next Steps\n\n### More Reading\n\nMiscellaneous write-ups for advanced configurations are available in the\n[docs](docs) folder.\n\n### Systemd Init Scripts\n\nA `systemd` init script is available to manage the OpenVPN container.  It will\nstart the container on system boot, restart the container if it exits\nunexpectedly, and pull updates from Docker Hub to keep itself up to date.\n\nPlease refer to the [systemd documentation](docs/systemd.md) to learn more.\n\n### Docker Compose\n\nIf you prefer to use `docker-compose` please refer to the [documentation](docs/docker-compose.md).\n\n## Debugging Tips\n\n* Create an environment variable with the name DEBUG and value of 1 to enable debug output (using \"docker -e\").\n\n        docker run -v $OVPN_DATA:/etc/openvpn -p 1194:1194/udp --cap-add=NET_ADMIN -e DEBUG=1 kylemanna/openvpn\n\n* Test using a client that has openvpn installed correctly\n\n        $ openvpn --config CLIENTNAME.ovpn\n\n* Run through a barrage of debugging checks on the client if things don't just work\n\n        $ ping 8.8.8.8    # checks connectivity without touching name resolution\n        $ dig google.com  # won't use the search directives in resolv.conf\n        $ nslookup google.com # will use search\n\n* Consider setting up a [systemd service](/docs/systemd.md) for automatic\n  start-up at boot time and restart in the event the OpenVPN daemon or Docker\n  crashes.\n\n## How Does It Work?\n\nInitialize the volume container using the `kylemanna/openvpn` image with the\nincluded scripts to automatically generate:\n\n- Diffie-Hellman parameters\n- a private key\n- a self-certificate matching the private key for the OpenVPN server\n- an EasyRSA CA key and certificate\n- a TLS auth key from HMAC security\n\nThe OpenVPN server is started with the default run cmd of `ovpn_run`\n\nThe configuration is located in `/etc/openvpn`, and the Dockerfile\ndeclares that directory as a volume. It means that you can start another\ncontainer with the `-v` argument, and access the configuration.\nThe volume also holds the PKI keys and certs so that it could be backed up.\n\nTo generate a client certificate, `kylemanna/openvpn` uses EasyRSA via the\n`easyrsa` command in the container's path.  The `EASYRSA_*` environmental\nvariables place the PKI CA under `/etc/openvpn/pki`.\n\nConveniently, `kylemanna/openvpn` comes with a script called `ovpn_getclient`,\nwhich dumps an inline OpenVPN client configuration file.  This single file can\nthen be given to a client for access to the VPN.\n\nTo enable Two Factor Authentication for clients (a.k.a. OTP) see [this document](/docs/otp.md).\n\n## OpenVPN Details\n\nWe use `tun` mode, because it works on the widest range of devices.\n`tap` mode, for instance, does not work on Android, except if the device\nis rooted.\n\nThe topology used is `net30`, because it works on the widest range of OS.\n`p2p`, for instance, does not work on Windows.\n\nThe UDP server uses`192.168.255.0/24` for dynamic clients by default.\n\nThe client profile specifies `redirect-gateway def1`, meaning that after\nestablishing the VPN connection, all traffic will go through the VPN.\nThis might cause problems if you use local DNS recursors which are not\ndirectly reachable, since you will try to reach them through the VPN\nand they might not answer to you. If that happens, use public DNS\nresolvers like those of Google (8.8.4.4 and 8.8.8.8) or OpenDNS\n(208.67.222.222 and 208.67.220.220).\n\n\n## Security Discussion\n\nThe Docker container runs its own EasyRSA PKI Certificate Authority.  This was\nchosen as a good way to compromise on security and convenience.  The container\nruns under the assumption that the OpenVPN container is running on a secure\nhost, that is to say that an adversary does not have access to the PKI files\nunder `/etc/openvpn/pki`.  This is a fairly reasonable compromise because if an\nadversary had access to these files, the adversary could manipulate the\nfunction of the OpenVPN server itself (sniff packets, create a new PKI CA, MITM\npackets, etc).\n\n* The certificate authority key is kept in the container by default for\n  simplicity.  It's highly recommended to secure the CA key with some\n  passphrase to protect against a filesystem compromise.  A more secure system\n  would put the EasyRSA PKI CA on an offline system (can use the same Docker\n  image and the script [`ovpn_copy_server_files`](/docs/paranoid.md) to accomplish this).\n* It would be impossible for an adversary to sign bad or forged certificates\n  without first cracking the key's passphase should the adversary have root\n  access to the filesystem.\n* The EasyRSA `build-client-full` command will generate and leave keys on the\n  server, again possible to compromise and steal the keys.  The keys generated\n  need to be signed by the CA which the user hopefully configured with a passphrase\n  as described above.\n* Assuming the rest of the Docker container's filesystem is secure, TLS + PKI\n  security should prevent any malicious host from using the VPN.\n\n\n## Benefits of Running Inside a Docker Container\n\n### The Entire Daemon and Dependencies are in the Docker Image\n\nThis means that it will function correctly (after Docker itself is setup) on\nall distributions Linux distributions such as: Ubuntu, Arch, Debian, Fedora,\netc.  Furthermore, an old stable server can run a bleeding edge OpenVPN server\nwithout having to install/muck with library dependencies (i.e. run latest\nOpenVPN with latest OpenSSL on Ubuntu 12.04 LTS).\n\n### It Doesn't Stomp All Over the Server's Filesystem\n\nEverything for the Docker container is contained in two images: the ephemeral\nrun time image (kylemanna/openvpn) and the `$OVPN_DATA` data volume. To remove\nit, remove the corresponding containers, `$OVPN_DATA` data volume and Docker\nimage and it's completely removed.  This also makes it easier to run multiple\nservers since each lives in the bubble of the container (of course multiple IPs\nor separate ports are needed to communicate with the world).\n\n### Some (arguable) Security Benefits\n\nAt the simplest level compromising the container may prevent additional\ncompromise of the server.  There are many arguments surrounding this, but the\ntake away is that it certainly makes it more difficult to break out of the\ncontainer.  People are actively working on Linux containers to make this more\nof a guarantee in the future.\n\n## Differences from jpetazzo/dockvpn\n\n* No longer uses serveconfig to distribute the configuration via https\n* Proper PKI support integrated into image\n* OpenVPN config files, PKI keys and certs are stored on a storage\n  volume for re-use across containers\n* Addition of tls-auth for HMAC security\n\n## Originally Tested On\n\n* Docker hosts:\n  * server a [Digital Ocean](https://www.digitalocean.com/?refcode=d19f7fe88c94) Droplet with 512 MB RAM running Ubuntu 14.04\n* Clients\n  * Android App OpenVPN Connect 1.1.14 (built 56)\n     * OpenVPN core 3.0 android armv7a thumb2 32-bit\n  * OS X Mavericks with Tunnelblick 3.4beta26 (build 3828) using openvpn-2.3.4\n  * ArchLinux OpenVPN pkg 2.3.4-1\n\n\n## License\n[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkylemanna%2Fdocker-openvpn.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkylemanna%2Fdocker-openvpn?ref=badge_large)\n"
+        },
+        {
+          "name": "alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "init",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "otp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

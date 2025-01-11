@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736568703944,
+    "page": 797,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc5OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "pascalw/kindle-dash",
+      "stars": 1228,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "/dist\n/kindle-dash-*.tgz\n/tmp\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 1.0087890625,
+          "content": "# Changelog\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n## [Unreleased]\n\n## [v1.0.0-beta.4] - 2022-07-27\n\n### Changed\n\n- Only call eips if fetch-dashboard succesfully completes\n- Ensure a full screen refresh is triggered after wake from sleep\n- Build ht from upstream sources, using rusttls instead of vendored openssl\n- Replace ht 0.4.0 with xh 0.16.1 (project was renamed)\n\n## [v1.0.0-beta.3] - 2020-02-03\n\n### Changed\n\n- Use 1.1.1.1 as default Wi-Fi test ip\n- Use a more standards-compliant cron parser (BREAKING)\n\n### Added\n\n- Add low battery reporting (`local/low-battery.sh`)\n- Add debug mode (DEBUG=true start.sh)\n- SSH server prerequisite in docs (@julianlam)\n\n### Fixed\n\n- Typos (@jcmiller11, @starcoat)\n\n## [v1.0.0-beta-2] - 2020-01-26\n\n### Removed\n\n- Power state logging\n\n## [v1.0.0-beta-1] - 2020-01-26\n\nInitial release 🎉\n"
+        },
+        {
+          "name": "KUAL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "Copyright (c) 2021 Pascal Widdershoven\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR\nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE\nOR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.2060546875,
+          "content": "VERSION := v1.0.0-beta.4\nSRC_FILES := $(shell find src -name '*.sh' -o -name '*.png')\nNEXT_WAKEUP_SRC_FILES := $(shell find src/next-wakeup/src -name '*.rs')\nTARGET_FILES := $(SRC_FILES:src/%=dist/%)\n\ndist: dist/next-wakeup dist/xh dist/local/state ${TARGET_FILES}\n\ntarball: dist\n\ttar -C dist -cvzf kindle-dash-${VERSION}.tgz ./\n\ndist/%: src/%\n\t@echo \"Copying $<\"\n\t@mkdir -p $(@D)\n\t@cp \"$<\" \"$@\"\n\ndist/next-wakeup: ${NEXT_WAKEUP_SRC_FILES}\n\tcd src/next-wakeup && cross build --release --target arm-unknown-linux-musleabi\n\tcp src/next-wakeup/target/arm-unknown-linux-musleabi/release/next-wakeup dist/\n\ndist/xh: tmp/xh\n\tcd tmp/xh && cross build --release --target arm-unknown-linux-musleabi\n\tdocker run --rm \\\n\t\t-v $(shell pwd)/tmp/xh:/src \\\n\t\trustembedded/cross:arm-unknown-linux-musleabi-0.2.1 \\\n\t\t/usr/local/arm-linux-musleabi/bin/strip /src/target/arm-unknown-linux-musleabi/release/xh\n\tcp tmp/xh/target/arm-unknown-linux-musleabi/release/xh dist/\n\ntmp/xh:\n\tmkdir -p tmp/\n\tgit clone --depth 1 --branch v0.16.1 https://github.com/ducaale/xh.git tmp/xh\n\ndist/local/state:\n\tmkdir -p dist/local/state\n\nclean:\n\trm -r dist/*\n\nwatch:\n\twatchexec -w src/ -p -- make\n\nformat:\n\tshfmt -i 2 -w -l src/**/*.sh\n\n.PHONY: clean watch tarball format\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.123046875,
+          "content": "# Low-power Kindle dashboard\n\nTurns out old Kindle devices make great, energy efficient dashboards :-)\n\n![](./example/photo.jpg)\n\n## What this repo is\n\nThis repo only contains the code that runs on the Kindle. It periodically fetches an image to be displayed on the screen and suspends the device to RAM (which is very power efficient) until the next screen update.\n\nThis code _does not_ render the dashboard itself. It's expected that what to display on the screen is rendered elsewhere and can be fetchd via HTTP(s). This is both more power efficient and allows you to use any tool you like to produce the dashboard image.\n\nIn my case I use a [dashbling](https://github.com/pascalw/dashbling) dashboard that I render into a PNG screenshot on a server. See [here](https://github.com/pascalw/kindle-dash/blob/main/docs/tipstricks.md#producing-dashboard-images-from-a-webpage) for information on how these PNGs should be produced, including some sample code.\n\n## Prerequisites\n\n* A jailbroken Kindle, with Wi-Fi configured.\n* An SSH server on the Kindle (via [USBNetwork](https://wiki.mobileread.com/wiki/USBNetwork))\n* Tested only on a Kindle 4 NT. Should work on other Kindle devices as well with minor modifications.\n\n## Installation\n\n1. Download the [latest release](https://github.com/pascalw/kindle-dash/releases) on your computer and extract it.\n2. Modify `local/fetch-dashboard.sh` and optionally `local/env.sh`.\n3. Copy the files to the Kindle, for example: `rsync -vr ./ kindle:/mnt/us/dashboard`.\n4. Start dashboard with `/mnt/us/dashboard/start.sh`.  \n   Note that the device will go into suspend about 10-15 seconds after you start the dashboard.\n\n## Upgrading\n\nIf you're running kindle-dash already and want to update to the latest version follow the following steps.\n\n1. Download the [latest release](https://github.com/pascalw/kindle-dash/releases) on your computer and extract it.\n2. Review the release notes. Some releases might require changes to files in `local/`.\n3. Copy the files to the Kindle, excluding the `local` directory. For example: `rsync -vur --exclude=local ./ kindle:/mnt/us/dashboard`.\n4. Modify files in `/mnt/us/dashboard/local` if applicable.\n5. Start dashboard with `/mnt/us/dashboard/start.sh`.  \n   Note that the device will go into suspend about 10-15 seconds after you start the dashboard.\n   \n## KUAL\n\nIf you're using KUAL you can use simple extension to start this Dashboard\n\n1. Copy folder `kindle-dash` from `KUAL` folder to the kual `extensions` folder. (located in `/mnt/us/extensions`)\n\n## How this works\n\n* This code periodically downloads a dashboard image from an HTTP(s) endpoint.\n* The interval can be configured in `dist/local/env.sh` using a cron expression.\n* During the update intervals the device is suspended to RAM to save power.\n\n## Notes\n\n* The releases contain a pre-compiled binary of the [ht](https://github.com/ducaale/ht) command-line HTTP client. This fully supports modern HTTPS crypto, wheras the built-in `curl` and `wget` commands don't (because they rely on a very old `openssl` library).\n\n## Credits\n\nThanks to [davidhampgonsalves/life-dashboard](https://github.com/davidhampgonsalves/life-dashboard) for the inspiration!\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

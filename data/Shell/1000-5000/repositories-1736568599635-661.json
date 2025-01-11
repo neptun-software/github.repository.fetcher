@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "timestamp": 1736568599635,
+    "page": 661,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rahul-thakoor/balena-rpiplay",
+      "stars": 1413,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": "Dockerfile.template",
+          "type": "blob",
+          "size": 0.9150390625,
+          "content": "FROM balenalib/rpi-raspbian:buster AS builder\n\nRUN install_packages cmake \\\n                     libavahi-compat-libdnssd-dev libplist-dev libssl-dev \\\n                     build-essential\\\n                     git\n\nRUN install_packages libraspberrypi-dev libraspberrypi-doc\n\nWORKDIR /usr/src/app/\n\nRUN git clone https://github.com/FD-/RPiPlay.git\n\nWORKDIR /usr/src/app/RPiPlay/build\n\nRUN cmake --DCMAKE_CXX_FLAGS=\"-O3\" --DCMAKE_C_FLAGS=\"-O3\" .. &&\\\n    make -j &&\\\n    make install\n\nRUN install_packages python3-pip python3-setuptools rsync\n\nWORKDIR /rootfs\n\nWORKDIR /usr/src/app\n\nRUN pip3 install git+https://github.com/larsks/dockerize\n\nRUN dockerize -n --verbose -g video -g audio -o /rootfs/ /usr/local/bin/rpiplay &&\\\n    rm /rootfs/Dockerfile\n\nFROM --platform=linux/arm/v6 busybox:stable\n\nCOPY --from=builder /rootfs/ ./\n\nWORKDIR /usr/src/app/\n\nCOPY start.sh ./\n\nCOPY VERSION ./\n\nRUN chmod +x ./start.sh\n\nCMD [\"sh\", \"./start.sh\"]\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.4658203125,
+          "content": "# balena-rpiplay\n\nTurn a Raspberry Pi into an Airplay server using [RPiPlay](https://github.com/FD-/RPiPlay) to enable screen mirroring on tvs, monitors and projectors.\n\nThis project essentially creates a docker image wrapping RPiPlay and making it easily deployable to balena fleets.\n\nNote:\n\n- Currently, the image does not include the gstreamer renderer\n- This project aims to build a very minimal image. The binary has been [dockerized](https://github.com/larsks/dockerize) and it is based on busybox. The image size is ~14 MB.\n\n\n## Setup and Deployment\n\n1. You can simply join the [balenaHub openFleet](https://hub.balena.io/gh_rahul_thakoor/balena-rpiplay). \n     - You don't need to signup for a balenaCloud account \n     - Your device will keep running the latest releases\n     - No control over configurations\n\n2. If you want to manage your own device and fleet, you can run this app is as simple as deploying it to a [balenaCloud](https://www.balena.io/cloud) fleet. \n     - You need to signup for a balenaCloud account\n     - You manage your fleet and releases\n     - You have total control over configurations\n\n    You can do it in just one click by using the button below:\n\n    [![balena deploy button](https://www.balena.io/deploy.svg)](https://dashboard.balena-cloud.com/deploy?repoUrl=https://github.com/rahul-thakoor/balena-rpiplay)\n\n\n\n\n## Configuration\n\nThe following [Device Variables](https://www.balena.io/docs/learn/manage/variables/#variables) might be required for proper scaling and resolutions:\n\n|  Name | Supported Values  | Default  | Description\n|---|---|--- |---\n|  AIRPIPLAY_NAME |  Text |  Air-Pi-Play@`<hostname>` |  Specify the network name of the AirPlay server\n|  AIRPIPLAY_AUDIO_OUT |`hdmi` or `analog` or `off`  | `hdmi` | Set audio output device\n| AIRPIPLAY_BACKGROUND  | `on` or `auto` or `off`  |  `auto`  | Show black background always, only during active connection, or never |\nAIRPIPLAY_LATENCY_MODE | `1` or `0` | `1` |  Enables low-latency mode. Low-latency mode reduces latency by effectively rendering audio and video frames as soon as they are received, ignoring the associated timestamps. As a side effect, playback will be choppy and audio-video sync will be noticably off |\nAIRPIPLAY_ROTATION | `90` or `180` or `270` | not set | Specify image rotation in multiples of 90 degrees |\nAIRPIPLAY_FLIP | `horiz` or `vert` or `both` | not set | Specify image flipping\n\n## Attribution\n\n- [RpiPlay](https://github.com/FD-/RPiPlay)\n- [Dockerize](https://github.com/larsks/dockerize)\n"
+        },
+        {
+          "name": "VERSION",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "0.3.1"
+        },
+        {
+          "name": "balena.yml",
+          "type": "blob",
+          "size": 1.779296875,
+          "content": "name: balena-rpiplay\ntype: sw.application\ndescription: >-\n  Turn a Raspberry Pi into an Airplay server using RPiPlay to enable screen mirroring on tvs, monitors and projectors.\npost-provisioning: >-\n  ## Usage instructions\n\n  **Application download**\n\n  Once you power up your device you'll need to allow some time for it to\n  download the application, this typically takes less than one minute but it can take\n  more depending on your internet connection, and the type of device you are using.\n\n  __Note: The device will reboot to apply some device configurations.__\n\n  **Usage**\n\n  When the download is complete the application will start. You should see\n  an Airplay device from your Apple devices. It will be broadcast with the name Airplay@hostname.\n\n  You can cast using your Apple devices. Use Screen Mirroring from the Control Center:\n  - [iOS devices](https://support.apple.com/en-us/HT204289#mirroriOS)\n  - [macOS devices](https://support.apple.com/guide/imac/use-airplay-apdf1417128d/mac)\n\nassets:\n  repository:\n    type: blob.asset\n    data:\n      url: 'https://github.com/rahul-thakoor/balena-rpiplay'\n  logo:\n    type: blob.asset\n    data:\n      url: >-\n        https://raw.githubusercontent.com/rahul-thakoor/balena-rpiplay/master/logo.png\ndata:\n  applicationEnvironmentVariables:\n    - AIRPIPLAY_NAME: \"\"\n    - AIRPIPLAY_AUDIO_OUT: hdmi\n    - AIRPIPLAY_BACKGROUND: auto\n    - AIRPIPLAY_LATENCY_MODE: 1\n    - AIRPIPLAY_ROTATION: \"\"\n    - AIRPIPLAY_FLIP: \"\"\n  applicationConfigVariables:\n    - BALENA_HOST_CONFIG_gpu_mem: 256\n    - BALENA_HOST_CONFIG_gpu_mem_512: 128\n    - BALENA_HOST_CONFIG_dtoverlay: vc4-fkms-v3d\n  defaultDeviceType: raspberrypi3\n  supportedDeviceTypes:\n    - raspberry-pi\n    - raspberry-pi2\n    - raspberrypi0-2w-64\n    - raspberrypi3\n    - raspberrypi4-64\n    - fincm3\nversion: 0.3.1\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.3427734375,
+          "content": "version: \"2.1\"\nservices:\n  rpiplay:\n    build: ./\n    privileged: true\n    restart: always\n    network_mode: host\n    devices:\n      - /dev/dri\n      - /dev/vchiq\n    group_add:\n      - video\n      - audio\n    environment: \n        - DBUS_SYSTEM_BUS_ADDRESS=unix:path=/host/run/dbus/system_bus_socket\n    labels:\n        io.balena.features.dbus: '1'\n\n"
+        },
+        {
+          "name": "logo.png",
+          "type": "blob",
+          "size": 6.154296875,
+          "content": null
+        },
+        {
+          "name": "start.sh",
+          "type": "blob",
+          "size": 0.5283203125,
+          "content": "#!/bin/bash\n\nexport LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/vc/lib\n\nDEVICE_NAME=\"${AIRPIPLAY_NAME:=\"Air-Pi-Play@$HOSTNAME\"}\"\nAUDIO_OUT=\"${AIRPIPLAY_AUDIO_OUT:=\"hdmi\"}\"\nBACKGROUND=\"${AIRPIPLAY_BACKGROUND:=\"auto\"}\"\ncase $AIRPIPLAY_LATENCY_MODE in\n  1) LATENCY=\"-l\";;\n  0) LATENCY=\"\";;\nesac\nROTATION=\"-r ${AIRPIPLAY_ROTATION:=\"\"}\"\nFLIP=\"-f ${AIRPIPLAY_FLIP:=\"\"}\"\n\necho \"Air-Pi-Play v$(cat VERSION) powered by RpiPlay\"\n\necho \"Device is discoverable as ${DEVICE_NAME}\"\n\nrpiplay -n $DEVICE_NAME -a $AUDIO_OUT -b $BACKGROUND $LATENCY $ROTATION $FLIP\n"
+        }
+      ]
+    }
+  ]
+}

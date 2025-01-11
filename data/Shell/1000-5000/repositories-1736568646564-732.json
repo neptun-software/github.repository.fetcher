@@ -1,0 +1,153 @@
+{
+  "metadata": {
+    "timestamp": 1736568646564,
+    "page": 732,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjczOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gtoonstra/etl-with-airflow",
+      "stars": 1311,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1064453125,
+          "content": "_site\n.sass-cache\n.jekyll-metadata\n**/*.pyc\nexamples/datavault2-bigdata-example/dataflow/env\n.idea/\n**/venv\n\n"
+        },
+        {
+          "name": "README.rst",
+          "type": "blob",
+          "size": 0.6376953125,
+          "content": "*** Welcome to the ETL Best practices with airflow repository.\n\nThis is the source code for all the documentation, which is hosted at:\n\nhttps://gtoonstra.github.io/etl-with-airflow/\n\n** Disclaimer\n\nThis is not the official documentation site for\nApache airflow. This site is not affiliated, monitored or controlled by\nthe official Apache Airflow development effort. If you are looking for\nthe official documentation site, please follow this link:\n  \nhttps://airflow.incubator.apache.org/\n    \nWhat you will find here are interesting examples, usage patterns and\nETL principles that I thought are going to help people use airflow to\nmuch better effect.\n\n"
+        },
+        {
+          "name": "docker-compose-LocalExecutor.yml",
+          "type": "blob",
+          "size": 0.8974609375,
+          "content": "version: '2'\nservices:\n  postgres:\n      image: postgres:9.6\n      environment:\n          - POSTGRES_USER=airflow\n          - POSTGRES_PASSWORD=airflow\n          - POSTGRES_DB=airflow\n      ports:\n          - 5432:5432\n      volumes:\n          - ./examples/do-this-first/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql\n          - ./examples/do-this-first/dwh_tables.sql:/docker-entrypoint-initdb.d/dwh_tables.sql\n          - ./examples/do-this-first/populate_tables.sql:/docker-entrypoint-initdb.d/populate_tables.sql\n  webserver:\n      image: puckel/docker-airflow:1.8.0\n      restart: always\n      depends_on:\n          - postgres\n      environment:\n          - LOAD_EX=n\n          - EXECUTOR=Local\n      volumes:\n          - ./examples/etl-example/dags:/usr/local/airflow/dags\n          - ./examples/etl-example/sql:/usr/local/airflow/sql\n      ports:\n          - 8080:8080\n      command: webserver\n"
+        },
+        {
+          "name": "docker-compose-datavault2-bigdata.yml",
+          "type": "blob",
+          "size": 2.6240234375,
+          "content": "version: '2'\nservices:\n  postgres:\n      image: postgres:9.6\n      container_name: postgres-docker\n      environment:\n          - POSTGRES_USER=airflow\n          - POSTGRES_PASSWORD=airflow\n          - POSTGRES_DB=airflow\n      ports:\n          - 5432:5432\n      volumes:\n          - ./examples/datavault2-bigdata-example/setup/100_restore.sql:/docker-entrypoint-initdb.d/100_restore.sql\n          - ./examples/datavault2-bigdata-example/setup/200_users.sql:/docker-entrypoint-initdb.d/200_users.sql\n          - ./examples/datavault2-bigdata-example/setup/300_fixdata.sql:/docker-entrypoint-initdb.d/300_fixdata.sql\n          - ./examples/datavault2-bigdata-example/setup/data:/docker-entrypoint-initdb.d/data\n  hive:\n      image: cloudera/quickstart:latest\n      container_name: hive-docker\n      restart: always\n      depends_on:\n          - postgres\n      ports:\n          - 8888:8888\n          - 10000:10000\n          - 7180:7180\n          - 8020:8020\n      volumes:\n          - ./examples/datavault2-bigdata-example/hive-site.xml:/etc/hive/conf.dist/hive-site.xml\n          - ./jdbc/postgresql-42.2.5.jre7.jar:/usr/share/java/postgresql-42.2.5.jre7.jar\n          - /tmp/datavault2-bigdata-example:/external\n          - ./examples/datavault2-bigdata-example/setup/md5-1.0-SNAPSHOT.jar:/usr/lib/hive/lib/md5-1.0-SNAPSHOT.jar\n          - ./examples/datavault2-bigdata-example/hive-server2:/etc/default/hive-server2\n      hostname: quickstart.cloudera\n      privileged: true\n      tty: true\n      command: /usr/bin/docker-quickstart\n  webserver:\n      image: gtoonstra/docker-airflow:1.0\n      container_name: airflow\n      restart: always\n      depends_on:\n          - postgres\n          - hive\n      environment:\n          - LOAD_EX=n\n          - EXECUTOR=Local\n          - INSTALL_HIVE=y\n      volumes:\n          - ./examples/datavault2-bigdata-example/dags:/usr/local/airflow/dags\n          - ./examples/datavault2-bigdata-example/dataflow:/usr/local/airflow/dataflow\n          - ./examples/datavault2-bigdata-example/sql:/usr/local/airflow/sql\n          - ./examples/datavault2-bigdata-example/schema:/usr/local/airflow/schema\n          - ./examples/datavault2-bigdata-example/core-site.xml:/core-site.xml\n          - ./examples/datavault2-bigdata-example/hdfs-site.xml:/hdfs-site.xml\n          - ./examples/datavault2-bigdata-example/mapred-site.xml:/mapred-site.xml\n          - /tmp/datavault2-bigdata-example:/tmp/datavault2-bigdata-example\n          - ./examples/datavault2-bigdata-example/requirements.txt:/requirements.txt\n          - ./jdbc/postgresql-42.2.5.jre7.jar:/usr/lib/sqoop/lib/postgresql-42.2.5.jre7.jar\n      ports:\n          - 8080:8080\n      command: webserver\n"
+        },
+        {
+          "name": "docker-compose-datavault2-dbt.yml",
+          "type": "blob",
+          "size": 0.6826171875,
+          "content": "version: '2'\nservices:\n  postgres:\n      image: postgres:9.6\n      environment:\n          - POSTGRES_USER=dbt\n          - POSTGRES_PASSWORD=dbt\n          - POSTGRES_DB=dbt\n      ports:\n          - 5432:5432\n      volumes:  # Reuses data from datavault2 example\n          - ./examples/datavault2-bigdata-example/setup/100_restore.sql:/docker-entrypoint-initdb.d/100_restore.sql\n          - ./examples/datavault2-bigdata-example/setup/200_users.sql:/docker-entrypoint-initdb.d/200_users.sql\n          - ./examples/datavault2-bigdata-example/setup/300_fixdata.sql:/docker-entrypoint-initdb.d/300_fixdata.sql\n          - ./examples/datavault2-bigdata-example/setup/data:/docker-entrypoint-initdb.d/data\n"
+        },
+        {
+          "name": "docker-compose-datavault2.yml",
+          "type": "blob",
+          "size": 1.8642578125,
+          "content": "version: '2'\nservices:\n  postgres:\n      image: postgres:9.6\n      environment:\n          - POSTGRES_USER=airflow\n          - POSTGRES_PASSWORD=airflow\n          - POSTGRES_DB=airflow\n      ports:\n          - 5432:5432\n      volumes:\n          - ./examples/datavault2-example/setup/100_create_database.sql:/docker-entrypoint-initdb.d/100_create_database.sql\n          - ./examples/datavault2-example/setup/200_create_tables.sql:/docker-entrypoint-initdb.d/200_create_tables.sql\n          - ./examples/datavault2-example/setup/300_permissions.sql:/docker-entrypoint-initdb.d/300_permissions.sql\n          - ./examples/datavault2-example/setup/data:/docker-entrypoint-initdb.d/data\n  hive:\n      image: cloudera/quickstart:latest\n      container_name: hive-docker\n      restart: always\n      depends_on:\n          - postgres\n      ports:\n          - 8888:8888\n          - 10000:10000\n          - 7180:7180\n          - 8020:8020\n      volumes:\n          - ./examples/datavault2-example/hive-site.xml:/etc/hive/conf.dist/hive-site.xml\n      hostname: quickstart.cloudera\n      privileged: true\n      tty: true\n      command: /usr/bin/docker-quickstart\n  webserver:\n      image: gtoonstra/docker-airflow:1.9.0\n      container_name: airflow\n      restart: always\n      depends_on:\n          - postgres\n          - hive\n      environment:\n          - LOAD_EX=n\n          - EXECUTOR=Local\n          - INSTALL_HIVE=y\n      volumes:\n          - ./examples/datavault2-example/dags:/usr/local/airflow/dags\n          - ./examples/datavault2-example/sql:/usr/local/airflow/sql\n          - ./examples/datavault2-example/core-site.xml:/core-site.xml\n          - ./examples/datavault2-example/hdfs-site.xml:/hdfs-site.xml\n          - ./examples/datavault2-example/mapred-site.xml:/mapred-site.xml\n          - /home/gt/keyfile.json:/usr/local/airflow/keyfile.json:ro\n      ports:\n          - 8080:8080\n      command: webserver\n"
+        },
+        {
+          "name": "docker-compose-dv.yml",
+          "type": "blob",
+          "size": 1.01953125,
+          "content": "version: '2'\nservices:\n  postgres:\n      image: postgres:9.6\n      environment:\n          - POSTGRES_USER=airflow\n          - POSTGRES_PASSWORD=airflow\n          - POSTGRES_DB=airflow\n      ports:\n          - 5432:5432\n      volumes:\n          - ./examples/do-this-first/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql\n          - ./examples/do-this-first/populate_tables.sql:/docker-entrypoint-initdb.d/populate_tables.sql\n          - ./examples/datavault-example/setup/datavault.sql:/docker-entrypoint-initdb.d/datavault.sql\n          - ./examples/datavault-example/setup/dwh_tables.sql:/docker-entrypoint-initdb.d/dwh_tables.sql\n  webserver:\n      image: puckel/docker-airflow:1.8.0\n      restart: always\n      depends_on:\n          - postgres\n      environment:\n          - LOAD_EX=n\n          - EXECUTOR=Local\n      volumes:\n          - ./examples/datavault-example/dags:/usr/local/airflow/dags\n          - ./examples/datavault-example/sql:/usr/local/airflow/sql\n      ports:\n          - 8080:8080\n      command: webserver\n"
+        },
+        {
+          "name": "docker-compose-hive.yml",
+          "type": "blob",
+          "size": 1.529296875,
+          "content": "version: '2'\nservices:\n  postgres:\n      image: postgres:9.6\n      container_name: postgres-docker\n      environment:\n          - POSTGRES_USER=airflow\n          - POSTGRES_PASSWORD=airflow\n          - POSTGRES_DB=airflow\n      ports:\n          - 5432:5432\n      volumes:\n          - ./examples/do-this-first/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql\n          - ./examples/do-this-first/populate_tables.sql:/docker-entrypoint-initdb.d/populate_tables.sql\n  hive:\n      image: cloudera/quickstart:latest\n      container_name: hive-docker\n      restart: always\n      depends_on:\n          - postgres\n      ports:\n          - 8888:8888\n          - 10000:10000\n          - 7180:7180\n          - 8020:8020\n      hostname: quickstart.cloudera\n      privileged: true\n      tty: true\n      command: /usr/bin/docker-quickstart\n  webserver:\n      image: gtoonstra/docker-airflow:1.8.1\n      container_name: airflow\n      restart: always\n      depends_on:\n          - postgres\n          - hive\n      environment:\n          - LOAD_EX=n\n          - EXECUTOR=Local\n          - INSTALL_HIVE=y\n      volumes:\n          - ./examples/hive-example/dags:/usr/local/airflow/dags\n          - ./examples/hive-example/sql:/usr/local/airflow/sql\n          - ./examples/hive-example/hql:/usr/local/airflow/hql\n          - ./examples/hive-example/core-site.xml:/core-site.xml\n          - ./examples/hive-example/hdfs-site.xml:/hdfs-site.xml\n          - ./examples/hive-example/mapred-site.xml:/mapred-site.xml\n      ports:\n          - 8080:8080\n      command: webserver\n"
+        },
+        {
+          "name": "docker-compose-mssql.yml",
+          "type": "blob",
+          "size": 1.14453125,
+          "content": "version: '2'\nservices:\n  mssql:\n      image: microsoft/mssql-server-linux:latest\n      container_name: docker-mssql\n      environment:\n          - ACCEPT_EULA=Y\n          - SA_PASSWORD=Th1sS3cret!\n          - POSTGRES_DB=airflow\n      ports:\n          - 1433:1433\n  postgres:\n      image: postgres:9.6\n      environment:\n          - POSTGRES_USER=airflow\n          - POSTGRES_PASSWORD=airflow\n          - POSTGRES_DB=airflow\n      ports:\n          - 5432:5432\n      volumes:\n          - ./examples/do-this-first/database_user.sql:/docker-entrypoint-initdb.d/database_user.sql\n          - ./examples/do-this-first/dwh_tables.sql:/docker-entrypoint-initdb.d/dwh_tables.sql\n          - ./examples/do-this-first/populate_tables.sql:/docker-entrypoint-initdb.d/populate_tables.sql\n  webserver:\n      image: test/airflow:1.0\n      restart: always\n      depends_on:\n          - postgres\n          - mssql\n      environment:\n          - LOAD_EX=n\n          - EXECUTOR=Local\n      volumes:\n          - ./examples/mssql-example/dags:/usr/local/airflow/dags\n          - ./examples/mssql-example/sql:/usr/local/airflow/sql\n      ports:\n          - 8080:8080\n      command: webserver\n\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ideas.rst",
+          "type": "blob",
+          "size": 0.060546875,
+          "content": "\n* A tutorial on how to deal with long running processes.\n\n* \n"
+        },
+        {
+          "name": "jdbc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run_datavault.sh",
+          "type": "blob",
+          "size": 0.0810546875,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-dv.yml up --abort-on-container-exit\n\n"
+        },
+        {
+          "name": "run_dv2.sh",
+          "type": "blob",
+          "size": 0.0888671875,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-datavault2.yml up --abort-on-container-exit\n\n"
+        },
+        {
+          "name": "run_dv_bigdata.sh",
+          "type": "blob",
+          "size": 0.2578125,
+          "content": "#!/bin/bash\n\nrm -rf /tmp/datavault2-bigdata-example\nmkdir -p /tmp/datavault2-bigdata-example\n\ncp -R ./examples/datavault2-bigdata-example/schema /tmp/datavault2-bigdata-example/\n\ndocker-compose -f docker-compose-datavault2-bigdata.yml up --abort-on-container-exit\n"
+        },
+        {
+          "name": "run_dv_dbt.sh",
+          "type": "blob",
+          "size": 0.2421875,
+          "content": "#!/bin/bash\n\nrm -rf /tmp/datavault2-dbt-example\nmkdir -p /tmp/datavault2-dbt-example\n\ncp -R ./examples/datavault2-dbt-example/schema /tmp/datavault2-bigdata-example/\n\ndocker-compose -f docker-compose-datavault2-dbt.yml up --abort-on-container-exit\n"
+        },
+        {
+          "name": "run_hive_example.sh",
+          "type": "blob",
+          "size": 0.0830078125,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-hive.yml up --abort-on-container-exit\n\n"
+        },
+        {
+          "name": "run_mssql.sh",
+          "type": "blob",
+          "size": 0.083984375,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-mssql.yml up --abort-on-container-exit\n\n"
+        },
+        {
+          "name": "stop_datavault.sh",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-dv.yml down\n\n"
+        },
+        {
+          "name": "stop_dv2.sh",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-datavault2.yml down\n\n"
+        },
+        {
+          "name": "stop_dv_bigdata.sh",
+          "type": "blob",
+          "size": 0.0732421875,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-datavault2-bigdata.yml down\n\n"
+        },
+        {
+          "name": "stop_dv_dbt.sh",
+          "type": "blob",
+          "size": 0.0693359375,
+          "content": "#!/bin/bash\n\ndocker-compose -f docker-compose-datavault2-dbt.yml down\n\n"
+        }
+      ]
+    }
+  ]
+}

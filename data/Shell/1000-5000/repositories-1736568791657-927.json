@@ -1,0 +1,163 @@
+{
+  "metadata": {
+    "timestamp": 1736568791657,
+    "page": 927,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkzOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "techno-tim/techno-tim.github.io",
+      "stars": 1071,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.1513671875,
+          "content": "node_modules\ncoverage\nnpm-debug.log\n.DS_Store\nyarn-error.log\n.idea\n.vscode\n.yarn-cache\n.yarn-cache/\n.sass-cache\n.jekyll-cache\n.jekyll-metadata\nvendor\nyarn*"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.310546875,
+          "content": "root = true\n\n[*]\ncharset = utf-8\nindent_style = space\nindent_size = 2\ntrim_trailing_whitespace = true\n# Unix-style newlines with a newline ending every file\nend_of_line = lf\ninsert_final_newline = true\n\n[*.{js,css,scss}]\nquote_type = single\n\n[*.{yml,yaml}]\nquote_type = double\n\n[*.md]\ntrim_trailing_whitespace = false\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.5322265625,
+          "content": ".DS_Store\nnode_modules\n./public\n.tmp\n.idea\n.log\ndist\ndocs\nnpm-debug.log\n.nyc_output\ncoverage\ncassettes\nyarn-error.log\n.compiled\n\n_site\n.sass-cache\n.jekyll-cache\n.jekyll-metadata\nvendor\nyarn*\n.bundle\n!.travis.yml\n\n# hidden files\n.*\n!.git*\n!.editorconfig\n!.nojekyll\n!.travis.yml\n!.markdownlint.yaml\n\n# bundler cache\n.bundle\n_site\nvendor\n\n# Jekyll cache\n.jekyll-cache\n_site\n\n# RubyGems\n*.gem\n\n# npm dependencies\nnode_modules\npackage-lock.json\n\n!.husky\n!.commitlintrc.json\n!.versionrc.json\n\n# IDE configurations\n.idea\n.vscode\n\n# Misc\nassets/js/dist\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 1.892578125,
+          "content": "stages:\n  - test\n  - docker\n  - deploy\n  - flushcache\n\nvariables:\n  KUBECONFIG: .kube/config\n  JEKYLL_ENV: production\n  GIT_STRATEGY: clone\n  GIT_DEPTH: 0\n\ncache: &global_cache\n  key: $CI_PROJECT_NAME\n  paths:\n    - vendor/ruby\n  policy: pull-push\n\nbuild:\n  image: ruby:3.2.2\n  stage: test\n  artifacts:\n    paths:\n      - _site\n    expire_in: 1 week\n  cache:\n    <<: *global_cache\n  retry: 2\n  script:\n    - gem install bundler\n    - bundle config set --local path 'vendor/ruby'\n    - bundle install\n    - JEKYLL_ENV=production bundle exec jekyll b\n\ndocker_image_build_release:\n  image:\n    name: gcr.io/kaniko-project/executor:debug\n    entrypoint: [\"\"]\n  cache: []\n  stage: docker\n  retry: 2\n  script:\n    - mkdir -p /kaniko/.docker\n    - echo \"{\\\"auths\\\":{\\\"$CI_REGISTRY\\\":{\\\"username\\\":\\\"$CI_REGISTRY_USER\\\",\\\"password\\\":\\\"$CI_REGISTRY_PASSWORD\\\"}}}\" > /kaniko/.docker/config.json\n    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest\n\ndeploy:\n  image:\n    name: bitnami/kubectl@sha256:6410882b254fde82200c364b606b0cbb9b0fb802fede69011a33b9d28066b459 #1.25.9\n    entrypoint: [\"\"]\n  cache: []\n  stage: deploy\n  retry: 2\n  before_script:\n    - sed -ie \"s/deploy-date-value/$(date)/g\" kubernetes/deployment.yaml\n    - sed -ie \"s|registry-value|$CI_REGISTRY_IMAGE|g\" kubernetes/deployment.yaml\n    - mkdir -p .kube/ && touch .kube/config\n    - echo ${KUBERNETES_PUBLIC_CLUSTER} | base64 -d -i > ${KUBECONFIG}\n  script:\n    - kubectl apply -f kubernetes\n\nflushcache:\n    image: alpine/curl\n    cache: []\n    artifacts: {}\n    stage: flushcache\n    retry: 2\n    script:\n    - sleep 60\n    - |\n        curl --fail --output \"/dev/null\" --silent --show-error -X POST \"https://api.cloudflare.com/client/v4/zones/$CF_ZONE_ID/purge_cache\" \\\n        -H \"Authorization: Bearer $CF_API_TOKEN\" -H \"Content-Type: application/json\" \\\n        --data '{\"purge_everything\":true}'\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1025390625,
+          "content": "[submodule \"assets/lib\"]\n\tpath = assets/lib\n\turl = https://github.com/cotes2020/chirpy-static-assets.git\n"
+        },
+        {
+          "name": ".markdownlint.yaml",
+          "type": "blob",
+          "size": 0.505859375,
+          "content": "---\ndefault: true\n\n# MD013/line-length - Line length\nMD013:\n  # Number of characters\n  line_length: 2000\n  # Number of characters for headings\n  heading_line_length: 80\n  # Number of characters for code blocks\n  code_block_line_length: 500\n  # Include code blocks\n  code_blocks: true\n  # Include tables\n  tables: true\n  # Include headings\n  headings: true\n  # Include headings\n  headers: true\n  # Strict length checking\n  strict: false\n  # Stern length checking\n  stern: false\n\nMD033:\nallowed_elements:\n  - blockquote\n"
+        },
+        {
+          "name": ".nojekyll",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.0849609375,
+          "content": "FROM nginx:alpine\n\nCOPY _site /usr/share/nginx/html\nCOPY ads.txt /usr/share/nginx/html\n"
+        },
+        {
+          "name": "Gemfile",
+          "type": "blob",
+          "size": 0.7880859375,
+          "content": "# frozen_string_literal: true\n\nsource \"https://rubygems.org\"\n\ngem \"jekyll-theme-chirpy\", \"~> 6.0\", \">= 6.0.1\"\n\ngroup :test do\n  gem \"html-proofer\", \"~> 3.18\"\nend\n\n# Windows and JRuby does not include zoneinfo files, so bundle the tzinfo-data gem\n# and associated library.\nplatforms :mingw, :x64_mingw, :mswin, :jruby do\n  gem \"tzinfo\", \">= 1\", \"< 3\"\n  gem \"tzinfo-data\"\nend\n\n# Performance-booster for watching directories on Windows\ngem \"wdm\", \"~> 0.1.1\", :platforms => [:mingw, :x64_mingw, :mswin]\n\n# Lock `http_parser.rb` gem to `v0.6.x` on JRuby builds since newer versions of the gem\n# do not have a Java counterpart.\ngem \"http_parser.rb\", \"~> 0.6.0\", :platforms => [:jruby]\n\n# Lock jekyll-sass-converter to 2.x on Linux-musl\nif RUBY_PLATFORM =~ /linux-musl/\n  gem \"jekyll-sass-converter\", \"~> 2.0\"\nend\n"
+        },
+        {
+          "name": "Gemfile.lock",
+          "type": "blob",
+          "size": 3.14453125,
+          "content": "GEM\n  remote: https://rubygems.org/\n  specs:\n    addressable (2.8.7)\n      public_suffix (>= 2.0.2, < 7.0)\n    bigdecimal (3.1.9)\n    colorator (1.1.0)\n    concurrent-ruby (1.3.4)\n    em-websocket (0.5.3)\n      eventmachine (>= 0.12.9)\n      http_parser.rb (~> 0)\n    ethon (0.16.0)\n      ffi (>= 1.15.0)\n    eventmachine (1.2.7)\n    ffi (1.17.1-arm64-darwin)\n    ffi (1.17.1-x86_64-linux-gnu)\n    forwardable-extended (2.6.0)\n    google-protobuf (4.29.2-arm64-darwin)\n      bigdecimal\n      rake (>= 13)\n    google-protobuf (4.29.2-x86_64-linux)\n      bigdecimal\n      rake (>= 13)\n    html-proofer (3.19.4)\n      addressable (~> 2.3)\n      mercenary (~> 0.3)\n      nokogiri (~> 1.13)\n      parallel (~> 1.10)\n      rainbow (~> 3.0)\n      typhoeus (~> 1.3)\n      yell (~> 2.0)\n    http_parser.rb (0.8.0)\n    i18n (1.14.6)\n      concurrent-ruby (~> 1.0)\n    jekyll (4.3.4)\n      addressable (~> 2.4)\n      colorator (~> 1.0)\n      em-websocket (~> 0.5)\n      i18n (~> 1.0)\n      jekyll-sass-converter (>= 2.0, < 4.0)\n      jekyll-watch (~> 2.0)\n      kramdown (~> 2.3, >= 2.3.1)\n      kramdown-parser-gfm (~> 1.0)\n      liquid (~> 4.0)\n      mercenary (>= 0.3.6, < 0.5)\n      pathutil (~> 0.9)\n      rouge (>= 3.0, < 5.0)\n      safe_yaml (~> 1.0)\n      terminal-table (>= 1.8, < 4.0)\n      webrick (~> 1.7)\n    jekyll-archives (2.3.0)\n      jekyll (>= 3.6, < 5.0)\n    jekyll-include-cache (0.2.1)\n      jekyll (>= 3.7, < 5.0)\n    jekyll-paginate (1.1.0)\n    jekyll-redirect-from (0.16.0)\n      jekyll (>= 3.3, < 5.0)\n    jekyll-sass-converter (3.0.0)\n      sass-embedded (~> 1.54)\n    jekyll-seo-tag (2.8.0)\n      jekyll (>= 3.8, < 5.0)\n    jekyll-sitemap (1.4.0)\n      jekyll (>= 3.7, < 5.0)\n    jekyll-theme-chirpy (6.5.5)\n      jekyll (~> 4.3)\n      jekyll-archives (~> 2.2)\n      jekyll-include-cache (~> 0.2)\n      jekyll-paginate (~> 1.1)\n      jekyll-redirect-from (~> 0.16)\n      jekyll-seo-tag (~> 2.8)\n      jekyll-sitemap (~> 1.4)\n    jekyll-watch (2.2.1)\n      listen (~> 3.0)\n    kramdown (2.5.1)\n      rexml (>= 3.3.9)\n    kramdown-parser-gfm (1.1.0)\n      kramdown (~> 2.0)\n    liquid (4.0.4)\n    listen (3.9.0)\n      rb-fsevent (~> 0.10, >= 0.10.3)\n      rb-inotify (~> 0.9, >= 0.9.10)\n    mercenary (0.4.0)\n    nokogiri (1.18.1-arm64-darwin)\n      racc (~> 1.4)\n    nokogiri (1.18.1-x86_64-linux-gnu)\n      racc (~> 1.4)\n    parallel (1.26.3)\n    pathutil (0.16.2)\n      forwardable-extended (~> 2.6)\n    public_suffix (6.0.1)\n    racc (1.8.1)\n    rainbow (3.1.1)\n    rake (13.2.1)\n    rb-fsevent (0.11.2)\n    rb-inotify (0.11.1)\n      ffi (~> 1.0)\n    rexml (3.4.0)\n    rouge (4.5.1)\n    safe_yaml (1.0.5)\n    sass-embedded (1.77.5-arm64-darwin)\n      google-protobuf (>= 3.25, < 5.0)\n    sass-embedded (1.77.5-x86_64-linux-gnu)\n      google-protobuf (>= 3.25, < 5.0)\n    strscan (3.1.0)\n    terminal-table (3.0.2)\n      unicode-display_width (>= 1.1.1, < 3)\n    typhoeus (1.4.1)\n      ethon (>= 0.9.0)\n    unicode-display_width (2.6.0)\n    webrick (1.9.1)\n    yell (2.2.2)\n\nPLATFORMS\n  arm64-darwin-23\n  x86_64-linux\n\nDEPENDENCIES\n  html-proofer (~> 3.18)\n  http_parser.rb (~> 0.6.0)\n  jekyll-theme-chirpy (~> 6.0, >= 6.0.1)\n  tzinfo (>= 1, < 3)\n  tzinfo-data\n  wdm (~> 0.1.1)\n\nBUNDLED WITH\n   2.4.10\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.736328125,
+          "content": "# YouTube Videos\n\nHere you will find all the documentation for my YouTube videos on my channel [https://www.youtube.com/technotimlive](https://l.technotim.live/subscribe)\n\n## Don't forget to ⭐ this repo and fork it! 👆\n\n## Documentation has moved here 👉 [The new documentation site](https://l.technotim.live/docs)\n\n## Credits\n\nCreated by TechnoTim with 💛\n\n► YouTube <https://l.technotim.live/subscribe>\n\n► Patreon <https://l.technotim.live/patreon>\n\n► Twitch <https://l.technotim.live/twitch>\n\n► Twitter  <https://l.technotim.live/twitter>\n\n► Discord <https://l.technotim.live/discord>\n\n► Instagram <https://l.technotim.live/instagram>\n\n► Facebook <https://l.technotim.live/facebook>\n\n► GitHub <https://l.technotim.live/github>\n"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 6.4423828125,
+          "content": "# The Site Configuration\n\n# Import the theme\ntheme: jekyll-theme-chirpy\n\n# Change the following value to '/PROJECT_NAME' ONLY IF your site type is GitHub Pages Project sites\n# and doesn't have a custom domain.\nbaseurl: \"\"\n\n# The language of the webpage › http://www.lingoes.net/en/translator/langcode.htm\n# If it has the same name as one of the files in folder `_data/locales`, the layout language will also be changed,\n# otherwise, the layout language will use the default value of 'en'.\nlang: en\n\n# Additional parameters for datetime localization, optional. › https://github.com/iamkun/dayjs/tree/dev/src/locale\nprefer_datetime_locale:\n\n# Change to your timezone › http://www.timezoneconverter.com/cgi-bin/findzone/findzone\ntimezone: America/Chicago\n\n# jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md\n# ↓ --------------------------\n\ntitle: Techno Tim                          # the main title\n\ntagline: Software Engineer | Tech Content Creator | HomeLab | 🇺🇸 🇯🇵 | Full Nerd   # it will display as the sub-title\n\ndescription: >-                        # used by seo meta and the atom feed\n Techno Tim Home - Documentation and More\n\n# fill in the protocol & hostname for your site, e.g., 'https://username.github.io'\nurl: 'https://technotim.live'\n\ngithub:\n  username: timothystewart6             # change to your github username\ntwitter:\n  username: technotimlive            # change to your twitter username\npatreon:\n  username: technotim\ntwitch:\n  username: technotim\ninstagram:\n  username: techno.tim\nfacebook:\n  username: TechnoTimLive\ndiscord:\n  invitelink: akMB4HJpvF\nyoutube:\n  channelid: UCOk-gHyjcWZNj3Br4oxwh0A\ntiktok:\n  username: '@technotim'\nsocial:\n  # Change to your full name.\n  # It will be displayed as the default author of the posts and the copyright owner in the Footer\n  name: Techno Tim\n  # email: example@doamin.com             # change to your email address\n  links:\n    # The first element serves as the copyright owner's link\n    - https://l.technotim.live/twitter      # change to your twitter homepage\n    # - https://github.com/username       # change to your github homepage\n    # Uncomment below to add more social links\n    # - https://www.facebook.com/username\n    # - https://www.linkedin.com/in/username\n\n\n# ↑ --------------------------\n# The end of `jekyll-seo-tag` settings\n\n# Web Analytics Settings\nanalytics:\n  google:\n    id: 'G-NZ5V7DM8F5'          # Fill with your Google Analytics ID\n  goatcounter:\n    id: # fill in your GoatCounter ID\n\n# Prefer color scheme setting.\n#\n# Note: Keep empty will follow the system prefer color by default,\n# and there will be a toggle to switch the theme between dark and light\n# on the bottom left of the sidebar.\n#\n# Available options:\n#\n#     light  - Use the light color scheme\n#     dark   - Use the dark color scheme\n#\n# theme_mode: dark # [light | dark]\n\n# The CDN endpoint for images.\n# Notice that once it is assigned, the CDN url\n# will be added to all image (site avatar & posts' images) paths starting with '/'\n#\n# e.g. 'https://cdn.com'\nimg_cdn:\n\n# the avatar on sidebar, support local or CORS resources\navatar: https://avatars.githubusercontent.com/u/1322205?s=400&u=5b4f2219006577dc0426007fe5a02391c4899677&v=4\n\n# boolean type, the global switch for ToC in posts.\ntoc: true\n\ncomments:\n  active: giscus        # The global switch for posts comments, e.g., 'disqus'.  Keep it empty means disable\n  # The active options are as follows:\n  disqus:\n    shortname:    # fill with the Disqus shortname. › https://help.disqus.com/en/articles/1717111-what-s-a-shortname\n  # utterances settings › https://utteranc.es/\n  utterances:\n    repo:         # <gh-username>/<repo>\n    issue_term:   # < url | pathname | title | ...>\n  # Giscus options › https://giscus.app\n  giscus:\n    repo: techno-tim/techno-tim.github.io\n    repo_id: MDEwOlJlcG9zaXRvcnkyNTQ3ODQ3Nzk\n    category: Comments\n    category_id: DIC_kwDODy-1C84CSN7z\n    mapping: pathname          # optional, default to 'pathname'\n    input_position: bottom  # optional, default to 'bottom'\n    lang: en            # optional, default to the value of `site.lang`\n    reactions_enabled: 1\n\n# Self-hosted static assets, optional › https://github.com/cotes2020/chirpy-static-assets\nassets:\n  self_host:\n    enabled:      # boolean, keep empty means false\n    # specify the Jekyll environment, empty means both\n    # only works if `assets.self_host.enabled` is 'true'\n    env:          # [development|production]\n\npwa:\n  enabled: false # the option for PWA feature (installable)\n  cache:\n    enabled: false # the option for PWA offline cache\n    # Paths defined here will be excluded from the PWA cache.\n    # Usually its value is the `baseurl` of another website that\n    # shares the same domain name as the current website.\n    deny_paths:\n      # - \"/example\"  # URLs match `<SITE_URL>/example/*` will not be cached by the PWA\n\npaginate: 10\n\n# ------------ The following options are not recommended to be modified ------------------\n\nkramdown:\n  syntax_highlighter: rouge\n  syntax_highlighter_opts: # Rouge Options › https://github.com/jneen/rouge#full-options\n    css_class: highlight\n    # default_lang: console\n    span:\n      line_numbers: false\n    block:\n      line_numbers: true\n      start_line: 1\n\ncollections:\n  tabs:\n    output: true\n    sort_by: order\n\ndefaults:\n  - scope:\n      path: \"\" # An empty string here means all files in the project\n      type: posts\n    values:\n      layout: post\n      comments: true # Enable comments in posts.\n      toc: true # Display TOC column in posts.\n      # DO NOT modify the following parameter unless you are confident enough\n      # to update the code of all other post links in this project.\n      permalink: /posts/:title/\n  - scope:\n      path: _drafts\n    values:\n      comments: false\n  - scope:\n      path: \"\"\n      type: tabs # see `site.collections`\n    values:\n      layout: page\n      permalink: /:title/\n  - scope:\n      path: assets/js/dist\n    values:\n      swcache: true\n\nsass:\n  style: compressed\n\ncompress_html:\n  clippings: all\n  comments: all\n  endings: all\n  profile: false\n  blanklines: false\n  ignore:\n    envs: [development]\n\nexclude:\n  - \"*.gem\"\n  - \"*.gemspec\"\n  - docs\n  - tools\n  - README.md\n  - LICENSE\n  - rollup.config.js\n  - node_modules\n  - package*.json\n  - archive_old\n  - template\n  - reference_files\n  - kubernetes\n  - Dockerfile\n\njekyll-archives:\n  enabled: [categories, tags]\n  layouts:\n    category: category\n    tag: tag\n  permalinks:\n    tag: /tags/:name/\n    category: /categories/:name/\n"
+        },
+        {
+          "name": "_data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_layouts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_plugins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_posts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_tabs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ads.txt",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": "google.com, pub-1872619258207885, DIRECT, f08c47fec0942fa0\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "giscus.json",
+          "type": "blob",
+          "size": 0.1552734375,
+          "content": "{\n  \"origins\": [\n    \"https://technotim.live\",\n    \"https://www.technotim.live\",\n    \"https://docs.technotim.live/\",\n    \"https://techno-tim.github.io/\"\n  ]\n}\n"
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "---\nlayout: home\n# Index page\n---\n"
+        },
+        {
+          "name": "kubernetes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "reference_files",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "template",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

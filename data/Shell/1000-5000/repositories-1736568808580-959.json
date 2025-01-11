@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "timestamp": 1736568808580,
+    "page": 959,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "BaptisteBdn/docker-selfhosted-apps",
+      "stars": 1049,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0078125,
+          "content": ".vscode/"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.16015625,
+          "content": "<p align=\"center\">\n<img src=\"_utilities/docker.png\" width=\"400\" alt=\"docker\" title=\"docker\" />\n</p>\n\nGuide with examples !\n\n# Services\n\n* [traefik](traefik/) - reverse proxy and SSL manager\n* [borg-backup](borg-backup/) - backup scripts (local and AWS)\n* [fail2ban](fail2ban/) - security tool (ban IP)\n* [freshrss](freshrss/) - RSS feed aggregator\n* [gotify](gotify/) - notification service\n* [jellyfin](jellyfin/) - media System\n* [nextcloud](nextcloud/) - file-hosting software system\n* [seafile](seafile/) - file-hosting software system\n* [synapse-element](synapse-element/) - decentralised communication system\n* [transmission](transmission/) - fast, easy, and free BitTorrent client\n* [trilium](trilium/) - hierarchical note-taking application\n* [vaultwarden](vaultwarden/) - password manager\n* [watchtower](watchtower/) - automatic docker images update\n* [webserver](webserver/) - simple apache webserver\n* [wireguard-pihole-unbound](wireguard-pihole-unbound/) - combination of WireGuard, PiHole, and Unbound\n* [wordpress](wordpress/) - blogging tool with a content management system (CMS)\n\n\n# Information\n\nThe overall guide is centered around example. Each of the services is tied with either a docker-compose or a script, everything has been made so that each service is almost ready to use, only a few user-specific variable are required.\n\nAll services respect a certain format :\n\n- **About** - basic overview of the service\n- **Table of Contents**\n- **Files structure** - lists all the files and folder required\n- **Information** - detailed information about the service and the example\n- **Usage** - required configuration and commands to use the service\n- **Update** - how to update the container, most of the time it is using watchtower\n- **Backup** - how to back up the container, most of the time it is using borg-backup\n\nTraefik is the core of this setup as it is the reverse proxy, it should be one of the first services to configure and use.\n\n# Requirement\n\nBasic linux knowledge is required and docker is a must-have, everything should be pretty easy to set up but understanding docker will make it even more easy.\nEach guide gives links to the official documentation, they are usually well written, and they should answer most of your questions.\n\nOn the technical side :\n\n* docker and docker-compose (1.X) are required, the installation process is fairly easy.\n* a domain, some can be found for free but most are usually pretty cheap.\n\n# Usage\n\nAll the docker-compose provided in this repository are ready to be used, and you should not have to touch them. The only thing you need to change are the `.env` file provided with the docker-compose, they are user-specific.\n\nTo begin with, you can clone this repository on your host.\n\n```bash\ngit clone https://github.com/BaptisteBdn/docker-selfhosted-apps.git\n```\n\nProvided you already have a domain, you can use the following commands to update all `.env` at once as well as some specific config files.\n\n```bash\nDOMAIN=your-domain.com\nfind ./ \\( -name \".env\" -or -name \"*.yml\" -or -name \"*.json\" \\) -type f -exec sed -i 's/example.com/'$DOMAIN'/g' {} \\;\n```\n\nYou can now go forward and try whatever service you want, every example as a `# Usage` section to guide you through the process. However, as most of them are using Traefik, it is recommended to set this one first.\n\n# Other\n\n## Docker and UFW\n\nUFW is a popular iptables front end on Ubuntu that makes it easy to manage firewall rules. But when Docker is installed, Docker bypass the UFW rules and the published ports can be accessed from outside.\n\nAn [easy fix](https://github.com/chaifeng/ufw-docker) is available, allowing to easily manage your firewall. As most of the services are going through Traefik, only the port 443 is mandatory. If another port is required, it will be listed in the requirements.\n\n## Docker tips\n\n* Get shell access whilst the container is running\n    ```\n    docker exec -it container-name /bin/bash\n    ```\n* Monitor the logs of the container in realtime\n    ```\n    docker logs -f container-name\n    ```\n\n## Docker images\n\nMost images are used with the tag `latest` as it simplify the testing. It is usually not recommended running an image with this tag as it is not very dynamic and precise.\nFeel free to experiment with the provided docker-compose examples and then use a better versionning system. For more information about [latest](https://vsupalov.com/docker-latest-tag/).\n\n## Updating docker images\n\nThis repository images are automatically updated with watchtower, however this can be a security risk. More details in the [watchtower guide](watchtower).\n\nIf you want to manually update an image, you can use docker-compose.\n\n* Update all images for a specific docker-compose file\n    ```\n    sudo docker-compose pull\n    ```\n* Update a single image\n    ```\n    sudo docker-compose pull image-name\n    ```\n* Recreate all updated containers with docker-compose\n    ```\n    sudo docker-compose up -d\n    ```\n* Recreate a single container with docker-compose\n    ```\n    sudo docker-compose up -d container-name\n    ```\n* Remove all dangling and unused images\n    ```\n    sudo docker image prune  -a\n    ```\n\n## Docker tools\n\nSome useful tools to manage your private docker infrastructure.\n\n- [lazydocker](https://github.com/jesseduffield/lazydocker) - A simple terminal UI for both docker and docker-compose, written in Go with the gocui library. By @jesseduffield\n- [dive](https://github.com/wagoodman/dive) - A tool for exploring each layer in a docker image. By @anchore.\n- [grype](https://github.com/anchore/grype) - A vulnerability scanner for container images and filesystems. By @anchore.\n\n## Docker resources \n\nA compilation of resources mainly focus on security.\n\n- [CIS Docker 1.13.0 Benchmark](https://downloads.cisecurity.org/#/) - provides prescriptive guidance for establishing a secure configuration posture for Docker\n- [Docker security](https://docs.docker.com/engine/security/) - official docker documentation about security\n- [Docker security OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html) - OWASP security cheat sheet\n\n# Credits\n\nThis guide is inspired from [@DoTheEvo](https://github.com/DoTheEvo/selfhosted-apps-docker) own docker guide, built with caddy at its core, check it out !\n"
+        },
+        {
+          "name": "_utilities",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "borg-backup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fail2ban",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "freshrss",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gotify",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jellyfin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nextcloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "seafile",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "synapse-element",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "traefik",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "transmission",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "trilium",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vaultwarden",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "watchtower",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webserver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wireguard-pihole-unbound",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wordpress",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

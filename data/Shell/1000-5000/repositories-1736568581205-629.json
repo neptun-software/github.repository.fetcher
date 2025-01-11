@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": 1736568581205,
+    "page": 629,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "notthebee/infra",
+      "stars": 1469,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".ansible-lint",
+          "type": "blob",
+          "size": 0.0849609375,
+          "content": "---\nskip_list:\n  - git-latest\n  - package-latest\n  - yaml\n\nwarn_list:\n  - load-failure\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2060546875,
+          "content": "/files/docker_persistent_data/*\n!/files/docker_persistent_data/.gitkeep\n/hosts\n/files/fonts/*\n.DS_Store\nsecret.yml\n/group_vars/\n/host_vars/\n!/host_vars/.gitkeep\n!/group_vars/all/vars.yml\nmountsraspi\n.fact_cache\n"
+        },
+        {
+          "name": ".yamllint",
+          "type": "blob",
+          "size": 0.2294921875,
+          "content": "---\nextends: default\n\nrules:\n  line-length: disable\n  truthy:\n    allowed-values: ['true', 'false', 'yes', 'no']\n  comments:\n    min-spaces-from-content: 1\n  braces:\n    min-spaces-inside: 0\n    max-spaces-inside: 1\n\nignore: |\n  .cache"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 0.47265625,
+          "content": "            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE\n                    Version 2, December 2004\n\n Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>\n\n Everyone is permitted to copy and distribute verbatim or modified\n copies of this license document, and changing it is allowed as long\n as the name is changed.\n\n            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE\n   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION\n\n  0. You just DO WHAT THE FUCK YOU WANT TO.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.7783203125,
+          "content": "# notthebee/infra\n\nSuperseded by [nix-config](https://github.com/notthebee/nix-config)\n\nOriginal README:\n```\nAn Ansible playbook that sets up an Ubuntu-based server with reasonable security, auto-updates, e-mail notifications for S.M.A.R.T. and Snapraid errors. Currently being completely rewritten\n\nIt assumes a fresh Ubuntu Server 20.04 install, access to a non-root user with sudo privileges and a public SSH key. This can be configured during the installation process.\n\nThe playbook is mostly being developed for personal use, so stuff is going to be constantly changing and breaking. Use at your own risk and don't expect any help in setting it up on your machine.\n\n## Special thanks\n* David Stephens for his [Ansible NAS](https://github.com/davestephens/ansible-nas) project. This is where I got the idea and \"borrowed\" a lot of concepts and implementations from.\n* Jeff Geerling for his book, [Ansible for DevOps](https://www.ansiblefordevops.com/) and his [Ansible 101 series](https://www.youtube.com/watch?v=goclfp6a2IQ&list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN) on YouTube.\n* Jonathan Hanson for his [SSH port juggling](https://gist.github.com/triplepoint/1ad6c6060c0f12112403d98180bcf0b4) implementation.\n* Alex Kretzschmar and Chris Fisher from [Self Hosted Show](https://selfhosted.show/) for introducing me to the idea of Infrastracture as Code\n* TylerAlterio for the [mergerfs](https://github.com/tyalt1/mediaserver/tree/master/roles/mergerfs) role\n* Jake Howard and Alex Kretzschmar for the [snapraid](https://github.com/RealOrangeOne/ansible-role-snapraid/commits?author=IronicBadger) role\n\n## Services included:\n* [Home Assistant](https://hub.docker.com/r/homeassistant/home-assistant) \n* [Phoscon-GW](https://hub.docker.com/r/marthoc/deconz) \n* [nginx-proxy-manager](https://nginxproxymanager.com/) \n```\n"
+        },
+        {
+          "name": "ansible.cfg",
+          "type": "blob",
+          "size": 0.2861328125,
+          "content": "[defaults]\nINVENTORY = hosts\nvault_password_file = pass.sh\nansible_python_interpreter=/usr/bin/python3\ntimeout=30\ngathering = smart\nfact_caching = jsonfile\nfact_caching_connection = .fact_cache\nfact_caching_timeout = 43200\nhash_behaviour = merge\nforks = 32\n\n[ssh_connection]\npipelining = True\n"
+        },
+        {
+          "name": "group_vars",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pass.sh",
+          "type": "blob",
+          "size": 0.2421875,
+          "content": "#!/usr/bin/env bash\n\n# Keychain query fields.\n# LABEL is the value you put for \"Keychain Item Name\" in Keychain.app.\nLABEL=\"ansible-vault-password\"\nACCOUNT_NAME=\"notthebee\"\n\n/usr/bin/security find-generic-password -w -a \"$ACCOUNT_NAME\" -l \"$LABEL\"\n"
+        },
+        {
+          "name": "requirements.yml",
+          "type": "blob",
+          "size": 0.16796875,
+          "content": "---\nroles:\n    - name: geerlingguy.repo-epel\n    - name: geerlingguy.security\n    - name: geerlingguy.docker\n    - name: geerlingguy.ntp\n    - name: chriswayg.msmtp-mailer\n"
+        },
+        {
+          "name": "roles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run.yml",
+          "type": "blob",
+          "size": 0.744140625,
+          "content": "---\n#\n# Tasks and roles for all hosts\n#\n- hosts: mona\n  gather_facts: no\n\n  pre_tasks:\n      - import_tasks: tasks/ssh_juggle_port.yml\n        tags:\n            - always\n            - port\n\n- hosts: fleet\n  become: yes\n\n  roles:\n      #\n      # Basics\n      #\n      - role: system\n        tags:\n            - system\n\n      - role: neovim\n        tags:\n            - neovim\n\n      - role: geerlingguy.security\n        tags:\n            - security\n\n      - role: geerlingguy.docker\n        tags:\n            - docker\n\n      - role: chriswayg.msmtp-mailer\n        tags:\n            - msmtp\n\n      - name: containers\n        tags:\n          - containers\n\n      - role: tailscale\n        when: tailscale_enabled | default(false)\n        tags:\n            - tailscale\n"
+        },
+        {
+          "name": "tasks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "upload_iso.yml",
+          "type": "blob",
+          "size": 0.0986328125,
+          "content": "---\n- hosts: all\n  gather_facts: yes\n  become: no\n\n  roles:\n    - role: notthebee.ubuntu_autoinstall\n"
+        }
+      ]
+    }
+  ]
+}

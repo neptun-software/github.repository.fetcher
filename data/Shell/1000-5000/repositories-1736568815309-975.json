@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "timestamp": 1736568815309,
+    "page": 975,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk3OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "big-data-europe/docker-hive",
+      "stars": 1033,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "data\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.7958984375,
+          "content": "FROM bde2020/hadoop-base:2.0.0-hadoop2.7.4-java8\n\nMAINTAINER Yiannis Mouchakis <gmouchakis@iit.demokritos.gr>\nMAINTAINER Ivan Ermilov <ivan.s.ermilov@gmail.com>\n\n# Allow buildtime config of HIVE_VERSION\nARG HIVE_VERSION\n# Set HIVE_VERSION from arg if provided at build, env if provided at run, or default\n# https://docs.docker.com/engine/reference/builder/#using-arg-variables\n# https://docs.docker.com/engine/reference/builder/#environment-replacement\nENV HIVE_VERSION=${HIVE_VERSION:-2.3.2}\n\nENV HIVE_HOME /opt/hive\nENV PATH $HIVE_HOME/bin:$PATH\nENV HADOOP_HOME /opt/hadoop-$HADOOP_VERSION\n\nWORKDIR /opt\n\n#Install Hive and PostgreSQL JDBC\nRUN apt-get update && apt-get install -y wget procps && \\\n\twget https://archive.apache.org/dist/hive/hive-$HIVE_VERSION/apache-hive-$HIVE_VERSION-bin.tar.gz && \\\n\ttar -xzvf apache-hive-$HIVE_VERSION-bin.tar.gz && \\\n\tmv apache-hive-$HIVE_VERSION-bin hive && \\\n\twget https://jdbc.postgresql.org/download/postgresql-9.4.1212.jar -O $HIVE_HOME/lib/postgresql-jdbc.jar && \\\n\trm apache-hive-$HIVE_VERSION-bin.tar.gz && \\\n\tapt-get --purge remove -y wget && \\\n\tapt-get clean && \\\n\trm -rf /var/lib/apt/lists/*\n\n\n#Spark should be compiled with Hive to be able to use it\n#hive-site.xml should be copied to $SPARK_HOME/conf folder\n\n#Custom configuration goes here\nADD conf/hive-site.xml $HIVE_HOME/conf\nADD conf/beeline-log4j2.properties $HIVE_HOME/conf\nADD conf/hive-env.sh $HIVE_HOME/conf\nADD conf/hive-exec-log4j2.properties $HIVE_HOME/conf\nADD conf/hive-log4j2.properties $HIVE_HOME/conf\nADD conf/ivysettings.xml $HIVE_HOME/conf\nADD conf/llap-daemon-log4j2.properties $HIVE_HOME/conf\n\nCOPY startup.sh /usr/local/bin/\nRUN chmod +x /usr/local/bin/startup.sh\n\nCOPY entrypoint.sh /usr/local/bin/\nRUN chmod +x /usr/local/bin/entrypoint.sh\n\nEXPOSE 10000\nEXPOSE 10002\n\nENTRYPOINT [\"entrypoint.sh\"]\nCMD startup.sh\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.1142578125,
+          "content": "current_branch := $(shell git rev-parse --abbrev-ref HEAD)\nbuild:\n\tdocker build -t bde2020/hive:$(current_branch) ./\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.67578125,
+          "content": "[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)\n\n# docker-hive\n\nThis is a docker container for Apache Hive 2.3.2. It is based on https://github.com/big-data-europe/docker-hadoop so check there for Hadoop configurations.\nThis deploys Hive and starts a hiveserver2 on port 10000.\nMetastore is running with a connection to postgresql database.\nThe hive configuration is performed with HIVE_SITE_CONF_ variables (see hadoop-hive.env for an example).\n\nTo run Hive with postgresql metastore:\n```\n    docker-compose up -d\n```\n\nTo deploy in Docker Swarm:\n```\n    docker stack deploy -c docker-compose.yml hive\n```\n\nTo run a PrestoDB 0.181 with Hive connector:\n\n```\n  docker-compose up -d presto-coordinator\n```\n\nThis deploys a Presto server listens on port `8080`\n\n## Testing\nLoad data into Hive:\n```\n  $ docker-compose exec hive-server bash\n  # /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000\n  > CREATE TABLE pokes (foo INT, bar STRING);\n  > LOAD DATA LOCAL INPATH '/opt/hive/examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;\n```\n\nThen query it from PrestoDB. You can get [presto.jar](https://prestosql.io/docs/current/installation/cli.html) from PrestoDB website:\n```\n  $ wget https://repo1.maven.org/maven2/io/prestosql/presto-cli/308/presto-cli-308-executable.jar\n  $ mv presto-cli-308-executable.jar presto.jar\n  $ chmod +x presto.jar\n  $ ./presto.jar --server localhost:8080 --catalog hive --schema default\n  presto> select * from pokes;\n```\n\n## Contributors\n* Ivan Ermilov [@earthquakesan](https://github.com/earthquakesan) (maintainer)\n* Yiannis Mouchakis [@gmouchakis](https://github.com/gmouchakis)\n* Ke Zhu [@shawnzhu](https://github.com/shawnzhu)\n"
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 1.2861328125,
+          "content": "version: \"3\"\n\nservices:\n  namenode:\n    image: bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8\n    volumes:\n      - namenode:/hadoop/dfs/name\n    environment:\n      - CLUSTER_NAME=test\n    env_file:\n      - ./hadoop-hive.env\n    ports:\n      - \"50070:50070\"\n  datanode:\n    image: bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8\n    volumes:\n      - datanode:/hadoop/dfs/data\n    env_file:\n      - ./hadoop-hive.env\n    environment:\n      SERVICE_PRECONDITION: \"namenode:50070\"\n    ports:\n      - \"50075:50075\"\n  hive-server:\n    image: bde2020/hive:2.3.2-postgresql-metastore\n    env_file:\n      - ./hadoop-hive.env\n    environment:\n      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: \"jdbc:postgresql://hive-metastore/metastore\"\n      SERVICE_PRECONDITION: \"hive-metastore:9083\"\n    ports:\n      - \"10000:10000\"\n  hive-metastore:\n    image: bde2020/hive:2.3.2-postgresql-metastore\n    env_file:\n      - ./hadoop-hive.env\n    command: /opt/hive/bin/hive --service metastore\n    environment:\n      SERVICE_PRECONDITION: \"namenode:50070 datanode:50075 hive-metastore-postgresql:5432\"\n    ports:\n      - \"9083:9083\"\n  hive-metastore-postgresql:\n    image: bde2020/hive-metastore-postgresql:2.3.0\n  presto-coordinator:\n    image: shawnzhu/prestodb:0.181\n    ports:\n      - \"8080:8080\"\n\nvolumes:\n  namenode:\n  datanode:\n"
+        },
+        {
+          "name": "entrypoint.sh",
+          "type": "blob",
+          "size": 4.0830078125,
+          "content": "#!/bin/bash\n\n# Set some sensible defaults\nexport CORE_CONF_fs_defaultFS=${CORE_CONF_fs_defaultFS:-hdfs://`hostname -f`:8020}\n\nfunction addProperty() {\n  local path=$1\n  local name=$2\n  local value=$3\n\n  local entry=\"<property><name>$name</name><value>${value}</value></property>\"\n  local escapedEntry=$(echo $entry | sed 's/\\//\\\\\\//g')\n  sed -i \"/<\\/configuration>/ s/.*/${escapedEntry}\\n&/\" $path\n}\n\nfunction configure() {\n    local path=$1\n    local module=$2\n    local envPrefix=$3\n\n    local var\n    local value\n    \n    echo \"Configuring $module\"\n    for c in `printenv | perl -sne 'print \"$1 \" if m/^${envPrefix}_(.+?)=.*/' -- -envPrefix=$envPrefix`; do \n        name=`echo ${c} | perl -pe 's/___/-/g; s/__/_/g; s/_/./g'`\n        var=\"${envPrefix}_${c}\"\n        value=${!var}\n        echo \" - Setting $name=$value\"\n        addProperty $path $name \"$value\"\n    done\n}\n\nconfigure /etc/hadoop/core-site.xml core CORE_CONF\nconfigure /etc/hadoop/hdfs-site.xml hdfs HDFS_CONF\nconfigure /etc/hadoop/yarn-site.xml yarn YARN_CONF\nconfigure /etc/hadoop/httpfs-site.xml httpfs HTTPFS_CONF\nconfigure /etc/hadoop/kms-site.xml kms KMS_CONF\nconfigure /etc/hadoop/mapred-site.xml mapred MAPRED_CONF\nconfigure /opt/hive/conf/hive-site.xml hive HIVE_SITE_CONF\n\nif [ \"$MULTIHOMED_NETWORK\" = \"1\" ]; then\n    echo \"Configuring for multihomed network\"\n\n    # HDFS\n    addProperty /etc/hadoop/hdfs-site.xml dfs.namenode.rpc-bind-host 0.0.0.0\n    addProperty /etc/hadoop/hdfs-site.xml dfs.namenode.servicerpc-bind-host 0.0.0.0\n    addProperty /etc/hadoop/hdfs-site.xml dfs.namenode.http-bind-host 0.0.0.0\n    addProperty /etc/hadoop/hdfs-site.xml dfs.namenode.https-bind-host 0.0.0.0\n    addProperty /etc/hadoop/hdfs-site.xml dfs.client.use.datanode.hostname true\n    addProperty /etc/hadoop/hdfs-site.xml dfs.datanode.use.datanode.hostname true\n\n    # YARN\n    addProperty /etc/hadoop/yarn-site.xml yarn.resourcemanager.bind-host 0.0.0.0\n    addProperty /etc/hadoop/yarn-site.xml yarn.nodemanager.bind-host 0.0.0.0\n    addProperty /etc/hadoop/yarn-site.xml yarn.nodemanager.bind-host 0.0.0.0\n    addProperty /etc/hadoop/yarn-site.xml yarn.timeline-service.bind-host 0.0.0.0\n\n    # MAPRED\n    addProperty /etc/hadoop/mapred-site.xml yarn.nodemanager.bind-host 0.0.0.0\nfi\n\nif [ -n \"$GANGLIA_HOST\" ]; then\n    mv /etc/hadoop/hadoop-metrics.properties /etc/hadoop/hadoop-metrics.properties.orig\n    mv /etc/hadoop/hadoop-metrics2.properties /etc/hadoop/hadoop-metrics2.properties.orig\n\n    for module in mapred jvm rpc ugi; do\n        echo \"$module.class=org.apache.hadoop.metrics.ganglia.GangliaContext31\"\n        echo \"$module.period=10\"\n        echo \"$module.servers=$GANGLIA_HOST:8649\"\n    done > /etc/hadoop/hadoop-metrics.properties\n    \n    for module in namenode datanode resourcemanager nodemanager mrappmaster jobhistoryserver; do\n        echo \"$module.sink.ganglia.class=org.apache.hadoop.metrics2.sink.ganglia.GangliaSink31\"\n        echo \"$module.sink.ganglia.period=10\"\n        echo \"$module.sink.ganglia.supportsparse=true\"\n        echo \"$module.sink.ganglia.slope=jvm.metrics.gcCount=zero,jvm.metrics.memHeapUsedM=both\"\n        echo \"$module.sink.ganglia.dmax=jvm.metrics.threadsBlocked=70,jvm.metrics.memHeapUsedM=40\"\n        echo \"$module.sink.ganglia.servers=$GANGLIA_HOST:8649\"\n    done > /etc/hadoop/hadoop-metrics2.properties\nfi\n\nfunction wait_for_it()\n{\n    local serviceport=$1\n    local service=${serviceport%%:*}\n    local port=${serviceport#*:}\n    local retry_seconds=5\n    local max_try=100\n    let i=1\n\n    nc -z $service $port\n    result=$?\n\n    until [ $result -eq 0 ]; do\n      echo \"[$i/$max_try] check for ${service}:${port}...\"\n      echo \"[$i/$max_try] ${service}:${port} is not available yet\"\n      if (( $i == $max_try )); then\n        echo \"[$i/$max_try] ${service}:${port} is still not available; giving up after ${max_try} tries. :/\"\n        exit 1\n      fi\n      \n      echo \"[$i/$max_try] try in ${retry_seconds}s once again ...\"\n      let \"i++\"\n      sleep $retry_seconds\n\n      nc -z $service $port\n      result=$?\n    done\n    echo \"[$i/$max_try] $service:${port} is available.\"\n}\n\nfor i in ${SERVICE_PRECONDITION[@]}\ndo\n    wait_for_it ${i}\ndone\n\nexec $@\n"
+        },
+        {
+          "name": "hadoop-hive.env",
+          "type": "blob",
+          "size": 1.6240234375,
+          "content": "HIVE_SITE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore-postgresql/metastore\nHIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName=org.postgresql.Driver\nHIVE_SITE_CONF_javax_jdo_option_ConnectionUserName=hive\nHIVE_SITE_CONF_javax_jdo_option_ConnectionPassword=hive\nHIVE_SITE_CONF_datanucleus_autoCreateSchema=false\nHIVE_SITE_CONF_hive_metastore_uris=thrift://hive-metastore:9083\nHDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false\n\nCORE_CONF_fs_defaultFS=hdfs://namenode:8020\nCORE_CONF_hadoop_http_staticuser_user=root\nCORE_CONF_hadoop_proxyuser_hue_hosts=*\nCORE_CONF_hadoop_proxyuser_hue_groups=*\n\nHDFS_CONF_dfs_webhdfs_enabled=true\nHDFS_CONF_dfs_permissions_enabled=false\n\nYARN_CONF_yarn_log___aggregation___enable=true\nYARN_CONF_yarn_resourcemanager_recovery_enabled=true\nYARN_CONF_yarn_resourcemanager_store_class=org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore\nYARN_CONF_yarn_resourcemanager_fs_state___store_uri=/rmstate\nYARN_CONF_yarn_nodemanager_remote___app___log___dir=/app-logs\nYARN_CONF_yarn_log_server_url=http://historyserver:8188/applicationhistory/logs/\nYARN_CONF_yarn_timeline___service_enabled=true\nYARN_CONF_yarn_timeline___service_generic___application___history_enabled=true\nYARN_CONF_yarn_resourcemanager_system___metrics___publisher_enabled=true\nYARN_CONF_yarn_resourcemanager_hostname=resourcemanager\nYARN_CONF_yarn_timeline___service_hostname=historyserver\nYARN_CONF_yarn_resourcemanager_address=resourcemanager:8032\nYARN_CONF_yarn_resourcemanager_scheduler_address=resourcemanager:8030\nYARN_CONF_yarn_resourcemanager_resource__tracker_address=resourcemanager:8031\n"
+        },
+        {
+          "name": "startup.sh",
+          "type": "blob",
+          "size": 0.2265625,
+          "content": "#!/bin/bash\n\nhadoop fs -mkdir       /tmp\nhadoop fs -mkdir -p    /user/hive/warehouse\nhadoop fs -chmod g+w   /tmp\nhadoop fs -chmod g+w   /user/hive/warehouse\n\ncd $HIVE_HOME/bin\n./hiveserver2 --hiveconf hive.server2.enable.doAs=false\n"
+        }
+      ]
+    }
+  ]
+}

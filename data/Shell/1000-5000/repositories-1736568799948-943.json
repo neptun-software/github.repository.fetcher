@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736568799948,
+    "page": 943,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk0OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "shipping-docker/vessel",
+      "stars": 1063,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.046875,
+          "content": ".DS_Store\n.vscode/\n.idea/\nvendor/\ncomposer.lock\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "MIT License\n\nCopyright (c) 2017 Shipping Docker\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.8154296875,
+          "content": "# Vessel\n\nUp and running with small Docker dev environments.\n\n## Documentation\n\nFull documentation can be found at [https://vessel.shippingdocker.com](https://vessel.shippingdocker.com).\n\n## Install\n\nVessel is just a small set of files that sets up a local Docker-based dev environment per project. There is nothing to install globally, except Docker itself!\n\nThis is all there is to using it:\n\n```bash\ncomposer require shipping-docker/vessel\nphp artisan vendor:publish --provider=\"Vessel\\VesselServiceProvider\"\n\n# Run this once to initialize project\n# Must run with \"bash\" until initialized\nbash vessel init\n\n./vessel start\n```\n\nHead to `http://localhost` in your browser and see your Laravel site!\n\n## Lumen\n\nIf you're using Lumen, you'll need to copy the Vessel files over manually instead of using `php artisan vendor:publish`. You can do this with this command:\n\n    cp -R vendor/shipping-docker/vessel/docker-files/{vessel,docker-compose.yml,docker} .\n\nand then you'll be able to install and continue as normal.\n\n\n## Multiple Environments\n\nVessel attempts to bind to port 80 and 3306 on your machine, so you can simply go to `http://localhost` in your browser.\n\nHowever, if you run more than one instance of Vessel, you'll get an error when starting it; Each port can only be used once. To get around this, use a different port per project by setting the `APP_PORT` and `MYSQL_PORT` environment variables in one of two ways:\n\nWithin the `.env` file:\n\n```\nAPP_PORT=8080\nMYSQL_PORT=33060\n```\n\nOr when starting Vessel:\n\n```bash\nAPP_PORT=8080 MYSQL_PORT=33060 ./vessel start\n```\n\nThen you can view your project at `http://localhost:8080` and access your database locally from port `33060`;\n\n## Sequel Pro\n\nSince we bind the MySQL to port `3306`, SequelPro can access the database directly.\n\n![sequel pro access](https://s3.amazonaws.com/sfh-assets/vessel-sequel-pro.png)\n\nThe password for user `root` is set by environment variable `DB_PASSWORD` from within the `.env` file.\n\n> The port setting must match the `MYSQL_PORT` environment variable, which defaults to `3306`.\n\n## Common Commands\n\nHere's a list of built-in helpers you can use. Any command not defined in the `vessel` script will default to being passed to the `docker-compose` command. If not command is used, it will run `docker-compose ps` to list the running containers for this environment.\n\n### Show Vessel Version or Help\n\n```bash\n# shows vessel current version\n$ vessel --version # or [ -v | version ]\n\n# shows vessel help\n$ vessel --help # or [ -H | help ]\n```\n\n### Starting and Stopping Vessel\n\n```bash\n# Start the environment\n./vessel start\n\n## This is equivalent to\n./vessel up -d\n\n# Stop the environment\n./vessel stop\n\n## This is equivalent to\n./vessel down\n```\n\n### Development\n\n```bash\n# Use composer\n./vessel composer <cmd>\n./vessel comp <cmd> # \"comp\" is a shortcut to \"composer\"\n\n# Use artisan\n./vessel artisan <cmd>\n./vessel art <cmd> # \"art\" is a shortcut to \"artisan\"\n\n# Run tinker REPL\n./vessel tinker # \"tinker\" is a shortcut for \"artisan tinker\"\n\n# Run phpunit tests\n./vessel test\n\n## Example: You can pass anything you would to phpunit to this as well\n./vessel test --filter=some.phpunit.filter\n./vessel test tests/Unit/SpecificTest.php\n\n\n# Run npm\n./vessel npm <cmd>\n\n## Example: install deps\n./vessel npm install\n\n# Run yarn\n\n./vessel yarn <cmd>\n\n## Example: install deps\n./vessel yarn install\n\n# Run gulp\n./vessel gulp <cmd>\n```\n\n### Docker Commands\n\nAs mentioned, anything not recognized as a built-in command will be used as an argument for the `docker-compose` command. Here's a few handy tricks:\n\n```bash\n# Both will list currently running containers and their status\n./vessel\n./vessel ps\n\n# Check log output of a container service\n./vessel logs # all container logs\n./vessel logs app # nginx | php logs\n./vessel logs mysql # mysql logs\n./vessel logs redis # redis logs\n\n## Tail the logs to see output as it's generated\n./vessel logs -f # all logs\n./vessel logs -f app # nginx | php logs\n\n## Tail Laravel Logs\n./vessel exec app tail -f /var/www/html/storage/logs/laravel.log\n\n# Start a bash shell inside of a container\n# This is just like SSH'ing into a server\n# Note that changes to a container made this way will **NOT**\n#   survive through stopping and starting the vessel environment\n#   To install software or change server configuration, you'll need to\n#     edit the Dockerfile and run: ./vessel build\n./vessel exec app bash\n\n# Example: mysqldump database \"homestead\" to local file system\n#          We must add the password in the command line this way\n#          This creates files \"homestead.sql\" on your local file system, not\n#          inside of the container\n# @link https://serversforhackers.com/c/mysql-in-dev-docker\n./vessel exec mysql mysqldump -u root -psecret homestead > homestead.sql\n```\n\n\n## What's included?\n\nThe aim of this project is simplicity. It includes:\n\n* PHP 7.4\n* MySQL 5.7\n* Redis ([latest](https://hub.docker.com/_/redis/))\n* NodeJS ([latest](https://hub.docker.com/_/node/)), with Yarn & Gulp\n\n## How does this work?\n\nIf you're unfamiliar with Docker, try out this [Docker in Development](https://serversforhackers.com/s/docker-in-development) course, which explains important topics in how this is put together.\n\nIf you want to see how this workflow was developed, check out [Shipping Docker](https://serversforhackers.com/shipping-docker) and signup for the free course module which explains building this Docker workflow.\n\n## Supported Systems\n\nVessel requires Docker, and currently only works on Windows, Mac and Linux.\n\n> Windows requires running Hyper-V.  Using Git Bash (MINGW64) and WSL are supported.  Native\n  Windows is still under development.\n\n| Mac                                                                      |                                              Linux                                              |                                     Windows                                      |\n| ------------------------------------------------------------------------ | :---------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------: |\n| Install Docker on [Mac](https://docs.docker.com/docker-for-mac/install/) | Install Docker on [Debian](https://docs.docker.com/engine/installation/linux/docker-ce/debian/) | Install Docker on [Windows](https://docs.docker.com/docker-for-windows/install/) |\n|                                                                          | Install Docker on [Ubuntu](https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/) |                                                                                  |\n|                                                                          | Install Docker on [CentOS](https://docs.docker.com/engine/installation/linux/docker-ce/centos/) |                                                                                  |\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.6572265625,
+          "content": "{\n    \"name\": \"shipping-docker/vessel\",\n    \"description\": \"Simple Docker dev environments\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Chris Fidao\",\n            \"email\": \"fideloper@gmail.com\"\n        }\n    ],\n    \"autoload\": {\n        \"psr-4\": {\n            \"Vessel\\\\\": \"src/\"\n        }\n    },\n    \"require\": {},\n    \"extra\": {\n        \"laravel\": {\n            \"providers\": [\n                \"Vessel\\\\VesselServiceProvider\"\n            ]\n        }\n    },\n    \"scripts\": {\n        \"post-update-cmd\": \"echo 'VESSEL: Updates may require rebuilding your images.\\nVESSEL: See https://github.com/shipping-docker/vessel/releases for details.'\"\n    }\n}\n"
+        },
+        {
+          "name": "docker-files",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

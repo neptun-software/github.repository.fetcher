@@ -1,0 +1,164 @@
+{
+  "metadata": {
+    "timestamp": 1736568766808,
+    "page": 882,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg4OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tianon/docker-postgres-upgrade",
+      "stars": 1117,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1298828125,
+          "content": "/*/**/Dockerfile      linguist-generated\n/*/**/docker-upgrade  linguist-generated\n/Dockerfile.template  linguist-language=Dockerfile\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0166015625,
+          "content": ".jq-template.awk\n"
+        },
+        {
+          "name": "12-to-13",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "12-to-14",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "12-to-15",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "12-to-16",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "12-to-17",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "13-to-14",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "13-to-15",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "13-to-16",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "13-to-17",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "14-to-15",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "14-to-16",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "14-to-17",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "15-to-16",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "15-to-17",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "16-to-17",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile.template",
+          "type": "blob",
+          "size": 0.669921875,
+          "content": "FROM {{ .from }}\n\nRUN sed -i 's/$/ {{ .old }}/' /etc/apt/sources.list.d/pgdg.list\n\nRUN set -eux; \\\n\tapt-get update; \\\n\tapt-get install -y --no-install-recommends \\\n\t\tpostgresql-{{ .old }}={{ .version | @sh }} \\\n\t; \\\n\trm -rf /var/lib/apt/lists/*\n\nENV PGBINOLD /usr/lib/postgresql/{{ .old }}/bin\nENV PGBINNEW /usr/lib/postgresql/{{ .new }}/bin\n\nENV PGDATAOLD /var/lib/postgresql/{{ .old }}/data\nENV PGDATANEW /var/lib/postgresql/{{ .new }}/data\n\nRUN set -eux; \\\n\tmkdir -p \"$PGDATAOLD\" \"$PGDATANEW\"; \\\n\tchown -R postgres:postgres /var/lib/postgresql\n\nWORKDIR /var/lib/postgresql\n\nCOPY docker-upgrade /usr/local/bin/\n\nENTRYPOINT [\"docker-upgrade\"]\n\n# recommended: --link\nCMD [\"pg_upgrade\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0634765625,
+          "content": "Copyright (c) 2014-2015, Docker PostgreSQL Authors (See AUTHORS)\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.5498046875,
+          "content": "# `pg_upgrade`, Docker style\n\nThis is a PoC for using `pg_upgrade` inside Docker -- learn from it, adapt it for your needs; don't expect it to work as-is!\n\n(Source for this image is available at [https://github.com/tianon/docker-postgres-upgrade](https://github.com/tianon/docker-postgres-upgrade).)\n\nTags of this image are of the format `OLD-to-NEW`, where `OLD` represents the version of PostgreSQL you are _currently_ running, and `NEW` represents the version of PostgreSQL you would like to upgrade to.\n\nIn order to get good performance, it is recommended to run this image with `docker run image --link` (see [`pg_upgrade` documentation](https://www.postgresql.org/docs/9.5/static/pgupgrade.html) for more details).\n\nFor this to be feasible, your directory structure should look something like this: (if yours does not, either adjust it, or scroll down to see the alternate pattern for running this image)\n\n```console\n$ find DIR -mindepth 2 -maxdepth 2\nDIR/OLD/data\nDIR/NEW/data\n\n$ docker run --rm \\\n\t-v DIR:/var/lib/postgresql \\\n\ttianon/postgres-upgrade:OLD-to-NEW \\\n\t--link\n\n...\n```\n\nMore concretely, assuming `OLD` of `9.4`, `NEW` of `9.5`, and `DIR` of `/mnt/bigdrive/postgresql`:\n\n```console\n$ find /mnt/bigdrive/postgresql -mindepth 2 -maxdepth 2\n/mnt/bigdrive/postgresql/9.4/data\n/mnt/bigdrive/postgresql/9.5/data\n\n$ docker run --rm \\\n\t-v /mnt/bigdrive/postgresql:/var/lib/postgresql \\\n\ttianon/postgres-upgrade:9.4-to-9.5 \\\n\t--link\n\n...\n```\n\n(which assumes that your previous `postgres:9.4` instance was running with `-v /mnt/bigdrive/postgresql/9.4/data:/var/lib/postgresql/data`, and your new `postgres:9.5` instance will run with `-v /mnt/bigdrive/postgresql/9.5/data:/var/lib/postgresql/data`)\n\n---\n\nIf your two directories (denoted below as `PGDATAOLD` and `PGDATANEW`) do not follow this structure, then the following may also be used (but will be slower):\n\n```console\n$ docker run --rm \\\n\t-v PGDATAOLD:/var/lib/postgresql/OLD/data \\\n\t-v PGDATANEW:/var/lib/postgresql/NEW/data \\\n\ttianon/postgres-upgrade:OLD-to-NEW\n\n...\n```\n\nMore concretely, assuming `OLD` of `9.4`, `NEW` of `9.5`, `PGDATAOLD` of `/mnt/bigdrive/postgresql-9.4`, and `PGDATANEW` of `/mnt/bigdrive/postgresql-9.5`:\n\n```console\n$ docker run --rm \\\n\t-v /mnt/bigdrive/postgresql-9.4:/var/lib/postgresql/9.4/data \\\n\t-v /mnt/bigdrive/postgresql-9.5:/var/lib/postgresql/9.5/data \\\n\ttianon/postgres-upgrade:9.4-to-9.5\n\n...\n```\n\n(which assumes that your previous `postgres:9.4` instance was running with `-v /mnt/bigdrive/postgresql-9.4:/var/lib/postgresql/data`, and your new `postgres:9.5` instance will run with `-v /mnt/bigdrive/postgresql-9.5:/var/lib/postgresql/data`)\n\n---\n\nPutting it all together:\n\n```console\n$ mkdir -p postgres-upgrade-testing\n$ cd postgres-upgrade-testing\n$ OLD='9.4'\n$ NEW='9.5'\n\n$ docker pull \"postgres:$OLD\"\n$ docker run -dit \\\n\t--name postgres-upgrade-testing \\\n\t-e POSTGRES_PASSWORD=password \\\n\t-v \"$PWD/$OLD/data\":/var/lib/postgresql/data \\\n\t\"postgres:$OLD\"\n$ sleep 5\n$ docker logs --tail 100 postgres-upgrade-testing\n\n$ # let's get some testing data in there\n$ docker exec -it \\\n\t-u postgres \\\n\tpostgres-upgrade-testing \\\n\tpgbench -i -s 10\n\n$ docker stop postgres-upgrade-testing\n$ docker rm postgres-upgrade-testing\n\n$ docker run --rm \\\n\t-v \"$PWD\":/var/lib/postgresql \\\n\t\"tianon/postgres-upgrade:$OLD-to-$NEW\" \\\n\t--link\n\n$ docker pull \"postgres:$NEW\"\n$ docker run -dit \\\n\t--name postgres-upgrade-testing \\\n\t-e POSTGRES_PASSWORD=password \\\n\t-v \"$PWD/$NEW/data\":/var/lib/postgresql/data \\\n\t\"postgres:$NEW\"\n$ sleep 5\n$ docker logs --tail 100 postgres-upgrade-testing\n\n$ # can now safely remove \"$OLD\"\n$ sudo rm -rf \"$OLD\"\n```\n"
+        },
+        {
+          "name": "apply-templates.sh",
+          "type": "blob",
+          "size": 0.9248046875,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\n[ -f versions.json ] # run \"versions.sh\" first\n\njqt='.jq-template.awk'\nif [ -n \"${BASHBREW_SCRIPTS:-}\" ]; then\n\tjqt=\"$BASHBREW_SCRIPTS/jq-template.awk\"\nelif [ \"$BASH_SOURCE\" -nt \"$jqt\" ]; then\n\t# https://github.com/docker-library/bashbrew/blob/master/scripts/jq-template.awk\n\twget -qO \"$jqt\" 'https://github.com/docker-library/bashbrew/raw/9f6a35772ac863a0241f147c820354e4008edf38/scripts/jq-template.awk'\nfi\n\nif [ \"$#\" -eq 0 ]; then\n\tversions=\"$(jq -r 'keys_unsorted | map(@sh) | join(\" \")' versions.json)\"\n\teval \"set -- $versions\"\nfi\n\ngenerated_warning() {\n\tcat <<-EOH\n\t\t#\n\t\t# NOTE: THIS DOCKERFILE IS GENERATED VIA \"apply-templates.sh\"\n\t\t#\n\t\t# PLEASE DO NOT EDIT IT DIRECTLY.\n\t\t#\n\n\tEOH\n}\n\nfor version; do\n\texport version\n\n\techo \"processing $version ...\"\n\n\tmkdir -p \"$version\"\n\n\t{\n\t\tgenerated_warning\n\t\tgawk -f \"$jqt\" Dockerfile.template\n\t} > \"$version/Dockerfile\"\n\n\tcp -a docker-upgrade \"$version/\"\ndone\n"
+        },
+        {
+          "name": "docker-upgrade",
+          "type": "blob",
+          "size": 0.4658203125,
+          "content": "#!/bin/bash\nset -e\n\nif [ \"$#\" -eq 0 -o \"${1:0:1}\" = '-' ]; then\n\tset -- pg_upgrade \"$@\"\nfi\n\nif [ \"$1\" = 'pg_upgrade' -a \"$(id -u)\" = '0' ]; then\n\tmkdir -p \"$PGDATAOLD\" \"$PGDATANEW\"\n\tchmod 700 \"$PGDATAOLD\" \"$PGDATANEW\"\n\tchown postgres .\n\tchown -R postgres \"$PGDATAOLD\" \"$PGDATANEW\"\n\texec gosu postgres \"$BASH_SOURCE\" \"$@\"\nfi\n\nif [ \"$1\" = 'pg_upgrade' ]; then\n\tif [ ! -s \"$PGDATANEW/PG_VERSION\" ]; then\n\t\tPGDATA=\"$PGDATANEW\" eval \"initdb $POSTGRES_INITDB_ARGS\"\n\tfi\nfi\n\nexec \"$@\"\n"
+        },
+        {
+          "name": "generate-stackbrew-library.sh",
+          "type": "blob",
+          "size": 0.5390625,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\nself=\"$(basename \"$BASH_SOURCE\")\"\ncd \"$(dirname \"$(readlink -f \"$BASH_SOURCE\")\")\"\n\nif [ \"$#\" -eq 0 ]; then\n\tversions=\"$(jq -r 'keys_unsorted | map(@sh) | join(\" \")' versions.json)\"\n\teval \"set -- $versions\"\nfi\n\ncommit=\"$(git log -1 --format='format:%H' HEAD)\"\n\ncat <<-EOH\n\tMaintainers: Tianon Gravi <tianon@tianon.xyz> (@tianon)\n\tGitRepo: https://github.com/tianon/docker-postgres-upgrade.git\n\tGitCommit: $commit\nEOH\n\nfor version; do\n\texport version\n\n\tcat <<-EOE\n\n\t\tTags: $version\n\t\tDirectory: $version\n\tEOE\ndone\n"
+        },
+        {
+          "name": "update.sh",
+          "type": "blob",
+          "size": 0.130859375,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\ncd \"$(dirname \"$(readlink -f \"$BASH_SOURCE\")\")\"\n\n./versions.sh \"$@\"\n./apply-templates.sh \"$@\"\n"
+        },
+        {
+          "name": "versions.json",
+          "type": "blob",
+          "size": 1.84765625,
+          "content": "{\n  \"16-to-17\": {\n    \"from\": \"postgres:17-bookworm\",\n    \"new\": \"17\",\n    \"old\": \"16\",\n    \"version\": \"16.6-1.pgdg120+1\"\n  },\n  \"15-to-17\": {\n    \"from\": \"postgres:17-bookworm\",\n    \"new\": \"17\",\n    \"old\": \"15\",\n    \"version\": \"15.10-1.pgdg120+1\"\n  },\n  \"14-to-17\": {\n    \"from\": \"postgres:17-bookworm\",\n    \"new\": \"17\",\n    \"old\": \"14\",\n    \"version\": \"14.15-1.pgdg120+1\"\n  },\n  \"13-to-17\": {\n    \"from\": \"postgres:17-bookworm\",\n    \"new\": \"17\",\n    \"old\": \"13\",\n    \"version\": \"13.18-1.pgdg120+1\"\n  },\n  \"12-to-17\": {\n    \"from\": \"postgres:17-bookworm\",\n    \"new\": \"17\",\n    \"old\": \"12\",\n    \"version\": \"12.22-1.pgdg120+1\"\n  },\n  \"15-to-16\": {\n    \"from\": \"postgres:16-bookworm\",\n    \"new\": \"16\",\n    \"old\": \"15\",\n    \"version\": \"15.10-1.pgdg120+1\"\n  },\n  \"14-to-16\": {\n    \"from\": \"postgres:16-bookworm\",\n    \"new\": \"16\",\n    \"old\": \"14\",\n    \"version\": \"14.15-1.pgdg120+1\"\n  },\n  \"13-to-16\": {\n    \"from\": \"postgres:16-bookworm\",\n    \"new\": \"16\",\n    \"old\": \"13\",\n    \"version\": \"13.18-1.pgdg120+1\"\n  },\n  \"12-to-16\": {\n    \"from\": \"postgres:16-bookworm\",\n    \"new\": \"16\",\n    \"old\": \"12\",\n    \"version\": \"12.22-1.pgdg120+1\"\n  },\n  \"14-to-15\": {\n    \"from\": \"postgres:15-bookworm\",\n    \"new\": \"15\",\n    \"old\": \"14\",\n    \"version\": \"14.15-1.pgdg120+1\"\n  },\n  \"13-to-15\": {\n    \"from\": \"postgres:15-bookworm\",\n    \"new\": \"15\",\n    \"old\": \"13\",\n    \"version\": \"13.18-1.pgdg120+1\"\n  },\n  \"12-to-15\": {\n    \"from\": \"postgres:15-bookworm\",\n    \"new\": \"15\",\n    \"old\": \"12\",\n    \"version\": \"12.22-1.pgdg120+1\"\n  },\n  \"13-to-14\": {\n    \"from\": \"postgres:14-bookworm\",\n    \"new\": \"14\",\n    \"old\": \"13\",\n    \"version\": \"13.18-1.pgdg120+1\"\n  },\n  \"12-to-14\": {\n    \"from\": \"postgres:14-bookworm\",\n    \"new\": \"14\",\n    \"old\": \"12\",\n    \"version\": \"12.22-1.pgdg120+1\"\n  },\n  \"12-to-13\": {\n    \"from\": \"postgres:13-bookworm\",\n    \"new\": \"13\",\n    \"old\": \"12\",\n    \"version\": \"12.22-1.pgdg120+1\"\n  }\n}\n"
+        },
+        {
+          "name": "versions.sh",
+          "type": "blob",
+          "size": 1.884765625,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\ndoiCommit=\"$(git ls-remote https://github.com/docker-library/official-images.git HEAD | cut -d$'\\t' -f1)\"\ndoiPostgres=\"https://github.com/docker-library/official-images/raw/$doiCommit/library/postgres\"\nversions=\"$(\n\tbashbrew list \"$doiPostgres\" | jq -nR '\n\t\t[\n\t\t\tinputs\n\t\t\t# filter tags down to just \"N-XXX\" (capturing \"version\" and \"debian suite\")\n\t\t\t| capture(\":(?<version>[0-9]+)-(?<suite>[a-z].*)$\")\n\t\t\t| select(.suite | startswith(\"alpine\") | not)\n\t\t]\n\t'\n)\"\nsupportedVersions=\"$(jq <<<\"$versions\" -r '[ .[].version | tonumber ] | unique | reverse | map(@sh) | join(\" \")')\"\neval \"supportedVersions=( $supportedVersions )\"\n\njson='{}'\n\nfor i in \"${!supportedVersions[@]}\"; do\n\tnew=\"${supportedVersions[$i]}\"\n\texport new\n\tsuites=\"$(jq <<<\"$versions\" -c '[ .[] | select(.version == env.new).suite ]')\"\n\techo \"# $new (possible suites: $suites)\"\n\t(( j = i + 1 ))\n\tfor old in \"${supportedVersions[@]:$j}\"; do\n\t\texport old\n\t\tsuite=\"$(jq <<<\"$versions\" --argjson suites \"$suites\" -r '\n\t\t\tfirst(\n\t\t\t\t.[]\n\t\t\t\t| select(\n\t\t\t\t\t.version == env.old\n\t\t\t\t\t\tand (\n\t\t\t\t\t\t\t.suite as $suite\n\t\t\t\t\t\t\t| $suites | index($suite)\n\t\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t).suite\n\t\t')\"\n\t\tfrom=\"postgres:$new-$suite\"\n\t\tdir=\"$old-to-$new\"\n\t\texport suite from dir\n\t\techo \"- $old -> $new ($dir; $suite)\"\n\t\tpostgresCommit=\"$(bashbrew cat --format '{{ .TagEntry.GitCommit }}' \"$doiPostgres:$old-$suite\")\"\n\t\tversionsURL=\"https://github.com/docker-library/postgres/raw/$postgresCommit/versions.json\"\n\t\toldVersion=\"$(wget -qO- \"$versionsURL\" | jq -r '.[env.old][env.suite].version // empty')\" # TODO arches? (would need to cross-reference $new's arches, but that's fair / not too difficult)\n\t\techo \"  - $oldVersion\"\n\t\t[ -n \"$oldVersion\" ]\n\t\texport oldVersion\n\t\tjson=\"$(jq <<<\"$json\" -c '\n\t\t\t.[env.dir] = {\n\t\t\t\tfrom: env.from,\n\t\t\t\tnew: env.new,\n\t\t\t\told: env.old,\n\t\t\t\tversion: env.oldVersion,\n\t\t\t}\n\t\t')\"\n\tdone\ndone\n\njq <<<\"$json\" '.' > versions.json\n"
+        }
+      ]
+    }
+  ]
+}

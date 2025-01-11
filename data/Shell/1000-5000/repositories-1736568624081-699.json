@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "timestamp": 1736568624081,
+    "page": 699,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcwOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kingkool68/generate-ssl-certs-for-local-development",
+      "stars": 1366,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0166015625,
+          "content": "tmp/\nyour-certs/\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.6640625,
+          "content": "# Generate Self-Signed SSL Certificates for Local Development On A Mac\n\nHave you ever need to develop HTTPS sites locally? To make it work you need to generate a SSL certificate of your own and tell your computer to trust it so you don't get weird Your connection is not private errors in your browser. \n\nGenerating the certs is a complicated hassle. So I made a bash script to do it all for you.\n\n(Props to https://deliciousbrains.com/ssl-certificate-authority-for-local-https-development/ for most of the background info to get this script working)\n\n## How do I use this?\n - Clone or download a zip of this repo\n - Navigate to the directory containing `generate-ssl.sh`\n - Edit the `options.conf` file to add all of the domain names you want included in the certificate\n - Edit the `certificate-authority-options.conf` file if you want to tweak the settings used to generate the certificate authority certificate (optional)\n - Run `sudo ./generate-ssl.sh local.dev` where `local.dev` is the name of the cert that will be generated\n - The script will ask you for your system password which it needs to add the root certificate to Keychain\n - The next prompts for passwords will be just for the generation of the certs. It doesn't matter what your password is so long as you enter the same one every time it asks\n - That's it! Your certificate and private key will be in the `your-certs/` directory. Do with them what you like.\n\nHere is the sample output after running the script:\n\n ```\nsudo ./generate-ssl.sh local.dev\nPassword:\nGenerating RSA private key, 2048 bit long modulus\n..........+++\n..............................................+++\ne is 65537 (0x10001)\nEnter pass phrase for tmp/local.devCA.key:\nVerifying - Enter pass phrase for tmp/local.devCA.key:\nEnter pass phrase for tmp/local.devCA.key:\nGenerating RSA private key, 2048 bit long modulus\n...............+++\n.........+++\ne is 65537 (0x10001)\nSignature ok\nsubject=/C=US/ST=Fake State/L=Fake Locality/O=Fake Company/CN=local.dev\nGetting CA Private Key\nEnter pass phrase for tmp/local.devCA.key:\nAll done! Check the your-certs directory for your certs.\n ```\n\n## What does this script do?\nWhen you run this script it will\n\n - Create a fake certificate authority used to sign your own SSL certificate so your browser will trust it\n - Run all of the `openssl` commands to generate a root certificate (`.pem`) so your system will trust your self-signed certificate, a public certificate (`.crt`) that your server sends to clients, and a private key for the certificate (`.key`) to encrypt and decrypt data sent between the server and client\n - Add the generated root certificate to MacOS' Keychain so the operating system can trust the certificates you sign yourself\n - Reads all options from two configuration files so you can customize things to meet your needs\n\n## \"It Didn't Work\"\n\n - `-bash: ./generate-ssl.sh: Permission denied` If the script isn't executeable you can make it executeable by typing: `chmod +x generate-ssl.sh`\n\n - `OpenSSL isn't installed. You need that to generate SSL certificates.` You can install `openssl` using Brew: `brew install openssl`. If you don't have Brew see https://brew.sh/\n\n - Open keychain and search for a certificate with the name you passed as an argument to the script. If you ran the script as `sudo ./generate-ssl.sh local.dev` then look for a certificate named `local.dev`\n\n - Firefox doesn't use the macOS keychain (it maintains its own certificate store), In order for your CA-signed certificates to be recognized by Firefox you'll need to go into the Firefox settings and manually add the `pem` file to Firefox.\n \n ## Other Scripts\n  - If you need a more robust solution for Windows or Linux check out https://github.com/FiloSottile/mkcert\n"
+        },
+        {
+          "name": "certificate-authority-options.conf",
+          "type": "blob",
+          "size": 0.2109375,
+          "content": "[req]\nprompt = no\ndistinguished_name = req_distinguished_name\n\n[req_distinguished_name]\nC = US\nST = Fake State\nL = Fake Locality\nO = Fake Company\n# OU = Org Unit Name\n# emailAddress = info@example.com\nCN = local.dev\n"
+        },
+        {
+          "name": "generate-ssl.sh",
+          "type": "blob",
+          "size": 2.17578125,
+          "content": "#!/usr/bin/env bash\n\n# Make sure this script is run as root\nif [ \"$EUID\" -ne 0 ] ; then\n        echo \"Please run as root. Try again by typing: sudo !!\"\n    exit\nfi\n\nfunction command_exists () {\n    type \"$1\" &> /dev/null ;\n}\n\n# Make sure openssl exists\nif ! command_exists openssl ; then\n        echo \"OpenSSL isn't installed. You need that to generate SSL certificates.\"\n    exit\nfi\n\nname=$1\nif [ -z \"$name\" ]; then\n        echo \"No name argument provided!\"\n        echo \"Try ./generate-ssl.sh name.dev\"\n    exit\nfi\n\n## Make sure the tmp/ directory exists\nif [ ! -d \"tmp\" ]; then\n    mkdir tmp/\nfi\n\n## Make sure the your-certs/ directory exists\nif [ ! -d \"your-certs\" ]; then\n    mkdir your-certs/\nfi\n\n# Cleanup files from previous runs\nrm tmp/*\nrm your-certs/*\n\n# Remove any lines that start with CN\nsed -i '' '/^CN/ d' certificate-authority-options.conf\n# Modify the conf file to set CN = ${name}\necho \"CN = ${name}\" >> certificate-authority-options.conf\n\n# Generate Certificate Authority\nopenssl genrsa -des3 -out \"tmp/${name}CA.key\" 2048\nopenssl req -x509 -config certificate-authority-options.conf -new -nodes -key \"tmp/${name}CA.key\" -sha256 -days 825 -out \"your-certs/${name}CA.pem\"\n\nif command_exists security ; then\n    # Delete trusted certs by their common name via https://unix.stackexchange.com/a/227014\n    security find-certificate -c \"${name}\" -a -Z | sudo awk '/SHA-1/{system(\"security delete-certificate -Z \"$NF)}'\n\n    # Trust the Root Certificate cert\n    security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain \"your-certs/${name}CA.pem\"\nfi\n\n# Generate CA-signed Certificate\nopenssl genrsa -out \"your-certs/${name}.key\" 2048\nopenssl req -new -config certificate-authority-options.conf -key \"your-certs/${name}.key\" -out \"tmp/${name}.csr\"\n\n# Generate SSL Certificate\nopenssl x509 -req -in \"tmp/${name}.csr\" -CA \"your-certs/${name}CA.pem\" -CAkey \"tmp/${name}CA.key\" -CAcreateserial -out \"your-certs/${name}.crt\" -days 825 -sha256 -extfile options.conf\n\n# Cleanup a stray file\nrm your-certs/*.srl\n\n# The username behind sudo, to give ownership back\nuser=$( who am i | awk '{ print $1 }')\nchown -R \"$user\" tmp your-certs\n\necho \"All done! Check the your-certs directory for your certs.\"\n"
+        },
+        {
+          "name": "options.conf",
+          "type": "blob",
+          "size": 0.4169921875,
+          "content": "authorityKeyIdentifier=keyid,issuer\nbasicConstraints=CA:FALSE\nkeyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment\nextendedKeyUsage = serverAuth, clientAuth, codeSigning, emailProtection\nsubjectAltName = @alt_names\n\n[alt_names]\n# Local hosts\nDNS.1 = localhost\nDNS.2 = 127.0.0.1\nDNS.3 = ::1\n\n# List your domain names here\nDNS.4 = local.dev\n# DNS.5 = another-domain.dev\n# DNS.6 = yet-another-domain.dev\n"
+        }
+      ]
+    }
+  ]
+}

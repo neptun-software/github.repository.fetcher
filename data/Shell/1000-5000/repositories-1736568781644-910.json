@@ -1,0 +1,36 @@
+{
+  "metadata": {
+    "timestamp": 1736568781644,
+    "page": 910,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkxOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "fhd/init-script-template",
+      "stars": 1091,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "Copyright (c) 2012-2014 Felix H. Dahlke\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.59375,
+          "content": "System V init script template\n=============================\n\nA simple template for init scripts that provide the start, stop,\nrestart and status commands.\n\nHandy for [Node.js](http://nodejs.org) apps and everything\nelse that runs itself.\n\nGetting started\n---------------\n\nCopy _template_ to /etc/init.d and rename it to something\nmeaningful. Then edit the script and enter that name after _Provides:_\n(between _### BEGIN INIT INFO_ and _### END INIT INFO_).\n\nNow set the following three variables in the script:\n\n### dir ###\n\nThe working directory of your process.\n\n### cmd ###\n\nThe command line to start the process.\n\n### user ###\n\nThe user that should execute the command (optional).\nIf not set, the command will be called as root (via `sudo ...`).\n\nHere's an example for an app called\n[algorithms](http://algorithms.ubercode.de):\n\n    dir=\"/var/apps/algorithms\"\n    cmd=\"node server.js\"\n    user=\"node\"\n\nScript usage\n------------\n\n### Start ###\n\nStarts the app.\n\n    /etc/init.d/algorithms start\n\n### Stop ###\n\nStops the app.\n\n    /etc/init.d/algorithms stop\n\n### Restart ###\n\nRestarts the app.\n\n    /etc/init.d/algorithms restart\n\n### Status ###\n\nTells you whether the app is running. Exits with _0_ if it is and _1_\notherwise.\n\n    /etc/init.d/algorithms status\n\nLogging\n-------\n\nBy default, standard output goes to _/var/log/scriptname.log_ and\nerror output to _/var/log/scriptname.err_. If you're not happy with\nthat, change the variables `stdout_log` and `stderr_log`.\n\nLicense\n-------\n\nCopyright (C) 2012-2014 Felix H. Dahlke\n\nThis is open source software, licensed under the MIT License. See the\nfile LICENSE for details.\n"
+        },
+        {
+          "name": "template",
+          "type": "blob",
+          "size": 1.982421875,
+          "content": "#!/bin/sh\n### BEGIN INIT INFO\n# Provides:\n# Required-Start:    $remote_fs $syslog\n# Required-Stop:     $remote_fs $syslog\n# Default-Start:     2 3 4 5\n# Default-Stop:      0 1 6\n# Short-Description: Start daemon at boot time\n# Description:       Enable service provided by daemon.\n### END INIT INFO\n\ndir=\"\"\ncmd=\"\"\nuser=\"\"\n\nname=`basename $0`\npid_file=\"/var/run/$name.pid\"\nstdout_log=\"/var/log/$name.log\"\nstderr_log=\"/var/log/$name.err\"\n\nget_pid() {\n    cat \"$pid_file\"\n}\n\nis_running() {\n    [ -f \"$pid_file\" ] && ps -p `get_pid` > /dev/null 2>&1\n}\n\ncase \"$1\" in\n    start)\n    if is_running; then\n        echo \"Already started\"\n    else\n        echo \"Starting $name\"\n        cd \"$dir\"\n        if [ -z \"$user\" ]; then\n            sudo $cmd >> \"$stdout_log\" 2>> \"$stderr_log\" &\n        else\n            sudo -u \"$user\" $cmd >> \"$stdout_log\" 2>> \"$stderr_log\" &\n        fi\n        echo $! > \"$pid_file\"\n        if ! is_running; then\n            echo \"Unable to start, see $stdout_log and $stderr_log\"\n            exit 1\n        fi\n    fi\n    ;;\n    stop)\n    if is_running; then\n        echo -n \"Stopping $name..\"\n        kill `get_pid`\n        for i in 1 2 3 4 5 6 7 8 9 10\n        # for i in `seq 10`\n        do\n            if ! is_running; then\n                break\n            fi\n\n            echo -n \".\"\n            sleep 1\n        done\n        echo\n\n        if is_running; then\n            echo \"Not stopped; may still be shutting down or shutdown may have failed\"\n            exit 1\n        else\n            echo \"Stopped\"\n            if [ -f \"$pid_file\" ]; then\n                rm \"$pid_file\"\n            fi\n        fi\n    else\n        echo \"Not running\"\n    fi\n    ;;\n    restart)\n    $0 stop\n    if is_running; then\n        echo \"Unable to stop, will not attempt to start\"\n        exit 1\n    fi\n    $0 start\n    ;;\n    status)\n    if is_running; then\n        echo \"Running\"\n    else\n        echo \"Stopped\"\n        exit 1\n    fi\n    ;;\n    *)\n    echo \"Usage: $0 {start|stop|restart|status}\"\n    exit 1\n    ;;\nesac\n\nexit 0\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736568547306,
+    "page": 565,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "DamionGans/ubuntu-wsl2-systemd-script",
+      "stars": 1566,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.185546875,
+          "content": "# ubuntu-wsl2-systemd-script\n## Script is unsupported and will no longer be maintained, but will be up here because it is used by quite some people.\n\nScript to enable systemd support on current Ubuntu WSL2 images from the Windows store. \n\nI am not responsible for broken installations, fights with your roommates and police ringing your door ;-).\n\nInstructions from [the snapcraft forum](https://forum.snapcraft.io/t/running-snaps-on-wsl2-insiders-only-for-now/13033) turned into a script. Thanks to [Daniel](https://forum.snapcraft.io/u/daniel) on the Snapcraft forum! \n\n## Usage\nYou need ```git``` to be installed for the commands below to work. Use\n```sh\nsudo apt install git\n```\nto do so.\n### Run the script and commands\n```sh\ngit clone https://github.com/DamionGans/ubuntu-wsl2-systemd-script.git\ncd ubuntu-wsl2-systemd-script/\nbash ubuntu-wsl2-systemd-script.sh\n# Enter your password and wait until the script has finished\n```\n### Then restart the Ubuntu shell and try running systemctl\n```sh\nsystemctl\n\n```\nIf you don't get an error and see a list of units, the script worked.\n\nHave fun using systemd on your Ubuntu WSL2 image. You may use and change and distribute this script in whatever way you'd like. \n"
+        },
+        {
+          "name": "enter-systemd-namespace",
+          "type": "blob",
+          "size": 1.7890625,
+          "content": "#!/bin/bash --norc\n\nif [ \"$LOGNAME\" != \"root\" ]; then\n    echo \"You need to run $0 through sudo\"\n    exit 1\nfi\n\nif [ -x /usr/sbin/daemonize ]; then\n    DAEMONIZE=/usr/sbin/daemonize\nelif [ -x /usr/bin/daemonize ]; then\n    DAEMONIZE=/usr/bin/daemonize\nelse\n    echo \"Cannot execute daemonize to start systemd.\"\n    exit 1\nfi\n\nif ! command -v /lib/systemd/systemd > /dev/null; then\n    echo \"Cannot execute /lib/systemd/systemd.\"\n    exit 1\nfi\n\nif ! command -v /usr/bin/unshare > /dev/null; then\n    echo \"Cannot execute /usr/bin/unshare.\"\n    exit 1\nfi\n\nSYSTEMD_EXE=\"/lib/systemd/systemd --unit=basic.target\"\nSYSTEMD_PID=\"$(ps -eo pid=,args= | awk '$2\" \"$3==\"'\"$SYSTEMD_EXE\"'\" {print $1}')\"\nif [ -z \"$SYSTEMD_PID\" ]; then\n    \"$DAEMONIZE\" /usr/bin/unshare --fork --pid --mount-proc bash -c 'export container=wsl; mount -t binfmt_misc binfmt_misc /proc/sys/fs/binfmt_misc; exec '\"$SYSTEMD_EXE\"\n    while [ -z \"$SYSTEMD_PID\" ]; do\n        echo \"Sleeping for 1 second to let systemd settle\"\n        sleep 1\n        SYSTEMD_PID=\"$(ps -eo pid=,args= | awk '$2\" \"$3==\"'\"$SYSTEMD_EXE\"'\" {print $1}')\"\n    done\nfi\n\nUSER_HOME=\"$(getent passwd | awk -F: '$1==\"'\"$SUDO_USER\"'\" {print $6}')\"\nif [ -n \"$SYSTEMD_PID\" ] && [ \"$SYSTEMD_PID\" != \"1\" ]; then\n    if [ -n \"$1\" ] && [ \"$1\" != \"bash --login\" ] && [ \"$1\" != \"/bin/bash --login\" ]; then\n        exec /usr/bin/nsenter -t \"$SYSTEMD_PID\" -a \\\n            /usr/bin/sudo -H -u \"$SUDO_USER\" \\\n            /bin/bash -c 'set -a; [ -f \"$HOME/.systemd-env\" ] && source \"$HOME/.systemd-env\"; set +a; exec bash -c '\"$(printf \"%q\" \"$@\")\"\n    else\n        exec /usr/bin/nsenter -t \"$SYSTEMD_PID\" -a \\\n            /bin/login -p -f \"$SUDO_USER\" \\\n            $([ -f \"$USER_HOME/.systemd-env\" ] && /bin/cat \"$USER_HOME/.systemd-env\" | xargs printf ' %q')\n    fi\n    echo \"Existential crisis\"\n    exit 1\nfi\n"
+        },
+        {
+          "name": "start-systemd-namespace",
+          "type": "blob",
+          "size": 0.8984375,
+          "content": "#!/bin/sh\n\nSYSTEMD_EXE=\"/lib/systemd/systemd --unit=basic.target\"\nSYSTEMD_PID=\"$(ps -eo pid=,args= | awk '$2\" \"$3==\"'\"$SYSTEMD_EXE\"'\" {print $1}')\"\nif [ \"$LOGNAME\" != \"root\" ] && ( [ -z \"$SYSTEMD_PID\" ] || [ \"$SYSTEMD_PID\" != \"1\" ] ); then\n    export | sed -e 's/^declare -x //;/^IFS=\".*[^\"]$/{N;s/\\n//}' | \\\n        grep -E -v \"^(BASH|BASH_ENV|DIRSTACK|EUID|GROUPS|HOME|HOSTNAME|\\\nIFS|LANG|LOGNAME|MACHTYPE|MAIL|NAME|OLDPWD|OPTERR|\\\nOSTYPE|PATH|PIPESTATUS|POSIXLY_CORRECT|PPID|PS1|PS4|\\\nSHELL|SHELLOPTS|SHLVL|SYSTEMD_PID|UID|USER|_)(=|\\$)\" > \"$HOME/.systemd-env\"\n    export PRE_NAMESPACE_PATH=\"$PATH\"\n    export PRE_NAMESPACE_PWD=\"$(pwd)\"\n    exec sudo /usr/sbin/enter-systemd-namespace \"$BASH_EXECUTION_STRING\"\nfi\nif [ -n \"$PRE_NAMESPACE_PATH\" ]; then\n    export PATH=\"$PRE_NAMESPACE_PATH\"\n    unset PRE_NAMESPACE_PATH\nfi\nif [ -n \"$PRE_NAMESPACE_PWD\" ]; then\n    cd \"$PRE_NAMESPACE_PWD\"\n    unset PRE_NAMESPACE_PWD\nfi\n"
+        },
+        {
+          "name": "ubuntu-wsl2-systemd-script.sh",
+          "type": "blob",
+          "size": 2.8583984375,
+          "content": "#!/bin/bash\n\nif [ \"$1\" != \"--force\" ]; then\n    if [ -f /usr/sbin/start-systemd-namespace ]; then\n        echo \"It appears you have already installed the systemd hack.\"\n        echo \"To forcibly reinstall, run this script with the \\`--force\\` parameter.\"\n        exit\n    fi\n    if [ -z \"$WSL_DISTRO_NAME\" ]; then\n        echo \"It appears that you are not running on WSL.\"\n        echo \"To forcibly install anyway, run this script with the \\`--force\\` parameter.\"\n        exit\n    fi\nfi\n\nself_dir=\"$(dirname $0)\"\n\nfunction interop_prefix {\n\twin_location=\"/mnt/\"\n\tif [ -f /etc/wsl.conf ]; then\n\t\ttmp=\"$(awk -F '=' '/root/ {print $2}' /etc/wsl.conf | awk '{$1=$1;print}')\"\n\t\t[ \"$tmp\" == \"\" ] || win_location=\"$tmp\"\n\t\tunset tmp\n\tfi\n\techo \"$win_location\"\n\n\tunset win_location\n}\n\nfunction sysdrive_prefix {\n\twin_location=\"$(interop_prefix)\"\n\thard_reset=0\n\tfor pt in $(ls \"$win_location\"); do\n\t\tif [ $(echo \"$pt\" | wc -l) -eq 1 ]; then\n\t\t\tif [ -d \"$win_location$pt/Windows/System32\" ]; then\n\t\t\t\thard_reset=1\n\t\t\t\twin_location=\"$pt\"\n\t\t\t\tbreak\n\t\t\tfi\n\t\tfi \n\tdone\n\n\tif [ $hard_reset -eq 0 ]; then\n\t\twin_location=\"c\"\n\tfi\n\n\techo \"$win_location\"\n\n\tunset win_location\n\tunset hard_reset\n}\n\nsudo hwclock -s\nsudo apt-get update && sudo apt-get install -yqq daemonize dbus-user-session fontconfig\n\nsudo cp \"$self_dir/start-systemd-namespace\" /usr/sbin/start-systemd-namespace\nsudo cp \"$self_dir/enter-systemd-namespace\" /usr/sbin/enter-systemd-namespace\nsudo chmod +x /usr/sbin/enter-systemd-namespace\n\nsudo tee /etc/sudoers.d/systemd-namespace >/dev/null <<EOF\nDefaults        env_keep += WSLPATH\nDefaults        env_keep += WSLENV\nDefaults        env_keep += WSL_INTEROP\nDefaults        env_keep += WSL_DISTRO_NAME\nDefaults        env_keep += PRE_NAMESPACE_PATH\nDefaults        env_keep += PRE_NAMESPACE_PWD\n%sudo ALL=(ALL) NOPASSWD: /usr/sbin/enter-systemd-namespace\nEOF\n\nif ! grep 'start-systemd-namespace' /etc/bash.bashrc >/dev/null; then\n  sudo sed -i 2a\"# Start or enter a PID namespace in WSL2\\nsource /usr/sbin/start-systemd-namespace\\n\" /etc/bash.bashrc\nfi\n\nsudo rm -f /etc/systemd/user/sockets.target.wants/dirmngr.socket\nsudo rm -f /etc/systemd/user/sockets.target.wants/gpg-agent*.socket\nsudo rm -f /lib/systemd/system/sysinit.target.wants/proc-sys-fs-binfmt_misc.automount\nsudo rm -f /lib/systemd/system/sysinit.target.wants/proc-sys-fs-binfmt_misc.mount\nsudo rm -f /lib/systemd/system/sysinit.target.wants/systemd-binfmt.service\n\nif [ -f /proc/sys/fs/binfmt_misc/WSLInterop ] && [ \"$(head -n1  /proc/sys/fs/binfmt_misc/WSLInterop)\" == \"enabled\" ]; then\n  \"$(interop_prefix)$(sysdrive_prefix)\"/Windows/System32/cmd.exe /C setx WSLENV BASH_ENV/u\n  \"$(interop_prefix)$(sysdrive_prefix)\"/Windows/System32/cmd.exe /C setx BASH_ENV /etc/bash.bashrc\nelse\n  echo\n  echo \"You need to manually run the following two commands in Windows' cmd.exe:\"\n  echo\n  echo \"  setx WSLENV BASH_ENV/u\"\n  echo \"  setx BASH_ENV /etc/bash.bashrc\"\n  echo\nfi\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736568772257,
+    "page": 892,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg5OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "webpro/dotfiles",
+      "stars": 1109,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.171875,
+          "content": "# top-most EditorConfig file\nroot = true\n\n[*]\ncharset = utf-8\nend_of_line = lf\ninsert_final_newline = true\ntrim_trailing_whitespace = true\nindent_style = space\nindent_size = 2\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0634765625,
+          "content": ".DS_Store\n*.lock.json\n__pycache__\nsystem/.custom\nsystem/.exports\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.6630859375,
+          "content": "DOTFILES_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))\nOS := $(shell bin/is-supported bin/is-macos macos linux)\nHOMEBREW_PREFIX := $(shell bin/is-supported bin/is-macos $(shell bin/is-supported bin/is-arm64 /opt/homebrew /usr/local) /home/linuxbrew/.linuxbrew)\nexport N_PREFIX = $(HOME)/.n\nPATH := $(HOMEBREW_PREFIX)/bin:$(DOTFILES_DIR)/bin:$(N_PREFIX)/bin:$(PATH)\nSHELL := env PATH=$(PATH) /bin/bash\nSHELLS := /private/etc/shells\nBIN := $(HOMEBREW_PREFIX)/bin\nexport XDG_CONFIG_HOME = $(HOME)/.config\nexport STOW_DIR = $(DOTFILES_DIR)\nexport ACCEPT_EULA=Y\n\n.PHONY: test\n\nall: $(OS)\n\nmacos: sudo core-macos packages link duti\n\nlinux: core-linux link\n\ncore-macos: brew bash git npm\n\ncore-linux:\n\tapt-get update\n\tapt-get upgrade -y\n\tapt-get dist-upgrade -f\n\nstow-macos: brew\n\tis-executable stow || brew install stow\n\nstow-linux: core-linux\n\tis-executable stow || apt-get -y install stow\n\nsudo:\nifndef GITHUB_ACTION\n\tsudo -v\n\twhile true; do sudo -n true; sleep 60; kill -0 \"$$\" || exit; done 2>/dev/null &\nendif\n\npackages: brew-packages cask-apps node-packages rust-packages\n\nlink: stow-$(OS)\n\tfor FILE in $$(\\ls -A runcom); do if [ -f $(HOME)/$$FILE -a ! -h $(HOME)/$$FILE ]; then \\\n\t\tmv -v $(HOME)/$$FILE{,.bak}; fi; done\n\tmkdir -p \"$(XDG_CONFIG_HOME)\"\n\tstow -t \"$(HOME)\" runcom\n\tstow -t \"$(XDG_CONFIG_HOME)\" config\n\tmkdir -p $(HOME)/.local/runtime\n\tchmod 700 $(HOME)/.local/runtime\n\nunlink: stow-$(OS)\n\tstow --delete -t \"$(HOME)\" runcom\n\tstow --delete -t \"$(XDG_CONFIG_HOME)\" config\n\tfor FILE in $$(\\ls -A runcom); do if [ -f $(HOME)/$$FILE.bak ]; then \\\n\t\tmv -v $(HOME)/$$FILE.bak $(HOME)/$${FILE%%.bak}; fi; done\n\nbrew:\n\tis-executable brew || curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh | bash\n\nbash: brew\nifdef GITHUB_ACTION\n\tif ! grep -q bash $(SHELLS); then \\\n\t\tbrew install bash bash-completion@2 pcre && \\\n\t\tsudo append $(shell which bash) $(SHELLS) && \\\n\t\tsudo chsh -s $(shell which bash); \\\n\tfi\nelse\n\tif ! grep -q bash $(SHELLS); then \\\n\t\tbrew install bash bash-completion@2 pcre && \\\n\t\tsudo append $(shell which bash) $(SHELLS) && \\\n\t\tchsh -s $(shell which bash); \\\n\tfi\nendif\n\ngit: brew\n\tbrew install git git-extras\n\nnpm: brew-packages\n\tn install lts\n\nbrew-packages: brew\n\tbrew bundle --file=$(DOTFILES_DIR)/install/Brewfile || true\n\ncask-apps: brew\n\tbrew bundle --file=$(DOTFILES_DIR)/install/Caskfile || true\n\nvscode-extensions: cask-apps\n\tfor EXT in $$(cat install/Codefile); do code --install-extension $$EXT; done\n\nnode-packages: npm\n\t$(N_PREFIX)/bin/npm install --force --location global $(shell cat install/npmfile)\n\nrust-packages: brew-packages\n\tcargo install $(shell cat install/Rustfile)\n\nduti:\n\tduti -v $(DOTFILES_DIR)/install/duti\n\ntest:\n\tbats test\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.4208984375,
+          "content": "# .files\n\nThese are my dotfiles. Take anything you want, but at your own risk.\n\nIt mainly targets macOS systems (should install on e.g. Ubuntu as well for many tools, config and aliases etc).\n\n## Highlights\n\n- Minimal efforts to install everything, using a [Makefile](./Makefile)\n- Mostly based around Homebrew, Caskroom and Node.js, latest Bash + GNU Utils\n- Fast and colored prompt\n- Updated macOS defaults\n- Well-organized and easy to customize\n- The installation and runcom setup is\n  [tested weekly on real Ubuntu and macOS machines](https://github.com/webpro/dotfiles/actions)\n  (Monterey/12 and Ventura/13) using [a GitHub Action](./.github/workflows/dotfiles-installation.yml)\n- Supports both Apple Silicon (M1) and Intel chips\n\n## Packages Overview\n\n- [Homebrew](https://brew.sh) (packages: [Brewfile](./install/Brewfile))\n- [homebrew-cask](https://github.com/Homebrew/homebrew-cask) (packages: [Caskfile](./install/Caskfile))\n- [Node.js + npm LTS](https://nodejs.org/en/download/) (packages: [npmfile](./install/npmfile))\n- Latest Git, Bash, Python, GNU coreutils, curl, Ruby\n- `$EDITOR` is [GNU nano](https://www.nano-editor.org) (`$VISUAL` is `code` and Git `core.editor` is `code --wait`)\n\n## Installation\n\nOn a sparkling fresh installation of macOS:\n\n```bash\nsudo softwareupdate -i -a\nxcode-select --install\n```\n\nThe Xcode Command Line Tools includes `git` and `make` (not available on stock macOS). Now there are two options:\n\n1. Install this repo with `curl` available:\n\n```bash\nbash -c \"`curl -fsSL https://raw.githubusercontent.com/webpro/dotfiles/master/remote-install.sh`\"\n```\n\nThis will clone or download this repo to `~/.dotfiles` (depending on the availability of `git`, `curl` or `wget`).\n\n1. Alternatively, clone manually into the desired location:\n\n```bash\ngit clone https://github.com/webpro/dotfiles.git ~/.dotfiles\n```\n\n2. Use the [Makefile](./Makefile) to install the [packages listed above](#packages-overview), and symlink\n   [runcom](./runcom) and [config](./config) files (using [stow](https://www.gnu.org/software/stow/)):\n\n```bash\ncd ~/.dotfiles\nmake\n```\n\nRunning `make` with the Makefile is idempotent. The installation process in the Makefile is tested on every push and every week in this\n[GitHub Action](https://github.com/webpro/dotfiles/actions). Please file an issue in this repo if there are errors.\n\n## Post-Installation\n\n1. Set your Git credentials:\n\n```sh\ngit config --global user.name \"your name\"\ngit config --global user.email \"your@email.com\"\ngit config --global github.user \"your-github-username\"\n```\n\n2. Set macOS [Dock items](./macos/dock.sh) and [system defaults](./macos/defaults.sh):\n\n```sh\ndot dock\ndot macos\n```\n\n3. Populate this file with tokens (example: `export GITHUB_TOKEN=abc`):\n\n```sh\ntouch ~/.dotfiles/system/.exports\n```\n\n## The `dot` command\n\n```\n$ dot help\nUsage: dot <command>\n\nCommands:\n   clean            Clean up caches (brew, cargo, gem, pip)\n   dock             Apply macOS Dock settings\n   edit             Open dotfiles in IDE ($VISUAL) and Git GUI ($VISUAL_GIT)\n   help             This help message\n   macos            Apply macOS system defaults\n   test             Run tests\n   update           Update packages and pkg managers (brew, casks, cargo, pip3, npm, gems, macOS)\n```\n\n## Customize\n\nTo customize the dotfiles to your likings, fork it and [be the king of your castle!](https://www.webpro.nl/articles/getting-started-with-dotfiles)\n\n## Credits\n\nMany thanks to the [dotfiles community](https://dotfiles.github.io).\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "macos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "remote-install.sh",
+          "type": "blob",
+          "size": 0.61328125,
+          "content": "#!/usr/bin/env bash\n\nSOURCE=\"https://github.com/webpro/dotfiles\"\nTARBALL=\"$SOURCE/tarball/main\"\nTARGET=\"$HOME/.dotfiles\"\nTAR_CMD=\"tar -xzv -C \"$TARGET\" --strip-components=1 --exclude='{.gitignore}'\"\n\nis_executable() {\n  type \"$1\" > /dev/null 2>&1\n}\n\nif is_executable \"git\"; then\n  CMD=\"git clone $SOURCE $TARGET\"\nelif is_executable \"curl\"; then\n  CMD=\"curl -#L $TARBALL | $TAR_CMD\"\nelif is_executable \"wget\"; then\n  CMD=\"wget --no-check-certificate -O - $TARBALL | $TAR_CMD\"\nfi\n\nif [ -z \"$CMD\" ]; then\n  echo \"No git, curl or wget available. Aborting.\"\nelse\n  echo \"Installing dotfiles...\"\n  mkdir -p \"$TARGET\"\n  eval \"$CMD\"\nfi\n"
+        },
+        {
+          "name": "runcom",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "system",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

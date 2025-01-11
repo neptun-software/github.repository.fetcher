@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "timestamp": 1736568683671,
+    "page": 764,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "novaspirit/pi-hosted",
+      "stars": 1269,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.25,
+          "content": "# Ignore MacOS and Windows hidden files\n.DS_Store\ndesktop.ini\n\n# Ignore tmp file in build directory\nbuild/tmp/\n\n# Ignore vscode specific config files\n.vscode/*\n\n# Local History for Visual Studio Code\n.history/\n\n# Built Visual Studio Code Extensions\n*.vsix\n"
+        },
+        {
+          "name": "apptemplate.png",
+          "type": "blob",
+          "size": 56.560546875,
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install_docker.sh",
+          "type": "blob",
+          "size": 0.55078125,
+          "content": "#!/bin/bash\n\nfunction error {\n  echo -e \"\\\\e[91m$1\\\\e[39m\"\n  exit 1\n}\n\nfunction check_internet() {\n  printf \"Checking if you are online...\"\n  wget -q --spider http://github.com\n  if [ $? -eq 0 ]; then\n    echo \"Online. Continuing.\"\n  else\n    error \"Offline. Go connect to the internet then run the script again.\"\n  fi\n}\n\ncheck_internet\n\ncurl -sSL https://get.docker.com | sh || error \"Failed to install Docker.\"\nsudo usermod -aG docker $USER || error \"Failed to add user to the Docker usergroup.\"\necho \"Remember to logoff/reboot for the changes to take effect.\"\n\n"
+        },
+        {
+          "name": "install_portainer.sh",
+          "type": "blob",
+          "size": 0.83984375,
+          "content": "#!/bin/bash\n\nfunction error {\n  echo -e \"\\\\e[91m$1\\\\e[39m\"\n  exit 1\n}\n\nfunction check_internet() {\n  printf \"Checking if you are online...\"\n  wget -q --spider http://github.com\n  if [ $? -eq 0 ]; then\n    echo \"Online. Continuing.\"\n  else\n    error \"Offline. Go connect to the internet then run the script again.\"\n  fi\n}\n\ncheck_internet\n\nsudo mkdir -p /portainer/Files/AppData/Config/portainer || error \"Failed to create the Portainer Config Folder\"\n\nsudo docker pull portainer/portainer-ce:latest || error \"Failed to pull latest Portainer docker image!\"\nsudo docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /portainer/Files/AppData/Config/portainer:/data portainer/portainer-ce:latest --logo \"https://pi-hosted.com/pi-hosted-logo.png\" || error \"Failed to run Portainer docker image!\"\n\n"
+        },
+        {
+          "name": "pi-hosted_template",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "reinstall_portainer.sh",
+          "type": "blob",
+          "size": 1.4794921875,
+          "content": "#!/bin/bash\n\nfunction error() {\n  echo -e \"\\\\e[91m$1\\\\e[39m\"\n  exit 1\n}\n\nfunction warning() {\n  echo -e \"\\\\e[91m$1\\\\e[39m\"\n}\n\nfunction check_internet() {\n  printf \"Checking if you are online...\"\n  wget -q --spider http://github.com\n  if [ $? -eq 0 ]; then\n    echo \"Online. Continuing.\"\n  else\n    error \"Offline. Go connect to the internet then run the script again.\"\n  fi\n}\n\ncheck_internet\n\nportainer_pid=`docker ps | grep portainer-ce | awk '{print $1}'`\nportainer_name=`docker ps | grep portainer-ce | awk '{print $2}'`\n\necho Removing the old version of Portainer\nsudo docker stop $portainer_pid || warning \"Failed to stop portainer!\"\nsudo docker rm $portainer_pid || warning \"Failed to remove portainer container!\"\nsudo docker rmi $portainer_name || warning \"Failed to remove/untag images from the container!\"\n\necho Pruning unused volume.  If asked answer yes.\nsudo docker volume prune -f\n\nsudo docker pull portainer/portainer-ce:latest || error \"Failed to pull latest Portainer docker image!\"\n\nsudo rm -rf /portainer/Files/AppData/Config/portainer\nsudo mkdir -p /portainer/Files/AppData/Config/portainer || error \"Failed to create the Portainer Config Folder\"\n\necho now doing a fresh install of portainer\nsudo docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /portainer/Files/AppData/Config/portainer:/data portainer/portainer-ce:latest --logo \"https://pi-hosted.com/pi-hosted-logo.png\" || error \"Failed to run Portainer docker image!\"\n"
+        },
+        {
+          "name": "stack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "template",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "update_portainer.sh",
+          "type": "blob",
+          "size": 1.1044921875,
+          "content": "#!/bin/bash\n\nfunction error() {\n  echo -e \"\\\\e[91m$1\\\\e[39m\"\n  exit 1\n}\n\nfunction check_internet() {\n  printf \"Checking if you are online...\"\n  wget -q --spider http://github.com\n  if [ $? -eq 0 ]; then\n    echo \"Online. Continuing.\"\n  else\n    error \"Offline. Go connect to the internet then run the script again.\"\n  fi\n}\n\ncheck_internet\n\nportainer_pid=`docker ps | grep portainer-ce | awk '{print $1}'`\nportainer_name=`docker ps | grep portainer-ce | awk '{print $2}'`\n\nsudo docker stop $portainer_pid || error \"Failed to stop portainer!\"\nsudo docker rm $portainer_pid || error \"Failed to remove portainer container!\"\nsudo docker rmi $portainer_name || error \"Failed to remove/untag images from the container!\"\n\nsudo mkdir -p /portainer/Files/AppData/Config/portainer || error \"Failed to create the Portainer Config Folder\"\n\nsudo docker run -d -p 9000:9000 -p 9443:9443 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v /portainer/Files/AppData/Config/portainer:/data portainer/portainer-ce:latest --logo \"https://pi-hosted.com/pi-hosted-logo.png\" || error \"Failed to run Portainer docker image!\"\n"
+        }
+      ]
+    }
+  ]
+}

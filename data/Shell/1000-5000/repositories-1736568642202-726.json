@@ -1,0 +1,725 @@
+{
+  "metadata": {
+    "timestamp": 1736568642202,
+    "page": 726,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcyOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "HariSekhon/Dockerfiles",
+      "stars": 1320,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".appveyor.yml",
+          "type": "blob",
+          "size": 3.8603515625,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2020-02-24 16:19:35 +0000 (Mon, 24 Feb 2020)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                             A p p V e y o r   C I\n# ============================================================================ #\n\n# https://www.appveyor.com/docs/appveyor-yml/\n\nimage: Ubuntu\n\n# workaround for default JDK9 have old CA certs:\n#\n#   https://github.com/appveyor/ci/issues/3833\n#\n#   https://www.appveyor.com/docs/getting-started-with-appveyor-for-linux/#configuring-language-stack\n#\nstack: jdk 15\n\nskip_commits:\n  files:\n    - docs/*\n    - '**/*.md'\n\n# https://www.appveyor.com/docs/how-to/ssh-to-build-worker/\nenvironment:\n  APPVEYOR_SSH_KEY: ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAvihSRU+YjBKvKiacDfUoZ7ghoVMcwNh4cWIYUNFGZosXOzNtyOcBpIb71TCgLFhOd+aMWKXCEC67BpNSIjt+a/FLD27AwmgVHv6cPlE3G0JJ9zmIrNmx9511dshTsxUW2O0SbYG+3InuO7FUkSrld+kA1OucyjgmZU7/+Cs9shpAEOaIVYmGlpDGRucAHpwtckvdgRTtnA3WNZ/Qg1vU6Ik4Xm03vjrW6lSiuTffYO1kbdcMQ4IZBlzfmovOtXQ0PomvN5NMCpgOyQuoNlvyS11tOXoqNiWOkiLE15XEzAQth9hHbNiH8jHJbAtkHqWWh0KK4IUyNGvoL6QfNxsTlw== hari@anotherdimension\n\n# enable SSH session accessible via my public key\n#init:\n#  - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -\n\n# more useful at end to leverage .appveyor.yml tweaks like disabling broken mssql repo/dependencies, checking out project and building the core stuff happen first so we don't have to do all that manually in SSH session\non_finish:\n  # set this in Settings -> Environment dynamically instead of here\n  #- sh: export APPVEYOR_SSH_BLOCK=true\n  #\n  # workaround for https://github.com/appveyor/ci/issues/3373\n  #            and https://github.com/appveyor/ci/issues/3384\n  #\n  # has since been added to AppVeyor's own scripts:\n  #\n  #     https://github.com/appveyor/ci/pull/3385\n  #\n  #- sh: curl -sflL 'https://raw.githubusercontent.com/HariSekhon/Dockerfiles/master/install/install_openssh.sh' | bash -e -\n  #\n  # https://www.appveyor.com/docs/how-to/ssh-to-build-worker/\n  - sh: if [ \"$APPVEYOR_SSH_BLOCK\" = true ]; then curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -; fi\n\ninstall:\n  # workaround for:\n  # Some packages could not be installed. This may mean that you have\n  # requested an impossible situation or if you are using the unstable\n  # distribution that some required packages have not yet been created\n  # or been moved out of Incoming.\n  # The following information may help to resolve the situation:\n  #\n  # The following packages have unmet dependencies:\n  #  mssql-server : Depends: libsasl2-modules-gssapi-mit but it is not going to be installed\n  #  E: Error, pkgProblemResolver::Resolve generated breaks, this may be caused by held packages.\n  #  Dockerfiles/Makefile.in:272: recipe for target 'apt-packages' failed\n  #  make[2]: *** [apt-packages] Error 123\n  #  make[2]: Leaving directory '/home/appveyor/projects/pylib'\n  #  Dockerfiles/Makefile.in:212: recipe for target 'system-packages' failed\n  #\n  #  adding \"|| :\" to the end of these commands causes them to be silently ignored!\n  - sudo sed -i '/https:\\/\\/packages.microsoft.com\\/ubuntu\\/.*\\/mssql-server/d' /etc/apt/sources.list\n  - sudo apt purge -yq --allow-change-held-packages mssql-server\n  # this prevents conflicts installing default-jdk - see https://github.com/appveyor/ci/issues/3411\n  #- dpkg -l | awk '/openjdk/{print $2}' | DEBIAN_FRONTEND=noninteractive xargs sudo apt-get remove -y --allow-change-held-packages\n  - setup/ci_bootstrap.sh\n  - make\n\ntest_script:\n  - make test\n\nbuild: off\n"
+        },
+        {
+          "name": ".buildkite",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".checkov.yaml",
+          "type": "blob",
+          "size": 1.357421875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2022-02-21 16:53:29 +0000 (Mon, 21 Feb 2022)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                          C h e c k o v   c o n f i g\n# ============================================================================ #\n\n# https://github.com/bridgecrewio/checkov#configuration-using-a-config-file\n#\n# This is not well documented but the fields seem to be the same as:\n#\n#   checkov --help\n#\n# See master template at:\n#\n#   https://github.com/HariSekhon/Templates/blob/master/.checkov.yaml\n\n---\ncompact: true\ndirectory:\n  - .\nskip-path:\n  - bash-tools\ndownload-external-modules: true  # without this gets lots of annoying warning lines such as '2022-02-22 16:14:40,180 [MainThread  ] [WARNI]  Failed to download module x/y/z:n.n.n'\nframework:\n  - all\nno-guide: true\noutput: cli\nquiet: true\nrepo-id: HariSekhon/Dockerfiles  # what to report to Bridgecrew Cloud - without this gets annoying duplicate repos such as 'harisekhon_cli_repo/Dockerfiles'\nskip-suppressions: true\nsoft-fail: true\n"
+        },
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".cirrus.yml",
+          "type": "blob",
+          "size": 0.8232421875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2020-02-24 16:55:36 +0000 (Mon, 24 Feb 2020)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                               C i r r u s   C I\n# ============================================================================ #\n\n# https://cirrus-ci.org/guide/writing-tasks/\n\ncontainer:\n  image: ubuntu:18.04\n\ntask:\n  # doesn't work properly\n  #skip: \"!changesInclude('**/*.md')\"\n  script:\n    - setup/ci_bootstrap.sh\n    - make init\n    - make ci test\n"
+        },
+        {
+          "name": ".drone.yml",
+          "type": "blob",
+          "size": 1.146484375,
+          "content": "---\n# XXX: putting this separator further down with code causes a parsing bug in drone lint\n#\n#  Author: Hari Sekhon\n#  Date: 2020-02-29 12:05:52 +0000 (Sat, 29 Feb 2020)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                                D r o n e   C I\n# ============================================================================ #\n\n# https://docs.drone.io/quickstart/cli/\n#\n# https://docs.drone.io/cli/install/\n#\n# brew install drone-cli\n#\n# cd to this directory\n#\n# drone exec [--pipeline default] [--include=thisstep] [--exclude=thatstep]\n\nkind: pipeline\ntype: docker\nname: default\n\nsteps:\n  - name: build\n    image: ubuntu:18.04\n    #environment:\n    #  DEBUG: 1\n    commands:\n      - setup/ci_bootstrap.sh\n      - make init\n      - make ci\n      - make test\n\ntrigger:\n  branch:\n    - master\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 1.9013671875,
+          "content": "#  vim:ts=4:sts=4:sw=4:et\n#\n#  Author: Hari Sekhon\n#  Date: 2015-10-31 19:04:34 +0000 (Sat, 31 Oct 2015)\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback\n#  to help improve or steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# http://EditorConfig.org\n\n# stop recursing upwards for other .editorconfig files\nroot = true\n\n# Unix-style newlines with a newline ending every file\n[*]\nindent_size = 4\nindent_style = space\nend_of_line = lf\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.go]\nindent_size = 4\nindent_style = tab\nend_of_line = lf\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[Makefile]\nindent_size = 4\nindent_style = tab\nend_of_line = lf\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[{*.md,*.hcl,*.tf,*.tfvars}]\nindent_size = 2\nindent_style = space\nend_of_line = lf\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.yml,*.yaml]\nindent_size = 2\nindent_style = space\nend_of_line = lf\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[.*]\nindent_size = 4\nindent_style = space\nend_of_line = lf\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n# ============================================================================ #\n#                  Older Stuff, don't think I use this any more\n# ============================================================================ #\n\n# Matches multiple files with brace expansion notation\n# Set default charset\n#[*.{js,py}]\n#charset = utf-8\n\n# Indentation override for all JS under lib directory\n#[lib/**.js]\n#indent_style = space\n#indent_size = 2\n\n# Matches the exact files either package.json or .travis.yml\n#[{package.json,.travis.yml}]\n#indent_style = space\n#indent_size = 2\n\n#[*.xml]\n#indent_style = space\n#indent_size = 2\n"
+        },
+        {
+          "name": ".envrc",
+          "type": "blob",
+          "size": 6.94140625,
+          "content": "#!/usr/bin/env bash\n#  vim:ts=4:sts=4:sw=4:et\n#\n#  Author: Hari Sekhon\n#  Date: Mon Feb 22 17:42:01 2021 +0000\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                                  D i r E n v\n# ============================================================================ #\n\n# https://direnv.net/man/direnv-stdlib.1.html\n\n# See Also:\n#\n#   .envrc-aws\n#   .envrc-gcp\n#   .envrc-kubernetes\n\n# direnv stdlib - loads .envrc from parent dir up to /\n#\n# useful to accumulate parent and child directory .envrc settings eg. adding Kubernetes namespace, ArgoCD app etc.\n#\n# bypasses security authorization though - use with care\n#source_up\n#\n# source_up must be loaded before set -u otherwise gets this error:\n#\n#   direnv: loading .envrc\n#   /bin/bash: line 226: $1: unbound variable\n#\n# source_up causes this error is up .envrc is found in parent directories:\n#\n#   direnv: No ancestor .envrc found\n\nset -euo pipefail\n[ -n \"${DEBUG:-}\" ] && set -x\nsrc=\"$(readlink -f \"${BASH_SOURCE[0]}\")\"\nsrcdir=\"$(cd \"$(dirname \"$src\")\" && pwd)\"\n\n# ============================================================================ #\n#                              P r e - C o m m i t\n# ============================================================================ #\n\n# Automatically install Pre-Commit Git hooks if not already present\n\nif ! type -P pre-commit &>/dev/null; then\n    if uname -s | grep -q Darwin &&\n       type -P brew &>/dev/null; then\n        echo\n        echo \"Pre-commit is not installed - installing now using Homebrew...\"\n        echo\n        brew install pre-commit\n        echo\n    elif type -P pip &>/dev/null; then\n        echo\n        echo \"Pre-commit is not installed - installing now using Pip...\"\n        echo\n        pip install pre-commit\n    fi\nfi\n\nif [ -f .pre-commit-config.yaml ] &&\n   type -P pre-commit &>/dev/null &&\n   git rev-parse --is-inside-work-tree &>/dev/null; then\n    if ! [ -f \"$(git rev-parse --show-toplevel)/.git/hooks/pre-commit\" ]; then\n        echo\n        echo \"Pre-commit hook is not installed in local Git repo checkout - installing now...\"\n        echo\n        pre-commit install\n    fi\nfi\n\n# ============================================================================ #\n#                          D o c k e r   C o m p o s e\n# ============================================================================ #\n\nexport COMPOSE_PROJECT_NAME=\"Dockerfiles\"\n\n# ============================================================================ #\n#                                  G i t H u b\n# ============================================================================ #\n\n#export GITHUB_ORGANIZATION=HariSekhon\n\n# ============================================================================ #\n#                                 A n s i b l e\n# ============================================================================ #\n\n# use the local repo's ansible.cfg rather than:\n#\n#   $PWD/ansible.cfg\n#   ~/.ansible.cfg\n#   /etc/ansible/ansible.cfg\n#\n# set this in project repos to ensure user environment ANSIBLE_CONFIG doesn't get used\n#export ANSIBLE_CONFIG=\"/path/to/ansible.cfg\"\n\n# ============================================================================ #\n#                              C l o u d f l a r e\n# ============================================================================ #\n\n#export CLOUDFLARE_EMAIL=hari@...\n#export CLOUDFLARE_API_KEY=...  # generate here: https://dash.cloudflare.com/profile/api-tokens\n#export CLOUDFLARE_TOKEN=...    # used by cloudflare_api.sh but not by terraform module\n\n# export the variables for terraform\n#export TF_VAR_cloudflare_email=\"$CLOUDFLARE_EMAIL\"\n#export TF_VAR_cloudflare_api_key=\"$CLOUDFLARE_API_KEY\"  # must be a key, not a token using the link above\n\n# ============================================================================ #\n#                   Load External Envrc Files If Present\n# ============================================================================ #\n\n# XXX: safer to bring all these external .envrc inline if you're worried about changes\n#      to it bypassing 'direnv allow' authorization\nload_if_exists(){\n    # first arg is a path to a .envrc\n    # all other args are passed to the sourcing of .envrc - used by .envrc-kubernetes\n    # to pass the context name 'docker-desktop' to switch to\n    local envrc=\"$1\"\n    shift\n    if ! [[ \"$envrc\" =~ ^/ ]]; then\n        envrc=\"$srcdir/$envrc\"\n    fi\n    if [ -f \"$envrc\" ]; then\n        # prevent looping on symlinks to this .envrc if given\n        if [ \"$(readlink \"$envrc\")\" = \"$src\" ]; then\n            return\n        fi\n        echo\n        echo \"Loading $envrc\"\n        # shellcheck disable=SC1090,SC1091\n        . \"$envrc\" \"$@\"\n    fi\n}\n\n# don't do this it may lead to an infinite loop if 'make link' symlinking ~/.envrc to this repo's .envrc\n# (which I do to keep Python virtual automatically loaded at all times because recent pip on Python refuses\n# to install to system Python)\n#load_if_exists ~/.envrc\n\n# ============================================================================ #\n#                                  P y t h o n\n# ============================================================================ #\n\n    #.envrc-aws \\\n    #.envrc-gcp \\\n    #.envrc-terraform \\\n# shellcheck disable=SC2043\nfor envrc in \\\n    .envrc-python \\\n    ; do\n    load_if_exists \"$envrc\"\ndone\n\n# ============================================================================ #\n#                                     A W S\n# ============================================================================ #\n\nif [[ \"$PWD\" =~ /aws/ ]]; then\n    load_if_exists .envrc-aws\nfi\n\n# ============================================================================ #\n#                                     G C P\n# ============================================================================ #\n\nif [[ \"$PWD\" =~ /gcp/ ]]; then\n    load_if_exists .envrc-gcp\nfi\n\n# ============================================================================ #\n#                               T e r r a f o r m\n# ============================================================================ #\n\nif [[ \"$PWD\" =~ /(terra(form)?|tf)(/|$) ]]; then\n    load_if_exists .envrc-terraform\nfi\n\n# ============================================================================ #\n#                              K u b e r n e t e s\n# ============================================================================ #\n\nif [ -f \"$srcdir/.envrc-kubernetes\" ]; then\n    load_if_exists .envrc-kubernetes docker-desktop\nfi\n\n# ============================================================================ #\n#                                    . E n v\n# ============================================================================ #\n\necho\n# read .env too\n#dotenv\n\nload_if_exists .envrc.local\n"
+        },
+        {
+          "name": ".envrc-python",
+          "type": "blob",
+          "size": 1.2998046875,
+          "content": "#!/usr/bin/env bash\n#  vim:ts=4:sts=4:sw=4:et\n#\n#  Author: Hari Sekhon\n#  Date: Mon Feb 22 17:42:01 2021 +0000\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                           P y t h o n   D i r E n v\n# ============================================================================ #\n\n# .envrc to auto-load the virtualenv inside the 'venv' directory if present\n\n# https://direnv.net/man/direnv-stdlib.1.html\n\nset -euo pipefail\n[ -n \"${DEBUG:-}\" ] && set -x\n#srcdir=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)\"\n\n# this is necessary because newer versions of pip no longer allow you to install PyPI packages in system-packages by default\nfor venv in \"$PWD/venv\" \"$HOME/venv\"; do\n    if [ -f \"$venv/bin/activate\" ]; then\n        echo\n        echo \"Virtualenv directory found in: $venv\"\n        echo\n        echo \"Activating Virtualenv inside the directory: $venv\"\n\n        # shellcheck disable=SC1091\n        source \"$venv/bin/activate\"\n        break\n    fi\ndone\n\n# read .env too\n#dotenv\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0146484375,
+          "content": "pytools_checks\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 0.7900390625,
+          "content": "#  vim:ts=2:sts=2:sw=2:et\n#\n#  Author: Hari Sekhon\n#  Date: Sun Feb 23 19:02:10 2020 +0000\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback\n#  to help improve or steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                               G i t L a b   C I\n# ============================================================================ #\n\n# https://docs.gitlab.com/ee/ci/yaml/README.html\n\n#include: '.gitlab/*.y*ml'\n\nimage: ubuntu:18.04\n\njob:\n  before_script:\n    - setup/ci_bootstrap.sh\n  script:\n    - make init && make ci test\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0966796875,
+          "content": "[submodule \"bash-tools\"]\n\tpath = bash-tools\n\turl = https://github.com/HariSekhon/DevOps-Bash-tools\n"
+        },
+        {
+          "name": ".hadolint.yaml",
+          "type": "blob",
+          "size": 0.6826171875,
+          "content": "#  vim:ts=4:sts=4:sw=4:et\n#\n#  Author: Hari Sekhon\n#  Date: 2019-10-01 16:14:15 +0100 (Tue, 01 Oct 2019)\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help improve or steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\nignored:\n  # dev images build on upstream latest tag\n  - DL3007\n  # apk add versions need not be pinned\n  - DL3018\n  # fine to use curl and wget, many images have both packages due to being dev builds\n  - DL4001\n  #- SC1010\n\ntrustedRegistries:\n  - docker.io\n  #- my-company.com:5000\n"
+        },
+        {
+          "name": ".mdl.rb",
+          "type": "blob",
+          "size": 0.9375,
+          "content": "#!/usr/bin/env ruby\n#  vim:ts=4:sts=4:sw=4:et:filetype=ruby\n#\n#  Author: Hari Sekhon\n#  Date: 2024-08-22 01:58:12 +0200 (Thu, 22 Aug 2024)\n#\n#  https///github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\nall\n#exclude_rule 'MD001'\n#exclude_rule 'MD003'\n#exclude_rule 'MD005'\nexclude_rule 'MD007'  # leave 2 space indentation for lists, 3 space is ugly af\n#exclude_rule 'MD012'\nexclude_rule 'MD013'  # long lines cannot be split if they are URLs\n#exclude_rule 'MD022'\n#exclude_rule 'MD025'\n#exclude_rule 'MD031'\n#exclude_rule 'MD032'\nexclude_rule 'MD033'  # inline HTML is important for formatting\nexclude_rule 'MD036'  # emphasis used instead of header for footer Ported from lines\n#exclude_rule 'MD039'\n#exclude_rule 'MD056'\n"
+        },
+        {
+          "name": ".mdlrc",
+          "type": "blob",
+          "size": 0.1064453125,
+          "content": "mdlrc_dir = File.expand_path('..', __FILE__)\n\nstyle_file = File.join(mdlrc_dir, '.mdl.rb')\n\nstyle style_file\n"
+        },
+        {
+          "name": ".pre-commit-config.yaml",
+          "type": "blob",
+          "size": 2.0654296875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2024-08-08 17:34:56 +0300 (Thu, 08 Aug 2024)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https///github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                              P r e - C o m m i t\n# ============================================================================ #\n\n---\nfail_fast: false\n#exclude: *.tmp$\n\nrepos:\n\n    # will accept anything that 'git clone' understands\n    # this means you can set this to a local git repo to develop your own hook repos interactively\n  - repo: https://github.com/pre-commit/pre-commit-hooks\n    rev: v4.6.0\n    hooks:\n      - id: check-yaml\n      # Common errors\n      - id: end-of-file-fixer\n      - id: trailing-whitespace\n        args: [--markdown-linebreak-ext=md]\n      # Git style\n      - id: check-added-large-files\n      - id: check-merge-conflict\n      - id: check-vcs-permalinks\n      - id: forbid-new-submodules\n      # Cross platform\n      - id: check-case-conflict\n      - id: mixed-line-ending\n        args: [--fix=lf]\n      # Security\n      - id: detect-aws-credentials\n        args: ['--allow-missing-credentials']\n\n  - repo: https://github.com/psf/black\n    rev: 24.8.0\n    hooks:\n      - id: black\n\n  # Git secrets Leaks\n  - repo: https://github.com/awslabs/git-secrets.git\n    # the release tags for 1.2.0, 1.2.1 and 1.3.0 are broken with this error:\n    #\n    #   /Users/hari/.cache/pre-commit/repo......./.pre-commit-hooks.yaml is not a file\n    #\n    rev: 5357e18\n    hooks:\n      - id: git-secrets\n\n  - repo: https://github.com/markdownlint/markdownlint\n    rev: v0.12.0\n    hooks:\n      - id: markdownlint\n        name: Markdownlint\n        description: Run markdownlint on your Markdown files\n        entry: mdl\n        args: [-s, .mdl.rb]\n        language: ruby\n        files: \\.(md|mdown|markdown)$\n"
+        },
+        {
+          "name": ".semaphore",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".sonarcloud.properties",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "sonar.host.url=https://sonarcloud.io\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 2.80078125,
+          "content": "#  vim:ts=2:sts=2:sw=2:et\n#\n#  Author: Hari Sekhon\n#  Date: 2014-11-29 01:02:47 +0000 (Sat, 29 Nov 2014)\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback\n#  to help improve or steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                               T r a v i s   C I\n# ============================================================================ #\n\n# https://docs.travis-ci.com/user/customizing-the-build/\n\n---\nversion: ~> 1.0\n\n# =============================================\n# https://docs.travis-ci.com/user/build-matrix/\n# https://docs.travis-ci.com/user/build-stages/matrix-expansion/\nmatrix:\n  include:\n\n    # https://docs.travis-ci.com/user/multi-os/\n    - os: linux\n      # https://docs.travis-ci.com/user/languages/python/\n      language: python\n      python: \"2.7\"\n\n    - os: linux\n      language: python\n      python: \"3.7\"\n\n    # GitHub Workflows has better badged stratification at a glance\n    #- os: linux\n    #  dist: trusty\n    #  language: python\n    #  python: \"2.7\"\n\n    # Travis CI doesn't support Python virtual envs on Mac OS X yet, workaround is to use generic and install to system python\n    - os: osx\n      language: generic\n      # https://docs.travis-ci.com/user/reference/osx/\n      # macOS 10.15.7 - otherwise defaults to Mac macOS 10.13 with xcode9.4 otherwise - and HomeBrew update takes 50 minutes until the build times out :-/\n      osx_image: xcode12.2\n\n# ======================================================\n# https://docs.travis-ci.com/user/environment-variables/\n#env:\n#  - DEBUG=1\n\n# ==============================================\n# https://docs.travis-ci.com/user/notifications/\nnotifications:\n  email: false\n\n# =================================================================================\n# https://docs.travis-ci.com/user/customizing-the-build/#building-specific-branches\n# https://docs.travis-ci.com/user/conditional-builds-stages-jobs\n#branches:\n#  only:\n#    - master\n\n# ========================================\n# https://docs.travis-ci.com/user/caching/\n\nbefore_cache:\n  - rm -f $HOME/.cache/pip/log/debug.log\n\ncache:\n  - pip\n  - directories:\n      - $HOME/.cache\n      - $HOME/.cpan\n      - $HOME/.cpanm\n      - $HOME/.gem\n      - bash-tools/pytools_checks\n\n# ==============================================\n# https://docs.travis-ci.com/user/job-lifecycle/\n\n# avoid package checksum mismatches when installing packages\nbefore_install:\n  - sudo rm -f \"${TRAVIS_ROOT}/etc/apt/apt.conf.d/99-travis-apt-proxy\"\n  - sudo rm -rf \"${TRAVIS_ROOT}/var/lib/apt/lists/\"*\n\ninstall:\n  - echo nothing to install\n\nscript:\n  - travis_retry make test\n"
+        },
+        {
+          "name": "Jenkinsfile",
+          "type": "blob",
+          "size": 2.2041015625,
+          "content": "//  vim:ts=4:sts=4:sw=4:et:filetype=groovy:syntax=groovy\n//\n//  Author: Hari Sekhon\n//  Date: 2017-06-28 12:39:02 +0200 (Wed, 28 Jun 2017)\n//\n//  https://github.com/HariSekhon/Dockerfiles\n//\n//  License: see accompanying Hari Sekhon LICENSE file\n//\n//  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n//\n//  https://www.linkedin.com/in/HariSekhon\n//\n\n// ========================================================================== //\n//                        J e n k i n s   P i p e l i n e\n// ========================================================================== //\n\n// Epic Jenkinsfile template:\n//\n// https://github.com/HariSekhon/Templates/blob/master/Jenkinsfile\n\n\n// Official Documentation:\n//\n// https://jenkins.io/doc/book/pipeline/syntax/\n//\n// https://www.jenkins.io/doc/pipeline/steps/\n//\n// https://www.jenkins.io/doc/pipeline/steps/workflow-basic-steps/\n\n\npipeline {\n  // to run on Docker or Kubernetes, see the master Jenkinsfile template listed at the top\n  agent any\n\n  options {\n    timestamps()\n\n    timeout(time: 2, unit: 'HOURS')\n  }\n\n  triggers {\n    cron('H 10 * * 1-5')\n    pollSCM('H/2 * * * *')\n  }\n\n  stages {\n    stage ('Checkout') {\n      steps {\n        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '', url: 'https://github.com/HariSekhon/Dockerfiles']]])\n      }\n    }\n\n    stage('Build') {\n      steps {\n        echo \"Running ${env.JOB_NAME} Build ${env.BUILD_ID} on ${env.JENKINS_URL}\"\n        echo 'Building...'\n        timeout(time: 10, unit: 'MINUTES') {\n          retry(3) {\n//            sh 'apt update -q'\n//            sh 'apt install -qy make'\n//            sh 'make init'\n            sh \"\"\"\n              setup/ci_bootstrap.sh &&\n              make init\n            \"\"\"\n          }\n        }\n        timeout(time: 180, unit: 'MINUTES') {\n          sh 'make ci'\n        }\n      }\n    }\n\n    stage('Test') {\n      options {\n        retry(2)\n      }\n      steps {\n        echo 'Testing...'\n        timeout(time: 120, unit: 'MINUTES') {\n          sh 'make test'\n        }\n      }\n    }\n  }\n}\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0263671875,
+          "content": "Copyright 2016 Hari Sekhon\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 8.5166015625,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2016-01-19 23:14:35 +0000 (Tue, 19 Jan 2016)\n#\n#  vim:ts=4:sts=4:sw=4:noet\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\nifneq (\"$(wildcard bash-tools/Makefile.in)\", \"\")\n\tinclude bash-tools/Makefile.in\nendif\n\n# On Ubuntu this fails to pushd otherwise\n# fails to bootstrap on Alpine\n#SHELL := /usr/bin/env bash\n\nREPO := HariSekhon/Dockerfiles\n\nCODE_FILES := $(shell find . -type f -name '*.py' -o -type f -name '*.sh' -o -type f -name Dockerfile | grep -v -e bash-tools)\n\n# EUID /  UID not exported in Make\n# USER not populated in Docker\n#ifeq '$(shell id -u)' '0'\n#\tSUDO =\n#\tSUDO2 =\n#else\n#\tSUDO = sudo\n#endif\n\n.PHONY: build\nbuild: init\n\t@echo \"===========\"\n\t@echo \"Dockerfiles\"\n\t@echo \"===========\"\n\t@#$(MAKE) git-summary\n\t@$(MAKE) system-packages\n\n.PHONY: init\ninit:\n\tgit submodule update --init --recursive\n\n.PHONY: all\nall: build test docker-build\n\t@:\n\n.PHONY: docker-build\ndocker-build:\n\t# do not just break as it will fail and move to next push target in build-push\n\tfor x in *; do \\\n\t\t[ -f \"$$x/Dockerfile\" ] || continue; \\\n\t\t[ -f \"$$x/Makefile\" ] || continue; \\\n\t\ttests/exclude.sh \"$$x\" && continue; \\\n\t\techo \"building: $$x\" && \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) build && \\\n\t\techo && \\\n\t\tcd - || \\\n\t\texit 1; \\\n\tdone\n\n.PHONY: build-push\nbuild-push: docker-build docker-push\n\t:\n\ntags:\n\t./build_tags.sh\n\n.PHONY: nocache\nnocache:\n\tfor x in *; do \\\n\t\t[ -f \"$$x/Dockerfile\" ] || continue; \\\n\t\t[ -f \"$$x/Makefile\" ] || continue; \\\n\t\ttests/exclude.sh \"$$x\" && continue; \\\n\t\techo \"building without cache: $$x\" && \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) nocache && \\\n\t\techo && \\\n\t\tcd - || \\\n\t\texit 1; \\\n\tdone\n\n#.PHONY: apt-packages\n#apt-packages:\n#\t$(SUDO) apt-get update\n#\t$(SUDO) apt-get install -y npm\n#\t$(SUDO) apt-get install -y which\n#\n#.PHONY: yum-packages\n#yum-packages:\n#\trpm -q rpm || $(SUDO) yum install -y npm\n#\trpm -q rpm || $(SUDO) yum install -y which\n#\n#.PHONY: test-deps\n#test-deps:\n#\tif [ -x /usr/bin/apt-get ]; then $(MAKE) apt-packages; fi\n#\tif [ -x /usr/bin/yum ];     then $(MAKE) yum-packages; fi\n#\t# this is clearly too basic - it doesn't even recognize LABEL instruction, nor line continuations\n#\twhich docklint &>/dev/null || npm install -g validate-dockerfile\n\n.PHONY: test\ntest:\n\t@# this would test everything but would call test-deps over and over inefficiently\n\t@#for x in *; do [ -d $$x ] || continue; cd \"$$x\"; $(MAKE) test; cd -; done\n\t@#$(MAKE) test-deps\n\t@#find . -name Dockerfile | xargs -n1 docklint\n\ttests/all.sh\n\n.PHONY: push\npush:\n\tgit push --all\n\n.PHONY: pull\npull:\n\tgit checkout master && \\\n\tgit pull --no-edit && \\\n\tfor branch in $$(git branch -a | grep -v -e remotes/ | sed 's/\\*//'); do \\\n\t\techo \"git checkout $$branch\" && \\\n\t\tgit checkout \"$$branch\" && \\\n\t\techo \"git pull --no-edit\" && \\\n\t\tgit pull --no-edit || \\\n\t\texit 1; \\\n\tdone; \\\n\tgit checkout master\n\n.PHONY: dockerpull\ndockerpull:\n\tfor x in *; do [ -d $$x ] || continue; docker pull harisekhon/$$x || exit 1; done\n\n.PHONY: docker-push\ndocker-push:\n\t# use make push which will also call hooks/post_build\n\tfor x in *; do \\\n\t\t[ -d \"$$x\" ] || continue; \\\n\t\ttests/exclude.sh \"$$x\" && continue; \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) push && \\\n\t\tcd - || \\\n\t\texit 1; \\\n\tdone\n\n.PHONY: sync-hooks\nsync-hooks:\n\t# some hooks are different to the rest so excluded, not git checkout overwritten in case they have pending changes\n\tlatest_hook=`ls -t */hooks/post_build | grep -Ev -e github -e '(alpine|centos|debian|fedora|ubuntu)-dev' -e \"nagios-plugins\" | head -n1`; \\\n\tfor x in */hooks/post_build; do \\\n\t\tif [[ \"$$x\" =~ nagios-plugins ]] || \\\n\t\t   [[ \"$$x\" =~ github ]] || \\\n\t\t   [[ \"$$x\" =~ (alpine|centos|debian|fedora|ubuntu)-dev ]] || \\\n\t\t   [[ \"$$x\" =~ devops-.*-tools ]]; then \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif git status --porcelain \"$$x/hooks/post_build\" | grep -q '^.M'; then \\\n\t\t\techo \"$$x/hooks/post_build has pending modifications, skipping...\"; \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif [ \"$$latest_hook\" != \"$$x\" ]; then \\\n\t\t\tcp -v \"$$latest_hook\" \"$$x\"; \\\n\t\tfi; \\\n\tdone\n\techo\n\tlatest_hook=`ls -t *github/hooks/post_build | head -n1`; \\\n\tfor x in *-github/hooks/post_build; do \\\n\t\tif git status --porcelain \"$$x/hooks/post_build\" | grep -q '^.M'; then \\\n\t\t\techo \"$$x/hooks/post_build has pending modifications, skipping...\"; \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif [ \"$$latest_hook\" != \"$$x\" ]; then \\\n\t\t\tcp -v \"$$latest_hook\" \"$$x\"; \\\n\t\tfi; \\\n\tdone\n\techo\n\tlatest_hook=`ls -t {alpine,centos,debian,fedora,ubuntu}-dev/hooks/post_build | head -n1`; \\\n\tfor x in {alpine,centos,debian,fedora,ubuntu}-dev/hooks/post_build; do \\\n\t\tif git status --porcelain \"$$x/hooks/post_build\" | grep -q '^.M'; then \\\n\t\t\techo \"$$x/hooks/post_build has pending modifications, skipping...\"; \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif [ \"$$latest_hook\" != \"$$x\" ]; then \\\n\t\t\tcp -v \"$$latest_hook\" \"$$x\"; \\\n\t\tfi; \\\n\tdone\n\n.PHONY: sync-builds\nsync-builds:\n\t# some hooks are different to the rest so excluded, not git checkout overwritten in case they have pending changes\n\tlatest_hook=`ls -t devops-*-tools-*/build.sh | grep -v alpine | head -n1`; \\\n\tfor x in devops-*-tools-*/build.sh; do \\\n\t\tif [[ \"$$x\" =~ alpine ]]; then \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif git status --porcelain \"$$x/build.sh\" | grep -q '^.M'; then \\\n\t\t\techo \"$$x/build.sh has pending modifications, skipping...\"; \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif [ \"$$latest_hook\" != \"$$x\" ]; then \\\n\t\t\tcp -v \"$$latest_hook\" \"$$x\"; \\\n\t\tfi; \\\n\tdone\n\techo\n\tlatest_hook=`ls -t devops-*-tools-alpine/build.sh | head -n1`; \\\n\tfor x in devops-*-tools-alpine/build.sh; do \\\n\t\tif git status --porcelain \"$$x/build.sh\" | grep -q '^.M'; then \\\n\t\t\techo \"$$x/build.sh has pending modifications, skipping...\"; \\\n\t\t\tcontinue; \\\n\t\tfi; \\\n\t\tif [ \"$$latest_hook\" != \"$$x\" ]; then \\\n\t\t\tcp -v \"$$latest_hook\" \"$$x\"; \\\n\t\tfi; \\\n\tdone\n\n.PHONY: commit-hooks\ncommit-hooks:\n\tgit commit -m \"updated post build hooks\" `git status -s */hooks | grep ^.M | awk '{print $$2}'`\n\n.PHONY: commit-builds\ncommit-builds:\n\tgit commit -m \"updated */build.sh\" `git status -s */build.sh | grep ^.M | awk '{print $$2}'`\n\n# TODO: finish and remove ranger\n.PHONY: post-build\npost-build:\n\t@for x in *; do \\\n\t\t[ -d \"$$x\" ] || continue; \\\n\t\t[ \"$$x\" = h2o ] && continue; \\\n\t\t[ \"$$x\" = presto-dev ] && continue; \\\n\t\t[ \"$$x\" = ranger ] && continue; \\\n\t\t[ \"$$x\" = riak ] && continue; \\\n\t\t[ \"$$x\" = teamcity ] && continue; \\\n\t\tif [ -f \"$$x/hooks/post_build\" ]; then \\\n\t\t\techo \"$$x/hooks/post_build\"; \\\n\t\t\t\"$$x/hooks/post_build\" || exit 1; \\\n\t\t\techo; \\\n\t\tfi; \\\n\tdone\n.PHONY: postbuild\npostbuild: post-build\n\t:\n\n.PHONY: mergemaster\nmergemaster:\n\tbash-tools/git/git_merge_master.sh\n\n.PHONY: mergemasterpull\nmergemasterpull:\n\tbash-tools/git/git_merge_master_pull.sh\n\n.PHONY: mergeall\nmergeall:\n\tbash-tools/git/git_merge_all.sh\n\n# this would apply to all recipes\n#.ONESHELL:\n.PHONY: nagios-plugins\nnagios-plugins:\n\tfor x in nagios-plugins*; do \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) nocache push; \\\n\t\tcd -; \\\n\tdone\n\tdocker images | grep nagios-plugins\n\n.PHONY: nagios\nnagios: nagios-plugins\n\t:\n\n.PHONY: perl-tools\nperl-tools:\n\tfor x in devops-perl-tools-*; do \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) nocache push; \\\n\t\tcd -; \\\n\tdone\n\tdocker images | grep perl-tools\n\n.PHONY: pytools\npytools: python-tools\n\t@:\n\n.PHONY: python-tools\npython-tools:\n\tfor x in devops-python-tools-*; do \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) nocache push; \\\n\t\tcd -; \\\n\tdone\n\tdocker images | grep pytools\n\n.PHONY: build-github\nbuild-github:\n\t# has no test target, consider adding one\n\tfor x in *-github; do \\\n\t\tcd \"$$x\" && \\\n\t\t$(MAKE) nocache push; \\\n\t\tcd -\n\tdone\n\tdocker images | grep github\n\n.PHONY: status\nstatus:\n\t@tests/check_dockerhub_statuses.sh\n\n# build a locally named obvious docker image with the git checkout dir and subdirectories for testing purposes\n# -  with a tag of the Git Commit Short Sha hashref of this current commit +\n# - a unique checksum of the list of files changed as a 'dirty' differentiator\n# - to compare the different resulting docker image sizes from\n# - the current commit's version of the Dockerfile\n#     vs\n# - the currently modified Dockerfile\n#\n#.PHONY: docker-build-hashref\n#docker-build-hashref:\n#    set -euxo pipefail; \\\n#    git_commit_short_sha=\"$$(git rev-parse --short HEAD)\"; \\\n#    git_root=\"$$(git rev-parse --show-toplevel)\"; \\\n#    git_root_dir=\"$${git_root##*/}\"; \\\n#    git_path=\"$${git_root_dir}/$${PWD##$$git_root/}\"; \\\n#    image_name=\"$${git_path////--}\"; \\\n#    dirty=\"\"; \\\n#    if git status --porcelain | grep -q . ; then \\\n#        dirty=\"-dirty-$$(git status --porcelain | md5sum | cut -c 1-7)\"; \\\n#    fi; \\\n#    docker build . -t \"$${image_name}:$${git_commit_short_sha}$${dirty}\" &&\n#    docker images | grep \"^$$image_name\"\n"
+        },
+        {
+          "name": "Makefile.in",
+          "type": "blob",
+          "size": 6.8076171875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2016-01-16 12:21:15 +0000 (Sat, 16 Jan 2016)\n#\n#  vim:ts=4:sts=4:sw=4:noet\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help improve or steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\nifneq (\"$(wildcard bash-tools)\", \"\")\n\tBASH_TOOLS := bash-tools\nelse ifneq (\"$(wildcard ../bash-tools)\", \"\")\n\tBASH_TOOLS := ../bash-tools\nelse\n\tBASH_TOOLS := .\nendif\n\nifndef TAG\n\t# take explicit tag from Makefile if present otherwise infer tag from first ARG *_VERSION=N.N in Dockerfile\n\tTAG := $(shell { perl -n -e '/REPO.*\\w+\\/\\w+:(\\d+\\.\\d+|\\w+)/ && &{print \"$1\\n\"; exit}' Makefile; perl -n -e '/^\\s*ARG\\s+.*(?:VERSION|RELEASE)\\s*=\\s*\"?([^\"]*)\"?/ && &{ print $$1; exit }' Dockerfile; } | head -n1)\nendif\n\nifndef REPO\n\tREPO :=\nendif\n\n# cassandra-dev     -> cassandra\n# consul-dev        -> consul\n# solrcloud-dev     -> solrcloud\n# rabbitmq-cluster  -> rabbitmq\n# solrloud          -> solr\n# presto-cli        -> presto\nBRANCH = $(shell echo \"$(REPO)\" | sed 's,.*/,,; s/-dev$$//; s/-cli$$//; s/-cluster$$//; s/cloud$$//')\n\nifndef MAP_PORTS\n\tMAP_PORTS := \"\"\nendif\n\nifndef NOPORTS\n\tNOPORTS :=\nendif\n\n#ifndef RUN_ARGS\n#\tRUN_ARGS := bash\n#endif\n\nifdef LATEST\n\tTAG=latest\nendif\n\nifneq \"$(TAG)\" \"\"\n\tREPO_TAG := \"$(REPO):$(TAG)\"\nelse\n\tREPO_TAG := \"$(REPO)\"\nendif\n\nexport DOCKER_BUILDKIT=1\n\n# for new M1 Macs which otherwise fail to build with errors like this:\n#\n#   AWS CLI version: qemu-x86_64: Could not open '/lib64/ld-linux-x86-64.so.2': No such file or directory\n#\nexport DOCKER_DEFAULT_PLATFORM=linux/amd64\n\n.PHONY: build\nbuild:\n\t@echo \"Docker Environment variables:\"\n\t@echo\n\t@env | grep ^DOCKER || :\n\t@echo\n\t@#@if docker buildx >/dev/null; then \\\n\t@#    docker buildx build -t $(REPO_TAG) . ; \\\n\t@#else \\\n\t@#    echo \"WARNING: docker buildx is not installed, using old docker build which will not reuse existing upstream cache layers\"; \\\n\t@#    docker build -t $(REPO_TAG) . ; \\\n\t@#fi\n\t@# use BuildKite if available via DOCKER_BUILDKIT=1 being set for all targets above\n\tdocker build -t $(REPO_TAG) . --cache-from $(REPO_TAG) --build-arg BUILDKIT_INLINE_CACHE=1\n\n.PHONY: cloudbuild\ncloudbuild:\n\tgcloud builds submit --tag $(REPO_TAG) .\n\n.PHONY: gcp-cloudbuild\ngcp-cloudbuild:\n\t@# replace the prefix with the project ID\n\tgcloud builds submit --tag gcr.io/$$GOOGLE_CLOUD_PROJECT/`echo \"$(REPO_TAG)\" | sed 's,.*/,,'` .\n\n.PHONY: gcp\ngcp: gcp-cloudbuild\n\t@:\n\n.PHONY: gcb\ngcb: gcp-cloudbuild\n\t@:\n\n.PHONY: azure-container-registry\nazure-container-registry:\n\taz acr build --file Dockerfile --registry \"$$AZURE_REGISTRY\" --image \"$(REPO_TAG)\" .\n\n.PHONY: azure\nazure: azure-container-registry\n\t@:\n\n.PHONY: acr\nacr: azure\n\t@:\n\n.PHONY: azure-container-registry-local\nazure-container-registry-local:\n\tdocker build -t \"$$AZURE_REGISTRY.azurecr.io/`echo \"$(REPO_TAG)\" | sed 's,.*/,,'`\" .\n\n.PHONY: azure-local\nazure-local: azure-container-registry-local\n\t@:\n\n.PHONY: acr-local\nacr-local: azure-local\n\t@:\n\n.PHONY: acr2\nacr2: acr-local\n\t@:\n\n.PHONY: nocache\nnocache:\n\tdocker build -t $(REPO_TAG) --no-cache .\n\n.PHONY: build-versions\nbuild-versions:\n\t@echo \"Building all versions from branches with base '$(BRANCH)'\"\n\tfor x in $$(git branch -a | grep $(BRANCH) | sed 's,remotes/origin/,,' | sort -u); do \\\n\t\tgit checkout \"$$x\" && \\\n\t\t$(MAKE) build && \\\n\t\techo || \\\n\t\texit 1; \\\n\tdone; \\\n\tgit checkout master\n\n.PHONY: build-push-versions\nbuild-push-versions: build-versions push-versions\n\t:\n\n.PHONY: push\npush:\n\tdocker push $(REPO_TAG)\n\t[ -f hooks/post_build ] && hooks/post_build || :\n\n# use 'make push' rather than just 'docker push' to trigger hooks/post_build\n.PHONY: push-versions\npush-versions:\n\tfor x in $$(git branch -a | grep $(BRANCH) | sed 's,remotes/origin/,,' | sort -u); do \\\n\t\tgit checkout \"$$x\" && \\\n\t\t$(MAKE) push && \\\n\t\techo || \\\n\t\texit 1; \\\n\tdone; \\\n\tgit checkout master\n\n.PHONY: up\nup: build test push\n\t:\n\n# ============================================================================ #\n# complex fix to allow makefile testing to work\nCMD := $(shell \\\n\tif [ -n \"$(MAP_PORTS)\" ]; then \\\n\t\tports=$$(for port in $(MAP_PORTS); do echo \"-p $$port:$$port \"; done); \\\n\t\techo docker run --rm $$ports $(REPO_TAG); \\\n\telif [ -n \"$(NOPORTS)\" ]; then \\\n\t\techo docker run --rm $(REPO_TAG); \\\n\telse \\\n\t\techo docker run -ti --rm $(REPO_TAG) $(RUN_ARGS); \\\n\tfi \\\n)\n\nCMD_FG := $(shell \\\n\tif [ -n \"$(MAP_PORTS)\" ]; then \\\n\t\tports=$$(for port in $(MAP_PORTS); do echo \"-p $$port:$$port \"; done); \\\n\t\techo docker run -ti --rm $$ports $(REPO_TAG); \\\n\telif [ -n \"$(NOPORTS)\" ]; then \\\n\t\techo docker run --rm $(REPO_TAG); \\\n\telse \\\n\t\techo \"docker run --rm $(REPO_TAG)\"; \\\n\tfi \\\n)\n\n.PHONY: runcmd\nruncmd:\n\techo \"$(CMD)\"\n\n.PHONY: runcmd-fg\nruncmd-fg:\n\techo \"$(CMD_FG)\"\n\n.PHONY: run\nrun: runcmd\n\t@#$(MAKE) run | tee /dev/stderr | sh\n\t@$(CMD)\n\n.PHONY: run-fg\nrun-fg: runcmd-fg\n\t@$(CMD_FG)\n\n# ============================================================================ #\n\n.PHONY: sh\nsh:\n\t#make -e MAP_PORTS=\"\" run\n\tdocker run -ti --rm -v \"$$PWD:/code\" --entrypoint sh \"$(REPO_TAG)\"\n\n.PHONY: bash\nbash:\n\t#make -e MAP_PORTS=\"\" run\n\tdocker run -ti --rm -v \"$$PWD:/code\" -w \"$$PWD/code\" --entrypoint bash \"$(REPO_TAG)\"\n\n.PHONY: test\ntest:\n\t#docker run -ti $(REPO) sh -c 'if test -f tests/all.sh; then tests/all.sh; fi;'\n\tdocker run -ti \"$(REPO)\" tests/all.sh\n\n.PHONY: interactive\ninteractive:\n\tdocker run -ti --rm \\\n\t\t-v \"$$PWD:/code\" \\\n\t\t-w /code \\\n\t\t\"$$(awk '/^FROM /{print $$2; exit}' Dockerfile)\" \\\n\t\tsh -c 'if type bash >/dev/null 2>&1; then exec bash; else exec sh; fi'\n\n.PHONY: build-script\nbuild-script:\n\tpath=\"$$(awk '/^[[:space:]]*ENV PATH / {print $$3}' Dockerfile)\" && \\\n\tbuild_script=\"$$(awk '/^[[:space:]]*ADD .* \\/build.sh/ {print $$2}' Dockerfile)\" && \\\n\twget -cO build.sh \"$$build_script\" && \\\n\tchmod +x build.sh && \\\n\tdocker run -ti --rm \\\n\t\t-v \"$$PWD:/code\" \\\n\t\t-w /code \\\n\t\t-e path=\"$$path\" \\\n\t\t-e DEBUG=\"$$DEBUG\" \\\n\t\t\"$$(awk '/^FROM /{print $$2; exit}' Dockerfile)\" \\\n\t\tsh -c 'export PATH=\"$$PATH:$$path\"; ./build.sh; if type bash >/dev/null 2>&1; then exec bash; else exec sh; fi'\n\n.PHONY: build-debug\nbuild-debug:\n\texport DEBUG=1 && \\\n\t$(MAKE) build-script\n\n.PHONY: browse\nbrowse:\n\t@source $(BASH_TOOLS)/.bash.d/network.sh; browser \"https://github.com/HariSekhon/Dockerfiles\"\n\n.PHONY: github\ngithub: browse\n\t@:\n\n.PHONY: github-url\ngithub-url:\n\t@source $(BASH_TOOLS)/.bash.d/functions.sh; echo \"https://github.com/HariSekhon/Dockerfiles\" | tee /dev/stderr | tr -d '\\n' | paste_clipboard\n\n.PHONY: dockerhub\ndockerhub:\n\t@source $(BASH_TOOLS)/.bash.d/network.sh; browser `echo \"https://hub.docker.com/r/$(REPO)\" | sed 's/:[^:]*$$//'`\n\n.PHONY: dockerhub-url\ndockerhub-url:\n\t@source $(BASH_TOOLS)/.bash.d/functions.sh; echo \"https://hub.docker.com/r/$(REPO)\" | sed 's/:[^:]*$$//' | tee /dev/stderr | tr -d '\\n' | paste_clipboard\n\n.PHONY: dockerhub-status\ndockerhub-status:\n\tcheck_dockerhub_repo_build_status.py -r $(REPO)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 43.5927734375,
+          "content": "# Dockerfiles for DevOps, CI/CD, Big Data & NoSQL\n\n[![GitHub stars](https://img.shields.io/github/stars/harisekhon/Dockerfiles?logo=github)](https://github.com/HariSekhon/Dockerfiles/stargazers)\n[![GitHub forks](https://img.shields.io/github/forks/harisekhon/Dockerfiles?logo=github)](https://github.com/HariSekhon/Dockerfiles/network)\n[![Contributors](https://img.shields.io/github/contributors/HariSekhon/Dockerfiles?logo=github)](https://github.com/HariSekhon/Dockerfiles/graphs/contributors)\n[![Lines of Code](https://img.shields.io/badge/lines%20of%20code-8k-lightgrey?logo=codecademy)](https://github.com/HariSekhon/Dockerfiles)\n[![License](https://img.shields.io/github/license/HariSekhon/Dockerfiles)](https://github.com/HariSekhon/Dockerfiles/blob/master/LICENSE)\n[![My LinkedIn](https://img.shields.io/badge/LinkedIn%20Profile-HariSekhon-blue?logo=data:image/svg%2bxml;base64,PHN2ZyByb2xlPSJpbWciIGZpbGw9IiNmZmZmZmYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGlua2VkSW48L3RpdGxlPjxwYXRoIGQ9Ik0yMC40NDcgMjAuNDUyaC0zLjU1NHYtNS41NjljMC0xLjMyOC0uMDI3LTMuMDM3LTEuODUyLTMuMDM3LTEuODUzIDAtMi4xMzYgMS40NDUtMi4xMzYgMi45Mzl2NS42NjdIOS4zNTFWOWgzLjQxNHYxLjU2MWguMDQ2Yy40NzctLjkgMS42MzctMS44NSAzLjM3LTEuODUgMy42MDEgMCA0LjI2NyAyLjM3IDQuMjY3IDUuNDU1djYuMjg2ek01LjMzNyA3LjQzM2MtMS4xNDQgMC0yLjA2My0uOTI2LTIuMDYzLTIuMDY1IDAtMS4xMzguOTItMi4wNjMgMi4wNjMtMi4wNjMgMS4xNCAwIDIuMDY0LjkyNSAyLjA2NCAyLjA2MyAwIDEuMTM5LS45MjUgMi4wNjUtMi4wNjQgMi4wNjV6bTEuNzgyIDEzLjAxOUgzLjU1NVY5aDMuNTY0djExLjQ1MnpNMjIuMjI1IDBIMS43NzFDLjc5MiAwIDAgLjc3NCAwIDEuNzI5djIwLjU0MkMwIDIzLjIyNy43OTIgMjQgMS43NzEgMjRoMjAuNDUxQzIzLjIgMjQgMjQgMjMuMjI3IDI0IDIyLjI3MVYxLjcyOUMyNCAuNzc0IDIzLjIgMCAyMi4yMjIgMGguMDAzeiIvPjwvc3ZnPgo=)](https://www.linkedin.com/in/HariSekhon/)\n[![GitHub Last Commit](https://img.shields.io/github/last-commit/HariSekhon/Dockerfiles?logo=github)](https://github.com/HariSekhon/Dockerfiles/commits/master)\n\n[![Codacy](https://api.codacy.com/project/badge/Grade/de6229f2d2ba4945acde9f86f59d2c66)](https://app.codacy.com/gh/HariSekhon/Dockerfiles/dashboard)\n[![CodeFactor](https://www.codefactor.io/repository/github/harisekhon/Dockerfiles/badge)](https://www.codefactor.io/repository/github/harisekhon/Dockerfiles)\n[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HariSekhon_Dockerfiles&metric=alert_status)](https://sonarcloud.io/dashboard?id=HariSekhon_Dockerfiles)\n[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=HariSekhon_Dockerfiles&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=HariSekhon_Dockerfiles)\n[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=HariSekhon_Dockerfiles&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=HariSekhon_Dockerfiles)\n[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=HariSekhon_Dockerfiles&metric=security_rating)](https://sonarcloud.io/dashboard?id=HariSekhon_Dockerfiles)\n[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=HariSekhon_Dockerfiles&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=HariSekhon_Dockerfiles)\n\n[![Linux](https://img.shields.io/badge/OS-Linux-blue?logo=linux)](https://github.com/HariSekhon/Dockerfiles)\n[![Mac](https://img.shields.io/badge/OS-Mac-blue?logo=apple)](https://github.com/HariSekhon/Dockerfiles)\n[![Docker](https://img.shields.io/badge/container-Docker-blue?logo=docker&logoColor=white)](https://hub.docker.com/u/harisekhon)\n[![StarTrack](https://img.shields.io/badge/Star-Track-blue?logo=github)](https://seladb.github.io/StarTrack-js/#/preload?r=HariSekhon,Nagios-Plugins&r=HariSekhon,Dockerfiles&r=HariSekhon,DevOps-Python-tools&r=HariSekhon,DevOps-Perl-tools&r=HariSekhon,DevOps-Bash-tools&r=HariSekhon,HAProxy-configs&r=HariSekhon,SQL-scripts)\n[![StarCharts](https://img.shields.io/badge/Star-Charts-blue?logo=github)](https://github.com/HariSekhon/DevOps-Bash-tools/blob/master/STARCHARTS.md)\n\n[![Alpine](https://img.shields.io/badge/Linux-Alpine-0D597F?logo=alpine%20linux)](https://alpinelinux.org/)\n[![CentOS](https://img.shields.io/badge/Linux-CentOS-262577?logo=centos&logoColor=white)](https://www.centos.org/)\n[![Debian](https://img.shields.io/badge/Linux-Debian-A81D33?logo=debian)](https://www.debian.org/)\n[![Fedora](https://img.shields.io/badge/Linux-Fedora-294172?logo=fedora&logoColor=white)](https://getfedora.org/)\n[![Redhat](https://img.shields.io/badge/Linux-Redhat-EE0000?logo=red%20hat)](https://www.redhat.com/en)\n[![Rocky](https://img.shields.io/badge/Linux-Rocky-10B981?logo=rockylinux&logoColor=white)](https://rockylinux.org/)\n[![Ubuntu](https://img.shields.io/badge/Linux-Ubuntu-E95420?logo=ubuntu&logoColor=white)](https://ubuntu.com/)\n\n[![CI Builds Overview](https://img.shields.io/badge/CI%20Builds-Overview%20Page-blue?logo=circleci)](https://harisekhon.github.io/CI-CD/)\n[![Jenkins](https://img.shields.io/badge/Jenkins-ready-blue?logo=jenkins&logoColor=white)](https://github.com/HariSekhon/Dockerfiles/blob/master/Jenkinsfile)\n[![Concourse](https://img.shields.io/badge/Concourse-ready-blue?logo=concourse)](https://github.com/HariSekhon/Dockerfiles/blob/master/cicd/.concourse.yml)\n[![GoCD](https://img.shields.io/badge/GoCD-ready-blue?logo=go)](https://github.com/HariSekhon/Dockerfiles/blob/master/cicd/.gocd.yml)\n[![TeamCity](https://img.shields.io/badge/TeamCity-ready-blue?logo=teamcity)](https://github.com/HariSekhon/TeamCity-CI)\n\n[![CircleCI](https://circleci.com/gh/HariSekhon/Dockerfiles.svg?style=svg)](https://circleci.com/gh/HariSekhon/Dockerfiles)\n[![BuildKite](https://img.shields.io/buildkite/503cefcbf7f8c60c2826d7a22a22496d1187a4839b71619914/master?label=BuildKite&logo=buildkite)](https://buildkite.com/hari-sekhon/dockerfiles)\n[![AppVeyor](https://img.shields.io/appveyor/build/harisekhon/Dockerfiles/master?logo=appveyor&label=AppVeyor)](https://ci.appveyor.com/project/HariSekhon/Dockerfiles/branch/master)\n[![Drone](https://img.shields.io/drone/build/HariSekhon/Dockerfiles/master?logo=drone&label=Drone)](https://cloud.drone.io/HariSekhon/Dockerfiles)\n[![Codefresh](https://g.codefresh.io/api/badges/pipeline/harisekhon/GitHub%2FDockerfiles?branch=master&key=eyJhbGciOiJIUzI1NiJ9.NWU1MmM5OGNiM2FiOWUzM2Y3ZDZmYjM3.O69674cW7vYom3v5JOGKXDbYgCVIJU9EWhXUMHl3zwA&type=cf-1)](https://g.codefresh.io/pipelines/edit/new/builds?id=5e58e32c9604d7520e95ee26&pipeline=Dockerfiles&projects=GitHub&projectId=5e52ca8ea284e00f882ea992&context=github&filter=page:1;pageSize:10;timeFrameStart:week)\n[![Cirrus CI](https://img.shields.io/cirrus/github/HariSekhon/Dockerfiles/master?logo=Cirrus%20CI&label=Cirrus%20CI)](https://cirrus-ci.com/github/HariSekhon/Dockerfiles)\n[![Semaphore](https://harisekhon.semaphoreci.com/badges/Dockerfiles.svg)](https://harisekhon.semaphoreci.com/projects/Dockerfiles)\n[![Buddy](https://img.shields.io/badge/Buddy-ready-1A86FD?logo=buddy)](https://github.com/HariSekhon/Dockerfiles/blob/master/buddy.yml)\n[![Shippable](https://img.shields.io/badge/Shippable-legacy-lightgrey?logo=jfrog&label=Shippable)](https://github.com/HariSekhon/Dockerfiles/blob/master/shippable.yml)\n[![Travis CI](https://img.shields.io/badge/TravisCI-ready-blue?logo=travis&label=Travis%20CI)](https://github.com/HariSekhon/Dockerfiles/blob/master/.travis.yml)\n\n[![Azure DevOps Pipeline](https://dev.azure.com/harisekhon/GitHub/_apis/build/status/HariSekhon.Dockerfiles?branchName=master)](https://dev.azure.com/harisekhon/GitHub/_build/latest?definitionId=6&branchName=master)\n[![GitLab Pipeline](https://img.shields.io/badge/GitLab%20CI-legacy-lightgrey?logo=gitlab)](https://gitlab.com/HariSekhon/Dockerfiles/pipelines)\n[![BitBucket Pipeline](https://img.shields.io/badge/Bitbucket%20CI-legacy-lightgrey?logo=bitbucket)](https://bitbucket.org/harisekhon/dockerfiles/addon/pipelines/home#!/)\n[![AWS CodeBuild](https://img.shields.io/badge/AWS%20CodeBuild-ready-blue?logo=amazon%20aws)](https://github.com/HariSekhon/Dockerfiles/blob/master/cicd/buildspec.yml)\n[![GCP Cloud Build](https://img.shields.io/badge/GCP%20Cloud%20Build-ready-blue?logo=google%20cloud&logoColor=white)](https://github.com/HariSekhon/Dockerfiles/blob/master/cicd/cloudbuild.yaml)\n\n[![Repo on GitHub](https://img.shields.io/badge/repo-GitHub-2088FF?logo=github)](https://github.com/HariSekhon/Dockerfiles)\n[![Repo on GitLab](https://img.shields.io/badge/repo-GitLab-FCA121?logo=gitlab)](https://gitlab.com/HariSekhon/Dockerfiles)\n[![Repo on Azure DevOps](https://img.shields.io/badge/repo-Azure%20DevOps-0078D7?logo=azure%20devops)](https://dev.azure.com/harisekhon/GitHub/_git/Dockerfiles)\n[![Repo on BitBucket](https://img.shields.io/badge/repo-BitBucket-0052CC?logo=bitbucket)](https://bitbucket.org/HariSekhon/Dockerfiles)\n\n[![Dockerfiles](https://github.com/HariSekhon/Dockerfiles/actions/workflows/dockerfiles.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/dockerfiles.yaml)\n[![ShellCheck](https://github.com/HariSekhon/Dockerfiles/actions/workflows/shellcheck.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/shellcheck.yaml)\n[![JSON](https://github.com/HariSekhon/Dockerfiles/actions/workflows/json.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/json.yaml)\n[![YAML](https://github.com/HariSekhon/Dockerfiles/actions/workflows/yaml.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/yaml.yaml)\n[![XML](https://github.com/HariSekhon/Dockerfiles/actions/workflows/xml.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/xml.yaml)\n[![Validation](https://github.com/HariSekhon/Dockerfiles/actions/workflows/validate.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/validate.yaml)\n[![Kics](https://github.com/HariSekhon/Dockerfiles/actions/workflows/kics.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/kics.yaml)\n[![Grype](https://github.com/HariSekhon/Dockerfiles/actions/workflows/grype.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/grype.yaml)\n[![Semgrep](https://github.com/HariSekhon/Dockerfiles/actions/workflows/semgrep.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/semgrep.yaml)\n[![Semgrep Cloud](https://github.com/HariSekhon/Dockerfiles/actions/workflows/semgrep-cloud.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/semgrep-cloud.yaml)\n[![Trivy](https://github.com/HariSekhon/Dockerfiles/actions/workflows/trivy.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/trivy.yaml)\n\n[![GitHub Actions Ubuntu](https://github.com/HariSekhon/Dockerfiles/workflows/GitHub%20Actions%20Ubuntu/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22GitHub+Actions+Ubuntu%22)\n[![Mac](https://github.com/HariSekhon/Dockerfiles/actions/workflows/mac.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/mac.yaml)\n[![Mac 11](https://github.com/HariSekhon/Dockerfiles/actions/workflows/mac_11.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/mac_11.yaml)\n[![Mac 12](https://github.com/HariSekhon/Dockerfiles/actions/workflows/mac_12.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/mac_12.yaml)\n[![Ubuntu](https://github.com/HariSekhon/Dockerfiles/workflows/Ubuntu/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Ubuntu%22)\n[![Ubuntu 20.04](https://github.com/HariSekhon/Dockerfiles/workflows/Ubuntu%2020.04/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Ubuntu+20.04%22)\n[![Ubuntu 22.04](https://github.com/HariSekhon/Dockerfiles/workflows/Ubuntu%2022.04/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Ubuntu+22.04%22)\n[![Debian](https://github.com/HariSekhon/Dockerfiles/workflows/Debian/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Debian%22)\n[![Debian 10](https://github.com/HariSekhon/Dockerfiles/workflows/Debian%2010/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Debian+10%22)\n[![Debian 11](https://github.com/HariSekhon/Dockerfiles/workflows/Debian%2011/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Debian+11%22)\n[![Debian 12](https://github.com/HariSekhon/Dockerfiles/workflows/Debian%2012/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Debian+12%22)\n[![Fedora](https://github.com/HariSekhon/Dockerfiles/workflows/Fedora/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Fedora%22)\n[![Alpine](https://github.com/HariSekhon/Dockerfiles/workflows/Alpine/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Alpine%22)\n[![Alpine 3](https://github.com/HariSekhon/Dockerfiles/workflows/Alpine%203/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions?query=workflow%3A%22Alpine+3%22)\n\n[git.io/dockerhub](https://git.io/dockerhub)\n\n**Contains 50+ DockerHub repos with 340+ tags, many different versions of standard official open source software, see [Full Inventory](https://github.com/HariSekhon/Dockerfiles#full-inventory) futher down**\n\nThese docker images are tested by hundreds of tools and also used in the full functional test suites of various other GitHub repos.\n\nSee also the [Kubernetes configs](https://github.com/HariSekhon/Kubernetes-configs) repo.\n\nOverview - this repo contains:\n\n- **Hadoop & Big Data** ecosystem technologies (Spark, Kafka, Presto, Drill, Nifi, ZooKeeper)\n- **NoSQL** datastores (HBase, Cassandra, Riak, SolrCloud)\n- OS & development images (Alpine, CentOS, Debian, Fedora, Ubuntu)\n- **DevOps**, CI/CD (CircleCI, GitHub Actions, Jenkins, TeamCity etc), open source (RabbitMQ Cluster, Mesos, Consul)\n- [My GitHub repos](https://github.com/HariSekhon) containing hundreds of tools related to these technologies with all dependencies pre-built in the docker images\n\nThese images are all available pre-built on [My DockerHub - https://hub.docker.com/u/harisekhon/](https://hub.docker.com/u/harisekhon/).\n\n- *Quality and Testing* - this repo has entire test suites run against it from various [GitHub repositories](https://github.com/HariSekhon) to validate the docker images' functionality, branches vs tagged versions align, latest contains correct version from master branch, syntax checks covering all common build and file formats (Make/JSON/CSV/INI/XML/YAML configurations) etc.\n\nThese are reusable tests that can anybody can implement and can be found in my [DevOps Python Tools](https://github.com/HariSekhon/DevOps-Python-tools) and [DevOps Bash Tools](https://github.com/HariSekhon/DevOps-Bash-tools) repos as well as the [Advanced Nagios Plugins Collection](https://github.com/HariSekhon/Nagios-Plugins) which contains hundreds of technology specific API-level test programs to ensure the docker images are functioning as intended.\n\n[Continuous Integration](https://travis-ci.org/HariSekhon/Dockerfiles) in run on this and adjacent repos that form a bi-directional validation between these docker images and several other repositories full of hundreds of programs. All of this is intended to keep the quality of this repo as high as possible.\n\nHari Sekhon\n\nCloud & Big Data Contractor, United Kingdom\n\n(ex-Cloudera, former Hortonworks Consultant)\n\n[![My LinkedIn](https://img.shields.io/badge/LinkedIn%20Profile-HariSekhon-blue?logo=data:image/svg%2bxml;base64,PHN2ZyByb2xlPSJpbWciIGZpbGw9IiNmZmZmZmYiIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGlua2VkSW48L3RpdGxlPjxwYXRoIGQ9Ik0yMC40NDcgMjAuNDUyaC0zLjU1NHYtNS41NjljMC0xLjMyOC0uMDI3LTMuMDM3LTEuODUyLTMuMDM3LTEuODUzIDAtMi4xMzYgMS40NDUtMi4xMzYgMi45Mzl2NS42NjdIOS4zNTFWOWgzLjQxNHYxLjU2MWguMDQ2Yy40NzctLjkgMS42MzctMS44NSAzLjM3LTEuODUgMy42MDEgMCA0LjI2NyAyLjM3IDQuMjY3IDUuNDU1djYuMjg2ek01LjMzNyA3LjQzM2MtMS4xNDQgMC0yLjA2My0uOTI2LTIuMDYzLTIuMDY1IDAtMS4xMzguOTItMi4wNjMgMi4wNjMtMi4wNjMgMS4xNCAwIDIuMDY0LjkyNSAyLjA2NCAyLjA2MyAwIDEuMTM5LS45MjUgMi4wNjUtMi4wNjQgMi4wNjV6bTEuNzgyIDEzLjAxOUgzLjU1NVY5aDMuNTY0djExLjQ1MnpNMjIuMjI1IDBIMS43NzFDLjc5MiAwIDAgLjc3NCAwIDEuNzI5djIwLjU0MkMwIDIzLjIyNy43OTIgMjQgMS43NzEgMjRoMjAuNDUxQzIzLjIgMjQgMjQgMjMuMjI3IDI0IDIyLjI3MVYxLjcyOUMyNCAuNzc0IDIzLjIgMCAyMi4yMjIgMGguMDAzeiIvPjwvc3ZnPgo=)](https://www.linkedin.com/in/HariSekhon/)\n<br>*(you're welcome to connect with me on LinkedIn)*\n\n## Ready to run Docker images\n\n```shell\ndocker search harisekhon\ndocker run harisekhon/nagios-plugins\n```\n\nTo see more than the 25 DockerHub repos limited by ```docker search``` ([docker issue 23055](https://github.com/docker/docker/issues/23055)) I wrote ```dockerhub_search.py``` using the DockerHub API, available in my [DevOps Python Tools github repo](https://github.com/HariSekhon/DevOps-Python-tools) and as a pre-built docker image:\n\n```shell\ndocker run harisekhon/pytools dockerhub_search.py harisekhon\n```\n\nThere are lots of tagged versions of official software in my repos to allow development testing across multiple versions, usually more versions than available from the official repos (and new version updates available on request, just [raise a GitHub issue](https://github.com/HariSekhon/Dockerfiles/issues)).\n\nDockerHub tags are not shown by ```docker search``` ([docker issue 17238](https://github.com/docker/docker/issues/17238)) so I wrote ```dockerhub_show_tags.py``` available in my [DevOps Python Tools github repo](https://github.com/HariSekhon/DevOps-Python-tools) and as a pre-built docker image - eg. to see an organized list of all CentOS tags:\n\n```shell\ndocker run harisekhon/pytools dockerhub_show_tags.py centos\n```\n\nFor service technologies like Hadoop, HBase, ZooKeeper etc for which you'll also want port mappings, each directory in the [GitHub project](https://github.com/HariSekhon/Dockerfiles) contains both a standard ` docker-compose ` configuration as well as a ` make run ` shortcut (which doesn't require ` docker-compose ` to be installed) - either way you don't have to remember all the command line switches and port number specifics:\n\n```shell\ncd zookeeper\ndocker-compose up\n```\n\nor for technologies with interactive shells like Spark, ZooKeeper, HBase, Drill, Cassandra where you want to be dropped in to an interactive shell, use the ` make run ` shortcut instead:\n\n```shell\ncd zookeeper\nmake run\n```\n\nwhich is much easier to type and remember than the equivalent bigger commands like:\n\n```shell\ndocker run -ti -p 2181:2181 harisekhon/zookeeper\n```\n\nand avoid this for more complex services like Hadoop / HBase:\n\n```shell\ndocker run -ti -p 2181:2181 -p 8080:8080 -p 8085:8085 -p 9090:9090 -p 9095:9095 -p 16000:16000 -p 16010:16010 -p 16201:16201 -p 16301:16301 harisekhon/hbase\n```\n\n```shell\ndocker run -ti -p 8020:8020 -p 8032:8032 -p 8088:8088 -p 9000:9000 -p 10020:10020 -p 19888:19888 -p 50010:50010 -p 50020:50020 -p 50070:50070 -p 50075:50075 -p 50090:50090 harisekhon/hadoop\n```\n\n### Full Inventory\n\n### Official Standard Open Source Technologies\n\nMore specific information can be found in the readme page under each respective directory in the [Dockerfiles git repo](https://github.com/HariSekhon/Dockerfiles).\n\n- [Alluxio](http://www.alluxio.org/) - distributed in-memory filesystem for cluster computing frameworks by UC Berkely's [AMPLab](https://amplab.cs.berkeley.edu/) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/alluxio/README.md)\n- [Apache Drill](https://drill.apache.org/) - distributed SQL engine by [MapR](https://mapr.com/) (opens Drill SQL shell) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/apache-drill/README.md)\n- [Awless](https://github.com/wallix/awless) - a Mighty CLI for AWS - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/awless/README.md)\n- [AWS Elastic Beanstalk CLI](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3.html) - CLI for AWS [Elastic Beanstalk](https://aws.amazon.com/elasticbeanstalk/) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/aws-eb-cli/README.md)\n- [Backstage](https://backstage.io/) - Spotify's Backstage software catalog and developer portal - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/backstage/README.md)\n- [Cassandra](http://cassandra.apache.org/) - distributed NoSQL datastore by Facebook and [DataStax](https://www.datastax.com/) (opens CQL shell, bundled with [nagios-plugins](https://github.com/HariSekhon/Nagios-Plugins))\n- [CircleCI Runner](https://circleci.com/) - CI/CD runner for CircleCI - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/circleci-runner/README.md)\n- [Consul](https://www.consul.io/) - distributed service discovery by [HashiCorp](https://www.hashicorp.com/)\n- [FakeS3](https://supso.org/projects/fake-s3) - Amazon S3 API simulator for testing without incurring AWS S3 costs - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/fakes3/README.md)\n- [GitHub Actions Runner](https://github.com/features/actions) - CI/CD runner for GitHub Actions - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/github-actions-runner/README.md)\n- [Git](https://git-scm.com/) + [Kustomize](https://kustomize.io/) - minimal Git + Kustomize for CI/CD GitOps workflows - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/git-kustomize/README.md)\n- [H2O](https://www.h2o.ai/) - distributed machine learning framework by [0xdata](https://www.h2o.ai/)\n- [Hadoop](http://hadoop.apache.org/) (HDFS + Yarn) - distributed storage and compute cluster by Yahoo, [Cloudera](https://www.cloudera.com/) and [Hortonworks](https://hortonworks.com/) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/hadoop/README.md)\n- [HBase](https://hbase.apache.org/) - distributed NoSQL datastore by Facebook (opens HBase shell) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/hbase/README.md)\n- [Jenkins Agent](https://www.jenkins.io/) with Docker - Jenkins inbound-agent with docker & docker-compose installed - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/jenkins-agent-docker/README.md)\n- [Jenkins Agent](https://www.jenkins.io/) with PHP + libs + New Relic - Jenkins inbound-agent with PHP + libs + New Relic installed - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/jenkins-agent-php/README.md)\n- [Jython](http://www.jython.org/) - Python on Java JVM (useful for Hadoop python utilities using Hadoop's Java API. eg. [DevOps Python Tools](https://github.com/HariSekhon/DevOps-Python-tools))\n- [Kafka](https://kafka.apache.org/) - pub-sub data broker by [LinkedIn](https://www.linkedin.com) and [Confluent](https://www.confluent.io/). Deprecated, see new [Confluent docker images](https://hub.docker.com/u/confluentinc/) instead\n- [Mesos](http://mesos.apache.org/) - datacenter resource manager by [Mesosphere](https://mesosphere.com/) (mostly obsoleted by more free Hortonworks / Hadoop Yarn resource manager)\n- [Nifi](https://nifi.apache.org/) - IOT data flow engine by NSA and [Hortonworks](https://hortonworks.com/)\n- [OpenTSDB TCollector](http://opentsdb.net/docs/build/html/user_guide/utilities/tcollector.html) - metrics collector - sends metrics to OpenTSDB - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/tcollector/README.md)\n- [Presto](https://prestodb.io/) - distributed SQL engine by Facebook (opens Presto SQL shell) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/presto-dev/README.md)\n- [Presto (Teradata distribution)](http://www.teradata.com/products-and-services/Presto/Presto-Download) - Teradata's Presto distribution including ODBC and JDBC drivers (opens Presto SQL shell) - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/presto/README.md)\n- [RabbitMQ](https://www.rabbitmq.com/) Cluster - pub-sub message queue broker by [Pivotal](https://pivotal.io/) (extension of RabbitMQ official image with added plugins)\n- [Riak KV](http://basho.com/products/riak-kv/) - distributed NoSQL datastore by [Basho](http://basho.com/)\n- [Riak KV](http://basho.com/products/riak-kv/) (bundled with [nagios-plugins](https://github.com/HariSekhon/Nagios-Plugins))\n- [Serf](https://www.serf.io/) - decentralized cluster coordination engine by [HashiCorp](https://www.hashicorp.com/)\n- [Solr](http://lucene.apache.org/solr/) - mature indexing engine built on Lucene search library\n- [SolrCloud](http://lucene.apache.org/solr/) - clustered distributed indexing engine version of Solr\n- [Spark](https://spark.apache.org/) - fast distributed cluster compute engine usually used on Hadoop, by UC Berkely's [AMPLab](https://amplab.cs.berkeley.edu/) and [Databricks](https://databricks.com/) (opens Spark shell)\n- [Superset](http://airbnb.io/projects/superset/) - data visualization by [Airbnb](https://www.airbnb.com/)\n- [Tachyon](http://www.alluxio.org/) (Alluxio < 1.0) - distributed in-memory filesystem for cluster computing frameworks by UC Berkely's [AMPLab](https://amplab.cs.berkeley.edu/)\n- [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/tfenv/README.md)\n- [ZooKeeper](https://zookeeper.apache.org/) (opens ZK shell) - distributed coordination and sychronization service by Yahoo\n\nRepos suffixed with ```-dev``` are the official technologies + development & debugging tools + my github repos with all dependencies pre-built.\n\n### My GitHub Repos (with all libs + deps pre-built)\n\nYou might like this Dockerfile trick for busting the Docker cache to get the latest repo updates:\n\n```Dockerfile\n# Cache Bust upon new commits\nADD https://api.github.com/repos/HariSekhon/DevOps-Bash-tools/git/refs/heads/master /.git-hashref\n```\n\n- [Advanced Nagios Plugins Collection](https://github.com/HariSekhon/Nagios-Plugins) - 450+ nagios plugins for every Hadoop distribution and every major NoSQL technology - Hadoop, Redis, Elasticsearch, Solr, HBase, Cassandra & DataStax OpsCenter, MongoDB, MySQL, Kafka, Riak, Memcached, Couchbase, CouchDB, Mesos, Spark, Neo4j, Datameer, H2O, WanDisco, Yarn, HDFS, Impala, Apache Drill, Presto, ZooKeeper, Cloudera, Hortonworks, MapR, IBM BigInsights, Infrastructure - Linux, DNS, Whois, SSL Certs etc\n  - [![DockerHub Nagios Plugins Alpine](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Aalpine-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n  - [![DockerHub Nagios Plugins Centos](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Acentos-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins) [![DockerHub Nagios Plugins Latest](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Alatest-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n  - [![DockerHub Nagios Plugins Debian](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Adebian-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n  - [![DockerHub Nagios Plugins Fedora](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Afedora-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n  - [![DockerHub Nagios Plugins Ubuntu](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Aubuntu-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n  - [![DockerHub Nagios Plugins Perl](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Aperl-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n  - [![DockerHub Nagios Plugins Python](https://img.shields.io/badge/DockerHub-harisekhon%2Fnagios--plugins%3Apython-blue)](https://hub.docker.com/repository/docker/harisekhon/nagios-plugins)\n- `harisekhon/tools` - DevOps Tools superset of the below images, containing hundreds of programs:\n  - [![DockerHub PyTools](https://img.shields.io/badge/DockerHub-harisekhon%2Fpytools-blue)](https://hub.docker.com/repository/docker/harisekhon/pytools) - [DevOps Python Tools](https://github.com/HariSekhon/DevOps-Python-tools) - 80+ DevOps CLI tools tools for AWS, Log Anonymizer, Spark, Hadoop, HBase, Hive, Impala, Linux, Docker, Spark Data Converters & Validators (Avro/Parquet/JSON/CSV/INI/XML/YAML), Travis CI, Ambari, Blueprints, CloudFormation, Elasticsearch, Solr, Pig etc.\n  - [![DockerHub Bash Tools](https://img.shields.io/badge/DockerHub-harisekhon%2Fbash--tools-blue)](https://hub.docker.com/repository/docker/harisekhon/bash-tools) - [DevOps Bash Tools](https://github.com/HariSekhon/DevOps-Bash-tools) - 750+ DevOps CLI tools for AWS, GCP, Kubernetes, Hadoop, Hive, Impala, Kafka, Docker, LDAP, Git, Code & build linting, package management for Linux / Mac / Python / Perl / Ruby / NodeJS / Golang, and lots more random goodies\n  - [![DockerHub Perl Tools](https://img.shields.io/badge/DockerHub-harisekhon%2Fperl--tools-blue)](https://hub.docker.com/repository/docker/harisekhon/perl-tools) - [DevOps Perl Tools](https://github.com/HariSekhon/DevOps-Perl-tools) - 25+ DevOps CLI Tools - Log Anonymizer, Hadoop HDFS & Hive tools, Solr/SolrCloud CLI, SQL ReCaser (MySQL, PostgreSQL, AWS Redshift, Snowflake, Apache Drill, Hive, Impala, Cassandra CQL, Microsoft SQL Server, Oracle, Couchbase N1QL, Dockerfiles, Pig Latin, Neo4j, InfluxDB), Linux, Nginx stats & HTTP(S) URL watchers for load balanced web farms, Ambari FreeIPA Kerberos, Datameer etc.\n  - all of the above repos come with tags for `alpine`, `centos`, `debian`, `fedora` and `ubuntu` builds\n- [Spotify Tools](https://github.com/HariSekhon/Spotify-tools) - Spotify API tools - eg. convert Spotify URIs to `Artist - Track` form by querying the Spotify API - [readme](https://github.com/HariSekhon/Dockerfiles/blob/master/spotify-tools/README.md)\n\n#### Github repos\n\n[![DockerHub GitHub Ubuntu](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n\nMy GitHub repo pre-built on major Linux distros with CLI programs located at `/github/<project>`\n\nAvailable as both `harisekhon/github:<distro>` and `harisekhon/<distro>-github` for convenience, and to allow shorter use of `:latest` by using just `harisekhon/github`\n\n`harisekhon/github:latest` is the same as `harisekhon/github:ubuntu`\n\n[![Docker Build GitHub Alpine](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_alpine.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_alpine.yaml)\n[![Docker Build GitHub Debian](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_debian.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_debian.yaml)\n[![Docker Build GitHub Fedora](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_fedora.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_fedora.yaml)\n[![Docker Build GitHub Ubuntu](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_ubuntu.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_github_ubuntu.yaml)\n\n- [![DockerHub GitHub Alpine](https://img.shields.io/badge/DockerHub-harisekhon%2Falpine--github-blue)](https://hub.docker.com/repository/docker/harisekhon/alpine-github)\n  [![DockerHub GitHub Alpine](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub%3Aalpine-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n- [![DockerHub GitHub CentOS](https://img.shields.io/badge/DockerHub-harisekhon%2Fcentos--github-blue)](https://hub.docker.com/repository/docker/harisekhon/centos-github)\n  [![DockerHub GitHub CentOS](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub%3Acentos-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n- [![DockerHub GitHub Debian](https://img.shields.io/badge/DockerHub-harisekhon%2Fdebian--github-blue)](https://hub.docker.com/repository/docker/harisekhon/debian-github)\n  [![DockerHub GitHub Debian](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub%3Adebian-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n- [![DockerHub GitHub Fedora](https://img.shields.io/badge/DockerHub-harisekhon%2Ffedora--github-blue)](https://hub.docker.com/repository/docker/harisekhon/fedora-github)\n  [![DockerHub GitHub Fedora](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub%3Afedora-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n- [![DockerHub GitHub Ubuntu](https://img.shields.io/badge/DockerHub-harisekhon%2Fubuntu--github-blue)](https://hub.docker.com/repository/docker/harisekhon/ubuntu-github)\n  [![DockerHub GitHub Ubuntu](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub%3Aubuntu-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n  [![DockerHub GitHub Ubuntu](https://img.shields.io/badge/DockerHub-harisekhon%2Fgithub%3Alatest-blue)](https://hub.docker.com/repository/docker/harisekhon/github)\n\n#### Base Images\n\n##### Linux Distros + Development Tools\n\nAvailable as both `harisekhon/<distro>-dev` and `harisekhon/dev:<distro>`\n\n`harisekhon/dev:latest` is the same as `harisekhon/dev:ubuntu`\n\n[![Docker Build Alpine Dev](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_alpine_dev.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_alpine_dev.yaml)\n[![Docker Build CentOS Dev](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_centos_dev.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_centos_dev.yaml)\n[![Docker Build Debian Dev](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_debian_dev.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_centos_dev.yaml)\n[![Docker Build Fedora Dev](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_fedora_dev.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_fedora_dev.yaml)\n[![Docker Build Ubuntu Dev](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_ubuntu_dev.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_ubuntu_dev.yaml)\n\n- [![DockerHub Alpine Dev](https://img.shields.io/badge/DockerHub-harisekhon%2Falpine--dev-blue)](https://hub.docker.com/repository/docker/harisekhon/alpine-dev) - Alpine latest with Java JDK, Perl, Python, Jython, Ruby, Scala, Groovy, GCC, Maven, SBT, Gradle, Make, Expect etc.\n- [![DockerHub CentOS Dev](https://img.shields.io/badge/DockerHub-harisekhon%2Fcentos--dev-blue)](https://hub.docker.com/repository/docker/harisekhon/centos-dev) - CentOS latest with Java JDK, Perl, Python, Jython, Ruby, Scala, Groovy, GCC, Maven, SBT, Gradle, Make, Expect, EPEL etc.\n- [![DockerHub Debian Dev](https://img.shields.io/badge/DockerHub-harisekhon%2Fdebian--dev-blue)](https://hub.docker.com/repository/docker/harisekhon/debian-dev) - Debian latest with Java JDK, Perl, Python, Jython, Ruby, Scala, Groovy, GCC, Maven, SBT, Gradle, Make, Expect etc.\n- [![DockerHub Fedora Dev](https://img.shields.io/badge/DockerHub-harisekhon%2Ffedora--dev-blue)](https://hub.docker.com/repository/docker/harisekhon/fedora-dev) - Fedora latest with Java JDK, Perl, Python, Jython, Ruby, Scala, Groovy, GCC, Maven, SBT, Gradle, Make, Expect etc.\n- [![DockerHub Ubuntu Dev](https://img.shields.io/badge/DockerHub-harisekhon%2Fubuntu--dev-blue)](https://hub.docker.com/repository/docker/harisekhon/ubuntu-dev) - Ubuntu latest with Java JDK, Perl, Python, Jython, Ruby, Scala, Groovy, GCC, Maven, SBT, Gradle, Make, Expect etc.\n\n##### Base Images of Java / Scala\n\nAll builds use OpenJDK with ```jre``` and ```jdk``` numbered tags. See this article below for why it might be illegal to bundle Oracle Java (and why no Linux distributions do this either):\n\n<https://www.javacodegeeks.com/2016/03/running-java-docker-youre-breaking-law.html>\n\n[![Docker Build Alpine Java](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_alpine_java.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_alpine_java.yaml)\n[![Docker Build CentOS Java](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_centos_java.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_centos_java.yaml)\n[![Docker Build Debian Java](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_debian_java.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_centos_java.yaml)\n[![Docker Build Fedora Java](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_fedora_java.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_fedora_java.yaml)\n[![Docker Build Ubuntu Java](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_ubuntu_java.yaml/badge.svg)](https://github.com/HariSekhon/Dockerfiles/actions/workflows/docker_build_ubuntu_java.yaml)\n\n- [![Docker Build Alpine Java](https://img.shields.io/badge/DockerHub-harisekhon%2Falpine--java-blue)](https://hub.docker.com/repository/docker/harisekhon/alpine-java) - Alpine latest with Java 8\n- [![Docker Build CentOS Java](https://img.shields.io/badge/DockerHub-harisekhon%2Fcentos--java-blue)](https://hub.docker.com/repository/docker/harisekhon/centos-java) - CentOS latest combinations of Java 7 / 8 and Scala 2.10 / 2.11\n- [![Docker Build Debian Java](https://img.shields.io/badge/DockerHub-harisekhon%2Fdebian--java-blue)](https://hub.docker.com/repository/docker/harisekhon/debian-java) - Debian latest with Java 7, 8\n- [![Docker Build Fedora Java](https://img.shields.io/badge/DockerHub-harisekhon%2Ffedora--java-blue)](https://hub.docker.com/repository/docker/harisekhon/fedora-java) - Fedora latest combinations of Java 7/8 and Scala 2.10/2.11\n- [![Docker Build Ubuntu Java](https://img.shields.io/badge/DockerHub-harisekhon%2Fubuntu--java-blue)](https://hub.docker.com/repository/docker/harisekhon/ubuntu-java)\n  - Ubuntu 14.04 with Java 7\n  - Ubuntu latest with Java 8, 9\n\n### Build from Source\n\nAll images come pre-built on [DockerHub](https://hub.docker.com/u/harisekhon/) but if you want to compile from source for any reason such as developing improvements, I've made this easy to do:\n\n```shell\ngit clone https://github.com/HariSekhon/Dockerfiles\n\ncd Dockerfiles\n```\n\nTo build all Docker images, just run the ```make``` command at the top level:\n\n```shell\nmake\n```\n\nTo build a specific Docker image, enter its directory and run `make`:\n\n```shell\ncd nagios-plugins\n\nmake\n```\n\nYou can also build a specific version by checking out the git branch for the version and running the build:\n\n```shell\ncd consul\ngit checkout consul-0.9\nmake\n```\n\nor build all versions of a given software project like so:\n\n```shell\ncd hadoop\nmake build-versions\n```\n\nSee the top level `Makefile` as well as the `Makefile.in` which is sourced per project with any project specific overrides in the `<project_directory>/Makefile`.\n\n### Support\n\nPlease raise tickets for issues and improvements at <https://github.com/HariSekhon/Dockerfiles/issues>\n\n## Star History\n\n[![Star History Chart](https://api.star-history.com/svg?repos=HariSekhon/Dockerfiles&type=Date)](https://star-history.com/#HariSekhon/Dockerfiles&Date)\n\n[git.io/dockerhub](https://git.io/dockerhub)\n\n## More Core Repos\n\n<!-- OTHER_REPOS_START -->\n\n### Knowledge\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Knowledge-Base&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Knowledge-Base)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Diagrams-as-Code&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Diagrams-as-Code)\n\n<!--\n\nNot support on GitHub Markdown:\n\n<iframe src=\"https://raw.githubusercontent.com/HariSekhon/HariSekhon/main/knowledge.md\" width=\"100%\" height=\"500px\"></iframe>\n\nDoes nothing:\n\n<embed src=\"https://raw.githubusercontent.com/HariSekhon/HariSekhon/main/knowledge.md\" width=\"100%\" height=\"500px\" />\n\n-->\n\n### DevOps Code\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=DevOps-Bash-tools&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/DevOps-Bash-tools)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=DevOps-Python-tools&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/DevOps-Python-tools)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=DevOps-Perl-tools&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/DevOps-Perl-tools)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=DevOps-Golang-tools&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/DevOps-Golang-tools)\n\n<!--\n[![Gist Card](https://github-readme-stats.vercel.app/api/gist?id=f8f551332440f1ca8897ff010e363e03)](https://gist.github.com/HariSekhon/f8f551332440f1ca8897ff010e363e03)\n-->\n\n### Containerization\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Kubernetes-configs&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Kubernetes-configs)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Dockerfiles&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Dockerfiles)\n\n### CI/CD\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=GitHub-Actions&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/GitHub-Actions)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Jenkins&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Jenkins)\n\n### DBA - SQL\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=SQL-scripts&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/SQL-scripts)\n\n### DevOps Reloaded\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Nagios-Plugins&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Nagios-Plugins)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=HAProxy-configs&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/HAProxy-configs)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Terraform&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Terraform)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Packer-templates&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Packer-templates)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Nagios-Plugin-Kafka&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Nagios-Plugin-Kafka)\n\n### Templates\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Templates&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Templates)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Template-repo&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Template-repo)\n\n### Misc\n\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Spotify-tools&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Spotify-tools)\n[![Readme Card](https://github-readme-stats.vercel.app/api/pin/?username=HariSekhon&repo=Spotify-playlists&theme=ambient_gradient&description_lines_count=3)](https://github.com/HariSekhon/Spotify-playlists)\n\nThe rest of my original source repos are\n[here](https://github.com/HariSekhon?tab=repositories&q=&type=source&language=&sort=stargazers).\n\nPre-built Docker images are available on my [DockerHub](https://hub.docker.com/u/harisekhon/).\n\n<!-- 1x1 pixel counter to record hits -->\n![](https://hit.yhype.me/github/profile?user_id=2211051)\n\n<!-- OTHER_REPOS_END -->\n"
+        },
+        {
+          "name": "alluxio",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "alpine-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "alpine-github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "alpine-java",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "apache-drill",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "appveyor-centos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "appveyor-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "appveyor-ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "awless",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "aws-eb-cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "azure-pipelines.yml",
+          "type": "blob",
+          "size": 2.0185546875,
+          "content": "#  vim:ts=2:sts=2:sw=2:et\n#\n#  Author: Hari Sekhon\n#  Date: Sun Feb 23 19:02:10 2020 +0000\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback\n#  to help improve or steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                   A z u r e   D e v O p s   P i p e l i n e\n# ============================================================================ #\n\n# https://aka.ms/yaml\n\ntrigger:\n  - master\n\nvariables:\n  # ubuntu version\n  os_version: '22.04'\n\npool:\n  # there is no /dev/stderr on this azure build!\n  #vmImage: 'ubuntu-latest'\n  #vmImage: 'ubuntu-22.04'\n  vmImage: 'ubuntu-$(os_version)'\n\n# unprivileged container without sudo, cannot install dependencies\n#container: ubuntu:22.04\n\nsteps:\n  - script: cat /etc/*-release\n    displayName: OS Release\n\n  # requires script as first key, otherwise parsing breaks with error message:  Unexpected value 'displayName'\n  - script: env | sort\n    displayName: Environment\n\n  # doesn't work in container due to unprivileged execution and lack of sudo\n  #- script: sudo apt-get update && sudo apt-get install -y git make\n  #  displayName: install git & make\n\n  #- script: make\n  #  displayName: build\n\n  # doesn't work in vmImage build due to lack of access to normal /dev/stderr device\n  # tee: /dev/stderr: No such device or address\n  #- script: make test\n  #  displayName: test\n\n  # hacky workaround to Azure Pipelines ubuntu environment limitations of unprivileged container and no /dev/stderr in vmImage :-(\n  - script: |\n      sudo docker run -v \"$PWD\":/code \"ubuntu:$(os_version)\" /bin/bash -c '\n        set -ex\n        cd /code\n        setup/ci_bootstrap.sh\n        if [ -x setup/ci_git_set_dir_safe.sh ]; then\n          setup/ci_git_set_dir_safe.sh\n        fi\n        make init\n        make ci test\n      '\n    displayName: docker build\n"
+        },
+        {
+          "name": "backstage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bash-tools",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "bitbucket-pipelines.yml",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2020-02-24 17:08:57 +0000 (Mon, 24 Feb 2020)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                B i t b u c k e t   C I / C D   P i p e l i n e\n# ============================================================================ #\n\n# Reference:\n#\n#   https://support.atlassian.com/bitbucket-cloud/docs/configure-bitbucket-pipelinesyml/\n\n# Languages:\n#\n#   https://confluence.atlassian.com/x/5Q4SMw\n\n# You can specify a custom docker image from Docker Hub as your build environment.\nimage: atlassian/default-image:2\n\npipelines:\n  default:\n    - step:\n        script:\n          - setup/ci_bootstrap.sh\n          - make init\n          - make ci\n          - make test\n"
+        },
+        {
+          "name": "boot",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": "setup/bootstrap.sh"
+        },
+        {
+          "name": "buddy.yml",
+          "type": "blob",
+          "size": 1.4560546875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2020-03-16 14:02:53 +0000 (Mon, 16 Mar 2020)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                                B u d d y   C I\n# ============================================================================ #\n\n# https://buddy.works/docs/yaml/yaml-schema\n\n---\n- pipeline: \"Build\"\n  trigger_mode: \"ON_EVERY_PUSH\"\n  ref_name: \"master\"\n  ref_type: \"BRANCH\"\n  target_site_url: \"https://github.com/HariSekhon/Dockerfiles\"\n  trigger_condition: \"ALWAYS\"\n  actions:\n    - action: \"Execute: make ci test\"\n      type: \"BUILD\"\n      working_directory: \"/buddy/Dockerfiles\"\n      docker_image_name: \"library/ubuntu\"\n      docker_image_tag: \"18.04\"\n      #setup_commands:\n      # this step gets cached, which results in\n      # E: Unable to fetch some archives, maybe run apt-get update or try with --fix-missing?\n      #  - apt update\n      #  - apt install -qy git make\n      execute_commands:\n        - setup/ci_bootstrap.sh\n        - make init\n        - make ci\n        - make test\n      volume_mappings:\n        - \"/:/buddy/Dockerfiles\"\n      shell: \"BASH\"\n      trigger_condition: \"ALWAYS\"\n"
+        },
+        {
+          "name": "cassandra-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "centos-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "centos-github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "centos-java",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "centos-scala",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cicd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "circleci-runner",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "codefresh.yml",
+          "type": "blob",
+          "size": 1.1396484375,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2020-02-24 17:43:07 +0000 (Mon, 24 Feb 2020)\n#\n#  vim:ts=2:sts=2:sw=2:et\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                            C o d e f r e s h   C I\n# ============================================================================ #\n\n# https://codefresh.io/docs/docs/codefresh-yaml/\n\nversion: \"1.0\"\nstages:\n  - \"checkout\"\n  - \"build\"\nsteps:\n  checkout:\n    type: \"git-clone\"\n    description: \"Cloning main repository...\"\n    repo: '${{CF_REPO_OWNER}}/${{CF_REPO_NAME}}'\n    revision: \"${{CF_REVISION}}\"\n    stage: \"checkout\"\n  build:\n    title: Running docker image\n    type: freestyle\n    working_directory: '${{CF_REPO_NAME}}'\n    arguments:\n      image: 'ubuntu:18.04'\n      commands:\n        - setup/ci_bootstrap.sh\n        - make init\n        - make ci\n        - make test\n"
+        },
+        {
+          "name": "collectd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "consul-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "consul",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "debian-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "debian-github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "debian-java",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-bash-tools-alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-bash-tools-centos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-bash-tools-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-bash-tools-fedora",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-bash-tools-ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-golang-tools-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-perl-tools-alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-perl-tools-centos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-perl-tools-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-perl-tools-fedora",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-perl-tools-ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-python-tools-alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-python-tools-centos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-python-tools-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-python-tools-fedora",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-python-tools-ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-tools-alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-tools-centos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-tools-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-tools-fedora",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "devops-tools-ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fakes3",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fedora-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fedora-github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fedora-java",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fedora-scala",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "git-kustomize",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "github-actions-runner",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "h2o",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hadoop-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hadoop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hbase-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hbase",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jenkins-agent-docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jenkins-agent-php",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jenkins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jython-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jython",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kafka",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kics.config",
+          "type": "blob",
+          "size": 1.1171875,
+          "content": "#\n#  Author: Hari Sekhon\n#  Date: 2023-05-05 18:05:53 +0100 (Fri, 05 May 2023)\n#\n#  vim:ts=2:sts=2:sw=2:et:filetype=yaml\n#\n#  https://github.com/HariSekhon/Dockerfiles\n#\n#  License: see accompanying Hari Sekhon LICENSE file\n#\n#  If you're using my code you're welcome to connect with me on LinkedIn and optionally send me feedback to help steer this or other code I publish\n#\n#  https://www.linkedin.com/in/HariSekhon\n#\n\n# ============================================================================ #\n#                             K i c s   C o n f i g\n# ============================================================================ #\n\n# https://github.com/Checkmarx/kics/blob/master/docs/configuration-file.md\n\n---\n#path: assets/iac_samples\nverbose: true\nlog-file: true\n#type:\n#  - Dockerfile\n#  - Kubernetes\n#queries-path: \"assets/queries\"\nexclude-paths:\n  # ignore submodules - handle them in the source repos only\n  - bash-tools/\n  - github-actions/\n  - haproxy-configs/\n  - jenkins/\n  - kubernetes-templates/\n  - lib/\n  - pylib/\n  - spotify-tools/\n  - sql/\n  - sql-keywords/\n  - templates/\n  - terraform-templates/\n#output-path: \"results\"\n"
+        },
+        {
+          "name": "mesos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugin-kafka",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-cassandra",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-centos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-fedora",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-perl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-python",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nagios-plugins-ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nifi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "old",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "opentsdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presto-admin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presto-cli-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presto-cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presto-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presto",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rabbitmq-cluster",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "riak-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "riak",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "serf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solrcloud-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solrcloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spark-apps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spotify-tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "superset",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tachyon",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tcollector",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "teamcity",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tfenv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ubuntu-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ubuntu-github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ubuntu-java",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zookeeper-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zookeeper",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

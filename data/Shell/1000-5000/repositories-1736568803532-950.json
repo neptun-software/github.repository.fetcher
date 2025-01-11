@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "timestamp": 1736568803532,
+    "page": 950,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "termux/termux-root-packages",
+      "stars": 1056,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0029296875,
+          "content": "*~\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1005859375,
+          "content": "[submodule \"termux-packages\"]\n\tpath = termux-packages\n\turl = https://github.com/termux/termux-packages\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 4.587890625,
+          "content": "# Contributing guide\n\nA simple way to help out is to check if new versions of packages have been released, and then open a pull request to update it.\nThe following instructions can be run both from a GNU/Linux computer and from termux.\n\n[Repology](https://repology.org/projects/?inrepo=termux&outdated=1) can be used to check for outdated packages in all termux repositories.\n\nStarting from scratch you need to:\n\n   * [Fork this repo](#forking-this-repo)\n   * [Clone your fork](#clone-your-fork)\n   * [Create a new branch](#creating-a-new-branch)\n   * [Update a package](#updating-a-package)\n   * [Commit changes and push to your fork](#commiting-changes-and-pushing-to-your-fork)\n   * [Open a pull request](#opening-a-pull-request)\n\n## Forking this repo\n\nTo be able to open a pull request you need to first fork this repo to your own github account.\nThe changes you do will first be pushed to your own fork and thereafter a pull request can be opened against the main repo.\nForking is done by pressing the \"Fork\" button in the upper right corner of the repository page.\nSee the github help pages for more details: [fork-a-repo#fork-an-example-repository](https://help.github.com/en/github/getting-started-with-github/fork-a-repo#fork-an-example-repository).\n\n## Clone your fork\n\nNow that you have your own fork you can clone it to your termux device or computer.\nFrom a suitable location simply run\n\n```sh\ngit clone https://github.com/<your-username>/termux-root-packages\n```\n\nNote that it is also possible to [edit files directly in github](https://help.github.com/en/github/managing-files-in-a-repository/editing-files-in-your-repository), so this step could be skipped.\n\n## Creating a new branch\n\nIt is recommended to create a new branch before making changes.\nThis is done by first checking out the master branch and making sure it is up to date, and then checking out a new branch:\n```sh\ngit checkout master\ngit pull origin master\ngit checkout -b <package-name>-update\n```\n\n## Updating a package\n\nMinor updates (going from for example v1.0.5 to v1.0.6) most often only means that the fields `TERMUX_PKG_VERSION`, `TERMUX_PKG_REVISION` and `TERMUX_PKG_SHA256` needs to be updated.\nThe changes in the build.sh would then change something like:\n```sh\n[ ... ]\nTERMUX_PKG_VERSION=1.0.5\nTERMUX_PKG_REVISION=2\nTERMUX_PKG_SRCURL=https://url.com/download/${TERMUX_PKG_VERSION}.tar.gz\nTERMUX_PKG_SHA256=abde02986bc1fb112655bb5a3161dddfdc9436057fd8b305a01fe42b7dd247ae\n[ ... ]\n```\nto\n```sh\n[ ... ]\nTERMUX_PKG_VERSION=1.0.6\nTERMUX_PKG_SRCURL=https://url.com/download/${TERMUX_PKG_VERSION}.tar.gz\nTERMUX_PKG_SHA256=6116e607250198f224d9ce9304eba6bf0792d592c0b55209e496843192cc6860\n[ ... ]\n```\n\nNote that the `TERMUX_PKG_REVISION` line has been deleted, when a package is updated the REVISION should be reset to 0 and this line hence deleted.\nThe value for `TERMUX_PKG_SHA256` can be calculated by downloading the source archive and running sha256sum on it:\n\n```sh\nwget https://url.com/download/1.0.6.tar.gz\nsha256sum 1.0.6.tar.gz\n```\n\nMajor updates (going from for example v1.0.5 to v2.0.0) can mean that patches needs to be updated, or added.\nThe CI build of the pull request will fail if patches need to be updated and in some cases if a new patch is needed, but then only way to be sure that a package still works after an update is by testing the built package in termux.\nFor example, many of the patches we have fixes paths to use $PREFIX, by changing for example `/tmp` to `/data/data/com.termux/files/usr/tmp`. The build will succeed even without this type of patch, but running the program later will give a `Permission denied` error or similar.\n\n## Commiting changes and pushing to your fork\n\nNow that the build.sh is updated we can commit it and push it to github so that a pull request against the main repo can be opened.\nTo commit with a short message you can run:\n```sh\ngit add packages/<package-name>\ngit commit -m \"<package-name>: update to 1.0.6\"\n```\n\nTo push this to github you then run\n\n```sh\ngit push origin\n```\n\n`origin` here is the repository that you originally cloned, which in this example is your fork.\nThe full url to this repository can be shown by running `git remote -v`\n\n## Opening a pull request\n\nYou can now visit your repo in a browser and open a pull request against this repo by pressing \"New pull request\".\nSee [creating-a-pull-request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request) for more information on how to do this.\n\nOnce a pull request has been created cirrus-ci will attempt to build the changes.\nThe status of the build can be seen by visiting https://cirrus-ci.com/github/termux/termux-root-packages.\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 0.548828125,
+          "content": "License for package patches\n===========================\nThe scripts and patches to build each package is licensed under the same license as\nthe actual package (so the patches and scripts to build bash are licensed under\nthe same license as bash, while the patches and scripts to build python are licensed\nunder the same license as python).\n\nLicense for the build infrastructure\n====================================\nFor build infrastructure outside the `packages/` folder the license is [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.50390625,
+          "content": "# ARCHIVED\n\nPackages from root-repo are now maintained along with the main repo in https://github.com/termux/termux-packages in a git monorep\n\n# Termux root packages\n\n[![Last build status](https://github.com/termux/termux-root-packages/workflows/Packages/badge.svg)](https://github.com/termux/termux-root-packages/actions)\n\n<img src=\".github/static/powered-by-fosshost.png\" alt=\"Powered by FossHost\" width=\"128px\"></img>\n\nThis repository contains packages that are only useful for rooted users.\n\n# Contributing\n\nInformation on how to open pull requests to help keep the packages here up to date can be read in [CONTRIBUTING.md](CONTRIBUTING.md)\n\n# Building a package\n\nTo build a package, first clone termux-root-packages and cd into the new directory\n```sh\ngit clone https://github.com/termux/termux-root-packages\ncd termux-root-packages\n```\n\nIf you want to build a package with the docker container run\n```sh\n./start-builder.sh ./build-package.sh name-of-package\n```\nYou might have to run the command as root, if you have not configured docker to be run as your user.\n\nTo build outside the docker container you can run\n```sh\ngit submodule update --init\n./termux-packages/build-package.sh ../packages/package-to-build)\n```\n`../` is needed since termux-packages/build-package.sh expects the path given (packages/package-to-build) to be relative to the position to the build-package.sh script.\n\n# Subscribing to the repository\n\nTo install packages from this repository, you first need to subscribe to it with:\n```sh\npkg install root-repo\n```\n"
+        },
+        {
+          "name": "disabled-packages",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packages",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "start-builder.sh",
+          "type": "blob",
+          "size": 3.091796875,
+          "content": "#!/bin/sh\n##\n##  Script for preparing & launching build environment.\n##\n##  Copyright 2019 Leonid Plyushch <leonid.plyushch@gmail.com>\n##\n##  Licensed under the Apache License, Version 2.0 (the \"License\");\n##  you may not use this file except in compliance with the License.\n##  You may obtain a copy of the License at\n##\n##    http://www.apache.org/licenses/LICENSE-2.0\n##\n##  Unless required by applicable law or agreed to in writing, software\n##  distributed under the License is distributed on an \"AS IS\" BASIS,\n##  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n##  See the License for the specific language governing permissions and\n##  limitations under the License.\n##\n\nset -e -u\n\nSCRIPT_NAME=$(basename \"$0\")\nREPOROOT=$(dirname \"$(realpath \"$0\")\")\n\nIMAGE_NAME=\"termux/package-builder\"\n\nLOCK_FILE=\"/tmp/.termux-root-builder.lck\"\nCONTAINER_NAME=\"termux-package-builder\"\nBUILD_ENVIRONMENT=\"termux-packages\"\n\nBUILDER_HOME=\"/home/builder\"\n\ncd \"$REPOROOT\"\n\nif [ ! -e \"$LOCK_FILE\" ]; then\n\ttouch \"$LOCK_FILE\"\nfi\n\nif [ \"${GITHUB_EVENT_PATH-x}\" != \"x\" ]; then\n\t# On CI/CD tty may not be available.\n\tDOCKER_TTY=\"\"\nelse\n\tDOCKER_TTY=\" --tty\"\nfi\n\n(flock -n 3 || exit 0\n\tdocker stop \"$CONTAINER_NAME\" >/dev/null 2>&1 || true\n\n\techo \"[*] Setting up repository submodules...\"\n\n\tOWNER=$(stat -c \"%U\" \"$REPOROOT\")\n\tif [ \"${OWNER}\" != \"$USER\" ]; then\n\t\tsudo -u $OWNER git submodule deinit --all --force\n\t\tsudo -u $OWNER git submodule update --init\n\telse\n\t\tgit submodule deinit --all --force\n\t\tgit submodule update --init\n\tfi\n) 3< \"$LOCK_FILE\"\n\n(flock -n 3 || true\n\techo \"[*] Running container '$CONTAINER_NAME' from image '$IMAGE_NAME'...\"\n\tif ! docker start \"$CONTAINER_NAME\" > /dev/null 2>&1; then\n\t\techo \"Creating new container...\"\n\t\tdocker run \\\n\t\t\t--tty \\\n\t\t\t--detach \\\n\t\t\t--name \"$CONTAINER_NAME\" \\\n\t\t\t--volume \"${REPOROOT}/${BUILD_ENVIRONMENT}:${BUILDER_HOME}/termux-packages\" \\\n\t\t\t--workdir \"${BUILDER_HOME}/termux-packages\" \\\n\t\t\t\"$IMAGE_NAME\"\n\n\t\tif [ \"$(id -u)\" -ne 0 ] && [ \"$(id -u)\" -ne 1000 ]; then\n\t\t\techo \"Changed builder uid/gid... (this may take a while)\"\n\t\t\tdocker exec $DOCKER_TTY \"$CONTAINER_NAME\" sudo chown -R $(id -u) \"${BUILDER_HOME}\"\n\t\t\tdocker exec $DOCKER_TTY \"$CONTAINER_NAME\" sudo chown -R $(id -u) /data\n\t\t\tdocker exec $DOCKER_TTY \"$CONTAINER_NAME\" sudo usermod -u $(id -u) builder\n\t\t\tdocker exec $DOCKER_TTY \"$CONTAINER_NAME\" sudo groupmod -g $(id -g) builder\n\t\tfi\n\tfi\n\n\techo \"[*] Copying packages from './packages' to build environment...\"\n\tfor pkg in $(find \"$REPOROOT\"/packages -mindepth 1 -maxdepth 1 -type d); do\n\t\tPKG_DIR=\"${BUILDER_HOME}/${BUILD_ENVIRONMENT}/packages/$(basename \"$pkg\")\"\n\t\tif docker exec \"$CONTAINER_NAME\" [ ! -d \"${PKG_DIR}\" ]; then\n\t\t\t# docker cp -a does not work, discussed here: https://github.com/moby/moby/issues/34142\n\t\t\tdocker cp \"$pkg\" \"$CONTAINER_NAME:${BUILDER_HOME}/${BUILD_ENVIRONMENT}\"/packages/\n\t\telse\n\t\t\techo \"[!] Package '$(basename \"$pkg\")' already exists in build environment. Skipping.\"\n\t\tfi\n\tdone\n\n\tif [ $# -ge 1 ]; then\n\t\tdocker exec --interactive $DOCKER_TTY \"$CONTAINER_NAME\" \"$@\"\n\telse\n\t\tdocker exec --interactive $DOCKER_TTY \"$CONTAINER_NAME\" bash\n\tfi\n) 3< \"$LOCK_FILE\"\n"
+        },
+        {
+          "name": "termux-packages",
+          "type": "commit",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

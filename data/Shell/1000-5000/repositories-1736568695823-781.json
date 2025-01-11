@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736568695823,
+    "page": 781,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc4OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "titzer/virgil",
+      "stars": 1249,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "*.v3 linguist-language=Other\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1201171875,
+          "content": "bin/bootstrap\nbin/current\nbin/Aeneas.jar\nbin/v3c\nbin/.workaround*\nbin/utils\napps/*/bin\n*/*/TODO\ntags\nTAGS\nvctags\n.DS_Store\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.1630859375,
+          "content": "AENEAS_SOURCE=aeneas/src/*/*.v3\nLIB_UTIL=lib/util/*.v3\nLIB_ASM=lib/asm/*/*.v3\nLIB_RT=rt/*/*.v3\nUTILS=bin/utils/vctags bin/utils/progress bin/utils/nu bin/utils/np\n\nall: bootstrap utils TAGS\n\nbin/utils/vctags: bootstrap apps/vctags/* $(LIB_UTIL)\n\t(cd apps/vctags && v3c-host -output=../../bin/utils/ *.v3 `cat DEPS`)\n\nbin/utils/progress: bootstrap apps/Progress/* $(LIB_UTIL)\n\t(cd apps/Progress && v3c-host -program-name=progress -output=../../bin/utils/ *.v3 `cat DEPS`)\n\nbin/utils/nu: bootstrap apps/NumUtil/* $(LIB_UTIL)\n\t(cd apps/NumUtil && v3c-host -program-name=nu -output=../../bin/utils/ *.v3 `cat DEPS`)\n\nbin/utils/np: bootstrap apps/NumParse/* $(LIB_UTIL)\n\t(cd apps/NumParse && v3c-host -program-name=np -output=../../bin/utils/ *.v3 `cat DEPS`)\n\nutils: $(UTILS)\n\nbootstrap: bin/stable/*/* $(AENEAS_SOURCE) $(LIB_UTIL) $(LIB_RT) $(LIB_ASM)\n\tbin/dev/aeneas bootstrap\n\nclean:\n\trm -f TAGS $(UTILS)\n\tbin/dev/aeneas clean\n\nstable: bin/stable/*/* $(AENEAS_SOURCE) $(LIB_UTIL) $(LIB_RT) $(LIB_ASM)\n\tV3C_OPTS=-redef-field=Debug.UNSTABLE=false bin/dev/aeneas bootstrap\n\nTAGS: $(AENEAS_SOURCE) $(LIB_UTIL) $(LIB_RT) bin/utils/vctags\n\tbin/dev/aeneas tags\n\n.PHONY: utils bootstrap clean stable\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.3359375,
+          "content": "# virgil: A Fast and Lightweight Systems Programming Language\n\n```\ndef main() {\n    System.puts(\"Virgil is fast and lightweight!\\n\");\n}\n```\n\nVirgil is a programming language designed for building lightweight high-performance systems.\nIts design blends functional and object-oriented programming paradigms for expressiveness and performance.\nVirgil's compiler produces optimized, standalone native executables, WebAssembly modules, or JARs for the JVM.\nFor quick turnaround in testing and debugging, programs can also be run directly on a built-in interpreter.\nIt is well-suited to writing small and fast programs with little or no dependencies, which makes\nit ideal for the lowest level of software systems.\nOn native targets, it includes features that allow building systems that talk directly to\nkernels, dynamically generate machine code, implement garbage collection, etc.\nIt is currently being used for virtual machine and programming language\nresearch, in particular the development of a next-generation WebAssembly virtual\nmachine, [Wizard](https://github.com/titzer/wizard-engine).\n\nThis repository includes the entire compiler, runtime system, some libraries,\ntests, documentation and supporting code for Virgil's various compilation\ntargets.\n\n## Language Design\n\nVirgil focuses on balancing these main features in a statically-typed language:\n\n  * Classes - for basic object-oriented programming\n  * Functions - for small-scale reuse of functionality\n  * Tuples - for efficient aggregation and uniform treatment of multi-argument functions\n  * Type parameters - for powerful and clean abstraction over types\n  * Algebraic data types - for easy building and matching of data structures\n\nFor more, read [this paper](https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/41446.pdf).\nOr see the [tutorial](doc/tutorial/Overview.md).\nOr read up on [libraries](doc/tutorial/LibUtil.md).\n\n## Supported Targets\n\nVirgil can compile to native binaries for Linux or Darwin, to jar files for the\nJVM, or to WebAssembly modules. Linux binaries can run successfully under\nWindows using Window's Linux system call layer.\nThe compiler is naturally a cross-compiler, able to compile from any supported\nplatform to any other supported platform, so you need only be able to run on\none of these platforms in order to target any of the others.\n\n* x86-darwin : 32-bit Darwin kernels (MacOS)\n* x86-64-darwin : 64-bit Darwin kernels (MacOS)\n* x86-linux : 32-bit Linux kernels\n* x86-64-linux : 64-bit Linux kernels\n* jar : JAR files for the Java Virtual Machine\n* wasm : WebAssembly module for any Wasm engine\n\n## Implementation\n\nVirgil is fully self-hosted: its entire compiler and runtime system is\nimplemented in Virgil.\nIt was originally designed as a language for embedded systems, particularly\nmicrocontrollers, but now supports more mainstream targets.\nThe compiler includes sophisticated whole-program optimizations that achieve\ngreat performance and small binaries.\nNative binaries compiled from your programs can be as small as a few hundred\nbytes in size and consume just kilobytes of memory at runtime.\nYou can learn more in the [Implementation Guide](doc/impl/README.md).\n\n## Documentation\n\nThe most up-to-date documentation is, as always, this repository!\nLearn how to [get started](start/README.md) using Virgil and browse the [tutorial](doc/tutorial/Overview.md), where many [example](doc/tutorial/examples) programs exist.\n\n### Research Papers\n\nSix research papers have been published on Virgil.\n\n* Bradley Wei Jie Teo and Ben L. Titzer. [Unboxing Virgil ADTs for Fun and Profit](https://dl.acm.org/doi/10.1145/3694848.3694857). In Proceedings of the Workshop Dedicated to Jens Palsberg on Occasion of of His 60th Birthday (JENSFEST 24). Pasadena, CA. October 2024.\n\n* Ben L. Titzer. [Harmonizing Classes, Functions, Tuples and Type Parameters in Virgil III](https://dl.acm.org/doi/10.1145/2491956.2491962) \\[[pdf](https://static.googleusercontent.com/media/research.google.com/sv//pubs/archive/41446.pdf)\\]. In\nProceedings of the ACM Conference on Programming Language Design and Implementation\n(PLDI '13). San Diego, CA. June 2013.\n\n* Stephen Kou and Jens Palsberg. [From OO to FPGA: Fitting round objects into square hardware](https://dl.acm.org/doi/10.1145/1869459.1869470)? \\[[pdf](https://web.cs.ucla.edu/~palsberg/paper/oopsla10.pdf)\\] In\nProceedings of the ACM Conference on Object-Oriented Programming Systems, Languages and\nApplications (OOPSLA '10). Reno, Nevada, 2010.\n\n* Ben L. Titzer and Jens Palsberg. Vertical Object Layout and Compression for Fixed Heaps. In\nSemantics and Algebra Specification. Pp. 376-408. 2009.\n\n* Ben L. Titzer and Jens Palsberg. [Vertical Object Layout and Compression for Fixed Heaps](https://dl.acm.org/doi/10.1145/1289881.1289914) \\[[pdf](https://web.cs.ucla.edu/~palsberg/paper/cases07.pdf)\\]. In\nProceedings of the International Conference on Compilers, Architecture, and Synthesis for\nEmbedded Systems (CASES ’07). Salzburg, Austria. October 2007.\n\n* Ben L. Titzer. [Virgil: Objects on the Head of a Pin](https://dl.acm.org/doi/10.1145/1167473.1167489) \\[[pdf](https://escholarship.org/content/qt13r0q4fc/qt13r0q4fc.pdf)\\]. In Proceedings of the 21 st Annual\nConference on Object-Oriented Systems, Languages, and Applications (OOPSLA '06). October 2006.\n\n## License\n\nLicensed under the Apache License, Version 2.0. ([rt/LICENSE](rt/LICENSE) or https://www.apache.org/licenses/LICENSE-2.0)\n"
+        },
+        {
+          "name": "aeneas",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "apps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bench",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "start",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

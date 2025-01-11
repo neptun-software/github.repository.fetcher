@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "timestamp": 1736568935122,
+    "page": 30,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "foxlet/macOS-Simple-KVM",
+      "stars": 13687,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0595703125,
+          "content": ".DS_Store\nBaseSystem.img\nBaseSystem.dmg\nBaseSystem.chunklist\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1005859375,
+          "content": "[submodule \"tools/dmg2img-src\"]\n\tpath = tools/dmg2img-src\n\turl = https://github.com/foxlet/dmg2img.git\n"
+        },
+        {
+          "name": "ESP.qcow2",
+          "type": "blob",
+          "size": 12864,
+          "content": ""
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.0185546875,
+          "content": "# macOS-Simple-KVM\nDocumentation to set up a simple macOS VM in QEMU, accelerated by KVM.\n\nBy [@FoxletFox](https://twitter.com/foxletfox), and the help of many others. Find this useful? You can donate [on Coinbase](https://commerce.coinbase.com/checkout/96dc5777-0abf-437d-a9b5-a78ae2c4c227) or [Paypal!](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=QFXXKKAB2B9MA&item_name=macOS-Simple-KVM).\n\nNew to macOS and KVM? Check [the FAQs.](docs/FAQs.md)\n\n## Getting Started\nYou'll need a Linux system with `qemu` (3.1 or later), `python3`, `pip` and the KVM modules enabled. A Mac is **not** required. Some examples for different distributions:\n\n```\nsudo apt-get install qemu-system qemu-utils python3 python3-pip  # for Ubuntu, Debian, Mint, and PopOS.\nsudo pacman -S qemu python python-pip python-wheel  # for Arch.\nsudo xbps-install -Su qemu python3 python3-pip   # for Void Linux.\nsudo zypper in qemu-tools qemu-kvm qemu-x86 qemu-audio-pa python3-pip  # for openSUSE Tumbleweed\nsudo dnf install qemu qemu-img python3 python3-pip # for Fedora\nsudo emerge -a qemu python:3.4 pip # for Gentoo\n```\n\n## Step 1\nRun `jumpstart.sh` to download installation media for macOS (internet required). The default installation uses Catalina, but you can choose which version to get by adding either `--high-sierra`, `--mojave`, or `--catalina`. For example:\n```\n./jumpstart.sh --mojave\n```\n> Note: You can skip this if you already have `BaseSystem.img` downloaded. If you have `BaseSystem.dmg`, you will need to convert it with the `dmg2img` tool.\n\n## Step 2\nCreate an empty hard disk using `qemu-img`, changing the name and size to preference:\n```\nqemu-img create -f qcow2 MyDisk.qcow2 64G\n```\n\nand add it to the end of `basic.sh`:\n```\n    -drive id=SystemDisk,if=none,file=MyDisk.qcow2 \\\n    -device ide-hd,bus=sata.4,drive=SystemDisk \\\n```\n> Note: If you're running on a headless system (such as on Cloud providers), you will need `-nographic` and `-vnc :0 -k en-us` for VNC support.\n\nThen run `basic.sh` to start the machine and install macOS. Remember to partition in Disk Utility first!\n\n## Step 2a (Virtual Machine Manager)\n1. If instead of QEMU, you'd like to import the setup into Virt-Manager for further configuration, just run `sudo ./make.sh --add`.\n2. After running the above command, add `MyDisk.qcow2` as storage in the properties of the newly added entry for VM.\n\n## Step 2b (Headless Systems)\nIf you're using a cloud-based/headless system, you can use `headless.sh` to set up a quick VNC instance. Settings are defined through variables as seen in the following example. VNC will start on port `5900` by default.\n```\nHEADLESS=1 MEM=1G CPUS=2 SYSTEM_DISK=MyDisk.qcow2 ./headless.sh\n```\n\n## Step 3\n\nYou're done!\n\nTo fine-tune the system and improve performance, look in the `docs` folder for more information on [adding memory](docs/guide-performance.md), setting up [bridged networking](docs/guide-networking.md), adding [passthrough hardware (for GPUs)](docs/guide-passthrough.md), tweaking [screen resolution](docs/guide-screen-resolution.md), and enabling sound features.\n"
+        },
+        {
+          "name": "basic.sh",
+          "type": "blob",
+          "size": 1.0361328125,
+          "content": "#!/bin/bash\n\nOSK=\"ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc\"\nVMDIR=$PWD\nOVMF=$VMDIR/firmware\n#export QEMU_AUDIO_DRV=pa\n#QEMU_AUDIO_DRV=pa\n\nqemu-system-x86_64 \\\n    -enable-kvm \\\n    -m 2G \\\n    -machine q35,accel=kvm \\\n    -smp 4,cores=2 \\\n    -cpu Penryn,vendor=GenuineIntel,kvm=on,+sse3,+sse4.2,+aes,+xsave,+avx,+xsaveopt,+xsavec,+xgetbv1,+avx2,+bmi2,+smep,+bmi1,+fma,+movbe,+invtsc \\\n    -device isa-applesmc,osk=\"$OSK\" \\\n    -smbios type=2 \\\n    -drive if=pflash,format=raw,readonly,file=\"$OVMF/OVMF_CODE.fd\" \\\n    -drive if=pflash,format=raw,file=\"$OVMF/OVMF_VARS-1024x768.fd\" \\\n    -vga qxl \\\n    -device ich9-intel-hda -device hda-output \\\n    -usb -device usb-kbd -device usb-mouse \\\n    -netdev user,id=net0 \\\n    -device e1000-82545em,netdev=net0,id=net0,mac=52:54:00:c9:18:27 \\\n    -device ich9-ahci,id=sata \\\n    -drive id=ESP,if=none,format=qcow2,file=ESP.qcow2 \\\n    -device ide-hd,bus=sata.2,drive=ESP \\\n    -drive id=InstallMedia,format=raw,if=none,file=BaseSystem.img \\\n    -device ide-hd,bus=sata.3,drive=InstallMedia \\\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "firmware",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "headless.sh",
+          "type": "blob",
+          "size": 1.4150390625,
+          "content": "#!/bin/bash\n\nOSK=\"ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc\"\nVMDIR=$PWD\nOVMF=$VMDIR/firmware\n\n[[ -z \"$MEM\" ]] && {\n\tMEM=\"1G\"\n}\n\n[[ -z \"$CPUS\" ]] && {\n\tCPUS=1\n}\n\n[[ -z \"$SYSTEM_DISK\" ]] && {\n    echo \"Please set the SYSTEM_DISK environment variable\"\n    exit 1\n}\n\n[[ -r \"$SYSTEM_DISK\" ]] || {\n    echo \"Can't read system disk image: $SYSTEM_DISK\"\n    exit 1\n}\n\nMOREARGS=()\n\n[[ \"$HEADLESS\" = \"1\" ]] && {\n    MOREARGS+=(-nographic -vnc :0 -k en-us)\n}\n\nqemu-system-x86_64 \\\n    -enable-kvm \\\n    -m $MEM \\\n    -machine q35,accel=kvm \\\n    -smp $CPUS \\\n    -cpu Penryn,vendor=GenuineIntel,kvm=on,+sse3,+sse4.2,+aes,+xsave,+avx,+xsaveopt,+xsavec,+xgetbv1,+avx2,+bmi2,+smep,+bmi1,+fma,+movbe,+invtsc \\\n    -device isa-applesmc,osk=\"$OSK\" \\\n    -smbios type=2 \\\n    -drive if=pflash,format=raw,readonly,file=\"$OVMF/OVMF_CODE.fd\" \\\n    -drive if=pflash,format=raw,file=\"$OVMF/OVMF_VARS-1024x768.fd\" \\\n    -vga qxl \\\n    -usb -device usb-kbd -device usb-tablet \\\n    -netdev user,id=net0 \\\n    -device e1000-82545em,netdev=net0,id=net0,mac=52:54:00:0e:0d:20 \\\n    -device ich9-ahci,id=sata \\\n    -drive id=ESP,if=none,format=qcow2,file=ESP.qcow2 \\\n    -device ide-hd,bus=sata.2,drive=ESP \\\n    -drive id=InstallMedia,format=raw,if=none,file=BaseSystem.img \\\n    -device ide-hd,bus=sata.3,drive=InstallMedia \\\n    -drive id=SystemDisk,if=none,file=\"${SYSTEM_DISK}\" \\\n    -device ide-hd,bus=sata.4,drive=SystemDisk \\\n    \"${MOREARGS[@]}\"\n"
+        },
+        {
+          "name": "jumpstart.sh",
+          "type": "blob",
+          "size": 0.853515625,
+          "content": "#!/bin/bash\n\n# jumpstart.sh: Fetches BaseSystem and converts it to a viable format.\n# by Foxlet <foxlet@furcode.co>\n\nTOOLS=$PWD/tools\n\nprint_usage() {\n    echo\n    echo \"Usage: $0\"\n    echo\n    echo \" -s, --high-sierra   Fetch High Sierra media.\"\n    echo \" -m, --mojave        Fetch Mojave media.\"\n    echo \" -c, --catalina      Fetch Catalina media.\"\n    echo\n}\n\nerror() {\n    local error_message=\"$*\"\n    echo \"${error_message}\" 1>&2;\n}\n\nargument=\"$1\"\ncase $argument in\n    -h|--help)\n        print_usage\n        ;;\n    -s|--high-sierra)\n        \"$TOOLS/FetchMacOS/fetch.sh\" -v 10.13 || exit 1;\n        ;;\n    -m|--mojave)\n        \"$TOOLS/FetchMacOS/fetch.sh\" -v 10.14 || exit 1;\n        ;;\n    -c|--catalina|*)\n        \"$TOOLS/FetchMacOS/fetch.sh\" -v 10.15 || exit 1;\n        ;;\nesac\n\n\"$TOOLS/dmg2img\" \"$TOOLS/FetchMacOS/BaseSystem/BaseSystem.dmg\" \"$PWD/BaseSystem.img\"\n"
+        },
+        {
+          "name": "make.sh",
+          "type": "blob",
+          "size": 0.71484375,
+          "content": "#!/bin/bash\n\n# make.sh: Generate customized libvirt XML.\n# by Foxlet <foxlet@furcode.co>\n\nVMDIR=$PWD\nMACHINE=\"$(qemu-system-x86_64 --machine help | grep q35 | cut -d\" \" -f1 | grep -Eoe \".*-[0-9.]+\" | sort -rV | head -1)\"\nOUT=\"template.xml\"\n\nprint_usage() {\n    echo\n    echo \"Usage: $0\"\n    echo\n    echo \" -a, --add   Add XML to virsh (uses sudo).\"\n    echo\n}\n\nerror() {\n    local error_message=\"$*\"\n    echo \"${error_message}\" 1>&2;\n}\n\ngenerate(){\n    sed -e \"s|VMDIR|$VMDIR|g\" -e \"s|MACHINE|$MACHINE|g\" tools/template.xml.in > $OUT\n    echo \"$OUT has been generated in $VMDIR\"\n}\n\ngenerate\n\nargument=\"$1\"\ncase $argument in\n    -a|--add)\n        sudo virsh define $OUT\n        ;;\n    -h|--help)\n        print_usage\n        ;;\nesac\n"
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "virtio.sh",
+          "type": "blob",
+          "size": 0.923828125,
+          "content": "#!/bin/bash\n\nOSK=\"ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc\"\nVMDIR=$PWD\nOVMF=$VMDIR/firmware\n#export QEMU_AUDIO_DRV=pa\n#QEMU_AUDIO_DRV=pa\n\nqemu-system-x86_64 \\\n    -nodefaults \\\n    -enable-kvm \\\n    -m 2G \\\n    -machine q35,accel=kvm \\\n    -smp 4,cores=2 \\\n    -cpu Penryn,vendor=GenuineIntel,kvm=on,+sse3,+sse4.2,+aes,+xsave,+avx,+xsaveopt,+xsavec,+xgetbv1,+avx2,+bmi2,+smep,+bmi1,+fma,+movbe,+invtsc \\\n    -device isa-applesmc,osk=\"$OSK\" \\\n    -smbios type=2 \\\n    -drive if=pflash,format=raw,readonly,file=\"$OVMF/OVMF_CODE.fd\" \\\n    -drive if=pflash,format=raw,file=\"$OVMF/OVMF_VARS-1024x768.fd\" \\\n    -vga std \\\n    -device ich9-intel-hda -device hda-output \\\n    -usb -device usb-kbd -device usb-mouse \\\n    -netdev user,id=net0 \\\n    -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:09:49:17 \\\n    -drive id=ESP,if=virtio,format=qcow2,file=ESP.qcow2 \\\n    -drive id=MyDisk,if=virtio,format=qcow2,file=MyDisk.qcow2 \\\n"
+        }
+      ]
+    }
+  ]
+}

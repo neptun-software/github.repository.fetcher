@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736568759596,
+    "page": 869,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg3OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jclem/gifify",
+      "stars": 1130,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "Changelog.md",
+          "type": "blob",
+          "size": 0.5439453125,
+          "content": "# Gifify Changelog\n\n## 2016-04-20\n\n* Remove CloudApp uploading\n* Combine FPS and speed into a single flag\n* Add -l loop option\n\n## 2015-03-25\n\n* Handle filenames with spaces correctly\n\n## 2014-08-29\n\n* Add scaling\n* Remove output of CloudApp link\n\n## 2014-04-24\n\n* Remove cloudapp gem dependency\n\n## 2013-03-21\n\n* Fix generation of output name\n\n## 2013-03-20\n\n* Upload to CloudApp by default (prevent with `-n` flag)\n* Passing `-x` flag removes resulting .gif *and* original file.\n* Default output is now `${filename}.gif`\n\n## 2013-03-14\n\n* Initial release\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0322265625,
+          "content": "Copyright (c) 2015 Jonathan Clem\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.349609375,
+          "content": "# gifify\n\ngifify is a shell script for converting screen recordings into GIFs that can be\nembedded conveniently into places like Slack channels or GitHub issues and pull\nrequests.\n\n## Installation\n\n```sh\nbrew install gifify\n```\n\n## Usage\n\nGiven a file `recording.mov`:\n\n- Convert it into recording.mov.gif:\n\n```sh\ngifify recording.mov\n```\n\n- Convert it into new_gif.gif:\n\n```sh\ngifify -o new_gif recording.mov\n```\n\n- Convert it, cropping the top left corner:\n\n```sh\ngifify -c 100:100 recording.mov\n```\n\n- Convert it and output at 60 frames per second:\n\n```sh\ngifify -r 60 recording.mov\n```\n\n- Convert it and output at 30 frames per second at 2x speed:\n\n```sh\ngifify -r 30@2 recording.mov\n```\n\n- Convert it and output at 30 frames per second at 2x speed, with a single loop:\n\n```sh\ngifify -r 30@2 -l 1 recording.mov\n```\n\n## Regarding framerates:\n\nGIF renderers typically cap the framerate somewhere between 60 and 100 frames\nper second. If you choose to change the framerate or playback speed of your\nGIFs, ensure your framerates do not exceed 60 frames per second to ensure your\nGIFs play consistently. An easy way to compute this is to ensure that FPS x\nSPEED is not greater than 60.\n\n## License\n\nMIT (See [LICENSE][3])\n\n\n[1]: https://raw.github.com/jclem/gifify/master/gifify.sh\n[2]: https://github.com/cloudapp/cloudapp.rb\n[3]: https://raw.github.com/jclem/gifify/master/LICENSE\n"
+        },
+        {
+          "name": "gifify.sh",
+          "type": "blob",
+          "size": 2.3369140625,
+          "content": "#!/bin/bash\n\nset -euo pipefail\n\nfunction printHelpAndExit {\n  echo 'Usage:'\n  echo '  gifify [options] filename'\n  echo ''\n  echo 'Options: (all optional)'\n  echo '  c CROP:      The x and y crops, from the top left of the image, i.e. 640:480'\n  echo '  o OUTPUT:    The basename of the file to be output (default \"output\")'\n  echo '  l LOOP:      The number of times to loop the animnation. 0 (default)'\n  echo '               for infinity.'\n  echo '  r FPS@SPEED: With 60@1.5, output at 60FPS at a speed of 1.5x the'\n  echo '               source material. NOTE: It is best to keep FPSxSPEED'\n  echo '               below approximately 60.'\n  echo '  p SCALE:     Rescale the output, e.g. 320:240'\n  echo '  x:           Remove the original file and resulting .gif once the script is complete'\n  echo ''\n  echo 'Example:'\n  echo '  gifify -c 240:80 -o my-gif my-movie.mov'\n  exit $1\n}\n\ncrop=\noutput=\nloop=0\nfpsspeed='10@1'\nscale=\n\nOPTERR=0\n\nwhile getopts 'c:o:l:p:r:s:' opt; do\n  case $opt in\n    c) crop=$OPTARG;;\n    h) printHelpAndExit 0;;\n    o) output=$OPTARG;;\n    l) loop=$OPTARG;;\n    r) fpsspeed=$OPTARG;;\n    p) scale=$OPTARG;;\n    *) printHelpAndExit 1;;\n  esac\ndone\n\nshift $(( OPTIND - 1 ))\n\nfilename=$1\n\nif [ -z ${output} ]; then\n  output=$filename\nfi\n\nif [ -z \"$filename\" ]; then printHelpAndExit 1; fi\n\nif [ $crop ]; then\n  crop=\"crop=${crop}:0:0\"\nelse\n  crop=\nfi\n\nif [ $scale ]; then\n  scale=\"scale=${scale}\"\nelse\n  scale=\nfi\n\nif [ $scale ] || [ $crop ]; then\n  filter=\"-vf $scale$crop\"\nelse\n  filter=\nfi\n\n# -delay uses time per tick (a tick defaults to 1/100 of a second), so 60fps ==\n# -delay 1.666666 which is rounded to 2 because convert apparently stores this\n# as an integer.\n#\n# To animate faster than 60fps, you must drop frames, meaning you must specify\n# a lower -r. This is due to the GIF format as well as GIF renderers that cap\n# frame delays < 3 to 3 or sometimes 10. Source:\n# http://humpy77.deviantart.com/journal/Frame-Delay-Times-for-Animated-GIFs-214150546\n\nfps=$(echo $fpsspeed | cut -d'@' -f1)\nspeed=$(echo $fpsspeed | cut -d'@' -f2)\n\nif [ ! -z \"$speed\" ]; then\n  speed=1\nfi\n\ndelay=$(bc -l <<< \"100/$fps/$speed\")\ntemp=$(mktemp /tmp/tempfile.XXXXXXXXX)\n\nffmpeg -loglevel panic -i \"$filename\" $filter -r $fps -f image2pipe -vcodec ppm - >> $temp\ncat $temp | convert +dither -layers Optimize -loop $loop -delay $delay - \"${output}.gif\"\necho \"${output}.gif\"\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736568944323,
+    "page": 48,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tmux-plugins/tmux-resurrect",
+      "stars": 11523,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "# Force text files to have unix eols, so Windows/Cygwin does not break them\n*.* eol=lf\n\n# Except for images because then on checkout the files have been altered.\n*.png binary\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0625,
+          "content": "run_tests\ntests/run_tests_in_isolation\ntests/helpers/helpers.sh\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1005859375,
+          "content": "[submodule \"lib/tmux-test\"]\n\tpath = lib/tmux-test\n\turl = https://github.com/tmux-plugins/tmux-test.git\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.677734375,
+          "content": "# generic packages and tmux\nbefore_install:\n  - sudo apt-get update\n  - sudo apt-get install -y git-core expect\n  - sudo apt-get install -y python-software-properties software-properties-common\n  - sudo apt-get install -y libevent-dev libncurses-dev\n  - git clone https://github.com/tmux/tmux.git\n  - cd tmux\n  - git checkout 2.5\n  - sh autogen.sh\n  - ./configure && make && sudo make install\n\ninstall:\n  - git fetch --unshallow --recurse-submodules || git fetch --recurse-submodules\n  # manual `git clone` required for testing `tmux-test` plugin itself\n  - git clone https://github.com/tmux-plugins/tmux-test lib/tmux-test; true\n  - lib/tmux-test/setup\n\nscript: ./tests/run_tests_in_isolation\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 6.54296875,
+          "content": "# Changelog\n\n### master\n- Remove deprecated \"restoring shell history\" feature.\n\n### v4.0.0, 2022-04-10\n- Proper handling of `automatic-rename` window option.\n- save and restore tmux pane title (breaking change: you have to re-save to be\n  able to properly restore!)\n\n### v3.0.0, 2021-08-30\n- save and restore tmux pane contents (@laomaiweng)\n- update tmux-test to solve issue with recursing git submodules in that project\n- set options quietly in `resurrect.tmux` script\n- improve pane contents restoration: `cat <file>` is no longer shown in pane\n  content history\n- refactoring: drop dependency on `paste` command\n- bugfix for pane contents restoration\n- expand tilde char `~` if used with `@resurrect-dir`\n- do not save empty trailing lines when pane content is saved\n- do not save pane contents if pane is empty (only for 'save pane contents'\n  feature)\n- \"save pane contents\" feature saves files to a separate directory\n- archive and compress pane contents file\n- make archive & compress pane contents process more portable\n- `mutt` added to the list of automatically restored programs\n- added guide for migrating from tmuxinator\n- fixed a bug for restoring commands on tmux 2.5 (and probably tmux 2.4)\n- do not create another resurrect file if there are no changes (credit @vburdo)\n- allow using '$HOSTNAME' in @resurrect-dir\n- add zsh history saving and restoring\n- delete resurrect files older than 30 days, but keep at least 5 files\n- add save and restore hooks\n- always use `-ao` flags for `ps` command to detect commands\n- Deprecate restoring shell history feature.\n- `view` added to the list of automatically restored programs\n- Enable vim session strategy to work with custom session files,\n  e.g. `vim -S Session1.vim`.\n- Enable restoring command arguments for inline strategies with `*` character.\n- Kill session \"0\" if it wasn't restored.\n- Add `@resurrect-delete-backup-after` option to specify how many days of\n  backups to keep - default is 30.\n\n### v2.4.0, 2015-02-23\n- add \"tmux-test\"\n- add test for \"resurrect save\" feature\n- add test for \"resurrect restore\" feature\n- make the tests work and pass on travis\n- add travis badge to the readme\n\n### v2.3.0, 2015-02-12\n- Improve fetching proper window_layout for zoomed windows. In order to fetch\n  proper value, window has to get unzoomed. This is now done faster so that\n  \"unzoom,fetch value,zoom\" cycle is almost unnoticable to the user.\n\n### v2.2.0, 2015-02-12\n- bugfix: zoomed windows related regression\n- export save and restore script paths so that 'tmux-resurrect-save' plugin can\n  use them\n- enable \"quiet\" saving (used by 'tmux-resurrect-save' plugin)\n\n### v2.1.0, 2015-02-12\n- if restore is started when there's only **1 pane in the whole tmux server**,\n  assume the users wants the \"full restore\" and overrwrite that pane.\n\n### v2.0.0, 2015-02-10\n- add link to the wiki page for \"first pane/window issue\" to the README as well\n  as other tweaks\n- save and restore grouped sessions (used with multi-monitor workflow)\n- save and restore active and alternate windows in grouped sessions\n- if there are no grouped sessions, do not output empty line to \"last\" file\n- restore active and alternate windows only if they are present in the \"last\" file\n- refactoring: prefer using variable with tab character\n- remove deprecated `M-s` and `M-r` key bindings (breaking change)\n\n### v1.5.0, 2014-11-09\n- add support for restoring neovim sessions\n\n### v1.4.0, 2014-10-25\n- plugin now uses strategies when fetching pane full command. Implemented\n  'default' strategy.\n- save command strategy: 'pgrep'. It's here only if fallback is needed.\n- save command strategy: 'gdb'\n- rename default strategy name to 'ps'\n- create `expect` script that can fully restore tmux environment\n- fix default save command strategy `ps` command flags. Flags are different for\n  FreeBSD.\n- add bash history saving and restoring (@rburny)\n- preserving layout of zoomed windows across restores (@Azrael3000)\n\n### v1.3.0, 2014-09-20\n- remove dependency on `pgrep` command. Use `ps` for fetching process names.\n\n### v1.2.1, 2014-09-02\n- tweak 'new_pane' creation strategy to fix #36\n- when running multiple tmux server and for a large number of panes (120 +) when\n  doing a restore, some panes might not be created. When that is the case also\n  don't restore programs for those panes.\n\n### v1.2.0, 2014-09-01\n- new feature: inline strategies when restoring a program\n\n### v1.1.0, 2014-08-31\n- bugfix: sourcing `variables.sh` file in save script\n- add `Ctrl` key mappings, deprecate `Alt` keys mappings.\n\n### v1.0.0, 2014-08-30\n- show spinner during the save process\n- add screencast script\n- make default program running list even more conservative\n\n### v0.4.0, 2014-08-29\n- change plugin name to `tmux-resurrect`. Change all the variable names.\n\n### v0.3.0, 2014-08-29\n- bugfix: when top is running the pane `$PWD` can't be saved. This was causing\n  issues during the restore and is now fixed.\n- restoring sessions multiple times messes up the whole environment - new panes\n  are all around. This is now fixed - pane restorations are now idempotent.\n- if pane exists from before session restore - do not restore the process within\n  it. This makes the restoration process even more idempotent.\n- more panes within a window can now be restored\n- restore window zoom state\n\n### v0.2.0, 2014-08-29\n- bugfix: with vim 'session' strategy, if the session file does not exist - make\n  sure vim does not contain `-S` flag\n- enable restoring programs with arguments (e.g. \"rails console\") and also\n  processes that contain program name\n- improve `irb` restore strategy\n\n### v0.1.0, 2014-08-28\n- refactor checking if saved tmux session exists\n- spinner while tmux sessions are restored\n\n### v0.0.5, 2014-08-28\n- restore pane processes\n- user option for disabling pane process restoring\n- enable whitelisting processes that will be restored\n- expand readme with configuration options\n- enable command strategies; enable restoring vim sessions\n- update readme: explain restoring vim sessions\n\n### v0.0.4, 2014-08-26\n- restore pane layout for each window\n- bugfix: correct pane ordering in a window\n\n### v0.0.3, 2014-08-26\n- save and restore current and alternate session\n- fix a bug with non-existing window names\n- restore active pane for each window that has multiple panes\n- restore active and alternate window for each session\n\n### v0.0.2, 2014-08-26\n- saving a new session does not remove the previous one\n- make the directory where sessions are stored configurable\n- support only Tmux v1.9 or greater\n- display a nice error message if saved session file does not exist\n- added README\n\n### v0.0.1, 2014-08-26\n- started a project\n- basic saving and restoring works\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.3212890625,
+          "content": "### Contributing\n\nCode contributions are welcome!\n\n### Reporting a bug\n\nIf you find a bug please report it in the issues. When reporting a bug please\nattach:\n- a file symlinked to `~/.tmux/resurrect/last`.\n- your `.tmux.conf`\n- if you're getting an error paste it to a [gist](https://gist.github.com/) and\n  link it in the issue\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0302734375,
+          "content": "Copyright (C) 2014 Bruno Sutic\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the \"Software\"),\nto deal in the Software without restriction, including without limitation\nthe rights to use, copy, modify, merge, publish, distribute, sublicense,\nand/or sell copies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included\nin all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE\nOR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.5771484375,
+          "content": "# Tmux Resurrect\n\n[![Build Status](https://travis-ci.org/tmux-plugins/tmux-resurrect.svg?branch=master)](https://travis-ci.org/tmux-plugins/tmux-resurrect)\n\nRestore `tmux` environment after system restart.\n\nTmux is great, except when you have to restart the computer. You lose all the\nrunning programs, working directories, pane layouts etc.\nThere are helpful management tools out there, but they require initial\nconfiguration and continuous updates as your workflow evolves or you start new\nprojects.\n\n`tmux-resurrect` saves all the little details from your tmux environment so it\ncan be completely restored after a system restart (or when you feel like it).\nNo configuration is required. You should feel like you never quit tmux.\n\nIt even (optionally)\n[restores vim and neovim sessions](docs/restoring_vim_and_neovim_sessions.md)!\n\nAutomatic restoring and continuous saving of tmux env is also possible with\n[tmux-continuum](https://github.com/tmux-plugins/tmux-continuum) plugin.\n\n### Screencast\n\n[![screencast screenshot](/video/screencast_img.png)](https://vimeo.com/104763018)\n\n### Key bindings\n\n- `prefix + Ctrl-s` - save\n- `prefix + Ctrl-r` - restore\n\n### About\n\nThis plugin goes to great lengths to save and restore all the details from your\n`tmux` environment. Here's what's been taken care of:\n\n- all sessions, windows, panes and their order\n- current working directory for each pane\n- **exact pane layouts** within windows (even when zoomed)\n- active and alternative session\n- active and alternative window for each session\n- windows with focus\n- active pane for each window\n- \"grouped sessions\" (useful feature when using tmux with multiple monitors)\n- programs running within a pane! More details in the\n  [restoring programs doc](docs/restoring_programs.md).\n\nOptional:\n\n- [restoring vim and neovim sessions](docs/restoring_vim_and_neovim_sessions.md)\n- [restoring pane contents](docs/restoring_pane_contents.md)\n- [restoring a previously saved environment](docs/restoring_previously_saved_environment.md)\n\nRequirements / dependencies: `tmux 1.9` or higher, `bash`.\n\nTested and working on Linux, OSX and Cygwin.\n\n`tmux-resurrect` is idempotent! It will not try to restore panes or windows that\nalready exist.<br/>\nThe single exception to this is when tmux is started with only 1 pane in order\nto restore previous tmux env. Only in this case will this single pane be\noverwritten.\n\n### Installation with [Tmux Plugin Manager](https://github.com/tmux-plugins/tpm) (recommended)\n\nAdd plugin to the list of TPM plugins in `.tmux.conf`:\n\n    set -g @plugin 'tmux-plugins/tmux-resurrect'\n\nHit `prefix + I` to fetch the plugin and source it. You should now be able to\nuse the plugin.\n\n### Manual Installation\n\nClone the repo:\n\n    $ git clone https://github.com/tmux-plugins/tmux-resurrect ~/clone/path\n\nAdd this line to the bottom of `.tmux.conf`:\n\n    run-shell ~/clone/path/resurrect.tmux\n\nReload TMUX environment with: `$ tmux source-file ~/.tmux.conf`.\nYou should now be able to use the plugin.\n\n### Docs\n\n- [Guide for migrating from tmuxinator](docs/migrating_from_tmuxinator.md)\n\n**Configuration**\n\n- [Changing the default key bindings](docs/custom_key_bindings.md).\n- [Setting up hooks on save & restore](docs/hooks.md).\n- Only a conservative list of programs is restored by default:<br/>\n  `vi vim nvim emacs man less more tail top htop irssi weechat mutt`.<br/>\n  [Restoring programs doc](docs/restoring_programs.md) explains how to restore\n  additional programs.\n- [Change a directory](docs/save_dir.md) where `tmux-resurrect` saves tmux\n  environment.\n\n**Optional features**\n\n- [Restoring vim and neovim sessions](docs/restoring_vim_and_neovim_sessions.md)\n  is nice if you're a vim/neovim user.\n- [Restoring pane contents](docs/restoring_pane_contents.md) feature.\n\n### Other goodies\n\n- [tmux-copycat](https://github.com/tmux-plugins/tmux-copycat) - a plugin for\n  regex searches in tmux and fast match selection\n- [tmux-yank](https://github.com/tmux-plugins/tmux-yank) - enables copying\n  highlighted text to system clipboard\n- [tmux-open](https://github.com/tmux-plugins/tmux-open) - a plugin for quickly\n  opening highlighted file or a url\n- [tmux-continuum](https://github.com/tmux-plugins/tmux-continuum) - automatic\n  restoring and continuous saving of tmux env\n\n### Reporting bugs and contributing\n\nBoth contributing and bug reports are welcome. Please check out\n[contributing guidelines](CONTRIBUTING.md).\n\n### Credits\n\n[Mislav Marohnić](https://github.com/mislav) - the idea for the plugin came from his\n[tmux-session script](https://github.com/mislav/dotfiles/blob/2036b5e03fb430bbcbc340689d63328abaa28876/bin/tmux-session).\n\n### License\n[MIT](LICENSE.md)\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resurrect.tmux",
+          "type": "blob",
+          "size": 1.0625,
+          "content": "#!/usr/bin/env bash\n\nCURRENT_DIR=\"$( cd \"$( dirname \"${BASH_SOURCE[0]}\" )\" && pwd )\"\n\nsource \"$CURRENT_DIR/scripts/variables.sh\"\nsource \"$CURRENT_DIR/scripts/helpers.sh\"\n\nset_save_bindings() {\n\tlocal key_bindings=$(get_tmux_option \"$save_option\" \"$default_save_key\")\n\tlocal key\n\tfor key in $key_bindings; do\n\t\ttmux bind-key \"$key\" run-shell \"$CURRENT_DIR/scripts/save.sh\"\n\tdone\n}\n\nset_restore_bindings() {\n\tlocal key_bindings=$(get_tmux_option \"$restore_option\" \"$default_restore_key\")\n\tlocal key\n\tfor key in $key_bindings; do\n\t\ttmux bind-key \"$key\" run-shell \"$CURRENT_DIR/scripts/restore.sh\"\n\tdone\n}\n\nset_default_strategies() {\n\ttmux set-option -gq \"${restore_process_strategy_option}irb\" \"default_strategy\"\n\ttmux set-option -gq \"${restore_process_strategy_option}mosh-client\" \"default_strategy\"\n}\n\nset_script_path_options() {\n\ttmux set-option -gq \"$save_path_option\" \"$CURRENT_DIR/scripts/save.sh\"\n\ttmux set-option -gq \"$restore_path_option\" \"$CURRENT_DIR/scripts/restore.sh\"\n}\n\nmain() {\n\tset_save_bindings\n\tset_restore_bindings\n\tset_default_strategies\n\tset_script_path_options\n}\nmain\n"
+        },
+        {
+          "name": "run_tests",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "lib/tmux-test/run_tests"
+        },
+        {
+          "name": "save_command_strategies",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "strategies",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "video",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

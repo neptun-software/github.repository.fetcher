@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "timestamp": 1736568817323,
+    "page": 977,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk4OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "xdtianyu/scripts",
+      "stars": 1030,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "scripts\n=======\n"
+        },
+        {
+          "name": "backup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ddns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ip",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "le-dns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lets-encrypt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "localrt.sh",
+          "type": "blob",
+          "size": 0.5986328125,
+          "content": "#!/bin/bash\n#title           :localrt.sh\n#description     :add local route after vpn or usb wifi.\n#author          :xdtianyu@gmail.com\n#date            :20141029\n#version         :1.0 final\n#usage           :bash localrt.sh\n#bash_version    :4.3.11(1)-release\n#==============================================================================\n\nroute add -net 192.168.160.0 netmask 255.255.255.0 gw 192.168.163.1\nroute add -net 192.168.161.0 netmask 255.255.255.0 gw 192.168.163.1\nroute add -net 192.168.162.0 netmask 255.255.255.0 gw 192.168.163.1\nroute add -net 192.168.163.0 netmask 255.255.255.0 gw 192.168.163.1\n"
+        },
+        {
+          "name": "media",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "net",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "newuser.sh",
+          "type": "blob",
+          "size": 1.25,
+          "content": "#!/bin/bash\n#title           :newuser.sh\n#description     :create users for freeswitch.\n#author          :xdtianyu@gmail.com\n#date            :20141029\n#version         :1.0 final\n#usage           :bash newuser.sh user_number_start user_number_end (bash newuser.sh 10000 20000)\n#bash_version    :4.3.11(1)-release\n#==============================================================================\nXML='<include>\\n\n  <user id=\"1000\">\\n\n    <params>\\n\n      <param name=\"password\" value=\"$${default_password}\"/>\\n\n      <param name=\"vm-password\" value=\"1000\"/>\\n\n    </params>\\n\n    <variables>\\n\n      <variable name=\"toll_allow\" value=\"domestic,international,local\"/>\\n\n      <variable name=\"accountcode\" value=\"1000\"/>\\n\n      <variable name=\"user_context\" value=\"default\"/>\\n\n      <variable name=\"effective_caller_id_name\" value=\"Extension 1000\"/>\\n\n      <variable name=\"effective_caller_id_number\" value=\"1000\"/>\\n\n      <variable name=\"outbound_caller_id_name\" value=\"$${outbound_caller_name}\"/>\\n\n      <variable name=\"outbound_caller_id_number\" value=\"$${outbound_caller_id}\"/>\\n\n      <variable name=\"callgroup\" value=\"techsupport\"/>\\n\n    </variables>\\n\n  </user>\\n\n</include>'\n\nmkdir xml\n\nfor (( i = $1; i <= $2 ; i ++ ))\ndo\n    echo -e ${XML//1000/$i} >xml/$i.xml\ndone\n\n\n"
+        },
+        {
+          "name": "nginx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "opensips",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "py",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "speedtest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ssh",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sticker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "trcp.sh",
+          "type": "blob",
+          "size": 1.447265625,
+          "content": "#!/bin/bash\n# copy complete torrent's *.resume *.torrent file\n# Usage:  trcp /media/smb/complete/ /media/wndr4300/transmission/\n\nCOMPLETE_DIR=$1\nTR_DIR=$2\n\nif [ ! -d \"$COMPLETE_DIR\" ];then\n    echo \"Param error.\"\n    exit 0\nfi\nif [ ! -d \"$TR_DIR\" ];then\n    echo \"Param error.\"\n    exit 0\nfi\n\nif [ ! -d \"$COMPLETE_DIR/../resume\" ];then\n    mkdir $COMPLETE_DIR/../resume\nfi\nif [ ! -d \"$COMPLETE_DIR/../torrents\" ];then\n    mkdir $COMPLETE_DIR/../torrents\nfi\n\nSAVEIFS=$IFS # setup this case the space char in file name.\nIFS=$(echo -en \"\\n\\b\")\n\ncd $COMPLETE_DIR\nfor file in *;do\n    echo $file\n    if [ $(find $TR_DIR/torrents |grep -F \"$file\"|wc -l) -gt 1 ];then\n        echo -e \"\\033[0;31mMore than one torrent detected, you may have to check manually.\\033[0m\"\n    fi\n    TORRENT=$(find $TR_DIR/torrents |grep -F \"$file\"|head -n1)\n    if [ ! -z \"$TORRENT\" ];then\n        #echo \"copy $TORRENT\"\n        if [ -f \"$COMPLETE_DIR/../torrents/$TORRENT\" ];then\n            echo \"file already exist.\"\n        else\n            cp \"$TORRENT\" $COMPLETE_DIR/../torrents\n        fi\n    else\n        echo \"error, no torrent find\"\n    fi\n    RESUME=$(find $TR_DIR/resume |grep -F \"$file\"|head -n1)\n    if [ ! -z \"$RESUME\" ];then\n        #echo \"copy $RESUME\"\n        if [ -f \"$COMPLETE_DIR/../resume/$RESUME\" ];then\n            echo \"file already exist.\"\n        else\n            cp \"$RESUME\" $COMPLETE_DIR/../resume\n        fi\n    else\n        echo \"error, no resume find\"\n    fi\ndone\n\nIFS=$SAVEIFS\n"
+        },
+        {
+          "name": "type",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "u2helper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uploader",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zip",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

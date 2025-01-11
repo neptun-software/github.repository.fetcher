@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "timestamp": 1736568709411,
+    "page": 806,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgwOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "liuyi01/kubernetes-starter",
+      "stars": 1215,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.2001953125,
+          "content": "# 综述\n\n  **必读：本项目是专门针对慕课网的在线课程[《Docker + Kubernetes微服务容器化实践》][5]中的kubernetes实战部分使用的，主要讲解了kubernetes在绿色网络环境下的集群搭建及集群的使用、常用命令、应用的部署。首先剥离了认证授权和服务发现模块，从最核心的模块开始构建集群，然后逐步增加认证授权和服务发现部分，在搭建过程中逐步熟悉kubernetes。最后在集群上部署我们前面开发的所有微服务模块。如果没有结合视频教程请忽略第四部分，敬请谅解！**\n  \n## [一、预先准备环境][1]\n## [二、基础集群部署 - kubernetes-simple][2]\n## [三、完整集群部署 - kubernetes-with-ca][3]\n## [四、在kubernetes上部署我们的微服务][4]\n\n\n\n\n\n\n\n\n  [1]: https://github.com/liuyi01/kubernetes-starter/tree/master/docs/1-pre.md\n  [2]: https://github.com/liuyi01/kubernetes-starter/tree/master/docs/2-kubernetes-simple.md\n  [3]: https://github.com/liuyi01/kubernetes-starter/tree/master/docs/3-kubernetes-with-ca.md\n  [4]: https://github.com/liuyi01/kubernetes-starter/tree/master/docs/4-microservice-deploy.md\n  [5]: https://coding.imooc.com/class/198.html\n"
+        },
+        {
+          "name": "apps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config.properties",
+          "type": "blob",
+          "size": 0.4873046875,
+          "content": "#kubernetes二进制文件目录,eg: /home/michael/bin\nBIN_PATH=\n\n#当前节点ip, eg: 192.168.1.102\nNODE_IP=\n\n#etcd服务集群列表, eg: http://192.168.1.102:2379\n#如果已有etcd集群可以填写现有的。没有的话填写：http://${MASTER_IP}:2379 （MASTER_IP自行替换成自己的主节点ip）\n##如果用了证书，就要填写https://${MASTER_IP}:2379 （MASTER_IP自行替换成自己的主节点ip）\nETCD_ENDPOINTS=\n\n#kubernetes主节点ip地址, eg: 192.168.1.102\nMASTER_IP=\n\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gen-config.sh",
+          "type": "blob",
+          "size": 1.2802734375,
+          "content": "#!/bin/bash\n\ndeclare -A kvs=()\n\nfunction replace_files() {\n    local file=$1 \n    if [ -f $file ];then\n        echo \"$file\"\n        for key in ${!kvs[@]}\n        do\n            value=${kvs[$key]}\n            value=${value//\\//\\\\\\/}\n            sed -i \"s/{{$key}}/${value}/g\" $file\n        done\n        return 0\n    fi\n    if [ -d $file ];then\n        for f in `ls $file`\n        do\n            replace_files \"${file}/${f}\"\n        done\n    fi\n    return 0\n}\n\ntarget=$1\n\nif [ \"$target\" != \"simple\" -a \"$target\" != \"with-ca\" ];then\n    echo -e \"Usage:\\n\\t sh gen-config.sh (simple / with-ca)\"\n    exit 1\nfi\n\nif [ \"$target\" == \"simple\" ];then\n    folder=\"kubernetes-simple\"\nelse\n    folder=\"kubernetes-with-ca\"\nfi\n\ntarget=\"target\"\nrm -fr $target\ncp -r $folder $target\ncd $target\n\necho \"====替换变量列表====\"\nwhile read line;do  \n    if [ \"${line:0:1}\" == \"#\" -o \"${line:0:1}\" == \"\" ];then\n        continue;\n    fi\n    key=${line/=*/}\n    value=${line#*=}\n    echo \"$key=$value\"\n    kvs[\"$key\"]=\"$value\"\ndone < ../config.properties\necho \"====================\"\n\necho \"====替换配置文件====\"\nfor element in `ls`\ndo  \n    dir_or_file=$element\n    if [ ! -d $dir_or_file ];then\n        continue \n    fi  \n    replace_files $dir_or_file\ndone\necho \"=================\"\necho \"配置生成成功，位置: `pwd`\"\n"
+        },
+        {
+          "name": "kubernetes-simple",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kubernetes-with-ca",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "service-config",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

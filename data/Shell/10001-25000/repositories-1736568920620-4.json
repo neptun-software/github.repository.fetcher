@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "timestamp": 1736568920620,
+    "page": 4,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lewagon/dotfiles",
+      "stars": 20788,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.06640625,
+          "content": "MIT License\n\nCopyright (c) 2023 La Loco SAS, head of Le Wagon Group\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.1982421875,
+          "content": "This repository is used by [Le Wagon](https://www.lewagon.com) students.\n\n## Toolset\n\n- [oh-my-zsh](http://ohmyz.sh/)\n- [Visual Studio Code](https://code.visualstudio.com/)\n- [git](https://git-scm.com/)\n"
+        },
+        {
+          "name": "aliases",
+          "type": "blob",
+          "size": 0.5078125,
+          "content": "# Get External IP / Internet Speed\nalias myip=\"curl https://ipinfo.io/json\" # or /ip for plain-text ip\nalias speedtest=\"curl -s https://raw.githubusercontent.com/sivel/speedtest-cli/master/speedtest.py | python -\"\n\n# Quickly serve the current directory as HTTP\nalias serve='ruby -run -e httpd . -p 8000' # Or python -m SimpleHTTPServer :)\n\n# NOTE: On Q3 2021, Le Wagon decided to change the Web Dev curriculum default text editor\nalias stt=\"echo 'Launching VS Code instead of Sublime Text... (cf ~/.aliases)' && code .\"\n"
+        },
+        {
+          "name": "config",
+          "type": "blob",
+          "size": 0.0771484375,
+          "content": "Host *\n  UseKeychain yes\n  AddKeysToAgent yes\n  IdentityFile ~/.ssh/id_ed25519\n"
+        },
+        {
+          "name": "git_setup.sh",
+          "type": "blob",
+          "size": 0.4541015625,
+          "content": "echo \"Type in your first and last name (no accent or special characters - e.g. 'ç'): \"\nread full_name\n\necho \"Type in your email address (the one used for your GitHub account): \"\nread email\n\ngit config --global user.email \"$email\"\ngit config --global user.name \"$full_name\"\n\ngit add .\ngit commit --message \"My identity for @lewagon in the gitconfig\"\ngit push origin master\n\ngit remote add upstream git@github.com:lewagon/dotfiles.git\n\necho \"👌 Awesome, all set.\"\n"
+        },
+        {
+          "name": "gitconfig",
+          "type": "blob",
+          "size": 1.5419921875,
+          "content": "[color]\n  branch = auto\n  diff = auto\n  interactive = auto\n  status = auto\n  ui = auto\n\n[color \"branch\"]\n  current = green\n  remote = yellow\n\n[core]\n  pager = less -FRSX\n  editor = code --wait\n\n[alias]\n  co = checkout\n  st = status -sb\n  br = branch\n  ci = commit\n  fo = fetch origin\n  d = !git --no-pager diff\n  dt  = difftool\n  stat = !git --no-pager diff --stat\n\n  # Set remotes/origin/HEAD -> defaultBranch (copied from https://stackoverflow.com/a/67672350/14870317)\n  remoteSetHead = remote set-head origin --auto\n\n  # Get default branch name (copied from https://stackoverflow.com/a/67672350/14870317)\n  defaultBranch = !git symbolic-ref refs/remotes/origin/HEAD | cut -d'/' -f4\n\n  # Clean merged branches (adapted from https://stackoverflow.com/a/6127884/14870317)\n  sweep = !git branch --merged $(git defaultBranch) | grep -E -v \" $(git defaultBranch)$\" | xargs -r git branch -d && git remote prune origin\n\n  # http://www.jukie.net/bart/blog/pimping-out-git-log\n  lg = log --graph --all --pretty=format:'%Cred%h%Creset - %s %Cgreen(%cr) %C(bold blue)%an%Creset %C(yellow)%d%Creset'\n\n  # Serve local repo. http://coderwall.com/p/eybtga\n  # Then other can access via `git clone git://#{YOUR_IP_ADDRESS}/\n  serve = !git daemon --reuseaddr --verbose  --base-path=. --export-all ./.git\n\n  # Checkout to defaultBranch\n  m = !git checkout $(git defaultBranch)\n\n  # Removes a file from the index\n  unstage = reset HEAD --\n\n[help]\n  autocorrect = 1\n\n[push]\n  default = simple\n\n[branch \"master\"]\n  mergeoptions = --no-edit\n\n[pull]\n  rebase = false\n\n[init]\n  defaultBranch = master\n"
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 2.142578125,
+          "content": "#!/bin/zsh\n\n# Define a function which rename a `target` file to `target.backup` if the file\n# exists and if it's a 'real' file, ie not a symlink\nbackup() {\n  target=$1\n  if [ -e \"$target\" ]; then\n    if [ ! -L \"$target\" ]; then\n      mv \"$target\" \"$target.backup\"\n      echo \"-----> Moved your old $target config file to $target.backup\"\n    fi\n  fi\n}\n\nsymlink() {\n  file=$1\n  link=$2\n  if [ ! -e \"$link\" ]; then\n    echo \"-----> Symlinking your new $link\"\n    ln -s $file $link\n  fi\n}\n\n# For all files `$name` in the present folder except `*.sh`, `README.md`, `settings.json`,\n# and `config`, backup the target file located at `~/.$name` and symlink `$name` to `~/.$name`\nfor name in aliases gitconfig irbrc pryrc rspec zprofile zshrc; do\n  if [ ! -d \"$name\" ]; then\n    target=\"$HOME/.$name\"\n    backup $target\n    symlink $PWD/$name $target\n  fi\ndone\n\n# Install zsh-syntax-highlighting plugin\nCURRENT_DIR=`pwd`\nZSH_PLUGINS_DIR=\"$HOME/.oh-my-zsh/custom/plugins\"\nmkdir -p \"$ZSH_PLUGINS_DIR\" && cd \"$ZSH_PLUGINS_DIR\"\nif [ ! -d \"$ZSH_PLUGINS_DIR/zsh-syntax-highlighting\" ]; then\n  echo \"-----> Installing zsh plugin 'zsh-syntax-highlighting'...\"\n  git clone https://github.com/zsh-users/zsh-autosuggestions\n  git clone https://github.com/zsh-users/zsh-syntax-highlighting\nfi\ncd \"$CURRENT_DIR\"\n\n# Symlink VS Code settings and keybindings to the present `settings.json` and `keybindings.json` files\n# If it's a macOS\nif [[ `uname` =~ \"Darwin\" ]]; then\n  CODE_PATH=~/Library/Application\\ Support/Code/User\n# Else, it's a Linux\nelse\n  CODE_PATH=~/.config/Code/User\n  # If this folder doesn't exist, it's a WSL\n  if [ ! -e $CODE_PATH ]; then\n    CODE_PATH=~/.vscode-server/data/Machine\n  fi\nfi\n\nfor name in settings.json keybindings.json; do\n  target=\"$CODE_PATH/$name\"\n  backup $target\n  symlink $PWD/$name $target\ndone\n\n# Symlink SSH config file to the present `config` file for macOS and add SSH passphrase to the keychain\nif [[ `uname` =~ \"Darwin\" ]]; then\n  target=~/.ssh/config\n  backup $target\n  symlink $PWD/config $target\n  ssh-add --apple-use-keychain ~/.ssh/id_ed25519\nfi\n\n# Refresh the current terminal with the newly installed configuration\nexec zsh\n\necho \"👌 Carry on with git setup!\"\n"
+        },
+        {
+          "name": "irbrc",
+          "type": "blob",
+          "size": 0.1025390625,
+          "content": "begin\n  require 'rubygems'\n  require 'pry'\nrescue LoadError\nend\n\nif defined?(Pry)\n  Pry.start\n  exit\nend\n"
+        },
+        {
+          "name": "keybindings.json",
+          "type": "blob",
+          "size": 0.3095703125,
+          "content": "// Place your key bindings in this file to override the defaults\n[\n  {\n    \"key\": \"ctrl+shift+v\",\n    \"command\": \"pasteAndIndent.action\",\n    \"when\": \"editorTextFocus && !editorReadonly\"\n  },\n  {\n    \"key\": \"cmd+shift+v\",\n    \"command\": \"pasteAndIndent.action\",\n    \"when\": \"editorTextFocus && !editorReadonly\"\n  }\n]\n"
+        },
+        {
+          "name": "pryrc",
+          "type": "blob",
+          "size": 1.1357421875,
+          "content": "# https://github.com/pry/pry/tree/master/lib/pry\n\nif defined?(Rails)\n  short_env_name_options = {\n    'development' => 'dev',\n    'production'  => 'prod'\n  } \n  app_name = Rails.application.class.module_parent_name.underscore.dasherize\n  env_name = short_env_name_options.fetch(Rails.env) { Rails.env }\n  description = 'Prompt has to match the rails app name'\nelse\n  current_directory = Dir.pwd.split('/').last.to_s\n  description = 'Prompt has to match the current directory name'\nend\n\n# https://github.com/pry/pry/blob/master/lib/pry/prompt.rb\nPry::Prompt.add(:current_app) do |context, nesting, pry_instance, sep|\n  format(\n    '[%<in_count>s] %<current_app>s(%<context>s)%<nesting>s%<separator>s ',\n    in_count: pry_instance.input_ring.count,\n    current_app: app_name || current_directory,\n    context: env_name || Pry.view_clip(context),\n    nesting: (nesting > 0 ? \":#{nesting}\" : ''),\n    separator: sep\n  )\nend\n\nprompt = Pry::Prompt[:current_app]\nprocs = [\n  proc { |*args| prompt.wait_proc.call(*args).to_s },\n  proc { |*args| prompt.incomplete_proc.call(*args).to_s }\n]\n\nPry.config.prompt = Pry::Prompt.new(\n  'custom_app_prompt', description, procs\n)\n"
+        },
+        {
+          "name": "rspec",
+          "type": "blob",
+          "size": 0.0302734375,
+          "content": "--color --format documentation\n"
+        },
+        {
+          "name": "settings.json",
+          "type": "blob",
+          "size": 2.681640625,
+          "content": "{\n    \"[python]\": {\n        \"editor.bracketPairColorization.enabled\": false,\n        \"editor.guides.bracketPairs\": false,\n        \"editor.tabSize\": 4\n    },\n    \"editor.bracketPairColorization.enabled\": true,\n    \"editor.detectIndentation\": false,\n    \"editor.fontSize\": 14,\n    \"editor.guides.bracketPairs\": true,\n    \"editor.minimap.enabled\": false,\n    \"editor.multiCursorModifier\": \"ctrlCmd\",\n    \"editor.renderControlCharacters\": true,\n    \"editor.rulers\": [\n        80,\n        120\n    ],\n    \"editor.showFoldingControls\": \"always\",\n    \"editor.snippetSuggestions\": \"top\",\n    \"editor.tabSize\": 2,\n    \"emmet.includeLanguages\": {\n        \"erb\": \"html\"\n    },\n    \"emmet.showSuggestionsAsSnippets\": true,\n    \"emmet.triggerExpansionOnTab\": true,\n    \"explorer.confirmDelete\": false,\n    \"files.exclude\": {\n        \"__pycache__\": true,\n        \"_site\": true,\n        \".asset-cache\": true,\n        \".bundle\": true,\n        \".ipynb_checkpoints\": true,\n        \".pytest_cache\": true,\n        \".sass-cache\": true,\n        \".svn\": true,\n        \"**/.DS_Store\": true,\n        \"**/.egg-info\": true,\n        \"**/.git\": true,\n        \"build\": true,\n        \"coverage\": true,\n        \"dist\": true,\n        \"log\": true,\n        \"node_modules\": true,\n        \"public/packs\": true,\n        \"tmp\": true\n    },\n    \"files.hotExit\": \"off\",\n    \"files.insertFinalNewline\": true,\n    \"files.trimFinalNewlines\": true,\n    \"files.trimTrailingWhitespace\": true,\n    \"files.watcherExclude\": {\n        \"**/audits/**\": true,\n        \"**/coverage/**\": true,\n        \"**/log/**\": true,\n        \"**/node_modules/**\": true,\n        \"**/tmp/**\": true,\n        \"**/vendor/**\": true\n    },\n    \"git.enabled\": false,\n    \"notebook.diff.ignoreMetadata\": true,\n    \"notebook.lineNumbers\": \"on\",\n    \"notebook.markup.fontSize\": 13,\n    \"python.defaultInterpreterPath\": \"~/.pyenv/shims/python\",\n    \"python.formatting.provider\": \"yapf\",\n    \"python.languageServer\": \"Pylance\",\n    \"python.linting.enabled\": false,\n    \"python.linting.flake8Enabled\": false,\n    \"python.linting.pylintEnabled\": false,\n    \"python.terminal.activateEnvironment\": false,\n    \"ruby.lint\": {\n        \"rubocop\": true\n    },\n    \"search.exclude\": {\n      // Inherits all glob patterns from the `files.exclude` setting.\n      \"**/.venv\": true\n    },\n    \"telemetry.telemetryLevel\": \"off\",\n    \"window.restoreWindows\": \"none\",\n    \"window.newWindowDimensions\": \"maximized\",\n    \"workbench.editor.enablePreview\": true,\n    \"workbench.iconTheme\": \"vscode-great-icons\",\n    \"workbench.settings.editor\": \"json\",\n    \"workbench.settings.openDefaultSettings\": true,\n    \"workbench.settings.useSplitJSON\": true,\n    \"workbench.startupEditor\": \"newUntitledFile\",\n    \"workbench.panel.defaultLocation\": \"right\",\n}\n"
+        },
+        {
+          "name": "zprofile",
+          "type": "blob",
+          "size": 0.2216796875,
+          "content": "# Setup the PATH for pyenv binaries and shims\nexport PYENV_ROOT=\"$HOME/.pyenv\"\nexport PATH=\"$PYENV_ROOT/bin:$PATH\"\neval \"$(/opt/homebrew/bin/brew shellenv 2> /dev/null)\"\ntype -a pyenv > /dev/null && eval \"$(pyenv init --path)\"\n"
+        },
+        {
+          "name": "zshrc",
+          "type": "blob",
+          "size": 2.60546875,
+          "content": "ZSH=$HOME/.oh-my-zsh\n\n# You can change the theme with another one from https://github.com/robbyrussell/oh-my-zsh/wiki/themes\nZSH_THEME=\"robbyrussell\"\n\n# Useful oh-my-zsh plugins for Le Wagon bootcamps\nplugins=(git gitfast last-working-dir common-aliases zsh-syntax-highlighting history-substring-search)\n\n# (macOS-only) Prevent Homebrew from reporting - https://github.com/Homebrew/brew/blob/master/docs/Analytics.md\nexport HOMEBREW_NO_ANALYTICS=1\n\n# Disable warning about insecure completion-dependent directories\nZSH_DISABLE_COMPFIX=true\n\n# Actually load Oh-My-Zsh\nsource \"${ZSH}/oh-my-zsh.sh\"\nunalias rm # No interactive rm by default (brought by plugins/common-aliases)\nunalias lt # we need `lt` for https://github.com/localtunnel/localtunnel\n\n# Load rbenv if installed (to manage your Ruby versions)\nexport PATH=\"${HOME}/.rbenv/bin:${PATH}\" # Needed for Linux/WSL\ntype -a rbenv > /dev/null && eval \"$(rbenv init -)\"\n\n# Load pyenv (to manage your Python versions)\nexport PYENV_VIRTUALENV_DISABLE_PROMPT=1\ntype -a pyenv > /dev/null && eval \"$(pyenv init -)\" && eval \"$(pyenv virtualenv-init - 2> /dev/null)\" && RPROMPT+='[🐍 $(pyenv version-name)]'\n\n# Load nvm (to manage your node versions)\nexport NVM_DIR=\"$HOME/.nvm\"\n[ -s \"$NVM_DIR/nvm.sh\" ] && \\. \"$NVM_DIR/nvm.sh\"  # This loads nvm\n[ -s \"$NVM_DIR/bash_completion\" ] && \\. \"$NVM_DIR/bash_completion\"  # This loads nvm bash_completion\n\n# Call `nvm use` automatically in a directory with a `.nvmrc` file\nautoload -U add-zsh-hook\nload-nvmrc() {\n  if nvm -v &> /dev/null; then\n    local node_version=\"$(nvm version)\"\n    local nvmrc_path=\"$(nvm_find_nvmrc)\"\n\n    if [ -n \"$nvmrc_path\" ]; then\n      local nvmrc_node_version=$(nvm version \"$(cat \"${nvmrc_path}\")\")\n\n      if [ \"$nvmrc_node_version\" = \"N/A\" ]; then\n        nvm install\n      elif [ \"$nvmrc_node_version\" != \"$node_version\" ]; then\n        nvm use --silent\n      fi\n    elif [ \"$node_version\" != \"$(nvm version default)\" ]; then\n      nvm use default --silent\n    fi\n  fi\n}\ntype -a nvm > /dev/null && add-zsh-hook chpwd load-nvmrc\ntype -a nvm > /dev/null && load-nvmrc\n\n# Rails and Ruby uses the local `bin` folder to store binstubs.\n# So instead of running `bin/rails` like the doc says, just run `rails`\n# Same for `./node_modules/.bin` and nodejs\nexport PATH=\"./bin:./node_modules/.bin:${PATH}:/usr/local/sbin\"\n\n# Store your own aliases in the ~/.aliases file and load the here.\n[[ -f \"$HOME/.aliases\" ]] && source \"$HOME/.aliases\"\n\n# Encoding stuff for the terminal\nexport LANG=en_US.UTF-8\nexport LC_ALL=en_US.UTF-8\n\nexport BUNDLER_EDITOR=code\nexport EDITOR=code\n\n# Set ipdb as the default Python debugger\nexport PYTHONBREAKPOINT=ipdb.set_trace\n"
+        }
+      ]
+    }
+  ]
+}

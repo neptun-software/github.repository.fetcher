@@ -1,0 +1,77 @@
+{
+  "metadata": {
+    "timestamp": 1736568788558,
+    "page": 922,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkyOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "paz-sh/paz",
+      "stars": 1076,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": ".DS_Store\n*.swp\n*.swo\npaz-vagrant\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.4287109375,
+          "content": "# Contributing\n\n## Submitting a Pull Request\n\nPlease ensure that your pull request meets the following criteria:\n\n* Existing tests pass\n* New tests are added to cover the issue or feature address by your pull request\n* Code style conforms to that of the rest of the project (ie. es-lint reports no errors)\n\nOther requirements will be added in the future (e.g. code coverage, specific forking/branching rules, etc.), so do check back here.\n"
+        },
+        {
+          "name": "LICENCE.md",
+          "type": "blob",
+          "size": 0.5458984375,
+          "content": "# Licence\n\nCopyright 2015 YLD Ltd.\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.7587890625,
+          "content": "[![Gitter chat](https://badges.gitter.im/paz-sh/paz.png)](https://gitter.im/paz-sh/paz)\n\nPaz\n===\n_Continuous deployment production environments, built on Docker, CoreOS, etcd and fleet._\n\n**THIS PROJECT IS INACTIVE**\n\nPaz is an in-house service platform with a PaaS-like workflow.\n\nPaz's documentation can be found [here](http://paz.readme.io).\n\n![Screenshot](https://raw.githubusercontent.com/yldio/paz/206283f9f2b0c21bc4abf3a1f3926bd5e0f0a962/docs/images/Screen%20Shot%202014-11-22%20at%2016.39.07.png)\n\n## What is Paz?\n\nPaz is...\n* Like your own private PaaS that you can host anywhere\n* Free\n* Open-source\n* Simple\n* A web front-end to CoreOS' Fleet with a PaaS-like workflow\n* Like a clustered/multi-host Dokku\n* Alpha software\n* Written in Node.js\n\nPaz is not...\n* A hosted service\n* A complete, enterprise-ready orchestration solution\n\n## Features\n* Beautiful web UI\n* Run anywhere (Vagrant, public cloud or bare metal)\n* No special code required in your services\n  - i.e. it will run any containerised application unmodified\n* Built for Continuous Deployment\n* Zero-downtime deployments\n* Service discovery\n* Same workflow from dev to production\n* Easy environments\n\n## Components\n* Web front-end - A beautiful UI for configuring and monitoring your services.\n* Service directory - A catalog of your services and their configuration.\n* Scheduler - Deploys services onto the platform.\n* Orchestrator - REST API used by the web front-end; presents a unified subset of functionality from Scheduler, Service Directory, Fleet and Etcd.\n* Centralised monitoring and logging.\n\n### Service Directory\nThis is a database of all your services and their configuration (e.g. environment variables, data volumes, port mappings and the number of instances to launch). Ultimately this information will be reduced to a set of systemd unit files (by the scheduler) to be submitted to Fleet for running on the cluster.\nThe service directory is a Node.js API backed by a LevelDB database.\n\n### Scheduler\nThis service receives HTTP POST commands to deploy services that are defined in the service directory. Using the service data from the directory it will render unit files and run them on the CoreOS cluster using Fleet. A history of deployments and associated config is also available from the scheduler.\n\nFor each service the scheduler will deploy a container for the service and an announce sidekick container.\n\nThe scheduler is a Node.js API backed by a LevelDB database and uses Fleet to launch services.\n\n### Orchestrator\nThis is a service that ties all of the other services together, providing a single access-point for the front-end to interface with. Also offers a web socket endpoint for realtime updates to the web front-end.\n\nThe orchestrator is a Node.js API server that communicates with Etcd, Fleet, the scheduler and service directory.\n\n### Web Front-End\nA beautiful and easy-to-use web UI for managing your services and observing the health of your cluster. Built in Ember.js.\n\n### HAProxy\nPaz uses Confd to dynamically configure HAProxy based on service availability information declared in Etcd. HAProxy is configured to route external and internal requests to the correct host for the desired service.\n\n### Monitoring and Logging\nCurrently cAdvisor is used for monitoring, and there is not yet any centralised logging. Monitoring and logging are high-priority features on the roadmap.\n\n## Installation\n\nPaz's Docker repositories are hosted at Quay.io, but they are public so you don't need any credentials.\n\nYou will need to install `fleetctl` and `etcdctl`. On OS/X you can install both with brew:\n```\n$ brew install etcdctl fleetctl\n```\n\n### Vagrant\n\nClone this repository and run the following from the root directory of this repository:\n\n```\n$ ./scripts/install-vagrant.sh\n```\n\nThis will bring up a three-node CoreOS Vagrant cluster and install Paz on it. Note that it may take 10 minutes or more to complete.\n\nFor extra debug output, run with `DEBUG=1` environment variable set.\n\nIf you already have a Vagrant cluster running and want to reinstall the units, use:\n\n```\n$./script/reinstall-units-vagrant.sh\n```\n\nTo interact with the units in the cluster via Fleet, just specify the URL to Etcd on one of your hosts as a parameter to Fleet. e.g.:\n\n```\n$ fleetctl -strict-host-key-checking=false -endpoint=http://172.17.9.101:4001 list-units\n```\n\nYou can also SSH into one of the VMs and run `fleetctl` from there:\n\n```\n$ cd coreos-vagrant\n$ vagrant ssh core-01\n```\n\n...however bear in mind that Fleet needs to SSH into the other VMs in order to perform operations that involve calling down to systemd (e.g. `journal`), and for this you need to have SSHd into the VM running the unit in question. For this reason you may find it simpler (albeit more verbose) to run `fleetctl` from outside the CoreOS VMs.\n\n### DigitalOcean\n\nPaz has been tested on Digital Ocean but there isn't currently an install script for it.\n\nIn short, you need to create your own cluster and then install the Paz units on there.\n\nThe first step is to spin up a CoreOS cluster on DigitalOcean with Paz's cloud-config userdata, and then we'll install Paz on it.\n\n1. Click the \"Create Droplet\" button in the DigitalOcean console.\n2. Give your droplet a name and choose your droplet size and region.\n3. Tick \"Private Networking\" and \"Enable User Data\"\n4. Paste the contents of the `digitalocean/userdata` file in the `yldio/paz` repository into the userdata text area.\n5. Go to `http://discovery.etcd.io/new` and copy the URL that it prints in the browser, pasting it into the userdata text area instead of the one that is already there.\n6. In the `write_files` section, in the section for writing the `/etc/environment` file, edit `PAZ_DOMAIN`, `PAZ_DNSIMPLE_APIKEY` and `PAZ_DNSIMPLE_EMAIL` fields, putting in your dnsimple-managed domain name, dnsimple API key and dnsimple account's email address, respectively.\n   - e.g. \"lukeb0nd.com\", \"ABcdE1fGHi2jk3LmnOP\" and \"me@blah.com\"\n7. Before submitting, copy this userdata to a text file or editor because we'll need to use it again unchanged\n8. Select the CoreOS version you want to install (e.g. latest stable or beta should be fine).\n9. Add the SSH keys that will be added to the box (under `core` user).\n10. Click \"Create Droplet\".\n11. Repeat for the number of nodes you want in the cluster (e.g. 3), using the exact same userdata file (i.e. don't generate a new discovery token etc.).\n12. Once all droplets have booted (test by trying to SSH into each one, run `docker ps` and observe that `paz-dnsmasq`, `cadvisor` and `paz-haproxy` are all running on each box), you may proceed.\n13. Install Paz:\n```\n$ ssh-add ~/.ssh/id_rsa\n$ FLEETCTL_TUNNEL=<MACHINE_IP> fleetctl -strict-host-key-checking=false start unitfiles/1/*\n```\n...where `<MACHINE_IP>` is an IP address of any node in your cluster.\nYou can wait for all units to be active/running like so:\n```\n$ FLEETCTL_TUNNEL=<MACHINE_IP> watch -n 5 fleetctl -strict-host-key-checking=false list-units\n```\nOnce they're up you can install the final services:\n```\n$ FLEETCTL_TUNNEL=<MACHINE_IP> fleetctl -strict-host-key-checking=false start unitfiles/2/*\n```\n### Bare Metal\n\nPaz works fine on a bare metal install, but there is no install script available for it yet.\n\nYou need to create your cluster, then add the contents of bare_metal/user-data to your cloud config, and finally submit the unit files.\n\n1. Create your cluster.\n2. Paste the contents of bare_metal/user-data into your cloud config file. Be sure to alter the networking information to match your setup.\n3. Go to `http://discovery.etcd.io/new` and copy the URL that it prints in the browser, pasting it into the userdata text area instead of the one that is already there.\n4. Install Paz:\n```\n$ ssh-add ~/.ssh/id_rsa\n$ FLEETCTL_TUNNEL=<MACHINE_IP> fleetctl -strict-host-key-checking=false start unitfiles/1/*\n```\n...where `<MACHINE_IP>` is an IP address of any node in your cluster.\nYou can wait for all units to be active/running like so:\n```\n$ FLEETCTL_TUNNEL=<MACHINE_IP> watch -n 5 fleetctl -strict-host-key-checking=false list-units\n```\nOnce they're up you can install the final services:\n```\n$ FLEETCTL_TUNNEL=<MACHINE_IP> fleetctl -strict-host-key-checking=false start unitfiles/2/*\n```\n## Tests\n\nThere is an integration test that brings up a CoreOS Vagrant cluster, installs Paz and then runs a contrived service on it and verifies that it works:\n\n```\n$ cd test\n$ ./integration.sh\n```\n\nEach paz repository (service directory, orchestrator, scheduler) has tests that run on http://paz-ci.yld.io:8080 (in StriderCD), triggered by a Github webhook.\n\n## Paz Repositories\n\nThe various components of Paz are spread across several repositories:\n* [Orchestrator](https://github.com/yldio/paz-orchestrator)\n* [Service Directory](https://github.com/yldio/paz-service-directory)\n* [Scheduler](https://github.com/yldio/paz-scheduler)\n* [Web](https://github.com/yldio/paz-web)\n* [HAProxy](https://github.com/yldio/paz-haproxy)\n"
+        },
+        {
+          "name": "bare_metal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "digitalocean",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "unitfiles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vagrant",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

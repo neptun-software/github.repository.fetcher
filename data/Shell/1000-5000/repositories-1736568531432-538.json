@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "timestamp": 1736568531432,
+    "page": 538,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dylanbai8/kmspro",
+      "stars": 1625,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.783203125,
+          "content": "## 官方网站：https://v0v.bid\n\n---\n\n---\n\n### windows系统一句命令激活\n\n#### 打开 命令提示符（管理员） 运行：slmgr /skms kms.v0v.bid && slmgr /ato\n\n---\n\n---\n\n## Linux系统 自建KMS服务器\n\n### 一键安装KMS服务 （Debian/Ubuntu/Mint 等）\n```\nwget -N --no-check-certificate git.io/k.sh && chmod +x k.sh && bash k.sh debian\n```\n\n### 一键安装KMS服务 （CentOS/Redhat/Fedora 等）（如果系统开启了防火墙 须自行开放 1688 端口）\n```\nwget -N --no-check-certificate git.io/k.sh && chmod +x k.sh && bash k.sh centos\n```\n\n### 启动KMS服务\n```\nbash k.sh start\n\n服务器IP地址既是KMS服务器地址\n也可以将域名解析至IP使用（支持IPv6 即AAAA记录）\n\n更多详细教程：https://v0v.bid/kms.html\n```\n\n### 关闭KMS服务\n```\nbash k.sh stop\n```\n\n### 添加开机自启动KMS服务\n```\nbash k.sh auto\n```\n\n### 重启KMS服务\n```\nbash k.sh restart\n```\n\n### 查看KMS服务运行状态\n```\nbash k.sh status\n```\n\n### 卸载KMS服务\n```\nbash k.sh uninstall\n```\n\n## Windows系统 自建KMS服务器\n\n### 一键安装KMS服务 （Windows系统 x86/x64）\n```\n访问下方地址：\nhttps://github.com/Wind4/vlmcsd/releases\n下载最新版本 binaries.tar.gz\n\n解压后运行：\n\\binaries\\Windows\\intel\\vlmcsd-Windows-x64.exe\n或者：\n\\binaries\\Windows\\intel\\vlmcsd-Windows-x86.exe\n```\n\n## 安卓手机 自建KMS服务器\n```\n访问下方地址：\nhttps://v0v.bid/android.html\n查看教程\n```\n\n## 版权声明：\n### 此项目仅为bash一键脚本，脚本内所涉及到的任何软件版权和责任归原作者所有。\n```\n此项目脚本基于以下开源项目：\nhttps://github.com/Wind4/vlmcsd\nhttps://github.com/ThunderEX/py-kms\nhttps://forums.mydigitallife.net/members/hotbird64.333466/\nhttps://forums.mydigitallife.net/members/pantagruel.5805/\n```\n"
+        },
+        {
+          "name": "kmspro.sh",
+          "type": "blob",
+          "size": 3.7236328125,
+          "content": "#!/bin/bash\n\n#====================================================\n#\tSystem Request: Debian/Ubuntu/Mint/CentOS/Redhat/Fedora\n#\tAuthor: dylanbai8\n#\tDscription: KMS服务一键安装脚本\n#\tOpen Source: https://github.com/dylanbai8/kmspro\n#\tOfficial document: https://v0v.bid\n#====================================================\n\n# 定义脚本变量\nPATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin\nexport PATH\nSTAT=2\n\n# Debian系列操作系统安装KMS\ndo_debian(){\napt-get install gcc git make -y\nrm -rf /usr/local/kms\nmkdir /usr/local/kms\ncd /usr/local/kms\ngit clone https://github.com/Wind4/vlmcsd.git\ncd vlmcsd\nmake\ncd bin\nmv vlmcsd /usr/local/kms/kms\ncd /usr/local/kms/\nrm -rf ./vlmcsd/\nmv kms vlmcsd\necho \"KMS服务安装成功！\"\necho \"更多教程请访问：https://v0v.bid/kms.html\"\n}\n\n# Centos系列操作系统安装KMS\ndo_centos(){\nyum install gcc git make -y\nrm -rf /usr/local/kms\nmkdir /usr/local/kms\ncd /usr/local/kms\ngit clone https://github.com/Wind4/vlmcsd.git\ncd vlmcsd\nmake\ncd bin\nmv vlmcsd /usr/local/kms/kms\ncd /usr/local/kms/\nrm -rf ./vlmcsd/\nmv kms vlmcsd\necho \"KMS服务安装成功！\"\necho \"更多教程请访问：https://v0v.bid/kms.html\"\necho \"Centos请自行开放1688端口\"\n}\n\n# 检测KMS运行状态\ncheck_running(){\nPID=`ps -ef | grep -v grep | grep -i \"vlmcsd\" | awk '{print $2}'`\n\t\tif [ ! -z $PID ]; then\n\t\tSTAT=0\n\telse\n\t\tSTAT=1\n\tfi\n}\n\n# 重启KMS服务\ndo_restart(){\n\tcheck_running\n\tif [ $STAT = 0 ]; then\n\t\techo \"KMS服务已经运行 正在重新启动 ...\"\n\t\tkill $PID\n\telif [ $STAT = 1 ]; then\n\t\techo \"KMS服务未运行 正在启动 ...\"\n\tfi\n\t/usr/local/kms/vlmcsd\n\tcheck_running\n\tif [ $STAT = 0 ]; then\n\t\tlocal_ip=`curl -4 ip.sb`\n\t\techo \"KMS服务 启动成功\"\n\t\techo \"[Windows一句命令激活] 命令提示符(管理员)：slmgr /skms ${local_ip} && slmgr /ato\"\n\t\techo \"更多教程请访问：https://v0v.bid/kms.html\"\n\telif [ $STAT = 1 ]; then\n\t\techo \"KMS服务 启动失败\"\n\tfi\n}\n\n# 停止KMS服务\ndo_stop(){\n\tcheck_running\n\tif [ $STAT = 0 ]; then\n\t\t\techo \"正在停止 KMS服务 ...\"\n\t\tkill $PID\n\t\tcheck_running\n\t\tif [ $STAT = 0 ]; then\n\t\t\techo \"停止 KMS服务 失败\"\n\t\telif [ $STAT = 1 ]; then\n\t\t\techo \"停止 KMS服务 成功\"\n\t\t\tfi\n\t\telif [ $STAT = 1 ]; then\n\t\t\t\techo \"KMS服务 未运行 取消操作\"\n\t\tfi\n}\n\n# 检测KMS服务是否运行\ndo_status(){\n\tcheck_running\n\tif [ $STAT = 0 ]; then\n\t\t\t\techo \"KMS服务 正在运行\"\n\t\t\t\techo \"更多教程请访问：https://v0v.bid/kms.html\"\n\t\telif [ $STAT = 1 ]; then\n\t\t\t\techo \"KMS服务 未运行\"\n\t\tfi\n}\n\n# 启动KMS服务\ndo_start(){\n\tcheck_running\n\tif [ $STAT = 0 ]; then\n\t\t\t\techo \"KMS服务 已运行 取消操作\"\n\t\t\t\techo \"更多教程请访问：https://v0v.bid/kms.html\"\n\t\texit 0;\n\t\telif [ $STAT = 1 ]; then\n\t\t\t\techo \"正在启动 KMS服务 ...\"\n\t/usr/local/kms/vlmcsd\n\tfi\n\t\tcheck_running\n\t\tif [ $STAT = 0 ]; then\n\t\t\t\tlocal_ip=`curl -4 ip.sb`\n\t\t\t\techo \"KMS服务 启动成功\"\n\t\t\t\techo \"[Windows一句命令激活] 命令提示符(管理员)：slmgr /skms ${local_ip} && slmgr /ato\"\n\t\t\t\techo \"更多教程请访问：https://v0v.bid/kms.html\"\n\t\telif [ $STAT = 1 ]; then\n\t\t\t\techo \"KMS服务 启动失败\"\n\t\tfi\n}\n\n# 添加开机自启动服务\ndo_auto(){\n\techo \"/usr/local/kms/vlmcsd\" >> /etc/rc.local\n\tchmod +x /etc/rc.local\n\techo \"已添加 开机自启动 KMS服务\"\n\techo \"更多教程请访问：https://v0v.bid/kms.html\"\n}\n\n# 卸载KMS服务\ndo_uninstall(){\n\tdo_stop\n\trm -rf /usr/local/kms\n\tsed -i '/vlmcsd/'d /etc/rc.local\n\techo \"KMS服务 已卸载\"\n}\n\n# 脚本菜单\ncase \"$1\" in\n\tdebian|centos|start|stop|auto|restart|status|uninstall)\n\tdo_$1\n\t;;\n\t*)\n\techo \"缺少参数: debian | centos | start | stop | auto | restart | status | uninstall \"\n\techo \"更多教程请访问：https://github.com/dylanbai8/kmspro\"\n\t;;\nesac\n\n# 转载请保留版权：https://v0v.bid"
+        }
+      ]
+    }
+  ]
+}

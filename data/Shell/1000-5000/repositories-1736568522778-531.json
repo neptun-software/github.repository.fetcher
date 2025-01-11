@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": 1736568522778,
+    "page": 531,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gushmazuko/metasploit_in_termux",
+      "stars": 1641,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 0.8447265625,
+          "content": "stages:\n  - test\n\ntest_job:\n  stage: test\n  image: termux/termux-docker:x86_64\n  before_script:\n    - export TERM=xterm\n    - |\n      echo \"Checking DNS readiness...\"\n      max_attempts=$((2 * 60 / 5))\n      attempt=1\n      while [ $attempt -le $max_attempts ]; do\n          if curl -Is https://termux.dev > /dev/null; then\n              echo \"DNS is ready and HTTP request to Termux was successful.\"\n              break\n          else\n              if [ $attempt -eq $max_attempts ]; then\n                  echo \"Timeout reached. DNS is still not ready.\"\n                  exit 1\n              fi\n              attempt=$((attempt + 1))\n              sleep 5\n          fi\n      done\n    - apt update -y\n  script:\n    - bash <(curl -fsSL https://gitlab.com/gushmazuko/metasploit_in_termux/-/raw/${CI_COMMIT_REF_NAME}/metasploit.sh)\n    - msfconsole -v\n  when: manual"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2018 gushmazuko\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.203125,
+          "content": "# Metasploit Framework 6 in Termux\n[![GitLab Testing status](https://gitlab.com/gushmazuko/metasploit_in_termux/badges/master/pipeline.svg)](https://gitlab.com/gushmazuko/metasploit_in_termux/-/pipelines) ![GitHub Repo stars](https://img.shields.io/github/stars/gushmazuko/metasploit_in_termux?style=social) [![](https://img.shields.io/badge/GitLab-Mirror-succes?link=https://gitlab.com/gushmazuko/metasploit_in_termux)](https://gitlab.com/gushmazuko/metasploit_in_termux)\n\n![Metasploit 6 running](https://i.imgur.com/yLFQhvP.png)\n\n## How to Install\n## Before\n\nIn order to have updated Termux:\n- **Purge all data** of Termux in Android Settings\n- Uninstall and reinstall latest Termux version from [F-Droid](https://f-droid.org/en/packages/com.termux/) (Version on Play Store is outdated)\n- Then launch Termux to initialization, close it (force stop, not swap)\n- Reopen and follow the instructions below\n\n### Auto\n```bash\nsource <(curl -fsSL https://kutt.it/msf)\n```\n\n### Manual\n```bash\npkg install wget\n\nwget https://github.com/gushmazuko/metasploit_in_termux/raw/master/metasploit.sh\n\n\nchmod +x metasploit.sh\n\n./metasploit.sh\n```\n\n## Launch metasploit\nAfter installation start Metasploit using the command:\n```bash\nmsfconsole\n```\n"
+        },
+        {
+          "name": "database.yml",
+          "type": "blob",
+          "size": 0.158203125,
+          "content": "production:\n    adapter: postgresql\n    database: msf_database\n    username: msf\n    password: msf\n    host: 127.0.0.1\n    port: 5432\n    pool: 75\n    timeout: 5\n"
+        },
+        {
+          "name": "metasploit.sh",
+          "type": "blob",
+          "size": 3.689453125,
+          "content": "#!/data/data/com.termux/files/usr/bin/bash\n\n# Banner and center functions\ncenter_banner() {\n    local termwidth=$(stty size | cut -d\" \" -f2)\n\n    local banner=(\n        \"+-+-+-+-+-+-+-+-+-+-+ +-+-+ +-+-+-+-+-+-+\"\n        \"|M|e|t|a|s|p|l|o|i|t| |i|n| |T|e|r|m|u|x|\"\n        \"+-+-+-+-+-+-+-+-+-+-+ +-+-+ +-+-+-+-+-+-+\"\n        \"+-+-+ +-+-+-+-+-+-+-+-+-+-+\"\n        \"|b|y| |G|u|s|h|m|a|z|u|k|o|\"\n        \"+-+-+ +-+-+-+-+-+-+-+-+-+-+\"\n    )\n\n    echo -e \"\\e[34m\" # Blue color\n    for line in \"${banner[@]}\"; do\n        printf \"%*s\\n\" $(( (termwidth + ${#line}) / 2 )) \"$line\"\n    done\n    echo -e \"\\e[0m\" # Reset color\n}\n\ncenter() {\n  termwidth=$(stty size | cut -d\" \" -f2)\n  padding=\"$(printf '%0.1s' ={1..500})\"\n  printf '%*.*s %s %*.*s\\n' 0 \"$(((termwidth-2-${#1})/2))\" \"$padding\" \"$1\" 0 \"$(((termwidth-1-${#1})/2))\" \"$padding\"\n}\n\nclear\ncenter_banner\n\n# Loading spinner\ncenter \"Loading...\"\nsource <(echo \"c3Bpbm5lcj0oICd8JyAnLycgJy0nICdcJyApOwoKY291bnQoKXsKICBzcGluICYKICBwaWQ9JCEKICBmb3IgaSBpbiBgc2VxIDEgMTBgCiAgZG8KICAgIHNsZWVwIDE7CiAgZG9uZQoKICBraWxsICRwaWQgIAp9CgpzcGluKCl7CiAgd2hpbGUgWyAxIF0KICBkbyAKICAgIGZvciBpIGluICR7c3Bpbm5lcltAXX07IAogICAgZG8gCiAgICAgIGVjaG8gLW5lICJcciRpIjsKICAgICAgc2xlZXAgMC4yOwogICAgZG9uZTsKICBkb25lCn0KCmNvdW50\" | base64 -d)\n\n# Dependencies Installation\ncenter \"* Dependencies installation...\"\npkg update -y\npkg upgrade -y -o Dpkg::Options::=\"--force-confnew\"\npkg install -y binutils python autoconf bison clang coreutils curl findutils apr apr-util postgresql openssl readline libffi libgmp libpcap libsqlite libgrpc libtool libxml2 libxslt ncurses make ncurses-utils ncurses git wget unzip zip tar termux-tools termux-elf-cleaner pkg-config git ruby -o Dpkg::Options::=\"--force-confnew\"\npython3 -m pip install requests\n\n# Fix ruby BigDecimal \n#center \"* Fix ruby BigDecimal\"\n#source <(curl -sL https://github.com/termux/termux-packages/files/2912002/fix-ruby-bigdecimal.sh.txt)\n\n# Erase Old Metasploit Folder\ncenter \"* Erasing old metasploit folder...\"\nif [ -d \"${PREFIX}/opt/metasploit-framework\" ]; then\n  rm -rf ${PREFIX}/opt/metasploit-framework\nfi\n\n# Download Metasploit\ncenter \"* Downloading...\"\nif [ ! -d \"${PREFIX}/opt\" ]; then\n  mkdir ${PREFIX}/opt\nfi\ngit clone https://github.com/rapid7/metasploit-framework.git --depth=1 ${PREFIX}/opt/metasploit-framework\n\n# Install Metasploit\ncenter \"* Installation...\"\ncd ${PREFIX}/opt/metasploit-framework\ngem install bundler\nNOKOGIRI_VERSION=$(cat Gemfile.lock | grep -i nokogiri | sed 's/nokogiri [\\(\\)]/(/g' | cut -d ' ' -f 5 | grep -oP \"(.).[[:digit:]][\\w+]?[.].\")\n# by overriding cflags nokogiri will install or you can simply declare a void function \n#  you might have seen this error while installing nokogiri `xmlSetStructuredErrorFunc((void *)rb_error_list, Nokogiri_error_array_pusher);`\n#  solution : void xmlSetStructuredErrorFunc(void *rb_error_list, void *Nokogiri_error_array_pusher); you can set any parameter name \n#  for sake of simplicity tweaking cflags is better than declaring a void function for every c file\n\ngem install nokogiri -v $NOKOGIRI_VERSION -- --with-cflags=\"-Wno-implicit-function-declaration -Wno-deprecated-declarations -Wno-incompatible-function-pointer-types\" --use-system-libraries\nbundle install\ngem install actionpack\nbundle update activesupport\nbundle update --bundler\nbundle install -j$(nproc --all)\n\n# Link Metasploit Executables\nln -sf ${PREFIX}/opt/metasploit-framework/msfconsole ${PREFIX}/bin/\nln -sf ${PREFIX}/opt/metasploit-framework/msfvenom ${PREFIX}/bin/\nln -sf ${PREFIX}/opt/metasploit-framework/msfrpcd ${PREFIX}/bin/\ntermux-elf-cleaner ${PREFIX}/lib/ruby/gems/*/gems/pg-*/lib/pg_ext.so\n\necho -e \"\\033[32m\" # Blue color\ncenter \"Installation complete\"\necho -e \"\\nStart Metasploit using the command: msfconsole\"\necho -e \"\\033[0m\" # Reset color\n"
+        }
+      ]
+    }
+  ]
+}

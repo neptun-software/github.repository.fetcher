@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "timestamp": 1736568917095,
+    "page": 135,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjEzNw==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bats-core/bats-core",
+      "stars": 5054,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".codespellrc",
+          "type": "blob",
+          "size": 0.05859375,
+          "content": "[codespell]\nskip = .git,*.pdf,*.svg\nignore-words-list = dne\n"
+        },
+        {
+          "name": ".devcontainer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.7255859375,
+          "content": "root = true\n\n[*]\nend_of_line = lf\nindent_style = space\nindent_size = 2\ninsert_final_newline = true\nmax_line_length = 80\ntrim_trailing_whitespace = true\n\n# The JSON files contain newlines inconsistently\n[*.json]\nindent_size = 2\ninsert_final_newline = ignore\n\n# YAML\n[*.{yml,yaml}]\nindent_style = space\nindent_size = 2\n\n# Makefiles always use tabs for recipe indentation\n[{Makefile,*.mak}]\nindent_style = tab\n\n# Markdown\n[*.{md,rmd,mkd,mkdn,mdwn,mdown,markdown,litcoffee}]\nmax_line_length = 80\n# tabs behave as if they were replaced by spaces with a tab stop of 4 characters\ntab_width = 4\n# trailing spaces indicates word wrap\ntrim_trailing_spaces = false\ntrim_trailing_whitespace = false\n\n[test/fixtures/bats/*_no_shellcheck.bats]\nignore = true"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0400390625,
+          "content": "* text=auto\n*.sh eol=lf\nlibexec/* eol=lf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.203125,
+          "content": "/docker-compose.override.yml\n/docs/build\n\n# npm\n/bats-*.tgz\n# we don't have any deps; un-ignore if that changes\n/package-lock.json\ntest/.bats/run-logs/\n# scratch file that should never be committed\n/test.bats"
+        },
+        {
+          "name": ".pre-commit-config.yaml",
+          "type": "blob",
+          "size": 0.3154296875,
+          "content": "repos:\n- repo: https://github.com/gitleaks/gitleaks\n  rev: v8.16.3\n  hooks:\n  - id: gitleaks\n- repo: https://github.com/jumanjihouse/pre-commit-hooks\n  rev: 3.0.0\n  hooks:\n  - id: shellcheck\n- repo: https://github.com/pre-commit/pre-commit-hooks\n  rev: v4.4.0\n  hooks:\n  - id: end-of-file-fixer\n  - id: trailing-whitespace\n"
+        },
+        {
+          "name": ".readthedocs.yml",
+          "type": "blob",
+          "size": 0.1767578125,
+          "content": "version: 2\n\nsphinx:\n  configuration: docs/source/conf.py\n\nbuild:\n  os: ubuntu-22.04\n  tools:\n    python: \"3.12\"\n\npython:\n  install:\n    - requirements: docs/source/requirements.txt\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.2138671875,
+          "content": "Andrew Martin (https://control-plane.io/)\nBianca Tamayo <hi@biancatamayo.me> (https://biancatamayo.me/)\nJason Karns <jason.karns@gmail.com> (http://jasonkarns.com/)\nMike Bland <mbland@acm.org> (https://mike-bland.com/)\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.556640625,
+          "content": "ARG bashver=latest\n\nFROM bash:${bashver}\nARG TINI_VERSION=v0.19.0\nARG TARGETPLATFORM\nARG LIBS_VER_SUPPORT=0.3.0\nARG LIBS_VER_FILE=0.4.0\nARG LIBS_VER_ASSERT=2.1.0\nARG LIBS_VER_DETIK=1.3.2\nARG UID=1001\nARG GID=115\n\n\n# https://github.com/opencontainers/image-spec/blob/main/annotations.md\nLABEL maintainer=\"Bats-core Team\"\nLABEL org.opencontainers.image.authors=\"Bats-core Team\"\nLABEL org.opencontainers.image.title=\"Bats\"\nLABEL org.opencontainers.image.description=\"Bash Automated Testing System\"\nLABEL org.opencontainers.image.url=\"https://hub.docker.com/r/bats/bats\"\nLABEL org.opencontainers.image.source=\"https://github.com/bats-core/bats-core\"\nLABEL org.opencontainers.image.base.name=\"docker.io/bash\"\n\nCOPY ./docker /tmp/docker\n# default to amd64 when not running in buildx environment that provides target platform\nRUN /tmp/docker/install_tini.sh \"${TARGETPLATFORM-linux/amd64}\"\n# Install bats libs\nRUN /tmp/docker/install_libs.sh support ${LIBS_VER_SUPPORT}\nRUN /tmp/docker/install_libs.sh file ${LIBS_VER_FILE}\nRUN /tmp/docker/install_libs.sh assert ${LIBS_VER_ASSERT}\nRUN /tmp/docker/install_libs.sh detik ${LIBS_VER_DETIK}\n\n# Install parallel and accept the citation notice (we aren't using this in a\n# context where it make sense to cite GNU Parallel).\nRUN apk add --no-cache parallel ncurses && \\\n    mkdir -p ~/.parallel && touch ~/.parallel/will-cite \\\n    && mkdir /code\n\nRUN ln -s \"$(/usr/bin/env which bash)\" \"/bin/bash\"\n\nRUN ln -s /opt/bats/bin/bats /usr/local/bin/bats\nCOPY . /opt/bats/\n\nWORKDIR /code/\n\nENTRYPOINT [\"/tini\", \"--\", \"/usr/local/bin/bash\", \"/usr/local/bin/bats\"]\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 2.4755859375,
+          "content": "Copyright (c) 2017 bats-core contributors\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n---\n\n* [bats-core] is a continuation of [bats]. Copyright for portions of the\n  bats-core project are held by Sam Stephenson, 2014 as part of the project\n  [bats], licensed under MIT:\n\nCopyright (c) 2014 Sam Stephenson\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\nFor details, please see the [version control history][commits].\n\n[bats-core]: https://github.com/bats-core/bats-core\n[bats]:https://github.com/sstephenson/bats\n[commits]:https://github.com/bats-core/bats-core/commits/master\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.7685546875,
+          "content": "[![Latest release](https://img.shields.io/github/release/bats-core/bats-core.svg)](https://github.com/bats-core/bats-core/releases/latest)\n[![npm package](https://img.shields.io/npm/v/bats.svg)](https://www.npmjs.com/package/bats)\n[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/bats-core/bats-core/blob/master/LICENSE.md)\n[![Continuous integration status](https://github.com/bats-core/bats-core/workflows/Tests/badge.svg)](https://github.com/bats-core/bats-core/actions?query=workflow%3ATests)\n[![Read the docs status](https://readthedocs.org/projects/bats-core/badge/)](https://bats-core.readthedocs.io)\n\n[![Join the chat in bats-core/bats-core on gitter](https://badges.gitter.im/bats-core/bats-core.svg)][gitter]\n\n<div align=\"center\">\n<picture>\n  <source media=\"(prefers-color-scheme: dark)\" srcset=\"docs/source/assets/dark_mode_cube.svg\">\n  <img alt=\"\" src=\"docs/source/assets/light_mode_cube.svg\">\n</picture>\n</div>\n\n# Bats-core: Bash Automated Testing System\n\nBats is a [TAP](https://testanything.org/)-compliant testing framework for Bash\n3.2 or above.  It provides a simple way to verify that the UNIX programs you\nwrite behave as expected.\n\nA Bats test file is a Bash script with special syntax for defining test cases.\nUnder the hood, each test case is just a function with a description.\n\n```bash\n#!/usr/bin/env bats\n\n@test \"addition using bc\" {\n  result=\"$(echo 2+2 | bc)\"\n  [ \"$result\" -eq 4 ]\n}\n\n@test \"addition using dc\" {\n  result=\"$(echo 2 2+p | dc)\"\n  [ \"$result\" -eq 4 ]\n}\n```\n\nBats is most useful when testing software written in Bash, but you can use it to\ntest any UNIX program.\n\nTest cases consist of standard shell commands. Bats makes use of Bash's\n`errexit` (`set -e`) option when running test cases. If every command in the\ntest case exits with a `0` status code (success), the test passes. In this way,\neach line is an assertion of truth.\n\n## Table of contents\n\n**NOTE** The documentation has moved to <https://bats-core.readthedocs.io>\n\n<!-- toc -->\n\n- [Testing](#testing)\n- [Support](#support)\n- [Contributing](#contributing)\n- [Contact](#contact)\n- [Version history](#version-history)\n- [Background](#background)\n  * [What's the plan and why?](#whats-the-plan-and-why)\n  * [Why was this fork created?](#why-was-this-fork-created)\n- [Copyright](#copyright)\n\n<!-- tocstop -->\n\n## Testing\n\n```sh\nbin/bats --tap test\n```\n\nSee also the [CI](./.github/workflows/tests.yml) settings for the current test environment and\nscripts.\n\n## Support\n\nThe Bats source code repository is [hosted on\nGitHub](https://github.com/bats-core/bats-core). There you can file bugs on the\nissue tracker or submit tested pull requests for review.\n\nFor real-world examples from open-source projects using Bats, see [Projects\nUsing Bats](https://github.com/bats-core/bats-core/wiki/Projects-Using-Bats) on\nthe wiki.\n\nTo learn how to set up your editor for Bats syntax highlighting, see [Syntax\nHighlighting](https://github.com/bats-core/bats-core/wiki/Syntax-Highlighting)\non the wiki.\n\n## Contributing\n\nFor now see the [`docs`](docs) folder for project guides, work with us on the wiki\nor look at the other communication channels.\n\n## Contact\n\n- You can find and chat with us on our [Gitter].\n\n## Version history\n\nSee `docs/CHANGELOG.md`.\n\n## Background\n\n<!-- markdownlint-disable MD026 -->\n### Why was this fork created?\n<!-- markdownlint-enable MD026 -->\n\nThere was an initial [call for maintainers][call-maintain] for the original Bats repository, but write access to it could not be obtained. With development activity stalled, this fork allowed ongoing maintenance and forward progress for Bats.\n\n**Tuesday, September 19, 2017:** This was forked from [Bats][bats-orig] at\ncommit [0360811][].  It was created via `git clone --bare` and `git push\n--mirror`.\n\nAs of **Thursday, April 29, 2021:** the original [Bats][bats-orig] has been\narchived by the owner and is now read-only.\n\nThis [bats-core](https://github.com/bats-core/bats-core) repo is now the community-maintained Bats project.\n\n[call-maintain]: https://github.com/sstephenson/bats/issues/150\n[bats-orig]: https://github.com/sstephenson/bats\n[0360811]: https://github.com/sstephenson/bats/commit/03608115df2071fff4eaaff1605768c275e5f81f\n\n## Copyright\n\nThe Bats Logo was created by [Vukory](https://www.artstation.com/vukory) ([Github](https://github.com/vukory)) and sponsored by [SethFalco](https://github.com/SethFalco). If you want to use our logo, have a look at our [guidelines](./docs/source/assets/README.md#Usage-Guide-for-Third-Parties).\n\n© 2017-2024 bats-core organization\n\n© 2011-2016 Sam Stephenson\n\nBats is released under an MIT-style license; see `LICENSE.md` for details.\n\nSee the [parent project](https://github.com/bats-core) at GitHub or the\n[AUTHORS](AUTHORS) file for the current project maintainer team.\n\n[gitter]: https://gitter.im/bats-core/bats-core\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 0.25390625,
+          "content": "# Security Policy\n\n## Supported Versions\n\nOnly the greatest published version (according to semver) will be supported.\n\n## Reporting a Vulnerability\n\nUse GitHub's builtin reporting mechanism under https://github.com/bats-core/bats-core/security/advisories/new\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "contrib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.override.dist",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "# Copy this file to docker-compose.override.yml\nservices:\n    bats:\n        entrypoint:\n            - \"bash\"\nnetworks:\n    default:\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.2236328125,
+          "content": "services:\n    bats:\n        build:\n            context: \".\"\n            dockerfile: \"Dockerfile\"\n        networks:\n            - \"default\"\n        user: \"root\"\n        volumes:\n            - \"./:/opt/bats\"\nnetworks:\n    default:\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 0.8974609375,
+          "content": "#!/usr/bin/env bash\n\nset -e\n\nBATS_ROOT=\"${0%/*}\"\nPREFIX=\"${1%/}\"\nLIBDIR=\"${2:-lib}\"\n\nif [[ -z \"$PREFIX\" ]]; then\n  printf '%s\\n' \\\n    \"usage: $0 <prefix> [base_libdir]\" \\\n    \"  e.g. $0 /usr/local\" \\\n    \"       $0 /usr/local lib64\" >&2\n  exit 1\nfi\n\ninstall -d -m 755 \"$PREFIX\"/{bin,libexec/bats-core,\"${LIBDIR}\"/bats-core,share/man/man{1,7}}\n\ninstall -m 755 \"$BATS_ROOT/bin\"/* \"$PREFIX/bin\"\ninstall -m 755 \"$BATS_ROOT/libexec/bats-core\"/* \"$PREFIX/libexec/bats-core\"\ninstall -m 755 \"$BATS_ROOT/lib/bats-core\"/* \"$PREFIX/${LIBDIR}/bats-core\"\ninstall -m 644 \"$BATS_ROOT/man/bats.1\" \"$PREFIX/share/man/man1\"\ninstall -m 644 \"$BATS_ROOT/man/bats.7\" \"$PREFIX/share/man/man7\"\n\nread -rd '' BATS_EXE_CONTENTS <\"$PREFIX/bin/bats\" || true\nBATS_EXE_CONTENTS=${BATS_EXE_CONTENTS/\"BATS_BASE_LIBDIR=lib\"/\"BATS_BASE_LIBDIR=${LIBDIR}\"}\nprintf \"%s\" \"$BATS_EXE_CONTENTS\" >| \"$PREFIX/bin/bats\"\n\necho \"Installed Bats to $PREFIX/bin/bats\"\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libexec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "man",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.6748046875,
+          "content": "{\n  \"name\": \"bats\",\n  \"version\": \"1.11.1\",\n  \"description\": \"Bash Automated Testing System\",\n  \"homepage\": \"https://github.com/bats-core/bats-core#readme\",\n  \"license\": \"MIT\",\n  \"author\": \"Sam Stephenson <sstephenson@gmail.com> (http://sstephenson.us/)\",\n  \"repository\": \"github:bats-core/bats-core\",\n  \"bugs\": \"https://github.com/bats-core/bats-core/issues\",\n  \"files\": [\n    \"bin\",\n    \"libexec\",\n    \"lib\",\n    \"man\",\n    \"install.sh\",\n    \"uninstall.sh\"\n  ],\n  \"directories\": {\n    \"bin\": \"bin\",\n    \"doc\": \"docs\",\n    \"man\": \"man\",\n    \"test\": \"test\"\n  },\n  \"scripts\": {\n    \"test\": \"bin/bats test\"\n  },\n  \"keywords\": [\n    \"bats\",\n    \"bash\",\n    \"shell\",\n    \"test\",\n    \"unit\"\n  ]\n}\n"
+        },
+        {
+          "name": "shellcheck.sh",
+          "type": "blob",
+          "size": 0.412109375,
+          "content": "#!/usr/bin/env bash\n\nset -e\n\ntargets=()\nwhile IFS= read -r -d $'\\0'; do\n  targets+=(\"$REPLY\")\ndone < <(\n  find . -type f \\( -name \\*.bash -o -name \\*.sh \\) -print0\n  find . -type f -name '*.bats' -not -name '*_no_shellcheck*' -print0\n  find libexec -type f -print0\n  find bin -type f -print0\n)\n\nif [[ $1 == --list ]]; then\n  printf \"%s\\n\" \"${targets[@]}\"\n  exit 0\nfi\n\nLC_ALL=C.UTF-8 shellcheck -x \"${targets[@]}\"\n\nexit $?\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uninstall.sh",
+          "type": "blob",
+          "size": 1.1953125,
+          "content": "#!/usr/bin/env bash\n\nset -e\n\nBATS_ROOT=\"${0%/*}\"\nPREFIX=\"${1%/}\"\n\nif [[ -z \"$PREFIX\" ]]; then\n  printf '%s\\n' \\\n    \"usage: $0 <prefix> [base_libdir]\" \\\n    \"  e.g. $0 /usr/local\" \\\n    \"       $0 /usr/local lib64\" >&2\n  exit 1\nfi\n\nif [[ ! -d \"$PREFIX\" ]]; then\n  printf \"No valid installation in directory %s.\\n\" \"$PREFIX\"\n  exit 2\nfi\n\nif [ -e \"$PREFIX/bin/bats\" ]; then\n  LIBDIR=$(grep -e '^BATS_BASE_LIBDIR=' \"$PREFIX/bin/bats\")\n  eval \"$LIBDIR\"\nfi\nLIBDIR=\"${BATS_BASE_LIBDIR:-lib}\"\n\nremove_file() { # <file>\n  echo \"Removing $1\"\n  rm -f \"$1\"\n}\n\nremove_directory() { # <directory>\n  local directory=$1\n  if [[ -d \"$directory\" ]]; then\n    echo \"Removing $directory\"\n    rmdir \"$directory\"\n  fi\n}\n\nd=\"$PREFIX/bin\"\nfor elt in \"$BATS_ROOT/bin\"/*; do\n  elt=${elt##*/}\n  remove_file \"$d/$elt\"\ndone\n\nd=\"$PREFIX/libexec/bats-core\"\nfor elt in \"$BATS_ROOT/libexec/bats-core\"/*; do\n  elt=${elt##*/}\n  remove_file \"$d/$elt\"\ndone\nremove_directory \"$d\"\n\nd=\"$PREFIX/${LIBDIR}/bats-core\"\nfor elt in \"$BATS_ROOT/lib/bats-core\"/*; do\n  elt=${elt##*/}\n  remove_file \"$d/$elt\"\ndone\nremove_directory \"$d\"\n\nremove_file \"$PREFIX\"/share/man/man1/bats.1\nremove_file \"$PREFIX\"/share/man/man7/bats.7\n\necho \"Uninstalled Bats from $PREFIX/bin/bats\"\n"
+        }
+      ]
+    }
+  ]
+}

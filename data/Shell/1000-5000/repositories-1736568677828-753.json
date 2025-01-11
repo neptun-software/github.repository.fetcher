@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "timestamp": 1736568677828,
+    "page": 753,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jimeh/tmuxifier",
+      "stars": 1283,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0419921875,
+          "content": "test-runner.sh\ntest/assert.sh\ntest/stub.sh\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.4794921875,
+          "content": "language: c\nenv:\n  - TMUX_VERSION=\"1.6\"\n  - TMUX_VERSION=\"1.7\"\n  - TMUX_VERSION=\"1.8\"\n  - TMUX_VERSION=\"1.9a\"\n  - TMUX_VERSION=\"2.0\"\nbefore_install:\n  - sudo apt-get update\n  - sudo apt-get install -y bc build-essential libevent-dev libncurses5-dev\n  - wget https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz\n  - tar -zxf tmux-${TMUX_VERSION}.tar.gz\n  - cd tmux-${TMUX_VERSION}\n  - ./configure && make && sudo make install\n  - cd ..\nscript: make test\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0322265625,
+          "content": "Copyright (c) 2014 Jim Myhrberg.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.37890625,
+          "content": "test: bootstrap\n\t./test-runner.sh\n\nbootstrap: test-runner.sh test/assert.sh test/stub.sh\nclean: remove_test-runner.sh remove_test/assert.sh remove_test/stub.sh\nupdate: update_test-runner.sh update_test/assert.sh update_test/stub.sh\n\ntest-runner.sh:\n\techo \"fetching test-runner.sh...\" && \\\n\tcurl -s -L -o test-runner.sh \\\n\t\thttps://github.com/jimeh/test-runner.sh/raw/v0.2.0/test-runner.sh && \\\n\tchmod +x test-runner.sh\n\nremove_test-runner.sh:\n\t( \\\n\t\ttest -f \"test-runner.sh\" && rm \"test-runner.sh\" && \\\n\t\techo \"removed test-runner.sh\"\\\n\t) || exit 0\n\nupdate_test-runner.sh: remove_test-runner.sh test-runner.sh\n\ntest/assert.sh:\n\techo \"fetching test/assert.sh...\" && \\\n\tcurl -s -L -o test/assert.sh \\\n\t\thttps://raw.github.com/lehmannro/assert.sh/v1.0.2/assert.sh\n\nremove_test/assert.sh:\n\ttest -f \"test/assert.sh\" && \\\n\t\trm \"test/assert.sh\" && \\\n\t\techo \"removed test/assert.sh\"\n\nupdate_test/assert.sh: remove_test/assert.sh test/assert.sh\n\ntest/stub.sh:\n\techo \"fetching test/stub.sh...\" && \\\n\tcurl -s -L -o test/stub.sh \\\n\t\thttps://raw.github.com/jimeh/stub.sh/v1.0.1/stub.sh\n\nremove_test/stub.sh:\n\ttest -f \"test/stub.sh\" && \\\n\t\trm \"test/stub.sh\" && \\\n\t\techo \"removed test/stub.sh\"\n\nupdate_test/stub.sh: remove_test/stub.sh test/stub.sh\n\n.SILENT:\n.PHONY: test bootstrap clean \\\n\tremove_test-runner.sh update_test-runner.sh \\\n\tremove_test/assert.sh update_test/assert.sh \\\n\tremove_test/stub.sh   update_test/stub.sh\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.3388671875,
+          "content": "# Tmuxifier [![Build Status](https://api.travis-ci.org/jimeh/tmuxifier.svg)](https://travis-ci.org/jimeh/tmuxifier)\n\nTmuxify your Tmux. Create, edit, manage and load complex Tmux session, window\nand pane configurations with ease.\n\nIn short, Tmuxifier allows you to easily create, edit, and load \"layout\" files,\nwhich are simple shell scripts where you use the `tmux` command and helper\ncommands provided by `tmuxifier` to manage Tmux sessions and windows\n\n### Window Layouts\n\nWindow layouts create a new Tmux window, optionally setting the window title and\nroot path where all shells are cd'd to by default. It allows you to easily split\na window into specifically sized panes and more as you wish.\n\nYou can load a window layout directly into your current Tmux session, or into a\nsession layout to have the window created along with the session.\n\n### Session Layouts\n\nSession layouts create a new Tmux session, optionally setting a session title\nand root path where all shells in the session are cd'd to by default. Windows\ncan be added to the session either by loading existing window layouts, or\ndefined directly within the session layout file.\n\n## Example\n\nGiven we have a window layout file called [example.window.sh][] which looks\nlike:\n\n[example.window.sh]:\n  https://github.com/jimeh/tmuxifier/blob/master/examples/example.window.sh\n\n```bash\nwindow_root \"~/Desktop\"\nnew_window \"Example Window\"\nsplit_v 20\nrun_cmd \"watch -t date\"\nsplit_h 60\nselect_pane 0\n```\n\nYou can then load that window layout into a new window in the current tmux\nsession using:\n\n    tmuxifier load-window example\n\nWhich will yield a Tmux window looking like this:\n\n![example](https://github.com/jimeh/tmuxifier/raw/master/examples/example.window-screenshot.png)\n\n## Installation\n\n### Manual\n\nClone the repo to your machine:\n\n    git clone https://github.com/jimeh/tmuxifier.git ~/.tmuxifier\n\nThen add `$HOME/.tmuxifier/bin` to your PATH to make the `tmuxifier` executable\navailable to you:\n\n**In bash & zsh:**\n\n```bash\nexport PATH=\"$HOME/.tmuxifier/bin:$PATH\"\n```\n\n**In tcsh:**\n\n```tcsh\nset path = ( \"~/.tmuxifier/bin\" $path )\n```\n\n**In fish:**\n\n```bash\nset -gx PATH \"~/.tmuxifier/bin\" $PATH\n```\n\n#### Custom Installation Path\n\nTo install Tmuxifier somewhere else than the suggested `~/.tmuxifier`, simply\nclone the repository to your custom location, and ensure the `bin` folder is\nadded to your PATH making the `tmuxifier` executable available to you.\n\n### TPM\n\nYou can also install and update Tmuxifier with\n[TPM](https://github.com/tmux-plugins/tpm):\n\n```bash\nset -g @plugin 'jimeh/tmuxifier'\n```\n\nTrigger TPM's install command with `prefix` + `I` to install Tmuxifier to TPM's\nplugin directory (default is `$HOME/.tmux/plugins`).\n\nTo use the `tmuxifier` command, you will need to add the `bin` directory to your\nPATH. If you are using the default TPM plugin directory, the `bin` directory\nwill be `$HOME/.tmux/plugins/tmuxifier/bin`.\n\n## Setup\n\n**In bash & zsh:**\n\nAnd add the following to your `~/.profile`, `~/.bash_profile`, `~/.zshrc` or\nequivalent:\n\n```bash\neval \"$(tmuxifier init -)\"\n```\n\n**In tcsh:**\n\nAdd the following to your `~/.cshrc`, `~/.tcshrc` or equivalent:\n\n```tcsh\neval `tmuxifier init -`\n```\n\n**In fish:**\n\nAnd add the following to your `~/.config/fish/config.fish` or equivalent:\n\n```bash\neval (tmuxifier init - fish)\n```\n\n### Custom Tmux Arguments\n\nIf you need to pass custom arguments to `tmux` itself, you can do so by setting\nthe `TMUXIFIER_TMUX_OPTS` environment variable. For example to set custom\narguments globally:\n\n```bash\nexport TMUXIFIER_TMUX_OPTS=\"-L my-awesome-socket-name\"\neval \"$(tmuxifier init -)\"\n```\n\nAnd/or specify dynamically when calling `tmuxifier`:\n\n```bash\nTMUXIFIER_TMUX_OPTS=\"-L other-socket\" tmuxifier load-session welcome\n```\n\n## Updating\n\n```bash\ncd ~/.tmuxifier # or where you've cloned tmuxifier to\ngit pull\n```\n\n## Usage\n\n_**Note:** This section needs expanding upon._\n\nFor a quick reference on available commands and their aliases, please run:\n\n    tmuxifier help\n\nTmuxifier doesn't come with any layouts, so you'll want to create your own\nwindow and session layout files. New layout files are populated with examples\nand comments explaining what things do. Also, having a look at the [examples][]\ndirectory will also give you a good idea.\n\n### Window Layouts\n\nFirst off you'll want to define a window layout:\n\n    tmuxifier new-window my-awesome-window\n\nThis will create a new layout file called `my-awesome-window.window.sh` in your\n`$TMUXIFIER_LAYOUT_PATH`, and open it with the editor defined in `$EDITOR`.\nCustomize it as you wish, and save.\n\nYou can now load _my-awesome-window_ with the following command:\n\n    tmuxifier load-window my-awesome-window\n\nYou should now have a new Tmux window open created from your custom and awesome\nwindow layout.\n\n### Session Layouts\n\nTo create your first session layout, run:\n\n    tmuxifier new-session my-awesome-session\n\nSame deal as with creating a new window, except the filename ends with\n`.session.sh` instead of `.window.sh`, and the file's pre-populated content\nlooks different. To have your awesome window loaded, add\n`load_window \"my-awesome-window\"` to the session layout next to existing\nexamples.\n\nTo load the session layout simply run:\n\n    tmuxifier load-session my-awesome-session\n\nYou'll now have a new Tmux session with your previously defined awesome window\nin it.\n\n[examples]: https://github.com/jimeh/tmuxifier/tree/master/examples\n\n## Configure & Customize\n\n### Custom Layouts Path\n\nYou can customize the layouts directory used by Tmuxifier by setting\n`$TMUXIFIER_LAYOUT_PATH`.\n\n```bash\nexport TMUXIFIER_LAYOUT_PATH=\"$HOME/.tmux-layouts\"\n```\n\n### Disable Shell-Completion\n\nTmuxifier comes with shell-completion for bash, zsh, tcsh, and fish. If for any\nreason you need to disable it, just set `$TMUXIFIER_NO_COMPLETE`.\n\n```bash\nexport TMUXIFIER_NO_COMPLETE=1\n```\n\n## Tips\n\n### iTerm2 Integration\n\nTmuxifier supports iTerm2's [Tmux integration][]. It can be used in two ways:\n\n- Passing `-CC` as a second argument to the `load-session` command. For example:\n\n          tmuxifier load-session my-awesome-session -CC\n\n- Setting the `TMUXIFIER_TMUX_ITERM_ATTACH` environment variable to `-CC` before\n  calling the `load-session` command.\n\n[tmux integration]: https://gitlab.com/gnachman/iterm2/wikis/TmuxIntegration\n\n## Inspiration\n\n- Tmuxifier is largely inspired by [Tmuxinator][].\n- The shell script structure and shell-completion setup is heavily\n  inspired/ripped from the internals of [rbenv][].\n\n## Tmuxifier vs. Tmuxinator\n\nThough Tmuxifier is largely inspired by the excellent [Tmuxinator][] project, it\ndoes set itself apart in a number of ways:\n\n- Uses shell scripts to define Tmux sessions and windows instead of YAML files.\n  The benefit is total control over Tmux, but the definition files are more\n  complicated to work with.\n- Instead of using a \"project\" concept, Tmuxifier uses a concept of \"sessions\"\n  and \"windows\" just like Tmux itself. This allows you to load a whole session\n  with multiple pre-defined window configurations, or just load a single window\n  configuration into your existing session.\n- Tmuxifier is a set of shell scripts, meaning it doesn't require Ruby to be\n  installed on the machine.\n\n[tmuxinator]: https://github.com/aziz/tmuxinator\n[rbenv]: https://github.com/sstephenson/rbenv\n\n## Todos\n\n- Improve Readme, specially Usage section.\n- Write up a detailed reference for all available layout helper functions.\n\n## License\n\n(The MIT license)\n\nCopyright (c) 2014 Jim Myhrberg.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "completion",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "init.fish",
+          "type": "blob",
+          "size": 0.6318359375,
+          "content": "# Set/fix Tmuxifier root path if needed.\nif test -z $TMUXIFIER\n  set -gx TMUXIFIER \"$HOME/.tmuxifier\"\nend\n\n# Add `bin` directroy to `$PATH`.\nif not contains \"$TMUXIFIER/bin\" $PATH\n  set -gx PATH \"$TMUXIFIER/bin\" $PATH\nend\n\n# If `tmuxifier` is available, and `$TMUXIFIER_NO_COMPLETE` is not set, then\n# load Tmuxifier shell completion.\nif test -n (which tmuxifier); and test -z $TMUXIFIER_NO_COMPLETE\n    # fish shell 2.0.0 does not have the source alias\n    if [ (fish --version 2>| awk -F'version ' '{print $2}') = '2.0.0' ];\n      . \"$TMUXIFIER/completion/tmuxifier.fish\"\n    else\n      source \"$TMUXIFIER/completion/tmuxifier.fish\"\n    end\nend\n"
+        },
+        {
+          "name": "init.sh",
+          "type": "blob",
+          "size": 0.6328125,
+          "content": "# Set/fix Tmuxifier root path if needed.\nif [ -z \"${TMUXIFIER}\" ]; then\n  export TMUXIFIER=\"${HOME}/.tmuxifier\"\nelse\n  export TMUXIFIER=\"${TMUXIFIER%/}\"\nfi\n\n# Add `bin` directroy to `$PATH`.\nif [[ \":$PATH:\" != *\":$TMUXIFIER/bin:\"* ]]; then\n  export PATH=\"$TMUXIFIER/bin:$PATH\"\nfi\n\n# If `tmuxifier` is available, and `$TMUXIFIER_NO_COMPLETE` is not set, then\n# load Tmuxifier shell completion.\nif [ -n \"$(command -v \"tmuxifier\")\" ] && [ -z \"$TMUXIFIER_NO_COMPLETE\" ]; then\n  if [ -n \"$BASH_VERSION\" ]; then\n    source \"$TMUXIFIER/completion/tmuxifier.bash\"\n  elif [ -n \"$ZSH_VERSION\" ]; then\n    source \"$TMUXIFIER/completion/tmuxifier.zsh\"\n  fi\nfi\n"
+        },
+        {
+          "name": "init.tcsh",
+          "type": "blob",
+          "size": 0.4736328125,
+          "content": "# Set Tmuxifier root path if needed.\nif ( ! $?TMUXIFIER ) then\n  setenv TMUXIFIER \"${HOME}/.tmuxifier\"\nendif\n\n# Add `bin` directroy to `$path` if needed.\nif ( ! (\" $path \" =~ \"* $TMUXIFIER/bin *\" ) ) then\n  set path = ( $TMUXIFIER/bin $path )\nendif\n\n# If `tmuxifier` is available, and `$TMUXIFIER_NO_COMPLETE` is not set, then\n# load Tmuxifier shell completion.\nif ( ! $?TMUXIFIER_NO_COMPLETE ) then\n  which tmuxifier > /dev/null && source \"$TMUXIFIER/completion/tmuxifier.tcsh\"\nendif\n"
+        },
+        {
+          "name": "layouts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libexec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tmuxifier.tmux",
+          "type": "blob",
+          "size": 0.01953125,
+          "content": "#!/usr/bin/env bash\n"
+        }
+      ]
+    }
+  ]
+}

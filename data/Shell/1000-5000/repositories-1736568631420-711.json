@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "timestamp": 1736568631420,
+    "page": 711,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcxOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bigeagle/gohop",
+      "stars": 1346,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2783203125,
+          "content": "# Compiled Object files, Static and Dynamic libs (Shared Objects)\n*.o\n*.a\n*.so\n\n# Folders\n_obj\n_test\n\n# Architecture specific extensions/prefixes\n*.[568vq]\n[568vq].out\n\n*.cgo1.go\n*.cgo2.c\n_cgo_defun.c\n_cgo_gotypes.go\n_cgo_export.*\n\n_testmain.go\n\n/gohop\n/test.ini\n*.test\n*.exe\n*.swp\n*~\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.955078125,
+          "content": "GoHop\n=====\nGoHop is a VPN implemented in golang, with innate encryption and obfuscation. The goal of this project is to escape from censorship and\nintelligent package inspection.\n\nWhy Reinvent the Wheel?\n------\n\nThere're already lots of VPN solutions like OpenVPN, L2TP with IPSec, PPTP and other commercial VPNs. But one key problem of these VPNs are\nthat they're only built for anti-censorship instead of anti-GFW, of course, because their developers are not Chinese.\n\nIn the past, encrypting packets is enough to get through GFW, but around Nov. 2012, with the upgrading of GFW, where DPI(deep packet\ninspection) and Machine Learning was introduced, although they cannot decrypt the packets and see the contents, they can still detect\nthere're HTTP packets encrypted inside VPN packets, thus both OpenVPN and SSH tunnel was blocked in China.\n\nHow to Escape from DPI\n------\n\nThere's no silver bullet to escape from the intelligent GFW, except for revolution :). All what I'm going to do are temporal solutions.\n\nFirst, OpenVPN and SSH are both built on top of SSL, which has distinct handshake character and can be easily detected by GFW. Second, all\npresent VPN solutions are single-port or single-protocol, thus the flow can be captured easily and with the help of machine learning, new\nprotocols can be inspected, too.\n\nSo I'm going to implement a VPN with these features:\n\n1. Pre-shared key based authentication, randomly generated key for encryption. NO SSL, maybe a reinvented SSL :).\n2. \"Frequency hopping\"-like port and protocol hopping, both handshake and packet transmission will be actually done in random port and protocol.\n3. Traffic shaping to hide protocol's statistical properties.\n\nNotice\n-------\n\nGoHop is built on top of Linux's `tun/tap` device. **Currently it supports neither Windows nor OS X**\n\nI think it would not be very difficult to port it to OS X. However, I'm not able to develop a OS X edition as I'm not a mac owner. If\nu wanna help, please fork and send me pull requests, I'd appreciate it.\n\nHow To Use\n------\n\n### Download\n\nYou can get updated release from https://github.com/bigeagle/gohop/releases , go programs are static-linked, so it's very likely that my\npre-built releases can run on your box.\n\n### Build and Install\n\n**Building GoHop needs Go 1.1 or higher.**\n\ngohop is a go-gettable package:\n\n```\ngo get github.com/bigeagle/gohop\n```\n\n### Config and Run\n\nOn the server, if u are using it for anti-GFW internet access, ip forwarding is needed:\n\n```\nsysctl net.ipv4.ip_forward=1\niptables -t nat -A POSTROUTING -j MASQUERADE\n```\n\nedit `server.ini` as your server's config file. Run\n```\ngohop server.ini\n```\n\nat client side, edit `client.ini` as your config file, custom routes is supported so that in-china network packets will not go through gohop. Run\n```\ngohop client.ini\n```\nwait until u see `Connection Initialized`, pay attention to your DNS config, if u are using a Chinese DNS server, u're still unable to\naccess blocked websites.\n\nnow try to ping `twitter.com` and cheers :).\n\n\nPublications\n-------\n\nIf you think this helpful, please cite:\n\n* Wang, Yuzhi; Ji, Ping; Ye, Borui; Wang, Pengjun; Luo, Rong; Yang, Huazhong, \"GoHop: Personal VPN to defend from censorship,\" \n_Advanced Communication Technology (ICACT), 2014 16th International Conference on_, pp.27,33, 2014\n\n\nLICENSE\n------\n\n```\nCopyright (c) 2013 Justin Wong <justin.w.xd@gmail.com>\n\nThis program is free software: you can redistribute it and/or modify    \nit under the terms of the GNU General Public License as published by    \nthe Free Software Foundation, either version 3 of the License, or    \n(at your option) any later version.    \n\nThis program is distributed in the hope that it will be useful,    \nbut WITHOUT ANY WARRANTY; without even the implied warranty of    \nMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the    \nGNU General Public License for more details.    \n\nYou should have received a copy of the GNU General Public License    \nalong with this program.  If not, see <http://www.gnu.org/licenses/>.\n```\n"
+        },
+        {
+          "name": "Todo.md",
+          "type": "blob",
+          "size": 0.1181640625,
+          "content": "# Todos\n\n* [X] packet fragmentation\n* [ ] configuration validation\n* [ ] heartbeat\n* [ ] noise packets\n* [ ] dynamic key\n"
+        },
+        {
+          "name": "client.ini",
+          "type": "blob",
+          "size": 0.42578125,
+          "content": "[default]\n# server or client\nmode = client\n\n[client]\n# gohop server\nserver = example.com\n# port range for hopping\nhopstart = 4000\nhopend = 5000\nmtu = 1400\nkey = ilovethebigbrother\n# method of traffic morphing: none or randsize\nmorphmethod = none\n# whether to redirect flow through gohop\nredirect-gateway = true\n# is server and client in the same subnet?\nlocal = false\nheartbeat-interval = 30\nup = chnroute-up.sh\ndown = chnroute-down.sh\n"
+        },
+        {
+          "name": "hop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "internal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 1.8623046875,
+          "content": "/*\n * This program is free software: you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation, either version 3 of the License, or\n * (at your option) any later version.\n *\n * This program is distributed in the hope that it will be useful,\n * but WITHOUT ANY WARRANTY; without even the implied warranty of\n * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n * GNU General Public License for more details.\n *\n * You should have received a copy of the GNU General Public License\n * along with this program.  If not, see <http://www.gnu.org/licenses/>.\n *\n * Author: Justin Wong <justin.w.xd@gmail.com>\n *\n */\n\npackage main\n\nimport (\n\t\"flag\"\n\t\"fmt\"\n\t\"os\"\n\t\"runtime\"\n\n\t\"github.com/bigeagle/gohop/hop\"\n\t. \"github.com/bigeagle/gohop/internal\"\n)\n\nvar srvMode, cltMode, debug, getVersion bool\nvar cfgFile string\n\nvar VERSION = \"0.3.3-dev\"\n\nfunc main() {\n\tflag.BoolVar(&getVersion, \"version\", false, \"Get Version info\")\n\tflag.BoolVar(&debug, \"debug\", false, \"Provide debug info\")\n\tflag.StringVar(&cfgFile, \"config\", \"\", \"configfile\")\n\tflag.Parse()\n\n\tif getVersion {\n\t\tfmt.Println(\"GoHop: Yet Another VPN to Escape from Censorship\")\n\t\tfmt.Printf(\"Version: %s\\n\", VERSION)\n\t\tos.Exit(0)\n\t}\n\n\tInitLogger(debug)\n\tlogger := GetLogger()\n\n\tcheckerr := func(err error) {\n\t\tif err != nil {\n\t\t\tlogger.Error(err.Error())\n\t\t\tos.Exit(1)\n\t\t}\n\t}\n\n\tif cfgFile == \"\" {\n\t\tcfgFile = flag.Arg(0)\n\t}\n\n\tlogger.Info(\"using config file: %v\", cfgFile)\n\n\ticfg, err := hop.ParseHopConfig(cfgFile)\n\tlogger.Debug(\"%v\", icfg)\n\tcheckerr(err)\n\n\tmaxProcs := runtime.GOMAXPROCS(0)\n\tif maxProcs < 2 {\n\t\truntime.GOMAXPROCS(2)\n\t}\n\n\tswitch cfg := icfg.(type) {\n\tcase hop.HopServerConfig:\n\t\terr := hop.NewServer(cfg)\n\t\tcheckerr(err)\n\tcase hop.HopClientConfig:\n\t\terr := hop.NewClient(cfg)\n\t\tcheckerr(err)\n\tdefault:\n\t\tlogger.Error(\"Invalid config file\")\n\t}\n}\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server.ini",
+          "type": "blob",
+          "size": 0.3349609375,
+          "content": "[default]\n# server or client\nmode = server\n\n[server]\n# port range to listen\nhopstart = 40100\nhopend = 40200\n# server addr\naddr = 10.1.1.1/24\n# master key\nmtu = 1400\nkey = ilovethebigbrother\n# method of traffic morphing: none or randsize\nmorphmethod = none\n# Fix MSS for tcp handshake\nfixmss = true\npeertimeout = 60\nup = some.sh\ndown = some.sh\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736568947507,
+    "page": 53,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jayphelps/git-blame-someone-else",
+      "stars": 10993,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0517578125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 Jay Phelps\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.279296875,
+          "content": "prefix=/usr/local\n\n# files that need mode 755\nEXEC_FILES =git-blame-someone-else\n\nall:\n\t@echo \"usage: make install\"\n\t@echo \"       make uninstall\"\n\ninstall:\n\tinstall -m 0755 $(EXEC_FILES) $(prefix)/bin\n\nuninstall:\n\ttest -d $(prefix)/bin && \\\n\tcd $(prefix)/bin && \\\n\trm -f $(EXEC_FILES)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.9482421875,
+          "content": "# git-blame-someone-else\n\n> \"I love git-blame-someone-else!!\" -[Linus Torvalds says](https://github.com/jayphelps/git-blame-someone-else/commit/e5cfe4bb2190a2ae406d5f0b8f49c32ac0f01cd7)*\n\n## Install\n\n```bash\n$ git clone https://github.com/jayphelps/git-blame-someone-else.git\n$ cd git-blame-someone-else\n$ sudo make install\n```\n\n## Usage\n\n```bash\n$ git blame-someone-else <author> <commit>\n```\n\n![ezgif-1396449034](https://cloud.githubusercontent.com/assets/762949/12863650/068e2820-cc2e-11e5-80c5-6ebdb71f51ea.gif)\n\n## Disclaimer:\n\nThis changes not only who authored the commit but the listed commiter as well. It also is something I wrote as a joke, so please don't run this against your production repo and complain if this script deletes everything.\n\n*Linus Torvalds didn't really approve of this. It's a joke to prove it works. [See his fake commit here](https://github.com/jayphelps/git-blame-someone-else/commit/e5cfe4bb2190a2ae406d5f0b8f49c32ac0f01cd7)\n\n:shipit:\n"
+        },
+        {
+          "name": "git-blame-someone-else",
+          "type": "blob",
+          "size": 0.6103515625,
+          "content": "#!/usr/bin/env bash\n\nif [ $# -ne 2 ]; then\n  >&2 echo \"Usage: $0 <author> <commit>\"\n  exit 1\nfi\n\nAUTHOR=$1\nAUTHOR_NAME=$(echo $AUTHOR | perl -wlne '/^(.*?)\\s*<.*>$/ and print $1')\nAUTHOR_EMAIL=$(echo $AUTHOR | perl -wlne '/^.*\\s*<(.*)>$/ and print $1')\nCOMMIT=$(git rev-parse --short $2)\n\n{\n  GIT_SEQUENCE_EDITOR=\"sed -i -e 's/^pick $COMMIT/edit $COMMIT/'\" git rebase -i $COMMIT~1^^ \n  GIT_COMMITTER_NAME=\"$AUTHOR_NAME\" GIT_COMMITTER_EMAIL=\"$AUTHOR_EMAIL\" git commit --amend --no-edit --author=\"$AUTHOR\"\n  git rebase --continue\n} &> /dev/null\n\necho \"$AUTHOR_NAME is now the author of $COMMIT. You're officially an asshole.\";\n"
+        }
+      ]
+    }
+  ]
+}

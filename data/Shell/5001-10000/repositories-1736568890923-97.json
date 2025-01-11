@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "timestamp": 1736568890923,
+    "page": 97,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "geerlingguy/mac-dev-playbook",
+      "stars": 6076,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".ansible-lint",
+          "type": "blob",
+          "size": 0.1337890625,
+          "content": "---\nskip_list:\n  - schema[meta]\n  - role-name\n  - experimental\n  - fqcn\n  - name[missing]\n  - no-changed-when\n  - risky-file-permissions\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "*.vagrant\n.DS_Store\n*.retry\nroles*\nconfig.yml\n"
+        },
+        {
+          "name": ".yamllint",
+          "type": "blob",
+          "size": 0.1142578125,
+          "content": "---\nextends: default\n\nrules:\n  line-length:\n    max: 180\n    level: warning\n\nignore: |\n  .github/workflows/stale.yml\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "Copyright (c) 2013 Michael Griffin\nhttp://mwgriffin.com\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.4912109375,
+          "content": "<img src=\"https://raw.githubusercontent.com/geerlingguy/mac-dev-playbook/master/files/Mac-Dev-Playbook-Logo.png\" width=\"250\" height=\"156\" alt=\"Mac Dev Playbook Logo\" />\n\n# Mac Development Ansible Playbook\n\n[![CI][badge-gh-actions]][link-gh-actions]\n\nThis playbook installs and configures most of the software I use on my Mac for web and software development. Some things in macOS are slightly difficult to automate, so I still have a few manual installation steps, but at least it's all documented here.\n\n## Installation\n\n  1. Ensure Apple's command line tools are installed (`xcode-select --install` to launch the installer).\n  2. [Install Ansible](https://docs.ansible.com/ansible/latest/installation_guide/index.html):\n\n     1. Run the following command to add Python 3 to your $PATH: `export PATH=\"$HOME/Library/Python/3.9/bin:/opt/homebrew/bin:$PATH\"`\n     2. Upgrade Pip: `sudo pip3 install --upgrade pip`\n     3. Install Ansible: `pip3 install ansible`\n\n  3. Clone or download this repository to your local drive.\n  4. Run `ansible-galaxy install -r requirements.yml` inside this directory to install required Ansible roles.\n  5. Run `ansible-playbook main.yml --ask-become-pass` inside this directory. Enter your macOS account password when prompted for the 'BECOME' password.\n\n> Note: If some Homebrew commands fail, you might need to agree to Xcode's license or fix some other Brew issue. Run `brew doctor` to see if this is the case.\n\n### Use with a remote Mac\n\nYou can use this playbook to manage other Macs as well; the playbook doesn't even need to be run from a Mac at all! If you want to manage a remote Mac, either another Mac on your network, or a hosted Mac like the ones from [MacStadium](https://www.macstadium.com), you just need to make sure you can connect to it with SSH:\n\n  1. (On the Mac you want to connect to:) Go to System Preferences > Sharing.\n  2. Enable 'Remote Login'.\n\n> You can also enable remote login on the command line:\n>\n>     sudo systemsetup -setremotelogin on\n\nThen edit the `inventory` file in this repository and change the line that starts with `127.0.0.1` to:\n\n```\n[ip address or hostname of mac]  ansible_user=[mac ssh username]\n```\n\nIf you need to supply an SSH password (if you don't use SSH keys), make sure to pass the `--ask-pass` parameter to the `ansible-playbook` command.\n\n### Running a specific set of tagged tasks\n\nYou can filter which part of the provisioning process to run by specifying a set of tags using `ansible-playbook`'s `--tags` flag. The tags available are `dotfiles`, `homebrew`, `mas`, `extra-packages` and `osx`.\n\n    ansible-playbook main.yml -K --tags \"dotfiles,homebrew\"\n\n## Overriding Defaults\n\nNot everyone's development environment and preferred software configuration is the same.\n\nYou can override any of the defaults configured in `default.config.yml` by creating a `config.yml` file and setting the overrides in that file. For example, you can customize the installed packages and apps with something like:\n\n```yaml\nhomebrew_installed_packages:\n  - git\n  - go\n\nmas_installed_apps:\n  - { id: 443987910, name: \"1Password\" }\n  - { id: 498486288, name: \"Quick Resizer\" }\n  - { id: 557168941, name: \"Tweetbot\" }\n  - { id: 497799835, name: \"Xcode\" }\n\ncomposer_packages:\n  - name: hirak/prestissimo\n  - name: drush/drush\n    version: '^8.1'\n\ngem_packages:\n  - name: bundler\n    state: latest\n\nnpm_packages:\n  - name: webpack\n\npip_packages:\n  - name: mkdocs\n\nconfigure_dock: true\ndockitems_remove:\n  - Launchpad\n  - TV\ndockitems_persist:\n  - name: \"Sublime Text\"\n    path: \"/Applications/Sublime Text.app/\"\n    pos: 5\n```\n\nAny variable can be overridden in `config.yml`; see the supporting roles' documentation for a complete list of available variables.\n\n## Included Applications / Configuration (Default)\n\nApplications (installed with Homebrew Cask):\n\n  - [ChromeDriver](https://sites.google.com/chromium.org/driver/)\n  - [Docker](https://www.docker.com/)\n  - [Dropbox](https://www.dropbox.com/)\n  - [Firefox](https://www.mozilla.org/en-US/firefox/new/)\n  - [Google Chrome](https://www.google.com/chrome/)\n  - [Handbrake](https://handbrake.fr/)\n  - [Homebrew](http://brew.sh/)\n  - [LICEcap](http://www.cockos.com/licecap/)\n  - [nvALT](http://brettterpstra.com/projects/nvalt/)\n  - [Sequel Ace](https://sequel-ace.com) (MySQL client)\n  - [Slack](https://slack.com/)\n  - [Sublime Text](https://www.sublimetext.com/)\n  - [Transmit](https://panic.com/transmit/) (S/FTP client)\n\nPackages (installed with Homebrew):\n\n  - autoconf\n  - bash-completion\n  - doxygen\n  - gettext\n  - gifsicle\n  - git\n  - gh\n  - go\n  - gpg\n  - httpie\n  - iperf\n  - libevent\n  - sqlite\n  - nmap\n  - node\n  - nvm\n  - php\n  - ssh-copy-id\n  - readline\n  - openssl\n  - pv\n  - wget\n  - wrk\n  - zsh-history-substring-search\n\nMy [dotfiles](https://github.com/geerlingguy/dotfiles) are also installed into the current user's home directory, including the `.osx` dotfile for configuring many aspects of macOS for better performance and ease of use. You can disable dotfiles management by setting `configure_dotfiles: no` in your configuration.\n\nFinally, there are a few other preferences and settings added on for various apps and services.\n\n## Full / From-scratch setup guide\n\nSince I've used this playbook to set up something like 20 different Macs, I decided to write up a full 100% from-scratch install for my own reference (everyone's particular install will be slightly different).\n\nYou can see my full from-scratch setup document here: [full-mac-setup.md](full-mac-setup.md).\n\n## Testing the Playbook\n\nMany people have asked me if I often wipe my entire workstation and start from scratch just to test changes to the playbook. Nope! This project is [continuously tested on GitHub Actions' macOS infrastructure](https://github.com/geerlingguy/mac-dev-playbook/actions?query=workflow%3ACI).\n\nYou can also run macOS itself inside a VM, for at least some of the required testing (App Store apps and some proprietary software might not install properly). I currently recommend:\n\n  - [UTM](https://mac.getutm.app)\n  - [Tart](https://github.com/cirruslabs/tart)\n\n## Ansible for DevOps\n\nCheck out [Ansible for DevOps](https://www.ansiblefordevops.com/), which teaches you how to automate almost anything with Ansible.\n\n## Author\n\nThis project was created by [Jeff Geerling](https://www.jeffgeerling.com/) (originally inspired by [MWGriffin/ansible-playbooks](https://github.com/MWGriffin/ansible-playbooks)).\n\n[badge-gh-actions]: https://github.com/geerlingguy/mac-dev-playbook/workflows/CI/badge.svg?event=push\n[link-gh-actions]: https://github.com/geerlingguy/mac-dev-playbook/actions?query=workflow%3ACI\n"
+        },
+        {
+          "name": "ansible.cfg",
+          "type": "blob",
+          "size": 0.12109375,
+          "content": "[defaults]\nnocows = True\nroles_path = ./roles:/etc/ansible/roles\ninventory = inventory\nbecome = true\nstdout_callback = yaml\n"
+        },
+        {
+          "name": "default.config.yml",
+          "type": "blob",
+          "size": 2.6767578125,
+          "content": "---\nconfigure_dotfiles: true\nconfigure_terminal: true\nconfigure_osx: true\n\n# Set to 'true' to configure the Dock via dockutil.\nconfigure_dock: false\ndockitems_remove: []\n# - Launchpad\n# - TV\n# - Podcasts\n# - 'App Store'\ndockitems_persist: []\n# - name: \"Sublime Text\"\n#   path: \"/Applications/Sublime Text.app/\"\n#   pos: 5\n\nconfigure_sudoers: false\nsudoers_custom_config: ''\n# Example:\n# sudoers_custom_config: |\n#   # Allow users in admin group to use sudo with no password.\n#   %admin ALL=(ALL) NOPASSWD: ALL\n\ndotfiles_repo: https://github.com/geerlingguy/dotfiles.git\ndotfiles_repo_accept_hostkey: true\ndotfiles_repo_local_destination: ~/Development/GitHub/dotfiles\ndotfiles_files:\n  - .zshrc\n  - .gitignore\n  - .inputrc\n  - .osx\n  - .vimrc\n\nhomebrew_installed_packages:\n  # - ansible # Installed via Pip.\n  - autoconf\n  - bash-completion\n  - doxygen\n  - gettext\n  - gifsicle\n  - git\n  - gh\n  - go\n  - gpg\n  - httpie\n  - iperf\n  - libevent\n  - sqlite\n  - nmap\n  - node\n  - nvm\n  - php\n  - pngpaste\n  - ssh-copy-id\n  - readline\n  - openssl\n  - pv\n  - wget\n  - wrk\n  - zsh-history-substring-search\n\nhomebrew_taps: []\n\nhomebrew_cask_appdir: /Applications\nhomebrew_cask_apps:\n  - chromedriver\n  - docker\n  - dropbox\n  - firefox\n  - google-chrome\n  - handbrake\n  - licecap\n  - sequel-ace\n  - slack\n  - sublime-text\n  - transmit\n\n# See `geerlingguy.mas` role documentation for usage instructions.\nmas_installed_apps: []\nmas_email: \"\"\nmas_password: \"\"\n\nosx_script: \"~/.osx --no-restart\"\n\n# Install packages from other package managers.\n# Note: You are responsible for making sure the required package managers are\n# installed, eg. through homebrew.\ncomposer_packages: []\n# - name: drush\n#   state: present # present/absent, default: present\n#   version: \"^8.1\" # default: N/A\ngem_packages: []\n# - name: bundler\n#   state: present # present/absent/latest, default: present\n#   version: \"~> 1.15.1\" # default: N/A\nnpm_packages: []\n# - name: webpack\n#   state: present # present/absent/latest, default: present\n#   version: \"^2.6\" # default: N/A\npip_packages: []\n# - name: mkdocs\n#   state: present # present/absent/latest, default: present\n#   version: \"0.16.3\" # default: N/A\n\n# Set to 'true' to configure Sublime Text.\nconfigure_sublime: false\nsublime_base_path: '~/Library/Application Support/Sublime Text'\nsublime_config_path: \"Packages/User\"\nsublime_package_control:\n  - \"DocBlockr\"\n  - \"Dockerfile Syntax Highlighting\"\n  - \"FileDiffs\"\n  - \"GitHub Flavored Markdown Preview\"\n  - \"Jinja2\"\n  - \"Package Control\"\n  - \"PHP-Twig\"\n  - \"Pretty JSON\"\n  - \"SublimeLinter\"\n  - \"SublimeLinter-contrib-yamllint\"\n  - \"TrailingSpaces\"\n  - \"WordCount\"\n\n# Glob pattern to ansible task files to run after all other tasks are finished.\npost_provision_tasks: []\n"
+        },
+        {
+          "name": "files",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "full-mac-setup.md",
+          "type": "blob",
+          "size": 6.193359375,
+          "content": "# Full Mac Setup Process (for Jeff Geerling)\n\nThere are some things in life that just can't be automated... or aren't 100% worth the time :(\n\nThis document covers that, at least in terms of setting up a brand new Mac out of the box.\n\n## Initial configuration of a brand new Mac\n\nBefore starting, I completed Apple's mandatory macOS setup wizard (creating a local user account, and optionally signing into my iCloud account). Once on the macOS desktop, I do the following (in order):\n\n  - Install Ansible (following the guide in [README.md](README.md))\n  - **Sign in in App Store** (since `mas` can't sign in automatically)\n  - Clone mac-dev-playbook to the Mac: `git clone git@github.com:geerlingguy/mac-dev-playbook.git`\n  - Drop `config.yml` from `~/Dropbox/Apps/Config` to the playbook (copy over the network or using a USB flash drive).\n  - Run the playbook with `--skip-tags post`.\n    - If there are errors, you may need to finish up other tasks like installing 'old-fashioned' apps first (since I try to place Photoshop in the Dock and it can't be installed automatically). Then, run the playbook again ;)\n  - Start Synchronization tasks:\n    - Open Photos and make sure iCloud sync options are correct\n    - Open Music, make sure computer is authorized, and set Library sync options\n    - Open Dropbox, sign in, and set up sync\n  - Install or complete setup for old-fashioned apps:\n    - Open Creative Cloud, sign in, and install needed apps\n    - Open iStat Menus and configure CPU/Net/Temp Combined view\n    - (If required:)\n      - Install [Elgato Stream Deck](https://www.elgato.com/en/downloads)\n        - Open Livestream profile inside `~/Dropbox/Apps/Config/Stream Deck`\n      - Install [Elgato Key Light Air (Control Center)](https://www.elgato.com/en/downloads)\n      - Install [Autodesk Fusion 360](https://www.autodesk.com)\n      - Install Microsoft Office Home & Student 2019 (https://account.microsoft.com/services/)\n      - Install [Fritzing](https://fritzing.org/download/)\n  - Configure FastMail account:\n    - Log into Fastmail\n    - Go to settings, go to the setup page for macOS Mail\n    - Download the profile and double click to install\n    - Head to the 'Profiles' System Preference pane and click install\n  - Open Calendar and sign into Google Accounts (have to manually sign in):\n    - Personal\n    - Work\n  - Manually copy `~/Development` folder from another Mac (to save time).\n  - Manual settings to automate someday:\n    - System Preferences:\n      - Accessibility > Display > Reduce transparency\n      - Keyboard > Keyboard Shortcuts... > Modifier Keys... > Caps Lock to Esc\n    - Safari:\n      - View > Show Status Bar\n      - Preferences > Advanced > \"Show full website address\"\n      - Preferences > Advanced > \"Show features for web developers\"\n      - Install the 'Return YouTube Dislike' Userscript in Userscripts\n    - Dock:\n      - Add jgeerling, Downloads, and Applications folders\n    - Terminal:\n      - Preferences > Profiles > Set JJG-Term as the default theme\n  - _After Dropbox Sync completes_: Run the playbook with `--tags post` to complete setup.\n  - Symlink the synchronized `config.yml` into the playbook dir: `ln -s /Users/jgeerling/Dropbox/Apps/Config/mac-dev-playbook/config.yml /Users/jgeerling/Development/mac-dev-playbook/config.yml`\n  - These things might be automatable, but I do them manually right now:\n    - Configure Time Machine backup drive and set Time Machine backups to daily instead of hourly\n    - Install Wireguard from App Store and add configuration (if needed)\n\n## To Wrap in Post-provision automation\n\nThe following tasks have to wait for the initial Dropbox sync to complete before they'll succeed. So ideally I'll stick this all in a post-provision script but somehow flag it not to run on first provision.\n\n```\n# ZSH Aliases.\nln -s /Users/jgeerling/Dropbox/Apps/Config/.aliases /Users/jgeerling/.aliases\n\n# Electrum BTC Wallet.\nln -s /Users/jgeerling/Dropbox/Apps/Electrum/default_wallet /Users/jgeerling/.electrum/wallets/default_wallet\n\n# SSH setup.\nssh-keygen  # and create a default key to set up .ssh folder\nsudo ln -s /Users/jgeerling/Dropbox/Apps/Config/ssh/config ~/.ssh/config\n# TODO - Manually copy any shared SSH keys that are needed.\n\n# Ansible setup.\nsudo mkdir -p /etc/ansible\nsudo ln -s /Users/jgeerling/Dropbox/Apps/Config/ansible/ansible.cfg /etc/ansible/ansible.cfg\nsudo ln -s /Users/jgeerling/Dropbox/Apps/Config/ansible/hosts /etc/ansible/hosts\nsudo ln -s /Users/jgeerling/Dropbox/VMs/roles /etc/ansible/roles\nmkdir -p /Users/jgeerling/.ansible\nln -s /Users/jgeerling/Dropbox/Apps/Config/ansible/galaxy_token /Users/jgeerling/.ansible/galaxy_token\nln -s /Users/jgeerling/Dropbox/Apps/Config/ansible/mm-vault-password.txt /Users/jgeerling/.ansible/mm-vault-password.txt\nln -s /Users/jgeerling/Dropbox/VMs/ /Users/jgeerling/.ansible/collections\n\n# Final Cut Pro setup. (Open Motion first)\ncp -r /Users/jgeerling/Dropbox/Apps/Config/Motion/Motion\\ Templates.localized/ /Users/jgeerling/Movies/Motion\\ Templates.localized/\ncp -r /Users/jgeerling/Dropbox/Apps/Config/Motion/Text\\ Styles/ /Users/jgeerling/Library/Application\\ Support/Motion/Library/Text\\ Styles.localized/\n\n# Sequel Ace favorites. (Open Sequel Ace first)\ncp /Users/jgeerling/Dropbox/Apps/Config/Sequel\\ Ace/Favorites.plist /Users/jgeerling/Library/Containers/com.sequel-ace.sequel-ace/Data/Library/Application\\ Support/Sequel\\ Ace/Data/Favorites.plist\n\n# Font setup.\ncp ~/Dropbox/Apps/Config/Fonts/* ~/Library/Fonts/\n\n# Vim setup.\nmkdir -p ~/.vim/autoload\nmkdir -p ~/.vim/bundle\ncd ~/.vim/autoload\ncurl https://raw.githubusercontent.com/tpope/vim-pathogen/master/autoload/pathogen.vim > pathogen.vim\ncd ~/.vim/bundle\ngit clone git://github.com/scrooloose/nerdtree.git\n```\n\n## When formatting old Mac\n\n  - Sign out of Adobe Creative Cloud\n  - Sign out of Panic Sync in Transmit\n  - Deauthorize Apple Music in iTunes/Music App\n  - Make sure anything new merged into `~/Dropbox/Apps/Config`:\n    - Fonts from ~/Library/Fonts\n    - Motion Plugins from ~/Movies/Motion\n    - Final Cut Pro Text Styles in ~/Library/Application Support/Motion/Library/Text Styles\n    - Sequel Ace shortcuts from ~/Library/Containers/com.sequel-ace.sequel-ace/Data/Library/Application\\ Support/Sequel\\ Ace/Data/Favorites.plist\n  - Follow Apple's guide [here](https://support.apple.com/en-au/HT212749)\n"
+        },
+        {
+          "name": "inventory",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "[all]\n127.0.0.1  ansible_connection=local\n"
+        },
+        {
+          "name": "main.yml",
+          "type": "blob",
+          "size": 1.4072265625,
+          "content": "---\n- name: Configure host.\n  hosts: all\n\n  vars_files:\n    - default.config.yml\n\n  pre_tasks:\n    - name: Include playbook configuration.\n      include_vars: \"{{ item }}\"\n      with_fileglob:\n        - \"{{ playbook_dir }}/config.yml\"\n      tags: ['always']\n\n  roles:\n    - role: elliotweiser.osx-command-line-tools\n    - role: geerlingguy.mac.homebrew\n      tags: ['homebrew']\n    - role: geerlingguy.dotfiles\n      when: configure_dotfiles\n      tags: ['dotfiles']\n    - role: geerlingguy.mac.mas\n      when: mas_installed_apps or mas_installed_app_ids\n      tags: ['mas']\n    - role: geerlingguy.mac.dock\n      when: configure_dock\n      tags: ['dock']\n\n  tasks:\n    - import_tasks: tasks/sudoers.yml\n      when: configure_sudoers\n      tags: ['sudoers']\n\n    - import_tasks: tasks/terminal.yml\n      when: configure_terminal\n      tags: ['terminal']\n\n    - import_tasks: tasks/osx.yml\n      when: configure_osx\n      tags: ['osx']\n\n    - import_tasks: tasks/extra-packages.yml\n      tags: ['extra-packages']\n\n    - import_tasks: tasks/sublime-text.yml\n      when: configure_sublime\n      tags: ['sublime-text']\n\n    - name: Run post-provision task files in a block.\n      tags: ['post']\n      block:\n        - name: Run configured post-provision ansible task files.\n          include_tasks: \"{{ outer_item }}\"\n          loop_control:\n            loop_var: outer_item\n          with_fileglob: \"{{ post_provision_tasks | default(omit) }}\"\n"
+        },
+        {
+          "name": "requirements.yml",
+          "type": "blob",
+          "size": 0.125,
+          "content": "---\nroles:\n  - name: elliotweiser.osx-command-line-tools\n  - name: geerlingguy.dotfiles\n\ncollections:\n  - name: geerlingguy.mac\n"
+        },
+        {
+          "name": "tasks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

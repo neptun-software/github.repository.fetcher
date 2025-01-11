@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "timestamp": 1736568897652,
+    "page": 109,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "basecamp/omakub",
+      "stars": 5774,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "EXTENSIONS.md",
+          "type": "blob",
+          "size": 0.208984375,
+          "content": "# [Dark and light mode theme switch](https://github.com/florentdestremau/omakub-darkmode-switch)\n\nSelect a dark and light theme of your choice to be applied automatically when switching the gnome light/dark mode.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.9482421875,
+          "content": "# Omakub\n\nTurn a fresh Ubuntu installation into a fully-configured, beautiful, and modern web development system by running a single command. That's the one-line pitch for Omakub. No need to write bespoke configs for every essential tool just to get started or to be up on all the latest command-line tools. Omakub is an opinionated take on what Linux can be at its best.\n\nWatch the introduction video and read more at [omakub.org](https://omakub.org).\n\n## Contributing to the documentation\n\nPlease help us improve Omakub's documentation on the [basecamp/omakub-site repository](https://github.com/basecamp/omakub-site).\n\n## License\n\nOmakub is released under the [MIT License](https://opensource.org/licenses/MIT).\n\n## Extras\n\nWhile omakub is purposed to be an opinionated take, the open source community offers alternative customization, add-ons, extras, that you can use to adjust, replace or enrich your experience.\n\n[⇒ Browse the omakub extensions.](EXTENSIONS.md)\n"
+        },
+        {
+          "name": "applications",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ascii.sh",
+          "type": "blob",
+          "size": 0.779296875,
+          "content": "ascii_art='\n________                  __        ___.\n\\_____  \\   _____ _____  |  | ____ _\\_ |__\n /   |   \\ /     \\\\__   \\ |  |/ /  |  \\ __ \\\n/    |    \\  Y Y  \\/ __ \\|    <|  |  / \\_\\ \\\n\\_______  /__|_|  (____  /__|_ \\____/|___  /\n        \\/      \\/     \\/     \\/         \\/\n\n'\n\n# Define the color gradient (shades of cyan and blue)\ncolors=(\n\t'\\033[38;5;81m' # Cyan\n\t'\\033[38;5;75m' # Light Blue\n\t'\\033[38;5;69m' # Sky Blue\n\t'\\033[38;5;63m' # Dodger Blue\n\t'\\033[38;5;57m' # Deep Sky Blue\n\t'\\033[38;5;51m' # Cornflower Blue\n\t'\\033[38;5;45m' # Royal Blue\n)\n\n# Split the ASCII art into lines\nIFS=$'\\n' read -rd '' -a lines <<<\"$ascii_art\"\n\n# Print each line with the corresponding color\nfor i in \"${!lines[@]}\"; do\n\tcolor_index=$((i % ${#colors[@]}))\n\techo -e \"${colors[color_index]}${lines[i]}\"\ndone\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "boot.sh",
+          "type": "blob",
+          "size": 0.8427734375,
+          "content": "set -e\n\nascii_art='________                  __        ___.\n\\_____  \\   _____ _____  |  | ____ _\\_ |__\n /   |   \\ /     \\\\__   \\ |  |/ /  |  \\ __ \\\n/    |    \\  Y Y  \\/ __ \\|    <|  |  / \\_\\ \\\n\\_______  /__|_|  (____  /__|_ \\____/|___  /\n        \\/      \\/     \\/     \\/         \\/\n'\n\necho -e \"$ascii_art\"\necho \"=> Omakub is for fresh Ubuntu 24.04 installations only!\"\necho -e \"\\nBegin installation (or abort with ctrl+c)...\"\n\nsudo apt-get update >/dev/null\nsudo apt-get install -y git >/dev/null\n\necho \"Cloning Omakub...\"\nrm -rf ~/.local/share/omakub\ngit clone https://github.com/basecamp/omakub.git ~/.local/share/omakub >/dev/null\nif [[ $OMAKUB_REF != \"master\" ]]; then\n\tcd ~/.local/share/omakub\n\tgit fetch origin \"${OMAKUB_REF:-stable}\" && git checkout \"${OMAKUB_REF:-stable}\"\n\tcd -\nfi\n\necho \"Installation starting...\"\nsource ~/.local/share/omakub/install.sh\n"
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "defaults",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 1.177734375,
+          "content": "# Exit immediately if a command exits with a non-zero status\nset -e\n\n# Desktop software and tweaks will only be installed if we're running Gnome\nRUNNING_GNOME=$([[ \"$XDG_CURRENT_DESKTOP\" == *\"GNOME\"* ]] && echo true || echo false)\n\n# Check the distribution name and version and abort if incompatible\nsource ~/.local/share/omakub/install/check-version.sh\n\nif $RUNNING_GNOME; then\n  # Ensure computer doesn't go to sleep or lock while installing\n  gsettings set org.gnome.desktop.screensaver lock-enabled false\n  gsettings set org.gnome.desktop.session idle-delay 0\n\n  echo \"Get ready to make a few choices...\"\n  source ~/.local/share/omakub/install/terminal/required/app-gum.sh >/dev/null\n  source ~/.local/share/omakub/install/first-run-choices.sh\n\n  echo \"Installing terminal and desktop tools...\"\nelse\n  echo \"Only installing terminal tools...\"\nfi\n\n# Install terminal tools\nsource ~/.local/share/omakub/install/terminal.sh\n\nif $RUNNING_GNOME; then\n  # Install desktop tools and tweaks\n  source ~/.local/share/omakub/install/desktop.sh\n\n  # Revert to normal idle and lock settings\n  gsettings set org.gnome.desktop.screensaver lock-enabled true\n  gsettings set org.gnome.desktop.session idle-delay 300\nfi\n"
+        },
+        {
+          "name": "install",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "migrations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "themes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uninstall",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "version",
+          "type": "blob",
+          "size": 0.005859375,
+          "content": "1.1.4\n"
+        }
+      ]
+    }
+  ]
+}

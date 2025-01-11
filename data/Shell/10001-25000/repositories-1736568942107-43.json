@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "timestamp": 1736568942107,
+    "page": 43,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "alex000kim/nsfw_data_scraper",
+      "stars": 12318,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1123046875,
+          "content": ".ipynb_checkpoints/\n.config/\nraw_data\ndata\nscripts/rip.properties\n.DS_Store\nscripts/ripme.jar\nscripts/history.json\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.291015625,
+          "content": "FROM ubuntu:18.04\nRUN apt update \\\n && apt upgrade -y \\\n && apt install wget rsync imagemagick default-jre -y \nRUN mkdir /root/nsfw_data_scraper\nWORKDIR /root/nsfw_data_scraper\nCOPY ./ /root/nsfw_data_scraper\nCOPY ./scripts/rip.properties /root/.config/ripme/rip.properties\nENTRYPOINT [\"/bin/bash\"]"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.044921875,
+          "content": "MIT License\n\nCopyright (c) 2019 Alexander Kim\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.3056640625,
+          "content": "# NSFW Data Scraper\n\n## Note: use with caution - the dataset is noisy\n\n## Description\n\nThis is a set of scripts that allows for an automatic collection of _tens of thousands_ of images for the following (loosely defined) categories to be later used for training an image classifier:\n- `porn` - pornography images\n- `hentai` - hentai images, but also includes pornographic drawings\n- `sexy` - sexually explicit images, but not pornography. Think nude photos, playboy, bikini, etc.\n- `neutral` - safe for work neutral images of everyday things and people\n- `drawings` - safe for work drawings (including anime)\n\nHere is what each script (located under `scripts` directory) does:\n- `1_get_urls_.sh` - iterates through text files under `scripts/source_urls` downloading URLs of images for each of the 5 categories above. The `ripme` application performs all the heavy lifting. The source URLs are mostly links to various subreddits, but could be any website that Ripme supports.\n*Note*: I already ran this script for you, and its outputs are located in `raw_data` directory. No need to rerun unless you edit files under `scripts/source_urls`.\n- `2_download_from_urls_.sh` - downloads actual images for urls found in text files in `raw_data` directory.\n- `3_optional_download_drawings_.sh` - (optional) script that downloads SFW anime images from the [Danbooru2018](https://www.gwern.net/Danbooru2018) database.\n- `4_optional_download_neutral_.sh` - (optional) script that downloads SFW neutral images from the [Caltech256](http://www.vision.caltech.edu/Image_Datasets/Caltech256/) dataset\n- `5_create_train_.sh` - creates `data/train` directory and copy all `*.jpg` and `*.jpeg` files into it from `raw_data`. Also removes corrupted images.\n- `6_create_test_.sh` - creates `data/test` directory and moves `N=2000` random files for each class from `data/train` to `data/test` (change this number inside the script if you need a different train/test split). Alternatively, you can run it multiple times, each time it will move `N` images for each class from `data/train` to `data/test`.\n\n## Prerequisites\n\n- Docker\n\n## How to collect data\n\n```bash\n$ docker build . -t docker_nsfw_data_scraper\nSending build context to Docker daemon  426.3MB\nStep 1/3 : FROM ubuntu:18.04\n ---> 775349758637\nStep 2/3 : RUN apt update  && apt upgrade -y  && apt install wget rsync imagemagick default-jre -y\n ---> Using cache\n ---> b2129908e7e2\nStep 3/3 : ENTRYPOINT [\"/bin/bash\"]\n ---> Using cache\n ---> d32c5ae5235b\nSuccessfully built d32c5ae5235b\nSuccessfully tagged docker_nsfw_data_scraper:latest\n$ # Next command might run for several hours. It is recommended to leave it overnight\n$ docker run -v $(pwd):/root/nsfw_data_scraper docker_nsfw_data_scraper scripts/runall.sh\nGetting images for class: neutral\n...\n...\n$ ls data\ntest  train\n$ ls data/train/\ndrawings  hentai  neutral  porn  sexy\n$ ls data/test/\ndrawings  hentai  neutral  porn  sexy\n```\n\n## How to train a CNN model\n- Install [fastai](https://github.com/fastai/fastai): `conda install -c pytorch -c fastai fastai`\n- Run `train_model.ipynb` top to bottom\n\n## Results\n\nI was able to train a CNN classifier to 91% accuracy with the following confusion matrix:\n\n![alt text](confusion_matrix.png)\n\nAs expected,  `drawings` and `hentai` are confused with each other more frequently than with other classes.\n\nSame with `porn` and `sexy` categories.\n\n"
+        },
+        {
+          "name": "confusion_matrix.png",
+          "type": "blob",
+          "size": 14.1103515625,
+          "content": null
+        },
+        {
+          "name": "raw_data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "train_model.ipynb",
+          "type": "blob",
+          "size": 3.15625,
+          "content": "{\n \"cells\": [\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"%reload_ext autoreload\\n\",\n    \"%autoreload 2\\n\",\n    \"from glob import glob\\n\",\n    \"from fastai.vision import *\"\n   ]\n  },\n  {\n   \"cell_type\": \"markdown\",\n   \"metadata\": {},\n   \"source\": [\n    \"## Resnet 34\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"path = Path('data')\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"glob(str(path/'*'))\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"# Uncomment if you want to check for corrupted images and remove them\\n\",\n    \"\\n\",\n    \"# train_subdirs = glob(str(path/'train/*'))\\n\",\n    \"# test_subdirs = glob(str(path/'test/*'))\\n\",\n    \"\\n\",\n    \"# for subdir in train_subdirs:\\n\",\n    \"#     print(subdir)\\n\",\n    \"#     verify_images(subdir, delete=True)\\n\",\n    \"\\n\",\n    \"# for subdir in test_subdirs:\\n\",\n    \"#     print(subdir)\\n\",\n    \"#     verify_images(subdir, delete=True)\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"data = ImageDataBunch.from_folder(path, \\n\",\n    \"                                  train='train', \\n\",\n    \"                                  valid='test',\\n\",\n    \"                                  num_workers=12,\\n\",\n    \"                                  ds_tfms=get_transforms(), \\n\",\n    \"                                  size=224).normalize(imagenet_stats)\\n\",\n    \"# data.show_batch(rows=4)\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"learn = cnn_learner(data, models.resnet34, metrics=accuracy)\\n\",\n    \"learn.fit_one_cycle(5)\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"learn.unfreeze()\\n\",\n    \"learn.fit_one_cycle(5, slice(1e-5,3e-4), pct_start=0.05)\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"accuracy(*learn.TTA())\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"learn.save(\\\"resnet34_model\\\", return_path=True)\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"interp = ClassificationInterpretation.from_learner(learn)\"\n   ]\n  },\n  {\n   \"cell_type\": \"code\",\n   \"execution_count\": null,\n   \"metadata\": {},\n   \"outputs\": [],\n   \"source\": [\n    \"interp.plot_confusion_matrix()\"\n   ]\n  }\n ],\n \"metadata\": {\n  \"kernelspec\": {\n   \"display_name\": \"Python 3\",\n   \"language\": \"python\",\n   \"name\": \"python3\"\n  },\n  \"language_info\": {\n   \"codemirror_mode\": {\n    \"name\": \"ipython\",\n    \"version\": 3\n   },\n   \"file_extension\": \".py\",\n   \"mimetype\": \"text/x-python\",\n   \"name\": \"python\",\n   \"nbconvert_exporter\": \"python\",\n   \"pygments_lexer\": \"ipython3\",\n   \"version\": \"3.7.3\"\n  }\n },\n \"nbformat\": 4,\n \"nbformat_minor\": 2\n}\n"
+        }
+      ]
+    }
+  ]
+}

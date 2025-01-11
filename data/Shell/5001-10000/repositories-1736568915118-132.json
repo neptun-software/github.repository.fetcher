@@ -1,0 +1,832 @@
+{
+  "metadata": {
+    "timestamp": 1736568915118,
+    "page": 132,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjEzNw==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "docker-library/docs",
+      "stars": 5104,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".ci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".common-templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": ".git\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".template-helpers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.8466796875,
+          "content": "FROM perl:5.39-bookworm\n\nRUN set -eux; \\\n\tapt-get update; \\\n\tapt-get install -y --no-install-recommends \\\n\t\tvim \\\n# https://bugs.debian.org/763056 - SVG rendering in ImageMagick looks awful unless it can use inkscape to render (or RSVG, which is explicitly not compiled into the Debian package??)\n\t\tinkscape \\\n\t; \\\n\trm -rf /var/lib/apt/lists/*\n\n# secure by default ♥ (thanks to sri!)\nENV PERL_CPANM_OPT --verbose --mirror https://cpan.metacpan.org\n# TODO find a way to make --mirror-only / SSL work with backpan too :(\nRUN cpanm Digest::SHA Module::Signature\n# TODO find a way to make --verify work with backpan as well :'(\n#ENV PERL_CPANM_OPT $PERL_CPANM_OPT --verify\n\n# reinstall cpanm itself, for good measure\nRUN cpanm App::cpanminus\n\nRUN cpanm Mojolicious@8.35\n\nRUN cpanm EV\nRUN cpanm IO::Socket::IP\nRUN cpanm --notest IO::Socket::SSL\n# the tests for IO::Socket::SSL like to hang... :(\n\nRUN cpanm Term::UI\n\nENV LANG C.UTF-8\n\nRUN mkdir ~/.vim ~/.vim/bundle ~/.vim/autoload\nRUN set -x \\\n\t&& git clone https://github.com/tpope/vim-pathogen.git ~/.vim/bundle/pathogen \\\n\t&& ln -s ../bundle/pathogen/autoload/pathogen.vim ~/.vim/autoload/\nRUN git clone https://github.com/jtratner/vim-flavored-markdown.git ~/.vim/bundle/ghmarkdown\nRUN git clone https://github.com/nanotech/jellybeans.vim.git ~/.vim/bundle/jellybeans\nRUN { \\\n\t\techo 'scriptencoding utf-8'; \\\n\t\t\\\n\t\techo 'execute pathogen#infect()'; \\\n\t\t\\\n\t\techo 'syntax on'; \\\n\t\techo 'filetype plugin indent on'; \\\n\t\techo 'set list listchars=tab:»·,nbsp:_,extends:¬ noet ts=4 sw=4 nobackup noswapfile'; \\\n\t\t\\\n\t\techo 'set background=dark'; \\\n\t\techo 'colorscheme jellybeans'; \\\n\t\t\\\n\t\techo 'au FilterWritePre * if &diff | setlocal wrap< | endif'; \\\n\t\t\\\n\t\techo 'au BufNewFile,BufRead *.md,*.markdown setlocal filetype=ghmarkdown'; \\\n\t} > ~/.vimrc\n\nCOPY . /usr/src/docker-library-docs\nWORKDIR /usr/src/docker-library-docs\n\nCMD [\"./push.pl\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.03125,
+          "content": "Copyright (c) 2014 Docker, Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be included\nin all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY\nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 11.615234375,
+          "content": "# What is this?\n\nThis repository contains the image documentation for each of the Docker Official Images. See [docker-library/official-images](https://github.com/docker-library/official-images) for more information about the program in general.\n\nAll Markdown files here are run through [tianon's fork of `markdownfmt`](https://github.com/tianon/markdownfmt), and verified as formatted correctly via GitHub Actions.\n\n-\t[![GitHub CI status badge](https://img.shields.io/github/actions/workflow/status/docker-library/docs/ci.yml?branch=master&label=GitHub%20CI)](https://github.com/docker-library/docs/actions?query=workflow%3A%22GitHub+CI%22+branch%3Amaster)\n-\t[![library update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/library.svg?label=Automated%20library%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/library/)\n\t-\t[![amd64 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/amd64.svg?label=Automated%20amd64%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/amd64/)\n\t-\t[![arm32v5 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/arm32v5.svg?label=Automated%20arm32v5%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/arm32v5/)\n\t-\t[![arm32v6 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/arm32v6.svg?label=Automated%20arm32v6%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/arm32v6/)\n\t-\t[![arm32v7 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/arm32v7.svg?label=Automated%20arm32v7%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/arm32v7/)\n\t-\t[![arm64v8 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/arm64v8.svg?label=Automated%20arm64v8%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/arm64v8/)\n\t-\t[![i386 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/i386.svg?label=Automated%20i386%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/i386/)\n\t-\t[![ppc64le update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/ppc64le.svg?label=Automated%20ppc64le%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/ppc64le/)\n\t-\t[![s390x update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/s390x.svg?label=Automated%20s390x%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/s390x/)\n\t-\t[![windows-amd64 update.sh status badge](https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/docs/job/windows-amd64.svg?label=Automated%20windows-amd64%20update.sh)](https://doi-janky.infosiftr.net/job/docs/job/windows-amd64/)\n\n## Table of Contents\n\n<!-- AUTOGENERATED TOC -->\n\n1.\t[What is this?](#what-is-this)\n\t1.\t[Table of Contents](#table-of-contents)\n2.\t[How do I update an image's docs](#how-do-i-update-an-images-docs)\n3.\t[How do I add a new image's docs](#how-do-i-add-a-new-images-docs)\n4.\t[Files related to an image's docs](#files-related-to-an-images-docs)\n\t1.\t[folder `<image name>`](#folder-image-name)\n\t2.\t[`README.md`](#readmemd)\n\t3.\t[`content.md`](#contentmd)\n\t4.\t[`get-help.md`](#get-helpmd)\n\t5.\t[`github-repo`](#github-repo)\n\t6.\t[`license.md`](#licensemd)\n\t7.\t[`logo.png`](#logopng)\n\t8.\t[`maintainer.md`](#maintainermd)\n\t9.\t[`metadata.json`](#metadatajson)\n\t10.\t[`README-short.txt`](#readme-shorttxt)\n\t11.\t[`stack.yml`](#stackyml)\n5.\t[Files for main Docs repo](#files-for-main-docs-repo)\n\t1.\t[`update.sh`](#updatesh)\n\t2.\t[`markdownfmt.sh` and `ymlfmt.sh`](#markdownfmtsh-and-ymlfmtsh)\n\t3.\t[`.template-helpers/generate-dockerfile-links-partial.sh`](#template-helpersgenerate-dockerfile-links-partialsh)\n\t4.\t[`.template-helpers/`](#template-helpers)\n6.\t[Scripts unrelated to templates](#scripts-unrelated-to-templates)\n\t1.\t[`generate-repo-stub-readme.sh`](#generate-repo-stub-readmesh)\n\t2.\t[`push.pl` and `push.sh`](#pushpl-and-pushsh)\n7.\t[Issues and Contributing](#issues-and-contributing)\n\n<!-- AUTOGENERATED TOC -->\n\n# How do I update an image's docs\n\nEdit the `content.md` for an image; not the `README.md` as it's auto-generated from the contents of the other files in that repo. To see the changes to the `README.md`, run `./update.sh myimage` from the repo root, but do not add the `README.md` changes to your pull request. See also `markdownfmt.sh` point [below](#how-do-i-add-a-new-images-docs).\n\nAfter opening your Pull Request the changes will be checked by an automated `markdownfmt.sh` before it can be merged. A common issue is incorrect spacing such as with two lines missing an empty line between them (double-spaced).\n\n# How do I add a new image's docs\n\n-\tCreate a folder for my image: `mkdir myimage`\n-\tCreate a `README-short.txt` (required, 100 char max)\n-\tCreate a `content.md` (required)\n-\tCreate a `license.md` (required)\n-\tCreate a `maintainer.md` (required)\n-\tCreate a `github-repo` (required)\n-\tCreate a `metadata.json` (required)\n-\tAdd a `logo.png` (recommended)\n\nOptionally:\n\n-\tRun `./markdownfmt.sh -l myimage` to list any files that are non-compliant to [`tianon/markdownfmt`](https://hub.docker.com/r/tianon/markdownfmt).  \n\tAny files in the list will result in a failed build during continuous integration.\n\t-\trun `./markdownfmt.sh -d myimage` to see a diff of changes required to pass.\n-\tRun `./update.sh myimage` to generate `myimage/README.md` for manual review of the generated copy.  \n\t**Note:** do not actually commit the `README.md` file; it is automatically generated/committed before being uploaded to Docker Hub.\n\n# Files related to an image's docs\n\n## folder `<image name>`\n\nThis is where all the partial (e.g. `content.md`) and generated files (e.g. `README.md`) for a given image reside, (e.g. `golang/`). It must match the name of the image used in `docker-library/official-images`.\n\n## `README.md`\n\nThis file is generated using `update.sh`. Do not commit or edit this file; it is regenerated periodically by a bot.\n\n## `content.md`\n\nThis file contains the main content of your image's long description. The basic parts you should have are a \"What Is\" section and a \"How To\" section. The following is a basic layout:\n\n```markdown\n# What is XYZ?\n\n// about what the contained software is\n\n%%LOGO%%\n\n# How to use this image\n\n// descriptions and examples of common use cases for the image\n// make use of subsections as necessary\n```\n\n## `get-help.md`\n\nThis file is an optional override of the default `get-help.md`. This is the content of the \"Where to get help\" part of the \"Quick reference\" at the top of the generated README. We recommend linking to the best places for community support like forums, chat rooms, or mailing lists.\n\n## `github-repo`\n\nThis file should contain the URL to the GitHub repository for the Dockerfiles that become the images. The file should be in a single line ending in a newline with no extraneous whitespace. Only one GitHub repo per image repository is supported. It is used in generating links. Here is an example for `golang`:\n\n```text\nhttps://github.com/docker-library/golang\n```\n\n## `license.md`\n\nThis file should contain a link to the license for the main software in the image. Here is an example for `golang`:\n\n```markdown\nView [license information](http://golang.org/LICENSE) for the software contained in this image.\n```\n\n## `logo.png`\n\nLogo for the contained software. While there are not hard rules on formatting, most existing logos are square or landscape and stay within a few hundred pixels of width. Alternatively, a `logo.svg` can be used instead, but only one logo file will apply. To use it within `content.md`, put `%%LOGO%%` as shown above in the basic `content.md` layout.\n\nThe image is automatically scaled to a 120 pixel square for the top of the Docker Hub page and Hub search results.\n\n## `maintainer.md`\n\nThis file should contain a link to the maintainers of the Dockerfile.\n\n## `metadata.json`\n\nThis file contains data about the repo for Docker Hub. The minimum file is defined below. `./metadata.sh [repo-name]` must be used to correctly format it (use `-w` to apply its suggested format changes). Only three sorted unique Docker Hub categories are allowed. `metadata.json` in the root contains the list of categories to choose from. See descriptions for the categories on the [Docker docs site](https://docs.docker.com/docker-hub/repos/categories/).\n\n```json\n{\n    \"hub\": {\n         \"categories\": []\n    }\n}\n```\n\n## `README-short.txt`\n\nThis is the short description for the Docker Hub, limited to 100 characters in a single line.\n\n> Go (golang) is a general purpose, higher-level, imperative programming language.\n\n## `stack.yml`\n\nThis optional file contains a small, working [Compose file for Docker Swarm](https://docs.docker.com/compose/compose-file/compose-file-v3/) showing off how to use the image. To use the `stack.yml`, add `%%STACK%%` to the `content.md` and this will embed the YAML along with a link to directly try it in [Play with Docker](https://labs.play-with-docker.com/).\n\nThe file must work via `docker stack deploy` since that is how Play with Docker will launch it, but it is helpful for users to try locally if it works for `docker-compose` as well. Other official images may be referenced within the YAML to demonstrate the functionality of the image, but no images external to the Docker Official Images program may be referenced.\n\n# Files for main Docs repo\n\n## `update.sh`\n\nThis is the main script used to generate the `README.md` files for each image. The generated file is committed along with the files used to generate it. Accepted arguments are which image(s) you want to update or no arguments to update all of them.\n\nThis script assumes [`bashbrew`](https://github.com/docker-library/bashbrew/releases) is in your `PATH` (for scraping relevant tag information from the library manifest file for each repository).\n\n## `markdownfmt.sh` and `ymlfmt.sh`\n\nThese two scripts are for verifying the formatting of Markdown (`.md`) and YAML (`.yml`) files, respectively. `markdownfmt.sh` uses the [`tianon/markdownfmt`](https://hub.docker.com/r/tianon/markdownfmt) image and `ymlfmt.sh` uses the [`tianon/ymlfmt`](https://hub.docker.com/r/tianon/ymlfmt) image.\n\n## `.template-helpers/generate-dockerfile-links-partial.sh`\n\nThis script is used by `update.sh` to create the \"Supported tags and respective `Dockerfile` links\" section of each generated `README.md` from the information in the [official-images `library/` manifests](https://github.com/docker-library/official-images/tree/master/library).\n\n## `.template-helpers/`\n\nThe scripts and Markdown files in here are used in building an image's `README.md` file in combination with its individual files.\n\n# Scripts unrelated to templates\n\n## `generate-repo-stub-readme.sh`\n\nThis is used to generate a simple `README.md` to put in the image's repo. We use this in Git repositories within https://github.com/docker-library to simplify our maintenance, but it is not required for anyone else. The only argument is the name of the image (or repo), like `golang` and it then outputs the readme to standard out.\n\n## `push.pl` and `push.sh`\n\nThese are used by us to push the actual content of the READMEs to the Docker Hub as special access is required to modify the Hub description contents. The `Dockerfile` is used to create a suitable environment for `push.pl`.\n\n# Issues and Contributing\n\nIf you would like to make a new Official Image, be sure to follow the [guidelines](https://docs.docker.com/docker-hub/official_repos/).\n\nFeel free to make a pull request for fixes and improvements to current documentation. For questions or problems on this repo come talk to us via the `#docker-library` IRC channel on [Libera.Chat](https://libera.chat/) or open up an issue.\n"
+        },
+        {
+          "name": "adminer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "aerospike",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "almalinux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "alpine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "alt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "amazoncorretto",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "amazonlinux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "api-firewall",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "arangodb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "archlinux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "backdrop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bash",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bonita",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "buildpack-deps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "busybox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "caddy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cassandra",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "chronograf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cirros",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clearlinux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clefos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clickhouse",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clojure",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "convertigo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "couchbase",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "couchdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "crate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dart",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "drupal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "eclipse-mosquitto",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "eclipse-temurin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "eggdrop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "elasticsearch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "elixir",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "emqx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "erlang",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fedora",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "flink",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fluentd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "friendica",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gazebo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gcc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "generate-repo-stub-readme.sh",
+          "type": "blob",
+          "size": 2.408203125,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\ncd \"$(dirname \"$(readlink -f \"$BASH_SOURCE\")\")\"\n\nrepo=\"${1:-}\"\n\nif [ -z \"$repo\" ]; then\n\techo >&2 'error: no repo specified'\n\tcat >&2 <<EOUSAGE\nusage: $0 repo [> README.md]\n   ie: $0 php > ../php/README.md\n\n   This script generates a stub README to standard out for the specified repo.\nEOUSAGE\n\texit 1\nfi\n\ngitRepo='https://github.com/docker-library/docs'\nhubPage=\"https://hub.docker.com/_/$repo/\"\n\ncanonicalRepo=\"https://github.com/docker-library/$repo\"\nif [ -s \"$repo/github-repo\" ]; then\n\tcanonicalRepo=\"$(< \"$repo/github-repo\")\"\nfi\ncanonicalRepo=\"$(curl -fsSLI -o /dev/null -w '%{url_effective}\\n' \"$canonicalRepo\")\" # follow redirects (http://stackoverflow.com/a/3077316/433558)\n\nmaintainer=\"$(sed -e 's!%%GITHUB-REPO%%!'\"$canonicalRepo\"'!g' \"$repo/maintainer.md\")\"\n\nif [ -f \"$repo/deprecated.md\" ]; then\n\techo '# DEPRECATED'\n\techo\n\tcat \"$repo/deprecated.md\"\n\techo\nfi\n\ncase \"$repo\" in\n\tbuildpack-deps | docker | hello-world | hylang) disclaimer='' ;;\n\t*) disclaimer=\" (not to be confused with any official \\`$repo\\` image provided by \\`$repo\\` upstream)\" ;;\nesac\n\ncat <<EOREADME\n# $canonicalRepo\n\n## Maintained by: $maintainer\n\nThis is the Git repo of the [Docker \"Official Image\"](https://github.com/docker-library/official-images#what-are-official-images) for [\\`$repo\\`]($hubPage)$disclaimer. See [the Docker Hub page]($hubPage) for the full readme on how to use this Docker image and for information regarding contributing and issues.\n\nThe [full image description on Docker Hub]($hubPage) is generated/maintained over in [the docker-library/docs repository]($gitRepo), specifically in [the \\`$repo\\` directory]($gitRepo/tree/master/$repo).\n\n## See a change merged here that doesn't show up on Docker Hub yet?\n\nFor more information about the full official images change lifecycle, see [the \"An image's source changed in Git, now what?\" FAQ entry](https://github.com/docker-library/faq#an-images-source-changed-in-git-now-what).\n\nFor outstanding \\`$repo\\` image PRs, check [PRs with the \"library/$repo\" label on the official-images repository](https://github.com/docker-library/official-images/labels/library%2F$repo). For the current \"source of truth\" for [\\`$repo\\`]($hubPage), see [the \\`library/$repo\\` file in the official-images repository](https://github.com/docker-library/official-images/blob/master/library/$repo).\n\n<!-- THIS FILE IS GENERATED BY $gitRepo/blob/master/generate-repo-stub-readme.sh -->\nEOREADME\n"
+        },
+        {
+          "name": "geonetwork",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "get-categories.sh",
+          "type": "blob",
+          "size": 0.5302734375,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\nworkdir=\"$(readlink -f \"$BASH_SOURCE\")\"\nworkdir=\"$(dirname \"$workdir\")\"\n\njsonFile='metadata.json'\ncanonicalMetadataFile=\"$workdir/$jsonFile\"\n\n# add categories slugs to canonicalMetadataFile without losing other keys there\ncurl -fsSL https://hub.docker.com/v2/categories | jq -s --sort-keys '\n\t.[0] as $allCategories\n\t| .[1]\n\t| .hub.categories = ( [ $allCategories[].slug ] | sort )\n' - \"$canonicalMetadataFile\" | tee \"$canonicalMetadataFile.new\"\nmv \"$canonicalMetadataFile.new\" \"$canonicalMetadataFile\"\n"
+        },
+        {
+          "name": "ghost",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "golang",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "groovy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "haproxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "haskell",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "haxe",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hello-world",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hitch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "httpd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hylang",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ibm-semeru-runtimes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ibmjava",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "influxdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "irssi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jetty",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "joomla",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jruby",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "julia",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kapacitor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kibana",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kong",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lightstreamer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "liquibase",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "logstash",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mageia",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mariadb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "markdownfmt.sh",
+          "type": "blob",
+          "size": 0.130859375,
+          "content": "#!/bin/bash\nset -e\n\nexec docker run -i --rm -v \"$PWD\":/scratch -w /scratch -u \"$(id -u):$(id -g)\" tianon/markdownfmt markdownfmt \"$@\"\n"
+        },
+        {
+          "name": "matomo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "maven",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediawiki",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "memcached",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "metadata.json",
+          "type": "blob",
+          "size": 0.4697265625,
+          "content": "{\n  \"hub\": {\n    \"categories\": [\n      \"api-management\",\n      \"content-management-system\",\n      \"data-science\",\n      \"databases-and-storage\",\n      \"developer-tools\",\n      \"integration-and-delivery\",\n      \"internet-of-things\",\n      \"languages-and-frameworks\",\n      \"machine-learning-and-ai\",\n      \"message-queues\",\n      \"monitoring-and-observability\",\n      \"networking\",\n      \"operating-systems\",\n      \"security\",\n      \"web-analytics\",\n      \"web-servers\"\n    ]\n  }\n}\n"
+        },
+        {
+          "name": "metadata.sh",
+          "type": "blob",
+          "size": 2.970703125,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\nworkdir=\"$(readlink -f \"$BASH_SOURCE\")\"\nworkdir=\"$(dirname \"$workdir\")\"\ncd \"$workdir\"\n\njsonFile='metadata.json'\ncanonicalMetadataFile=\"./$jsonFile\"\nexport maxCategories=3\n\nself=\"$(basename \"$0\")\"\n\nusage() {\n\tcat <<EOUSAGE\n\nusage: $self [--write] REPO[...]\n   eg: $self debian\n       $self -w python\n\nThis script checks a givens repo's metadata.json. It checks formating (providing a diff), checks categories, and can write the formatting changes.\n\n-h, --help          Print this help output and exit.\n-w, --write         Apply json formatting (run without to see the diff that would be applied).\n\nArguments are the list of repos with a 'metadata.json' in them. 'metadata.json' is expected in every repo.\n'.' can also be passed to check the format of the canonical './metadata.json' at\nthe root of the repo, but the max categories of '-c' is skipped for it.\nEOUSAGE\n}\n\n# arg handling\nopts=\"$(getopt -o 'hw' --long 'help,write' -- \"$@\" || { usage >&2 && false; })\"\neval set -- \"$opts\"\n\nwrite=\n\nwhile :; do\n\tflag=\"$1\"\n\tshift\n\tcase \"$flag\" in\n\t\t--help | -h) usage && exit 0 ;;\n\t\t--write | -w) write=1 ;;\n\t\t--) break ;;\n\t\t*)\n\t\t\t{\n\t\t\t\techo \"error: unknown flag: $flag\"\n\t\t\t\tusage\n\t\t\t} >&2\n\t\t\texit 1\n\t\t\t;;\n\tesac\ndone\n\nrepos=( \"$@\" )\nif [ \"${#repos[@]}\" -eq 0 ]; then\n\trepos=( */ )\nfi\nrepos=( \"${repos[@]%/}\" )\n\nfailures=0\nfor repo in \"${repos[@]}\"; do\n\trepoFile=\"$repo/$jsonFile\"\n\tif [ ! -s \"$repoFile\" ]; then\n\t\techo >&2 \"error: $repoFile does not exist or is empty\"\n\t\t(( failures++ )) || :\n\t\tcontinue\n\tfi\n\n\t# sort object keys and pretty print with jq as our \"cannonical json\"\n\t# sort categories array, no duplicates\n\tif ! repoFileJson=\"$(jq -s --sort-keys '.[0] | .hub.categories |= unique' \"$repoFile\")\"; then\n\t\techo >&2 \"error parsing '$repoFile'; invalid JSON?\"\n\t\t(( failures++ )) || :\n\t\tcontinue\n\tfi\n\tif ! filediff=\"$(diff -u \"$repoFile\" <(cat <<<\"$repoFileJson\"))\"; then\n\t\tcat <<<\"$filediff\"\n\t\tif [ -n \"$write\" ]; then\n\t\t\tcat <<<\"$repoFileJson\" > \"$repoFile\"\n\t\telse\n\t\t\t(( failures++ )) || :\n\t\tfi\n\tfi\n\n\t# TODO also check for required keys and/or types?\n\t# the canonicalMetadataFile doesn't have too many categories since it is the source of categories\n\t# all other metadata.json files must not be more than maxCategories or have categories that aren't in the canonical set\n\tif [ \"$repoFile\" != \"$canonicalMetadataFile\" ]; then\n\t\texport repoFile\n\t\tif errorText=\"$(jq -r --slurpfile canonical \"$canonicalMetadataFile\" '\n\t\t\t.hub.categories\n\t\t\t| (\n\t\t\t\tlength\n\t\t\t\t| if . > (env.maxCategories | tonumber) then\n\t\t\t\t\t\"error: \\(env.repoFile): too many categories: \\(.) (max \\(env.maxCategories))\"\n\t\t\t\telse empty end\n\t\t\t),\n\t\t\t(\n\t\t\t\t. - $canonical[0].hub.categories\n\t\t\t\t| if length > 0 then\n\t\t\t\t\t\"error: \\(env.repoFile): unknown categories \\(.)\"\n\t\t\t\telse empty end\n\t\t\t)\n\t\t' \"$repoFile\")\"; then\n\t\t\tif [ -n \"$errorText\" ]; then\n\t\t\t\techo >&2 \"$errorText\"\n\t\t\t\t(( failures++ )) || :\n\t\t\tfi\n\t\telse\n\t\t\techo >&2 \"error parsing '$repoFile'; invalid JSON?\"\n\t\t\t(( failures++ )) || :\n\t\t\tcontinue\n\t\tfi\n\tfi\ndone\n\nexit \"$failures\"\n"
+        },
+        {
+          "name": "mongo-express",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mongo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "monica",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mono",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mysql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nats",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "neo4j",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "neurodebian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nextcloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nginx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "node",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "notary",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "odoo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "open-liberty",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "openjdk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "oraclelinux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "orientdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "parallel-update.sh",
+          "type": "blob",
+          "size": 0.232421875,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\ncd \"$(dirname \"$(readlink -f \"$BASH_SOURCE\")\")\"\n\nimages=( */ )\nimages=( \"${images[@]%/}\" )\n\n: \"${PARALLELISM:=$(( $(nproc) * 2 ))}\"\n\nxargs -rtn1 -P \"$PARALLELISM\" ./update.sh \"$@\" <<<\"${images[*]}\"\n"
+        },
+        {
+          "name": "percona",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "perl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "photon",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "php-zendserver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "php",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpmyadmin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "plone",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "postfixadmin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "postgres",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "push.pl",
+          "type": "blob",
+          "size": 11.3017578125,
+          "content": "#!/usr/bin/env perl\nuse strict;\nuse warnings;\nuse 5.010;\nuse open ':encoding(utf8)';\n\nuse File::Basename qw(basename fileparse);\nuse File::Temp;\nuse Getopt::Long;\nuse Mojo::File;\nuse Mojo::JSON qw(decode_json);\nuse Mojo::UserAgent;\nuse Mojo::Util qw(decode encode trim url_escape);\n\nuse Term::UI;\nuse Term::ReadLine;\n\nrequire bytes; # this is not recommended, but we *only* use \"bytes::length\" from it to determine whether we need to do a more correct conversion to/from bytes for trimming (see $hubLengthLimit and usages)\n\nmy $hubLengthLimit = 25_000; # NOTE: this is *bytes*, not characters 🙃\nmy $githubBase = 'https://github.com/docker-library/docs/tree/master'; # TODO point this at the correct \"dist-xxx\" branch based on \"namespace\"\n\nmy $username;\nmy $password;\nmy $batchmode;\nmy $namespace;\nmy $logos;\nGetOptions(\n\t'u|username=s' => \\$username,\n\t'p|password=s' => \\$password,\n\t'batchmode!' => \\$batchmode,\n\t'namespace=s' => \\$namespace,\n\t'logos!' => \\$logos,\n) or die 'bad args';\n\ndie 'no repos specified' unless @ARGV;\n\nmy $ua = Mojo::UserAgent->new->max_redirects(10);\n$ua->transactor->name('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.125 Safari/537.36');\n\nmy $term = Term::ReadLine->new('docker-library-docs-push');\nunless (defined $username) {\n\t$username = $term->get_reply(prompt => 'Hub Username');\n}\nunless (defined $password) {\n\t$password = $term->get_reply(prompt => 'Hub Password'); # TODO hide the input? O:)\n}\n\nmy $dockerHub = 'https://hub.docker.com';\n\nmy $login = $ua->post($dockerHub . '/v2/users/login/' => {} => json => { username => $username, password => $password });\ndie 'login failed: ' . $login->res->error->{message} unless $login->res->is_success;\n\nmy $token = $login->res->json->{token};\n\nmy $authorizationHeader = {\n\tAuthorization => \"JWT $token\",\n};\n\nmy $supportedTagsRegex = qr%^(# Supported tags and respective `Dockerfile` links\\n\\n)(.*?\\n)(?=# |\\[)%ms;\n\nsub prompt_for_edit {\n\tmy $currentText = shift;\n\tmy $proposedFile = shift;\n\tmy $lengthLimit = shift // 0;\n\t\n\tmy $proposedText = Mojo::File->new($proposedFile)->slurp // '**  FILE MISSING!  **';\n\t$proposedText = trim(decode('UTF-8', $proposedText));\n\t\n\t# remove our warning about generated files (Hub doesn't support HTML comments in Markdown)\n\t$proposedText =~ s% ^ <!-- .*? --> \\s* %%sx;\n\t\n\t# extract/re-inject sponsored links\n\tmy $sponsoredLinks = '';\n\tif ($currentText =~ m{ ( ^ [#] \\Q Sponsored Resources\\E \\n .*? \\n --- \\n ) }smx) {\n\t\t$sponsoredLinks = $1 . \"\\n\";\n\t\t$proposedText =~ s%$supportedTagsRegex%$sponsoredLinks$1$2%;\n\t}\n\t\n\tif ($lengthLimit > 0 && bytes::length($proposedText) > $lengthLimit) {\n\t\t# TODO https://github.com/docker/hub-beta-feedback/issues/238\n\t\tmy $fullUrl = \"$githubBase/$proposedFile\";\n\t\tmy $shortTags = \"-\\tSee [\\\"Supported tags and respective \\`Dockerfile\\` links\\\" at $fullUrl]($fullUrl#supported-tags-and-respective-dockerfile-links)\\n\\n\";\n\t\tmy $seeAlso = 'See also [docker/hub-feedback#238](https://github.com/docker/hub-feedback/issues/238) and [docker/roadmap#475](https://github.com/docker/roadmap/issues/475).';\n\t\tmy $tagsNote = \"**Note:** the description for this image is longer than the Hub length limit of $lengthLimit, so the \\\"Supported tags\\\" list has been trimmed to compensate.  $seeAlso\\n\\n$shortTags\";\n\t\tmy $genericNote = \"**Note:** the description for this image is longer than the Hub length limit of $lengthLimit, so has been trimmed.  The full description can be found at [$fullUrl]($fullUrl).  $seeAlso\";\n\t\tmy $startingNote = $genericNote . \"\\n\\n\";\n\t\tmy $endingNote = \"\\n\\n...\\n\\n\" . $genericNote;\n\t\t\n\t\tmy $trimmedText = $proposedText;\n\t\t\n\t\t# if our text is too long for the Hub length limit, let's first try removing the \"Supported tags\" list and add $tagsNote and see if that's enough to let us put the full image documentation\n\t\t$trimmedText =~ s%$supportedTagsRegex%$sponsoredLinks$1$tagsNote%ms;\n\t\t# (we scrape until the next \"h1\" or a line starting with a link which is likely a build status badge for an architecture-namespace)\n\t\t\n\t\tif (bytes::length($trimmedText) > $lengthLimit) {\n\t\t\t# ... if that doesn't do the trick, then do our older naïve description trimming (respecting utf8; see https://www.perlmonks.org/?node_id=1230659 and https://perldoc.perl.org/utf8)\n\t\t\t$trimmedText = $proposedText;\n\t\t\tutf8::encode($trimmedText);\n\t\t\t$trimmedText = $startingNote . substr $trimmedText, 0, ($lengthLimit - bytes::length($startingNote . $endingNote));\n\t\t\t# (deal with the potential of \"bytes::substr\" here cutting us in the middle of a unicode glyph, which is arguably a much worse problem than the markdown cutting described below 😬  again, see https://www.perlmonks.org/?node_id=1230659)\n\t\t\t$trimmedText =~ s/(?:\n\t\t\t\t[\\xC0-\\xDF]\n\t\t\t\t| [\\xE0-\\xEF] [\\x80-\\xBF]?\n\t\t\t\t| [\\xF0-\\xF7] [\\x80-\\xBF]{0,2}\n\t\t\t)\\z//x;\n\t\t\tutf8::decode($trimmedText);\n\n\t\t\t# adding the \"ending note\" (https://github.com/docker/hub-feedback/issues/2220) is a bit more complicated as we have to deal with cutting off markdown ~cleanly so it renders correctly\n\t\t\t# TODO deal with \"```foo\" appropriately (so we don't drop our note in the middle of a code block) - the Hub's current markdown rendering (2022-04-07) does not auto-close a dangling block like this, so this isn't urgent\n\t\t\tif ($trimmedText =~ m/\\n$/) {\n\t\t\t\t# if we already end with a newline, we should be fine to just trim newlines and add our ending note\n\t\t\t\t$trimmedText =~ s/\\n+$//;\n\t\t\t}\n\t\t\telse {\n\t\t\t\t# otherwise, we need to get a little bit more creative and trim back to the last fully blank line (which we can reasonably assume is safe thanks to our markdownfmt)\n\t\t\t\t$trimmedText =~ s/\\n\\n(.\\n?)*$//;\n\t\t\t}\n\t\t\t$trimmedText .= $endingNote;\n\t\t}\n\t\t\n\t\t$proposedText = $trimmedText;\n\t}\n\t\n\treturn $currentText if $currentText eq $proposedText;\n\t\n\tmy @proposedFileBits = fileparse($proposedFile, qr!\\.[^.]*!);\n\tmy $file = File::Temp->new(SUFFIX => '-' . basename($proposedFileBits[1]) . '-current' . $proposedFileBits[2]);\n\tmy $filename = $file->filename;\n\tMojo::File->new($filename)->spurt(encode('UTF-8', $currentText . \"\\n\"));\n\t\n\tmy $tempProposedFile = File::Temp->new(SUFFIX => '-' . basename($proposedFileBits[1]) . '-proposed' . $proposedFileBits[2]);\n\tmy $tempProposedFilename = $tempProposedFile->filename;\n\tMojo::File->new($tempProposedFilename)->spurt(encode('UTF-8', $proposedText . \"\\n\"));\n\t\n\tsystem(qw(git --no-pager diff --no-index), $filename, $tempProposedFilename);\n\t\n\tmy $reply;\n\tif ($batchmode) {\n\t\t$reply = 'yes';\n\t}\n\telse {\n\t\t$reply = $term->get_reply(\n\t\t\tprompt => 'Apply changes?',\n\t\t\tchoices => [ qw( yes vimdiff no quit ) ],\n\t\t\tdefault => 'yes',\n\t\t);\n\t}\n\t\n\tif ($reply eq 'quit') {\n\t\tsay 'quitting, as requested';\n\t\texit;\n\t}\n\t\n\tif ($reply eq 'yes') {\n\t\treturn $proposedText;\n\t}\n\t\n\tif ($reply eq 'vimdiff') {\n\t\tsystem('vimdiff', $tempProposedFilename, $filename) == 0 or die \"vimdiff on $filename and $proposedFile failed\";\n\t\treturn trim(decode('UTF-8', Mojo::File->new($filename)->slurp));\n\t}\n\t\n\treturn $currentText;\n}\n\nwhile (my $repo = shift) { # 'library/hylang', 'tianon/perl', etc\n\t$repo =~ s!^/+|/+$!!; # trim extra slashes (from \"*/\" globbing, for example)\n\t$repo = $namespace . '/' . $repo if $namespace; # ./push.pl --namespace xxx ...\n\t$repo = 'library/' . $repo unless $repo =~ m!/!; # \"hylang\" -> \"library/hylang\"\n\t\n\tmy $repoName = $repo;\n\t$repoName =~ s!^.*/!!; # 'hylang', 'perl', etc\n\t\n\tmy $repoUrl = $dockerHub . '/v2/repositories/' . $repo . '/';\n\t\n\tif ($logos && $repo =~ m{ ^ library/ }x) {\n\t\t# only DOI (\"library\"), DSOS, or DVP orgs can include a logo which is displayed in the Hub UI\n\t\t# if we have a logo file, let's update that metadata first\n\t\tmy $repoLogo120 = $repoName . '/logo-120.png';\n\t\tif (!-f $repoLogo120) {\n\t\t\tmy $repoLogoPng = $repoName . '/logo.png';\n\t\t\tmy $repoLogoSvg = $repoName . '/logo.svg';\n\t\t\tmy $logoToConvert = (\n\t\t\t\t-f $repoLogoPng\n\t\t\t\t? $repoLogoPng\n\t\t\t\t: $repoLogoSvg\n\t\t\t);\n\t\t\tif (-f $logoToConvert) {\n\t\t\t\tsay 'converting ' . $logoToConvert . ' to ' . $repoLogo120;\n\t\t\t\tsystem(\n\t\t\t\t\tqw( convert -background none -density 1200 -strip -resize 120x120> -gravity center -extent 120x120 ),\n\t\t\t\t\t$logoToConvert,\n\t\t\t\t\t$repoLogo120,\n\t\t\t\t) == 0 or die \"failed to convert $logoToConvert into $repoLogo120\";\n\t\t\t}\n\t\t}\n\t\tmy $logoUrlBase = $dockerHub . '/api/media/repos_logo/v1/' . url_escape($repo);\n\t\tif (-f $repoLogo120) {\n\t\t\tmy $proposedLogo = Mojo::File->new($repoLogo120)->slurp;\n\t\t\tmy $currentLogo = $ua->get($logoUrlBase, { 'Cache-Control' => 'no-cache' });\n\t\t\t$currentLogo = ($currentLogo->res->is_success ? $currentLogo->res->body : undef);\n\t\t\t\n\t\t\tif ($currentLogo && $currentLogo eq $proposedLogo) {\n\t\t\t\tsay 'no change to ' . $repoName . ' logo; skipping';\n\t\t\t}\n\t\t\telse {\n\t\t\t\tsay 'putting logo ' . $repoLogo120;\n\t\t\t\tmy $logoUpload = $ua->post($logoUrlBase . '/upload' => { %$authorizationHeader, 'Content-Type' => 'image/png' } => $proposedLogo);\n\t\t\t\tdie 'POST to ' . $logoUrlBase . '/upload failed: ' . $logoUpload->res->text unless $logoUpload->res->is_success;\n\t\t\t}\n\t\t} else {\n\t\t\t# if we had no logo file, we should send a DELETE request to the API just to be sure we're synchronizing the repo state appropriately even on complete logo removal\n\t\t\tsay 'no ' . $repoLogo120 . '; deleting logo';\n\t\t\tmy $logoDelete = $ua->delete($logoUrlBase => $authorizationHeader);\n\t\t\tdie 'DELETE to ' . $logoUrlBase . ' failed: ' . $logoDelete->res->text unless $logoDelete->res->is_success or $logoDelete->res->code == 404;\n\t\t}\n\t}\n\t\n\tmy $repoTx = $ua->get($repoUrl => $authorizationHeader);\n\twarn 'warning: failed to get: ' . $repoUrl . ' (skipping)' and next unless $repoTx->res->is_success;\n\t\n\tmy $repoDetails = $repoTx->res->json;\n\t$repoDetails->{description} //= '';\n\t$repoDetails->{full_description} //= '';\n\t$repoDetails->{categories} //= [];\n\tmy @repoCategories = sort map { $_->{slug} } @{ $repoDetails->{categories} };\n\t\n\t# read local categories from metadata.json\n\tmy $repoMetadataBytes = Mojo::File->new($repoName . '/metadata.json')->slurp;\n\tmy $repoMetadataJson = decode_json $repoMetadataBytes;\n\tmy @localRepoCategories = sort @{ $repoMetadataJson->{hub}{categories} };\n\t\n\t# check if the local categories differ in length or items from the remote\n\tmy $needCat = @localRepoCategories != @repoCategories;\n\tif (! $needCat) {\n\t\tforeach my $i (0 .. @localRepoCategories) {\n\t\t\tlast if ! defined $repoCategories[$i]; # length difference already covered, so we can bail\n\t\t\tif ($localRepoCategories[$i] ne $repoCategories[$i]) {\n\t\t\t\t$needCat = 1;\n\t\t\t\tlast;\n\t\t\t}\n\t\t}\n\t}\n\tif ($needCat) {\n\t\tsay 'updating ' . $repoName . ' categories';\n\t\tmy $catsPatch = $ua->patch($repoUrl . 'categories/' => { %$authorizationHeader, Accept => 'application/json' } => json => [\n\t\t\t\tmap { {\n\t\t\t\t\tslug => $_,\n\t\t\t\t\tname => 'All those moments will be lost in time, like tears in rain... Time to die.',\n\t\t\t\t} } @{ $repoMetadataJson->{hub}{categories} }\n\t\t\t]);\n\t\tdie 'patch to categories failed: ' . $catsPatch->res->text unless $catsPatch->res->is_success;\n\t}\n\t\n\tmy $hubShort = prompt_for_edit($repoDetails->{description}, $repoName . '/README-short.txt');\n\tmy $hubLong = prompt_for_edit($repoDetails->{full_description}, $repoName . '/README.md', $hubLengthLimit);\n\t\n\tsay 'no change to ' . $repoName . '; skipping' and next if $repoDetails->{description} eq $hubShort and $repoDetails->{full_description} eq $hubLong;\n\t\n\tsay 'updating ' . $repoName;\n\t\n\tmy $repoPatch = $ua->patch($repoUrl => $authorizationHeader => json => {\n\t\t\tdescription => $hubShort,\n\t\t\tfull_description => $hubLong,\n\t\t});\n\tdie 'patch to ' . $repoUrl . ' failed: ' . $repoPatch->res->text unless $repoPatch->res->is_success;\n}\n"
+        },
+        {
+          "name": "push.sh",
+          "type": "blob",
+          "size": 0.3291015625,
+          "content": "#!/bin/bash\nset -e\n\ncd \"$(dirname \"$(readlink -f \"$BASH_SOURCE\")\")\"\n\n#docker pull $(awk '$1 == \"FROM\" { print $2 }' Dockerfile)\ndocker build -t docker-library-docs .\ntest -t 1 && it='-it' || it='-i'\nexec docker run \"$it\" --rm -v \"$(pwd)\":/wtf -w /wtf -u \"$(id -u):$(id -g)\" -e TERM --init --entrypoint ./push.pl docker-library-docs \"$@\"\n"
+        },
+        {
+          "name": "pypy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "r-base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rabbitmq",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rakudo-star",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "redis",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "redmine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "registry",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rethinkdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rocket.chat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rockylinux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ros",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ruby",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rust",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sapmachine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "satosa",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scratch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "silverpeas",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sonarqube",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spiped",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "storm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "swift",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "swipl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "teamspeak",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "telegraf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tomcat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tomee",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "traefik",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ubuntu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "unit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "update.sh",
+          "type": "blob",
+          "size": 6.8203125,
+          "content": "#!/bin/bash\nset -Eeuo pipefail\n\ncd \"$(dirname \"$(readlink -f \"$BASH_SOURCE\")\")\"\nhelperDir='.template-helpers'\n\n# usage: ./update.sh [--namespace NAMESPACE] [[NAMESPACE/]IMAGE ...]\n#    ie: ./update.sh\n#        ./update.sh debian golang\n#        ./update.sh --namespace tianontesting debian golang\n#        ./update.sh tianontesting/debian tianontestingmore/golang\n#        BASHBREW_ARCH=windows-amd64 BASHBREW_ARCH_NAMESPACES='...' ./update.sh --namespace winamd64\n\nforceNamespace=\nif [ \"${1:-}\" = '--namespace' ]; then\n\tshift\n\tforceNamespace=\"$1\"\n\tshift\nfi\n\nimages=( \"$@\" )\nif [ ${#images[@]} -eq 0 ]; then\n\timages=( */ )\nfi\nimages=( \"${images[@]%/}\" )\n\nif [ -n \"$forceNamespace\" ]; then\n\timages=( \"${images[@]/#/\"$forceNamespace/\"}\" )\nfi\n\nreplace_field() {\n\ttargetFile=\"$1\"\n\tfield=\"$2\"\n\tcontent=\"$3\"\n\textraSed=\"${4:-}\"\n\tsed_escaped_value=\"$(echo \"$content\" | sed 's/[\\/&]/\\\\&/g')\"\n\tsed_escaped_value=\"${sed_escaped_value//$'\\n'/\\\\n}\"\n\tsed -ri -e \"s/${extraSed}%%${field}%%${extraSed}/$sed_escaped_value/g\" \"$targetFile\"\n}\n\nfor image in \"${images[@]}\"; do\n\trepo=\"${image##*/}\"\n\tnamespace=\"${image%$repo}\"\n\tnamespace=\"${namespace%/}\"\n\n\t# this is used by subscripts to determine whether we're pushing /_/xxx or /r/ARCH/xxx\n\t# (especialy for \"supported tags\")\n\texport ARCH_SPECIFIC_DOCS=\n\tif [ -n \"$namespace\" ] && [ -n \"${BASHBREW_ARCH:-}\" ]; then\n\t\texport ARCH_SPECIFIC_DOCS=1\n\tfi\n\n\tif [ -x \"$repo/update.sh\" ]; then\n\t\t( set -x; \"$repo/update.sh\" \"$image\" )\n\tfi\n\n\tif [ -e \"$repo/content.md\" ]; then\n\t\tgithubRepo=\"$(cat \"$repo/github-repo\")\"\n\t\tmaintainer=\"$(cat \"$repo/maintainer.md\")\"\n\n\t\tissues=\"$(cat \"$repo/issues.md\" 2>/dev/null || cat \"$helperDir/issues.md\")\"\n\t\tgetHelp=\"$(cat \"$repo/get-help.md\" 2>/dev/null || cat \"$helperDir/get-help.md\")\"\n\n\t\tlicense=\"$(cat \"$repo/license.md\" 2>/dev/null || true)\"\n\t\tlicenseCommon=\"$(cat \"$repo/license-common.md\" 2>/dev/null || cat \"$helperDir/license-common.md\")\"\n\t\tif [ \"$license\" ]; then\n\t\t\tlicense=$'\\n\\n''# License'$'\\n\\n'\"$license\"$'\\n\\n'\"$licenseCommon\"\n\t\tfi\n\n\t\tlogo=\n\t\tlogoFile=\n\t\tfor f in png svg; do\n\t\t\tif [ -e \"$repo/logo.$f\" ]; then\n\t\t\t\tlogoFile=\"$repo/logo.$f\"\n\t\t\t\tbreak\n\t\t\tfi\n\t\tdone\n\t\tif [ \"$logoFile\" ]; then\n\t\t\tlogoCommit=\"$(git log -1 --format='format:%H' -- \"$logoFile\" 2>/dev/null || true)\"\n\t\t\t[ \"$logoCommit\" ] || logoCommit='master'\n\t\t\tlogoUrl=\"https://raw.githubusercontent.com/docker-library/docs/$logoCommit/$logoFile\"\n\t\t\tif [ \"${logoFile##*.}\" = 'svg' ]; then\n\t\t\t\t# https://stackoverflow.com/a/16462143/433558\n\t\t\t\tlogoUrl+='?sanitize=true'\n\t\t\tfi\n\t\t\tlogo=\"![logo]($logoUrl)\"\n\t\tfi\n\n\t\tstack=\n\t\tstackYml=\n\t\tstackUrl=\n\t\tif [ -f \"$repo/stack.yml\" ]; then\n\t\t\tstack=\"$(cat \"$repo/stack.md\" 2>/dev/null || cat \"$helperDir/stack.md\")\"\n\t\t\tstackYml=$'```yaml\\n'\"$(cat \"$repo/stack.yml\")\"$'\\n```'\n\t\t\tstackCommit=\"$(git log -1 --format='format:%H' -- \"$repo/stack.yml\" 2>/dev/null || true)\"\n\t\t\t[ \"$stackCommit\" ] || stackCommit='master'\n\t\t\tstackUrl=\"https://raw.githubusercontent.com/docker-library/docs/$stackCommit/$repo/stack.yml\"\n\t\tfi\n\n\t\tcompose=\n\t\tcomposeYml=\n\t\tif [ -f \"$repo/docker-compose.yml\" ]; then\n\t\t\tcompose=\"$(cat \"$repo/compose.md\" 2>/dev/null || cat \"$helperDir/compose.md\")\"\n\t\t\tcomposeYml=$'```yaml\\n'\"$(cat \"$repo/docker-compose.yml\")\"$'\\n```'\n\t\tfi\n\n\t\tdeprecated=\n\t\tif [ -f \"$repo/deprecated.md\" ]; then\n\t\t\tdeprecated=\"$(< \"$repo/deprecated.md\")\"\n\t\t\tif [ \"${deprecated:0:2}\" != '# ' ]; then\n\t\t\t\tdeprecated=$'# **DEPRECATION NOTICE**\\n\\n'\"$deprecated\"\n\t\t\tfi\n\t\t\tdeprecated+=$'\\n\\n'\n\t\tfi\n\n\t\tif ! partial=\"$(\"$helperDir/generate-dockerfile-links-partial.sh\" \"$repo\")\"; then\n\t\t\t{\n\t\t\t\techo\n\t\t\t\techo \"WARNING: failed to fetch tags for '$repo'; skipping!\"\n\t\t\t\techo\n\t\t\t} >&2\n\t\t\tcontinue\n\t\tfi\n\n\t\ttargetFile=\"$repo/README.md\"\n\n\t\t{\n\t\t\tcat \"$helperDir/autogenerated-warning.md\"\n\t\t\techo\n\n\t\t\tif [ -n \"$ARCH_SPECIFIC_DOCS\" ]; then\n\t\t\t\techo '**Note:** this is the \"per-architecture\" repository for the `'\"$BASHBREW_ARCH\"'` builds of [the `'\"$repo\"'` official image](https://hub.docker.com/_/'\"$repo\"') -- for more information, see [\"Architectures other than amd64?\" in the official images documentation](https://github.com/docker-library/official-images#architectures-other-than-amd64) and [\"An image'\\''s source changed in Git, now what?\" in the official images FAQ](https://github.com/docker-library/faq#an-images-source-changed-in-git-now-what).'\n\t\t\t\techo\n\t\t\tfi\n\n\t\t\techo -n \"$deprecated\"\n\t\t\tcat \"$helperDir/template.md\"\n\t\t} > \"$targetFile\"\n\n\t\techo '  TAGS => generate-dockerfile-links-partial.sh \"'\"$repo\"'\"'\n\t\tif [ -z \"$partial\" ]; then\n\t\t\tif [ -n \"$ARCH_SPECIFIC_DOCS\" ]; then\n\t\t\t\tpartial='**No supported tags found!**'$'\\n\\n''It is very likely that `%%REPO%%` does not support the currently selected architecture (`'\"$BASHBREW_ARCH\"'`).'\n\t\t\telse\n\t\t\t\t# opensuse, etc\n\t\t\t\tpartial='**No supported tags**'\n\t\t\tfi\n\t\telif [ -n \"$ARCH_SPECIFIC_DOCS\" ]; then\n\t\t\tjenkinsJobUrl=\"https://doi-janky.infosiftr.net/job/multiarch/job/$BASHBREW_ARCH/job/$repo/\"\n\t\t\tjenkinsImageUrl=\"https://img.shields.io/jenkins/s/https/doi-janky.infosiftr.net/job/multiarch/job/$BASHBREW_ARCH/job/$repo.svg?label=%%IMAGE%%%20%20build%20job\"\n\t\t\tpartial+=$'\\n\\n''[![%%IMAGE%% build status badge]('\"$jenkinsImageUrl\"')]('\"$jenkinsJobUrl\"')'\n\t\tfi\n\t\treplace_field \"$targetFile\" 'TAGS' \"$partial\"\n\n\t\techo '  ARCHES => arches.sh \"'\"$repo\"'\"'\n\t\tarches=\"$(\"$helperDir/arches.sh\" \"$repo\")\"\n\t\t[ -n \"$arches\" ] || arches='**No supported architectures**'\n\t\treplace_field \"$targetFile\" 'ARCHES' \"$arches\"\n\n\t\techo '  CONTENT => '\"$repo\"'/content.md'\n\t\treplace_field \"$targetFile\" 'CONTENT' \"$(cat \"$repo/content.md\")\"\n\n\t\techo '  VARIANT => variant.sh'\n\t\treplace_field \"$targetFile\" 'VARIANT' \"$(\"$helperDir/variant.sh\" \"$repo\")\"\n\n\t\t# has to be after CONTENT because it's contained in content.md\n\t\techo \"  LOGO => $logo\"\n\t\treplace_field \"$targetFile\" 'LOGO' \"$logo\" '\\s*'\n\n\t\techo '  STACK => '\"$repo\"'/stack.md'\n\t\treplace_field \"$targetFile\" 'STACK' \"$stack\"\n\t\techo '  STACK-YML => '\"$repo\"'/stack.yml'\n\t\treplace_field \"$targetFile\" 'STACK-YML' \"$stackYml\"\n\t\techo '  STACK-URL => '\"$repo\"'/stack.yml'\n\t\treplace_field \"$targetFile\" 'STACK-URL' \"$stackUrl\"\n\n\t\techo '  COMPOSE => '\"$repo\"'/compose.md'\n\t\treplace_field \"$targetFile\" 'COMPOSE' \"$compose\"\n\t\techo '  COMPOSE-YML => '\"$repo\"'/docker-compose.yml'\n\t\treplace_field \"$targetFile\" 'COMPOSE-YML' \"$composeYml\"\n\n\t\techo '  LICENSE => '\"$repo\"'/license.md'\n\t\treplace_field \"$targetFile\" 'LICENSE' \"$license\"\n\n\t\techo '  ISSUES => \"'\"$issues\"'\"'\n\t\treplace_field \"$targetFile\" 'ISSUES' \"$issues\"\n\n\t\techo '  GET-HELP => \"'\"$getHelp\"'\"'\n\t\treplace_field \"$targetFile\" 'GET-HELP' \"$getHelp\"\n\n\t\techo '  MAINTAINER => \"'\"$maintainer\"'\"'\n\t\treplace_field \"$targetFile\" 'MAINTAINER' \"$maintainer\"\n\n\t\techo '  IMAGE => \"'\"$image\"'\"'\n\t\treplace_field \"$targetFile\" 'IMAGE' \"$image\"\n\n\t\techo '  REPO => \"'\"$repo\"'\"'\n\t\treplace_field \"$targetFile\" 'REPO' \"$repo\"\n\n\t\techo '  GITHUB-REPO => \"'\"$githubRepo\"'\"'\n\t\treplace_field \"$targetFile\" 'GITHUB-REPO' \"$githubRepo\"\n\n\t\techo\n\telse\n\t\techo >&2 \"skipping $repo: missing repo/content.md\"\n\tfi\ndone\n"
+        },
+        {
+          "name": "varnish",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "websphere-liberty",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wordpress",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "xwiki",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ymlfmt.sh",
+          "type": "blob",
+          "size": 0.12109375,
+          "content": "#!/bin/bash\nset -e\n\nexec docker run -i --rm -v \"$PWD\":/scratch -w /scratch -u \"$(id -u):$(id -g)\" tianon/ymlfmt ymlfmt \"$@\"\n"
+        },
+        {
+          "name": "yourls",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "znc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zookeeper",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
