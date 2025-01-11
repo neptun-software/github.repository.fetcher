@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "timestamp": 1736565709390,
+    "page": 613,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ttttupup/wxhelper",
+      "stars": 2462,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2939453125,
+          "content": "# Prerequisites\n*.d\n\n# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Compiled Dynamic libraries\n*.so\n*.dylib\n#*.dll\n\n# Fortran module files\n*.mod\n*.smod\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n*.lib\n\n# Executables\n#*.exe\n*.out\n*.app\nCMakePresets.json\n.vscode\nout"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0771484375,
+          "content": "﻿[submodule \"spdlog\"]\n\tpath = spdlog\n\turl = https://github.com/gabime/spdlog\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.5927734375,
+          "content": "cmake_minimum_required(VERSION 3.0.0)\n# include(ExternalProject)\nproject(wxhelper VERSION 1.0.0)\nenable_language(ASM_MASM)\n\n\n\n# SET(CMAKE_ASM_NASM_FLAGS \"-w0\") \n\n\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_STANDARD_REQUIRED True)\nset(CMAKE_POSITION_INDEPENDENT_CODE TRUE)\n\n\nset(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} /D '_UNICODE' /D 'UNICODE' \")\n\nfile(GLOB CPP_FILES  ${PROJECT_SOURCE_DIR}/src/*.cc  ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c )\n\nfile(GLOB ASM_FILES  ${PROJECT_SOURCE_DIR}/src/*.asm )\n\ninclude_directories(${VCPKG_INSTALLED_DIR}/x64-windows/include  ${PROJECT_SOURCE_DIR}/spdlog/include  ${DETOURS_INCLUDE_DIRS}) \n# include_directories(${VCPKG_INSTALLED_DIR}/x64-windows/include  ${PROJECT_SOURCE_DIR}/spdlog/include ) \n\n\n\nadd_subdirectory(spdlog)\nadd_subdirectory(source)\n\n# find_package(spdlog CONFIG REQUIRED)\n\nfind_package(nlohmann_json CONFIG REQUIRED)\n\nfind_path(DETOURS_INCLUDE_DIRS \"detours/detours.h\")\nfind_library(DETOURS_LIBRARY detours REQUIRED)\n\n\nadd_library(wxhelper  SHARED ${CPP_FILES} ${ASM_FILES} )\n\n\n\ntarget_link_libraries(wxhelper PRIVATE nlohmann_json::nlohmann_json)\ntarget_link_libraries(wxhelper PRIVATE spdlog::spdlog spdlog::spdlog_header_only)\ntarget_link_libraries(wxhelper PRIVATE ${DETOURS_LIBRARY})\n\n\nSET_TARGET_PROPERTIES(wxhelper PROPERTIES LINKER_LANGUAGE C\n                      ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib\n                      LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib\n                      RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib\n                      OUTPUT_NAME \"wxhelper\"\n                      PREFIX \"\")\n           "
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0400390625,
+          "content": "MIT License\n\nCopyright (c) 2023 ttttupup\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.1845703125,
+          "content": "# wxhelper\nwechat hook 。PC端微信逆向学习。支持3.8.0.41，3.8.1.26, 3.9.0.28, 3.9.2.23,3.9.2.26版本。\n#### 免责声明:\n本仓库发布的内容，仅用于学习研究，请勿用于非法用途和商业用途！如因此产生任何法律纠纷，均与作者无关！\n\n#### 项目说明：\n<font color= \"#dd0000\">本项目是逆向练习项目，可能会造成封号等后果。请自行承担风险。仅用于学习研究，请勿于非法用途。</font>  \n\n#### 实现原理：  \n逆向分析PC端微信客户端，定位相关功能关键Call，编写dll调用关键Call。然后将该dll文件注入到微信进程。   \ndll在注入成功时，创建了一个默认端口为19088的http服务端，然后所有的功能直接可以通过http协议调用。       \n```\n\n                                      |----------------\n--------------------------    注入    |  WeChat.exe    |\n| ConsoleApplication.exe  |————————>  |----------------           --------------    访问      ---------\n|                         |           | wxhelper.dll   |————————>| 启动http服务  | <----------| clent |\n|--------------------------           |-----------------          --------------              --------    \n\n```\n#### 使用说明：\n支持的版本3.8.0.41、3.8.1.26、3.9.0.28、3.9.2.23、3.9.2.26 、3.9.5.81。  \n源码和主要实现在相应的分支内。  \nsrc:主要的dll代码  \ntool：简单的注入工具，一个是控制台，一个是图形界面。  \npython: tcpserver.py: 简单的服务器，用以接收消息内容。decrpty.py: 微信数据库解密工具。   http_server.py：http server端。     \nsource: 简单的命令行远程注入源码。   \n其他目录：热心作者提供的一些客户端。\n\n#### 0.首先安装对应的版本的微信，分支名称即代表的是微信对应的版本。dll的前缀都会带有微信版本。\n#### 1.使用注入工具注入wxhelper.dll,注入成功后，即可通过postman直接调用对应的接口。\n#### 2.可以使用python/clent.py进行简单测试。    \n\n\n##### 特别注意：  \n \n##### 1.hook相关的接口都需要先调用对应的hook接口，server端才会收到相应消息。    \n##### 2.注意个别接口在一些版本没有实现，功能预览里没有的功能就是没有实现。      \n##### 3.如果注入不成功，请先检查注入工具，或者使用其他注入工具。     \n##### 4.相关功能只在win11环境下进行简单测试，其他环境无法保证。  \n\n\n#### 参与项目\n个人精力和水平有限，项目还有许多不足，欢迎提出 issues 或 pr。期待你的贡献。\n\n\n\n#### 问题讨论   \n个人常用的方法，请参考https://github.com/ttttupup/wxhelper/wiki    \n使用上的问题，可查询https://github.com/ttttupup/wxhelper/discussions    \n数据库解密，请参考https://github.com/ttttupup/wxhelper/wiki      \n个人精力有限，只维护最新版本，旧版本的bug会在新版本中修复，不维护旧版本。   \n\n\n#### 编译环境\n\nVisual Studio 2022(x86)  \n\nVisual Studio code   \n\ncmake  \n\nvcpkg\n#### 编译构建\n\n先准备好编译环境。   \n#### <font color= \"#dd0000\"> 以下是x86环境构建，3.9.5.81是x64环境，具体参考对应分支。</font> \n```\ncd wxhelper  \nmkdir build  \ncd build  \ncmake -DCMAKE_C_COMPILER=cl.exe  \\\n-DCMAKE_CXX_COMPILER=cl.exe \\\n-DCMAKE_BUILD_TYPE=Debug \\\n-DCMAKE_INSTALL_PREFIX=C:/other/codeSource/windows/wxhelper/out/install/x86-debug \\\n-DCMAKE_TOOLCHAIN_FILE:FILEPATH=C:/vcpkg/scripts/buildsystems/vcpkg.cmake \\\n-SC:/wxhelper \\\n-BC:/wxhelper/build/x86-debug\\\n-G Ninja\n\ncmake --build ..  \n```\n\n以下是在vscode中操作，vs中的操作类似。  \n1.安装vcpkg，cmake，vscode  \n\n2.安装相应的库，如果安装的版本不同，则根据vcpkg安装成功后提示的find_package修改CMakeLists.txt内容即可。或者自己编译。\n```\n    vcpkg  install mongoose  \n    vcpkg  install nlohmann-json\n```\n3.vscode 配置CMakePresets.json,主要设置CMAKE_C_COMPILER 和CMAKE_CXX_COMPILER 为cl.exe.参考如下\n```\n {\n            \"name\": \"x86-release\",\n            \"displayName\": \"x86-release\",\n            \"description\": \"Sets Ninja generator, build and install directory\",\n            \"generator\": \"Ninja\",\n            \"binaryDir\": \"${sourceDir}/out/build/${presetName}\",\n            \"architecture\":{\n                \"value\": \"x86\",\n                \"strategy\": \"external\"\n            },\n            \"cacheVariables\": {\n                \"CMAKE_C_COMPILER\": \"cl.exe\",\n                \"CMAKE_CXX_COMPILER\": \"cl.exe\",\n                \"CMAKE_BUILD_TYPE\": \"Release\",\n                \"CMAKE_INSTALL_PREFIX\": \"${sourceDir}/out/install/${presetName}\",\n                \"CMAKE_TOOLCHAIN_FILE\": {\n                    \"value\": \"C:/soft/vcpkg/scripts/buildsystems/vcpkg.cmake\",\n                     \"type\": \"FILEPATH\"\n                  }\n            },\n            \"environment\": {\n\n            }\n          \n        }\n```\n4.执行cmake build vscode中右键configure all  projects,在Terminal中点击Run Task，如没有先配置build任务，然后运行即可   \n\n5.命令行注入工具，注入命令 \n``` javascript\n    //-i  注入程序名   -p 注入dll路径   \n    // -u 卸载程序名   -d 卸载dll名称\n    // -m pid  关闭微信互斥体，多开微信\n    // -P port 指定http端口，需要使用 specify-port 分支的生成的dll\n    // -I 注入程序的pid\n    //注入  \n    ConsoleInject.exe  -i demo.exe -p E:\\testInject.dll\n    //卸载 \n    ConsoleInject.exe  -u demo.exe -d  testInject.dll\n    //多开\n    ConsoleInject.exe  -m 1222\n    // 注入并指定http端口\n    ConsoleInject.exe  -i demo.exe -p E:\\testInject.dll  -P  18888   \n    // 注入指定pid并关闭多开限制\n    ConsoleInject.exe  -I 15048 -p E:\\testInject.dll  -m 15048  \n  \n```\n\n6.如果想改变端口，可以在微信目录下创建config.ini配置文件,修改端口即可。不创建则默认端口19088。   \n``` shell\n[config]\nport=19099\n\n```\n\n#### 更新说明\n2022-12-26 ： 增加3.8.1.26版本支持。  \n\n2022-12-29 ： 新增提取文字功能。  \n\n2023-01-02 ： 退出微信登录。  \n\n2023-01-31 ： 新增修改群昵称（仅支持3.8.1.26）。  \n\n2023-02-01 ： 新增拍一拍（仅支持3.8.1.26）。  \n\n2023-02-04 ： 新增群消息置顶和取消置顶。  \n\n2023-02-06 ： 新增确认收款。  \n\n2023-02-08 ： 新增朋友圈消息。  \n\n2023-02-09 ： 新增3.9.0.28版本基础功能。  \n\n2023-02-13 ： 新增群昵称和微信名称。    \n\n2023-02-17 :  新增通过wxid添加好友,搜索查找微信。  \n\n2023-03-02 ： 新增发送@消息     \n\n2023-03-04 ： 新增消息附件下载      \n\n2023-03-21 ： 新增hook语音     \n\n2023-03-30 ： 新增获取语音文件(推荐使用这个非hook接口)      \n\n2023-04-08 : 3.9.2.23版本功能更新   \n\n2023-06-05 ：3.9.2.26版本更新   \n\n2023-07-07 ：3.9.5.81版本更新  \n\n#### 功能预览：\n0.检查是否登录    \n1.获取登录微信信息    \n2.发送文本    \n3.发送@文本   \n5.发送图片     \n6.发送文件  \n9.hook消息  \n10.取消hook消息  \n11.hook图片    \n12.取消hook图片    \n13.hook语音   \n14.取消hook语音    \n17.删除好友    \n19.通过手机或qq查找微信  \n20.通过wxid添加好友    \n23.通过好友申请   \n25.获取群成员  \n26.获取群成员昵称  \n27.删除群成员  \n28.增加群成员   \n31.修改群昵称   \n32.获取数据库句柄      \n34.查询数据库    \n35.hook日志   \n36.取消hook日志    \n40.转发消息        \n44.退出登录    \n45.确认收款     \n46.联系人列表      \n47.获取群详情   \n48.获取解密图片    \n49.图片提取文字ocr    \n50.拍一拍  \n51.群消息置顶消息    \n52.群消息取消置顶    \n53.朋友圈首页    \n54.朋友圈下一页    \n55.获取联系人或者群名称    \n56.获取消息附件（图片，视频，文件）   \n57.获取语音文件(silk3格式)    \n58.登录二维码   \n59.邀请入群   \n60.获取群/群成员详情    \n61.撤回消息    \n62.发送公众号消息   \n63.转发公众号消息   \n64.发送小程序   \n65.退款    \n66.下载头像(勿用,没什么用)       \n#### 感谢\nhttps://github.com/ljc545w/ComWeChatRobot  \n\nhttps://github.com/NationalSecurityAgency/ghidra  \n\nhttps://github.com/x64dbg/x64dbg  \n\n#### 讨论组\nhttps://t.me/+LmvAauweyUpjYzJl  \n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go_client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "java_client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs_client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "source",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spdlog",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tool",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "weChatHook-java",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

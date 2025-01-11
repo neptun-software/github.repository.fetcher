@@ -1,0 +1,161 @@
+{
+  "metadata": {
+    "timestamp": 1736565645110,
+    "page": 533,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "baidu/Familia",
+      "stars": 2639,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.03515625,
+          "content": "*/__pycache__\nFamilia/model\n*/.git/\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.251953125,
+          "content": "*.DS_Store\nbuild/\n\n.vscode\n.idea\n.project\n.cproject\n.pydevproject\n.settings/\n.test_env/\nthird_party/\n__pycache__/\n\n*~\n/include/familia/config.pb.h\n/model/*.tar.gz\n/model/news/\n/model/novel/\n/model/webpage/\n/model/weibo/\n*.o\nfamilia.so\n/src/config.cpp\n*_demo\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2158203125,
+          "content": "sudo: false\nlanguage: cpp\ncompiler: g++\naddons:\n  apt:\n    sources:\n    - ubuntu-toolchain-r-test\n    packages:\n    - g++-4.8\n\ninstall:\n- if [ \"$CXX\" = \"g++\" ]; then export CXX=\"g++-4.8\"; fi\n\nscript: \"bash -c ./build.sh\"\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.4130859375,
+          "content": "# Contributors should be added to this file in the following format:\n# Name or Organization <email address>\n\nBaidu.com, Inc.\n\n# Initial version authors:\nJiang Di <jiangdi@baidu.com>\nChen Zeyu <chenzeyu01@baidu.com>\nJiang Jiajun <jiangjiajun@baidu.com>\nLian Rongzhong <lianrongzhong@baidu.com>\nLi Chen <lichen06@baidu.com>\nBao Siqi <baosiqi@baidu.com>\nSong Yuanfeng <songyuanfeng@baidu.com>\n\n# Partial list of contributors:\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.40625,
+          "content": "FROM python:3.6-alpine\n\nADD . /familia\nWORKDIR /familia/\n\nENV PYTHON_VERSION=python3.6m\n\nRUN apk add make gcc g++ && \\\n  sh build.sh && \\\n  rm -f *_demo.sh *_demo && \\\n  (cd model; sh download_model.sh; rm -f *.tar.gz) && \\\n  (cd python; rm -rf demo *_demo.sh) && \\\n  pip install -r python/requirements.txt\n\nENV LD_LIBRARY_PATH=/familia/third_party/lib:$LD_LIBRARY_PATH\n\nEXPOSE 5000\n\nCMD [\"python\", \"python/app.py\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4482421875,
+          "content": "Copyright (c) 2017, Baidu, Inc.\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the Baidu, Inc. nor the names of it\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 3.1630859375,
+          "content": "ifdef config\ninclude $(config)\nendif\n\nifndef DEPS_PATH\nDEPS_PATH = $(shell pwd)/third_party\nendif\n\nifndef PYTHON_PATH\nPYTHON_PATH = $(shell python -c\"import sys; print(sys.prefix)\")\nendif\n\nifndef PYTHON_VERSION\nPYTHON_VERSION = $(shell ls $(PYTHON_PATH)/include | grep python | head -n1)\nendif\n\nifndef PYTHON_INCLUDE\nPYTHON_INCLUDE = $(shell ls $(PYTHON_PATH)/include | grep python | head -n1 | sed \"s:^:$(PYTHON_PATH)/include/:\")\nendif\n\nifndef PROTOC\nPROTOC = ${DEPS_PATH}/bin/protoc\nendif\n\nifndef CXX\n\tCXX = g++\nendif\nCXXFLAGS=-pipe \\\n  \t\t -W \\\n  \t\t -Wall \\\n  \t\t -fPIC \\\n  \t\t -std=c++11 \\\n  \t\t -fno-omit-frame-pointer \\\n  \t\t -fpermissive \\\n  \t\t -O3 \\\n  \t\t -ffast-math\n\nINCPATH=-I./include/ \\\n\t\t-I./include/familia \\\n  \t\t-I./third_party/include \\\n\t\t-I$(PYTHON_INCLUDE)\n\nLDFLAGS_SO = -L$(DEPS_PATH)/lib -L$(PYTHON_PATH)/lib -L./build/ -lfamilia -lprotobuf -lglog -lgflags\n\n.PHONY: all\nall: familia python/familia.so\n\t@echo $(SOURCES)\n\t@echo $(OBJS)\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/inference_demo.o  $(LDFLAGS_SO) -o inference_demo\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/doc_distance_demo.o $(LDFLAGS_SO)  -o doc_distance_demo\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/query_doc_sim_demo.o $(LDFLAGS_SO)  -o query_doc_sim_demo\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/word_distance_demo.o $(LDFLAGS_SO) -o word_distance_demo\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/topic_word_demo.o $(LDFLAGS_SO) -o topic_word_demo\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/show_topic_demo.o $(LDFLAGS_SO) -o show_topic_demo\n\t$(CXX) $(CXXFLAGS) $(INCPATH) build/demo/document_keywords_demo.o $(LDFLAGS_SO) -o document_keywords_demo\n\ninclude depends.mk\n\n.PHONY: clean\nclean:\n\trm -rf inference_demo\n\trm -rf doc_distance_demo\n\trm -rf query_doc_sim_demo\n\trm -rf word_distance_demo\n\trm -rf topic_word_demo\n\trm -rf show_topic_demo\n\trm -rf document_keywords_demo\n\trm -rf build\n\trm -rf python/cpp/*.o\n\trm -rf python/demo/*.so\n\trm -rf python/demo/*.pyc\n\tfind src -name \"*.pb.[ch]*\" -delete\n\n# third party dependency\ndeps: ${GLOGS} ${GFLAGS} ${PROTOBUF}\n\t@echo \"dependency installed!\"\n\n.PHONY: familia\nfamilia: build/libfamilia.a\n\nOBJS = $(addprefix build/, vose_alias.o inference_engine.o model.o vocab.o document.o sampler.o config.o util.o semantic_matching.o tokenizer.o \\\n\t\t                   demo/inference_demo.o \\\n\t\t\t\t\t\t   demo/doc_distance_demo.o \\\n\t\t\t\t\t\t   demo/query_doc_sim_demo.o \\\n\t\t\t\t\t\t   demo/word_distance_demo.o \\\n\t\t\t\t\t\t   demo/topic_word_demo.o \\\n\t\t\t\t\t\t   demo/document_keywords_demo.o \\\n\t\t\t\t\t\t   demo/show_topic_demo.o)\n\nbuild/libfamilia.a: include/config.pb.h $(OBJS)\n\t@echo Target $@;\n\tar crv $@ $(filter %.o, $?)\n\nbuild/%.o: src/%.cpp\n\t@mkdir -p $(@D)\n\t$(CXX) $(INCPATH) $(CXXFLAGS) -MM -MT build/$*.o $< >build/$*.d\n\t$(CXX) $(INCPATH) $(CXXFLAGS) -c $< -o $@\n\n# build proto\ninclude/config.pb.h src/config.cpp : proto/config.proto\n\t$(PROTOC) --cpp_out=./src --proto_path=./proto $<\n\tmv src/config.pb.h ./include/familia\n\tmv src/config.pb.cc ./src/config.cpp\n\npython/familia.so : python/cpp/familia_wrapper.cpp familia\n\t$(CXX) $(INCPATH) $(CXXFLAGS) -c $< -o python/cpp/familia_wrapper.o\n\t$(CXX) $(INCPATH) $(CXXFLAGS) -shared python/cpp/familia_wrapper.o $(LDFLAGS_SO) -l$(PYTHON_VERSION) -o $@\n\n-include $(wildcard */*.d *.d)\n"
+        },
+        {
+          "name": "README.EN.md",
+          "type": "blob",
+          "size": 6.4677734375,
+          "content": "<a href=\"http://github.com/baidu/Familia\">\n\t<img style=\"vertical-align: top;\" src=\"https://raw.githubusercontent.com/wiki/baidu/Familia/img/logo.png?raw=true\" alt=\"logo\" height=\"140px\">\n</a>\n\n[![Build Status][image-1]][1]\n[![License][image-2]]()\n\n**Familia** is an open-source project, which implements three popular topic models based on the large-scale industrial data. They are Latent Dirichlet Allocation(LDA)、SentenceLDA and Topical Word Embedding(TWE). In addition, **Familia** offers several tools including lda-infer and lda-query-doc-sim. **Familia** could be easily applied to many tasks, such as document classification, document clustering and personalized recommendation. Due to the high cost of model training, we will continue to release well-trained topic models based on the various types of large-scale data.  \n\n## News!!!\nRecently, we launched the Familia's LDA model in [PaddleHub](https://github.com/PaddlePaddle/PaddleHub) 1.8 version. According to different datasets, we launched three LDA models: lda_news, lda_novel, lda_webpage.\n\nPaddleHub is very convenient to use. Let's use lda_news as an example.\n\n1. First, before using PaddleHub, you need to install the PaddlePaddle deep learning framework. For more installation instructions, please refer to [PaddlePaddle Quick Installation] (https://www.paddlepaddle.org.cn/install/quick).\n\n2. Install Paddlehub: `pip install paddlehub`\n\n3. lda_news model installation: `hub install lda_news`\n\n4. API usage\n``` python\nimport paddlehub as hub\n\nlda_news = hub.Module(name=\"lda_news\")\njsd, hd = lda_news.cal_doc_distance(doc_text1=\"今天的天气如何，适合出去游玩吗\", doc_text2=\"感觉今天的天气不错，可以出去玩一玩了\")\n# jsd = 0.003109, hd = 0.0573171\n\nlda_sim = lda_news.cal_query_doc_similarity(query='百度搜索引擎', document='百度是全球最大的中文搜索引擎、致力于让网民更便捷地获取信息，找到所求。百度超过千亿的中文网页数据库，可以瞬间找到相关的搜索结果。')\n# LDA similarity = 0.06826\n\nresults = lda_news.cal_doc_keywords_similarity('百度是全球最大的中文搜索引擎、致力于让网民更便捷地获取信息，找到所求。百度超过千亿的中文网页数据库，可以瞬间找到相关的搜索结果。')\n# [{'word': '百度', 'similarity': 0.12943492762349573}, \n#  {'word': '信息', 'similarity': 0.06139783578769882}, \n#  {'word': '找到', 'similarity': 0.055296603463188265}, \n#  {'word': '搜索', 'similarity': 0.04270794098349327}, \n#  {'word': '全球', 'similarity': 0.03773627056367886}, \n#  {'word': '超过', 'similarity': 0.03478658388202199}, \n#  {'word': '相关', 'similarity': 0.026295857219683725}, \n#  {'word': '获取', 'similarity': 0.021313585287833996}, \n#  {'word': '中文', 'similarity': 0.020187103312009513}, \n#  {'word': '搜索引擎', 'similarity': 0.007092890537169911}]\n```\nMore detailed introduction and usage can be found here: https://www.paddlepaddle.org.cn/hublist?filter=en_category&value=SemanticModel\n\n\n## Introduction\nThe details of topic models implemented by **Familia** can be referred to [papers on topic models][3].\n\nGenerally, the applications adopting topic models are categorized into two parts: Semantic Representation and Semantic Matching.\n\n- **Semantic Representation**\n\n    Topic models are able to mine hidden dimensions (topics) from document collection and generate semantic representations of documents. These generated semantic representations can be used as features for document classification, document content analysis, and CTR     prediction.\n\n- **Semantic Matching**\n\n    We offer two methods to compute semantic similarity between documents:\n    -\tSemantic similarity between short-long documents, which can be applied to keyword extraction and computing query-document semantic  similarity.\n    -\tSemantic similarity between long-long documents, which can be applied to computing semantic similarity between user profile and news article.\n\nMore details can be referred to [**Familia Wiki**][4].\n\n## Compilation\nThe required third parties include `gflags-2.0`，`glogs-0.3.4`，`protobuf-2.5.0`. The complier should support `C++11`, `g++ >= 4.8` and be compatible with linux and mac. The deps could be obtained and installed automatically by running the following script.\n\n\t$ sh build.sh\n\n## Download\n\t$ cd model\n\t$ sh download_model.sh\n\nMore details can be referred to [Models][5].\n\n## Demo\n**Familia** demo includes the following functions:\n-\t**Semantic Representation**\n   utilize topic models to infer the topic distribution of the input document.\n   \n-\t**Semantic Matching**\n\tcompute semantic similarity between short-long or long-long documents.\n\n-\t**Topic Show**\n\tdemonstrate top words under each topic for users’ better understanding.\n  \nMore details can be referred to [Demos][6].\n\n## Tips\n* If libglog.so, libgflags.so and other dynamic libraries could not be found, please add third\\_party to the environmental parameter `LD_LIBRARY_PATH`.\n\n\t`export LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH`\n\n## Contact\n[Github Issues][7]\n\n{familia} at baidu.com\n\n## Citation\n\nThe following article describes the Familia project and industrial cases powered by topic modeling. It bundles and translates the Chinese documentation of the website. We recommend citing this article as default.\n\nDi Jiang, Yuanfeng Song, Rongzhong Lian, Siqi Bao, Jinhua Peng, Huang He and Hua Wu. 2018. [Familia: A Configurable Topic Modeling Framework for Industrial Text Engineering][8]. arXiv preprint arXiv:1808.03733.\n\n\t@article{jiang2018familia,\n  \t  author = {Di Jiang and Yuanfeng Song and Rongzhong Lian and Siqi Bao and Jinhua Peng and Huang He and Hua Wu},\n  \t  title = {{Familia: A Configurable Topic Modeling Framework for Industrial Text Engineering}},\n  \t  journal = {arXiv preprint arXiv:1808.03733},\n  \t  year = {2018}\n\t}\n\nFurther Reading: [Federated Topic Modeling][11]\n\n## Copyright and License\n\nFamilia is provided under the [BSD-3-Clause License][9].\n\n[1]:\thttp://travis-ci.org/baidu/Familia\n[3]:\thttps://github.com/baidu/Familia/wiki/%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE\n[4]:\thttps://github.com/baidu/Familia/wiki\n[5]:\thttps://github.com/baidu/Familia/blob/master/model/README.md\n[6]:\thttps://github.com/baidu/Familia/wiki/Demo%E4%BD%BF%E7%94%A8%E6%96%87%E6%A1%A3\n[7]:\thttps://github.com/baidu/Familia/issues\n[8]:\thttps://arxiv.org/abs/1808.03733v2\n[9]:\tLICENSE\n[11]:   https://github.com/baidu/Familia/blob/master/papers/FTM.pdf\n\n[image-1]:\thttps://travis-ci.org/baidu/Familia.svg?branch=master\n[image-2]:\thttps://img.shields.io/pypi/l/Django.svg\n \n\n\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.3359375,
+          "content": "<a href=\"http://github.com/baidu/Familia\">\n\t<img style=\"vertical-align: top;\" src=\"https://raw.githubusercontent.com/wiki/baidu/Familia/img/logo.png?raw=true\" alt=\"logo\" height=\"140px\">\n</a>\n\n[![Build Status][image-1]][1]\n[![License][image-2]]()\n\n**Familia** 开源项目包含文档主题推断工具、语义匹配计算工具以及基于工业级语料训练的三种主题模型：Latent Dirichlet Allocation(LDA)、SentenceLDA 和Topical Word Embedding(TWE)。 支持用户以“拿来即用”的方式进行文本分类、文本聚类、个性化推荐等多种场景的调研和应用。考虑到主题模型训练成本较高以及开源主题模型资源有限的现状，我们会陆续开放基于工业级语料训练的多个垂直领域的主题模型，以及这些模型在工业界的典型应用方式，助力主题模型技术的科研和落地。([**English**][10])\n\n## News!!!\n\n近期，我们在[PaddleHub](https://github.com/PaddlePaddle/PaddleHub) 1.8版本中上线了**Familia**中的LDA模型，根据数据集的不同，区分为lda_news、lda_novel和lda_webpage。\n\nPaddleHub使用起来非常便捷，我们以lda_news的使用来进行例子介绍。\n\n1. 首先，在使用PaddleHub之前，需要先安装PaddlePaddle深度学习框架，更多安装说明请查阅[飞桨快速安装](https://www.paddlepaddle.org.cn/install/quick)。\n\n2. 安装Paddlehub: `pip install paddlehub`\n\n3. lda_news模型安装：`hub install lda_news`\n\n4. 具体使用：\n``` python\nimport paddlehub as hub\n\nlda_news = hub.Module(name=\"lda_news\")\njsd, hd = lda_news.cal_doc_distance(doc_text1=\"今天的天气如何，适合出去游玩吗\", doc_text2=\"感觉今天的天气不错，可以出去玩一玩了\")\n# jsd = 0.003109, hd = 0.0573171\n\nlda_sim = lda_news.cal_query_doc_similarity(query='百度搜索引擎', document='百度是全球最大的中文搜索引擎、致力于让网民更便捷地获取信息，找到所求。百度超过千亿的中文网页数据库，可以瞬间找到相关的搜索结果。')\n# LDA similarity = 0.06826\n\nresults = lda_news.cal_doc_keywords_similarity('百度是全球最大的中文搜索引擎、致力于让网民更便捷地获取信息，找到所求。百度超过千亿的中文网页数据库，可以瞬间找到相关的搜索结果。')\n# [{'word': '百度', 'similarity': 0.12943492762349573}, \n#  {'word': '信息', 'similarity': 0.06139783578769882}, \n#  {'word': '找到', 'similarity': 0.055296603463188265}, \n#  {'word': '搜索', 'similarity': 0.04270794098349327}, \n#  {'word': '全球', 'similarity': 0.03773627056367886}, \n#  {'word': '超过', 'similarity': 0.03478658388202199}, \n#  {'word': '相关', 'similarity': 0.026295857219683725}, \n#  {'word': '获取', 'similarity': 0.021313585287833996}, \n#  {'word': '中文', 'similarity': 0.020187103312009513}, \n#  {'word': '搜索引擎', 'similarity': 0.007092890537169911}]\n```\n\n更加具体的介绍和使用方法可以看这里：https://www.paddlepaddle.org.cn/hublist?filter=en_category&value=SemanticModel \n\n\n## 应用介绍\n**Familia**目前包含的主题模型的对应论文介绍可以参考[相关论文][3]。\n\n主题模型在工业界的应用范式可以抽象为两大类: 语义表示和语义匹配。\n\n- **语义表示 (Semantic Representation)**\n    对文档进行主题降维，获得文档的语义表示，这些语义表示可以应用于文本分类、文本内容分析、CTR预估等下游应用。\n\n- **语义匹配 (Semantic Matching)**\n\n\t计算文本间的语义匹配度，我们提供两种文本类型的相似度计算方式:\n\n\t- 短文本-长文本相似度计算，使用场景包括文档关键词抽取、计算搜索引擎查询和网页的相似度等等。\n\t- 长文本-长文本相似度计算，使用场景包括计算两篇文档的相似度、计算用户画像和新闻的相似度等等。\n\n更详细的内容及工业界应用案例可以参考[**Familia Wiki**][4] ，\n如果想要对上述应用范式进行基于Web的可视化展示，可以参考[**Familia-Visualization**][12]。\n\n## 代码编译\n第三方依赖包括`gflags-2.0`，`glogs-0.3.4`，`protobuf-2.5.0`, 同时要求编译器支持C++11, `g++ >= 4.8`, 兼容Linux和Mac操作系统。\n默认情况下执行以下脚本会自动获取依赖并安装。\n\n\t$ sh build.sh # 包含获取并安装第三方依赖的过程\n\n## 模型下载\n\n\t$ cd model\n\t$ sh download_model.sh\n\n* 关于模型的详细配置说明可以参考[模型说明][5]\n\n我们会陆续开放不同领域的多种主题模型，来满足更多不同的场景需求。\n\n## Demo\n**Familia**自带的Demo包含以下功能：\n-  **语义表示计算**\n   利用主题模型对输入文档进行主题推断，以得到文档的主题降维表示。\n\n-  **语义匹配计算**\n   计算文本之间的相似度，包括短文本-长文本、长文本-长文本间的相似度计算。\n\n-  **模型内容展现**\n    对模型的主题词，近邻词进行展现，方便用户对模型的主题有直观的理解。\n\n具体的Demo使用说明可以参考[使用文档][6]\n\n## 注意事项\n\n* 若出现找不到libglog.so, libgflags.so等动态库错误，请添加third\\_party至环境变量的`LD_LIBRARY_PATH`中。\n\n\t`export LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH`\n\n* 代码中内置简易的FMM分词工具，只针对主题模型中出现的词表进行正向匹配。若对分词和语义准确度有更高要求，建议使用商用分词工具，并使用自定义词表的功能导入主题模型中的词表。\n\n## 问题咨询\n\n欢迎提交任何问题和Bug Report至[Github Issues][7]。\n或者发送咨询邮件至{ familia } at baidu.com\n\n## Docker\n\n```\ndocker run -d \\\n    --name familia \\\n    -e MODEL_NAME=news \\\n    -p 5000:5000 \\\n    orctom/familia\n```\nMODEL_NAME can be one of `news`/`novel`/`webpage`/`webo`\n\n### API\n\n```\nhttp://localhost:5000/swagger/\n```\n\n## Citation\n\nThe following article describes the Familia project and industrial cases powered by topic modeling. It bundles and translates the Chinese documentation of the website. We recommend citing this article as default.\n\nDi Jiang, Yuanfeng Song, Rongzhong Lian, Siqi Bao, Jinhua Peng, Huang He, Hua Wu. 2018. [Familia: A Configurable Topic Modeling Framework for Industrial Text Engineering][8]. arXiv preprint arXiv:1808.03733.\n\t\n\t@article{jiang2018familia,\n\t  author = {Di Jiang and Yuanfeng Song and Rongzhong Lian and Siqi Bao and Jinhua Peng and Huang He and Hua Wu},\n\t  title = {{Familia: A Configurable Topic Modeling Framework for Industrial Text Engineering}},\n\t  journal = {arXiv preprint arXiv:1808.03733},\n\t  year = {2018}\n\t}\n\t\nFurther Reading: [Federated Topic Modeling][11]\n\n\n## Copyright and License\n\nFamilia is provided under the [BSD-3-Clause License][9].\n\n[1]:\thttp://travis-ci.org/baidu/Familia\n[3]:\thttps://github.com/baidu/Familia/wiki/%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE\n[4]:\thttps://github.com/baidu/Familia/wiki\n[5]:\thttps://github.com/baidu/Familia/blob/master/model/README.md\n[6]:\thttps://github.com/baidu/Familia/wiki/Demo%E4%BD%BF%E7%94%A8%E6%96%87%E6%A1%A3\n[7]:\thttps://github.com/baidu/Familia/issues\n[8]:\thttps://arxiv.org/abs/1808.03733v2\n[9]:\tLICENSE\n[10]:   https://github.com/baidu/Familia/blob/master/README.EN.md\n[11]:   https://github.com/baidu/Familia/blob/master/papers/FTM.pdf\n[12]:   https://github.com/gmission/Familia-Visualization\n\n[image-1]:\thttps://travis-ci.org/baidu/Familia.svg?branch=master\n[image-2]:\thttps://img.shields.io/pypi/l/Django.svg\n"
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.06640625,
+          "content": "#!/bin/bash\n\nmkdir -p third_party\nmake deps\nmake clean && make -j4;\n"
+        },
+        {
+          "name": "depends.mk",
+          "type": "blob",
+          "size": 1.2646484375,
+          "content": "# Install dependencies\n\nURL=http://raw.githubusercontent.com/ZeyuChen/third_party/master/package/\nifndef WGET\n\tWGET = wget --no-check-certificate\nendif\n\n# protobuf\nPROTOBUF = ${DEPS_PATH}/include/google/protobuf/message.h\n${PROTOBUF}:\n\t$(eval FILE=protobuf-2.5.0.tar.gz)\n\t$(eval DIR=protobuf-2.5.0)\n\trm -rf $(FILE) $(DIR)\n\t$(WGET) $(URL)/$(FILE) && tar -zxf $(FILE)\n\tcd $(DIR) && export CFLAGS=-fPIC && export CXXFLAGS=-fPIC && ./configure --disable-shared -prefix=$(DEPS_PATH) && $(MAKE) && $(MAKE) install\n\trm -rf $(FILE) $(DIR)\nprotobuf: | ${PROTOBUF}\n\nGFLAGS = ${DEPS_PATH}/include/google/gflags.h\n${GFLAGS}:\n\t$(eval FILE=gflags-2.0-no-svn-files.tar.gz)\n\t$(eval DIR=gflags-2.0)\n\trm -rf $(FILE) $(DIR)\n\t$(WGET) $(URL)/$(FILE) && tar -zxf $(FILE)\n\tcd $(DIR) && export CFLAGS=-fPIC && export CXXFLAGS=-fPIC && ./configure -prefix=$(DEPS_PATH) && $(MAKE) && $(MAKE) install\n\trm -rf $(FILE) $(DIR)\ngflags: | ${GFLAGS}\n\n# glog\nGLOGS = ${DEPS_PATH}/include/glog/logging.h\n${GLOGS}:\n\t$(eval FILE=glog-0.3.4.tar.gz)\n\t$(eval DIR=glog-0.3.4)\n\trm -rf $(FILE) $(DIR)\n\t$(WGET) $(URL)/$(FILE)  && tar -zxf $(FILE)\n\tcd $(DIR) && export CFLAGS=-fPIC && export CXXFLAGS=-fPIC && ./configure -prefix=$(DEPS_PATH) --with-gflags=$(DEPS_PATH) && $(MAKE) && $(MAKE) install\n\trm -rf $(FILE) $(DIR)\nglog: | ${GLOGS}\n"
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "model",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "papers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proto",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run_doc_distance_demo.sh",
+          "type": "blob",
+          "size": 0.173828125,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./doc_distance_demo --model_dir=\"./model/news\" --conf_file=\"lda.conf\"\n"
+        },
+        {
+          "name": "run_document_keywords_demo.sh",
+          "type": "blob",
+          "size": 0.2392578125,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./document_keywords_demo --model_dir=\"./model/news\" --conf_file=\"lda.conf\" --emb_file=\"news_twe_lda.model\" --model_type=\"TWE\" --top_k=10\n"
+        },
+        {
+          "name": "run_inference_demo.sh",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./inference_demo --model_dir=\"./model/news\" --conf_file=\"lda.conf\"\n"
+        },
+        {
+          "name": "run_query_doc_sim_demo.sh",
+          "type": "blob",
+          "size": 0.2060546875,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./query_doc_sim_demo --model_dir=\"./model/news\" --conf_file=\"lda.conf\" --emb_file=\"news_twe_lda.model\"\n"
+        },
+        {
+          "name": "run_show_topic_demo.sh",
+          "type": "blob",
+          "size": 0.18359375,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./show_topic_demo --model_dir=\"./model/news/\" --conf_file=\"lda.conf\" --top_k=10\n"
+        },
+        {
+          "name": "run_topic_word_demo.sh",
+          "type": "blob",
+          "size": 0.220703125,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./topic_word_demo --model_dir=\"./model/news\" --emb_file=\"news_twe_lda.model\" --topic_words_file=\"topic_words.lda.txt\"\n"
+        },
+        {
+          "name": "run_word_distance_demo.sh",
+          "type": "blob",
+          "size": 0.1943359375,
+          "content": "#!/bin/bash\nexport LD_LIBRARY_PATH=./third_party/lib:$LD_LIBRARY_PATH\n\ncd model\nsh download_model.sh\ncd ..\n\n./word_distance_demo --model_dir=\"./model/news\" --emb_file=\"news_twe_lda.model\" --top_k=20\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

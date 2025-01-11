@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736565471691,
+    "page": 327,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "pond3r/ggpo",
+      "stars": 3212,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3193359375,
+          "content": "# Ignore visual studio directies and local files\n.vscode\n\n# Prerequisites\n*.d\n\n# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Compiled Dynamic libraries\n*.so\n*.dylib\n*.dll\n\n# Fortran module files\n*.mod\n*.smod\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n*.lib\n\n# Executables\n*.exe\n*.out\n*.app"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.103515625,
+          "content": "cmake_minimum_required(VERSION 3.2)\n\n# TODO: SDK Versioning.\nproject(GGPO VERSION 1.0.0)\n\n# Remove RelWithDebInfo and MinSizeRelease build types to match the original Visual Studio Project. \nset(CMAKE_CONFIGURATION_TYPES \"Debug;Release\" CACHE STRING \"\" FORCE)\n\ninclude(src/cmake/properties.cmake)\ninclude(src/cmake/helper_methods.cmake)\n\nif(WIN32)\n\t## Prevent the CMake trying to install GGPO in Program Files on Windows\n\tif (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)\n\t\tset (CMAKE_INSTALL_PREFIX \"${CMAKE_BINARY_DIR}/installed\" CACHE PATH \"Default install path\" FORCE)\n\tendif()\nendif()\n\n# What do we want to build?\noption(GGPO_BUILD_SDK \"Enable the build of the GGPO SDK\" ON)\noption(GGPO_BUILD_VECTORWAR \"Enable the build of the Vector War example app\" ON)\noption(BUILD_SHARED_LIBS \"Enable the build of shared libraries (.dll/.so) instead of static ones (.lib/.a)\" ON)\n\nif(GGPO_BUILD_SDK)\n\tadd_subdirectory(src)\nendif()\n\nif(GGPO_BUILD_VECTORWAR)\n\t# Vector War is Windows only.\n\tif(WIN32)\n\t\tadd_subdirectory(src/apps/vectorwar)\n\telse()\n\t\tmessage(WARNING \"The Vector War app only supports Windows, skipping...\")\n\tendif()\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0830078125,
+          "content": "The MIT License\n\nCopyright (c) 2009-2019 GroundStorm Studios, LLC. (http://ggpo.net)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.ja.md",
+          "type": "blob",
+          "size": 2.830078125,
+          "content": "![](doc/images/ggpo_header.png)\n\n&nbsp; _[![Appveyor build status](https://img.shields.io/appveyor/ci/pond3r/ggpo/master.svg?logo=appveyor)](https://ci.appveyor.com/project/pond3r/ggpo/branch/master)_\n\n## GGPOとは\n\n従来の技術はプレイヤーの入力に遅延を織り込んで通信を行っており、その結果反応が遅く、ラグを感じるプレイ感になっていました。ロールバックネットワーキングは入力予測と投機的実行を行って、プレイヤーの入力を即座に送信するため、遅延を感じさせないネット環境をもたらします。ロールバックがあれば、タイミングや相手の動きや効果音に対する反応、指が覚えている入力、これらオフラインで行えた内容が、そのままオンラインでも行えます。GGPOネットワーキングSDKは、ロールバックネットワーキングを新作や発売されているゲームに極力簡単に組み込めるよう作られています。\n\nこれまでのGGPOについてさらに知りたい方は、http://ja.ggpo.net/ をご覧ください。\n\nこのリポジトリにコードやドキュメント、SDKのサンプルアプリケーションが収められています。\n\n## ビルド\n\nGGPOのビルドは現在のところWindowsのみになりますが、他プラットフォームへのポートも現在行っています。\n\n### Windows\n\nWindowsのビルドは[Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)と[CMake](https://cmake.org/download/)が必要になります。ご使用の前に、どちらもインストールされていることをご確認ください。またインストール時、パスにCMakeを追加してください。\n\n- Visual Studio 2019のソリューションファイルを作成するため、SDKのルートディレクトリで`build_windows.cmd`を実行します。\n- コンパイルをするため、Visual Studio 2019で`build/GGPO.sln`ソリューションを開きます。\n\n好みにあわせて`cmake-gui`で実行も出来ます。\n\n## サンプルアプリケーション\n\nソースディレクトリ内のVector Warには、GGPOを使った2つのクライアントを同期する単純なアプリケーションが含まれています。コマンドライン引数は以下の通りです。\n\n```\nvectorwar.exe  <localport>  <num players> ('local' | <remote ip>:<remote port>) for each player\n```\n\n2～4プレイヤーでのゲーム開始方法の例については、binディレクトリにある.cmdファイルを参照してください。\n\n## ライセンス\n\nGGPOはMITライセンスの元で利用ができます。つまり、GGPOは商用、非商用のどちらでも無料で利用ができます。クレジットの掲載、帰属は必要ありませんが、してくださると大変うれしく思います。\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.1650390625,
+          "content": "![](doc/images/ggpo_header.png)\n\n&nbsp; _[![Appveyor build status](https://img.shields.io/appveyor/ci/pond3r/ggpo/master.svg?logo=appveyor)](https://ci.appveyor.com/project/pond3r/ggpo/branch/master)_\n\n(日本語ドキュメントは[こちら](README.ja.md))\n\n## What's GGPO?\n\nTraditional techniques account for network transmission time by adding delay to a players input, resulting in a sluggish, laggy game-feel.  Rollback networking uses input prediction and speculative execution to send player inputs to the game immediately, providing the illusion of a zero-latency network.  Using rollback, the same timings, reactions, visual and audio queues, and muscle memory your players build up playing offline will translate directly online.  The GGPO networking SDK is designed to make incorporating rollback networking into new and existing games as easy as possible.  \n\nFor more information about the history of GGPO, check out http://ggpo.net/\n\nThis repository contains the code, documentation, and sample applications for the SDK.\n\n## Building\n\nBuilding GGPO is currently only available on Windows, however efforts are being made to port it to other platforms.\n\n### Windows\n\nWindows builds requires both [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) and [CMake](https://cmake.org/download/).  Make sure you've installed both before starting.  Make sure to add CMake to your path when installing.\n\n- Run the `build_windows.cmd` in the root directory of the SDK to generate the Visual Studio 2019 solution files.   \n- Open `build/GGPO.sln` solution for Visual Studio 2019 to compile.\n\nYou can also run the `cmake-gui` tool if you prefer. \n\n## Sample Application\n\nThe Vector War application in the source directory contains a simple application which uses GGPO to synchronize the two clients.  The command line arguments are:\n\n```\nvectorwar.exe  <localport>  <num players> ('local' | <remote ip>:<remote port>) for each player\n```\n\nSee the .cmd files in the bin directory for examples on how to start 2, 3, and 4 player games.\n\n## Licensing\n\nGGPO is available under The MIT License. This means GGPO is free for commercial and non-commercial use. Attribution is not required, but appreciated. \n"
+        },
+        {
+          "name": "appveyor.yml",
+          "type": "blob",
+          "size": 0.3603515625,
+          "content": "# GGPO AppVeyor CI Configuration\n\nversion: 2.4.3.{build}\n\nimage: Visual Studio 2019\n\nenvironment:\n  matrix:\n    - GGPO_SHARED_LIB: on\n    - GGPO_SHARED_LIB: off\n\nmatrix:\n  fast_finish: true\n\nskip_commits:\n  files:\n    - doc/*\n\nconfiguration:\n  - Debug\n  - Release\nplatform:\n  - x64\n\nbefore_build:\n  - configure_windows.cmd --no-prompt\n\nbuild:\n  project: build\\GGPO.sln\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configure_windows.cmd",
+          "type": "blob",
+          "size": 0.5,
+          "content": "@echo off\nset local\n\nIF \"%GGPO_SHARED_LIB%\" == \"\" (\n   echo GGPO_SHARED_LIB not set.  Defaulting to off\n   set GGPO_SHARED_LIB=off\n)\n\necho Generating GGPO Visual Studio solution files.\necho    GGPO_SHARED_LIB=%GGPO_SHARED_LIB%\n\ncmake -G \"Visual Studio 16 2019\" -A x64 -B build -DBUILD_SHARED_LIBS=%GGPO_SHARED_LIB%\n\necho Finished!  Open build/GGPO.sln in Visual Studio to build.\n\nIF \"%1\"==\"--no-prompt\" goto :done\n:: pause so the user can see the output if they double clicked the configure script\npause \n\n:done\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

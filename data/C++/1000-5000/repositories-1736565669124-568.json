@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "timestamp": 1736565669124,
+    "page": 568,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hosseinmoein/DataFrame",
+      "stars": 2561,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.09765625,
+          "content": "\\bin\n\\lib\n\\obj\n\n\\build\n\\install\n\\Release\n\\Debug\n\n#add support for jetbrains IDE\n.idea/\ncmake-build*\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 4.03125,
+          "content": "cmake_minimum_required(VERSION 3.8)\nset(CMAKE_CXX_STANDARD 23)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nif(POLICY CMP0090)\n    cmake_policy(SET CMP0090 NEW)\nendif()\n\nproject(DataFrame VERSION 3.0.0 LANGUAGES CXX)\n\noption(HMDF_TESTING \"Enable testing\" OFF)\noption(HMDF_EXAMPLES \"Build Examples\" OFF)\noption(HMDF_BENCHMARKS \"Build Benchmarks\" OFF)\n\nif(HMDF_TESTING)\n    enable_testing()\nendif()\n\nif(HMDF_SANITY_EXCEPTIONS)\n    add_compile_definitions(HMDF_SANITY_EXCEPTIONS)\nendif()\n\nlist(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)\n\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)\n\ninclude(CheckSymbolExists)\ninclude(CMakePackageConfigHelpers)\ninclude(GNUInstallDirs)\n\nfile(GLOB DATA_FILES ${PROJECT_SOURCE_DIR}/data/*.*)\nfile(COPY ${DATA_FILES} DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})\n\n# Build DataFrame library\ncheck_symbol_exists(clock_gettime \"time.h\" HMDF_HAVE_CLOCK_GETTIME)\n\nfind_package(Threads REQUIRED)\n\nadd_library(DataFrame)\nadd_library(DataFrame::DataFrame ALIAS DataFrame)\n\ntarget_sources(DataFrame PRIVATE src/Utils/DateTime.cc)\n\ntarget_compile_features(DataFrame PUBLIC cxx_std_23)\ntarget_compile_definitions(\n    DataFrame\n    PRIVATE $<$<BOOL:${HMDF_HAVE_CLOCK_GETTIME}>:HMDF_HAVE_CLOCK_GETTIME>\n    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:_USE_MATH_DEFINES>\n)\ntarget_compile_options(\n    DataFrame\n    PRIVATE $<$<CXX_COMPILER_ID:MSVC>:/bigobj>\n            $<$<CXX_COMPILER_ID:MSVC>:/wd4251>\n    # TODO: fix these warnings\n    PUBLIC $<$<CXX_COMPILER_ID:MSVC>:/wd4244>\n           $<$<CXX_COMPILER_ID:MSVC>:/wd4267>\n           $<$<CXX_COMPILER_ID:MSVC>:/wd4996>\n)\nset_target_properties(\n    DataFrame\n    PROPERTIES VERSION ${PROJECT_VERSION} SOVERSION ${PROJECT_VERSION_MAJOR}\n)\n\nif(BUILD_SHARED_LIBS)\n    set_target_properties(\n        DataFrame\n        PROPERTIES CXX_VISIBILITY_PRESET\n        hidden VISIBILITY_INLINES_HIDDEN ON\n    )\n    target_compile_definitions(DataFrame PUBLIC HMDF_SHARED)\nendif()\n\ntarget_link_libraries(\n    DataFrame\n    INTERFACE Threads::Threads\n              $<$<AND:$<BOOL:${UNIX}>,$<NOT:$<BOOL:${APPLE}>>>:rt>\n)\n\ntarget_include_directories(\n    DataFrame\n    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>\n           $<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>\n)\n\n# Installation\n\n## DataFrame library & public headers\ninstall(\n    TARGETS DataFrame\n    EXPORT DataFrameExport\n    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib\n    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT lib\n    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT bin\n)\n\ninstall(\n    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/DataFrame\n    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}\n    COMPONENT dev\n)\n\n## pkgconfig file\nif(UNIX AND NOT APPLE)\n    set(DATAFRAME_PKG_EXTRA_LIBS \" -lpthread -lrt\")\nendif()\n\nconfigure_file(\n    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/DataFrame.pc.in\n    DataFrame.pc\n    @ONLY\n)\n\ninstall(\n    FILES ${CMAKE_CURRENT_BINARY_DIR}/DataFrame.pc\n    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig\n)\n\n## CMake config files\nconfigure_package_config_file(\n    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/DataFrameConfig.cmake.in\n    DataFrameConfig.cmake\n    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DataFrame\n)\n\nwrite_basic_package_version_file(\n    DataFrameConfigVersion.cmake\n    VERSION ${PROJECT_VERSION}\n    COMPATIBILITY AnyNewerVersion\n)\n\nexport(\n    EXPORT DataFrameExport\n    NAMESPACE DataFrame::\n    FILE DataFrameTargets.cmake\n)\n\ninstall(\n    EXPORT DataFrameExport\n    NAMESPACE DataFrame::\n    FILE DataFrameTargets.cmake\n    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DataFrame\n)\n\ninstall(\n    FILES ${CMAKE_CURRENT_BINARY_DIR}/DataFrameConfig.cmake\n          ${CMAKE_CURRENT_BINARY_DIR}/DataFrameConfigVersion.cmake\n    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/DataFrame\n)\n\nexport(PACKAGE DataFrame)\n\n# Tests\nif(HMDF_TESTING)\n    add_subdirectory(test)\n    file(COPY ${DATA_FILES} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/test)\nendif()\n\n# Examples\nif(HMDF_EXAMPLES)\n    add_subdirectory(examples)\nendif()\n\n# Benchmarks\nif(HMDF_BENCHMARKS)\n    add_subdirectory(benchmarks)\nendif()\n"
+        },
+        {
+          "name": "License",
+          "type": "blob",
+          "size": 1.439453125,
+          "content": "Copyright (c) 2019-2026, Hossein Moein\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n* Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright\nnotice, this list of conditions and the following disclaimer in the\ndocumentation and/or other materials provided with the distribution.\n* Neither the name of Hossein Moein and/or the DataFrame nor the\nnames of its contributors may be used to endorse or promote products\nderived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY\nDIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.3427734375,
+          "content": "<!--\nCopyright (c) 2019-2026, Hossein Moein\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n* Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n* Redistributions in binary form must reproduce the above copyright\nnotice, this list of conditions and the following disclaimer in the\ndocumentation and/or other materials provided with the distribution.\n* Neither the name of Hossein Moein and/or the DataFrame nor the\nnames of its contributors may be used to endorse or promote products\nderived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL Hossein Moein BE LIABLE FOR ANY\nDIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n-->\n[![C++23](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://isocpp.org/std/the-standard )\n[![Build status](https://ci.appveyor.com/api/projects/status/hjw01qui3bvxs8yi?svg=true)](https://ci.appveyor.com/project/hosseinmoein/dataframe)\n[![Codacy Badge](https://api.codacy.com/project/badge/Grade/db646376a4014c3788c7224e670fe451)](https://app.codacy.com/organizations/gh/hosseinmoein/repositories)\n<BR>\n[![GitHub tag (latest by date)](https://img.shields.io/github/tag-date/hosseinmoein/DataFrame.svg?color=blue&label=Official%20Release&style=popout)](https://github.com/hosseinmoein/DataFrame/releases)\n[![Conan Center](https://img.shields.io/conan/v/dataframe)](https://conan.io/center/recipes/dataframe)\n[![VCPKG package](https://repology.org/badge/version-for-repo/vcpkg/dataframe.svg)](https://vcpkg.link/ports/dataframe)\n\n<img src=\"docs/LionLookingUp.jpg\" alt=\"DataFrame Lion\" width=\"400\" longdesc=\"https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html\"/>\n\n## <a href=\"https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html\" target=\"_blank\"><B>DataFrame documentation with code samples</B></a>\nThis is a C++ analytical library designed for data analysis similar to libraries in Python and R. For example, you would compare this to [Pandas](https://pandas.pydata.org) or [R data.frame](https://www.w3schools.com/r/r_data_frames.asp)<BR>\nYou can slice the data in many different ways. You can join, merge, group-by the data. You can run various statistical, summarization, financial, and ML algorithms on the data. You can add your custom algorithms easily. You can multi-column sort, custom pick and delete the data. And more …<BR>\nDataFrame also includes a large collection of analytical algorithms in form of visitors. These are from basic stats such as <I>Mean</I>, <I>Std Deviation</I>, <I>Return</I>, … to more involved analysis such as <I>PCA</I>, <I>Polynomial Fit</I>, <I>Fast Fourier transform of arbitrary length</I> … including a good collection of trading indicators. You can also easily add your own algorithms.<BR>\nDataFrame also employs extensive multithreading in almost all its API’s, for large datasets. That makes DataFrame especially suitable for analyzing large datasets.<BR>\nFor basic operations to start you off, see [Hello World](examples/hello_world.cc). For a complete list of features with code samples, see <a href=\"https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/DataFrame.html\" target=\"_blank\">documentation</a>.\n\nI have followed a few <B>principles in this library</B>:<BR>\n\n1. [Support any type either built-in or user defined without needing new code](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/any_type.html)\n2. [Never chase pointers ala _linked lists_, _std::any_, _pointer to base_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/pointers.html)\n3. [Have all column data in contiguous memory space](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/contiguous_memory.html)\n4. [Never use more space than you need ala _unions_, _std::variant_, ...](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/std_variant.html)\n5. [Avoid copying data as much as possible](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/copying_data.html)\n6. [Use multi-threading but only when it makes sense](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/multithreading.html)\n7. [Do not attempt to protect the user against _garbage in_, _garbage out_](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/garbage_in_garbage_out.html)\n8. [Keep DataFrame library self-contained, meaning DataFrame must only depend on _C++ language_ and its _standard library_](https://htmlpreview.github.io/?https://github.com/hosseinmoein/DataFrame/blob/master/docs/HTML/self_contained.html)\n\n---\n\n### Performance\nYou have probably heard of Polars DataFrame. It is implemented in Rust and ported with zero-overhead to Python (as long as you don’t have a loop). I have been asked by many people to write a comparison for <B>DataFrame vs. Polars</B>. So, I finally found some time to learn a bit about Polars and write a very simple benchmark.<BR>\nI wrote the following identical programs for both Polars and C++ DataFrame (and Pandas). I used Polars version: 0.19.14 (Pandas version: 1.5.3, Numpy version: 1.24.2). And I used C++20 clang compiler with -O3 option. I ran both on my, somewhat outdated, MacBook Pro (Intel chip, 96GB RAM).<BR>\nIn both cases, I created a dataframe with 3 random columns. The C++ DataFrame also required an additional index column of the same size. Polars doesn’t believe in index columns (that has its own pros and cons. I am not going through it here).\nEach program has three identical parts. First it generates and populates 3 columns with 300m random numbers each (in case of C++ DataFrame, it must also generate a sequential index column of the same size). That is the part I am _not_ interested in. In the second part, it calculates the mean of the first column, the variance of the second column, and the Pearson correlation of the second and third columns. In the third part, it does a select (or filter as Polars calls it) on one of the columns.\n\n**Results**:<BR>\nThe maximum dataset I could load into Polars was 300m rows per column. Any bigger dataset blew up the memory and caused OS to kill it. I ran C++ DataFrame with 10b rows per column and I am sure it would have run with bigger datasets too. So, I was forced to run both with 300m rows to compare.\nI ran each test 4 times and took the best time. Polars numbers varied a lot from one run to another, especially calculation and selection times. C++ DataFrame numbers were significantly more consistent.\n\n|                          | [<B>C++ DataFrame</B>](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/dataframe_performance.cc) | [<B>Polars</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/polars_performance.py) | [<B>Pandas</B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;](https://github.com/hosseinmoein/DataFrame/blob/master/benchmarks/pandas_performance.py) |\n|            :--           |        ---:         |     ---:      |     ---:      |\n| Data generation/load time | 26.9459 secs | 28.4686 secs | 36.6799 secs |\n| Calculation time | 1.2602 secs | 4.8766 secs | 40.3264 secs |\n| Selection time | 0.7425 secs | 3.8766 secs | 8.3264 secs |\n| Overall time: | 28.9486 secs | 36.8763 secs | 85.8451 secs | \n\n---\n\n[**Please consider sponsoring DataFrame, especially if you are using it in production capacity. It is the strongest form of appreciation**](https://github.com/sponsors/hosseinmoein)\n\n---\n"
+        },
+        {
+          "name": "appveyor.yml",
+          "type": "blob",
+          "size": 0.5673828125,
+          "content": "version: '{build}'\n\nskip_tags: true\n\nimage:\n  - Visual Studio 2022\n\nplatform:\n  - x64\n#  - x86\n\ntest: off\n\nclone_folder: c:\\Repos\\source\n\ninstall:\n#  - ps: if($env:PLATFORM  -eq 'x64') { $env:arch = ' Win64'; } else { $env:arch = ''; } # Null for x86 builds\n  - ps: $env:arch = ' Win64';\n\nbuild_script:\n  - cd C:\\Repos\\source\\\n  - mkdir build\n  - cd build\n  - cmake --version\n  - cmake C:\\Repos\\source -G \"Visual Studio 17 2022\" -DHMDF_TESTING=ON -DHMDF_EXAMPLES=ON -DHMDF_BENCHMARKS=ON\n  - cmake --build . --config \"Release\"\n\ntest_script:\n  - ctest -C Release --output-on-failure\n"
+        },
+        {
+          "name": "benchmarks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.369140625,
+          "content": "{\n  \"name\": \"DataFrame\",\n  \"version\": \"3.3.0\",\n  \"homepage\": \"https://github.com/hosseinmoein/DataFrame\",\n  \"repository\": \"github:hosseinmoein/DataFrame\",\n  \"author\": \"Hossein Moein <myseajune@aol.com>\",\n  \"description\": \"C++ DataFrame for statistical, Financial, and ML analysis -- in modern C++ using native types and contiguous memory storage\",\n  \"license\": \"BSD 3-Clause\"\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

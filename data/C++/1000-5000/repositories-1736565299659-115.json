@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "timestamp": 1736565299659,
+    "page": 115,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "DDoSolitary/LxRunOffline",
+      "stars": 4171,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.052734375,
+          "content": "﻿cmake-build-*/\n.vs/\nout/\nbuild/\nCMakeSettings.json\n"
+        },
+        {
+          "name": ".idea",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.4345703125,
+          "content": "cmake_minimum_required(VERSION 3.17)\r\n\r\nexecute_process(\r\n\tCOMMAND git describe --tags\r\n\tWORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}\r\n\tOUTPUT_VARIABLE LxRunOffline_VERSION_STR\r\n\tRESULT_VARIABLE GIT_RESULT\r\n\tOUTPUT_STRIP_TRAILING_WHITESPACE\r\n)\r\nif(GIT_RESULT EQUAL 0)\r\n\tstring(SUBSTRING ${LxRunOffline_VERSION_STR} 1 -1 VERSION)\r\n\tstring(FIND ${VERSION} - VERSION_SLASH_OFFSET)\r\n\tstring(SUBSTRING ${VERSION} 0 ${VERSION_SLASH_OFFSET} VERSION)\r\nelse()\r\n\tmessage(WARNING \"Unable to retrieve version using git.\")\r\n\tset(LxRunOffline_VERSION_STR \"unknown version\")\r\n\tset(VERSION 0.0.0)\r\nendif()\r\n\r\nproject(LxRunOffline VERSION ${VERSION})\r\n\r\noption(LXRUNOFFLINE_STATIC \"Link statically\" ON)\r\noption(BUILD_CHOCO_PKG \"Package the files for Chocolatey\" OFF)\r\n\r\nset(CMAKE_CXX_STANDARD 17)\r\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\r\nset(CMAKE_CXX_EXTENSIONS OFF)\r\nadd_compile_definitions(UNICODE _UNICODE _CRT_SECURE_NO_WARNINGS)\r\n\r\nif (NOT CMAKE_BUILD_TYPE STREQUAL Debug)\r\n\t# Build fails when linking Boost statically using MinGW.\r\n\tif(NOT LXRUNOFFLINE_STATIC OR NOT MINGW)\r\n\t\tset(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)\r\n\tendif()\r\nendif()\r\n\r\nif(MSVC)\r\n\tadd_compile_definitions(NOMINMAX)\r\n\tadd_compile_options(/W3 /wd4068)\r\n\tadd_compile_options(/utf-8)\r\n\tset(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)\r\n\tif(NOT LXRUNOFFLINE_STATIC)\r\n\t\tstring(APPEND CMAKE_MSVC_RUNTIME_LIBRARY DLL)\r\n\tendif()\r\nelseif(MINGW)\r\n\tadd_compile_options(-Wall -Wextra -Wpedantic -Wno-unknown-pragmas -Wno-parentheses)\r\n\tadd_compile_options(-finput-charset=utf-8)\r\n\tif(LXRUNOFFLINE_STATIC)\r\n\t\tadd_link_options(-static -static-libgcc -static-libstdc++)\r\n\tendif()\r\nelse()\r\n\tmessage(WARNING \"Only MinGW and MSVC compilers are supported.\")\r\nendif()\r\n\r\nif(LXRUNOFFLINE_STATIC)\r\n\tset(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_STATIC_LIBRARY_SUFFIX})\r\nelse()\r\n\tset(CMAKE_FIND_LIBRARY_SUFFIXES ${CMAKE_IMPORT_LIBRARY_SUFFIX})\r\nendif()\r\n\r\nenable_testing()\r\n\r\nif(BUILD_CHOCO_PKG)\r\n\tif(MSVC)\r\n\t\tadd_subdirectory(choco)\r\n\telse()\r\n\t\tmessage(FATAL_ERROR \"Can't build Chocolatey package with non-MSVC compilers because the shell extension can't be built.\")\r\n\tendif()\r\nendif()\r\nadd_subdirectory(src)\r\nadd_subdirectory(tests)\r\n\r\ninstall(FILES LICENSE LICENSE-3RD-PARTY DESTINATION .)\r\n\r\nif(MSVC)\r\n\tset(ZIP_NAME_SUFFIX -msvc)\r\nelse()\r\n\tset(ZIP_NAME_SUFFIX -mingw)\r\nendif()\r\n\r\nset(CPACK_GENERATOR ZIP)\r\nset(CPACK_STRIP_FILES ON)\r\nset(CPACK_PACKAGE_FILE_NAME LxRunOffline-${LxRunOffline_VERSION_STR}${ZIP_NAME_SUFFIX})\r\ninclude(CPack)\r\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.078125,
+          "content": "The MIT License (MIT)\r\n\r\nCopyright (c) 2016-2020 DDoSolitary\r\n\r\nPermission is hereby granted, free of charge, to any person obtaining a copy\r\nof this software and associated documentation files (the \"Software\"), to deal\r\nin the Software without restriction, including without limitation the rights\r\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\ncopies of the Software, and to permit persons to whom the Software is\r\nfurnished to do so, subject to the following conditions:\r\n\r\nThe above copyright notice and this permission notice shall be included in all\r\ncopies or substantial portions of the Software.\r\n\r\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE.\r\n"
+        },
+        {
+          "name": "LICENSE-3RD-PARTY",
+          "type": "blob",
+          "size": 3.447265625,
+          "content": "Boost\r\n\r\nBoost Software License - Version 1.0 - August 17th, 2003\r\n\r\nPermission is hereby granted, free of charge, to any person or organization\r\nobtaining a copy of the software and accompanying documentation covered by\r\nthis license (the \"Software\") to use, reproduce, display, distribute,\r\nexecute, and transmit the Software, and to prepare derivative works of the\r\nSoftware, and to permit third-parties to whom the Software is furnished to\r\ndo so, all subject to the following:\r\n\r\nThe copyright notices in the Software and this entire statement, including\r\nthe above license grant, this restriction and the following disclaimer,\r\nmust be included in all copies of the Software, in whole or in part, and\r\nall derivative works of the Software, unless such copies or derivative\r\nworks are solely in the form of machine-executable object code generated by\r\na source language processor.\r\n\r\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\nFITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT. IN NO EVENT\r\nSHALL THE COPYRIGHT HOLDERS OR ANYONE DISTRIBUTING THE SOFTWARE BE LIABLE\r\nFOR ANY DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE,\r\nARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\r\nDEALINGS IN THE SOFTWARE.\r\n\r\n\r\nlibarchive\r\n\r\nCopyright (c) 2003-2009 <author(s)>\r\nAll rights reserved.\r\n\r\nRedistribution and use in source and binary forms, with or without\r\nmodification, are permitted provided that the following conditions\r\nare met:\r\n1. Redistributions of source code must retain the above copyright\r\n   notice, this list of conditions and the following disclaimer\r\n   in this position and unchanged.\r\n2. Redistributions in binary form must reproduce the above copyright\r\n   notice, this list of conditions and the following disclaimer in the\r\n   documentation and/or other materials provided with the distribution.\r\n\r\nTHIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) ``AS IS'' AND ANY EXPRESS OR\r\nIMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES\r\nOF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.\r\nIN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR ANY DIRECT, INDIRECT,\r\nINCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT\r\nNOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\r\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\r\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\r\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF\r\nTHIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\r\n\r\n\r\nTinyXML-2\r\n\r\nThis software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.\r\n\r\nPermission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:\r\n\r\n1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.\r\n2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.\r\n3. This notice may not be removed or altered from any source distribution.\r\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.1904296875,
+          "content": "# LxRunOffline\r\n\r\n![Build status](https://github.com/DDoSolitary/LxRunOffline/workflows/.github/workflows/build.yml/badge.svg)\r\n[![Chocolatey](https://img.shields.io/chocolatey/v/lxrunoffline.svg)](https://chocolatey.org/packages/lxrunoffline)\r\n\r\nA full-featured utility for managing *Windows Subsystem for Linux (WSL)*.\r\n\r\n# Donation\r\n\r\nIt would be greatly appreciated if you could make a donation to support development of this project.\r\n\r\nPayPal [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.me/ddosolitary)\r\n\r\nAlipay\r\n\r\n![Alipay](https://image.ibb.co/kkxV99/1537608529099_20180922174914623.jpg)\r\n\r\n# Features\r\n\r\n- Install any Linux distro to any directory on your computer.\r\n- Move an existing installation to another directory.\r\n- Duplicate(copy) an existing installation.\r\n- Register an existing installation directory. This enables you to install to a USB stick and use it on different computers.\r\n- Run arbitrary Linux commands in a specified installation.\r\n- Configure default user, environment variables and [various flags](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/api/wslapi/ne-wslapi-wsl_distribution_flags).\r\n- Export configuration to an XML file and import from the file.\r\n- Export an installation to a tar file.\r\n\r\n# Install\r\n\r\nYou can install via Chocolatey `choco install lxrunoffline`, Scoop `scoop bucket add extras`, `scoop install lxrunoffline`, or download the binaries directly:\r\n- Latest releases: https://github.com/DDoSolitary/LxRunOffline/releases\r\n- Development builds: https://ddosolitary-builds.sourceforge.io/LxRunOffline/\r\n\r\n### Shell extension\r\n\r\nThe right-click menu feature requires the shell extension DLL to be properly registered. This is automatically done if you used Chocolatey to install this project. However, if you downloaded the binaries directly, you need to run `regsvr32 LxRunOfflineShellExt.dll` manually to register the DLL file.\r\n\r\n# Usage\r\n\r\nSee the [Wiki](https://github.com/DDoSolitary/LxRunOffline/wiki) to download tar files for different distros, which are used by the `LxRunOffline install` command.\r\n\r\nRun `LxRunOffline` for available actions and run `LxRunOffline <action-name>` for available arguments/flags.\r\n\r\n# Build\r\n\r\nThis project uses CMake as its build system. MinGW GCC and Visual C++ compilers are supported.\r\n\r\n### Visual C++\r\n\r\n1. Install Visual Studio 2019, latest Windows SDK, CMake and [vcpkg](https://github.com/Microsoft/vcpkg).\r\n\r\n2. Install dependencies.\r\n\r\n```\r\nvcpkg install --triplet x64-windows-static libarchive boost-program-options boost-format boost-algorithm boost-test tinyxml2\r\n```\r\n\r\n3. Open \"x64 Native Tools Command Prompt\" from Start Menu and build.\r\n\r\n```cmd\r\nmkdir build\r\ncd build\r\ncmake .. ^\r\n    -G \"NMake Makefiles\" ^\r\n    -DCMAKE_TOOLCHAIN_FILE=<path-to-vcpkg-dir>/scripts/buildsystems/vcpkg.cmake ^\r\n    -DVCPKG_TARGET_TRIPLET=x64-windows-static\r\nnmake\r\n```\r\n\r\n### MinGW\r\n\r\n1. Install MSYS2.\r\n\r\n2. Open the \"MSYS2 MinGW 64-bit\" shell from Start menu, and install dependencies.\r\n\r\n```bash\r\npacman -Sy --needed --noconfirm base-devel git mingw-w64-x86_64-{toolchain,cmake,libarchive,boost,tinyxml2}\r\n```\r\n\r\n3. Build.\r\n\r\n```bash\r\nmkdir build\r\ncd build\r\ncmake .. -G \"MSYS Makefiles\"\r\nmake\r\n```\r\n\r\n### Notes\r\n\r\n- Other CMake generators like Visual Studio and Ninja may also work, but they're neither tested nor officially supported by this project.\r\n- Static linking is used by default. However, you can define `-DLXRUNOFFLINE_STATIC=OFF` to switch to dynamic linking. If you're building with Visual C++, you also need to change vcpkg's triplet to `x64-windows` when installing dependencies and invoking CMake.\r\n- The build script in [CI configuration](https://github.com/DDoSolitary/LxRunOffline/blob/master/.github/workflows/build.yml) can be used as an example of how to build this project.\r\n- The shell extension uses ATL, which is not supported by MinGW, so it will only be built when using Visual C++.\r\n\r\n# Compatibility\r\n\r\n- **v1.x**: Only Windows 10 Fall Creators Update (v1709) or earlier.\r\n- **v2.x**: Only Windows 10 Fall Creators Update (v1709) or later.\r\n- **v3.x**: Only Windows 10 April 2018 Update (v1803) or later.\r\n\r\nIt is strongly recommended to install the April 2018 Update or later and use v3.x releases.\r\n"
+        },
+        {
+          "name": "choco",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

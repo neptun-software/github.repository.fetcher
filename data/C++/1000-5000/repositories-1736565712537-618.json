@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "timestamp": 1736565712537,
+    "page": 618,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "RobustFieldAutonomyLab/LeGO-LOAM",
+      "stars": 2453,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.490234375,
+          "content": "BSD 3-Clause License\n \nCopyright (c) 2018, Robust Field Autonomy Lab\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the copyright holder nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "LeGO-LOAM",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.01953125,
+          "content": "# LeGO-LOAM\n\nThis repository contains code for a lightweight and ground optimized lidar odometry and mapping (LeGO-LOAM) system for ROS compatible UGVs. The system takes in point cloud  from a Velodyne VLP-16 Lidar (palced horizontally) and optional IMU data as inputs. It outputs 6D pose estimation in real-time. A demonstration of the system can be found here -> https://www.youtube.com/watch?v=O3tz_ftHV48\n<!--\n[![Watch the video](/LeGO-LOAM/launch/demo.gif)](https://www.youtube.com/watch?v=O3tz_ftHV48)\n-->\n<p align='center'>\n    <img src=\"/LeGO-LOAM/launch/demo.gif\" alt=\"drawing\" width=\"800\"/>\n</p>\n\n## Lidar-inertial Odometry\n\nAn updated lidar-initial odometry package, [LIO-SAM](https://github.com/TixiaoShan/LIO-SAM), has been open-sourced and available for testing.\n\n## Dependency\n\n- [ROS](http://wiki.ros.org/ROS/Installation) (tested with indigo, kinetic, and melodic)\n- [gtsam](https://github.com/borglab/gtsam/releases) (Georgia Tech Smoothing and Mapping library, 4.0.0-alpha2)\n  ```\n  wget -O ~/Downloads/gtsam.zip https://github.com/borglab/gtsam/archive/4.0.0-alpha2.zip\n  cd ~/Downloads/ && unzip gtsam.zip -d ~/Downloads/\n  cd ~/Downloads/gtsam-4.0.0-alpha2/\n  mkdir build && cd build\n  cmake ..\n  sudo make install\n  ```\n\n## Compile\n\nYou can use the following commands to download and compile the package.\n\n```\ncd ~/catkin_ws/src\ngit clone https://github.com/RobustFieldAutonomyLab/LeGO-LOAM.git\ncd ..\ncatkin_make -j1\n```\nWhen you compile the code for the first time, you need to add \"-j1\" behind \"catkin_make\" for generating some message types. \"-j1\" is not needed for future compiling.\n\n## The system\n\nLeGO-LOAM is speficifally optimized for a horizontally placed VLP-16 on a ground vehicle. It assumes there is always a ground plane in the scan. The UGV we are using is Clearpath Jackal. It has a built-in IMU. \n\n<p align='center'>\n    <img src=\"/LeGO-LOAM/launch/jackal-label.jpg\" alt=\"drawing\" width=\"400\"/>\n</p>\n\nThe package performs segmentation before feature extraction.\n\n<p align='center'>\n    <img src=\"/LeGO-LOAM/launch/seg-total.jpg\" alt=\"drawing\" width=\"400\"/>\n</p>\n\nLidar odometry performs two-step Levenberg Marquardt optimization to get 6D transformation.\n\n<p align='center'>\n    <img src=\"/LeGO-LOAM/launch/odometry.jpg\" alt=\"drawing\" width=\"400\"/>\n</p>\n\n## New Lidar\n\nThe key thing to adapt the code to a new sensor is making sure the point cloud can be properly projected to an range image and ground can be correctly detected. For example, VLP-16 has a angular resolution of 0.2&deg; and 2&deg; along two directions. It has 16 beams. The angle of the bottom beam is -15&deg;. Thus, the parameters in \"utility.h\" are listed as below. When you implement new sensor, make sure that the ground_cloud has enough points for matching. Before you post any issues, please read this.\n\n```\nextern const int N_SCAN = 16;\nextern const int Horizon_SCAN = 1800;\nextern const float ang_res_x = 0.2;\nextern const float ang_res_y = 2.0;\nextern const float ang_bottom = 15.0;\nextern const int groundScanInd = 7;\n```\n\nAnother example for Velodyne HDL-32e range image projection:\n\n```\nextern const int N_SCAN = 32;\nextern const int Horizon_SCAN = 1800;\nextern const float ang_res_x = 360.0/Horizon_SCAN;\nextern const float ang_res_y = 41.333/float(N_Scan-1);\nextern const float ang_bottom = 30.666666;\nextern const int groundScanInd = 20;\n```\n\n**New**: a new **useCloudRing** flag has been added to help with point cloud projection (i.e., VLP-32C, VLS-128). Velodyne point cloud has \"ring\" channel that directly gives the point row id in a range image. Other lidars may have a same type of channel, i.e., \"r\" in Ouster. If you are using a non-Velodyne lidar but it has a similar \"ring\" channel, you can change the PointXYZIR definition in utility.h and the corresponding code in imageProjection.cpp.\n\nFor **KITTI** users, if you want to use our algorithm with  **HDL-64e**, you need to write your own implementation for such projection. If the point cloud is not projected properly, you will lose many points and performance.\n\nIf you are using your lidar with an IMU, make sure your IMU is aligned properly with the lidar. The algorithm uses IMU data to correct the point cloud distortion that is cause by sensor motion. If the IMU is not aligned properly, the usage of IMU data will deteriorate the result. Ouster lidar IMU is not supported in the package as LeGO-LOAM needs a 9-DOF IMU.\n\n## Run the package\n\n1. Run the launch file:\n```\nroslaunch lego_loam run.launch\n```\nNotes: The parameter \"/use_sim_time\" is set to \"true\" for simulation, \"false\" to real robot usage.\n\n2. Play existing bag files:\n```\nrosbag play *.bag --clock --topic /velodyne_points /imu/data\n```\nNotes: Though /imu/data is optinal, it can improve estimation accuracy greatly if provided. Some sample bags can be downloaded from [here](https://github.com/RobustFieldAutonomyLab/jackal_dataset_20170608). \n\n## New data-set\n\nThis dataset, [Stevens data-set](https://github.com/TixiaoShan/Stevens-VLP16-Dataset), is captured using a Velodyne VLP-16, which is mounted on an UGV - Clearpath Jackal, on Stevens Institute of Technology campus. The VLP-16 rotation rate is set to 10Hz. This data-set features over 20K scans and many loop-closures. \n\n<p align='center'>\n    <img src=\"/LeGO-LOAM/launch/dataset-demo.gif\" alt=\"drawing\" width=\"600\"/>\n</p>\n<p align='center'>\n    <img src=\"/LeGO-LOAM/launch/google-earth.png\" alt=\"drawing\" width=\"600\"/>  \n</p>\n\n## Cite *LeGO-LOAM*\n\nThank you for citing [our *LeGO-LOAM* paper](./Shan_Englot_IROS_2018_Preprint.pdf) if you use any of this code: \n```\n@inproceedings{legoloam2018,\n  title={LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain},\n  author={Shan, Tixiao and Englot, Brendan},\n  booktitle={IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},\n  pages={4758-4765},\n  year={2018},\n  organization={IEEE}\n}\n```\n\n## Loop Closure\n\nThe loop-closure method implemented in this package is a naive ICP-based method. It often fails when the odometry drift is too large. For more advanced loop-closure methods, there is a package called [SC-LeGO-LOAM](https://github.com/irapkaist/SC-LeGO-LOAM), which features utilizing point cloud descriptor.\n\n## Speed Optimization\n\nAn optimized version of LeGO-LOAM can be found [here](https://github.com/facontidavide/LeGO-LOAM/tree/speed_optimization). All credits go to @facontidavide. Improvements in this directory include but not limited to:\n\n    + To improve the quality of the code, making it more readable, consistent and easier to understand and modify.\n    + To remove hard-coded values and use proper configuration files to describe the hardware.\n    + To improve performance, in terms of amount of CPU used to calculate the same result.\n    + To convert a multi-process application into a single-process / multi-threading one; this makes the algorithm more deterministic and slightly faster.\n    + To make it easier and faster to work with rosbags: processing a rosbag should be done at maximum speed allowed by the CPU and in a deterministic way.\n    + As a consequence of the previous point, creating unit and regression tests will be easier.\n"
+        },
+        {
+          "name": "Shan_Englot_IROS_2018_Preprint.pdf",
+          "type": "blob",
+          "size": 4451.953125,
+          "content": null
+        },
+        {
+          "name": "cloud_msgs",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

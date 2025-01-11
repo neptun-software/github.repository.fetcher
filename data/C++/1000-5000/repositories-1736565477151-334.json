@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "timestamp": 1736565477151,
+    "page": 334,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ggerganov/imtui",
+      "stars": 3167,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0888671875,
+          "content": "compile_commands.json\nbuild\nbuild-*\n\n.cache\n.clangd\n.vscode\n.cquery_cache\n*.code-workspace\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1337890625,
+          "content": "[submodule \"third-party/imgui/imgui\"]\n    path = third-party/imgui/imgui\n    url = https://github.com/ggerganov/imgui\n    branch = imtui\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.6396484375,
+          "content": "# Changelog\n\n## [Unreleased]\n\n- \"Columns & Tables\" demo window (0986676)\n\n## [1.0.4] - 2021-04-03\n\n- Update Dear ImGui to v1.81 ([#24](https://github.com/ggerganov/imtui/pull/24))\n- Fix CMake install targets\n\n## [1.0.3] - 2021-01-09\n\n- Update Dear ImGui to v1.79\n- Add Windows support with MSYS2 + PDCurses (39f34ea)\n\n## [1.0.0] - 2020-12-15\n\n- Initial release with Dear ImGui v1.77 backend\n\n[unreleased]: https://github.com/ggerganov/imtui/compare/v1.0.4...HEAD\n[1.0.4]: https://github.com/ggerganov/imtui/releases/tag/v1.0.4\n[1.0.3]: https://github.com/ggerganov/imtui/releases/tag/v1.0.3\n[1.0.0]: https://github.com/ggerganov/imtui/releases/tag/v1.0.0\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 3.2041015625,
+          "content": "cmake_minimum_required (VERSION 3.10)\nproject(imtui VERSION 1.0.3)\n\nset(CMAKE_EXPORT_COMPILE_COMMANDS \"on\")\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)\nset(CMAKE_INSTALL_RPATH \"${CMAKE_INSTALL_PREFIX}/lib\")\n\nif(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)\n    set(IMTUI_STANDALONE ON)\n    include(cmake/GitVars.cmake)\n    include(GNUInstallDirs)\nelse()\n    set(IMTUI_STANDALONE OFF)\nendif()\n\nif (EMSCRIPTEN)\n    set(IMTUI_SUPPORT_NCURSES_DEFAULT OFF)\n    set(IMTUI_SUPPORT_CURL_DEFAULT OFF)\n    set(IMTUI_LIBRARY_TYPE STATIC)\nelse()\n    set(IMTUI_SUPPORT_NCURSES_DEFAULT ON)\n    set(IMTUI_SUPPORT_CURL_DEFAULT ON)\n    if (BUILD_SHARED_LIBS)\n        set(IMTUI_LIBRARY_TYPE SHARED)\n    else ()\n        set(IMTUI_LIBRARY_TYPE STATIC)\n    endif()\nendif()\n\n# options\n\noption(IMTUI_ALL_WARNINGS            \"imtui: enable all compiler warnings\" ${IMTUI_STANDALONE})\noption(IMTUI_ALL_WARNINGS_3RD_PARTY  \"imtui: enable all compiler warnings in 3rd party libs\" OFF)\n\noption(IMTUI_SANITIZE_THREAD         \"imtui: enable thread sanitizer\" OFF)\noption(IMTUI_SANITIZE_ADDRESS        \"imtui: enable address sanitizer\" OFF)\noption(IMTUI_SANITIZE_UNDEFINED      \"imtui: enable undefined sanitizer\" OFF)\n\noption(IMTUI_SUPPORT_NCURSES         \"imtui: support for libncurses\" ${IMTUI_SUPPORT_NCURSES_DEFAULT})\noption(IMTUI_SUPPORT_CURL            \"imtui: support for libcurl\" ${IMTUI_SUPPORT_CURL_DEFAULT})\n\noption(IMTUI_BUILD_EXAMPLES          \"imtui: build examples\" ${IMTUI_STANDALONE})\n\n# sanitizers\n\nif (IMTUI_SANITIZE_THREAD)\n    set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -fsanitize=thread\")\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -fsanitize=thread\")\nendif()\n\nif (IMTUI_SANITIZE_ADDRESS)\n    set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer\")\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer\")\nendif()\n\nif (IMTUI_SANITIZE_UNDEFINED)\n    set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -fsanitize=undefined\")\n    set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -fsanitize=undefined\")\nendif()\n\n# dependencies\n\nif (IMTUI_SUPPORT_NCURSES)\n    if (MINGW)\n        set(CURSES_LIBRARIES pdcurses)\n    else()\n        find_package(Curses REQUIRED)\n        CHECK_LIBRARY_EXISTS(\"${CURSES_NCURSES_LIBRARY}\"\n            nodelay \"\" CURSES_NCURSES_HAS_NODELAY)\n        if(NOT CURSES_NCURSES_HAS_NODELAY)\n            find_library(CURSES_EXTRA_LIBRARY tinfo)\n            CHECK_LIBRARY_EXISTS(\"${CURSES_EXTRA_LIBRARY}\"\n                nodelay \"\" CURSES_TINFO_HAS_NODELAY)\n        endif()\n        if(CURSES_EXTRA_LIBRARY)\n            set(CURSES_LIBRARIES ${CURSES_LIBRARIES} ${CURSES_EXTRA_LIBRARY})\n        endif()\n    endif()\nendif()\n\n# main\n\nif (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)\n    set(CMAKE_BUILD_TYPE Release CACHE STRING \"Build type\" FORCE)\n    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS \"Debug\" \"Release\" \"RelWithDebInfo\")\nendif ()\n\nadd_subdirectory(third-party)\n\nif (IMTUI_ALL_WARNINGS)\n    if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_CXX_COMPILER_ID MATCHES \"Clang\")\n        set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic\")\n    else()\n        # todo : windows\n    endif()\nendif()\n\nadd_subdirectory(src)\n\nif (IMTUI_STANDALONE AND IMTUI_BUILD_EXAMPLES)\n    add_subdirectory(examples)\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "MIT License\n\nCopyright (c) 2019 Georgi Gerganov\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.3056640625,
+          "content": "imtui\n=====\n[![Actions Status](https://github.com/ggerganov/imtui/workflows/CI/badge.svg)](https://github.com/ggerganov/imtui/actions)\n[![ImTui v1.0.4 badge][changelog-badge]][changelog]\n[![Dear ImGui version badge][imgui-version-badge]](https://github.com/ocornut/imgui)\n\nImTui is an immediate mode text-based user interface library. Supports 256 ANSI colors and mouse/keyboard input.\n\n<p align=\"center\">\n  <a href=\"https://asciinema.org/a/JsUQsJyCchqlsQzm1P0CN4OJU\">\n    <img alt=\"ImTui basic\" src=\"https://media.giphy.com/media/AcKDr9ZyW3RWyNZRg1/giphy.gif\"></img>  \n  </a>\n  <br>\n  <i>A very basic ImTui example</i>\n</p>\n\n---\n\n<p align=\"center\">\n  <a href=\"https://slack.ggerganov.com\">\n    <img alt=\"Slack client\" src=\"https://user-images.githubusercontent.com/1991296/180660513-e9471200-11b1-4e79-bec0-e2d313dfd6a6.gif\"></img>  \n  </a>\n  <br>\n  <i>Text-based client for <a href=\"https://slack.com\">Slack</a></i>\n</p>\n\n---\n\n<p align=\"center\">\n  <a href=\"https://imtui.ggerganov.com\">\n    <img alt=\"Tables\" src=\"https://user-images.githubusercontent.com/1991296/140774086-285cb34f-0851-47b0-82e5-2e8a5bf174ac.gif\"></img>  \n  </a>\n  <br>\n  <i>Tables example</i>\n</p>\n\n---\n\n<p align=\"center\">\n  <a href=\"https://github.com/ggerganov/hnterm\">\n    <img alt=\"HNTerm\" src=\"https://user-images.githubusercontent.com/1991296/131371951-3af42be8-657e-4542-a46a-0370cfc431d8.gif\"></img>  \n  </a>\n  <br>\n  <i>Text-based client for <a href=\"https://news.ycombinator.com/news\">Hacker News</a></i>\n</p>\n\n---\n\n<p align=\"center\">\n  <a href=\"https://asciinema.org/a/VUKWZM70PxRCHueyPFXy9smU8\">\n    <img alt=\"WTF util\" src=\"https://asciinema.org/a/VUKWZM70PxRCHueyPFXy9smU8.svg\"></img>  \n  </a>\n  <br>\n  <i>Text-based configuration editor for the <a href=\"https://wtfutil.com/\">WTF Dashboard</a></i>\n</p>\n\n## Live demo in the browser\n\nEven though this library is supposed to be used in the terminal, for convenience here is an [Emscripten](https://emscripten.org) build to demonstrate what it looks like, by simulating a console in the browser:\n\n- Demo 0: [imtui.ggerganov.com](https://imtui.ggerganov.com/)\n- Demo 1: [hnterm.ggerganov.com](https://hnterm.ggerganov.com/)\n- Demo 2: [wtf-tui.ggerganov.com](https://wtf-tui.ggerganov.com/)\n- Demo 3: [slack.ggerganov.com](https://slack.ggerganov.com/)\n\nNote: the demos work best with **Chrome**\n\n## Details\n\nThis library is 99.9% based on the popular [Dear ImGui](https://github.com/ocornut/imgui) library. ImTui simply provides an [ncurses](https://en.wikipedia.org/wiki/Ncurses) interface in order to draw and interact with widgets in the terminal. The entire Dear ImGui interface is available out-of-the-box.\n\nFor basic usage of ImTui, check one of the available samples:\n\n- [example-ncurses0](https://github.com/ggerganov/imtui/blob/master/examples/ncurses0/main.cpp)\n- [example-emscripten0](https://github.com/ggerganov/imtui/blob/master/examples/emscripten0/main.cpp)\n- [hnterm](https://github.com/ggerganov/hnterm) - a simple tool to browse Hacker News in the terminal\n- [wtf-tui](https://github.com/ggerganov/wtf-tui) - text-based UI for configuring the WTF terminal dashboard\n- [slack](https://github.com/ggerganov/imtui/blob/master/examples/slack) - text-based mock UI for Slack\n\n## Building\n\nImTui depends only on `libncurses`\n\n###  Linux and Mac:\n\n```bash\ngit clone https://github.com/ggerganov/imtui --recursive\ncd imtui\nmkdir build && cd build\ncmake ..\nmake\n\n./bin/imtui-example-ncurses0\n```\n\n### Windows:\n\nPartial Windows support is currently available using MSYS2 + MinGW + PDCurses:\n\n```\n# install required packages in an MSYS2 terminal:\npacman -S git cmake make mingw-w64-x86_64-dlfcn mingw-w64-x86_64-gcc mingw-w64-x86_64-pdcurses mingw-w64-x86_64-curl\n\n# build\ngit clone https://github.com/ggerganov/imtui --recursive\ncd imtui\nmkdir build && cd build\ncmake ..\nmake\n\n./bin/hnterm.exe\n```\n![](https://user-images.githubusercontent.com/1991296/103576542-fa5aef80-4edb-11eb-8340-4bd60a1f9fba.gif)\nFor more information, checkout the following discussion: [#19](https://github.com/ggerganov/imtui/discussions/19)\n\n### Emscripten:\n\n```bash\ngit clone https://github.com/ggerganov/imtui --recursive\ncd imtui\nmkdir build && cd build\nemconfigure cmake ..\nmake\n```\n\n[changelog]: ./CHANGELOG.md\n[changelog-badge]: https://img.shields.io/badge/changelog-ImTui%20v1.0.4-dummy\n[imgui-version-badge]: https://img.shields.io/badge/Powered%20by%20Dear%20ImGui-v1.81-blue.svg\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "third-party",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

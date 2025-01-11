@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736565624136,
+    "page": 506,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mit-biomimetics/Cheetah-Software",
+      "stars": 2678,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.517578125,
+          "content": "build/\nmc-build/\ncmake-build-debug/\n.idea/\nlcm-types/cheetahlcm\nlcm-types/c_lcm_files\nlcm-types/controllerlcm\nlcm-types/interfacelcm\nlcm-types/java\nlcm-types/simulatorlcm\nlcm-types/wincontrollerlcm\nlcm-types/file_list.txt\nlcm-types/cpp/*\nlcm-types/lcmtypes/*\nlcm-types/python/*\nlcm_data/lcm_log\nlcm_data/matlab_log\nlcm_data/matlab_log_archive\noptimization_data\nsim_data\ntest_data\nplanning_data\n*.m~\n*.pyc\ndocumentation/doxygen/latex\ndocumentation/doxygen/html\ndocumentation/doxygen/html\ndocumentation/doxygen/latex\n.DS_Store\ntags\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.0703125,
+          "content": "cmake_minimum_required(VERSION 3.5)\nset(CMAKE_DISABLE_IN_SOURCE_BUILD ON)\nset(CMAKE_DISABLE_SOURCE_CHANGES  ON)\n\nif (\"${CMAKE_SOURCE_DIR}\" STREQUAL \"${CMAKE_BINARY_DIR}\")\n  message(SEND_ERROR \"In-source builds are not allowed.\")\nendif ()\n\nset(CMAKE_COLOR_MAKEFILE   ON)\n#execute_process(COMMAND ../scripts/make_types.sh)\n\nset(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)\n\n#set(CMAKE_VERBOSE_MAKEFILE ON)\n\noption(MINI_CHEETAH_BUILD \"use compiler flags for mini cheetah computer\" OFF)\nset(BUILD_TYPE_RELEASE TRUE)\n\noption(NO_SIM \"Do not build simulator\" OFF)\n\nif(MINI_CHEETAH_BUILD)\n  SET (THIS_COM \"../\" )\n  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake\n    ${CMAKE_BINARY_DIR}/Configuration.h)\n  set(CMAKE_CXX_FLAGS \"-O3 -no-pie -ggdb -Wall \\\n  -Wextra -Wcast-align -Wdisabled-optimization -Wformat=2 \\\n  -Winit-self -Wmissing-include-dirs -Woverloaded-virtual \\\n  -Wshadow -Wsign-promo -Werror\")\n  set(CMAKE_C_FLAGS \"-O3  -ggdb -std=gnu99 -I.\")\n  message(\"**** Mini-Cheetah build enabled ****\")\nelse(MINI_CHEETAH_BUILD)\n  SET (THIS_COM \"${PROJECT_SOURCE_DIR}/\" )\n  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake\n    ${CMAKE_BINARY_DIR}/Configuration.h)\n\n  if(CMAKE_SYSTEM_NAME MATCHES Linux)\n    set(CMAKE_CXX_FLAGS \"-O3 -no-pie -march=native -ggdb -Wall \\\n    -Wextra -Wcast-align -Wdisabled-optimization -Wformat=2 \\\n    -Winit-self -Wmissing-include-dirs -Woverloaded-virtual \\\n    -Wshadow -Wsign-promo -Werror\")\n  elseif(APPLE)\n    set(CMAKE_CXX_FLAGS \"-O3 -march=native -ggdb -Wall \\\n    -Wextra -Wcast-align -Wdisabled-optimization -Wformat=2 \\\n    -Winit-self -Wmissing-include-dirs -Woverloaded-virtual \\\n    -Wshadow -Wsign-promo\")\n    include_directories(\"/usr/local/include/\")   # lcm includes\n  endif()\n\n  set(CMAKE_C_FLAGS \"-O3  -ggdb  -march=native -std=gnu99 -I.\")\n  message(\"**** Mini-Cheetah build disabled ****\")\nendif(MINI_CHEETAH_BUILD)\n\nset(CMAKE_CXX_STANDARD 14)\n\n#find_package(lcm)\n\nadd_subdirectory(robot)\nadd_subdirectory(third-party)\nadd_subdirectory(common)\n\nif(NO_SIM)\n\nelse(NO_SIM)\n  add_subdirectory(sim)\nendif()\n\nadd_subdirectory(user)\nadd_subdirectory(rc_test)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05859375,
+          "content": "MIT License\n\nCopyright (c) 2019 MIT Biomimetic Robotics Lab\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.919921875,
+          "content": "## Cheetah-Software\nThis repository contains the Robot and Simulation software project.  For a getting started guide, see the documentation folder.\n\nThe common folder contains the common library with dynamics and utilities\nThe resources folder will contain data files, like CAD of the robot used for the visualization\nThe robot folder will contain the robot program\nThe sim folder will contain the simulation program. It is the only program which depends on QT.\nThe third-party will contain *small* third party libraries that we have modified. This should just be libsoem for Cheetah 3, which Pat modified at one point.\n\n## Build\nTo build all code:\n```\nmkdir build\ncd build\ncmake ..\n./../scripts/make_types.sh\nmake -j4\n```\n\nIf you are building code on your computer that you would like to copy over to the mini cheetah, you must replace the cmake command with\n```\ncmake -DMINI_CHEETAH_BUILD=TRUE\n```\notherwise it will not work.  If you are building mini cheetah code one the mini cheetah computer, you do not need to do this.\n\nThis build process builds the common library, robot code, and simulator. If you just change robot code, you can simply run `make -j4` again. If you change LCM types, you'll need to run `cmake ..; make -j4`. This automatically runs `make_types.sh`.\n\nTo test the common library, run `common/test-common`. To run the robot code, run `robot/robot`. To run the simulator, run `sim/sim`.\n\nPart of this build process will automatically download the gtest software testing framework and sets it up. After it is done building, it will produce a `libbiomimetics.a` static library and an executable `test-common`.  Run the tests with `common/test-common`. This output should hopefully end with\n\n```\n[----------] Global test environment tear-down\n[==========] 18 tests from 3 test cases ran. (0 ms total)\n[  PASSED  ] 18 tests.\n```\n## Run simulator\nTo run the simulator:\n1. Open the control board\n```\n./sim/sim\n```\n2. In the another command window, run the robot control code\n```\n./user/${controller_folder}/${controller_name} ${robot_name} ${target_system}\n```\nExample)\n```\n./user/JPos_Controller/jpos_ctrl 3 s\n```\n3: Cheetah 3, m: Mini Cheetah\ns: simulation, r: robot\n\n## Run Mini cheetah\n1. Create build folder `mkdir mc-build`\n2. Build as mini cheetah executable `cd mc-build; cmake -DMINI_CHEETAH_BUILD=TRUE ..; make -j`\n3. Connect to mini cheetah over ethernet, verify you can ssh in\n4. Copy program to mini cheetah with `../scripts/send_to_mini_cheetah.sh`\n5. ssh into the mini cheetah `ssh user@10.0.0.34`\n6. Enter the robot program folder `cd robot-software-....`\n7. Run robot code `./run_mc.sh` \n\n\n\n## Dependencies:\n- Qt 5.10 - https://www.qt.io/download-qt-installer\n- LCM - https://lcm-proj.github.io/ (Please make it sure that you have a java to let lcm compile java-extension together)\n- Eigen - http://eigen.tuxfamily.org\n- `mesa-common-dev`\n- `freeglut3-dev`\n- `libblas-dev liblapack-dev`\n\nTo use Ipopt, use CMake Ipopt option. Ex) cmake -DIPOPT_OPTION=ON ..\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config.h.cmake",
+          "type": "blob",
+          "size": 0.0810546875,
+          "content": "#ifndef CTRL_CONFIG_H\n#define CTRL_CONFIG_H\n\n#define THIS_COM \"@THIS_COM@\"\n\n#endif\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "documentation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lcm-types",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lcm_data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rc_test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "robot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sim",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "third-party",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "user",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "timestamp": 1736565720116,
+    "page": 630,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hasherezade/pe_to_shellcode",
+      "stars": 2427,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".appveyor.yml",
+          "type": "blob",
+          "size": 0.916015625,
+          "content": "os:\n  - Visual Studio 2015\n\nplatform: x64\n  - x64\n\nbranches:\n  only:\n    - master\n\ninstall:\n  - git submodule update --init --recursive\n  - set PATH=C:\\Program Files\\CMake\\bin;%PATH%\n\nbuild:\n  verbosity: detailed\n  \nconfiguration:\n  - Release\n  - Debug\n  \nenvironment:\n  artifactName: $(APPVEYOR_PROJECT_NAME)-$(APPVEYOR_REPO_COMMIT)-$(CONFIGURATION)\n  matrix:\n    - env_arch: \"x64\"\n    - env_arch: \"x86\"\n    \nbefore_build:\n  - mkdir build\n  - cd build\n  - if [%env_arch%]==[x64] (\n      cmake .. -A x64 -DPE2SHC_BUILD_TESTING=ON )\n  - if [%env_arch%]==[x86] (\n      cmake .. -DPE2SHC_BUILD_TESTING=ON )\n  - cmake -DCMAKE_INSTALL_PREFIX:PATH=%APPVEYOR_BUILD_FOLDER%/%APPVEYOR_REPO_COMMIT% ..\n  \nbuild_script:\n  - cmake --build . --config %CONFIGURATION% --target install \n  - ctest -V\n\nafter_build:\n  - mkdir %artifactName%\n  - cp %APPVEYOR_BUILD_FOLDER%/%APPVEYOR_REPO_COMMIT%/* %artifactName%\n\nartifacts:\n  - path: build\\%artifactName%\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "*.aps\n*.exe\n*.bak\n\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.091796875,
+          "content": "[submodule \"libpeconv\"]\n\tpath = libpeconv\n\turl = https://github.com/hasherezade/libpeconv.git\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 0.63671875,
+          "content": "cmake_minimum_required ( VERSION 3.0 )\n\n# replace \"peconv_project\" by your own project name:\nproject ( pe_to_shellcode )\n\noption (PE2SHC_BUILD_TESTING \"enable testing\" OFF)\n\n# libs\n# modules:\nset ( M_PARSER \"libpeconv/libpeconv\" )\n\n# modules paths:\nset (PECONV_DIR \"${CMAKE_SOURCE_DIR}/${M_PARSER}\" CACHE PATH \"PEConv main path\")\nadd_subdirectory ( ${PECONV_DIR} )\nset ( PECONV_LIB $<TARGET_FILE:libpeconv> CACHE PATH \"PEConvLib library path\" )\n\n# Add sub-directories\n#\nadd_subdirectory ( pe2shc )\nadd_subdirectory ( runshc )\nadd_subdirectory ( injector )\n\n# Setup testing\nif(PE2SHC_BUILD_TESTING)\n\tenable_testing()\n\tadd_subdirectory ( tests )\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.294921875,
+          "content": "BSD 2-Clause License\n\nCopyright (c) 2018-2020, hasherezade\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.5390625,
+          "content": "# pe_to_shellcode\n[![Build status](https://ci.appveyor.com/api/projects/status/w3dy81u0k3up7459?svg=true)](https://ci.appveyor.com/project/hasherezade/pe-to-shellcode)\n[![GitHub release](https://img.shields.io/github/release/hasherezade/pe_to_shellcode.svg)](https://github.com/hasherezade/pe_to_shellcode/releases)\n[![Github All Releases](https://img.shields.io/github/downloads/hasherezade/pe_to_shellcode/total.svg)](https://github.com/hasherezade/pe_to_shellcode/releases)\n[![Github Latest Release](https://img.shields.io/github/downloads/hasherezade/pe_to_shellcode/latest/total.svg)](https://github.com/hasherezade/pe_to_shellcode/releases)\n\nConverts PE so that it can be then injected just like a normal shellcode.<br/>\n(At the same time, the output file remains to be a valid PE).<br/>\n<b>Supports both 32 and 64 bit PEs</b>\n\n*Authors: [@hasherezade](https://github.com/hasherezade) & [@hh86](https://github.com/86hh)*\n\nObjective\n-\nThe goal of this project is to provide a possibility to generate PE files that can be injected with minimal effort.\nIt is inspired by Stephen Fewer's [ReflectiveDLLInjection](https://github.com/stephenfewer/ReflectiveDLLInjection) - but the difference is that with pe2shc you can add the reflective loading stub post-compilation. Also, the header of the PE file is modified in such a way, that you can start executing the injected buffer from the very beginning - just like you would do with a shellcode. It will automatically find the stub, and continue loading the full PE.\n\nScope of the project\n-\n🟢 The stub supports only basic structures of PE format, such as:\n+ relocations\n+ imports\n+ TLS callbacks (called once, before the Entry Point is executed)\n\nPlease keep in mind, that although for the majority of PE files this is sufficient, some executables you encounter may be using other, more complex aspects of the PE format. It means, **not every PE can be successfuly converted to a shellcode**.\n\n🚫 Examples of currently not supported elements:\n+ exceptions (if the executable you converted will be run as a shellcode, and throw the exception, the appropriate exception handler will not be found, and the application will crash)\n+ Delay Load Imports (only the basic Import Table support is implemented)\n+ MUI files (if the executable you converted expects some elements of the GUI have to be loaded from a MUI file, it won't work)\n\nBuilds\n-\n📦 ⚙️ Download the latest [release](https://github.com/hasherezade/pe_to_shellcode/releases).\n\nClone\n-\nUse recursive clone to get the repo together with all the submodules:\n\n```console\ngit clone --recursive https://github.com/hasherezade/pe_to_shellcode.git\n```\n\nHow to use it\n-\n1. Use **pe2shc.exe** to convert a PE of your choice:\n```\npe2shc.exe <path to your PE> [output path*]\n* - optional\n```\nIf the PE was successfuly converted, **pe2shc** will let you know where the output was saved:\n```\n[+] Saved to file: <converted file>\n```\ni.e.\n```\n[+] Saved to file: test_file.shc.exe\n```\n2. Use **runshc.exe**(*) to run the output file and check if the conversion went fine.\n```\nrunshc.exe <converted file>\n```\n\n(*)Warning: remember to use the version of **runshc** with a bitness appropriate to your converted application (32 or 64 bit) - otherwise the application will crash!\n\n3. If the file runs as the original PE, it confirms that the conversion was successful!<br/>\nNow you can use the converted PE just like you would use a shellcode: inject it to a target and execute from the beginning of the buffer. No additional PE loaders are required.<br/>\nAt the same time, you can keep using the converted file as a regular PE.\n"
+        },
+        {
+          "name": "injector",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libpeconv",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "loader_v1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "loader_v2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pe2shc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "runshc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

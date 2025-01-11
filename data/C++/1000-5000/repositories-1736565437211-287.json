@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "timestamp": 1736565437211,
+    "page": 287,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "NVIDIA/nccl",
+      "stars": 3364,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0908203125,
+          "content": "# Copyright (c) 2015-2016, NVIDIA CORPORATION. All rights reserved.\n/build\n*.gcov\n/coverage/\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.8505859375,
+          "content": "\n Copyright (c) 2015-2020, NVIDIA CORPORATION. All rights reserved.\n\n Redistribution and use in source and binary forms, with or without\n modification, are permitted provided that the following conditions\n are met:\n  * Redistributions of source code must retain the above copyright\n    notice, this list of conditions and the following disclaimer.\n  * Redistributions in binary form must reproduce the above copyright\n    notice, this list of conditions and the following disclaimer in the\n    documentation and/or other materials provided with the distribution.\n  * Neither the name of NVIDIA CORPORATION, Lawrence Berkeley National\n    Laboratory, the U.S. Department of Energy, nor the names of their\n    contributors may be used to endorse or promote products derived\n    from this software without specific prior written permission.\n\n THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY\n EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\n PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR\n CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\n EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,\n PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\n PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY\n OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\n The U.S. Department of Energy funded the development of this software\n under subcontract 7078610 with Lawrence Berkeley National Laboratory.\n\n\nThis code also includes files from the NVIDIA Tools Extension SDK project.\n\nSee:\n\n   https://github.com/NVIDIA/NVTX\n\nfor more information and license details.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.646484375,
+          "content": "#\n# Copyright (c) 2015-2019, NVIDIA CORPORATION. All rights reserved.\n#\n# See LICENSE.txt for license information\n#\n.PHONY : all clean\n\ndefault : src.build\ninstall : src.install\nBUILDDIR ?= $(abspath ./build)\nABSBUILDDIR := $(abspath $(BUILDDIR))\nTARGETS := src pkg\nclean: ${TARGETS:%=%.clean}\ntest.build: src.build\nLICENSE_FILES := LICENSE.txt\nLICENSE_TARGETS := $(LICENSE_FILES:%=$(BUILDDIR)/%)\nlic: $(LICENSE_TARGETS)\n\n${BUILDDIR}/%.txt: %.txt\n\t@printf \"Copying    %-35s > %s\\n\" $< $@\n\tmkdir -p ${BUILDDIR}\n\tcp $< $@\n\nsrc.%:\n\t${MAKE} -C src $* BUILDDIR=${ABSBUILDDIR}\n\npkg.%:\n\t${MAKE} -C pkg $* BUILDDIR=${ABSBUILDDIR}\n\npkg.debian.prep: lic\npkg.txz.prep: lic\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.482421875,
+          "content": "# NCCL\n\nOptimized primitives for inter-GPU communication.\n\n## Introduction\n\nNCCL (pronounced \"Nickel\") is a stand-alone library of standard communication routines for GPUs, implementing all-reduce, all-gather, reduce, broadcast, reduce-scatter, as well as any send/receive based communication pattern. It has been optimized to achieve high bandwidth on platforms using PCIe, NVLink, NVswitch, as well as networking using InfiniBand Verbs or TCP/IP sockets. NCCL supports an arbitrary number of GPUs installed in a single node or across multiple nodes, and can be used in either single- or multi-process (e.g., MPI) applications.\n\nFor more information on NCCL usage, please refer to the [NCCL documentation](https://docs.nvidia.com/deeplearning/sdk/nccl-developer-guide/index.html).\n\n## Build\n\nNote: the official and tested builds of NCCL can be downloaded from: https://developer.nvidia.com/nccl. You can skip the following build steps if you choose to use the official builds.\n\nTo build the library :\n\n```shell\n$ cd nccl\n$ make -j src.build\n```\n\nIf CUDA is not installed in the default /usr/local/cuda path, you can define the CUDA path with :\n\n```shell\n$ make src.build CUDA_HOME=<path to cuda install>\n```\n\nNCCL will be compiled and installed in `build/` unless `BUILDDIR` is set.\n\nBy default, NCCL is compiled for all supported architectures. To accelerate the compilation and reduce the binary size, consider redefining `NVCC_GENCODE` (defined in `makefiles/common.mk`) to only include the architecture of the target platform :\n```shell\n$ make -j src.build NVCC_GENCODE=\"-gencode=arch=compute_70,code=sm_70\"\n```\n\n## Install\n\nTo install NCCL on the system, create a package then install it as root.\n\nDebian/Ubuntu :\n```shell\n$ # Install tools to create debian packages\n$ sudo apt install build-essential devscripts debhelper fakeroot\n$ # Build NCCL deb package\n$ make pkg.debian.build\n$ ls build/pkg/deb/\n```\n\nRedHat/CentOS :\n```shell\n$ # Install tools to create rpm packages\n$ sudo yum install rpm-build rpmdevtools\n$ # Build NCCL rpm package\n$ make pkg.redhat.build\n$ ls build/pkg/rpm/\n```\n\nOS-agnostic tarball :\n```shell\n$ make pkg.txz.build\n$ ls build/pkg/txz/\n```\n\n## Tests\n\nTests for NCCL are maintained separately at https://github.com/nvidia/nccl-tests.\n\n```shell\n$ git clone https://github.com/NVIDIA/nccl-tests.git\n$ cd nccl-tests\n$ make\n$ ./build/all_reduce_perf -b 8 -e 256M -f 2 -g <ngpus>\n```\n\n## Copyright\n\nAll source code and accompanying documentation is copyright (c) 2015-2020, NVIDIA CORPORATION. All rights reserved.\n"
+        },
+        {
+          "name": "ext-net",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ext-profiler",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ext-tuner",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "makefiles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

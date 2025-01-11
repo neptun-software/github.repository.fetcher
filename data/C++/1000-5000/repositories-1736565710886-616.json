@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "timestamp": 1736565710886,
+    "page": 616,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Walton1128/CPP-Templates-2nd--",
+      "stars": 2458,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "C++模板_第二版.doc",
+          "type": "blob",
+          "size": 1541,
+          "content": null
+        },
+        {
+          "name": "C++模板_第二版.pdf",
+          "type": "blob",
+          "size": 2532.828125,
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.427734375,
+          "content": "# CPP-Templates-2nd--\n《C++ Templates 第二版》中文翻译，和原书排版一致，第一部分（1至11章）已完成，第二部分请参见：https://github.com/r00tk1ts/cpp-templates-2nd。 第三部分第18，19，20，21，22，23，24，25章完成。其余内容逐步更新中。 个人爱好，发现错误请指正\n\n一个效果图：\n![image](https://github.com/Walton1128/CPP-Templates-2nd--/blob/master/sample.PNG)\n\n"
+        },
+        {
+          "name": "example_object_pool.cpp",
+          "type": "blob",
+          "size": 3.87890625,
+          "content": "#include <iostream>\n#include <memory>\n#include <queue>\n#include <boost/shared_ptr.hpp>\nusing namespace std;\n\ntemplate<bool COND, typename TrueType, typename FalseType>\nstruct IfThenElseT {\n    using Type = TrueType;\n};\n\ntemplate<typename TrueType, typename FalseType>\nstruct IfThenElseT<false, TrueType, FalseType> {\n    using Type = FalseType;\n};\ntemplate<bool COND, typename TrueType, typename FalseType>\nusing IfThenElse = typename IfThenElseT<COND, TrueType, FalseType>::Type;\n\n\ntemplate <typename Head, typename... Tail>\nclass LargestTypeT\n{\n    private:\n        using First = Head;\n        using Rest = typename LargestTypeT<Tail...>::Type;\n    public:\n        using Type = IfThenElse<(sizeof(First) >= sizeof(Rest)), First, Rest>;\n};\n\ntemplate<typename _Type>\nclass LargestTypeT<_Type>\n{\n    public:\n        using Type = _Type;\n};\ntemplate<typename... Args>\nusing LargestType = typename LargestTypeT<Args ...>::Type;\n\n\ntemplate <typename T>\nclass ObjectCounter\n{\n    public:\n        static unsigned int allocate_counter;\n        static unsigned int object_counter;\n\n        ~ObjectCounter(){\n            std::cout << \"object_counter =\" << object_counter << \"  allocated_mem counter \" << allocate_counter << std::endl; \n        }\n};\n\ntemplate<typename T>\nunsigned int ObjectCounter<T>::allocate_counter = 0;\n\ntemplate<typename T>\nunsigned int ObjectCounter<T>::object_counter = 0;\n\n\ntemplate <typename _PacketType, unsigned _PoolSize = 60>\nclass ObjectMemPool:ObjectCounter<ObjectMemPool<_PacketType>>\n{\n    public:\n        typedef _PacketType* Pointer;\n\n        ObjectMemPool():m_RingStart{0}, m_RingEnd{_PoolSize - 1}{\n            for(int i = 0; i< _PoolSize; ++i){\n                m_RingBuffer[i] = i;\n            }\n        }\n\n        ObjectMemPool(const ObjectMemPool& ) = delete;\n\n        template <typename _Type, typename ... Args>\n            typename _Type::Pointer  Get(Args&&... args){\n                void* __p;\n                int index = 0;\n                if(m_RingStart == m_RingEnd){\n                    ++(this->allocate_counter);\n                    ++(this->object_counter);\n                    return typename _Type::Pointer(::new _Type(std::forward<Args>(args)...));\n                }else{\n                    index = m_RingBuffer[m_RingStart]; \n                    m_RingStart = (m_RingStart+1) % _PoolSize;\n                    __p = (void*)(m_Pool + index);//m_MemQueue.front();\n                    ::new(__p) _Type(std::forward<Args>(args)...);\n\n                    ++(this->object_counter);\n                    return  typename _Type::Pointer((_Type*)__p, [this, index]( _Type* p){\n                            p->~_Type();\n                            this->m_RingEnd = (this->m_RingEnd + 1) % _PoolSize;\n                            this->m_RingBuffer[this->m_RingEnd] = index;\n                            }\n                            );\n                }\n            }\n\n        ~ObjectMemPool(){\n            ::operator delete(m_Pool);\n        }\n\n\n    private:\n        int m_RingBuffer[_PoolSize]; \n        int m_RingStart;\n        int m_RingEnd;\n        Pointer m_Pool = static_cast<Pointer> (::operator new(_PoolSize*sizeof(_PacketType)));\n};\n\n\nstruct T1{\n    int dummy_1;\n    int dummy_2;\n    using Pointer = std::shared_ptr<T1>;\n\n    T1(int _d1, int _d2):dummy_1(_d1), dummy_2(_d2){;}\n    T1() = default;\n};\n\n\nstruct T2{\n    int dummy_1;\n    int dummy_2;\n    int dummy_3;\n    using Pointer = boost::shared_ptr<T2>;\n\n    T2(int _d1, int _d2, int _d3):dummy_1(_d1), dummy_2(_d2), dummy_3(_d3){;}\n    T2() = default;\n};\n\nint main(){\n    using MaxType = LargestType<T1, T2>;\n    ObjectMemPool<MaxType, 3> pmp;\n\n    {\n        auto t1 = pmp.Get<T1>();\n        auto t1_a = pmp.Get<T1>(100, 100);\n        auto t2 = pmp.Get<T2>();\n        auto t2_a = pmp.Get<T2>(100, 100, 100);\n    }\n\n    auto t1 = pmp.Get<T1>();\n    auto t1_a = pmp.Get<T1>(100, 100);\n    auto t2 = pmp.Get<T2>();\n    auto t2_a = pmp.Get<T2>(100, 100, 100);\n\n    return 0;\n}\n\n"
+        },
+        {
+          "name": "sample.PNG",
+          "type": "blob",
+          "size": 367.6962890625,
+          "content": null
+        },
+        {
+          "name": "test.md",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "# CPP-Templates-2nd--\n"
+        },
+        {
+          "name": "术语表.docx",
+          "type": "blob",
+          "size": 36.5341796875,
+          "content": null
+        },
+        {
+          "name": "附录.docx",
+          "type": "blob",
+          "size": 1596.9873046875,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

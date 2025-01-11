@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp": 1736565476706,
+    "page": 333,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "facebookarchive/beringei",
+      "stars": 3169,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.216796875,
+          "content": "# Docker\n**/.dockerignore\n**/*Dockerfile\n\n# Circle-ci\n**/*circle.yml\n\n# Vagrant\n**/*Vagrantfile\n**/.vagrant/\n\n# Vim swap files\n**/.*.sw[po]\n\n\n**/*CONTRIBUTING.md\n**/*PATENTS\n\n# Beringei builds\nbuild/\nberingei/if/gen-cpp2/\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "beringei/if/gen-cpp2/\nbuild/\n.vagrant"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.3291015625,
+          "content": "# Copyright (c) 2016-present, Facebook, Inc.\n# All rights reserved.\n#\n# This source code is licensed under the BSD-style license found in the\n# LICENSE file in the root directory of this source tree. An additional grant\n# of patent rights can be found in the PATENTS file in the same directory.\n\ncmake_minimum_required(VERSION 2.8.7 FATAL_ERROR)\n\n# This is necessary so that find_package can find the \"Find$x.cmake\" files.\nset(CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/beringei/cmake\" ${CMAKE_MODULE_PATH})\ninclude_directories(${CMAKE_CURRENT_BINARY_DIR})\n\n# package information\nset(PACKAGE_NAME      \"beringei\")\nset(PACKAGE_VERSION   \"1\")\nset(PACKAGE_STRING    \"${PACKAGE_NAME} ${PACKAGE_VERSION}\")\nset(PACKAGE_TARNAME   \"${PACKAGE_NAME}-${PACKAGE_VERSION}\")\nset(PACKAGE_BUGREPORT \"https://github.com/facebookincubator/beringei/issues\")\n\nproject(${PACKAGE_NAME} C CXX)\n\n# Check Platform Requirement\nif(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)\n    message(FATAL_ERROR \"Beringei requires a 64bit OS\")\nendif()\n\nfind_package(\n    Boost 1.58.0 REQUIRED\n    COMPONENTS\n        filesystem\n        system\n)\n\nfind_package(Folly REQUIRED)\nfind_package(FBThrift REQUIRED)\nfind_package(GFlags REQUIRED)\nfind_package(Glog REQUIRED)\nfind_package(Threads REQUIRED)\nfind_package(Wangle REQUIRED)\nfind_package(Proxygen REQUIRED)\n\ninclude(CheckFunctionExists)\ninclude(BeringeiCompilerOptions)\n\nset(BERINGEI_HOME ${CMAKE_CURRENT_SOURCE_DIR})\n\nmessage(\"Building Required Thrift Files\")\nexecute_process(\n  COMMAND bash \"-e\" \"build_thrift.sh\"\n  WORKING_DIRECTORY ${BERINGEI_HOME}/beringei/if\n  RESULT_VARIABLE thrift_build_result)\n\nif(NOT \"${thrift_build_result}\" STREQUAL \"0\")\n    message(FATAL_ERROR \"Could not build thrfft file.\")\nendif()\n\nset(TP_PROJECTS_DIR \"beringei/third-party\")\n# So that qualified includes work. E.g. #include \"beringei/client/$x.h\"\ninclude_directories(${BERINGEI_HOME})\n\n# So that all subsequent directories have access to\n# folly, thrift, proxygen and wangle\ninclude_directories(${FOLLY_INCLUDE_DIR} ${FBTHRIFT_INCLUDE_DIR} ${PROXYGEN_INCLUDE_DIR} ${WANGLE_INCLUDE_DIR})\n\nadd_subdirectory(${TP_PROJECTS_DIR}/gtest)\ninclude_directories(${GTEST_INCLUDE_DIRS} ${GMOCK_INCLUDE_DIRS})\n\nenable_testing()\nadd_subdirectory(\"beringei\")\n\n# modules / depends\nfile(GLOB BERINGEI_CMAKE_FILES \"cmake/*.cmake\")\ninstall(\n    FILES ${BERINGEI_CMAKE_FILES}\n    DESTINATION cmake\n    COMPONENT dev\n)\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.734375,
+          "content": "# Contributing to Beringei\nWe want to make contributing to Beringei as easy and transparent as\npossible.\n\n## Our Development Process\nWe primarily develop Beringei on an internal branch at Facebook, with commits\ncontinuously synced to GitHub. Pull requests are rebased onto this internal\nbranch and then synced back out.\n\n## Pull Requests\nWe actively welcome your pull requests.\n\n1. Fork the repo and create your branch from `master`.\n2. Make sure all changes have appropriate tests.\n3. If you've changed APIs, update the documentation.\n4. Ensure `make test` passes.\n5. clang-format the repo by running `beringei/clang-format.sh`\n6. If you haven't already, complete the Contributor License Agreement (\"CLA\").\n\n## Contributor License Agreement (\"CLA\")\nIn order to accept your pull request, we need you to submit a CLA. You only need\nto do this once to work on any of Facebook's open source projects.\n\nComplete your CLA here: <https://code.facebook.com/cla>\n\n## Issues\nWe use GitHub issues to track public bugs. Please ensure your description is\nclear and has sufficient instructions to be able to reproduce the issue.\n\nFacebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe\ndisclosure of security bugs. In those cases, please go through the process\noutlined on that page and do not file a public issue.\n\n## Coding Style\nCoding style is handled entirely by\n[clang-format](http://clang.llvm.org/docs/ClangFormat.html). Please make sure\nto run it against all code changes.\n\nYou will need clang-format >=3.9.\n\nThe provided script `clang-format.sh` is an easy way to reformat the entire\nrepository.\n\n## License\nBy contributing to Beringei, you agree that your contributions will be licensed\nunder the LICENSE file in the root directory of this source tree.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.8623046875,
+          "content": "# Pull base image.\nFROM ubuntu:16.10\n\nENV WORKDIR /usr/local/beringei\nENV RUN_CMD ./beringei/service/beringei_main \\\n              -beringei_configuration_path $WORKDIR/beringei.json \\\n              -create_directories \\\n              -sleep_between_bucket_finalization_secs 60 \\\n              -allowed_timestamp_behind 300 \\\n              -bucket_size 600 \\\n              -buckets 144 \\\n              -logtostderr \\\n              -v=2\n\n# Copy files from CircleCI into docker container.\nCOPY . $WORKDIR\n\n# Define default command.\nCMD [\"bash\"]\n\n# Setup the docker container.\nWORKDIR $WORKDIR\nRUN $WORKDIR/setup_ubuntu.sh\n\n# Create a build directory.\nRUN mkdir $WORKDIR/build\nWORKDIR $WORKDIR/build\n\n# Compile and install\nRUN cmake ..\nRUN make install\n\nRUN ./beringei/tools/beringei_configuration_generator --host_names localhost --file_path $WORKDIR/beringei.json\n\nENTRYPOINT $RUN_CMD"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4931640625,
+          "content": "BSD License\n\nFor Beringei software\n\nCopyright (c) 2016-present, Facebook, Inc. All rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n * Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n * Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\n * Neither the name Facebook nor the names of its contributors may be used to\n   endorse or promote products derived from this software without specific\n   prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "PATENTS",
+          "type": "blob",
+          "size": 1.9326171875,
+          "content": "Additional Grant of Patent Rights Version 2\n\n\"Software\" means the Beringei software distributed by Facebook, Inc.\n\nFacebook, Inc. (\"Facebook\") hereby grants to each recipient of the Software\n(\"you\") a perpetual, worldwide, royalty-free, non-exclusive, irrevocable\n(subject to the termination provision below) license under any Necessary\nClaims, to make, have made, use, sell, offer to sell, import, and otherwise\ntransfer the Software. For avoidance of doubt, no license is granted under\nFacebook’s rights in any patent claims that are infringed by (i) modifications\nto the Software made by you or any third party or (ii) the Software in\ncombination with any software or other technology.\n\nThe license granted hereunder will terminate, automatically and without notice,\nif you (or any of your subsidiaries, corporate affiliates or agents) initiate\ndirectly or indirectly, or take a direct financial interest in, any Patent\nAssertion: (i) against Facebook or any of its subsidiaries or corporate\naffiliates, (ii) against any party if such Patent Assertion arises in whole or\nin part from any software, technology, product or service of Facebook or any of\nits subsidiaries or corporate affiliates, or (iii) against any party relating\nto the Software. Notwithstanding the foregoing, if Facebook or any of its\nsubsidiaries or corporate affiliates files a lawsuit alleging patent\ninfringement against you in the first instance, and you respond by filing a\npatent infringement counterclaim in that lawsuit against that party that is\nunrelated to the Software, the license granted hereunder will not terminate\nunder section (i) of this paragraph due to such counterclaim.\n\nA \"Necessary Claim\" is a claim of a patent owned by Facebook that is\nnecessarily infringed by the Software standing alone.\n\nA \"Patent Assertion\" is any lawsuit or other action alleging direct, indirect,\nor contributory infringement or inducement to infringe any patent, including a\ncross-claim or counterclaim.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.6474609375,
+          "content": "** THIS REPO HAS BEEN ARCHIVED AND IS NO LONGER BEING ACTIVELY MAINTAINED **\n\n# Beringei [![CircleCI](https://circleci.com/gh/facebookincubator/beringei/tree/master.svg?style=svg)](https://circleci.com/gh/facebookincubator/beringei/tree/master)\nA high performance, in memory time series storage engine\n\n<img src=\"./beringei_logo_clear.png\" height=200 width=200>\n\nIn the fall of 2015, we published the [paper “Gorilla: A Fast, Scalable, In-Memory Time Series Database”](http://www.vldb.org/pvldb/vol8/p1816-teller.pdf) at VLDB 2015. Beringei is the open source representation of the ideas presented in this paper.\n\nBeringei is a high performance time series storage engine. Time series are commonly used as a representation of statistics, gauges, and counters for monitoring performance and health of a system. \n\n## Features\n\nBeringei has the following features:\n\n* Support for very fast, in-memory storage, backed by disk for persistence. Queries to the storage engine are always served out of memory for extremely fast query performance, but backed to disk so the process can be restarted or migrated with very little down time and no data loss.\n* Extremely efficient streaming compression algorithm. Our streaming compression algorithm is able to compress real world time series data by over 90%. The delta of delta compression algorithm used by Beringei is also fast - we see that a single machine is able to compress more than 1.5 million datapoints/second.\n* Reference sharded service implementation, including a client implementation.\n* Reference http service implementation that enables direct Grafana integration.\n\n## How can I use Beringei?\n\nBeringei can be used in one of two ways. \n\n1. We have created a simple, sharded service, and reference client implementation, that can store and serve\ntime series query requests. \n1. You can use Beringei as an embedded library to handle the low-level details of efficiently storing time series data. Using Beringei in this way is similar to [RocksDB](https://rocksdb.org) - the Beringei library can be the high performance storage system underlying your performance monitoring solution.\n\n\n## Requirements\n\nBeringei is tested and working on:\n\n* Ubuntu 16.10\n\nWe also depend on these open source projects:\n\n* [fbthrift](https://github.com/facebook/fbthrift)\n* [folly](https://github.com/facebook/folly)\n* [wangle](https://github.com/facebook/wangle)\n* [proxygen](https://github.com/facebook/proxygen)\n* [gtest](https://github.com/google/googletest)\n* [gflags](https://github.com/gflags/gflags)\n\n## Building Beringei\n\nOur instructions are for Ubuntu 16.10 - but you will probably be able to modify\nthe install scripts and directions to work with other linux distros.\n\n- Run `sudo ./setup_ubuntu.sh`.\n\n- Build beringei.\n\n```\nmkdir build && cd build && cmake .. && make\n```\n\n- Generate a beringei configuration file.\n\n```\n./beringei/tools/beringei_configuration_generator --host_names $(hostname) --file_path /tmp/beringei.json\n```\n\n- Start beringei.\n\n```\n./beringei/service/beringei_main \\\n    -beringei_configuration_path /tmp/beringei.json \\\n    -create_directories \\\n    -sleep_between_bucket_finalization_secs 60 \\\n    -allowed_timestamp_behind 300 \\\n    -bucket_size 600 \\\n    -buckets $((86400/600)) \\\n    -logtostderr \\\n    -v=2\n```\n\n- Send data.\n\n```\nwhile [[ 1 ]]; do\n    ./beringei/tools/beringei_put \\\n        -beringei_configuration_path /tmp/beringei.json \\\n        testkey ${RANDOM} \\\n        -logtostderr -v 3\n    sleep 30\ndone\n```\n\n- Read the data back.\n\n```\n./beringei/tools/beringei_get \\\n    -beringei_configuration_path /tmp/beringei.json \\\n    testkey \\\n    -logtostderr -v 3\n```\n\n## License\n\nBeringei is BSD-licensed. We also provide an additional patent grant.\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 0.5390625,
+          "content": "# -*- mode: ruby -*-\n# vi: set ft=ruby :\n\nVagrant.configure(2) do |config|\n\n  # the base box is ubuntu 16.10\n  config.vm.box = \"bento/ubuntu-16.10\"\n\n  # check update\n  config.vm.box_check_update = true\n\n  # forward guest 80 to host 8080\n  # config.vm.network \"forwarded_port\", guest: 80, host: 8080\n\n  config.vm.provider \"virtualbox\" do |vb|\n     # Don't show the GUI unless you have some bug\n     vb.gui = false\n     # Customize the amount of memory on the VM:\n     vb.memory = \"1024\"\n  end\n\n  config.vm.provision \"shell\", path: \"setup_ubuntu.sh\"\n\nend"
+        },
+        {
+          "name": "beringei",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "beringei_logo_clear.png",
+          "type": "blob",
+          "size": 6.70703125,
+          "content": null
+        },
+        {
+          "name": "circle.yml",
+          "type": "blob",
+          "size": 0.2138671875,
+          "content": "machine:\n  services:\n    - docker\n\ndependencies:\n  override:\n    - docker build --rm=false -t base_ubuntu_16.10 .\n\ntest:\n  override:\n    - docker run -t base_ubuntu_16.10 /bin/bash -c \"set -e ; cmake .. ; make ; ctest\"\n"
+        },
+        {
+          "name": "setup_ubuntu.sh",
+          "type": "blob",
+          "size": 2.76171875,
+          "content": "#!/bin/bash\nset -e\n\nFB_VERSION=\"2017.05.22.00\"\nZSTD_VERSION=\"1.1.1\"\n\necho \"This script configures ubuntu with everything needed to run beringei.\"\necho \"It requires that you run it as root. sudo works great for that.\"\n\napt update\n\napt install --yes \\\n    autoconf \\\n    autoconf-archive \\\n    automake \\\n    binutils-dev \\\n    bison \\\n    clang-format-3.9 \\\n    cmake \\\n    flex \\\n    g++ \\\n    git \\\n    gperf \\\n    libboost-all-dev \\\n    libcap-dev \\\n    libdouble-conversion-dev \\\n    libevent-dev \\\n    libgflags-dev \\\n    libgoogle-glog-dev \\\n    libjemalloc-dev \\\n    libkrb5-dev \\\n    liblz4-dev \\\n    liblzma-dev \\\n    libnuma-dev \\\n    libsasl2-dev \\\n    libsnappy-dev \\\n    libssl-dev \\\n    libtool \\\n    make \\\n    pkg-config \\\n    scons \\\n    wget \\\n    zip \\\n    zlib1g-dev\n\nready_destdir() {\n        if [[ -e ${2} ]]; then\n                echo \"Moving aside existing $1 directory..\"\n                mv -v \"$2\" \"$2.bak.$(date +%Y-%m-%d)\"\n        fi\n}\n\nmkdir -pv /usr/local/facebook-${FB_VERSION}\nln -sfT /usr/local/facebook-${FB_VERSION} /usr/local/facebook\n\nexport LDFLAGS=\"-L/usr/local/facebook/lib -Wl,-rpath=/usr/local/facebook/lib\"\nexport CPPFLAGS=\"-I/usr/local/facebook/include\"\n\ncd /tmp\n\nwget -O /tmp/folly-${FB_VERSION}.tar.gz https://github.com/facebook/folly/archive/v${FB_VERSION}.tar.gz\nwget -O /tmp/wangle-${FB_VERSION}.tar.gz https://github.com/facebook/wangle/archive/v${FB_VERSION}.tar.gz\nwget -O /tmp/fbthrift-${FB_VERSION}.tar.gz https://github.com/facebook/fbthrift/archive/v${FB_VERSION}.tar.gz\nwget -O /tmp/proxygen-${FB_VERSION}.tar.gz https://github.com/facebook/proxygen/archive/v${FB_VERSION}.tar.gz\nwget -O /tmp/mstch-master.tar.gz https://github.com/no1msd/mstch/archive/master.tar.gz\nwget -O /tmp/zstd-${ZSTD_VERSION}.tar.gz https://github.com/facebook/zstd/archive/v${ZSTD_VERSION}.tar.gz\n\ntar xzvf folly-${FB_VERSION}.tar.gz\ntar xzvf wangle-${FB_VERSION}.tar.gz\ntar xzvf fbthrift-${FB_VERSION}.tar.gz\ntar xzvf proxygen-${FB_VERSION}.tar.gz\ntar xzvf mstch-master.tar.gz\ntar xzvf zstd-${ZSTD_VERSION}.tar.gz\n\npushd mstch-master\ncmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/facebook-${FB_VERSION} .\nmake install\npopd\n\npushd zstd-${ZSTD_VERSION}\nmake install PREFIX=/usr/local/facebook-${FB_VERSION}\npopd\n\n\npushd folly-${FB_VERSION}/folly\nautoreconf -ivf\n./configure --prefix=/usr/local/facebook-${FB_VERSION}\nmake install\npopd\n\npushd wangle-${FB_VERSION}/wangle\ncmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local/facebook-${FB_VERSION} -DBUILD_SHARED_LIBS:BOOL=ON .\nmake\n# Wangle tests are broken. Disabling ctest.\n# ctest\nmake install\npopd\n\npushd fbthrift-${FB_VERSION}/thrift\nautoreconf -ivf\n./configure --prefix=/usr/local/facebook-${FB_VERSION}\nmake install\npopd\n\npushd proxygen-${FB_VERSION}/proxygen\nautoreconf -ivf\n./configure --prefix=/usr/local/facebook-${FB_VERSION}\nmake install\npopd\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "timestamp": 1736565691078,
+    "page": 591,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lloyd/node-memwatch",
+      "stars": 2510,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0244140625,
+          "content": "/build\n/node_modules\n*~\n\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0966796875,
+          "content": "language: node_js\n\nnode_js:\n - 0.6\n - 0.8\n - 0.10\n\nnotifications:\n  email:\n    - lloyd@hilaiel.com\n"
+        },
+        {
+          "name": "ChangeLog",
+          "type": "blob",
+          "size": 0.87109375,
+          "content": "v0.2.2 -\n\t* don't crash when a user accidentally allocates a HeapDiff without new (ala new require('memwatch').HeapDiff()) #30\n\nv0.2.1 -\n\t* 0.10.0 support (thanks @rvagg and @tmuellerleile)\n\t* improved windows build support (no longer requires sed in path, thanks @mscdex)\n\t* work around a windows specific crash due to upstream \"bug\"  in libuv (https://github.com/joyent/libuv/pull/629)\n\nv0.2.0 -\n\t* fix memory leak of snapshots in HeapDiff #15\n\t* HeapDiff.end() throws an exception if invoked more than once.\n\t* aggressively clean up snapshots, at end() rather than next gc\n\nv0.1.5 -\n\t* compiles on windows (thanks @jmatthewsr-ms! sorry to make you wait)\n\nv0.1.4 -\n\t* migrate to node-gyp (thanks @jhaynie for getting it started)\n\nv0.1.3 -\n\t* node 0.8 support\n\nv0.1.2 -\n\n\t* Addition of unit tests (running on travis)\n\t* fix bug whereby events would not be emitted when listeners use .once()\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.2197265625,
+          "content": "`node-memwatch`: Leak Detection and Heap Diffing for Node.JS\n============================================================\n\n[![Build Status](https://secure.travis-ci.org/lloyd/node-memwatch.png)](http://travis-ci.org/lloyd/node-memwatch)\n\n`node-memwatch` is here to help you detect and find memory leaks in\nNode.JS code.  It provides:\n\n- A `leak` event, emitted when it appears your code is leaking memory.\n\n- A `stats` event, emitted occasionally, giving you\n  data describing your heap usage and trends over time.\n\n- A `HeapDiff` class that lets you compare the state of your heap between\n  two points in time, telling you what has been allocated, and what\n  has been released.\n\n\nInstallation\n------------\n\n- `npm install memwatch`\n\nor\n\n- `git clone git://github.com/lloyd/node-memwatch.git`\n\n\nDescription\n-----------\n\nThere are a growing number of tools for debugging and profiling memory\nusage in Node.JS applications, but there is still a need for a\nplatform-independent native module that requires no special\ninstrumentation.  This module attempts to satisfy that need.\n\nTo get started, import `node-memwatch` like so:\n\n```javascript\nvar memwatch = require('memwatch');\n```\n\n### Leak Detection\n\nYou can then subscribe to `leak` events.  A `leak` event will be\nemitted when your heap usage has increased for five consecutive\ngarbage collections:\n\n```javascript\nmemwatch.on('leak', function(info) { ... });\n```\n\nThe `info` object will look something like:\n\n```javascript\n{ start: Fri, 29 Jun 2012 14:12:13 GMT,\n  end: Fri, 29 Jun 2012 14:12:33 GMT,\n  growth: 67984,\n  reason: 'heap growth over 5 consecutive GCs (20s) - 11.67 mb/hr' }\n```\n\n\n### Heap Usage\n\nThe best way to evaluate your memory footprint is to look at heap\nusage right aver V8 performs garbage collection.  `memwatch` does\nexactly this - it checks heap usage only after GC to give you a stable\nbaseline of your actual memory usage.\n\nWhen V8 performs a garbage collection (technically, we're talking\nabout a full GC with heap compaction), `memwatch` will emit a `stats`\nevent.\n\n```javascript\nmemwatch.on('stats', function(stats) { ... });\n```\n\nThe `stats` data will look something like this:\n\n```javascript\n{\n  \"num_full_gc\": 17,\n  \"num_inc_gc\": 8,\n  \"heap_compactions\": 8,\n  \"estimated_base\": 2592568,\n  \"current_base\": 2592568,\n  \"min\": 2499912,\n  \"max\": 2592568,\n  \"usage_trend\": 0\n}\n```\n\n`estimated_base` and `usage_trend` are tracked over time.  If usage\ntrend is consistently positive, it indicates that your base heap size\nis continuously growing and you might have a leak.\n\nV8 has its own idea of when it's best to perform a GC, and under a\nheavy load, it may defer this action for some time.  To aid in\nspeedier debugging, `memwatch` provides a `gc()` method to force V8 to\ndo a full GC and heap compaction.\n\n\n### Heap Diffing\n\nSo far we have seen how `memwatch` can aid in leak detection.  For\nleak isolation, it provides a `HeapDiff` class that takes two snapshots\nand computes a diff between them.  For example:\n\n```javascript\n// Take first snapshot\nvar hd = new memwatch.HeapDiff();\n\n// do some things ...\n\n// Take the second snapshot and compute the diff\nvar diff = hd.end();\n```\n\nThe contents of `diff` will look something like:\n\n```javascript\n{\n  \"before\": { \"nodes\": 11625, \"size_bytes\": 1869904, \"size\": \"1.78 mb\" },\n  \"after\":  { \"nodes\": 21435, \"size_bytes\": 2119136, \"size\": \"2.02 mb\" },\n  \"change\": { \"size_bytes\": 249232, \"size\": \"243.39 kb\", \"freed_nodes\": 197,\n    \"allocated_nodes\": 10007,\n    \"details\": [\n      { \"what\": \"String\",\n        \"size_bytes\": -2120,  \"size\": \"-2.07 kb\",  \"+\": 3,    \"-\": 62\n      },\n      { \"what\": \"Array\",\n        \"size_bytes\": 66687,  \"size\": \"65.13 kb\",  \"+\": 4,    \"-\": 78\n      },\n      { \"what\": \"LeakingClass\",\n        \"size_bytes\": 239952, \"size\": \"234.33 kb\", \"+\": 9998, \"-\": 0\n      }\n    ]\n  }\n```\n\nThe diff shows that during the sample period, the total number of\nallocated `String` and `Array` classes decreased, but `Leaking Class`\ngrew by 9998 allocations.  Hmmm.\n\nYou can use `HeapDiff` in your `on('stats')` callback; even though it\ntakes a memory snapshot, which triggers a V8 GC, it will not trigger\nthe `stats` event itself.  Because that would be silly.\n\n\nFuture Work\n-----------\n\nPlease see the Issues to share suggestions and contribute!\n\n\nLicense\n-------\n\nhttp://wtfpl.org\n"
+        },
+        {
+          "name": "binding.gyp",
+          "type": "blob",
+          "size": 0.22265625,
+          "content": "{\n  'targets': [\n    {\n      'target_name': 'memwatch',\n      'include_dirs': [\n      ],\n      'sources': [\n        'src/heapdiff.cc',\n        'src/init.cc',\n        'src/memwatch.cc',\n        'src/util.cc'\n      ],\n    }\n  ]\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include.js",
+          "type": "blob",
+          "size": 0.3876953125,
+          "content": "const\nmagic = require('./build/Release/memwatch'),\nevents = require('events');\n\nmodule.exports = new events.EventEmitter();\n\nmodule.exports.gc = magic.gc;\nmodule.exports.HeapDiff = magic.HeapDiff;\n\nmagic.upon_gc(function(has_listeners, event, data) {\n  if (has_listeners) {\n    return (module.exports.listeners('stats').length > 0);\n  } else {\n    return module.exports.emit(event, data);\n  }\n});\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.736328125,
+          "content": "{\n  \"name\": \"memwatch\",\n  \"description\": \"Keep an eye on your memory usage, and discover and isolate leaks.\",\n  \"version\": \"0.2.2\",\n  \"author\": \"Lloyd Hilaiel (http://lloyd.io)\",\n  \"engines\": { \"node\": \">= 0.6.0\" },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/lloyd/node-memwatch.git\"\n  },\n  \"main\": \"include.js\",\n  \"licenses\": [ { \"type\": \"wtfpl\" } ],\n  \"bugs\": {\n    \"url\" : \"https://github.com/lloyd/node-memwatch/issues\"\n  },\n  \"scripts\": {\n    \"install\": \"node-gyp rebuild\",\n    \"test\": \"mocha tests\"\n  },\n  \"devDependencies\": {\n    \"mocha\": \"1.2.2\",\n    \"should\": \"0.6.3\",\n    \"node-gyp\": \"0.5.7\"\n  },\n  \"contributors\": [\n    \"Jed Parsons (@jedp)\",\n    \"Jeff Haynie (@jhaynie)\",\n    \"Justin Matthews (@jmatthewsr-ms)\"\n  ]\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests.js",
+          "type": "blob",
+          "size": 1.7470703125,
+          "content": "const\nshould = require('should'),\nmemwatch = require('./');\n\ndescribe('the library', function() {\n  it('should export a couple functions', function(done) {\n    should.exist(memwatch.gc);\n    should.exist(memwatch.on);\n    should.exist(memwatch.once);\n    should.exist(memwatch.removeAllListeners);\n    should.exist(memwatch.HeapDiff);\n    done();\n  });\n});\ndescribe('calling .gc()', function() {\n  it('should cause a stats() event to be emitted', function(done) {\n    memwatch.once('stats', function(s) {\n      s.should.be.a('object');\n      done();\n    });\n    memwatch.gc();\n  });\n});\n\ndescribe('HeapDiff', function() {\n  it('should detect allocations', function(done) {\n    function LeakingClass() {};\n    var arr = [];\n    var hd = new memwatch.HeapDiff();\n    for (var i = 0; i < 100; i++) arr.push(new LeakingClass());\n    var diff = hd.end();\n    (Array.isArray(diff.change.details)).should.be.ok;\n    diff.change.details.should.be.an.instanceOf(Array);\n    // find the LeakingClass elem\n    var leakingReport;\n    diff.change.details.forEach(function(d) {\n      if (d.what === 'LeakingClass')\n        leakingReport = d;\n    });\n    should.exist(leakingReport);\n    ((leakingReport['+'] - leakingReport['-']) > 0).should.be.ok;\n    done();\n\n  });\n});\n\ndescribe('HeapDiff', function() {\n  it('double end should throw', function(done) {\n    var hd = new memwatch.HeapDiff();\n    var arr = [];\n    (function() { hd.end(); }).should.not.throw();\n    (function() { hd.end(); }).should.throw();\n    done();\n  });\n});\n\ndescribe('improper HeapDiff allocation', function() {\n  it('should throw an exception', function(done) {\n    // equivalent to \"new require('memwatch').HeapDiff()\"\n    // see issue #30\n    (function() { new (memwatch.HeapDiff()); }).should.throw();\n    done();\n  });\n});\n"
+        }
+      ]
+    }
+  ]
+}

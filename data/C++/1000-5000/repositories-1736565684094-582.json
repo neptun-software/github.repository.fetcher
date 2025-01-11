@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "timestamp": 1736565684094,
+    "page": 582,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "f1xpl/openauto",
+      "stars": 2529,
+      "defaultBranch": "development",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1162109375,
+          "content": "# Add any directories, files, or patterns you don't want to be tracked by version control\nlib/\nbin/\nCMakeLists.txt.user"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 4.05078125,
+          "content": "cmake_minimum_required(VERSION 3.5.1)\nproject(openauto CXX)\n\nset(CMAKE_AUTOMOC ON)\nset(CMAKE_AUTOUIC ON)\nset(CMAKE_AUTORCC ON)\nset(base_directory ${CMAKE_CURRENT_SOURCE_DIR})\nset(resources_directory ${base_directory}/assets)\nset(sources_directory ${base_directory}/src)\nset(include_directory ${base_directory}/include)\n\nset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${base_directory}/lib)\nset(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${base_directory}/lib)\n\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${base_directory}/bin)\nset(EXECUTABLE_OUTPUT_PATH ${base_directory}/bin)\n\nset(Boost_USE_STATIC_LIBS OFF)\nset(Boost_USE_MULTITHREADED ON)\nset(Boost_USE_STATIC_RUNTIME OFF)\n\nset(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} \"${CMAKE_SOURCE_DIR}/cmake_modules/\")\nSET(CMAKE_CXX_STANDARD 14)\nset(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS_INIT} -Wall -pedantic -fPIC\")\nset(CMAKE_CXX_FLAGS_DEBUG \"-g -O0\")\nset(CMAKE_CXX_FLAGS_RELEASE \"-g -O3\")\n\nadd_definitions(-DBOOST_ALL_DYN_LINK)\n\nfind_package(Boost REQUIRED COMPONENTS system log OPTIONAL_COMPONENTS unit_test_framework)\nfind_package(libusb-1.0 REQUIRED)\nfind_package(Qt5 COMPONENTS Multimedia MultimediaWidgets Bluetooth)\nfind_package(Protobuf REQUIRED)\nfind_package(OpenSSL REQUIRED)\nfind_package(rtaudio REQUIRED)\n\nif(WIN32)\n    set(WINSOCK2_LIBRARIES \"ws2_32\")\nendif(WIN32)\n\nif(RPI3_BUILD)\n    add_definitions(-DUSE_OMX -DOMX_SKIP64BIT -DRASPBERRYPI3)\n    set(BCM_HOST_LIBRARIES \"/opt/vc/lib/libbcm_host.so\")\n    set(BCM_HOST_INCLUDE_DIRS \"/opt/vc/include\")\n    set(ILCLIENT_INCLUDE_DIRS \"/opt/vc/src/hello_pi/libs/ilclient\")\n    set(ILCLIENT_LIBRARIES \"/opt/vc/src/hello_pi/libs/ilclient/libilclient.a;/opt/vc/lib/libvcos.so;/opt/vc/lib/libvcilcs.a;/opt/vc/lib/libvchiq_arm.so\")\nendif(RPI3_BUILD)\n\ninclude_directories(${CMAKE_CURRENT_BINARY_DIR}\n                    ${Qt5Multimedia_INCLUDE_DIRS}\n                    ${Qt5MultimediaWidgets_INCLUDE_DIRS}\n                    ${Qt5Widgets_INCLUDE_DIRS}\n                    ${Qt5Bluetooth_INCLUDE_DIRS}\n                    ${Boost_INCLUDE_DIRS}\n                    ${LIBUSB_1_INCLUDE_DIRS}\n                    ${PROTOBUF_INCLUDE_DIR}\n                    ${OPENSSL_INCLUDE_DIR}\n                    ${RTAUDIO_INCLUDE_DIRS}\n                    ${AASDK_PROTO_INCLUDE_DIRS}\n                    ${AASDK_INCLUDE_DIRS}\n                    ${BCM_HOST_INCLUDE_DIRS}\n                    ${ILCLIENT_INCLUDE_DIRS}\n                    ${include_directory})\n\t\t\t\t\t\t\t\t\nlink_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})\n\nset(common_include_directory ${include_directory}/f1x/openauto/Common)\n\nset(autoapp_sources_directory ${sources_directory}/autoapp)\nset(autoapp_include_directory ${include_directory}/f1x/openauto/autoapp)\nfile(GLOB_RECURSE autoapp_source_files ${autoapp_sources_directory}/*.ui ${autoapp_sources_directory}/*.cpp ${autoapp_include_directory}/*.hpp ${common_include_directory}/*.hpp ${resources_directory}/*.qrc)\n\nadd_executable(autoapp ${autoapp_source_files})\n\ntarget_link_libraries(autoapp\n                        ${Boost_LIBRARIES}\n                        ${Qt5Multimedia_LIBRARIES}\n                        ${Qt5MultimediaWidgets_LIBRARIES}\n                        ${Qt5Bluetooth_LIBRARIES}\n                        ${LIBUSB_1_LIBRARIES}\n                        ${PROTOBUF_LIBRARIES}\n                        ${BCM_HOST_LIBRARIES}\n                        ${ILCLIENT_LIBRARIES}\n                        ${WINSOCK2_LIBRARIES}\n                        ${RTAUDIO_LIBRARIES}\n                        ${AASDK_PROTO_LIBRARIES}\n                        ${AASDK_LIBRARIES})\n\nset(btservice_sources_directory ${sources_directory}/btservice)\nset(btservice_include_directory ${include_directory}/f1x/openauto/btservice)\nfile(GLOB_RECURSE btservice_source_files ${btservice_sources_directory}/*.cpp ${btservice_include_directory}/*.hpp ${common_include_directory}/*.hpp)\n\nadd_executable(btservice ${btservice_source_files})\n\ntarget_link_libraries(btservice\n                        ${Boost_LIBRARIES}\n                        ${Qt5Bluetooth_LIBRARIES}\n                        ${Qt5MultimediaWidgets_LIBRARIES}\n                        ${PROTOBUF_LIBRARIES}\n                        ${AASDK_PROTO_LIBRARIES})\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 1.642578125,
+          "content": "\n# OpenAuto\n\n### Support project\n[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=R4HXE5ESDR4U4)\n\nFor support of other platforms please contact me at f1xstudiopl@gmail.com\n\n### Description\nOpenAuto is an AndroidAuto(tm) headunit emulator based on aasdk library and Qt libraries. Main goal is to run this application on the RaspberryPI 3 board computer smoothly.\n\n### Supported functionalities\n - 480p, 720p and 1080p with 30 or 60 FPS\n - RaspberryPI 3 hardware acceleration support to decode video stream (up to 1080p@60!)\n - Audio playback from all audio channels (Media, System and Speech)\n - Audio input for voice commands\n - Touchscreen and buttons input\n - Bluetooth\n - Automatic launch after device hotplug\n - Automatic detection of connected Android devices\n - Wireless (WiFi) mode via head unit server (must be enabled in hidden developer settings)\n - User-friendly settings\n\n### Supported platforms\n\n - Linux\n - RaspberryPI 3\n - Windows\n\n### License\nGNU GPLv3\n\nCopyrights (c) 2018 f1x.studio (Michal Szwaj)\n\n*AndroidAuto is registered trademark of Google Inc.*\n\n### Used software\n - [aasdk](https://github.com/f1xpl/aasdk)\n - [Boost libraries](http://www.boost.org/)\n - [Qt libraries](https://www.qt.io/)\n - [CMake](https://cmake.org/)\n - [RtAudio](https://www.music.mcgill.ca/~gary/rtaudio/playback.html)\n - Broadcom ilclient from RaspberryPI 3 firmware\n - OpenMAX IL API\n\n### Remarks\n**This software is not certified by Google Inc. It is created for R&D purposes and may not work as expected by the original authors. Do not use while driving. You use this software at your own risk.**\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmake_modules",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

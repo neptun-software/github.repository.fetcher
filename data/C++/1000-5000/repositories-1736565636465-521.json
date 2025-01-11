@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "timestamp": 1736565636465,
+    "page": 521,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "picotorrent/picotorrent",
+      "stars": 2657,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "# Auto detect text files and perform LF normalization \n* text=auto\n\nsrc/breakpad/* linguist-vendored\nsrc/sqlite/* linguist-vendored\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1904296875,
+          "content": "build-x64/\nbuild-x86/\nbuild/\ndocs/build\nsrc/installer/bin\nsrc/installer/obj\nsrc/picotorrent/buildinfo.cpp\ntools\n.vscode\n[D|d]ebug\n[R|r]elease\n.vendor-status\n\n.vs\n*.db\n*.opendb\n*.suo\n*.sdf\n*.user\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.5068359375,
+          "content": "[submodule \"vendor/wx\"]\n\tpath = vendor/wx\n\turl = https://github.com/wxWidgets/wxWidgets\n[submodule \"vendor/duktape\"]\n[submodule \"vendor/crashpad\"]\n\tpath = vendor/crashpad\n\turl = https://github.com/picotorrent/crashpad\n[submodule \"vendor/sentry-crashpad\"]\n\tpath = vendor/sentry-crashpad\n\turl = https://github.com/picotorrent/sentry-crashpad\n[submodule \"vendor/antlr4\"]\n\tpath = vendor/antlr4\n\turl = https://github.com/antlr/antlr4\n[submodule \"vendor/vcpkg\"]\n\tpath = vendor/vcpkg\n\turl = https://github.com/microsoft/vcpkg\n"
+        },
+        {
+          "name": ".readthedocs.yml",
+          "type": "blob",
+          "size": 0.052734375,
+          "content": "version: 2\n\nsphinx:\n  configuration: docs/src/conf.py\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 6.62109375,
+          "content": "cmake_minimum_required(VERSION 3.14 FATAL_ERROR)\ncmake_policy(SET CMP0092 NEW) # don't add /W3 as default\ncmake_policy(SET CMP0115 OLD) # Source file extensions must be explicit.\n\n# set(VCPKG_OVERLAY_PORTS    ${CMAKE_CURRENT_SOURCE_DIR}/vendor/vcpkg-overlays/ports)\nset(VCPKG_OVERLAY_TRIPLETS ${CMAKE_CURRENT_SOURCE_DIR}/vendor/vcpkg-overlays/triplets)\nset(CMAKE_TOOLCHAIN_FILE   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/vcpkg/scripts/buildsystems/vcpkg.cmake CACHE STRING \"Vcpkg toolchain file\")\n\nproject(\"PicoTorrent\")\n\nset(CMAKE_CXX_STANDARD 17)\n\n# --------- antlr4 options\noption(WITH_STATIC_CRT \"\" Off)\n# -----------------------\n\n# --------- wx options\nset(wxBUILD_SHARED        OFF   CACHE BOOL   \"\" FORCE)\nset(wxBUILD_COMPATIBILITY \"3.2\" CACHE STRING \"\" FORCE)\nset(wxUSE_EXCEPTIONS      OFF   CACHE BOOL   \"\" FORCE)\n# --------------------\n\n# vendor libs\nadd_subdirectory(vendor/sentry-crashpad)\nadd_subdirectory(vendor/wx)\n\n# pico components\nadd_subdirectory(src/pql)\n\n# vcpkg packages\nfind_package(Boost                      REQUIRED COMPONENTS log)\nfind_package(fmt                 CONFIG REQUIRED)\nfind_package(LibtorrentRasterbar CONFIG REQUIRED)\nfind_package(nlohmann_json       CONFIG REQUIRED)\nfind_package(unofficial-sqlite3  CONFIG REQUIRED)\n\n# Generate buildinfo file\nconfigure_file(\"${CMAKE_SOURCE_DIR}/src/picotorrent/buildinfo.cpp.in\" \"${CMAKE_SOURCE_DIR}/src/picotorrent/buildinfo.cpp\" @ONLY)\n\n# Debug flags\nset(CMAKE_CXX_FLAGS_DEBUG \"${CMAKE_CXX_FLAGS_DEBUG} /Zi\")\n\n# Release flags\nset(CMAKE_CXX_FLAGS_RELEASE \"${CMAKE_CXX_FLAGS_RELEASE} /Zi\")\nset(CMAKE_EXE_LINKER_FLAGS_RELEASE \"/DEBUG /INCREMENTAL:NO /MAP /OPT:REF /OPT:ICF\")\nset(CMAKE_SHARED_LINKER_FLAGS_RELEASE \"/DEBUG /INCREMENTAL:NO /MAP /OPT:REF /OPT:ICF\")\n\nadd_executable(\n    PicoTorrent-coredb\n    src/l10n/main\n    lang/ca-ES.json\n    lang/de-DE.json\n    lang/el-GR.json\n    lang/en-US.json\n    lang/es-ES.json\n    lang/fi-FI.json\n    lang/fr-FR.json\n    lang/hu-HU.json\n    lang/hy-AM.json\n    lang/id-ID.json\n    lang/it-IT.json\n    lang/ka-GE.json\n    lang/ko-KR.json\n    lang/lt-LT.json\n    lang/lv-LV.json\n    lang/nl-NL.json\n    lang/pl-PL.json\n    lang/pt-BR.json\n    lang/ro-RO.json\n    lang/ru-RU.json\n    lang/sv-SE.json\n    lang/tr-TR.json\n    lang/uk-UA.json\n    lang/zh-CN.json\n)\n\ntarget_link_libraries(\n    PicoTorrent-coredb\n    PRIVATE\n    nlohmann_json::nlohmann_json\n    unofficial::sqlite3::sqlite3\n)\n\nadd_executable(\n    PicoTorrent\n    WIN32\n\n    src/picotorrent/application\n    src/picotorrent/buildinfo\n    src/picotorrent/crashpadinitializer\n    src/picotorrent/main\n    src/picotorrent/persistencemanager\n    src/picotorrent/resources.rc\n\n    # API\n    src/picotorrent/api/libpico\n\n    # BitTorrent\n    src/picotorrent/bittorrent/session\n    src/picotorrent/bittorrent/torrenthandle\n\n    # Core\n    src/picotorrent/core/configuration\n    src/picotorrent/core/database\n    src/picotorrent/core/environment\n    src/picotorrent/core/utils\n\n    # Http\n    src/picotorrent/http/httpclient\n\n    # IPC\n    src/picotorrent/ipc/applicationoptionsconnection\n    src/picotorrent/ipc/server\n\n    # Dialogs\n    src/picotorrent/ui/dialogs/aboutdialog\n    src/picotorrent/ui/dialogs/addmagnetlinkdialog\n    src/picotorrent/ui/dialogs/addtrackerdialog\n    src/picotorrent/ui/dialogs/addtorrentdialog\n    src/picotorrent/ui/dialogs/createtorrentdialog\n    src/picotorrent/ui/dialogs/listeninterfacedialog\n    src/picotorrent/ui/dialogs/preferencesadvancedpage\n    src/picotorrent/ui/dialogs/preferencesconnectionpage\n    src/picotorrent/ui/dialogs/preferencesdialog\n    src/picotorrent/ui/dialogs/preferencesdownloadspage\n    src/picotorrent/ui/dialogs/preferencesgeneralpage\n    src/picotorrent/ui/dialogs/preferenceslabelspage\n    src/picotorrent/ui/dialogs/preferencesproxypage\n    src/picotorrent/ui/dialogs/textoutputdialog\n\n    # Filters\n    src/picotorrent/ui/filters/pqltorrentfilter\n\n    # Models\n    src/picotorrent/ui/models/filestoragemodel\n    src/picotorrent/ui/models/peerlistmodel\n    src/picotorrent/ui/models/torrentlistmodel\n    src/picotorrent/ui/models/trackerlistmodel\n\n    # Persistence\n    src/picotorrent/ui/persistence/persistenttorrentlistview\n\n    # UI\n    src/picotorrent/ui/console\n    src/picotorrent/ui/mainframe\n    src/picotorrent/ui/statusbar\n    src/picotorrent/ui/taskbaricon\n    src/picotorrent/ui/torrentcontextmenu\n    src/picotorrent/ui/torrentdetailsfilespanel\n    src/picotorrent/ui/torrentdetailsoverviewpanel\n    src/picotorrent/ui/torrentdetailspeerspanel\n    src/picotorrent/ui/torrentdetailstrackerspanel\n    src/picotorrent/ui/torrentdetailsview\n    src/picotorrent/ui/torrentfilelistview\n    src/picotorrent/ui/torrentlistview\n    src/picotorrent/ui/translator\n\n    # Widgets\n    src/picotorrent/ui/widgets/pieceprogressbar\n\n    # Win32 specific stuff\n    src/picotorrent/ui/win32/openfiledialog\n)\n\ntarget_compile_definitions(\n    PicoTorrent\n    PRIVATE\n    -D_UNICODE\n    -D_WIN32\n    -D_WIN32_WINNT=0x0600\n    -DNOMINMAX\n    -DPICOJSON_USE_INT64\n    -DUNICODE\n    -DWIN32\n    -DWIN32_LEAN_AND_MEAN\n\n    -DLIBPICO_API_EXPORT\n\n    -DPICO_GIT_COMMITISH=${GITVERSION_VAR_SHORTSHA}\n    -DPICO_VERSION_MAJOR=${GITVERSION_VAR_VERSION_MAJOR}\n    -DPICO_VERSION_MINOR=${GITVERSION_VAR_VERSION_MINOR}\n    -DPICO_VERSION_PATCH=${GITVERSION_VAR_VERSION_PATCH}\n\n    -DPICO_WX_GIT_COMMITISH=${PICO_WX_GIT_COMMITISH}\n)\n\ntarget_compile_options(PicoTorrent PRIVATE /guard:cf /W4 /WX)\n\ntarget_include_directories(\n    PicoTorrent\n    PRIVATE\n\n    include\n)\n\ntarget_link_libraries(\n    PicoTorrent\n\n    PRIVATE\n\n    # boost\n    Boost::boost\n    Boost::log\n\n    # wxWidgets\n    wxcore wxbase wxpropgrid\n\n    # Windows\n    Comctl32\n    crypt32\n    iphlpapi\n    legacy_stdio_definitions\n    propsys\n    shlwapi\n    wininet\n    winhttp\n\n    # Crashpad\n    crashpad_client\n    crashpad_util\n    mini_chromium\n\n    # fmt\n    fmt::fmt\n\n    # nlohmann-json\n    nlohmann_json::nlohmann_json\n\n    # Rasterbar-libtorrent\n    LibtorrentRasterbar::torrent-rasterbar\n\n    # PQL\n    PicoTorrentPQL\n\n    unofficial::sqlite3::sqlite3\n)\n\nset_property(TARGET PicoTorrent PROPERTY ENABLE_EXPORTS 1)\n\n# Plugins\nadd_library(\n    Plugin_Updater\n    SHARED\n    src/plugins/updater/updater\n)\n\ntarget_compile_definitions(Plugin_Updater PRIVATE -D_WIN32 -DUNICODE -DWIN32_LEAN_AND_MEAN)\ntarget_include_directories(Plugin_Updater PRIVATE include)\ntarget_link_libraries(Plugin_Updater PRIVATE PicoTorrent Comctl32)\n\n# Copy Crashpad handler\nadd_custom_command(\n    TARGET PicoTorrent POST_BUILD\n    COMMAND ${CMAKE_COMMAND} -E copy_if_different\n        $<TARGET_FILE:crashpad_handler>\n        $<TARGET_FILE_DIR:PicoTorrent>\n)\n\n# Generate coredb\nadd_custom_command(\n    TARGET PicoTorrent POST_BUILD\n    COMMAND PicoTorrent-coredb \"${CMAKE_SOURCE_DIR}/lang\" $<TARGET_FILE_DIR:PicoTorrent>\n)\n"
+        },
+        {
+          "name": "GitVersion.yml",
+          "type": "blob",
+          "size": 0.08203125,
+          "content": "mode: ContinuousDeployment\nbranches: {}\nignore:\n  sha: []\nmerge-message-formats: {}\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.095703125,
+          "content": "The MIT License (MIT)\r\n\r\nCopyright (c) 2015, Viktor Elofsson and contributors.\r\n\r\nPermission is hereby granted, free of charge, to any person obtaining a copy\r\nof this software and associated documentation files (the \"Software\"), to deal\r\nin the Software without restriction, including without limitation the rights\r\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\r\ncopies of the Software, and to permit persons to whom the Software is\r\nfurnished to do so, subject to the following conditions:\r\n\r\nThe above copyright notice and this permission notice shall be included in all\r\ncopies or substantial portions of the Software.\r\n\r\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\r\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\r\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\r\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\r\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\r\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\r\nSOFTWARE.\r\n"
+        },
+        {
+          "name": "LICENSE.rtf",
+          "type": "blob",
+          "size": 1.140625,
+          "content": "{\\rtf1\\ansi\n{\\fonttbl\\f0\\fcharset0 Tahoma;}\n\n\\pard\\sl380\n\nThe MIT License (MIT)\\\n\\\nCopyright (c) 2015 Viktor Elofsson and contributors.\\\n\\\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\\\n\\\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\\\n\\\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\\\n}"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.431640625,
+          "content": "# PicoTorrent\r\n\r\n![CI](https://github.com/picotorrent/picotorrent/workflows/CI/badge.svg)\r\n[![Discord](https://img.shields.io/discord/759537913205227580)](https://discord.gg/tV3dFrv)\r\n\r\nA tiny, hackable BitTorrent client written in modern C++. Based on\r\nRasterbar-libtorrent to provide high performance and low memory usage.\r\n\r\n<p align=\"center\">\r\n    <img src=\"res/screenshot1.png?raw=true\" width=\"614\" />\r\n</p>\r\n\r\n\r\n## Quick facts\r\n\r\n- Full support for BitTorrent 2.0 ([BEP-52](http://bittorrent.org/beps/bep_0052.html)), v1, v2 and v1+v2 hybrid torrents.\r\n- Supports DHT, PeX, LSD, UPnP.\r\n- (Azureus-style) peer ID: `-PI-`. Example: `-PI0151-` (major: 0, minor: 15, patch: 1).\r\n- User agent: `PicoTorrent/x.y.z`.\r\n- Native look-and-feel across Windows versions.\r\n- Easy to use with high performance.\r\n\r\n*The portable version of PicoTorrent requires manual installation of [the Microsoft Visual C++ Redistributable for Visual Studio 2019](https://visualstudio.microsoft.com/downloads/).*\r\n\r\n\r\n## Download for Windows\r\n\r\n[![Download zip](https://custom-icon-badges.demolab.com/badge/-Download-blue?style=for-the-badge&logo=download&logoColor=white \"Download zip\")](https://github.com/picotorrent/picotorrent/releases)\r\n\r\n\r\n## Building PicoTorrent\r\n\r\nTo successfully build PicoTorrent, you need the following libraries and\r\napplications installed,\r\n\r\n * [CMake (>= v3.14)](https://cmake.org/download/).\r\n * [Visual Studio 2019 Build Tools](https://visualstudio.microsoft.com/downloads/) (or regular Visual Studio 2019) with the C++ toolset.\r\n * [OpenSSL v1.1.1](https://slproweb.com/products/Win32OpenSSL.html) (*not*\r\n   the light version) for the architecture you plan on building. Both Win32\r\n   and Win64 can be installed side by side.\r\n * [Boost 1.73.0](https://www.boost.org).\r\n * [Chocolatey](https://chocolatey.org/install) (Optional) if you plan to build\r\n   or test the Chocolatey package.\r\n * [.NET Core](https://dotnet.microsoft.com/download). Used for the build scripts.\r\n\r\n```\r\nλ git submodule update --init --recursive\r\nλ dotnet tool restore\r\nλ dotnet cake --platorm=[x86|x64] --configuration=[Debug|Release]\r\n```\r\n\r\n\r\n## Translations\r\n\r\nPicoTorrent uses [Weblate](https://translate.picotorrent.org/) to handle the translation process. If you want to help, feel free to signup and give your contribution.\r\n\r\n\r\n## License\r\n\r\nCopyright (c) Viktor Elofsson and contributors. PicoTorrent is provided\r\nas-is under the MIT license. For more information see [LICENSE](LICENSE).\r\n"
+        },
+        {
+          "name": "build.cake",
+          "type": "blob",
+          "size": 7.4013671875,
+          "content": "#addin \"nuget:?package=Cake.CMake&version=1.3.1\"\n#tool  \"nuget:?package=GitVersion.CommandLine&version=5.12.0\"\n#tool  \"nuget:?package=WiX&version=3.11.2\"\n\n//////////////////////////////////////////////////////////////////////\n// ARGUMENTS\n//////////////////////////////////////////////////////////////////////\n\nvar target        = Argument(\"target\", \"Default\");\nvar configuration = Argument(\"configuration\", \"Release\");\nvar platform      = Argument(\"platform\", \"x64\");\nvar vcpkgTriplet  = Argument(\"vcpkg-triplet\", \"x64-windows-static-md\");\n\n// Parameters\nvar OutputDirectory       = Directory(\"./build-\" + platform);\nvar BuildDirectory        = OutputDirectory + Directory(configuration);\nvar PackagesDirectory     = BuildDirectory + Directory(\"packages\");\nvar PublishDirectory      = BuildDirectory + Directory(\"publish\");\nvar BootstrapperDirectory = Directory(\"./src/installer/bin\") + Directory(configuration);\nvar ResourceDirectory     = Directory(\"./res\");\n\nvar Version            = GitVersion();\nvar Installer          = string.Format(\"PicoTorrent-{0}-{1}.msi\", Version.SemVer, platform);\nvar InstallerBundle    = string.Format(\"PicoTorrent-{0}-{1}.exe\", Version.SemVer, platform);\nvar PortablePackage    = string.Format(\"PicoTorrent-{0}-{1}.zip\", Version.SemVer, platform);\nvar SymbolsPackage     = string.Format(\"PicoTorrent-{0}-{1}.symbols.zip\", Version.SemVer, platform);\n\n//////////////////////////////////////////////////////////////////////\n// TASKS\n//////////////////////////////////////////////////////////////////////\n\nTask(\"Clean\")\n    .Does(() =>\n{\n    CleanDirectory(BootstrapperDirectory);\n    CleanDirectory(BuildDirectory);\n});\n\nTask(\"Generate-Project\")\n    .IsDependentOn(\"Clean\")\n    .Does(() =>\n{\n    CMake(new CMakeSettings\n    {\n        SourcePath = \".\",\n        OutputPath = OutputDirectory,\n        Generator = \"Visual Studio 17 2022\",\n        Platform = platform == \"x86\" ? \"Win32\" : \"x64\",\n        Toolset = \"v143\",\n        Options = new []\n        {\n            $\"-DGITVERSION_VAR_BRANCHNAME={Version.BranchName}\",\n            $\"-DGITVERSION_VAR_SEMVER={Version.SemVer}\",\n            $\"-DGITVERSION_VAR_SHORTSHA={Version.Sha.Substring(0,7)}\",\n            $\"-DGITVERSION_VAR_VERSION_MAJOR={Version.Major}\",\n            $\"-DGITVERSION_VAR_VERSION_MINOR={Version.Minor}\",\n            $\"-DGITVERSION_VAR_VERSION_PATCH={Version.Patch}\",\n            $\"-DGITVERSION_VAR_VERSION={Version.MajorMinorPatch}\",\n            $\"-DVCPKG_TARGET_TRIPLET={vcpkgTriplet}\"\n        }\n    });\n});\n\nTask(\"Build\")\n    .IsDependentOn(\"Generate-Project\")\n    .Does(() =>\n{\n    var settings = new MSBuildSettings()\n        .SetConfiguration(configuration)\n        .SetMaxCpuCount(0)\n        .UseToolVersion(MSBuildToolVersion.VS2022);\n    if(platform == \"x86\")\n    {\n        settings.WithProperty(\"Platform\", \"Win32\")\n                .SetPlatformTarget(PlatformTarget.x86);\n    }\n    else\n    {\n        settings.WithProperty(\"Platform\", \"x64\")\n                .SetPlatformTarget(PlatformTarget.x64);\n    }\n\n    MSBuild(OutputDirectory + File(\"PicoTorrent.vcxproj\"), settings);\n\n    // Plugins\n    MSBuild(OutputDirectory + File(\"Plugin_Updater.vcxproj\"), settings);\n});\n\nTask(\"Setup-Publish-Directory\")\n    .IsDependentOn(\"Build\")\n    .Does(() =>\n{\n    var files = new FilePath[]\n    {\n        MakeAbsolute(BuildDirectory + File(\"PicoTorrent.exe\")),\n        MakeAbsolute(BuildDirectory + File(\"coredb.sqlite\")),\n        MakeAbsolute(BuildDirectory + File(\"crashpad_handler.exe\")),\n        MakeAbsolute(BuildDirectory + File(\"Plugin_Updater.dll\")),\n    };\n\n    CreateDirectory(PublishDirectory);\n\n    CopyFiles(\n        files,            // Source\n        PublishDirectory, // Target\n        true);            // Preserve folder structure\n});\n\nTask(\"Build-Installer\")\n    .IsDependentOn(\"Build\")\n    .IsDependentOn(\"Setup-Publish-Directory\")\n    .Does(() =>\n{\n    var arch = Architecture.X64;\n\n    if(platform == \"x86\")\n    {\n        arch = Architecture.X86;\n    }\n\n    var sourceFiles = new FilePath[]\n    {\n        \"./packaging/WiX/PicoTorrent.wxs\",\n        \"./packaging/WiX/PicoTorrent.Components.wxs\",\n        \"./packaging/WiX/PicoTorrent.Directories.wxs\"\n    };\n\n    var objFiles = new FilePath[]\n    {\n        BuildDirectory + File(\"PicoTorrent.wixobj\"),\n        BuildDirectory + File(\"PicoTorrent.Components.wixobj\"),\n        BuildDirectory + File(\"PicoTorrent.Directories.wixobj\")\n    };\n\n    WiXCandle(sourceFiles, new CandleSettings\n    {\n        Architecture = arch,\n        Defines = new Dictionary<string, string>\n        {\n            { \"Configuration\", configuration },\n            { \"PublishDirectory\", PublishDirectory },\n            { \"Platform\", platform },\n            { \"ResourceDirectory\", ResourceDirectory },\n            { \"Version\", Version.MajorMinorPatch }\n        },\n        Extensions = new [] { \"WixFirewallExtension\", \"WixUtilExtension\" },\n        OutputDirectory = BuildDirectory\n    });\n\n    WiXLight(objFiles, new LightSettings\n    {\n        ArgumentCustomization = args =>\n            args.Append(\"-sice:ICE38\")\n                .Append(\"-sice:ICE91\"),\n        Extensions = new [] { \"WixFirewallExtension\", \"WixUtilExtension\" },\n        OutputFile = PackagesDirectory + File(Installer)\n    });\n});\n\nTask(\"Build-Installer-Bootstrapper\")\n    .Does(() =>\n{\n    var settings = new MSBuildSettings()\n        .SetConfiguration(configuration)\n        .SetMaxCpuCount(0)\n        .UseToolVersion(MSBuildToolVersion.VS2022);\n\n    MSBuild(\"./src/installer/PicoTorrentBootstrapper.sln\", settings);\n});\n\nTask(\"Build-Installer-Bundle\")\n    .IsDependentOn(\"Build-Installer\")\n    .IsDependentOn(\"Build-Installer-Bootstrapper\")\n    .Does(() =>\n{\n    var arch = Architecture.X64;\n\n    if(platform == \"x86\")\n    {\n        arch = Architecture.X86;\n    }\n\n    WiXCandle(\"./packaging/WiX/PicoTorrentBundle.wxs\", new CandleSettings\n    {\n        Architecture = arch,\n        Extensions = new [] { \"WixBalExtension\", \"WixNetFxExtension\", \"WixUtilExtension\" },\n        Defines = new Dictionary<string, string>\n        {\n            { \"PicoTorrentInstaller\", PackagesDirectory + File(Installer) },\n            { \"Platform\", platform },\n            { \"Version\", Version.MajorMinorPatch }\n        },\n        OutputDirectory = BuildDirectory\n    });\n\n    WiXLight((BuildDirectory + File(\"PicoTorrentBundle.wixobj\")).ToString(), new LightSettings\n    {\n        Extensions = new [] { \"WixBalExtension\", \"WixNetFxExtension\", \"WixUtilExtension\" },\n        OutputFile = PackagesDirectory + File(InstallerBundle)\n    });\n});\n\nTask(\"Build-Portable-Package\")\n    .IsDependentOn(\"Build\")\n    .IsDependentOn(\"Setup-Publish-Directory\")\n    .Does(() =>\n{\n    Zip(PublishDirectory, PackagesDirectory + File(PortablePackage));\n});\n\nTask(\"Build-Symbols-Package\")\n    .IsDependentOn(\"Build\")\n    .Does(() =>\n{\n    var files = new FilePath[]\n    {\n        BuildDirectory + File(\"PicoTorrent.pdb\"),\n    };\n\n    Zip(BuildDirectory, PackagesDirectory + File(SymbolsPackage), files);\n});\n\n//////////////////////////////////////////////////////////////////////\n// TASK TARGETS\n//////////////////////////////////////////////////////////////////////\n\nTask(\"Default\")\n    .IsDependentOn(\"Build\")\n    ;\n\nTask(\"Publish\")\n    .IsDependentOn(\"Build\")\n    .IsDependentOn(\"Build-Installer\")\n    .IsDependentOn(\"Build-Installer-Bundle\")\n    .IsDependentOn(\"Build-Portable-Package\")\n    .IsDependentOn(\"Build-Symbols-Package\");\n\n//////////////////////////////////////////////////////////////////////\n// EXECUTION\n//////////////////////////////////////////////////////////////////////\n\nRunTarget(target);\n"
+        },
+        {
+          "name": "crowdin.yaml",
+          "type": "blob",
+          "size": 0.109375,
+          "content": "base_path: ./\npreserve_hierarchy: true\nfiles:\n  - source: /lang/en-US.json\n    translation: /lang/%locale%.json\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lang",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packaging",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "res",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vcpkg.json",
+          "type": "blob",
+          "size": 0.251953125,
+          "content": "{\n  \"$schema\": \"https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json\",\n  \"name\": \"picotorrent\",\n  \"version-string\": \"1\",\n  \"dependencies\": [\n    \"boost-log\",\n    \"fmt\",\n    \"libtorrent\",\n    \"nlohmann-json\",\n    \"sqlite3\"\n  ]\n}\n"
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

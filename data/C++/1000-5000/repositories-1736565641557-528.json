@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736565641557,
+    "page": 528,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "RudjiGames/MTuner",
+      "stars": 2650,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".appveyor.yml",
+          "type": "blob",
+          "size": 3.5986328125,
+          "content": "\nenvironment:\n  matrix:\n\n   - job_name: Windows\n     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022\n     configuration: Debug\n     platform: x64\n\n   - job_name: Windows\n     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022\n     configuration: Release\n     platform: x64\n\n   - job_name: Windows\n     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022\n     configuration: Retail\n     platform: x64\n\n   - job_name: Linux\n     APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2204\n     buildcfg: debug64\n\n   - job_name: Linux\n     APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2204\n     buildcfg: release64\n\n   - job_name: Linux\n     APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2204\n     buildcfg: retail64\n\n   - job_name: OSX\n     APPVEYOR_BUILD_WORKER_IMAGE: macOS-sonoma\n     buildcfg: debug64\n\n   - job_name: OSX\n     APPVEYOR_BUILD_WORKER_IMAGE: macOS-sonoma\n     buildcfg: release64\n\n   - job_name: OSX\n     APPVEYOR_BUILD_WORKER_IMAGE: macOS-sonoma\n     buildcfg: retail64\n\nshallow_clone: true\n\ninstall:\n- git submodule init\n- git submodule update\n\nfor:\n  \n# ======================================\n# Windows\n# ======================================\n\n  -\n    matrix:\n      only:\n      - job_name: Windows\n      - QTDIR: C:\\Qt\\6.5.3\\msvc2019_64\n    \n    init:\n    - set QTDIR=C:\\Qt\\6.5.3\\msvc2019_64\n    - git clone --depth 1 https://github.com/rjpcomputing/luaforwindows luaforwindows\n    - copy %cd%\\luaforwindows\\files\\lua5.1.exe %cd%\\luaforwindows\\files\\lua.exe\n    - set PATH=%cd%\\luaforwindows\\files;C:\\Qt\\6.5.3\\msvc2019_64\\bin;%PATH%\n    - git clone --recursive --depth 1 https://github.com/milostosic/MTuner  MTuner\n\n    install:\n      - MTuner\\build\\tools\\bin\\windows\\genie.exe --file=MTuner\\src\\MTuner\\genie\\genie.lua vs2022\n\n    build: ../.build/windows/vs2022/MTuner/projects/MTuner.sln\n\n# ======================================\n# Linux\n# ======================================\n\n  -\n    matrix:\n      only:\n      - job_name: Linux\n\n    init:\n      - sudo apt install -y lua5.3 lua-filesystem\n      - export QTDIR=\"$HOME/Qt/6.5.3/gcc_64\"\n      - export PATH=\"$HOME/Qt/6.5.3/gcc_64/bin:$HOME/Qt/6.5.3/gcc_64/libexec:/home/appveyor/Qt/6.5.3/gcc_64/libexec:$PATH\"\n      - export PKG_CONFIG_PATH=\"$PKG_CONFIG_PATH:$HOME/Qt/6.5.3/gcc_64/lib/pkgconfig\"\n      - git clone --recursive --depth 1 https://github.com/milostosic/MTuner    MTuner\n      - git clone --depth 1 https://github.com/bkaradzic/GENie                  GENie\n      - cd GENie && make && cd ..\n\n    install:\n      - ./GENie/bin/linux/genie --file=MTuner/src/MTuner/genie/genie.lua --gcc=linux-gcc gmake\n  \n    build_script:\n      - cd MTuner/.build/linux/linux-gcc/MTuner/projects/\n      - make config=${buildcfg}\n     \n# ======================================\n# OSX\n# ======================================\n\n  -\n    matrix:\n      only:\n      - job_name: OSX\n\n    init:\n      - export QTDIR=\"$HOME/Qt/6.5.3/macos/\" \n      - export PATH=\"$HOME/Qt/6.5.3/macos/bin:$HOME/Qt/6.5.3/macos/libexec:$PATH\"\n      - export PKG_CONFIG_PATH=\"$PKG_CONFIG_PATH:$HOME/Qt/6.5.3/macos/lib/pkgconfig\"\n      - curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz\n      - tar zxf lua-5.4.7.tar.gz\n      - cd lua-5.4.7 && sudo make all test && sudo make install && cd ..\n      - git clone --recursive --depth 1 https://github.com/milostosic/MTuner MTuner\n      - git clone --depth 1 https://github.com/bkaradzic/GENie GENie  # build GENie from source: we don't know the target CPU, can't use ARM binary from 'build'\n      - cd GENie && make && cd ..\n    \n    install:\n      - ./GENie/bin/darwin/genie --file=MTuner/src/MTuner/genie/genie.lua --gcc=osx-x64 gmake\n    \n    build_script:\n      - cd MTuner/.build/osx/clang/MTuner/projects/\n      - make config=${buildcfg}\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.22265625,
+          "content": "root = true\n\n[*]\nindent_style    = tab\nindent_size     = 4\nend_of_line     = lf\nmax_line_length = 150\ninsert_final_newline     = true\ntrim_trailing_whitespace = true\n\n[*.md]\ntrim_trailing_whitespace = false\nmax_line_length = 80\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1416015625,
+          "content": "*.c      eol=lf\n*.cpp    eol=lf\n*.h      eol=lf\n*.hpp    eol=lf\n*.hlsl   eol=lf\n*.md     eol=lf\n*.lua    eol=lf\n*.mk     eol=lf\nmakefile eol=lf\n\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": ".qt\n.build\n.DS_Store\n\n\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "[submodule \"build\"]\n\tpath = build\n\turl = https://github.com/RudjiGames/build.git\n[submodule \"src/libs/rbase\"]\n\tpath = src/libs/rbase\n\turl = https://github.com/RudjiGames/rbase.git\n[submodule \"src/libs/rmem\"]\n\tpath = src/libs/rmem\n\turl = https://github.com/RudjiGames/rmem.git\n[submodule \"src/libs/rqt\"]\n\tpath = src/libs/rqt\n\turl = https://github.com/RudjiGames/rqt.git\n[submodule \"src/tools/cmdline/MTunerCmd\"]\n\tpath = src/tools/cmdline/MTunerCmd\n\turl = https://github.com/RudjiGames/MTunerCmd.git\n[submodule \"src/tools/cmdline/MTunerInject\"]\n\tpath = src/tools/cmdline/MTunerInject\n\turl = https://github.com/RudjiGames/MTunerInject.git\n[submodule \"src/tools/cmdline/MTunerDLL\"]\n\tpath = src/tools/cmdline/MTunerDLL\n\turl = https://github.com/RudjiGames/MTunerDLL.git\n[submodule \"src/libs/rdebug\"]\n\tpath = src/libs/rdebug\n\turl = https://github.com/RudjiGames/rdebug.git\n[submodule \"3rd/DIA\"]\n\tpath = 3rd/DIA\n\turl = https://github.com/RudjiGames/DIA.git\n[submodule \"3rd/unordered_dense\"]\n\tpath = 3rd/unordered_dense\n\turl = https://github.com/martinus/unordered_dense.git\n"
+        },
+        {
+          "name": "3rd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.2802734375,
+          "content": "BSD 2-Clause License\n\nCopyright 2023 Milos Tosic\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.6787109375,
+          "content": "![MTuner logo](img/mtuner.png)\n\n[![Build status](https://ci.appveyor.com/api/projects/status/8ops3q96bhvpoy4t?svg=true)](https://ci.appveyor.com/project/milostosic/mtuner)\n[![License](https://img.shields.io/badge/license-BSD--2%20clause-blue.svg)](https://github.com/RudjiGames/MTuner/blob/master/LICENSE)\n\n**MTuner** is a C/C++ memory profiler and memory leak finder for Windows, PlayStation 3/4/5, Nintendo Switch, Android and other platforms.\n\n**MTuner** utilizes a novel approach to memory profiling and analysis, keeping entire time-based history of memory operations. This gives an unique insight in memory related behavior of your software by making queries over the entire data set.\n\nWhile **MTuner** was created for profiling C/C++ applications, it is possible to profile memory for programs written in other languages as long as there is corresponding debug symbol information. Users can convert DMD CodeView/DWARF debug symbols to PDB format using [cv2pdb](https://github.com/rainers/cv2pdb).\n\n![MTuner screenshot](https://github.com/RudjiGames/MTuner/blob/master/img/mtuner_screenshot.png)\n\nSource Code\n======\n\nYou can get the latest source code by cloning it from github:\n\n    git clone https://github.com/RudjiGames/MTuner.git\n\nAfter cloning, we need to download dependencies:\n\n \tgit submodule init\n \tgit submodule update\n\nDownload\n======\n\nBinaries can be downloaded from [releases](https://github.com/RudjiGames/MTuner/releases) page  \n\nNB: If your application crashes while being profiled with **MTuner**, you can try adding **MTuner** folder to 'Exclusions' list under 'Virus & threat protection settings'\n\nDocumentation\n======\n\n**MTuner** documentation can be found [here](https://RudjiGames.github.io/MTuner/).  \n\nBuild\n======\n\n**MTuner** uses [**Qt**](https://www.qt.io/) framework for user interface so it needs to be installed on the build machine. The build system is based on [**GENie**](https://github.com/bkaradzic/GENie) and [**build**](https://github.com/RudjiGames/build) in order to dramatically simplify managing build configurations and dependencies.\n\nAfter cloning the repository and dependencies, here are the steps to build *MTuner*.\n\n**MinGW**\n\n\t$ cd MTuner/genie\n\t$ genie --gcc=mingw-gcc gmake\n\t$ cd ../../.build/windows/mingw-gcc/MTuner/projects/\n\t$ make\nMINGW environment variable must be set and point to the MinGW installation directory.  \nTested with [TDM64 MinGW](http://tdm-gcc.tdragon.net/download) using [OpenMP package](http://sourceforge.net/projects/tdm-gcc/files/TDM-GCC%205%20series/5.1.0-tdm64-1/gcc-5.1.0-tdm64-1-openmp.zip/download)\n\n**Visual Studio**\n\n\t> cd MTuner/genie\n\t> genie vs2022\nSolution will be located here: *{Clone root}/.build/windows/vs2022/projects/MTuner/MTuner.sln*\n\nNB: building [**Qt**](https://www.qt.io/) based projects with [**build**](https://github.com/RudjiGames/build) requires Lua to be installed.\n\nEnvironment variables are used to locate [**Qt**](https://www.qt.io/) installation, example:\n\n\tset QTDIR_VS2022_x86=C:\\<some_path>\\Qt\\6.3.1\\msvc2019_64 *\n\tset QTDIR_VS2022_x64=C:\\<some_path>\\Qt\\6.3.1\\msvc2019_64\n\n*\\* Note that [**Qt**](https://www.qt.io/) deprecated 32bit builds which is why both variables point to same location.*\n\nLicense (BSD 2-clause)\n======\n\n<a href=\"http://opensource.org/licenses/BSD-2-Clause\" target=\"_blank\">\n<img align=\"right\" src=\"https://opensource.org/wp-content/uploads/2022/10/osi-badge-dark.svg\" width=\"100\" height=\"137\">\n</a>\n\n\tCopyright 2023 Milos Tosic. All rights reserved.\n\t\n\thttps://github.com/RudjiGames/MTuner\n\t\n\tRedistribution and use in source and binary forms, with or without\n\tmodification, are permitted provided that the following conditions are met:\n\t\n\t   1. Redistributions of source code must retain the above copyright notice,\n\t      this list of conditions and the following disclaimer.\n\t\n\t   2. Redistributions in binary form must reproduce the above copyright\n\t      notice, this list of conditions and the following disclaimer in the\n\t      documentation and/or other materials provided with the distribution.\n\t\n\tTHIS SOFTWARE IS PROVIDED BY COPYRIGHT HOLDER ``AS IS'' AND ANY EXPRESS OR\n\tIMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF\n\tMERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO\n\tEVENT SHALL COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,\n\tINDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n\t(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\n\tLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\n\tON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n\t(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF\n\tTHIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. \n"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "theme: jekyll-theme-modernist"
+        },
+        {
+          "name": "build",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "img",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "makefile",
+          "type": "blob",
+          "size": 2.7373046875,
+          "content": "#\n# Copyright 2023 Milos Toisc. All rights reserved.\n# License: http://www.opensource.org/licenses/BSD-2-Clause\n#\n\nGENIE=../build/tools/bin/$(OS)/genie\n\nall:\n\t$(GENIE) vs2015\n\t$(GENIE) vs2017\n\t$(GENIE) --gcc=android-arm gmake\n\t$(GENIE) --gcc=android-mips gmake\n\t$(GENIE) --gcc=android-x86 gmake\n\t$(GENIE) --gcc=mingw-gcc gmake\n\t$(GENIE) --gcc=linux-gcc gmake\n\t$(GENIE) --gcc=osx gmake\n\t$(GENIE) --gcc=ios-arm gmake\n\t$(GENIE) --gcc=ios-simulator gmake\n\t$(GENIE) --gcc=ios-simulator64 gmake\n\t$(GENIE) xcode4 \n\ngmake-linux:\n\t$(GENIE) --file=genie/genie.lua --gcc=linux-gcc gmake\n#linux-debug32: gmake-linux\n#\tmake -R -C ../.build/linux/gcc/MTuner/projects config=debug32\n#linux-release32: gmake-linux\n#\tmake -R -C ../.build/linux/gcc/MTuner/projects config=release32\nlinux-debug64: gmake-linux\n\tmake -R -C ../.build/linux/gcc/MTuner/projects config=debug64\nlinux-release64: gmake-linux\n\tmake -R -C ../.build/linux/gcc/MTuner/projects config=release64\nlinux: linux-debug64 linux-release64\n\ngmake-mingw-gcc:\n\t$(GENIE) --file=genie/genie.lua --gcc=mingw-gcc gmake\n#mingw-gcc-debug32: gmake-mingw-gcc\n#\tmake -R -C ../.build/windows/mingw-gcc/MTuner/projects config=debug32\n#mingw-gcc-release32: gmake-mingw-gcc\n#\tmake -R -C ../.build/windows/mingw-gcc/MTuner/projects config=release32\nmingw-gcc-debug64: gmake-mingw-gcc\n\tmake -R -C ../.build/windows/mingw-gcc/MTuner/projects config=debug64\nmingw-gcc-release64: gmake-mingw-gcc\n\tmake -R -C ../.build/windows/mingw-gcc/MTuner/projects config=release64\nmingw-gcc: mingw-gcc-debug64 mingw-gcc-release64\n\ngmake-mingw-clang:\n\t$(GENIE) --file=genie/genie.lua --clang=mingw-clang gmake\n#mingw-clang-debug32: gmake-mingw-clang\n#\tmake -R -C ../.build/windows/mingw-clang/MTuner/projects config=debug32\n#mingw-clang-release32: gmake-mingw-clang\n#\tmake -R -C ../.build/windows/mingw-clang/MTuner/projects config=release32\nmingw-clang-debug64: gmake-mingw-clang\n\tmake -R -C ../.build/windows/mingw-clang/MTuner/projects config=debug64\nmingw-clang-release64: gmake-mingw-clang\n\tmake -R -C ../.build/windows/mingw-clang/MTuner/projects config=release64\nmingw-clang: mingw-clang-debug64 mingw-clang-release64\n\nvs2015:\n\t$(GENIE) --file=genie/genie.lua vs2015\n\nvs2017:\n\t$(GENIE) --file=genie/genie.lua vs2017\n\n../.build/osx/gcc/MTuner/projects:\n\t$(GENIE) --file=genie/genie.lua --gcc=osx gmake\nosx-debug64: ../.build/osx/gcc/MTuner/projects\n\tmake -C ../.build/osx/gcc/MTuner/projects config=debug64\nosx-release64: ../.build/osx/gcc/MTuner/projects\n\tmake -C ../.build/osx/gcc/MTuner/projects config=release64\nosx: osx-debug64 osx-release64\n\nclean:\n\t@echo Cleaning...\n\t-@rm -rf ../.build\n\n###\n\nSILENT ?= @\n\nUNAME := $(shell uname)\nifeq ($(UNAME),$(filter $(UNAME),Linux GNU Darwin))\nifeq ($(UNAME),$(filter $(UNAME),Darwin))\nOS=darwin\nelse\nOS=linux\nendif\nelse\nOS=windows\nendif \n\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

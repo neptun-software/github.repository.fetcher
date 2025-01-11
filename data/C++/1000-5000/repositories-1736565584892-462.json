@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736565584892,
+    "page": 462,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kth-competitive-programming/kactl",
+      "stars": 2799,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "/build/\n*.aux\n*.log\n*.gch\na.out\nheader.tmp\n.vscode\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.6591796875,
+          "content": "LATEXCMD = pdflatex -shell-escape -output-directory build/\nexport TEXINPUTS=.:content/tex/:\nexport max_print_line = 1048576\n\nhelp:\n\t@echo \"This makefile builds KACTL (KTH Algorithm Competition Template Library)\"\n\t@echo \"\"\n\t@echo \"Available commands are:\"\n\t@echo \"\tmake fast\t\t- to build KACTL, quickly (only runs LaTeX once)\"\n\t@echo \"\tmake kactl\t\t- to build KACTL\"\n\t@echo \"\tmake clean\t\t- to clean up the build process\"\n\t@echo \"\tmake veryclean\t\t- to clean up and remove kactl.pdf\"\n\t@echo \"\tmake test\t\t- to run all the stress tests in stress-tests/\"\n\t@echo \"\tmake test-compiles\t- to test compiling all headers\"\n\t@echo \"\tmake help\t\t- to show this information\"\n\t@echo \"\tmake showexcluded\t- to show files that are not included in the doc\"\n\t@echo \"\"\n\t@echo \"For more information see the file 'doc/README'\"\n\nfast: | build\n\t$(LATEXCMD) content/kactl.tex </dev/null\n\tcp build/kactl.pdf kactl.pdf\n\nkactl: test-session.pdf | build\n\t$(LATEXCMD) content/kactl.tex && $(LATEXCMD) content/kactl.tex\n\tcp build/kactl.pdf kactl.pdf\n\nclean:\n\tcd build && rm -f kactl.aux kactl.log kactl.tmp kactl.toc kactl.pdf kactl.ptc\n\nveryclean: clean\n\trm -f kactl.pdf test-session.pdf\n\n.PHONY: help fast kactl clean veryclean\n\nbuild:\n\tmkdir -p build/\n\ntest:\n\t./doc/scripts/run-all.sh .\n\ntest-compiles:\n\t./doc/scripts/compile-all.sh .\n\ntest-session.pdf: content/test-session/test-session.tex content/test-session/chapter.tex | build\n\t$(LATEXCMD) content/test-session/test-session.tex\n\tcp build/test-session.pdf test-session.pdf\n\nshowexcluded: build\n\tgrep -RoPh '^\\s*\\\\kactlimport{\\K.*' content/ | sed 's/.$$//' > build/headers_included\n\tfind ./content -name \"*.h\" -o -name \"*.py\" -o -name \"*.java\" | grep -vFf build/headers_included\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.2763671875,
+          "content": "# KACTL\n\nThis repo hosts KACTL, [KTH](https://en.wikipedia.org/wiki/KTH_Royal_Institute_of_Technology)'s ICPC team reference document.\nIt consists of 25 pages of copy-pasteable C++ code, for use in ICPC-style programming competitions.\n\nSee [kactl.pdf](./kactl.pdf) for the final, browsable version, and [content/](./content/) for raw source code.\n\n## Aspirations\n\nKACTL algorithms should be: useful, short, fast enough, well tested, and if relevant, readable and easy to modify.\nThey should *not* be overly generic, since code is manually typed and that just adds overhead.\nDue to space issues, we also exclude algorithms that are very common/simple (e.g., Dijkstra), or very uncommon (general weighted matching).\n\nIf you feel that something is missing, could be cleaned up, or notice a bug, please file an issue or [send a pull request](https://help.github.com/articles/fork-a-repo/)!\n\n## Customizing KACTL\n\nWhile KACTL is usable as is, it's also easy to modify if you want to create a personalized copy.\nIn particular, you may want to change the cover page, or make your own choice of algorithms to include --\ndue to space concerns, not all algorithms in the repo are included in the pdf.\nYou may also want to enable colored syntax highlighting.\n\n`content/kactl.tex` is the main file of KACTL, and can be edited to change team name, logo, syntax highlighting, etc.\nIt imports `chapter.tex` files from each of the `content/` subdirectories, which define the contents of each chapter.\nThese include source code, text and math in the form of LaTeX.\nTo add/remove code from a chapter, add/remove a corresponding `\\kactlimport` line from the `chapter.tex` file.\nFor nicer alignment you might want to insert `\\hardcolumnbreak`, `\\columnbreak` or `\\newpage` commands,\nthough this is usually only done before important contests, and not on the main branch.\nThe algorithms that are not included in the pdf are left commented out in `chapter.tex`.\n\nTo build KACTL, type `make kactl` (or `make fast`) on a \\*nix machine -- this will update `kactl.pdf`.\n(Windows might work as well, but is not tested.) `doc/README` has a few more notes about this.\n\nTips:\n1. Check out what's excluded by default by running `make showexcluded`.\nThe default configuration is chosen to be a reasonable balance for beginners\nand advanced teams.\n2. Take advantage of the hashing when typing in these algorithms. Each\nalgorithm has a 6 character MD5 hash in the upper right. This hash can be\ngenerated by using `hash.sh` or the `:Hash` command from the `.vimrc`. The\nhashing ignores whitespace and comments.\n\n## Coding style\n\nKACTL uses a relatively terse coding style, with a handful of macros/typedefs defined in the\n[template](./content/contest/template.cpp) that help shorten the code.\nLine width is 63 chars, with tabs for indentation (tab = 2 spaces in the pdf).\n\nEach algorithm contains a header with the author of the code, the date it\nwas added, a description of the algorithm, its testing status, and preferably also\nsource, license and time complexity.\n\nkactl.pdf is to be kept to 25 pages + cover page.\nOccasionally the generated kactl.pdf is committed to the repo for convenience, but not too often because it makes git operations slower.\n\n## Testing\n\nKACTL aims for a high level of confidence in algorithm correctness.\nTesting is done both on online judges and (for newer algorithms) with stress tests\nthat compare output to a more naive algorithm for a large amount of randomly generated cases.\nThese tests live in the `stress-tests` directory, and are run with CI on every commit. The CI also verifies that all headers compile (except for an exclude list in `docs/scripts/skip_headers`) and that the latex compiles.\n\n`old-unit-tests` contains a couple of broken unit tests, last touched about ten years ago.\n\n## License\n\nAs usual for competitive programming, the licensing situation is a bit unclear.\nMany source files are marked with license (we try to go with\n[CC0](https://creativecommons.org/share-your-work/public-domain/cc0/)), but many also aren't.\nPresumably good will is to be assumed from other authors, though, and in many cases permission should not be needed since the code is not distributed.\nTo help trace things back, sources and authors are noted in source files.\n\nEverything in `stress-tests` is implicitly CC0, except reference implementations taken from around the Internet.\n"
+        },
+        {
+          "name": "content",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kactl.pdf",
+          "type": "blob",
+          "size": 2360.6015625,
+          "content": null
+        },
+        {
+          "name": "old-unit-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "stress-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test-session.pdf",
+          "type": "blob",
+          "size": 55.78515625,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

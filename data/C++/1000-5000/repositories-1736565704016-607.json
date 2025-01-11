@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp": 1736565704016,
+    "page": 607,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wjakob/nanobind",
+      "stars": 2475,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.623046875,
+          "content": "libnanobind-static.a\nlibnanobind-static-abi3.a\nlibnanobind-static-ft.a\nlibnanobind.so\nlibnanobind-abi3.so\nlibnanobind-ft.so\nlibnanobind.dylib\nlibnanobind-abi3.dylib\nlibnanobind-ft.dylib\nnanobind.dll\nnanobind-abi3.dll\nnanobind-ft.dll\n\nlibinter_module.dylib\nlibinter_module.so\ninter_module.dll\n\n/.ninja_deps\n/.ninja_log\n/.cache\n/build.ninja\n/build\n/src/nanobind/cmake\n/src/nanobind/include\n/src/nanobind/ext\n/src/nanobind/src\n/dist\n/bench\ncompile_commands.json\n\nCMakeFiles\nCMakeCache.txt\ncmake_install.cmake\nnanobind-config-version.cmake\n\\.DS_Store\n\\.cmake\n__pycache__\nnanobind.egg-info\ntest_*_ext*.so\ntest_*_ext*.pyd\npy\\.typed\n.mypy_cache\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0908203125,
+          "content": "[submodule \"ext/robin_map\"]\n\tpath = ext/robin_map\n\turl = https://github.com/Tessil/robin-map\n"
+        },
+        {
+          "name": ".readthedocs.yaml",
+          "type": "blob",
+          "size": 0.2158203125,
+          "content": "version: 2\n\nbuild:\n  os: ubuntu-22.04\n  apt_packages:\n    - librsvg2-bin\n  tools:\n    python: \"3.11\"\n\nsphinx:\n   configuration: docs/conf.py\n\npython:\n   install:\n   - requirements: docs/requirements.txt\n\nformats:\n  - pdf\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 6.0537109375,
+          "content": "cmake_minimum_required(VERSION 3.15...3.27)\n\n# ---------------------------------------------------------------------------\n# Read the project version from nanobind.h\n# ---------------------------------------------------------------------------\n\nfile(STRINGS \"include/nanobind/nanobind.h\" _nanobind_h_version REGEX \"^#define NB_VERSION_.*$\")\nstring(REGEX MATCH \"#define NB_VERSION_MAJOR ([0-9]+)\" _ \"${_nanobind_h_version}\")\nset(_major ${CMAKE_MATCH_1})\nstring(REGEX MATCH \"#define NB_VERSION_MINOR ([0-9]+)\" _ \"${_nanobind_h_version}\")\nset(_minor ${CMAKE_MATCH_1})\nstring(REGEX MATCH \"#define NB_VERSION_PATCH ([0-9]+)\" _ \"${_nanobind_h_version}\")\nset(_patch ${CMAKE_MATCH_1})\n\nproject(nanobind LANGUAGES NONE VERSION \"${_major}.${_minor}.${_patch}\")\n\n# ---------------------------------------------------------------------------\n# Only build tests by default if this is the top-level CMake project\n# ---------------------------------------------------------------------------\n\nif (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)\n  set(NB_MASTER_PROJECT ON)\nelse()\n  set(NB_MASTER_PROJECT OFF)\nendif()\n\noption(NB_CREATE_INSTALL_RULES \"Create installation rules\" ${NB_MASTER_PROJECT})\noption(NB_USE_SUBMODULE_DEPS   \"Use the nanobind dependencies shipped as a git submodule of this repository\" ON)\n\noption(NB_TEST               \"Compile nanobind tests?\" ${NB_MASTER_PROJECT})\noption(NB_TEST_STABLE_ABI    \"Test the stable ABI interface?\" OFF)\noption(NB_TEST_SHARED_BUILD  \"Build a shared nanobind library for the test suite?\" OFF)\noption(NB_TEST_CUDA          \"Force the use of the CUDA/NVCC compiler for testing purposes\" OFF)\noption(NB_TEST_FREE_THREADED \"Build free-threaded extensions for the test suite?\" ON)\n\nif (NOT MSVC)\n  option(NB_TEST_SANITIZERS_ASAN  \"Build tests with the address sanitizer?\" OFF)\n  option(NB_TEST_SANITIZERS_UBSAN \"Build tests with the address undefined behavior sanitizer?\" OFF)\n  option(NB_TEST_SANITIZERS_TSAN  \"Build tests with the thread sanitizer?\" OFF)\nendif()\n\n# ---------------------------------------------------------------------------\n# Do a release build if nothing was specified\n# ---------------------------------------------------------------------------\n\nif (NB_MASTER_PROJECT AND NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)\n  message(STATUS \"nanobind: setting build type to 'Release' as none was specified.\")\n  set(CMAKE_BUILD_TYPE Release CACHE STRING \"Choose the type of build.\" FORCE)\n  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS \"Debug\" \"Release\"\n    \"MinSizeRel\" \"RelWithDebInfo\")\nendif()\n\n# ---------------------------------------------------------------------------\n# Check whether all dependencies are present\n# ---------------------------------------------------------------------------\n\nif (NB_USE_SUBMODULE_DEPS AND NOT IS_DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/ext/robin_map/include\")\n  message(FATAL_ERROR \"The nanobind dependencies are missing! \"\n    \"You probably did not clone the project with --recursive. It is possible to recover \"\n    \"by invoking\\n$ git submodule update --init --recursive\")\nendif()\n\n# ---------------------------------------------------------------------------\n# Installation rules\n# ---------------------------------------------------------------------------\nif(NB_CREATE_INSTALL_RULES AND NOT CMAKE_SKIP_INSTALL_RULES)\n  # Silence warning in GNUInstallDirs due to no enabled languages\n  set(CMAKE_INSTALL_LIBDIR \"\")\n  include(GNUInstallDirs)\n  set(NB_INSTALL_DATADIR \"nanobind\"\n    CACHE PATH \"Installation path for read-only architecture-independent nanobind data files\")\n\n  # Normally these would be configurable by the user, but we can't allow that\n  # because the lookup paths are hard-coded in 'cmake/nanobind-config.cmake'\n  set(NB_INSTALL_INC_DIR \"${NB_INSTALL_DATADIR}/include\")\n  set(NB_INSTALL_SRC_DIR \"${NB_INSTALL_DATADIR}/src\")\n  set(NB_INSTALL_EXT_DIR \"${NB_INSTALL_DATADIR}/ext\")\n  set(NB_INSTALL_MODULE_DIR \"${NB_INSTALL_DATADIR}\")\n  set(NB_INSTALL_CMAKE_DIR \"${NB_INSTALL_DATADIR}/cmake\")\n\n  install(\n    DIRECTORY include/\n    DESTINATION \"${NB_INSTALL_INC_DIR}\"\n  )\n\n  install(\n    DIRECTORY src/\n    DESTINATION \"${NB_INSTALL_SRC_DIR}\"\n    PATTERN \"*.py\" EXCLUDE\n  )\n\n  install(\n    DIRECTORY src/\n    DESTINATION \"${NB_INSTALL_MODULE_DIR}\"\n    FILES_MATCHING PATTERN \"*\\.py\"\n  )\n\n  if(NB_USE_SUBMODULE_DEPS)\n    install(\n      FILES ext/robin_map/include/tsl/robin_map.h\n            ext/robin_map/include/tsl/robin_hash.h\n            ext/robin_map/include/tsl/robin_growth_policy.h\n      DESTINATION \"${NB_INSTALL_EXT_DIR}/robin_map/include/tsl\"\n    )\n  endif()\n\n  install(\n    FILES cmake/nanobind-config.cmake\n          cmake/darwin-ld-cpython.sym\n          cmake/darwin-ld-pypy.sym\n    DESTINATION \"${NB_INSTALL_CMAKE_DIR}\"\n  )\n\n  include(CMakePackageConfigHelpers)\n  write_basic_package_version_file(\n    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake\n    COMPATIBILITY SameMajorVersion\n  )\n  install(\n    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake\n    DESTINATION \"${NB_INSTALL_CMAKE_DIR}\"\n  )\nendif()\n\n# Return early to skip finding needless dependencies if the user only wishes to\n# install nanobind\nif (NB_MASTER_PROJECT AND NOT NB_TEST)\n  return()\nelse()\n  enable_language(CXX)\nendif()\n\n# ---------------------------------------------------------------------------\n# Find the Python interpreter and development libraries\n# ---------------------------------------------------------------------------\n\nif (NOT TARGET Python::Module OR NOT TARGET Python::Interpreter)\n  set(Python_FIND_FRAMEWORK LAST) # Prefer Brew/Conda to Apple framework python\n\n  if (CMAKE_VERSION VERSION_LESS 3.18)\n    set(NB_PYTHON_DEV_MODULE Development)\n  else()\n    set(NB_PYTHON_DEV_MODULE Development.Module)\n  endif()\n\n  find_package(Python 3.8\n    REQUIRED COMPONENTS Interpreter ${NB_PYTHON_DEV_MODULE}\n    OPTIONAL_COMPONENTS Development.SABIModule)\nendif()\n\n# ---------------------------------------------------------------------------\n# Include nanobind cmake functionality\n# ---------------------------------------------------------------------------\ninclude(cmake/nanobind-config.cmake)\n\nif (NB_TEST)\n  add_subdirectory(tests)\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4853515625,
+          "content": "Copyright (c) 2022 Wenzel Jakob <wenzel.jakob@epfl.ch>, All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\n3. Neither the name of the copyright holder nor the names of its contributors\n   may be used to endorse or promote products derived from this software\n   without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.90234375,
+          "content": "# nanobind: tiny and efficient C++/Python bindings\n\n[![Documentation](https://img.shields.io/readthedocs/nanobind/latest)](https://nanobind.readthedocs.io/en/latest/)\n[![Continuous Integration](https://img.shields.io/github/actions/workflow/status/wjakob/nanobind/ci.yml?label=tests)](https://github.com/wjakob/nanobind/actions/workflows/ci.yml)\n[![](https://img.shields.io/pypi/v/nanobind.svg?color=brightgreen)](https://pypi.org/pypi/nanobind/)\n![](https://img.shields.io/pypi/l/nanobind.svg?color=brightgreen)\n[![](https://img.shields.io/badge/Example-Link-brightgreen)](https://github.com/wjakob/nanobind_example)\n[![](https://img.shields.io/badge/Changelog-Link-brightgreen)](https://nanobind.readthedocs.io/en/latest/changelog.html)\n\n<p align=\"center\">\n    <picture>\n      <source media=\"(prefers-color-scheme: dark)\" width=\"800\" srcset=\"https://rgl.s3.eu-central-1.amazonaws.com/media/uploads/wjakob/2023/03/28/nanobind_logo_dark.png\">\n      <source media=\"(prefers-color-scheme: light)\" width=\"800\" srcset=\"https://github.com/wjakob/nanobind/raw/master/docs/images/logo.jpg\">\n      <img alt=\"nanobind logo\" width=\"800\" src=\"https://github.com/wjakob/nanobind/raw/master/docs/images/logo.jpg\">\n    </picture>\n</p>\n\n_nanobind_ is a small binding library that exposes C++ types in Python and vice\nversa. It is reminiscent of\n[Boost.Python](https://www.boost.org/doc/libs/1_64_0/libs/python/doc/html) and\n[pybind11](https://github.com/pybind/pybind11) and uses near-identical syntax.\nIn contrast to these existing tools, nanobind is more efficient: bindings\ncompile in a shorter amount of time, produce smaller binaries, and have better\nruntime performance.\n\nMore concretely,\n[benchmarks](https://nanobind.readthedocs.io/en/latest/benchmark.html) show up\nto **~4× faster** compile time, **~5× smaller** binaries, and **~10× lower**\nruntime overheads compared to pybind11. nanobind also outperforms Cython in\nimportant metrics (**3-12×** binary size reduction, **1.6-4×** compilation time\nreduction, similar runtime performance).\n\n## Documentation\n\nPlease see the following links for tutorial and reference documentation in\n[HTML](https://nanobind.readthedocs.io/en/latest/) and\n[PDF](https://nanobind.readthedocs.io/_/downloads/en/latest/pdf/) formats.\n\n## License and attribution\n\nAll material in this repository is licensed under a three-clause [BSD\nlicense](LICENSE).\n\nPlease use the following BibTeX template to cite nanobind in scientific\ndiscourse:\n\n```bibtex\n@misc{nanobind,\n   author = {Wenzel Jakob},\n   year = {2022},\n   note = {https://github.com/wjakob/nanobind},\n   title = {nanobind: tiny and efficient C++/Python bindings}\n}\n```\n\nThe nanobind logo was designed by [AndoTwin Studio](https://andotwinstudio.com)\n(high-resolution download:\n[light](https://rgl.s3.eu-central-1.amazonaws.com/media/uploads/wjakob/2023/03/27/nanobind_logo.jpg),\n[dark](https://rgl.s3.eu-central-1.amazonaws.com/media/uploads/wjakob/2023/03/28/nanobind_logo_dark_1.png)).\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ext",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 2.0625,
+          "content": "[build-system]\nrequires = [\"scikit-build-core >=0.10\"]\nbuild-backend = \"scikit_build_core.build\"\n\n[project]\nname = \"nanobind\"\nversion = \"2.5.0dev1\"\ndescription = \"nanobind: tiny and efficient C++/Python bindings\"\nreadme.content-type = \"text/markdown\"\nreadme.text = \"\"\"\n![nanobind logo](\nhttps://github.com/wjakob/nanobind/raw/master/docs/images/logo.jpg?raw=True)\n\n_nanobind_ is a small binding library that exposes C++ types in Python and\nvice versa. It is reminiscent of\n[Boost.Python](https://www.boost.org/doc/libs/1_64_0/libs/python/doc/html)\nand [pybind11](http://github.com/pybind/pybind11) and uses near-identical\nsyntax. In contrast to these existing tools, nanobind is more efficient:\nbindings compile in a shorter amount of time, produce smaller binaries, and\nhave better runtime performance.\n\nMore concretely,\n[benchmarks](https://nanobind.readthedocs.io/en/latest/benchmark.html) show up\nto **~4× faster** compile time, **~5× smaller** binaries, and **~10× lower**\nruntime overheads compared to pybind11. nanobind also outperforms Cython in\nimportant metrics (**3-12×** binary size reduction, **1.6-4×** compilation time\nreduction, similar runtime performance).\n\nPlease see the following links for tutorial and reference documentation in\n[HTML](https://nanobind.readthedocs.io/en/latest/) and\n[PDF](https://nanobind.readthedocs.io/_/downloads/en/latest/pdf/) formats.\n\"\"\"\nauthors = [\n    { name = \"Wenzel Jakob\", email = \"wenzel.jakob@epfl.ch\" },\n]\nclassifiers = [\n    \"Intended Audience :: Developers\",\n    \"License :: OSI Approved :: BSD License\",\n    \"Programming Language :: C++\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: Implementation :: CPython\",\n    \"Programming Language :: Python :: Implementation :: PyPy\",\n    \"Topic :: Software Development :: Libraries :: Python Modules\",\n    \"Topic :: Utilities\",\n]\n\n[project.urls]\nHomepage = \"https://github.com/wjakob/nanobind\"\n\n\n[tool.scikit-build]\nminimum-version = \"build-system.requires\"\nwheel.platlib = false\ncmake.define.NB_TEST = false\n\n\n[tool.pytest.ini_options]\ntestpaths = [ \"tests\" ]\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
