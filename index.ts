@@ -110,23 +110,30 @@ async function saveChunk(repositories: Repositories, metadata: ChunkMetadata) {
 - Size: ${(Bun.file(filePath).size / 1024).toFixed(2)} KB`);
 }
 
+function isIpAllowlistError(error: any): boolean {
+  return error?.message?.includes('has an IP allow list enabled') ||
+    error?.response?.errors?.some((e: any) => e.message?.includes('has an IP allow list enabled'));
+}
+
 async function fetchRepositoryData(nameWithOwner: string, withBlobContents: boolean = true) {
   const [owner, name] = nameWithOwner.split('/');
-  const { repository }: { repository: Repository } = await graphqlWithAuth(`
-    query getRepoFiles($owner: String!, $name: String!) {
-      repository(owner: $owner, name: $name) {
-        defaultBranchRef {
-          name
-          target {
-            ... on Commit {
-              tree {
-                entries {
-                  name
-                  type
-                  object {
-                    ... on Blob {
-                      byteSize
-                      ${withBlobContents ? 'text' : ''}
+  try {
+    const { repository }: { repository: Repository } = await graphqlWithAuth(`
+      query getRepoFiles($owner: String!, $name: String!) {
+        repository(owner: $owner, name: $name) {
+          defaultBranchRef {
+            name
+            target {
+              ... on Commit {
+                tree {
+                  entries {
+                    name
+                    type
+                    object {
+                      ... on Blob {
+                        byteSize
+                        ${withBlobContents ? 'text' : ''}
+                      }
                     }
                   }
                 }
@@ -135,13 +142,28 @@ async function fetchRepositoryData(nameWithOwner: string, withBlobContents: bool
           }
         }
       }
-    }
-  `, {
-    owner,
-    name
-  });
+    `, {
+      owner,
+      name
+    });
 
-  return repository;
+    return repository;
+  } catch (error) {
+    if (isIpAllowlistError(error)) {
+      console.log(`⚠️ Skipping ${nameWithOwner} due to IP allowlist restrictions`);
+      return {
+        defaultBranchRef: {
+          name: 'unknown',
+          target: {
+            tree: {
+              entries: []
+            }
+          }
+        }
+      };
+    }
+    throw error;
+  }
 }
 
 async function fetchTopRepositories() {
@@ -230,7 +252,11 @@ async function fetchTopRepositories() {
         try {
           // First try with blob contents
           fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, true);
-          console.log(`✅ Successfully fetched ${repo.nameWithOwner} with blob contents`);
+          if (fetchedRepo.defaultBranchRef?.name === 'unknown') {
+            console.log(`⚠️ Limited access to ${repo.nameWithOwner} due to IP restrictions - storing minimal data`);
+          } else {
+            console.log(`✅ Successfully fetched ${repo.nameWithOwner} with blob contents`);
+          }
         } catch (error) {
           await logError(`Failed to fetch ${repo.nameWithOwner} with blob contents, retrying without...`, error);
           try {
@@ -238,6 +264,10 @@ async function fetchTopRepositories() {
             fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, false);
             console.log(`✅ Successfully fetched ${repo.nameWithOwner} without blob contents`);
           } catch (retryError) {
+            if (isIpAllowlistError(retryError)) {
+              console.log(`⚠️ Skipping ${repo.nameWithOwner} due to IP allowlist restrictions`);
+              continue;
+            }
             await logError(`Failed to fetch ${repo.nameWithOwner} even without blob contents:`, retryError);
             continue;
           }
