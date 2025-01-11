@@ -474,6 +474,7 @@ async function fetchLanguagesWithPopularRepos(): Promise<Language[]> {
     }
   }
 
+  // Return all languages without filtering, just sort by count
   return Array.from(languages.entries())
     .map(([name, count]) => ({ name, repositoryCount: count }))
     .sort((a, b) => b.repositoryCount - a.repositoryCount)
@@ -485,10 +486,13 @@ async function fetchRepositoriesForLanguageAndStars(
   starRange: StarRange,
   cursor: string | null = null
 ): Promise<{ search: SearchResultItemConnection; rateLimit: RateLimit }> {
+  // Wrap language in quotes if it contains spaces
+  const languageQuery = language.includes(' ') ? `"${language}"` : language;
+
   return graphqlWithAuth(`
     query getReposByLanguageAndStars($cursor: String) {
       search(
-        query: "language:${language} stars:${starRange.min}..${starRange.max} sort:stars-desc"
+        query: "language:${languageQuery} stars:${starRange.min}..${starRange.max} sort:stars-desc"
         type: REPOSITORY
         first: 10
         after: $cursor
@@ -517,6 +521,19 @@ async function fetchRepositoriesForLanguageAndStars(
 }
 
 async function processLanguageAndStarRange(language: string, starRange: StarRange) {
+  // Check if this segment is already completed in global metadata
+  const globalMetadata = await loadGlobalMetadata();
+  const isCompleted = globalMetadata.completedSegments.some(
+    seg => seg.language === language &&
+      seg.starRange === starRange.label &&
+      seg.completionStatus === 'COMPLETED'
+  );
+
+  if (isCompleted) {
+    console.log(`⏩ Skipping completed segment ${language}/${starRange.label}`);
+    return;
+  }
+
   const dir = join(DATA_DIR, language, starRange.label);
   await mkdir(dir, { recursive: true });
 
@@ -679,24 +696,11 @@ async function main() {
       console.log(`\n📚 Processing ${language.name} (${language.repositoryCount} repositories)`);
 
       for (const starRange of STAR_RANGES) {
-        // Skip ranges we've already completed
-        const isCompleted = globalMetadata.completedSegments.some(
-          seg => seg.language === language.name &&
-            seg.starRange === starRange.label &&
-            seg.completionStatus === 'COMPLETED'
-        );
-        if (isCompleted) {
-          console.log(`⏩ Skipping completed segment ${language.name}/${starRange.label}`);
-          continue;
-        }
-
         // Skip until we reach the range we were processing
         if (startFromLanguage === language.name && startFromRange && starRange.label !== startFromRange) {
           continue;
         }
         startFromRange = null;
-
-        console.log(`\n⭐ Processing ${language.name} repositories with ${starRange.label} stars`);
 
         // Update current position
         globalMetadata.currentLanguage = language.name;
