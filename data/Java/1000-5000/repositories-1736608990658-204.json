@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736608990658,
+    "page": 204,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "pqpo/SmartCropper",
+      "stars": 4031,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0546875,
+          "content": "*.hpp linguist-language=Java\n*.h linguist-language=Java\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.12109375,
+          "content": "*.iml\n.gradle\n.idea\n/local.properties\n/.idea/workspace.xml\n/.idea/libraries\n.DS_Store\n/build\n/captures\n.externalNativeBuild\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8095703125,
+          "content": "# SmartCropper\n\n## [English](README_EN.md) | 中文\n\n***目前优化了一套更高识别率的模型和算法，有意向合作的请联系邮箱：pqponet@gmail.com***\n\n简单易用的智能图片裁剪库，适用于身份证，名片，文档等照片的裁剪。 如果觉得还不错，欢迎 star，fork。\n\n你也可以关注我的另一个库 [SmartCamera](https://github.com/pqpo/SmartCamera)： SmartCamera 是一个 Android 相机拓展库，能够实时采集并且识别相机内物体边框是否吻合指定区域。\n\n## 支持特性\n\n- 使用智能算法(基于opencv)识别图片中的边框  \n- 支持拖动锚点，手动调节选区，放大镜效果提升定位体验\n- 使用透视变换裁剪并矫正选区，还原正面图片\n- 支持丰富的UI设置，如辅助线，蒙版，锚点，放大镜等\n\n## 例子（[传送门](art/SmartCropperSampleV6.apk)）\n\n### 1. 选择图片后智能选区，使用透视变换裁剪并矫正选区：\n\n![](art/smart_crop_1.png)\n![](art/cropped_1.png)\n\n### 2. 拖动锚点，手动调节选区，右上角放大镜效果方便拖拽定位：\n\n![](art/advance_crop_2.png)\n\n### gif 动画：\n\n![](art/smartcropper_photo.gif)\n![](art/smartcropper_album_1.gif)\n\n## 优化智能选区算法(V2.1.1+)\n使用机器学习算法代理 Canny 算法，提高识别率(基于 TensorFlow 的 HED 网络).\n感谢：https://github.com/fengjian0106/hed-tutorial-for-document-scanning\n\n1. build.gradle 添加如下代码，不压缩模型：\n```gradle\naaptOptions {\n    noCompress \"tflite\"\n    noCompress \"lite\"\n}\n```\n2. 在合适的地方初始化(比如在 Application.onCreate)：\n```java\nSmartCropper.buildImageDetector(this);\n```\n\n## 接入\n\n1.根目录下的 build.gradle 添加：\n```gradle\nallprojects {\n\t\trepositories {\n\t\t\t...\n\t\t\tmaven { url 'https://jitpack.io' }\n\t\t}\n}\n```\n2.添加依赖\n```gradle\ndependencies {\n\t  compile 'com.github.pqpo:SmartCropper:v2.1.3'\n}\n```\n\n注意：由于使用了 JNI， 请**不要混淆**  \n\n```\n-keep class me.pqpo.smartcropperlib.**{*;}\n```  \n\n## 使用  \n\n### 1. 裁剪布局：  \n```xml\n<me.pqpo.smartcropperlib.view.CropImageView   \n        android:id=\"@+id/iv_crop\"  \n        android:layout_width=\"match_parent\" \n        android:layout_height=\"match_parent\" />  \n```  \n\n注意： CropImageView 继承至 ImageView，但是 ScaleType 必须为居中类型，如果手动设置成 fit_end,fit_start,matrix 将会报错。  \n\n### 2. 设置待裁剪图片：    \n```java\nivCrop.setImageToCrop(selectedBitmap); \n```\n\n该方法内部会使用 native 代码智能识别边框，并绘制图片与选区。在 native 层实现，大大的提高了运行效率，运行时间与图片大小成正比，在大图片的情况下，可以考虑在子线程执行，或者压缩传入的图片。\n\n### 3. 裁剪选区内的图片：\n\n```java  \nBitmap crop = ivCrop.crop();  \n```  \n\n根据选区裁剪出选区内的图片，并使用透视变换矫正成正面图片。  \n\n注意：改方法主要逻辑也是位于 native 层，运行时间与图片大小成正比，在大图片的情况下，可以考虑在子线程执行，或者压缩传入的图片。\n\n## Attributes\n\n|name|format|description|\n|:---:|:---:|:---:|\n|civMaskAlpha|integer|选区外蒙版的透明度，取值范围 0-255|\n|civShowGuideLine|boolean|是否显示辅助线，默认 true|\n|civLineColor|color|选区线的颜色|\n|civLineWidth|dimension|选区线的宽度|\n|civShowMagnifier|boolean|在拖动的时候是否显示放大镜，默认 true|\n|civMagnifierCrossColor|color|放大镜十字准心的颜色|\n|civGuideLineWidth|dimension|辅助线宽度|\n|civGuideLineColor|color|辅助线颜色|\n|civPointFillColor|color|锚点内部区域填充颜色|\n|civPointFillAlpha|integer|锚点内部区域填充颜色透明度|\n\n## Features\n\n- [x] 优化点排序算法\n- [x] CropImageView 选区放大镜效果\n- [x] CropImageView xml属性配置\n- [x] 优化智能选区算法\n- [ ] 欢迎提 ISSUE\n\n---\n\n## 关于我：\n\n- 邮箱：    pqponet@gmail.com\n- GitHub：  [pqpo](https://github.com/pqpo)\n- 博客：    [pqpo's notes](https://pqpo.me)\n- Twitter: [Pqponet](https://twitter.com/Pqponet)\n- 微信公众号: pqpo_me(扫下方二维码) \n\n<img src=\"art/qrcode_for_gh.jpg\" width=\"200\">\n\n- qq群: Github 开源交流群\n\n<img src=\"art/qq_qr.jpeg\" width=\"200\">\n\nLicense\n-------\n\n    Copyright 2017 pqpo\n\n    Licensed under the Apache License, Version 2.0 (the \"License\");\n    you may not use this file except in compliance with the License.\n    You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n    Unless required by applicable law or agreed to in writing, software\n    distributed under the License is distributed on an \"AS IS\" BASIS,\n    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n    See the License for the specific language governing permissions and\n    limitations under the License.\n\n\n\n\n"
+        },
+        {
+          "name": "README_EN.md",
+          "type": "blob",
+          "size": 3.6123046875,
+          "content": "# SmartCropper\n\n## English | [中文](README.md)\n\nA library for cropping image in a smart way that can identify the border and correct the cropped image. Applicable to ID cards, business cards, documents and other photos of the crop. If you like, welcome star, fork or follow me.\n\nYou can also follow my other library [SmartCamera](https://github.com/pqpo/SmartCamera): SmartCamera is an Android camera extension library，provides a scanning module that can recognizes whether the object's border inside the camera matches the area in real time.\n\n## Features\n\n- Crop image in a smart way that can identify the border.\n- Support drag anchors, magnifying glass effect to enhance the positioning experience.\n- Use the perspective transform to crop and correct the selection to restore the front image.\n- Support rich UI settings, such as auxiliary lines, mask, anchor, magnifying glass and so on.\n\n## Sample（[link](art/SmartCropperSampleV6.apk)）\n\n### 1. Select a image, use the perspective transform to crop and correct the selection:\n\n![](art/smart_crop_1.png)\n![](art/cropped_1.png)\n\n### 2. drag anchors, magnifying glass effect to enhance the positioning experience:\n\n![](art/advance_crop_2.png)\n\n### gif：\n\n![](art/smartcropper_photo.gif)\n![](art/smartcropper_album_1.gif)\n\n## Import\n\nif version >= v1.2.4:\n\naar download: https://github.com/pqpo/SmartCropper/releases\n\nelse:\n\nStep 1. Add it in your root build.gradle at the end of repositories:\n```\n\tallprojects {\n\t\trepositories {\n\t\t\t...\n\t\t\tmaven { url 'https://jitpack.io' }\n\t\t}\n\t}\n```\n\nStep 2. Add the dependency\n```\n\tdependencies {\n\t        compile 'com.github.pqpo:SmartCropper:v2.1.3'\n\t}\n```\n\nnote：\n\n```\n-keep class me.pqpo.smartcropperlib.**{*;}\n```  \n\n## Usage  \n\n### 1. Use CropImageView in your xml file.  \n```xml\n<me.pqpo.smartcropperlib.view.CropImageView   \n        android:id=\"@+id/iv_crop\"  \n        android:layout_width=\"match_parent\" \n        android:layout_height=\"match_parent\" />  \n```  \n\nnote： CropImageView extends from ImageView，and ScaleType must be center type，If you set ScaleType to fit_end,fit_start,matrix will throws an error。  \n\n### 2. Set image to crop：    \n\n```java\nivCrop.setImageToCrop(selectedBitmap); \n```\n\nIt will identify the border by native(c/c++), and show Image.     \n\n### 3. Crop the image：\n\n```java  \nBitmap crop = ivCrop.crop();\n```\n\n\n### Optimization of intelligent selection algorithm:\n\nTensorflow HED Net instant of Canny:\n\n1. build.gradle ：\n```gradle\naaptOptions {\n    noCompress \"tflite\"\n    noCompress \"lite\"\n}\n```\n2. Application.onCreate：\n```java\nSmartCropper.buildImageDetector(this);\n```\n\n## Features\n\n- [x] Optimization point sorting algorithm\n- [x] CropImageView selection magnifying effect\n- [x] CropImageView xml settings\n- [x] Optimization of intelligent selection algorithm\n- [ ] Please submit ISSUEs\n\n---\n\n## Author：\n\n- Email：    pqponet@gmail.com\n- GitHub：  [pqpo](https://github.com/pqpo)\n- Blog：    [pqpo's notes](https://pqpo.me)\n- Twitter: [Pqponet](https://twitter.com/Pqponet)\n- WeChat: pqpo_me\n\n<img src=\"art/qrcode_for_gh.jpg\" width=\"200\">\n\nLicense\n-------\n\n    Copyright 2017 pqpo\n\n    Licensed under the Apache License, Version 2.0 (the \"License\");\n    you may not use this file except in compliance with the License.\n    You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n    Unless required by applicable law or agreed to in writing, software\n    distributed under the License is distributed on an \"AS IS\" BASIS,\n    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n    See the License for the specific language governing permissions and\n    limitations under the License.\n\n\n\n\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "art",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.gradle",
+          "type": "blob",
+          "size": 0.5712890625,
+          "content": "// Top-level build file where you can add configuration options common to all sub-projects/modules.\n\nbuildscript {\n    repositories {\n        jcenter()\n        google()\n    }\n    dependencies {\n        classpath 'com.android.tools.build:gradle:3.2.1'\n        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'\n        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'\n    }\n}\n\nallprojects {\n    repositories {\n        jcenter()\n        google()\n        maven { url 'https://jitpack.io' }\n    }\n}\n\ntask clean(type: Delete) {\n    delete rootProject.buildDir\n}\n"
+        },
+        {
+          "name": "edge_detection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradle.properties",
+          "type": "blob",
+          "size": 0.712890625,
+          "content": "# Project-wide Gradle settings.\n\n# IDE (e.g. Android Studio) users:\n# Gradle settings configured through the IDE *will override*\n# any settings specified in this file.\n\n# For more details on how to configure your build environment visit\n# http://www.gradle.org/docs/current/userguide/build_environment.html\n\n# Specifies the JVM arguments used for the daemon process.\n# The setting is particularly useful for tweaking memory settings.\norg.gradle.jvmargs=-Xmx1536m\n\n# When configured, Gradle will run in incubating parallel mode.\n# This option should only be used with decoupled projects. More details, visit\n# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects\n# org.gradle.parallel=true\n"
+        },
+        {
+          "name": "gradle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradlew",
+          "type": "blob",
+          "size": 4.8544921875,
+          "content": "#!/usr/bin/env bash\n\n##############################################################################\n##\n##  Gradle start up script for UN*X\n##\n##############################################################################\n\n# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\nDEFAULT_JVM_OPTS=\"\"\n\nAPP_NAME=\"Gradle\"\nAPP_BASE_NAME=`basename \"$0\"`\n\n# Use the maximum available, or set MAX_FD != -1 to use that value.\nMAX_FD=\"maximum\"\n\nwarn ( ) {\n    echo \"$*\"\n}\n\ndie ( ) {\n    echo\n    echo \"$*\"\n    echo\n    exit 1\n}\n\n# OS specific support (must be 'true' or 'false').\ncygwin=false\nmsys=false\ndarwin=false\ncase \"`uname`\" in\n  CYGWIN* )\n    cygwin=true\n    ;;\n  Darwin* )\n    darwin=true\n    ;;\n  MINGW* )\n    msys=true\n    ;;\nesac\n\n# Attempt to set APP_HOME\n# Resolve links: $0 may be a link\nPRG=\"$0\"\n# Need this for relative symlinks.\nwhile [ -h \"$PRG\" ] ; do\n    ls=`ls -ld \"$PRG\"`\n    link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n    if expr \"$link\" : '/.*' > /dev/null; then\n        PRG=\"$link\"\n    else\n        PRG=`dirname \"$PRG\"`\"/$link\"\n    fi\ndone\nSAVED=\"`pwd`\"\ncd \"`dirname \\\"$PRG\\\"`/\" >/dev/null\nAPP_HOME=\"`pwd -P`\"\ncd \"$SAVED\" >/dev/null\n\nCLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar\n\n# Determine the Java command to use to start the JVM.\nif [ -n \"$JAVA_HOME\" ] ; then\n    if [ -x \"$JAVA_HOME/jre/sh/java\" ] ; then\n        # IBM's JDK on AIX uses strange locations for the executables\n        JAVACMD=\"$JAVA_HOME/jre/sh/java\"\n    else\n        JAVACMD=\"$JAVA_HOME/bin/java\"\n    fi\n    if [ ! -x \"$JAVACMD\" ] ; then\n        die \"ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\n    fi\nelse\n    JAVACMD=\"java\"\n    which java >/dev/null 2>&1 || die \"ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\nfi\n\n# Increase the maximum file descriptors if we can.\nif [ \"$cygwin\" = \"false\" -a \"$darwin\" = \"false\" ] ; then\n    MAX_FD_LIMIT=`ulimit -H -n`\n    if [ $? -eq 0 ] ; then\n        if [ \"$MAX_FD\" = \"maximum\" -o \"$MAX_FD\" = \"max\" ] ; then\n            MAX_FD=\"$MAX_FD_LIMIT\"\n        fi\n        ulimit -n $MAX_FD\n        if [ $? -ne 0 ] ; then\n            warn \"Could not set maximum file descriptor limit: $MAX_FD\"\n        fi\n    else\n        warn \"Could not query maximum file descriptor limit: $MAX_FD_LIMIT\"\n    fi\nfi\n\n# For Darwin, add options to specify how the application appears in the dock\nif $darwin; then\n    GRADLE_OPTS=\"$GRADLE_OPTS \\\"-Xdock:name=$APP_NAME\\\" \\\"-Xdock:icon=$APP_HOME/media/gradle.icns\\\"\"\nfi\n\n# For Cygwin, switch paths to Windows format before running java\nif $cygwin ; then\n    APP_HOME=`cygpath --path --mixed \"$APP_HOME\"`\n    CLASSPATH=`cygpath --path --mixed \"$CLASSPATH\"`\n    JAVACMD=`cygpath --unix \"$JAVACMD\"`\n\n    # We build the pattern for arguments to be converted via cygpath\n    ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`\n    SEP=\"\"\n    for dir in $ROOTDIRSRAW ; do\n        ROOTDIRS=\"$ROOTDIRS$SEP$dir\"\n        SEP=\"|\"\n    done\n    OURCYGPATTERN=\"(^($ROOTDIRS))\"\n    # Add a user-defined pattern to the cygpath arguments\n    if [ \"$GRADLE_CYGPATTERN\" != \"\" ] ; then\n        OURCYGPATTERN=\"$OURCYGPATTERN|($GRADLE_CYGPATTERN)\"\n    fi\n    # Now convert the arguments - kludge to limit ourselves to /bin/sh\n    i=0\n    for arg in \"$@\" ; do\n        CHECK=`echo \"$arg\"|egrep -c \"$OURCYGPATTERN\" -`\n        CHECK2=`echo \"$arg\"|egrep -c \"^-\"`                                 ### Determine if an option\n\n        if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition\n            eval `echo args$i`=`cygpath --path --ignore --mixed \"$arg\"`\n        else\n            eval `echo args$i`=\"\\\"$arg\\\"\"\n        fi\n        i=$((i+1))\n    done\n    case $i in\n        (0) set -- ;;\n        (1) set -- \"$args0\" ;;\n        (2) set -- \"$args0\" \"$args1\" ;;\n        (3) set -- \"$args0\" \"$args1\" \"$args2\" ;;\n        (4) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" ;;\n        (5) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" ;;\n        (6) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" ;;\n        (7) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" ;;\n        (8) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" ;;\n        (9) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" \"$args8\" ;;\n    esac\nfi\n\n# Split up the JVM_OPTS And GRADLE_OPTS values into an array, following the shell quoting and substitution rules\nfunction splitJvmOpts() {\n    JVM_OPTS=(\"$@\")\n}\neval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS\nJVM_OPTS[${#JVM_OPTS[*]}]=\"-Dorg.gradle.appname=$APP_BASE_NAME\"\n\nexec \"$JAVACMD\" \"${JVM_OPTS[@]}\" -classpath \"$CLASSPATH\" org.gradle.wrapper.GradleWrapperMain \"$@\"\n"
+        },
+        {
+          "name": "gradlew.bat",
+          "type": "blob",
+          "size": 2.259765625,
+          "content": "@if \"%DEBUG%\" == \"\" @echo off\n@rem ##########################################################################\n@rem\n@rem  Gradle startup script for Windows\n@rem\n@rem ##########################################################################\n\n@rem Set local scope for the variables with windows NT shell\nif \"%OS%\"==\"Windows_NT\" setlocal\n\n@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\nset DEFAULT_JVM_OPTS=\n\nset DIRNAME=%~dp0\nif \"%DIRNAME%\" == \"\" set DIRNAME=.\nset APP_BASE_NAME=%~n0\nset APP_HOME=%DIRNAME%\n\n@rem Find java.exe\nif defined JAVA_HOME goto findJavaFromJavaHome\n\nset JAVA_EXE=java.exe\n%JAVA_EXE% -version >NUL 2>&1\nif \"%ERRORLEVEL%\" == \"0\" goto init\n\necho.\necho ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\necho.\necho Please set the JAVA_HOME variable in your environment to match the\necho location of your Java installation.\n\ngoto fail\n\n:findJavaFromJavaHome\nset JAVA_HOME=%JAVA_HOME:\"=%\nset JAVA_EXE=%JAVA_HOME%/bin/java.exe\n\nif exist \"%JAVA_EXE%\" goto init\n\necho.\necho ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%\necho.\necho Please set the JAVA_HOME variable in your environment to match the\necho location of your Java installation.\n\ngoto fail\n\n:init\n@rem Get command-line arguments, handling Windowz variants\n\nif not \"%OS%\" == \"Windows_NT\" goto win9xME_args\nif \"%@eval[2+2]\" == \"4\" goto 4NT_args\n\n:win9xME_args\n@rem Slurp the command line arguments.\nset CMD_LINE_ARGS=\nset _SKIP=2\n\n:win9xME_args_slurp\nif \"x%~1\" == \"x\" goto execute\n\nset CMD_LINE_ARGS=%*\ngoto execute\n\n:4NT_args\n@rem Get arguments from the 4NT Shell from JP Software\nset CMD_LINE_ARGS=%$\n\n:execute\n@rem Setup the command line\n\nset CLASSPATH=%APP_HOME%\\gradle\\wrapper\\gradle-wrapper.jar\n\n@rem Execute Gradle\n\"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% \"-Dorg.gradle.appname=%APP_BASE_NAME%\" -classpath \"%CLASSPATH%\" org.gradle.wrapper.GradleWrapperMain %CMD_LINE_ARGS%\n\n:end\n@rem End local scope for the variables with windows NT shell\nif \"%ERRORLEVEL%\"==\"0\" goto mainEnd\n\n:fail\nrem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of\nrem the _cmd.exe /c_ return code!\nif  not \"\" == \"%GRADLE_EXIT_CONSOLE%\" exit 1\nexit /b 1\n\n:mainEnd\nif \"%OS%\"==\"Windows_NT\" endlocal\n\n:omega\n"
+        },
+        {
+          "name": "settings.gradle",
+          "type": "blob",
+          "size": 0.0341796875,
+          "content": "include ':app', ':smartcropperlib'\n"
+        },
+        {
+          "name": "smartcropperlib",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

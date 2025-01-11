@@ -1,0 +1,332 @@
+{
+  "metadata": {
+    "timestamp": 1736608845131,
+    "page": 3,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "brianfrankcooper/YCSB",
+      "stars": 4985,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.9052734375,
+          "content": "# Copyright (c) 2015, 2017 YCSB contributors.\n# All rights reserved.\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\"); you\n# may not use this file except in compliance with the License. You\n# may obtain a copy of the License at\n#\n# http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n# implied. See the License for the specific language governing\n# permissions and limitations under the License. See accompanying\n# LICENSE file.\n# For more info, see: http://EditorConfig.org\nroot = true\n\n[*.java]\nindent_style = space\nindent_size = 2\ncontinuation_indent_size = 4\n\n[*.md]\nindent_style = space\nindent_size = 2\ncontinuation_indent_size = 4\n\n[*.xml]\nindent_style = space\nindent_size = 2\ncontinuation_indent_size = 4\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.322265625,
+          "content": "# ignore compiled byte code\ntarget\n\n# ignore output files from testing\noutput*\n\n# ignore standard Eclipse files\n.project\n.classpath\n.settings\n.checkstyle\n\n# ignore standard IntelliJ files\n.idea/\n*.iml\n*.ipr\n*.iws\n\n# ignore standard Vim and Emacs temp files\n*.swp\n*~\n\n# ignore standard Mac OS X files/dirs\n.DS_Store\n/differentbin/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.4853515625,
+          "content": "# Copyright (c) 2010 Yahoo! Inc., 2012 - 2015 YCSB contributors. \n# All rights reserved.\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\"); you\n# may not use this file except in compliance with the License. You\n# may obtain a copy of the License at\n#\n# http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n# implied. See the License for the specific language governing\n# permissions and limitations under the License. See accompanying\n# LICENSE file.\n\n# more info here about TravisCI and Java projects\n# http://docs.travis-ci.com/user/languages/java/\n\nlanguage: java\n\njdk:\n  - openjdk8\n  - openjdk11\n  - oraclejdk11\n\naddons:\n  hosts:\n    - myshorthost\n  hostname: myshorthost\n  postgresql: \"9.5\"\n\ninstall:\n  - mvn -N io.takari:maven:0.7.7:wrapper -Dmaven=3.6.3\n  - ./mvnw install -q -DskipTests=true\n\nscript: ./mvnw test -q\n\nbefore_script:\n  - psql -c 'CREATE database test;' -U postgres\n  - psql -c 'CREATE TABLE usertable (YCSB_KEY VARCHAR(255) PRIMARY KEY not NULL, YCSB_VALUE JSONB not NULL);' -U postgres -d test\n  - psql -c 'GRANT ALL PRIVILEGES ON DATABASE test to postgres;' -U postgres\n\n# Services to start for tests.\nservices:\n  - ignite\n  - mongodb\n  - postgresql\n# temporarily disable riak. failing, docs offline.\n#  - riak\n\n# Can't use container based infra because of hosts/hostname\nsudo: true\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 10.234375,
+          "content": "<!--\nCopyright (c) 2017 YCSB contributors.\nAll rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"); you\nmay not use this file except in compliance with the License. You\nmay obtain a copy of the License at\n\nhttp://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\nimplied. See the License for the specific language governing\npermissions and limitations under the License. See accompanying\nLICENSE file.\n-->\n## How To Contribute\n\nAs more and more databases are created to handle distributed or \"cloud\" workloads, YCSB needs contributors to write clients to test them. And of course we always need bug fixes, updates for existing databases and new features to keep YCSB going. Here are some guidelines to follow when digging into the code.\n\n## Project Source\n\nYCSB is located in a Git repository hosted on GitHub at [https://github.com/brianfrankcooper/YCSB](https://github.com/brianfrankcooper/YCSB). To modify the code, fork the main repo into your own GitHub account or organization and commit changes there.\n\nYCSB is written in Java (as most of the new cloud data stores at beginning of the project were written in Java) and is laid out as a multi-module Maven project. You should be able to import the project into your favorite IDE or environment easily. For more details about the Maven layout see the [Guide to Working with Multiple Modules](https://maven.apache.org/guides/mini/guide-multiple-modules.html).\n\n## Licensing\n\nYCSB is licensed under the Apache License, Version 2.0 (APL2). Every file included in the project must include the APL header. For example, each Java source file must have a header similar to the following:\n\n```java\n/**\n * Copyright (c) 2015-2017 YCSB contributors. All rights reserved.\n * <p>\n * Licensed under the Apache License, Version 2.0 (the \"License\"); you\n * may not use this file except in compliance with the License. You\n * may obtain a copy of the License at\n * <p>\n * http://www.apache.org/licenses/LICENSE-2.0\n * <p>\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n * implied. See the License for the specific language governing\n * permissions and limitations under the License. See accompanying\n * LICENSE file.\n */ \n```\n\nWhen modifying files that already have a license header, please update the year when you made your edits. E.g. change ``Copyright (c) 2010 Yahoo! Inc., 2012 - 2016 YCSB contributors.`` to ``Copyright (c) 2010 Yahoo! Inc., 2012 - 2017 YCSB contributors.`` If the file only has ``Copyright (c) 2010 Yahoo! Inc.``, append the current year as in ``Copyright (c) 2010 Yahoo! Inc., 2017 YCSB contributors.``.\n\n**WARNING**: It should go without saying, but don't copy and paste code from outside authors or sources. If you are a database author and want to copy some example code, it must be APL2 compatible.\n\nClient bindings to non-APL databases are perfectly acceptable, as data stores are meant to be used from all kinds of projects. Just make sure not to copy any code or commit libraries or binaries into the YCSB code base. Link to them in the Maven pom file.\n\n## Issues and Support\n\nTo track bugs, feature requests and releases we use GitHub's integrated [Issues](https://github.com/brianfrankcooper/YCSB/issues). If you find a bug or problem, open an issue with a descriptive title and as many details as you can give us in the body (stack traces, log files, etc). Then if you can create a fix, follow the PR guidelines below.\n\n**Note** Before embarking on a code change or DB, search through the existing issues and pull requests to see if anyone is already working on it. Reach out to them if so.\n\nFor general support, please use the mailing list hosted (of course) with Yahoo groups at [http://groups.yahoo.com/group/ycsb-users](http://groups.yahoo.com/group/ycsb-users).\n\n## Code Style\n\nA Java coding style guide is enforced via the Maven CheckStyle plugin. We try not to be too draconian with enforcement but the biggies include:\n\n* Whitespaces instead of tabs.\n* Proper Javadocs for methods and classes.\n* Camel case member names.\n* Upper camel case classes and method names.\n* Line length.\n\nCheckStyle will run for pull requests or if you create a package locally so if you just compile and push a commit, you may be surprised when the build fails with a style issue. Just execute ``mvn checkstyle:checkstyle `` before you open a PR and you should avoid any suprises.\n\n## Platforms\n\nSince most data bases aim to support multiple platforms, YCSB aims to run on as many as possible as well. Besides **Linux** and **macOS**, YCSB must compile and run for **Windows**. While not all DBs will run under every platform, the YCSB tool itself must be able to execute on all of these systems and hopefully be able to communicate with remote data stores.\n\nAdditionally, YCSB is targeting Java 7 (1.7.0) as its build version as some users are glacially slow moving to Java 8. So please avoid those Lambdas and Streams for now.\n\n## Pull Requests\n\nYou've written some amazing code and are excited to share it with the community! It's time to open a PR! Here's what you should do.\n\n* Checkout YCSB's ``master`` branch in your own fork and create a new branch based off of it with a name that is reflective of your work. E.g. ``i123`` for fixing an issue or ``db_xyz`` when working on a binding.\n* Add your changes to the branch.\n* Commit the code and start the commit message with the component you are working on in square braces. E.g. ``[core] Add another format for exporting histograms.`` or ``[hbase12] Fix interrupted exception bug.``.\n* Push to your fork and click the ``Create Pull Request`` button.\n* Wait for the build to complete in the CI pipeline. If it fails with a red X, click through the logs for details and fix any issues and commit your changes.\n* If you have made changes, please flatten the commits so that the commit logs are nice and clean. Just run a ``git rebase -i <hash before your first commit>``. \n\nAfter you have opened your PR, a YCSB maintainer will review it and offer constructive feedback via the GitHub review feature. If no one has responded to your PR, please bump the thread by adding comments.\n\n**NOTE**: For maintainers, please get another maintainer to sign off on your changes before merging a PR. And if you're writing code, please do create a PR from your fork, don't just push code directly to the master branch.\n\n## Core, Bindings and Workloads\n\nThe main components of the code base include the core library and benchmarking utility, various database client bindings and workload classes and definitions.\n\n### Core\nWhen working on the core classes, keep in mind the following:\n\n* Do not change the core behavior or operation of the main benchmarking classes (Particularly the Client and Workload classes). YCSB is used all over the place because it's a consistent standard that allows different users to compare results with the same workloads. If you find a way to drastically improve throughput, that's great! But please check with the rest of the maintainers to see if we can add the tweaks without invalidating years of benchmarks.\n* Do not remove or modify measurements. Users may have tooling to parse the outputs so if you take something out, they'll be a wee bit unhappy. Extending or adding measurements is fine (so if you do have tooling, expect additions.)\n* Do not modify existing generators. Again we don't want to invalidate years of benchmarks. Instead, create a new generator or option that can be enabled explicitly (not implicitly!) for users to try out.\n* Utility classes and methods are welcome. But if they're only ever used by a specific database binding, co-locate the code with that binding.\n* Don't change the DB interface if at all possible. Implementations can squeeze all kinds of workloads through the existing interface and while it may be easy to change the bindings included with the source code, some users may have private clients they can't share with the community. \n\n### Bindings and Clients\n\nWhen a new database is released a *binding* can be created that implements a client communicating with the given data store that will execute YCSB workloads. Details about writing a DB binding can be found on our [GitHub Wiki page](https://github.com/brianfrankcooper/YCSB/wiki/Adding-a-Database). Some development guidelines to follow include:\n\n* Create a new Maven module for your binding. Follow the existing bindings as examples.\n* The module *must* include a README.md file with details such as:\n  * Database setup with links to documentation so that the YCSB benchmarks will execute properly.\n  * Example command line executions (workload selection, etc).\n  * Required and optional properties (e.g. connection strings, behavior settings, etc) along with the default values.\n  * Versions of the database the binding supports.\n* Javadoc the binding and all of the methods. Tell us what it does and how it works.\n\nBecause YCSB is a utility to compare multiple data stores, we need each binding to behave similarly by default. That means each data store should enforce the strictest consistency guarantees available and avoid client side buffering or optimizations. This allows users to evaluate different DBs with a common baseline and tough standards.\n\nHowever you *should* include parameters to tune and improve performance as much as possible to reach those flashy marketing numbers. Just be honest and document what the settings do and what trade-offs are made. (e.g. client side buffering reduces I/O but a crash can lead to data loss).\n\n### Workloads\n\nYCSB began comparing various key/value data stores with simple CRUD operations. However as DBs have become more specialized we've added more workloads for various tasks and would love to have more in the future. Keep the following in mind:\n\n* Make sure more than one publicly available database can handle your workload. It's no fun if only one player is in the game.\n* Use the existing DB interface to pass your data around. If you really need another API, discuss with the maintainers to see if there isn't a workaround.\n* Provide real-world use cases for the workload, not just theoretical idealizations."
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 11.091796875,
+          "content": "\n                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+        },
+        {
+          "name": "NOTICE.txt",
+          "type": "blob",
+          "size": 0.6005859375,
+          "content": "=========================================================================\nNOTICE file for use with, and corresponding to Section 4 of,            \nthe Apache License, Version 2.0,                                  \nin this case for the YCSB project.                     \n=========================================================================\n\n   This product includes software developed by\n   Yahoo! Inc. (www.yahoo.com)\n   Copyright (c) 2010 Yahoo! Inc.  All rights reserved.\n\n   This product includes software developed by\n   Google Inc. (www.google.com)\n   Copyright (c) 2015 Google Inc.  All rights reserved.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.3759765625,
+          "content": "<!--\nCopyright (c) 2010 Yahoo! Inc., 2012 - 2016 YCSB contributors.\nAll rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"); you\nmay not use this file except in compliance with the License. You\nmay obtain a copy of the License at\n\nhttp://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\nimplied. See the License for the specific language governing\npermissions and limitations under the License. See accompanying\nLICENSE file.\n-->\n\nYCSB\n====================================\n[![Build Status](https://travis-ci.org/brianfrankcooper/YCSB.png?branch=master)](https://travis-ci.org/brianfrankcooper/YCSB)\n\n\n\nLinks\n-----\n* To get here, use https://ycsb.site\n* [Our project docs](https://github.com/brianfrankcooper/YCSB/wiki)\n* [The original announcement from Yahoo!](https://labs.yahoo.com/news/yahoo-cloud-serving-benchmark/)\n\nGetting Started\n---------------\n\n1. Download the [latest release of YCSB](https://github.com/brianfrankcooper/YCSB/releases/latest):\n\n    ```sh\n    curl -O --location https://github.com/brianfrankcooper/YCSB/releases/download/0.17.0/ycsb-0.17.0.tar.gz\n    tar xfvz ycsb-0.17.0.tar.gz\n    cd ycsb-0.17.0\n    ```\n    \n2. Set up a database to benchmark. There is a README file under each binding \n   directory.\n\n3. Run YCSB command. \n\n    On Linux:\n    ```sh\n    bin/ycsb.sh load basic -P workloads/workloada\n    bin/ycsb.sh run basic -P workloads/workloada\n    ```\n\n    On Windows:\n    ```bat\n    bin/ycsb.bat load basic -P workloads\\workloada\n    bin/ycsb.bat run basic -P workloads\\workloada\n    ```\n\n  Running the `ycsb` command without any argument will print the usage. \n   \n  See https://github.com/brianfrankcooper/YCSB/wiki/Running-a-Workload\n  for a detailed documentation on how to run a workload.\n\n  See https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties for \n  the list of available workload properties.\n\n\nBuilding from source\n--------------------\n\nYCSB requires the use of Maven 3; if you use Maven 2, you may see [errors\nsuch as these](https://github.com/brianfrankcooper/YCSB/issues/406).\n\nTo build the full distribution, with all database bindings:\n\n    mvn clean package\n\nTo build a single database binding:\n\n    mvn -pl site.ycsb:mongodb-binding -am clean package\n\nRunning multiple instances and latency percentiles\n--------------------------------------------------\n\nIn general, you shall be interested in 99% percentile (P99) of the latency\ndistribution, and the rest of the tail - 99.9%, 99.99%, 99.999%. The difference\nbetween the amount of requests that will be observed by a user that fall\ninto 95% (P95) percentile and 99% percentile may be sufficiently large.\n\nFor example, see \"How Many Nines?\" at https://bravenewgeek.com/everything-you-know-about-latency-is-wrong/.\nThe formula to calculate probability of how many clients will observe\na specific percentile is: \n\n    Probability_to_observe = 1 - Percentile ^ Requests\n\nThat is why almost 30% of the users will observe latency worse than P99\njust by loading the default _google.com_ web page:\n\n    1 - 0.99 ^ 30 = 0.27\n\nRemember, that\n\n- _latencies_ percentiles can't be averaged. Don't fall into this\n  [trap](http://latencytipoftheday.blogspot.com/2014/06/latencytipoftheday-you-cant-average.html).\n  Neither latency averages, nor P99 averages do not make any sense.\n\nIf you run multiple loaders dump result histograms with:\n\n    -p hdrhistogram.fileoutput=true\n    -p hdrhistogram.output.path=file.hdr\n\nmerge them manually and extract required percentiles out of the\njoined result.\n\nRemember that running multiple workloads may distort original\nworkloads distributions they were intended to produce.\n\nMerging HDR histogram percentiles\n---------------------------------\n\nHdrHistogram can serialize its data to HDR files. Use CLI tool\nto do different operations with your saved histograms\nhttps://github.com/nitsanw/HdrLogProcessing.\n\nYou shall be interested in 3 functions:\n\n- Union - to combine result histograms\n- Summarize - to extract latency percentiles\n- An ability to print the result into the CSV file and extract tags\n\nTo extract HDR content into CSV file format use from\nhttps://github.com/HdrHistogram/HdrHistogram/:\n\n    java -cp HdrHistogram-2.1.9.jar org.HdrHistogram.HistogramLogProcessor -i file.hdr -o output_${tag}.csv -csv -tag ${tag}\n"
+        },
+        {
+          "name": "accumulo1.9",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "aerospike",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "arangodb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "asynchbase",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "azurecosmos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "azuretablestorage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "binding-parent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cassandra",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "checkstyle.xml",
+          "type": "blob",
+          "size": 7.373046875,
+          "content": "<?xml version=\"1.0\"?>\n<!-- \nCopyright (c) 2012 - 2016 YCSB contributors. All rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"); you\nmay not use this file except in compliance with the License. You\nmay obtain a copy of the License at\n\nhttp://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\nimplied. See the License for the specific language governing\npermissions and limitations under the License. See accompanying\nLICENSE file.\n-->\n\n<!DOCTYPE module PUBLIC\n    \"-//Puppy Crawl//DTD Check Configuration 1.2//EN\"\n    \"http://www.puppycrawl.com/dtds/configuration_1_2.dtd\">\n\n<!--\n\n  Checkstyle configuration for Hadoop that is based on the sun_checks.xml file\n  that is bundled with Checkstyle and includes checks for:\n\n    - the Java Language Specification at\n      http://java.sun.com/docs/books/jls/second_edition/html/index.html\n\n    - the Sun Code Conventions at http://java.sun.com/docs/codeconv/\n\n    - the Javadoc guidelines at\n      http://java.sun.com/j2se/javadoc/writingdoccomments/index.html\n\n    - the JDK Api documentation http://java.sun.com/j2se/docs/api/index.html\n\n    - some best practices\n\n  Checkstyle is very configurable. Be sure to read the documentation at\n  http://checkstyle.sf.net (or in your downloaded distribution).\n\n  Most Checks are configurable, be sure to consult the documentation.\n\n  To completely disable a check, just comment it out or delete it from the file.\n\n  Finally, it is worth reading the documentation.\n\n-->\n\n<module name=\"Checker\">\n\n    <!-- Checks that a package.html file exists for each package.     -->\n    <!-- See http://checkstyle.sf.net/config_javadoc.html#PackageHtml -->\n    <module name=\"JavadocPackage\"/>\n\n    <!-- Checks whether files end with a new line.                        -->\n    <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->\n    <!-- module name=\"NewlineAtEndOfFile\"/-->\n\n    <!-- Checks that property files contain the same keys.         -->\n    <!-- See http://checkstyle.sf.net/config_misc.html#Translation -->\n    <module name=\"Translation\"/>\n\n    <module name=\"FileLength\"/>\n    <module name=\"FileTabCharacter\"/>\n\n    <module name=\"TreeWalker\">\n\n        <!-- Checks for Javadoc comments.                     -->\n        <!-- See http://checkstyle.sf.net/config_javadoc.html -->\n        <module name=\"JavadocType\">\n          <property name=\"scope\" value=\"public\"/>\n          <property name=\"allowMissingParamTags\" value=\"true\"/>\n          <!-- unfortunately we cannot add implNote, implSpec, apiNote and apiSpec to checkstyle -->\n          <property name=\"allowUnknownTags\" value=\"true\"/>\n        </module>\n        <module name=\"JavadocStyle\"/>\n\n        <!-- Checks for Naming Conventions.                  -->\n        <!-- See http://checkstyle.sf.net/config_naming.html -->\n        <module name=\"ConstantName\"/>\n        <module name=\"LocalFinalVariableName\"/>\n        <module name=\"LocalVariableName\"/>\n        <module name=\"MemberName\"/>\n        <module name=\"MethodName\"/>\n        <module name=\"PackageName\"/>\n        <module name=\"ParameterName\"/>\n        <module name=\"StaticVariableName\"/>\n        <module name=\"TypeName\"/>\n\n\n        <!-- Checks for Headers                                -->\n        <!-- See http://checkstyle.sf.net/config_header.html   -->\n        <!-- <module name=\"Header\">                            -->\n            <!-- The follow property value demonstrates the ability     -->\n            <!-- to have access to ANT properties. In this case it uses -->\n            <!-- the ${basedir} property to allow Checkstyle to be run  -->\n            <!-- from any directory within a project. See property      -->\n            <!-- expansion,                                             -->\n            <!-- http://checkstyle.sf.net/config.html#properties        -->\n            <!-- <property                                              -->\n            <!--     name=\"headerFile\"                                  -->\n            <!--     value=\"${basedir}/java.header\"/>                   -->\n        <!-- </module> -->\n\n        <!-- Following interprets the header file as regular expressions. -->\n        <!-- <module name=\"RegexpHeader\"/>                                -->\n\n\n        <!-- Checks for imports                              -->\n        <!-- See http://checkstyle.sf.net/config_import.html -->\n        <module name=\"IllegalImport\"/> <!-- defaults to sun.* packages -->\n        <module name=\"RedundantImport\"/>\n        <module name=\"UnusedImports\"/>\n\n\n        <!-- Checks for Size Violations.                    -->\n        <!-- See http://checkstyle.sf.net/config_sizes.html -->\n        <module name=\"LineLength\">\n            <property name=\"max\" value=\"120\"/>\n        </module>\n        <module name=\"MethodLength\"/>\n        <module name=\"ParameterNumber\"/>\n\n\n        <!-- Checks for whitespace                               -->\n        <!-- See http://checkstyle.sf.net/config_whitespace.html -->\n        <module name=\"EmptyForIteratorPad\"/>\n        <module name=\"MethodParamPad\"/>\n        <module name=\"NoWhitespaceAfter\"/>\n        <module name=\"NoWhitespaceBefore\"/>\n        <module name=\"ParenPad\"/>\n        <module name=\"TypecastParenPad\"/>\n        <module name=\"WhitespaceAfter\">\n\t    \t<property name=\"tokens\" value=\"COMMA, SEMI\"/>\n\t\t</module>\n\n\n        <!-- Modifier Checks                                    -->\n        <!-- See http://checkstyle.sf.net/config_modifiers.html -->\n        <module name=\"ModifierOrder\"/>\n        <module name=\"RedundantModifier\"/>\n\n\n        <!-- Checks for blocks. You know, those {}'s         -->\n        <!-- See http://checkstyle.sf.net/config_blocks.html -->\n        <module name=\"AvoidNestedBlocks\"/>\n        <module name=\"EmptyBlock\">\n          <property name=\"option\" value=\"text\"/>\n        </module>\n        <module name=\"LeftCurly\"/>\n        <module name=\"NeedBraces\"/>\n        <module name=\"RightCurly\"/>\n\n\n        <!-- Checks for common coding problems               -->\n        <!-- See http://checkstyle.sf.net/config_coding.html -->\n        <!-- module name=\"AvoidInlineConditionals\"/-->\n        <module name=\"EmptyStatement\"/>\n        <module name=\"EqualsHashCode\"/>\n        <module name=\"HiddenField\">\n          <property name=\"ignoreConstructorParameter\" value=\"true\"/>\n        </module>\n        <module name=\"IllegalInstantiation\"/>\n        <module name=\"InnerAssignment\"/>\n        <module name=\"MissingSwitchDefault\"/>\n        <module name=\"SimplifyBooleanExpression\"/>\n        <module name=\"SimplifyBooleanReturn\"/>\n\n        <!-- Checks for class design                         -->\n        <!-- See http://checkstyle.sf.net/config_design.html -->\n        <module name=\"FinalClass\"/>\n        <module name=\"HideUtilityClassConstructor\"/>\n        <module name=\"InterfaceIsType\"/>\n        <module name=\"VisibilityModifier\">\n          <property name=\"protectedAllowed\" value=\"true\"/>\n        </module>\n\n\n        <!-- Miscellaneous other checks.                   -->\n        <!-- See http://checkstyle.sf.net/config_misc.html -->\n        <module name=\"ArrayTypeStyle\"/>\n        <module name=\"Indentation\">\n            <property name=\"basicOffset\" value=\"2\" />\n            <property name=\"caseIndent\" value=\"0\" />\n        </module> \n        <!-- <module name=\"TodoComment\"/> -->\n        <module name=\"UpperEll\"/>\n\n    </module>\n\n</module>\n"
+        },
+        {
+          "name": "cloudspanner",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "couchbase",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "couchbase2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "crail",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "distribution",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dynamodb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "elasticsearch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "elasticsearch5",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "foundationdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "geode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "googlebigtable",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "googlebigtable2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "googledatastore",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "griddb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hbase1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hbase2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ignite",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "infinispan",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jdbc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kudu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "maprdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "maprjsondb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "memcached",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mongodb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nosqldb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "orientdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pom.xml",
+          "type": "blob",
+          "size": 10.841796875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!--\nCopyright (c) 2012 - 2020 YCSB contributors. All rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\"); you\nmay not use this file except in compliance with the License. You\nmay obtain a copy of the License at\n\nhttp://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\nimplied. See the License for the specific language governing\npermissions and limitations under the License. See accompanying\nLICENSE file.\n-->\n\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n  <modelVersion>4.0.0</modelVersion>\n\n  <groupId>site.ycsb</groupId>\n  <artifactId>root</artifactId>\n  <version>0.18.0-SNAPSHOT</version>\n  <packaging>pom</packaging>\n\n  <name>YCSB Root</name>\n\n  <description>\n    This is the top level project that builds, packages the core and all the DB bindings for YCSB infrastructure.\n  </description>\n\n  <url>https://ycsb.site/</url>\n  <licenses>\n    <license>\n      <name>Apache License, Version 2.0</name>\n      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>\n      <distribution>repo</distribution>\n    </license>\n  </licenses>\n  <developers>\n    <!-- Please see git for authorship information.\n         This list is project maintainers -->\n    <developer>\n      <id>allanbank</id>\n      <name>Robert J. Moore</name>\n      <email>robert.j.moore@allanbank.com</email>\n    </developer>\n    <developer>\n      <id>busbey</id>\n      <name>Sean Busbey</name>\n      <email>sean.busbey@gmail.com</email>\n    </developer>\n    <developer>\n      <id>cmatser</id>\n      <name>Chrisjan Matser</name>\n      <email>cmatser@codespinnerinc.com</email>\n    </developer>\n    <developer>\n      <id>stfeng2</id>\n      <name>Stanley Feng</name>\n      <email>stfeng@google.com</email>\n    </developer>\n  </developers>\n\n  <scm>\n    <connection>scm:git:git://github.com/brianfrankcooper/YCSB.git</connection>\n    <tag>master</tag>\n    <url>https://github.com/brianfrankcooper/YCSB</url>\n  </scm>\n  <distributionManagement>\n    <repository>\n      <id>sonatype.releases.https</id>\n      <name>Release Repo at sonatype oss.</name>\n      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>\n    </repository>\n    <snapshotRepository>\n      <id>sonatype.snapshots.https</id>\n      <name>snapshot Repo at sonatype oss.</name>\n      <url>https://oss.sonatype.org/content/repositories/snapshots</url>\n    </snapshotRepository>\n  </distributionManagement>\n  <dependencyManagement>\n    <dependencies>\n      <dependency>\n        <groupId>com.puppycrawl.tools</groupId>\n        <artifactId>checkstyle</artifactId>\n        <version>7.7.1</version>\n      </dependency>\n      <dependency>\n        <groupId>org.jdom</groupId>\n        <artifactId>jdom</artifactId>\n        <version>1.1</version>\n      </dependency>\n      <dependency>\n        <groupId>com.google.collections</groupId>\n        <artifactId>google-collections</artifactId>\n        <version>1.0</version>\n      </dependency>\n      <dependency>\n        <groupId>org.slf4j</groupId>\n        <artifactId>slf4j-api</artifactId>\n        <version>1.7.25</version>\n      </dependency>\n    </dependencies>\n  </dependencyManagement>\n\n  <!-- Properties Management -->\n  <properties>\n    <maven.assembly.version>2.5.5</maven.assembly.version>\n    <maven.dependency.version>2.10</maven.dependency.version>\n\n    <!-- datastore binding versions, lex sorted -->\n    <accumulo.1.9.version>1.9.3</accumulo.1.9.version>\n    <aerospike.version>3.1.2</aerospike.version>\n    <arangodb.version>4.4.1</arangodb.version>\n    <asynchbase.version>1.8.2</asynchbase.version>\n    <azurecosmos.version>4.8.0</azurecosmos.version>\n    <azurestorage.version>4.0.0</azurestorage.version>\n    <cassandra.cql.version>3.0.0</cassandra.cql.version>\n    <cloudspanner.version>6.71.0</cloudspanner.version>\n    <couchbase.version>1.4.10</couchbase.version>\n\t\t<couchbase2.version>2.3.1</couchbase2.version>\n\t\t<crail.version>1.1-incubating</crail.version>\n    <elasticsearch5-version>5.5.1</elasticsearch5-version>\n    <foundationdb.version>5.2.5</foundationdb.version>\n    <geode.version>1.2.0</geode.version>\n    <!-- deprecated, please use googlebigtable2 -->\n    <googlebigtable.version>1.4.0</googlebigtable.version>\n    <googlebigtable2.version>2.47.0</googlebigtable2.version>\n    <griddb.version>4.0.0</griddb.version>\n    <hbase1.version>1.4.12</hbase1.version>\n    <hbase2.version>2.2.3</hbase2.version>\n    <ignite.version>2.7.6</ignite.version>\n    <infinispan.version>7.2.2.Final</infinispan.version>\n    <kudu.version>1.11.1</kudu.version>\n    <maprhbase.version>1.1.8-mapr-1710</maprhbase.version>\n    <mongodb.version>3.11.0</mongodb.version>\n    <mongodb.async.version>2.0.1</mongodb.async.version>\n    <openjpa.jdbc.version>2.1.1</openjpa.jdbc.version>\n    <orientdb.version>2.2.37</orientdb.version>\n    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\n    <redis.version>2.9.0</redis.version>\n    <riak.version>2.0.5</riak.version>\n    <rocksdb.version>6.2.2</rocksdb.version>\n    <s3.version>1.10.20</s3.version>\n    <seaweed.client.version>1.4.1</seaweed.client.version>\n    <scylla.cql.version>3.10.2-scylla-1</scylla.cql.version>\n    <solr7.version>7.7.2</solr7.version>\n    <tarantool.version>1.6.5</tarantool.version>\n    <thrift.version>0.8.0</thrift.version>\n    <tablestore.version>4.8.0</tablestore.version>\n    <voltdb.version>10.1.1</voltdb.version>\n    <zookeeper.version>3.5.8</zookeeper.version>\n  </properties>\n\n  <modules>\n    <!-- our internals -->\n    <module>core</module>\n    <module>binding-parent</module>\n    <module>distribution</module>\n    <!-- all the datastore bindings, lex sorted please -->\n    <module>accumulo1.9</module>\n    <module>aerospike</module>\n    <module>arangodb</module>\n    <module>asynchbase</module>\n    <module>azurecosmos</module>\n    <module>azuretablestorage</module>\n    <module>cassandra</module>\n    <module>cloudspanner</module>\n    <module>couchbase</module>\n\t\t<module>couchbase2</module>\n\t\t<module>crail</module>\n    <module>dynamodb</module>\n    <module>elasticsearch</module>\n    <module>elasticsearch5</module>\n    <module>foundationdb</module>\n    <module>geode</module>\n    <module>googlebigtable</module>\n    <module>googlebigtable2</module>\n    <module>googledatastore</module>\n    <module>griddb</module>\n    <module>hbase1</module>\n    <module>hbase2</module>\n    <module>ignite</module>\n    <module>infinispan</module>\n    <module>jdbc</module>\n    <module>kudu</module>\n    <module>maprdb</module>\n    <module>maprjsondb</module>\n    <module>memcached</module>\n    <module>mongodb</module>\n    <module>nosqldb</module>\n    <module>orientdb</module>\n    <module>postgrenosql</module>\n    <module>rados</module>\n    <module>redis</module>\n    <module>rest</module>\n    <module>riak</module>\n    <module>rocksdb</module>\n    <module>s3</module>\n    <module>seaweedfs</module>\n    <module>scylla</module>\n    <module>solr7</module>\n    <module>tarantool</module>\n    <module>tablestore</module>\n    <module>voltdb</module>\n    <module>zookeeper</module>\n  </modules>\n\n  <build>\n    <pluginManagement>\n      <plugins>\n        <plugin>\n          <groupId>org.apache.maven.plugins</groupId>\n          <artifactId>maven-checkstyle-plugin</artifactId>\n          <version>2.16</version>\n        </plugin>\n      </plugins>\n    </pluginManagement>\n    <plugins>\n      <plugin>\n        <groupId>org.apache.maven.plugins</groupId>\n        <artifactId>maven-enforcer-plugin</artifactId>\n        <version>3.0.0-M1</version>\n        <executions>\n          <execution>\n            <id>enforce-maven</id>\n            <goals>\n              <goal>enforce</goal>\n            </goals>\n            <configuration>\n              <rules>\n                <requireMavenVersion>\n                  <!--\n                  Maven 3.6.2 has issues\n                  https://github.com/brianfrankcooper/YCSB/issues/1390\n                  -->\n                  <version>[3.1.0,3.6.2),(3.6.2,)</version>\n                </requireMavenVersion>\n              </rules>\n            </configuration>\n          </execution>\n        </executions>\n      </plugin>\n      <plugin>\n        <groupId>org.apache.maven.plugins</groupId>\n        <artifactId>maven-compiler-plugin</artifactId>\n        <version>3.7.0</version>\n        <configuration>\n          <source>1.8</source>\n          <target>1.8</target>\n        </configuration>\n      </plugin>\n      <plugin>\n        <groupId>org.apache.maven.plugins</groupId>\n        <artifactId>maven-checkstyle-plugin</artifactId>\n        <executions>\n          <execution>\n            <id>validate</id>\n            <phase>validate</phase>\n            <goals>\n              <goal>check</goal>\n            </goals>\n            <configuration>\n              <configLocation>checkstyle.xml</configLocation>\n            </configuration>\n          </execution>\n        </executions>\n      </plugin>\n    </plugins>\n  </build>\n  <profiles>\n    <profile>\n      <!-- plugins needed to pass sonatype repo checks -->\n      <id>ycsb-release</id>\n      <properties>\n        <doclint>none</doclint>\n      </properties>\n      <build>\n        <pluginManagement>\n          <plugins>\n            <plugin>\n              <groupId>org.apache.maven.plugins</groupId>\n              <artifactId>maven-deploy-plugin</artifactId>\n              <version>3.0.0-M1</version>\n            </plugin>\n          </plugins>\n        </pluginManagement>\n        <plugins>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-source-plugin</artifactId>\n            <version>3.1.0</version>\n            <executions>\n              <execution>\n                <id>attach-sources</id>\n                <goals>\n                  <goal>jar-no-fork</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-javadoc-plugin</artifactId>\n            <version>3.1.1</version>\n            <executions>\n              <execution>\n                <id>attach-javadocs</id>\n                <goals>\n                  <goal>jar</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n          <plugin>\n            <groupId>org.apache.maven.plugins</groupId>\n            <artifactId>maven-gpg-plugin</artifactId>\n            <version>1.6</version>\n            <executions>\n              <execution>\n                <id>sign-release-artifacts</id>\n                <goals>\n                  <goal>sign</goal>\n                </goals>\n              </execution>\n            </executions>\n          </plugin>\n        </plugins>\n      </build>\n    </profile>\n  </profiles>\n</project>\n"
+        },
+        {
+          "name": "postgrenosql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rados",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "redis",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "riak",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rocksdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "s3",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scylla",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "seaweedfs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solr7",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tablestore",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tarantool",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "voltdb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "workloads",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zookeeper",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

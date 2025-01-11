@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "timestamp": 1736609141867,
+    "page": 432,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "guoguibing/librec",
+      "stars": 3244,
+      "defaultBranch": "3.0.0",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3310546875,
+          "content": "*classes/*\n*.settings*\n*.idea*\n*.project\n*.classpath\n*.umlproject\n*.euml*\n*bin/log\n.idea/\nresult/*\n*/.cache-main\n*target/*\n*/target/*\n*/*.iml\n*.iml\ncore/target/*\nspark/target/*\ngui/target/*\nspark/docs/*\nspark/file/*\nlog/*\nout/\n.directory\n\ncore/src/log/librec\\.log\n\ncore/src/main/java/net/librec/job/test1\\.java\n\ndata/ml-10M100K/\n.DS_Store\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.6796875,
+          "content": "<img src=\"http://librec.net/images/logo.png\" height=\"25%\" width=\"25%\" />\n\n**LibRec** (https://guoguibing.github.io/librec/index.html) is a Java library for recommender systems (Java version 1.7 or higher required). It implements a suit of state-of-the-art recommendation algorithms, aiming to resolve two classic recommendation tasks: **rating prediction** and **item ranking**. \n\n[![Join the chat at https://gitter.im/librec/Lobby](https://badges.gitter.im/librec/Lobby.svg)](https://gitter.im/librec/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)[![Build Status](https://travis-ci.org/guoguibing/librec.svg?branch=2.0.0)](https://travis-ci.org/guoguibing/librec)\n\n### LibRec Demo\nA movie recommender system is designed and [available here](http://demo.librec.net).\n\n### Documentation\nPlease refer to [LibRec Documentation](http://wiki.librec.net) and [API Documentation](http://librec.net/doc/librec-v2.0/)\n\n### Authors Words about the NEW Version\nIt has been a year since the last version was released. In this year, lots of changes have been taken to the LibRec project, and the most significant one is the formulation of the LibRec team. The team pushes forward the development of LibRec with the wisdom of many experts, and the collaboration of experienced and enthusiastic contributors. Without their great efforts and hardworking, it is impossible to reach the state that a single developer may dream of. \n\nLibRec 2.0 is not the end of our teamwork, but just the begining of greater objectives. We aim to continously provide NEXT versions for better experience and performance. There are many directions and goals in plan, and we will do our best to make them happen. It is always exciting to receive any code contributions, suggestions, comments from all our LibRec users. \n\nWe hope you enjoy the new version!\n\nPS: Follow us on WeChat to have first-hand and up-to-date information about LibRec. \n\n<img src=\"http://librec.net/images/mp.jpg\" height=\"25%\" width=\"25%\" />\n\n### Features\n\n* **Rich Algorithms:** More than 70 recommendation algorithms have been implemented, and more will be done.\n* **High Modularity:** Six main components including data split, data conversion, similarity, algorithms, evaluators and filters.\n* **Great Performance:** More efficient implementations than other counterparts while producing comparable accuracy.\n* **Flexible Configuration:** Low coupling, flexible and either external textual or internal API configuration.\n* **Simple Usage:** Can get executed in a few lines of codes, and a number of demos are provided for easy start.\n* **Easy Expansion:** A set of recommendation interfaces for easy expansion to implement new recommenders.\n\n<div style=\"text-align:center;\"><img src=\"http://librec.net/images/modules.jpg\" width=\"500\" /> </div>\n\nThe procedure of LibRec is illustrated as follows. \n\n<div style=\"text-align:center;\"><img src=\"http://librec.net/images/procedure.jpg\" width=\"600\" /> </div>\n\n### Download\n\nby maven\n```\n<dependency>\n    <groupId>net.librec</groupId>\n    <artifactId>librec-core</artifactId>\n    <version>2.0.0</version>\n</dependency>\n```\n\nby packages\n\n* **[librec-v2.0](https://github.com/guoguibing/librec/archive/librec-src-v2.0.zip)**\n* **[librec-v1.3](http://www.librec.net/release/librec-v1.3.zip)**\n* **[librec-v1.2](http://www.librec.net/release/librec-v1.2.zip)**\n* **[librec-v1.1](http://www.librec.net/release/librec-v1.1.zip)**\n* **[librec-v1.0](http://www.librec.net/release/librec-v1.0.zip)**\n\n\n### Execution \nYou can run LibRec with configurations from command arguments:\n\n<pre>\nlibrec rec -exec -D rec.recommender.class=itemcluster -D rec.pgm.number=10 -D rec.iterator.maximum=20\n</pre>\n\nor from a configuration file:\n\n<pre>\nlibrec rec -exec -conf itemcluster-test.properties\n</pre>\n\n### Code Snippet\n\nYou can use **LibRec** as a part of your projects, and use the following codes to run a recommender. \n\n<pre>\npublic void main(String[] args) throws Exception {\n\t\n\t// recommender configuration\n\tConfiguration conf = new Configuration();\n\tResource resource = new Resource(\"rec/cf/userknn-test.properties\");\n\tconf.addResource(resource);\n\n\t// build data model\n\tDataModel dataModel = new TextDataModel(conf);\n\tdataModel.buildDataModel();\n\t\n\t// set recommendation context\n\tRecommenderContext context = new RecommenderContext(conf, dataModel);\n\tRecommenderSimilarity similarity = new PCCSimilarity();\n\tsimilarity.buildSimilarityMatrix(dataModel, true);\n\tcontext.setSimilarity(similarity);\n\n\t// training\n\tRecommender recommender = new UserKNNRecommender();\n\trecommender.recommend(context);\n\n\t// evaluation\n\tRecommenderEvaluator evaluator = new MAEEvaluator();\n\trecommender.evaluate(evaluator);\n\n\t// recommendation results\n\tList<RecommendedItem> recommendedItemList = recommender.getRecommendedList();\n\tRecommendedFilter filter = new GenericRecommendedFilter();\n\trecommendedItemList = filter.filter(recommendedItemList);\n}\n</pre>\n\n### News Report \n\n* [An Introduction to Open-source Recommendaion Toolkit: LibRec](http://chuansong.me/n/1701947351918) [by ResysChina in Chinese]\n* [LibRec: an Open-source and Cross-platform Software for Recommender Systems](http://chuansong.me/n/1751521251128) [by InfoQ in Chinese]\n\n### Acknowledgement\n\nWe would like to express our appreciation to the following people for contributing source codes to LibRec, including [Prof. Robin Burke](http://josquin.cti.depaul.edu/~rburke/), [Bin Wu](https://github.com/wubin7019088), [Diego Monti](https://github.com/dmm42), [Ge Zhou](https://github.com/466152112), Li Wenxi, [Marco Mera](https://github.com/mmera), [Ran Locar](https://github.com/ranlocar), [Shawn Rutledge](https://github.com/shawndr), [ShuLong Chen](https://github.com/ChenSuL), [Tao Lian](https://github.com/taolian), [Takuya Kitazawa](https://github.com/takuti), [Zhaohua Hong](mailto:jstarcraft@gmail.com), Tan Jiale, [Daniel Velten](https://github.com/dvelten), [Qian Shaofeng](https://github.com/shitou112), etc.  We gratefully thank Mr. Lijun Dai for designing and contributing the logo of LibRec, and also many thanks to [Mr. Jianbin Zhang](http://www.liaotian2020.com/) for implementing and sharing a [LibRec demo](http://demo.librec.net/). \n\nWe also appreciate many others for reporting bugs and issues, and for providing valuable suggestions and support. \n\n### Publications\nPlease cite the following papers if LibRec is helpful to your research. \n\n1. G. Guo, J. Zhang, Z. Sun and N. Yorke-Smith, [LibRec: A Java Library for Recommender Systems](http://ceur-ws.org/Vol-1388/demo_paper1.pdf), in Posters, Demos, Late-breaking Results and Workshop Proceedings of the 23rd Conference on User Modelling, Adaptation and Personalization (UMAP), 2015.\n2. G. Guo, J. Zhang and N. Yorke-Smith, TrustSVD: Collaborative Filtering with Both the Explicit and Implicit Influence of User Trust and of Item Ratings, in Proceedings of the 29th AAAI Conference on Artificial Intelligence (AAAI), 2015, 123-129.\n3. Z. Sun, G. Guo and J. Zhang, Exploiting Implicit Item Relationships for Recommender Systems, in Proceedings of the 23rd International Conference on User Modeling, Adaptation and Personalization (UMAP), 2015.\n\n\n### GPL License\n\nLibRec is [free software](http://www.gnu.org/philosophy/free-sw.html): you can redistribute it and/or modify it under the terms of the [GNU General Public License (GPL)](http://www.gnu.org/licenses/gpl.html) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. LibRec is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. \n\nYou should have received a copy of the GNU General Public License along with LibRec. If not, see http://www.gnu.org/licenses/.\n"
+        },
+        {
+          "name": "Recruitment.md",
+          "type": "blob",
+          "size": 2.791015625,
+          "content": "# LibRec团队组建\n\nLibRec是一个基于Java的开源推荐系统工具库，网站链接是 http://www.librec.net/, 源码链接是 https://github.com/guoguibing/librec. 在Github中搜索recommender systems, LibRec在返回的结果里名列前位(top 5)，目前受到很多工业界和学术界人员的关注和使用。其它在规划中的内容包括推荐展示系统，工业应用拓展，与其它工具库做整合。整合后的LibRec将是推荐系统领域内最完整，最具有活力的开源工具库。\n\n由于本人工作变动及精力分散，影响了LibRec的更新和持续开发。我也深刻体会到了团队协作的重要性，尤其是这样一个开源系统，仅仅依靠个人的力量是非常有限的。因此，为了促进LibRec的持续改进和更好地服务推荐系统社区，现准备组建LibRec开发团队。欢迎有志于从事开源推荐事业的梦想人士加入我们的团队。有意向的朋友可发个人简历到我的邮箱：guogb@swc.neu.edu.cn，或加微信了解更多，非诚勿扰。\n\n本招募信息长期有效，欢迎志同道合的人士积极参与，为开源推荐系统贡献自己的一份力。\n\n### 基本要求\n\n* 熟悉Java编程\n* 能阅读英文文献\n* 参加过推荐系统竞赛的优先考虑\n\n### 招募人员\n团队目前主要成员有6人（[查看详情](https://github.com/guoguibing/librec/blob/master/Team.md)），现拟招募2~3名新成员参与开发。\n\n* 架构师1~2名：主要负责接口设计、改进构架和数据结构，测试并优化算法。\n* 工程师3~4名：主要负责实现并测试新的算法代码。目前规划的内容主要有：\n  * Tensor Factorization\n  * Factorization machines\n  * Probabilistic graphic models\n  * Content-based recommendation models\n  * POI-based recommendadtion models\n  * Deep learning models\n  * Up-to-date recommendation models\n  * Python, C++ interfaces\n\n### 工作方式及待遇\n\n* 以自主工作为主，每周定时讨论开发进展和问题。\n* LibRec库主页上列为开发团队主要成员。\n* 在获得经费支持时，可为团队成员发放补贴。\n* 优先及优惠参与团队组织的各项学术活动。\n* 可组队参加各类推荐系统竞赛，赢取名次和奖金。\n* 工作突出的队员可获推荐国外留学或工作，也欢迎报考东北大学硕士/博士研究生。\n\n### 招募流程\n\n1. 投递个人简历到 guogb@swc.neu.edu.cn\n2. 通知面试\n3. 加入团队\n\n### 联系方式\n\n郭贵冰  \n东北大学软件学院，副教授  \n主页：http://www.luckymoon.me  \n\n\n加微信与我讨论：\n\n<img src=\"http://www.luckymoon.me/images/guibing-wechat.jpg\" width=\"200\" height=\"200\" alt=\"Scan me on Wechat\">\n\n加入推荐系统微信群：\n\n<img src=\"http://www.luckymoon.me/images/librec-group.jpg\" width=\"200\" height=\"250\" alt=\"Scan me on Wechat\">\n"
+        },
+        {
+          "name": "Team.md",
+          "type": "blob",
+          "size": 3.208984375,
+          "content": "# LibRec团队\n\n* **郭贵冰** (Team Leader)，东北大学软件学院副教授，个人主页：[http://www.luckymoon.me/](http://www.luckymoon.me/)。\n* **王宇峰** (Team Manager)，10年左右工作经验，担任过项目经理、架构师等职位；做过大型WEB系统、大型薪资计算系统、软硬件交互系统、ANDROID应用等项目。目前在国内知名互联网广告公司负责HADOOP相关的大数据研发工作，并担任研发经理岗位。熟练掌握JAVA,JAVASCRIPT,PYTHON等语言。\n* **张海东** (Core Developer)，北京自动化所博士，研究方向为推荐系统和机器学习。目前主要研究基于图模型的协同过滤推荐算法。\n* **吴宾** (Core Developer)，郑州大学在读博士，研究方向为推荐系统。目前主要研究在多源异构数据的情形下，如何有效地将矩阵分解、概率图模型等用于推荐系统，以解决评分预测和物品推荐任务。\n* **王科强** (Core Developer)，华东师范大学博士，研究方向为多样性学习和推荐系统，个人主页: [http://dase.ecnu.edu.cn/index/shows/catid/30/id/105](http://dase.ecnu.edu.cn/index/shows/catid/30/id/105)。\n* **靳远远** (Core Developer)，华东师范大学博士，研究方向为推荐系统与数据挖掘。\n* **马辰** (Core Developer)，加拿大McGill University博士，研究方向为推荐系统，目前主要从事Point-of-Interest推荐的研究，个人主页：[https://www.linkedin.com/in/ma-chen-93455693/en](https://www.linkedin.com/in/ma-chen-93455693/en)。\n<!-- * **张帅** (Core Developer)，澳大利亚UNSW Sydney博士，研究方向为推荐系统和深度学习，个人主页：[http://www.cse.unsw.edu.au/~z5122282/](http://www.cse.unsw.edu.au/~z5122282/)。 -->\n* **辛永佳** (Core Developer)，腾讯研发工程师，目前主要负责基于新闻的NLP、推荐系统算法以及用户行为信息收集系统架构的开发与优化工作，个人主页：[https://github.com/logicxin](https://github.com/logicxin)。\n* **张朝立** (Core Developer)，58推荐算法工程师，主要负责招聘业务部门双边的推荐工作，个人主页：[http://iyao.ren](http://iyao.ren)。\n* **刘啸泽** (Developer)，浙江大学计算机学院硕士。研究方向为数据挖掘与深度学习，目前主要研究深度学习在序列数据中的应用，个人主页: [http://liuxz.top/about/](http://liuxz.top/about/)。\n* **孙亚童** (Developer)，东北大学软件学院硕士（2017级）。研究方向为推荐系统、大数据与数据挖掘。\n* **屈石林** (Developer)，东北大学软件学院硕士（2017级）。研究方向为推荐系统、大数据与数据挖掘。\n\n## Former Team Members\n* **陈旭** (Core Developer)，清华大学软件学院博士，研究方向主要是推荐系统，机器学习，情感分析等。目前主要研究如何把评论信息应用于推荐系统中，以对用户或者商品进行更加准确的建模，进而缓解传统的推荐系统中普遍存在的数据稀疏问题，冷启动问题等。\n* **汤嘉熹** (Core Developer)，加拿大Simon Fraser University博士，研究方向为推荐系统与用户行为建模，个人主页 [http://www.sfu.ca/~jiaxit](http://www.sfu.ca/~jiaxit)。\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gui",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "myData",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pom.xml",
+          "type": "blob",
+          "size": 3.5439453125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n\t<modelVersion>4.0.0</modelVersion>\n\t<groupId>net.librec</groupId>\n\t<artifactId>librec</artifactId>\n\t<version>3.0.0</version>\n\t<packaging>pom</packaging>\n\t<name>librec</name>\n\t<modules>\n\t\t<module>core</module>\n\t\t<module>spark</module>\n        <module>gui</module>\n    </modules>\n\t<properties>\n\t\t<librec.version.shortname>2.0.0-beta</librec.version.shortname>\n\t\t<java.version>1.8</java.version>\n\t\t<javadoc.encoding>UTF-8</javadoc.encoding>\n\t\t<javadoc.locale>en_US</javadoc.locale>\n\t\t<!-- Build Properties -->\n\t\t<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\n\t\t<!-- Library Dependency Versions -->\n\t\t<commons-cli.version>1.2</commons-cli.version>\n\t\t<commons-codec.version>1.4</commons-codec.version>\n\t\t<commons-compress.version>1.4.1</commons-compress.version>\n\t\t<commons-exec.version>1.1</commons-exec.version>\n\t\t<commons-io.version>2.4</commons-io.version>\n\t\t<commons-lang.version>2.4</commons-lang.version>\n\t\t<commons-lang3.version>3.1</commons-lang3.version>\n\t\t<commons-logging.version>1.1.3</commons-logging.version>\n\t\t<log4j.version>1.2.17</log4j.version>\n\t\t<nd4j.version>0.9.1</nd4j.version>\n\t\t<dl4j.version>0.9.1</dl4j.version>\n\t</properties>\n\t<dependencyManagement>\n\t\t<dependencies>\n\t\t\t<dependency>\n\t\t\t\t<groupId>commons-cli</groupId>\n\t\t\t\t<artifactId>commons-cli</artifactId>\n\t\t\t\t<version>${commons-cli.version}</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>commons-codec</groupId>\n\t\t\t\t<artifactId>commons-codec</artifactId>\n\t\t\t\t<version>${commons-codec.version}</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>commons-io</groupId>\n\t\t\t\t<artifactId>commons-io</artifactId>\n\t\t\t\t<version>${commons-io.version}</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>commons-lang</groupId>\n\t\t\t\t<artifactId>commons-lang</artifactId>\n\t\t\t\t<version>${commons-lang.version}</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>commons-logging</groupId>\n\t\t\t\t<artifactId>commons-logging</artifactId>\n\t\t\t\t<version>${commons-logging.version}</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>log4j</groupId>\n\t\t\t\t<artifactId>log4j</artifactId>\n\t\t\t\t<version>${log4j.version}</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>org.apache.avro</groupId>\n\t\t\t\t<artifactId>avro</artifactId>\n\t\t\t\t<version>1.7.7</version>\n\t\t\t</dependency>\n\t\t\t<dependency>\n\t\t\t\t<groupId>org.apache.commons</groupId>\n\t\t\t\t<artifactId>commons-math3</artifactId>\n\t\t\t\t<version>3.6</version>\n\t\t\t</dependency>\n\t\t</dependencies>\n\t</dependencyManagement>\n\t<build>\n\t\t<pluginManagement>\n\t\t\t<plugins>\n\t\t\t\t<plugin>\n\t\t\t\t\t<groupId>org.apache.maven.plugins</groupId>\n\t\t\t\t\t<artifactId>maven-compiler-plugin</artifactId>\n\t\t\t\t\t<configuration>\n\t\t\t\t\t\t<source>${java.version}</source>\n\t\t\t\t\t\t<target>${java.version}</target>\n\t\t\t\t\t</configuration>\n\t\t\t\t</plugin>\n\t\t\t\t<plugin>\n\t\t\t\t\t<groupId>org.apache.maven.plugins</groupId>\n\t\t\t\t\t<artifactId>maven-jar-plugin</artifactId>\n\t\t\t\t\t<version>2.4</version>\n\t\t\t\t</plugin>\n\t\t\t\t<plugin>\n\t\t\t\t\t<groupId>org.apache.maven.plugins</groupId>\n\t\t\t\t\t<artifactId>maven-javadoc-plugin</artifactId>\n\t\t\t\t\t<version>2.4</version>\n\t\t\t\t\t<configuration>\n\t\t\t\t\t\t<doctitle>${project.name} ${project.version} API</doctitle>\n\t\t\t\t\t\t<aggregate>true</aggregate>\n\t\t\t\t\t\t<locale>${javadoc.locale}</locale>\n\t\t\t\t\t\t<encoding>${javadoc.encoding}</encoding>\n\t\t\t\t\t\t<stylesheet>java</stylesheet>\n\t\t\t\t\t</configuration>\n\t\t\t\t</plugin>\n\t\t\t</plugins>\n\t\t</pluginManagement>\n\t</build>\n</project>"
+        },
+        {
+          "name": "spark",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

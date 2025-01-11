@@ -1,0 +1,383 @@
+{
+  "metadata": {
+    "timestamp": 1736609089232,
+    "page": 352,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "microservices-patterns/ftgo-application",
+      "stars": 3481,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": "mysql/*.sh text eol=lf\ndynamodblocal-init/*.sh text eol=lf\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.150390625,
+          "content": ".gradle\nbuild/\n*.idea/\n*.iml\n*.log\n*.pid\nout\ntarget\n.serverless\n*.pid\n.classpath\n.project\n.settings\nbin\nnode_modules\ndist\nftgo-api-gateway-graphql/jest_0\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 0.5634765625,
+          "content": "Copyright 2016 Eventuate, Inc. All rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "README.adoc",
+          "type": "blob",
+          "size": 9.38671875,
+          "content": "= FTGO example application\n\nThis is the example code for my book https://microservices.io/book[Microservice patterns].\n\nimage::http://microservices.io/i/Microservices-Patterns-Cover.png[width=50%]\n\n== Please note\n\n* The code is still work in progress\n* It primarily illustrates the technical aspects of the microservice architecture and so the business logic is minimal\n* The documentation is sparse/non-existent and you will need to look in the book\n* The application consists of many services and so requires a lot of memory. It runs well, for example, on a 16GB Macbook pro.\n* The application's services and the infrastructure services, such as MySQL and Apache Kafka, are deployed using Docker containers using either Docker Compose or Kubernetes.\n\n== Got questions?\n\nPlease create a https://github.com/microservices-patterns/ftgo-application/issues[github issue] and I'll do my best to help you.\n\n== Application architecture\n\nNot surprisingly, this application has a microservice architecture.\nThere are the following services:\n\n* link:./ftgo-consumer-service[ftgo-consumer-service] - the `Consumer Service`\n* link:./ftgo-restaurant-service[ftgo-restaurant-service] - the `Restaurant Service`\n* link:./ftgo-order-service[ftgo-order-service] - the `Order Service`\n* link:./ftgo-kitchen-service[ftgo-kitchen-service] - the `Kitchen Service`\n* link:./ftgo-accounting-service[ftgo-accounting-service] - the `Accounting Service`\n* link:./ftgo-order-history-service[ftgo-order-history-service] - a `Order History Service`, which is a CQRS view\n* link:./ftgo-api-gateway[ftgo-api-gateway] - the API gateway\n\n== Service design\n\nKey points:\n\n* A service consists of a single Gradle module.\nFor example, `ftgo-order-service` implements the `Order Service`\n* A service is a Spring Boot application\n* A service has a Swagger UI `http://.../swagger-ui.html`. See `open-swagger-uis.sh`\n* A service typically consists of the following packages:\n** domain - domain logic including aggregates\n** messaging - messaging adapters\n** web - Spring MVC controllers (HTTP adapters)\n** main - the main application\n* The services use the following other frameworks\n** https://github.com/eventuate-tram/eventuate-tram-core[`Eventuate Tram framework`] - implements transactional messaging\n** https://github.com/eventuate-tram/eventuate-tram-sagas[`Eventuate Tram Saga framework`] - implements sagas\n** https://github.com/eventuate-clients/eventuate-client-java[`Eventuate Client framework`] - implements event sourcing\n\n== Chapter by chapter\n\nThis section maps the chapters to the code.\n\n=== Chapter 3 Inter-process communication in a microservice architecture\n\n* The services have a REST API\n* The services also communicate using the Apache Kafka message broker via the `Eventuate Tram` framework\n\n=== Chapter 4 Managing transactions with sagas\n\nThe link:./ftgo-order-service[ftgo-order-service] uses sagas to maintain data consistency:\n\n* link:./ftgo-order-service/src/main/java/net/chrisrichardson/ftgo/orderservice/sagas/createorder/CreateOrderSaga.java[CreateOrderSaga]\n* link:./ftgo-order-service/src/main/java/net/chrisrichardson/ftgo/orderservice/sagas/cancelorder/CancelOrderSaga.java[CancelOrderSaga]\n* link:./ftgo-order-service/src/main/java/net/chrisrichardson/ftgo/orderservice/sagas/reviseorder/ReviseOrderSaga.java[ReviseOrderSaga]\n\nThe services that participate in these sagas define the following command handlers:\n\n* `Accounting Service` link:./ftgo-accounting-service/src/main/java/net/chrisrichardson/ftgo/accountingservice/messaging/AccountingServiceCommandHandler.java[AccountingServiceCommandHandler]\n* `Consumer Service` link:./ftgo-consumer-service/src/main/java/net/chrisrichardson/ftgo/consumerservice/domain/ConsumerServiceCommandHandlers.java[ConsumerServiceCommandHandlers]\n* `Kitchen Service` link:./ftgo-kitchen-service/src/main/java/net/chrisrichardson/ftgo/kitchenservice/messagehandlers/KitchenServiceCommandHandler.java[KitchenServiceCommandHandler]\n* `Order Service` link:./ftgo-order-service/src/main/java/net/chrisrichardson/ftgo/orderservice/service/OrderCommandHandlers.java[OrderCommandHandlers]\n\n\n\n=== Chapter 5 Designing business logic in a microservice architecture\n\nAll the services' business logic is implemented using Domain-Driven design aggregates.\n\n* `Accounting Service`\n** link:./ftgo-accounting-service/src/main/java/net/chrisrichardson/ftgo/accountingservice/domain/Account.java[`Account`] aggregate in the link:./ftgo-accounting-service[ftgo-accounting-service]\n* `Consumer Service`\n**  link:./ftgo-consumer-service/src/main/java/net/chrisrichardson/ftgo/consumerservice/domain/Consumer.java[Consumer]\n* `Order Service`\n** link:./ftgo-order-service/src/main/java/net/chrisrichardson/ftgo/orderservice/domain/Order.java[Order]\n** link:./ftgo-order-service/src/main/java/net/chrisrichardson/ftgo/orderservice/domain/Restaurant.java[Restaurant]\n* `Kitchen Service`\n**  link:./ftgo-kitchen-service/src/main/java/net/chrisrichardson/ftgo/kitchenservice/domain/Restaurant.java[Restaurant]\n** link:./ftgo-kitchen-service/src/main/java/net/chrisrichardson/ftgo/kitchenservice/domain/Ticket.java[Ticket]\n* `Restaurant Service`\n** link:./ftgo-restaurant-service/src/main/java/net/chrisrichardson/ftgo/restaurantservice/domain/Restaurant.java[Restaurant]\n\n\n=== Chapter 6 Developing business logic with event sourcing\n\n* The link:./ftgo-accounting-service/src/main/java/net/chrisrichardson/ftgo/accountingservice/domain/Account.java[`Account`] aggregate in the link:./ftgo-accounting-service[ftgo-accounting-service] is implemented using event sourcing\n\n=== Chapter 7 Implementing queries in a microservice architecture\n\n* link:./ftgo-order-history-service[ftgo-order-history-service] is an example of a CQRS view\n* link:./ftgo-api-gateway[ftgo-api-gateway] uses API composition to implement the REST endpoint for retrieving the order history\n\n=== Chapter 8 External API patterns\n\n* link:./ftgo-api-gateway[ftgo-api-gateway] is the API gateway\n\n\n== Building and running the application\n\n=== Pre-requisites\n\n* Java 8+\n* Docker and Docker Compose\n* Internet access so that Gradle and Docker can download dependencies and container images\n\n=== Building\n\nTemporary: Build the Spring Cloud Contracts using this command:\n\n```\n./gradlew buildContracts\n```\n\nBuild the services using this command:\n\n```\n./gradlew assemble\n```\n\n=== Running the application\n\nRun the application using this command:\n\n```\n./gradlew :composeUp\n```\n\nNote: the ':'\n\nThis can take a while.\n\n=== Using the application\n\nUse the services Swagger UIs to invoke the services.\n\n* Create consumer - `http://localhost:8081/swagger-ui/index.html`\n* Create a restaurant - `http://localhost:8084/swagger-ui/index.html`\n* Create an order - `http://localhost:8082/swagger-ui/index.html`\n* View the order - `http://localhost:8082/swagger-ui/index.html`\n* View the order history -  `http://localhost:8086/swagger-ui/index.html`\n\nYou can also access the application via the `API Gateway` at `http://localhost:8087`.\nHowever, currently it  doesn't have a Swagger UI so you will have to use `curl`, for example.\n\nNote: if the containers aren't accessible via `localhost` - e.g. you are using Docker Toolbox, you will have to use `${DOCKER_HOST_IP}` as described below.\n\n=== Stopping the application\n\nStop the application using this command:\n\n```\n./gradlew :composeDown\n```\n\n== Deploying the application on Kubernetes\n\nYou can find Kubernetes YAML files in the following directories: `deployment/kubernetes` and `*/src/deployment/kubernetes`.\nThere are also some helpful shell scripts.\n\n=== Deploying services\n\nYou can run this command\n\n```\n./deployment/kubernetes/scripts/kubernetes-deploy-all.sh\n```\n\n=== Undeploying the services\n\nYou can run the script to undeploy the services:\n\n```\n./deployment/kubernetes/scripts/kubernetes-delete-all.sh\n```\n\nIf you want to delete the persistent volumes for Apache Kafka, Zookeeper and MySQL please run the command:\n\n```\n./deployment/kubernetes/scripts/kubernetes-delete-volumes.sh\n```\n\n== Setting environment variables to do development\n\nYou should not need to set any environment variables.\nTo run the application, you certainly do not.\nSimilarly, to do development (e.g. run tests), you typically do not need to set any environment variables.\nThat's because Docker containers are generally accessible (e.g. Docker for Windows/Mac) on the host via `localhost`.\nHowever, if Docker is running elsewhere (e.g. you are using Docker Toolbox) you will need to set `DOCKER_HOST_IP`.\n\n=== Quick way\n\nA quick way to set the environment variables is to run the script `./set-env.sh`.\n\n=== Long way\n\nThe value of `DOCKER_HOST_IP` must be meaningful to both Java services/tests running on your desktop/laptop and to Docker containers.\nPlease do NOT set it to the unresolvable hostname of your machine, `localhost` or `127.0.0.1` since the Docker containers will probably not work correctly.\n\n=== Verifying that DOCKER_HOST_IP is set correctly\n\nYou can verify that `DOCKER_HOST_IP` is set correctly by running this command:\n\n----\ndocker run -p 8889:8888 -e DOCKER_DIAGNOSTICS_PORT=8889 -e DOCKER_HOST_IP \\\n     --rm eventuateio/eventuateio-docker-networking-diagnostics:0.2.0.RELEASE\n----\n\n=== Setting the environment variable in your IDE\n\nIf you want to run Java services/tests within your IDE on your desktop/laptop AND  the Docker containers are not accessible via `localhost` THEN you will need to set `DOCKER_HOST_IP` within your IDE.\nHow to do this depends on your operating system and IDE.\nFor example, I find it convenient to launch my IDE from the command line and after setting this environment variable.\n"
+        },
+        {
+          "name": "TODO.txt",
+          "type": "blob",
+          "size": 1.6845703125,
+          "content": "eventuate client\n\nsync repo ignores interceptor\nerror handling ignores options interceptor\n\ntram:\n\n// TODO accidentally returned new Success() and message handler was fine\n* mysql image\n* logging of sending reply\n* in-memory: sending message to channel with no subscribers = error?\n* default channel mapping bean\n* varags publish domain event\n* channel mapping needs to be pushed to lowest-level - messageproducer, messageconsumer\n* trameventspublisherconfiguration.class, // todo  => tramdomaineventpublisherconfiguration?\n\nexceptions during event delivery don't cause rollback of transaction that records duplicate?\n\nsagas\n\n* mysql image\n* logging of sending reply\n* logging of sagas actions\n\n\n--------------------------------\n\nftgo - big\n\nwhat functionality:\n\n* Cancel ORder\n* Revise order\n\nCQRS:\n\n* Order events,\n* Other events\n\nAPI Gateway\n\n* composition\n\n----\n\n* separate schemas for the services\n** tram needs to use an explicit schema\n\n* actual create order request - stupid stuff right now: passing in prices.\n** order request should have menuitemid and pricing - need to ask a service to price the order.\n*** self (duplicate), ros (preparation - not pricing), rs (ok - except we discussed the need to offload), new orderpricingservice\n** do we need to start at the beginning of ordering?? shopping cart?\n\n** saga method throws exception, reported by kafkamessageprocessor, eventuatekafkaconsumer  appears to have processed the record. what is the expected behavior??? who stops processing?\n\n** define constants for channels, ?? kitchenservice\n@transactional\n\n\nftgo - misc\n\n* serialization of money\n* jpa mapping of enum - e.g. orderstate as name rather than integer\n\nmisc\n\n* need static checking of serializability\n"
+        },
+        {
+          "name": "_wait-for-services.sh",
+          "type": "blob",
+          "size": 0.40625,
+          "content": "#! /bin/bash\n\npath=$1\nshift\nports=$*\n\necho $path\necho $ports\n\nhost=${DOCKER_HOST_IP:-localhost}\n\ndone=false\n\n\nwhile [[ \"$done\" = false ]]; do\n\tfor port in $ports; do\n\t\turl=http://${host}:${port}$path\n\t\tcurl --fail $url >& /dev/null\n\t\tif [[ \"$?\" -eq \"0\" ]]; then\n\t\t\tdone=true\n\t\telse\n\t\t\tdone=false\n\t\t\techo $url\n\t\t\tbreak\n\t\tfi\n\tdone\n\tif [[ \"$done\" = true ]]; then\n\t\techo connected\n\t\tbreak;\n  fi\n\techo -n .\n\tsleep 1\ndone\n"
+        },
+        {
+          "name": "build-and-restart-service.sh",
+          "type": "blob",
+          "size": 0.16015625,
+          "content": "#! /bin/bash -e\n\nfor SN in $* ; do\n\n    ./gradlew :${SN?}:assemble\n    docker-compose build ${SN?}\n    docker-compose up -d ${SN?}\ndone\n\ndocker-compose logs -f $*\n\n"
+        },
+        {
+          "name": "build-and-test-all.sh",
+          "type": "blob",
+          "size": 1.37890625,
+          "content": "#! /bin/bash -e\n\nKEEP_RUNNING=\nASSEMBLE_ONLY=\nUSE_EXISTING_CONTAINERS=\n\nDATABASE_SERVICES=\"dynamodblocal mysql dynamodblocal-init\"\n\nwhile [ ! -z \"$*\" ] ; do\n  case $1 in\n    \"--keep-running\" )\n      KEEP_RUNNING=yes\n      ;;\n    \"--assemble-only\" )\n      ASSEMBLE_ONLY=yes\n      ;;\n    \"--use-existing-containers\" )\n      USE_EXISTING_CONTAINERS=yes\n      ;;\n    \"--help\" )\n      echo ./build-and-test-all.sh --keep-running --assemble-only --use-existing-containers\n      exit 0\n      ;;\n  esac\n  shift\ndone\n\necho KEEP_RUNNING=$KEEP_RUNNING\n\n# TODO Temporarily\n\n./gradlew --parallel buildContracts\n\n./gradlew --parallel compileAll\n\nif [ -z \"$USE_EXISTING_CONTAINERS\" ] ; then\n    ./gradlew :composeDown\nfi\n\n./gradlew infrastructureComposeUp\n\necho mysql is started\n\n# Test ./mysql-cli.sh\n\necho 'show databases;' | ./mysql-cli.sh -i\n\nif [ -z \"$ASSEMBLE_ONLY\" ] ; then\n\n  ./gradlew -x :ftgo-end-to-end-tests:test $* build\n\n  ./gradlew $* integrationTest\n\n  ./gradlew infrastructureComposeDown\n  ./gradlew infrastructureComposeUp\n\n  ./gradlew cleanComponentTest \n\n  # ./gradlew :ftgo-delivery-service:componentTest\n  # ./gradlew :ftgo-order-service:componentTest\n  \n  ./gradlew componentTest\n\n  ./gradlew :composeDown\n\nelse\n  ./gradlew $* assemble\n\nfi\n\n./gradlew :composeUp\n\n./run-end-to-end-tests.sh\n\n\n# NEED TO FIX\n# ./run-graphql-api-gateway-tests.sh\n\nif [ -z \"$KEEP_RUNNING\" ] ; then\n  ./gradlew :composeDown\nfi\n"
+        },
+        {
+          "name": "build.gradle",
+          "type": "blob",
+          "size": 2.814453125,
+          "content": "buildscript {\n    repositories {\n        mavenCentral()\n        jcenter()\n    }\n    dependencies {\n        classpath \"org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}\"\n        classpath \"io.spring.gradle:dependency-management-plugin:$springDependencyManagementPluginVersion\"\n        classpath \"com.avast.gradle:gradle-docker-compose-plugin:$dockerComposePluginVersion\"\n        classpath \"org.springframework.cloud:spring-cloud-contract-gradle-plugin:$springCloudContractDependenciesVersion\"\n    }\n}\n\napply plugin: WaitForMySqlPlugin\napply plugin: 'docker-compose'\n\nsubprojects {\n\n    apply plugin: \"java\"\n\n    // TODO apply plugin: 'pmd'\n\n    sourceCompatibility = '1.8'\n    targetCompatibility = '1.8'\n\n    group = \"net.chrisrichardson.ftgo\"\n\n    repositories {\n        eventuateMavenRepoUrl.split('[ ,]').each { repoUrl -> maven { url repoUrl.trim() } }\n\n        mavenCentral()\n        jcenter()\n\n        maven {\n            url 'https://jitpack.io'\n        }\n\n        maven {\n            url \"${project.rootDir}/build/repo\"\n        }\n\n    }\n\n    dependencies {\n\n        implementation(platform(\"io.eventuate.platform:eventuate-platform-dependencies:$eventuatePlatformVersion\"))\n        constraints {\n                compile (\"io.netty:netty-codec-http2\") {\n                    version {\n                        strictly(\"4.1.72.Final\")\n                    }\n                }\n        }\n\n\n    }\n}\n\ntask buildContracts(type: GradleBuild) {\n  tasks = subprojects.collect { it.name }.findAll { it.endsWith(\"-contracts\") }.collect { \":\" + it + \":publish\"}\n}\n\ntask compileAll(type: GradleBuild) {\n  tasks = [\"testClasses\", \"compileIntegrationTestJava\", \"compileComponentTestJava\"]\n}\n\ndockerCompose {\n\n  environment.put \"EVENTUATE_COMMON_VERSION\", eventuateCommonImageVersion\n  environment.put \"EVENTUATE_CDC_VERSION\", eventuateCdcImageVersion\n  environment.put \"EVENTUATE_SAGA_VERSION\", eventuateTramSagasImageVersion\n  environment.put \"EVENTUATE_JAVA_BASE_IMAGE_VERSION\", eventuateExamplesBaseImageVersion\n  environment.put \"EVENTUATE_MESSAGING_KAFKA_IMAGE_VERSION\", eventuateMessagingKafkaImageVersion\n\n  projectName = null\n  removeOrphans = true\n  retainContainersOnStartupFailure = true\n\n  if (project.hasProperty('startedServices'))\n    startedServices= project.ext.startedServices.split(',')\n\n  mysql {\n      projectName = null\n      startedServices = [\"mysql\"]\n  }    \n  \n  infrastructure {\n      projectName = null\n      startedServices = [\"mysql\", \"cdc-service\", \"dynamodblocal-init\", \"kafka\", \"zookeeper\"]\n  }    \n  \n  kafkaGui {\n      projectName = null\n      startedServices = [\"kafka-gui\"]\n  }  \n}\n\ncomposeUp.dependsOn(infrastructureComposeUp)\n\nsubprojects.each {\n  if (it.name.endsWith(\"-service\") || it.name.endsWith(\"-gateway\")) {\n    composeBuild.dependsOn(\":\" + it.name + \":assemble\")\n    composeUp.dependsOn(\":\" + it.name + \":assemble\")\n  }\n }"
+        },
+        {
+          "name": "buildSrc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common-swagger",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "deployment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose-api-gateway-graphql.yml",
+          "type": "blob",
+          "size": 0.3291015625,
+          "content": "version: '3'\nservices:\n  ftgo-api-gateway-graphql:\n    build: ./ftgo-api-gateway-graphql\n    ports:\n      - \"8088:3000\"\n    environment:\n      ORDER_HISTORY_SERVICE_URL: http://ftgo-order-history-service:8080\n      CONSUMER_SERVICE_URL: http://ftgo-consumer-service:8080\n      RESTAURANT_SERVICE_URL: http://ftgo-restaurant-service:8080\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 10.376953125,
+          "content": "version: '3'\nservices:\n  zookeeper:\n    image: eventuateio/eventuate-zookeeper:$EVENTUATE_COMMON_VERSION\n    ports:\n      - 2181:2181\n    environment:\n      ZOOKEEPER_CLIENT_PORT: 2181\n      KAFKA_HEAP_OPTS: -Xmx64m\n\n  kafka:\n    image: \"eventuateio/eventuate-kafka:$EVENTUATE_MESSAGING_KAFKA_IMAGE_VERSION\"\n    ports:\n      - 9092:9092\n    depends_on:\n      - zookeeper\n    environment:\n      KAFKA_LISTENERS: LC://kafka:29092,LX://kafka:9092\n      KAFKA_ADVERTISED_LISTENERS: LC://kafka:29092,LX://${DOCKER_HOST_IP:-localhost}:9092\n      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LC:PLAINTEXT,LX:PLAINTEXT\n      KAFKA_INTER_BROKER_LISTENER_NAME: LC\n      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181\n      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1\n      KAFKA_HEAP_OPTS: -Xmx192m\n  mysql:\n    build:\n      context: ./mysql\n      args:\n        EVENTUATE_COMMON_VERSION: ${EVENTUATE_COMMON_VERSION?}\n        EVENTUATE_SAGA_VERSION: ${EVENTUATE_SAGA_VERSION?}\n    ports:\n      - 3306:3306\n    environment:\n      - MYSQL_ROOT_PASSWORD=rootpassword\n      - MYSQL_USER=mysqluser\n      - MYSQL_PASSWORD=mysqlpw\n  cdc-service:\n    image: eventuateio/eventuate-cdc-service:$EVENTUATE_CDC_VERSION\n    ports:\n      - \"8099:8080\"\n    depends_on:\n      - mysql\n      - kafka\n    environment:\n      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n      EVENTUATE_CDC_PIPELINE_PIPELINE1_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE1_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE1_EVENTUATEDATABASESCHEMA: ftgo_consumer_service\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE2_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE2_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE2_EVENTUATEDATABASESCHEMA: ftgo_order_service\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE3_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE3_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE3_EVENTUATEDATABASESCHEMA: ftgo_kitchen_service\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE4_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE4_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE4_EVENTUATEDATABASESCHEMA: ftgo_restaurant_service\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE5_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE5_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE5_EVENTUATEDATABASESCHEMA: ftgo_accounting_service\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE6_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE6_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE6_EVENTUATEDATABASESCHEMA: ftgoorderhistoryservice\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE7_TYPE: eventuate-local\n      EVENTUATE_CDC_PIPELINE_PIPELINE7_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE7_EVENTUATEDATABASESCHEMA: ftgo_accounting_service\n\n      EVENTUATE_CDC_PIPELINE_PIPELINE8_TYPE: eventuate-tram\n      EVENTUATE_CDC_PIPELINE_PIPELINE8_READER: reader1\n      EVENTUATE_CDC_PIPELINE_PIPELINE8_EVENTUATEDATABASESCHEMA: ftgo_delivery_service\n\n      EVENTUATE_CDC_READER_READER1_TYPE: mysql-binlog\n      EVENTUATE_CDC_READER_READER1_DATASOURCEURL: jdbc:mysql://mysql:3306/eventuate\n      EVENTUATE_CDC_READER_READER1_DATASOURCEUSERNAME: root\n      EVENTUATE_CDC_READER_READER1_DATASOURCEPASSWORD: rootpassword\n      EVENTUATE_CDC_READER_READER1_DATASOURCEDRIVERCLASSNAME: com.mysql.jdbc.Driver\n      EVENTUATE_CDC_READER_READER1_LEADERSHIPLOCKPATH: /eventuate/cdc/leader/common\n      EVENTUATE_CDC_READER_READER1_CDCDBUSERNAME: root\n      EVENTUATE_CDC_READER_READER1_CDCDBPASSWORD: rootpassword\n      EVENTUATE_CDC_READER_READER1_READOLDDEBEZIUMDBOFFSETSTORAGETOPIC: \"false\"\n      EVENTUATE_CDC_READER_READER1_MYSQLBINLOGCLIENTUNIQUEID: 1\n      EVENTUATE_CDC_READER_READER1_OFFSETSTOREKEY: MySqlBinlog\n      EVENTUATE_CDC_READER_READER1_OFFSETSTORAGETOPICNAME: db.history.common\n      EVENTUATE_CDC_READER_READER1_OUTBOXID: 1\n\n  ftgo-consumer-service:\n    build: \n      context: ./ftgo-consumer-service\n      args:\n          baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n    ports:\n      - \"8081:8080\"\n    depends_on:\n      - mysql\n      - kafka\n      - cdc-service\n    environment:\n      SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo_consumer_service\n      SPRING_DATASOURCE_USERNAME: ftgo_consumer_service_user\n      SPRING_DATASOURCE_PASSWORD: ftgo_consumer_service_password\n      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver\n      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n      EVENTUATE_DATABASE_SCHEMA: ftgo_consumer_service\n  ftgo-order-service:\n    build: \n      context: ./ftgo-order-service\n      args:\n          baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n    ports:\n      - \"8082:8080\"\n    depends_on:\n      - mysql\n      - kafka\n      - cdc-service\n      - zipkin\n    environment:\n      SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo_order_service\n      SPRING_DATASOURCE_USERNAME: ftgo_order_service_user\n      SPRING_DATASOURCE_PASSWORD: ftgo_order_service_password\n      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver\n      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n      SPRING_SLEUTH_ENABLED: \"true\"\n      SPRING_SLEUTH_SAMPLER_PROBABILITY: 1\n      SPRING_ZIPKIN_BASE_URL: http://zipkin:9411/\n      EVENTUATE_DATABASE_SCHEMA: ftgo_order_service\n  ftgo-kitchen-service:\n      build: \n        context: ./ftgo-kitchen-service\n        args:\n            baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n      ports:\n        - \"8083:8080\"\n      depends_on:\n        - mysql\n        - kafka\n        - zookeeper\n        - cdc-service\n      environment:\n        SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo_kitchen_service\n        SPRING_DATASOURCE_USERNAME: ftgo_kitchen_service_user\n        SPRING_DATASOURCE_PASSWORD: ftgo_kitchen_service_password\n        SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver\n        EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n        EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n        EVENTUATE_DATABASE_SCHEMA: ftgo_kitchen_service\n  ftgo-restaurant-service:\n      build: \n        context: ./ftgo-restaurant-service\n        args:\n            baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n      ports:\n        - \"8084:8080\"\n      depends_on:\n        - mysql\n        - kafka\n        - zookeeper\n        - cdc-service\n      environment:\n        SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo_restaurant_service\n        SPRING_DATASOURCE_USERNAME: ftgo_restaurant_service_user\n        SPRING_DATASOURCE_PASSWORD: ftgo_restaurant_service_password\n        SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver\n        EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n        EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n        EVENTUATE_DATABASE_SCHEMA: ftgo_restaurant_service\n  ftgo-accounting-service:\n        build: \n          context: ./ftgo-accounting-service\n          args:\n              baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n        ports:\n          - \"8085:8080\"\n        depends_on:\n          - mysql\n          - kafka\n          - zookeeper\n          - cdc-service\n        environment:\n          SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo_accounting_service\n          SPRING_DATASOURCE_USERNAME: ftgo_accounting_service_user\n          SPRING_DATASOURCE_PASSWORD: ftgo_accounting_service_password\n          SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver\n          EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n          EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n          EVENTUATE_DATABASE_SCHEMA: ftgo_accounting_service\n  ftgo-delivery-service:\n    build: \n      context: ./ftgo-delivery-service\n      args:\n          baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n    ports:\n      - \"8089:8080\"\n    depends_on:\n      - mysql\n      - kafka\n      - cdc-service\n      - zipkin\n    environment:\n      SPRING_DATASOURCE_URL: jdbc:mysql://mysql/ftgo_delivery_service\n      SPRING_DATASOURCE_USERNAME: ftgo_delivery_service_user\n      SPRING_DATASOURCE_PASSWORD: ftgo_delivery_service_password\n      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.jdbc.Driver\n      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n      SPRING_SLEUTH_ENABLED: \"true\"\n      SPRING_SLEUTH_SAMPLER_PROBABILITY: 1\n      SPRING_ZIPKIN_BASE_URL: http://zipkin:9411/\n      EVENTUATE_DATABASE_SCHEMA: ftgo_delivery_service\n  ftgo-order-history-service:\n    build: \n      context: ./ftgo-order-history-service\n      args:\n          baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n    ports:\n      - \"8086:8080\"\n    depends_on:\n      - kafka\n      - zookeeper\n      - cdc-service\n      - dynamodblocal\n      - dynamodblocal-init\n    environment:\n      EVENTUATELOCAL_KAFKA_BOOTSTRAP_SERVERS: kafka:29092\n      EVENTUATELOCAL_ZOOKEEPER_CONNECTION_STRING: zookeeper:2181\n      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-id_key}\n      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-access_key}\n      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodblocal:8000\n      AWS_REGION: ${AWS_REGION:-us-west-2}\n  ftgo-api-gateway:\n    build: \n      context: ./ftgo-api-gateway\n      args:\n          baseImageVersion: ${EVENTUATE_JAVA_BASE_IMAGE_VERSION}\n    ports:\n      - \"8087:8080\"\n    environment:\n      ORDER_DESTINATIONS_ORDERSERVICEURL: http://ftgo-order-service:8080\n      ORDER_DESTINATIONS_ORDERHISTORYSERVICEURL: http://ftgo-order-history-service:8080\n      CONSUMER_DESTINATIONS_CONSUMERSERVICEURL: http://ftgo-consumer-service:8080\n      SPRING_SLEUTH_ENABLED: \"true\"\n      SPRING_SLEUTH_SAMPLER_PROBABILITY: 1\n      SPRING_ZIPKIN_BASE_URL: http://zipkin:9411/\n\n  zipkin:\n      image: openzipkin/zipkin:2.21\n      ports:\n       - \"9411:9411\"\n      environment:\n        JAVA_OPTS: -Xmx128m\n\n  dynamodblocal:\n    build: ./dynamodblocal\n    ports:\n     - \"8000:8000\"\n    environment:\n      JAVA_OPTS: -Xmx128m\n\n  dynamodblocal-init:\n    build: ./dynamodblocal-init\n    depends_on:\n      - dynamodblocal\n    restart: on-failure\n    environment:\n      AWS_DYNAMODB_ENDPOINT_URL: http://dynamodblocal:8000\n      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-id_key}\n      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-access_key}\n      AWS_REGION: ${AWS_REGION:-us-west-2}\n\n  kafka-gui:\n    image: quay.io/cloudhut/kowl:master-1d07695\n    ports:\n      - 9088:8080\n    depends_on:\n      - kafka\n    environment:\n      KAFKA_BROKERS: kafka:29092"
+        },
+        {
+          "name": "dynamodblocal-init",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dynamodblocal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-accounting-service-api-spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-accounting-service-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-accounting-service-contracts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-accounting-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-api-gateway-graphql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-api-gateway",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-common-jpa",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-consumer-service-api-spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-consumer-service-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-consumer-service-contracts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-consumer-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-delivery-service-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-delivery-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-end-to-end-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-kitchen-service-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-kitchen-service-contracts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-kitchen-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-order-history-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-order-service-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-order-service-contracts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-order-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-restaurant-service-api-spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-restaurant-service-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-restaurant-service-aws-lambda",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-restaurant-service-contracts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-restaurant-service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-test-util-json-schema",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ftgo-test-util",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradle.properties",
+          "type": "blob",
+          "size": 1.1533203125,
+          "content": "deployUrl=file:///Users/cer/.m2/testdeploy\n\neventuateMavenRepoUrl=https://snapshots.repositories.eventuate.io/repository,file:///Users/cer/.m2/testdeploy\n\nspringBootVersion=2.2.6.RELEASE\nrestAssuredVersion=2.9.0\n# TODO Upgrading to 2.0.2.RELEASE requires addressing this issue: https://stackoverflow.com/questions/54268428/spring-cloud-contracts-plugin-change-sourceset\n\n#springCloudContractDependenciesVersion=2.0.1.RELEASE\nspringCloudContractDependenciesVersion=2.2.0.RELEASE\n\nspringDependencyManagementPluginVersion=1.0.3.RELEASE\n\neventuateCommonVersion=0.15.0.RELEASE\neventuatePlatformVersion=2022.0.RELEASE\n\n\neventuateCommonImageVersion=0.15.0.RELEASE\neventuateMessagingKafkaImageVersion=0.15.0.RELEASE\neventuateCdcImageVersion=0.13.0.RELEASE\neventuateTramSagasImageVersion=0.19.0.RELEASE\n\nprotocVersion=3.20.1\ngrpcVersion = 1.47.0\n\nswaggerUiVersion=3.23.11\neventuateExamplesBaseImageVersion=BUILD-15\n\ndockerComposePluginVersion=0.15.2\nspringCloudSleuthVersion=2.2.2.RELEASE\nspringCloudGatewayVersion=2.0.0.RELEASE\nmicrometerVersion=1.0.4\n\nmicroserviceCanvasVersion=0.8.0.RELEASE\nswaggerRequestValidatorVersion=2.8.3\njs2pVersion=1.0.1\n\neventuatePlatformVersion=2022.0.RELEASE\n"
+        },
+        {
+          "name": "gradle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradlew",
+          "type": "blob",
+          "size": 4.9609375,
+          "content": "#!/usr/bin/env bash\n\n##############################################################################\n##\n##  Gradle start up script for UN*X\n##\n##############################################################################\n\n# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\nDEFAULT_JVM_OPTS=\"\"\n\nAPP_NAME=\"Gradle\"\nAPP_BASE_NAME=`basename \"$0\"`\n\n# Use the maximum available, or set MAX_FD != -1 to use that value.\nMAX_FD=\"maximum\"\n\nwarn ( ) {\n    echo \"$*\"\n}\n\ndie ( ) {\n    echo\n    echo \"$*\"\n    echo\n    exit 1\n}\n\n# OS specific support (must be 'true' or 'false').\ncygwin=false\nmsys=false\ndarwin=false\ncase \"`uname`\" in\n  CYGWIN* )\n    cygwin=true\n    ;;\n  Darwin* )\n    darwin=true\n    ;;\n  MINGW* )\n    msys=true\n    ;;\nesac\n\n# For Cygwin, ensure paths are in UNIX format before anything is touched.\nif $cygwin ; then\n    [ -n \"$JAVA_HOME\" ] && JAVA_HOME=`cygpath --unix \"$JAVA_HOME\"`\nfi\n\n# Attempt to set APP_HOME\n# Resolve links: $0 may be a link\nPRG=\"$0\"\n# Need this for relative symlinks.\nwhile [ -h \"$PRG\" ] ; do\n    ls=`ls -ld \"$PRG\"`\n    link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n    if expr \"$link\" : '/.*' > /dev/null; then\n        PRG=\"$link\"\n    else\n        PRG=`dirname \"$PRG\"`\"/$link\"\n    fi\ndone\nSAVED=\"`pwd`\"\ncd \"`dirname \\\"$PRG\\\"`/\" >&-\nAPP_HOME=\"`pwd -P`\"\ncd \"$SAVED\" >&-\n\nCLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar\n\n# Determine the Java command to use to start the JVM.\nif [ -n \"$JAVA_HOME\" ] ; then\n    if [ -x \"$JAVA_HOME/jre/sh/java\" ] ; then\n        # IBM's JDK on AIX uses strange locations for the executables\n        JAVACMD=\"$JAVA_HOME/jre/sh/java\"\n    else\n        JAVACMD=\"$JAVA_HOME/bin/java\"\n    fi\n    if [ ! -x \"$JAVACMD\" ] ; then\n        die \"ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\n    fi\nelse\n    JAVACMD=\"java\"\n    which java >/dev/null 2>&1 || die \"ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\nfi\n\n# Increase the maximum file descriptors if we can.\nif [ \"$cygwin\" = \"false\" -a \"$darwin\" = \"false\" ] ; then\n    MAX_FD_LIMIT=`ulimit -H -n`\n    if [ $? -eq 0 ] ; then\n        if [ \"$MAX_FD\" = \"maximum\" -o \"$MAX_FD\" = \"max\" ] ; then\n            MAX_FD=\"$MAX_FD_LIMIT\"\n        fi\n        ulimit -n $MAX_FD\n        if [ $? -ne 0 ] ; then\n            warn \"Could not set maximum file descriptor limit: $MAX_FD\"\n        fi\n    else\n        warn \"Could not query maximum file descriptor limit: $MAX_FD_LIMIT\"\n    fi\nfi\n\n# For Darwin, add options to specify how the application appears in the dock\nif $darwin; then\n    GRADLE_OPTS=\"$GRADLE_OPTS \\\"-Xdock:name=$APP_NAME\\\" \\\"-Xdock:icon=$APP_HOME/media/gradle.icns\\\"\"\nfi\n\n# For Cygwin, switch paths to Windows format before running java\nif $cygwin ; then\n    APP_HOME=`cygpath --path --mixed \"$APP_HOME\"`\n    CLASSPATH=`cygpath --path --mixed \"$CLASSPATH\"`\n\n    # We build the pattern for arguments to be converted via cygpath\n    ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`\n    SEP=\"\"\n    for dir in $ROOTDIRSRAW ; do\n        ROOTDIRS=\"$ROOTDIRS$SEP$dir\"\n        SEP=\"|\"\n    done\n    OURCYGPATTERN=\"(^($ROOTDIRS))\"\n    # Add a user-defined pattern to the cygpath arguments\n    if [ \"$GRADLE_CYGPATTERN\" != \"\" ] ; then\n        OURCYGPATTERN=\"$OURCYGPATTERN|($GRADLE_CYGPATTERN)\"\n    fi\n    # Now convert the arguments - kludge to limit ourselves to /bin/sh\n    i=0\n    for arg in \"$@\" ; do\n        CHECK=`echo \"$arg\"|egrep -c \"$OURCYGPATTERN\" -`\n        CHECK2=`echo \"$arg\"|egrep -c \"^-\"`                                 ### Determine if an option\n\n        if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition\n            eval `echo args$i`=`cygpath --path --ignore --mixed \"$arg\"`\n        else\n            eval `echo args$i`=\"\\\"$arg\\\"\"\n        fi\n        i=$((i+1))\n    done\n    case $i in\n        (0) set -- ;;\n        (1) set -- \"$args0\" ;;\n        (2) set -- \"$args0\" \"$args1\" ;;\n        (3) set -- \"$args0\" \"$args1\" \"$args2\" ;;\n        (4) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" ;;\n        (5) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" ;;\n        (6) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" ;;\n        (7) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" ;;\n        (8) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" ;;\n        (9) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" \"$args8\" ;;\n    esac\nfi\n\n# Split up the JVM_OPTS And GRADLE_OPTS values into an array, following the shell quoting and substitution rules\nfunction splitJvmOpts() {\n    JVM_OPTS=(\"$@\")\n}\neval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS\nJVM_OPTS[${#JVM_OPTS[*]}]=\"-Dorg.gradle.appname=$APP_BASE_NAME\"\n\nexec \"$JAVACMD\" \"${JVM_OPTS[@]}\" -classpath \"$CLASSPATH\" org.gradle.wrapper.GradleWrapperMain \"$@\"\n"
+        },
+        {
+          "name": "gradlew.bat",
+          "type": "blob",
+          "size": 2.34765625,
+          "content": "@if \"%DEBUG%\" == \"\" @echo off\r\n@rem ##########################################################################\r\n@rem\r\n@rem  Gradle startup script for Windows\r\n@rem\r\n@rem ##########################################################################\r\n\r\n@rem Set local scope for the variables with windows NT shell\r\nif \"%OS%\"==\"Windows_NT\" setlocal\r\n\r\n@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\r\nset DEFAULT_JVM_OPTS=\r\n\r\nset DIRNAME=%~dp0\r\nif \"%DIRNAME%\" == \"\" set DIRNAME=.\r\nset APP_BASE_NAME=%~n0\r\nset APP_HOME=%DIRNAME%\r\n\r\n@rem Find java.exe\r\nif defined JAVA_HOME goto findJavaFromJavaHome\r\n\r\nset JAVA_EXE=java.exe\r\n%JAVA_EXE% -version >NUL 2>&1\r\nif \"%ERRORLEVEL%\" == \"0\" goto init\r\n\r\necho.\r\necho ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\r\necho.\r\necho Please set the JAVA_HOME variable in your environment to match the\r\necho location of your Java installation.\r\n\r\ngoto fail\r\n\r\n:findJavaFromJavaHome\r\nset JAVA_HOME=%JAVA_HOME:\"=%\r\nset JAVA_EXE=%JAVA_HOME%/bin/java.exe\r\n\r\nif exist \"%JAVA_EXE%\" goto init\r\n\r\necho.\r\necho ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%\r\necho.\r\necho Please set the JAVA_HOME variable in your environment to match the\r\necho location of your Java installation.\r\n\r\ngoto fail\r\n\r\n:init\r\n@rem Get command-line arguments, handling Windowz variants\r\n\r\nif not \"%OS%\" == \"Windows_NT\" goto win9xME_args\r\nif \"%@eval[2+2]\" == \"4\" goto 4NT_args\r\n\r\n:win9xME_args\r\n@rem Slurp the command line arguments.\r\nset CMD_LINE_ARGS=\r\nset _SKIP=2\r\n\r\n:win9xME_args_slurp\r\nif \"x%~1\" == \"x\" goto execute\r\n\r\nset CMD_LINE_ARGS=%*\r\ngoto execute\r\n\r\n:4NT_args\r\n@rem Get arguments from the 4NT Shell from JP Software\r\nset CMD_LINE_ARGS=%$\r\n\r\n:execute\r\n@rem Setup the command line\r\n\r\nset CLASSPATH=%APP_HOME%\\gradle\\wrapper\\gradle-wrapper.jar\r\n\r\n@rem Execute Gradle\r\n\"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% \"-Dorg.gradle.appname=%APP_BASE_NAME%\" -classpath \"%CLASSPATH%\" org.gradle.wrapper.GradleWrapperMain %CMD_LINE_ARGS%\r\n\r\n:end\r\n@rem End local scope for the variables with windows NT shell\r\nif \"%ERRORLEVEL%\"==\"0\" goto mainEnd\r\n\r\n:fail\r\nrem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of\r\nrem the _cmd.exe /c_ return code!\r\nif  not \"\" == \"%GRADLE_EXIT_CONSOLE%\" exit 1\r\nexit /b 1\r\n\r\n:mainEnd\r\nif \"%OS%\"==\"Windows_NT\" endlocal\r\n\r\n:omega\r\n"
+        },
+        {
+          "name": "initialize-dynamodb.sh",
+          "type": "blob",
+          "size": 0.130859375,
+          "content": "#!/bin/bash -e\n\necho preparing dynamodblocal table data\ncd dynamodblocal-init\n./create-dynamodb-tables.sh\ncd ..\necho data is prepared\n"
+        },
+        {
+          "name": "mysql-cli.sh",
+          "type": "blob",
+          "size": 0.17578125,
+          "content": "#! /bin/bash -e\n\ndocker run $* \\\n   --name mysqlterm --rm --network=${PWD##*/}_default \\\n   mysql/mysql-server:8.0.27-1.2.6-server  \\\n   mysql -hmysql -P3306 -uroot -prootpassword\n"
+        },
+        {
+          "name": "mysql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "open-swagger-uis.sh",
+          "type": "blob",
+          "size": 0.119140625,
+          "content": "#! /bin/bash -e\n\n\nfor port in 8081 8084 8082 ; do\n    open http://${DOCKER_HOST_IP:-localhost}:$port/swagger-ui.html\ndone\n"
+        },
+        {
+          "name": "publish-docker-images.sh",
+          "type": "blob",
+          "size": 0.7490234375,
+          "content": "#! /bin/bash -e\n\nDOCKER_COMPOSE_PREFIX=\"${PWD##*/}_\"\n\nDOCKER_REPO=msapatterns\n\n$PREFIX docker login -u ${DOCKER_USER_ID?} -p ${DOCKER_PASSWORD?}\n\nIMAGES=\"ftgo-consumer-service ftgo-order-service ftgo-kitchen-service ftgo-restaurant-service ftgo-accounting-service ftgo-order-history-service ftgo-api-gateway dynamodblocal-init mysql\"\n\ncd dynamodblocal-init\n$PREFIX ./build-docker.sh\n$PREFIX docker tag test-dynamodblocal-init:latest ${DOCKER_COMPOSE_PREFIX?}dynamodblocal-init\ncd ..\n\nfunction tagAndPush() {\n  LOCAL=$1\n  REMOTE=\"$2\"\n  FULL_LOCAL=${DOCKER_COMPOSE_PREFIX?}$LOCAL\n  FULL_REMOTE=\"$DOCKER_REPO/$REMOTE:latest\"\n\n  $PREFIX docker tag $FULL_LOCAL $FULL_REMOTE\n  $PREFIX docker push $FULL_REMOTE\n}\n\nfor image in $IMAGES ; do\n    tagAndPush $image $image\ndone\n"
+        },
+        {
+          "name": "run-end-to-end-tests.sh",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "#! /bin/bash -e\n\n./gradlew :ftgo-end-to-end-tests:cleanTest :ftgo-end-to-end-tests:test\n"
+        },
+        {
+          "name": "run-graphql-api-gateway-tests.sh",
+          "type": "blob",
+          "size": 0.474609375,
+          "content": "#! /bin/bash -e\n\nif which npm ; then\n   echo npm on path. attempting to test GraphQL API gateway\nelse\n   echo No Node.JS detected. Skipping test of GraphQL API gateway\n   exit 0\nfi\n\ncd ftgo-api-gateway-graphql\n\nif [ ! -d node_modules ] ; then\n  npm install\nfi\n\nif which tsc ; then\n    echo tsc installed\nelse\n    npm install -g typescript\nfi\n\nnpm run unit-test\n\ndocker-compose -f ../docker-compose.yml -f ../docker-compose-api-gateway-graphql.yml up -d --build\n\nnpm run end-to-end-test\n"
+        },
+        {
+          "name": "scan-order-history-view.sh",
+          "type": "blob",
+          "size": 0.205078125,
+          "content": "#!/usr/bin/env bash\n\nexport AWS_ACCESS_KEY_ID=id_key AWS_SECRET_ACCESS_KEY=access_key\naws --region ignored --endpoint-url http://${DOCKER_HOST_IP:=localhost}:8000 dynamodb scan --table-name ftgo-order-history\n\n"
+        },
+        {
+          "name": "set-env.sh",
+          "type": "blob",
+          "size": 0.3583984375,
+          "content": "if [ -z \"$DOCKER_HOST_IP\" ] ; then\n    if [ ! -z \"$DOCKER_HOST\" ] ; then\n      echo using ${DOCKER_HOST?}\n      XX=${DOCKER_HOST%\\:*}\n      export DOCKER_HOST_IP=${XX#tcp\\:\\/\\/}\n    fi\nfi\n\n\nif [ -z \"$DOCKER_HOST_IP\" ] ; then\n  echo DOCKER_HOST_IP is not set - localhost will be used\nelse\n  echo DOCKER_HOST_IP is ${DOCKER_HOST_IP}\nfi\n\nexport COMPOSE_HTTP_TIMEOUT=240\n"
+        },
+        {
+          "name": "settings.gradle",
+          "type": "blob",
+          "size": 1.009765625,
+          "content": "\ninclude \"common-swagger\"\ninclude \"ftgo-test-util\"\ninclude \"ftgo-test-util-json-schema\"\ninclude \"ftgo-common\"\ninclude \"ftgo-common-jpa\"\n\n\ninclude \"ftgo-order-service\"\n\ninclude \"ftgo-order-service-api\"\ninclude \"ftgo-order-service-contracts\"\n\ninclude \"ftgo-kitchen-service-api\"\ninclude \"ftgo-kitchen-service\"\ninclude \"ftgo-kitchen-service-contracts\"\n\ninclude \"ftgo-accounting-service-api\"\ninclude \"ftgo-accounting-service-api-spec\"\ninclude \"ftgo-accounting-service\"\ninclude \"ftgo-accounting-service-contracts\"\n\ninclude \"ftgo-consumer-service-api\"\ninclude \"ftgo-consumer-service-api-spec\"\ninclude \"ftgo-consumer-service\"\ninclude \"ftgo-consumer-service-contracts\"\n\ninclude \"ftgo-restaurant-service-api\"\ninclude \"ftgo-restaurant-service-api-spec\"\ninclude \"ftgo-restaurant-service-contracts\"\ninclude \"ftgo-restaurant-service\"\n\ninclude \"ftgo-order-history-service\"\n\ninclude \"ftgo-delivery-service\"\ninclude \"ftgo-delivery-service-api\"\n\n\ninclude \"ftgo-api-gateway\"\ninclude \"ftgo-end-to-end-tests\"\n\ninclude \"ftgo-restaurant-service-aws-lambda\"\n"
+        },
+        {
+          "name": "show-swagger-ui-urls.sh",
+          "type": "blob",
+          "size": 0.5751953125,
+          "content": "#! /bin/bash -e\n\n./wait-for-services.sh\n\necho Create consumer - open http://${DOCKER_HOST_IP:-localhost}:8081/swagger-ui/index.html\necho Create a restaurant - open http://${DOCKER_HOST_IP:-localhost}:8084/swagger-ui/index.html\necho Create an order - open http://${DOCKER_HOST_IP:-localhost}:8082/swagger-ui/index.html\necho View the order - open http://${DOCKER_HOST_IP:-localhost}:8082/swagger-ui/index.html\necho View the order history - open  http://${DOCKER_HOST_IP:-localhost}:8086/swagger-ui/index.html\necho Zipkin distributed tracing - open  http://${DOCKER_HOST_IP:-localhost}:9411\n\n"
+        },
+        {
+          "name": "skaffold.yaml",
+          "type": "blob",
+          "size": 0.8291015625,
+          "content": "apiVersion: skaffold/v1\nkind: Config\nmetadata:\n  name: ftgo-application\nbuild:\n  artifacts:\n  - image: msapatterns/ftgo-consumer-service\n    context: ftgo-consumer-service\ndeploy:\n  kubectl:\n    manifests:\n    - deployment/kubernetes/cdc-services/eventuate-local-cdc-service.yml\n    - deployment/kubernetes/cdc-services/ftgo-tram-cdc-service.yml\n    - deployment/kubernetes/stateful-services/ftgo-db-secret.yml\n    - deployment/kubernetes/stateful-services/ftgo-dynamodb-local.yml\n    - deployment/kubernetes/stateful-services/ftgo-kafka-config.yml\n    - deployment/kubernetes/stateful-services/ftgo-kafka-deployment.yml\n    - deployment/kubernetes/stateful-services/ftgo-mysql-deployment.yml\n    - deployment/kubernetes/stateful-services/ftgo-zookeeper-deployment.yml\n    - ftgo-consumer-service/src/deployment/kubernetes/ftgo-consumer-service.yml\n"
+        },
+        {
+          "name": "start-infrastructure-services.sh",
+          "type": "blob",
+          "size": 0.1328125,
+          "content": "#!/bin/bash -e\n\ndocker-compose up -d --build $* mysql cdc-service eventuate-local-cdc-service dynamodblocal\n\n./initialize-dynamodb.sh\n\n\n"
+        },
+        {
+          "name": "start-services.sh",
+          "type": "blob",
+          "size": 0.1689453125,
+          "content": "#! /bin/bash -e\n\ndocker-compose up -d --build mysql\n\n./wait-for-mysql.sh\n\ndocker-compose up -d --build\n\necho -n waiting for the services to start...\n\n./wait-for-services.sh\n"
+        },
+        {
+          "name": "truncate-table.sh",
+          "type": "blob",
+          "size": 0.775390625,
+          "content": "#!/bin/bash\n\n### from https://gist.github.com/toshke/d972b56c6273639ace5f62361e1ffac1\n####\n#### Delete (remove) all items from Aws Dynamo DB table, by specifing table name and primary key\n####\n#### Forked from https://gist.github.com/k3karthic/4bc929885eef40dbe010\n####\n#### Usage:\n#### clean-dynamo-table TABLE_NAME PRIMARY_KEY\n####\n\nset -e\n\nTABLE_NAME=$1\nKEY_NAME=$2\n\n# Get id list\naws dynamodb scan --table-name $TABLE_NAME | jq \".Items[].$KEY_NAME.S\" > \"/tmp/dynamo_${TABLE_NAME}_keys.txt\"\n\nALL_KEYS=$(cat \"/tmp/dynamo_${TABLE_NAME}_keys.txt\")\n\n# Delete from id list\nfor key in $ALL_KEYS;do\n  echo \"Deleting $key from $TABLE_NAME...\"\n  aws dynamodb delete-item --table-name $TABLE_NAME --key \"{ \\\"$KEY_NAME\\\": { \\\"S\\\": $key }}\"\ndone\n\n# Remove id list\nrm \"/tmp/dynamo_${TABLE_NAME}_keys.txt\""
+        },
+        {
+          "name": "wait-for-mysql.sh",
+          "type": "blob",
+          "size": 0.115234375,
+          "content": "#! /bin/sh\n\nuntil (echo select 1 from dual | ./mysql-cli.sh -i > /dev/null)\ndo\n echo sleeping for mysql\n sleep 5\ndone\n"
+        },
+        {
+          "name": "wait-for-services.sh",
+          "type": "blob",
+          "size": 0.087890625,
+          "content": "#! /bin/bash\n\n./_wait-for-services.sh /actuator/health 8081 8082 8083 8084 8085 8086 8099\n"
+        }
+      ]
+    }
+  ]
+}

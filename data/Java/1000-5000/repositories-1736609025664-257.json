@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736609025664,
+    "page": 257,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bitcoin-wallet/bitcoin-wallet",
+      "stars": 3811,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": "**/.*\n**/build.Containerfile\n**/local.properties\n**/build\n**/*.iml\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.119140625,
+          "content": ".gradle/\ngradlew\ngradlew.bat\ngradle/wrapper\nbuild/\nlocal.properties\n.classpath\n.project\n.settings/\n.idea/\n*.iml\nbin/\ngen/\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 2.126953125,
+          "content": "variables:\n  ANDROID_HOME: $PWD/android-sdk\n\nreference:\n  image: debian:bookworm-slim\n  before_script:\n    - apt-get update\n    - apt-get -y install ca-certificates buildah\n    # switch to iptables legacy, as GitLab CI doesn't support nftables\n    - apt-get -y install --no-install-recommends iptables\n    - update-alternatives --set iptables /usr/sbin/iptables-legacy\n  script:\n    - buildah build --file build.Containerfile --output build .\n  after_script:\n    - sha256sum build/*\n  artifacts:\n    name: bitcoin-wallet-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA\n    paths:\n      - build/**\n\nbullseye-jdk11:\n  image: debian:bullseye-backports\n  script:\n    - apt-get update\n    - apt-get -y install openjdk-11-jdk-headless gradle sdkmanager\n    - yes | sdkmanager --licenses >/dev/null || true\n    - gradle build --stacktrace\n    - gradle --version\n  artifacts:\n    name: bitcoin-wallet-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA\n    paths:\n      - wallet/build/outputs/apk/**/*.apk\n\nbookworm-jdk17:\n  image: debian:bookworm-slim\n  script:\n    - apt-get update\n    - apt-get -y install openjdk-17-jdk-headless gradle sdkmanager\n    - yes | sdkmanager --licenses >/dev/null || true\n    - gradle build --stacktrace\n    - gradle --version\n  artifacts:\n    name: bitcoin-wallet-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA\n    paths:\n      - wallet/build/outputs/apk/**/*.apk\n\njammy-jdk11:\n  image: ubuntu:jammy\n  script:\n    - apt-get update\n    - apt-get -y install openjdk-11-jdk-headless gradle sdkmanager\n    - yes | sdkmanager --licenses >/dev/null || true\n    - gradle build --stacktrace\n    - gradle --version\n  artifacts:\n    name: bitcoin-wallet-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA\n    paths:\n      - wallet/build/outputs/apk/**/*.apk\n\nlunar-jdk17:\n  image: ubuntu:lunar\n  script:\n    - apt-get update\n    - apt-get -y install openjdk-17-jdk-headless gradle sdkmanager\n    - yes | sdkmanager --licenses >/dev/null || true\n    - gradle build --stacktrace\n    - gradle --version\n  artifacts:\n    name: bitcoin-wallet-$CI_JOB_NAME-$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHORT_SHA\n    paths:\n      - wallet/build/outputs/apk/**/*.apk\n"
+        },
+        {
+          "name": ".tx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.6689453125,
+          "content": "# BITCOIN WALLET\n\nWelcome to _Bitcoin Wallet_, a standalone Bitcoin payment app for your Android device!\n\nThis project contains several sub-projects:\n\n * __wallet__:\n     The Android app itself. This is probably what you're searching for.\n * __market__:\n     App description and promo material for the Google Play app store.\n\n\n### PREREQUISITES FOR BUILDING\n\nYou'll need git, a Java 11 SDK and Gradle between 4.4 and 6.9.x for this. We'll assume Ubuntu 24.04 LTS (Noble Numbat)\nfor the package installs, which comes with OpenJDK 11 and Gradle 4.4.1 out of the box.\n\n    # first time only\n    sudo apt install git gradle openjdk-11-jdk\n\nCreate a directory for the Android SDK (e.g. `android-sdk`) and point the `ANDROID_HOME` variable to it.\n\nDownload the [Android SDK Tools](https://developer.android.com/studio/index.html#command-tools)\nand unpack it to `$ANDROID_HOME/`.\n\nFinally, the last preparative step is acquiring the source code. Again in your workspace, use:\n\n    # first time only\n    git clone -b main https://github.com/bitcoin-wallet/bitcoin-wallet.git bitcoin-wallet\n    cd bitcoin-wallet\n\n\n### BUILDING\n\nYou can build all sub-projects in all flavors at once using Gradle:\n\n    # each time\n    gradle clean build\n\nFor details about building the wallet see the [specific README](wallet/README.md).\n\n\n### REPRODUCIBLE BUILD\n\nAlternatively, you can build using buildah:\n\n    # each time\n    buildah build --cap-add sys_admin --device /dev/fuse --file build.Containerfile --output build/ .\n\nAccess to FUSE and the SYS_ADMIN capability are needed for mounting disorderfs\nin order to sort the directory entries of the project folder.\n\nThe unsigned APKs are written to the specified output directory.\n"
+        },
+        {
+          "name": "build.Containerfile",
+          "type": "blob",
+          "size": 1.826171875,
+          "content": "#\n# Reproducible reference build\n#\n# Usage:\n#\n# docker build --file build.Containerfile --output <outputdir> .\n# or\n# podman build --file build.Containerfile --output <outputdir> .\n#\n# For improved reproducibility, the project directory entries can be ordered\n# like this:\n#\n# buildah build --cap-add sys_admin --device /dev/fuse --file build.Containerfile --output <outputdir> .\n#\n# In any case, the unsigned APKs are written to the specified output\n# directory. Use `apksigner` to sign before installing via `adb install`.\n#\n\nFROM debian:bullseye-backports AS build-stage\n\n# install debian packages\nENV DEBIAN_FRONTEND noninteractive\nRUN /usr/bin/apt-get update && \\\n    /usr/bin/apt-get --yes install disorderfs openjdk-11-jdk-headless gradle sdkmanager && \\\n    /bin/ln -fs /usr/share/zoneinfo/CET /etc/localtime && \\\n    /usr/sbin/dpkg-reconfigure --frontend noninteractive tzdata && \\\n    /bin/ln -s /proc/self/mounts /etc/mtab && \\\n    /usr/sbin/adduser --disabled-login --gecos \"\" builder\n\n# give up privileges\nUSER builder\n\n# copy project source code\nWORKDIR /home/builder\nCOPY --chown=builder / project/\n\n# accept SDK licenses\nENV ANDROID_HOME /home/builder/android-sdk\nRUN yes | /usr/bin/sdkmanager --licenses >/dev/null\n\n# build project\nRUN if [ -e /dev/fuse ] ; \\\n      then /bin/mv project project.u && /bin/mkdir project && \\\n      /usr/bin/disorderfs --sort-dirents=yes --reverse-dirents=no project.u project ; \\\n    fi && \\\n    /usr/bin/gradle --project-dir project/ --no-build-cache --no-daemon --no-parallel clean :wallet:assembleRelease && \\\n    if [ -e /dev/fuse ] ; \\\n      then /bin/fusermount -u project | true && /bin/rmdir project && /bin/mv project.u project ; \\\n    fi\n\n# export build output\nFROM scratch AS export-stage\nCOPY --from=build-stage /home/builder/project/wallet/build/outputs/apk/*/release/bitcoin-wallet-*-release-unsigned.apk /\n"
+        },
+        {
+          "name": "build.gradle",
+          "type": "blob",
+          "size": 0.4521484375,
+          "content": "buildscript {\n    repositories {\n        mavenCentral()\n        google()\n    }\n\n    dependencies {\n        classpath 'com.android.tools.build:gradle:3.1.4'\n        //noinspection GradleDependency\n        classpath 'net.sf.proguard:proguard-gradle:6.2.2'\n        classpath('fr.avianey.androidsvgdrawable:gradle-plugin:3.0.2') {\n            exclude group: 'xerces'\n        }\n    }\n}\n\nallprojects {\n    repositories {\n        mavenCentral()\n        google()\n    }\n}\n"
+        },
+        {
+          "name": "gradle.properties",
+          "type": "blob",
+          "size": 0.060546875,
+          "content": "org.gradle.jvmargs=-Xmx2048M\nandroid.enableD8.desugaring=true\n"
+        },
+        {
+          "name": "market",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "settings.gradle",
+          "type": "blob",
+          "size": 0.677734375,
+          "content": "import org.gradle.util.GradleVersion\nimport org.gradle.api.GradleScriptException\n\n// required Gradle version\ndef minGradleVersion = GradleVersion.version(\"4.4\") // including\ndef maxGradleVersion = GradleVersion.version(\"7.0\") // excluding\n\nif (GradleVersion.current() < minGradleVersion || GradleVersion.current() >= maxGradleVersion)\n    throw new GradleScriptException(\"build requires Gradle between ${minGradleVersion.version} (including) and ${maxGradleVersion.version} (excluding)\", null)\n\ngradle.startParameter.excludedTaskNames << \"lint\"\ngradle.startParameter.excludedTaskNames << \"lintVitalDevRelease\"\ngradle.startParameter.excludedTaskNames << \"lintVitalProdRelease\"\n\ninclude 'wallet'\n"
+        },
+        {
+          "name": "wallet",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

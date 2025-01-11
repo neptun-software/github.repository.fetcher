@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "timestamp": 1736608925044,
+    "page": 118,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "RedSpider1/concurrent",
+      "stars": 4487,
+      "defaultBranch": "develop",
+      "files": [
+        {
+          "name": ".DS_Store",
+          "type": "blob",
+          "size": 6.00390625,
+          "content": null
+        },
+        {
+          "name": ".drone.yml",
+          "type": "blob",
+          "size": 1.05859375,
+          "content": "kind: pipeline\nname: build\n\nsteps:\n  - name: docker\n    image: plugins/docker\n    settings:\n      username: yasinshaw\n      password:\n        from_secret: docker_password\n      repo: registry.cn-hangzhou.aliyuncs.com/yasinshaw/concurrent\n      registry: registry.cn-hangzhou.aliyuncs.com\n      mirror: https://mzayqkhl.mirror.aliyuncs.com\n      tags: latest\n\n---\nkind: pipeline\ntype: ssh\nname: deploy\n\nserver:\n  host: yasinshaw.com\n  user: root\n  ssh_key:\n    from_secret: ssh_key\n\nsteps:\n  - name: pull image\n    environment:\n      DOCKER_PASSWORD:\n        from_secret: docker_password\n    commands:\n      - docker login --username=yasinshaw --password=$DOCKER_PASSWORD registry.cn-hangzhou.aliyuncs.com\n      - docker pull registry.cn-hangzhou.aliyuncs.com/yasinshaw/concurrent:latest\n\n  - name: remove old container\n    failure: ignore\n    commands:\n      - docker rm -f -v concurrent \n\n  - name: start container\n    commands:\n      - docker run -d --name=concurrent --restart=always -p 4000:4000 registry.cn-hangzhou.aliyuncs.com/yasinshaw/concurrent:latest\ndepends_on:\n  - build\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0849609375,
+          "content": "*.js linguist-language=java\n*.css linguist-language=java\n*.html linguist-language=java\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "_book/\nnode_modules/\n.vscode/\n.idea/\n"
+        },
+        {
+          "name": "Author.md",
+          "type": "blob",
+          "size": 1.6220703125,
+          "content": "# 作者介绍\n\n本书由五位作者（均为RedSpider社区成员）共同撰写。他们均参与了初稿编写、文章修订等工作。\n\n下面分别是五位作者的简介（以拼音排序）：\n\n\n## 灵鹤\n招银网络科技高级开发工程师，拥有国外大型企业高并发项目经验，熟悉敏捷流程开发及持续集成，热爱开源，喜欢分享，对于写作始终保持严谨的态度。\n\n## 毛毛虫\n高级Java开发工程师，长期工作在华为一线，专注Java技术体系，熟悉微服务及大数据领域。拥有大数据项目开发经验和运维经验、丰富的企业级项目开发经验。热爱开源，乐于分享。目前专注于微服务，JVM，大数据生态系统。\n\n## 潘帕斯雄鹰\nJava开发工程师，长期位于Java开发一线，拥有丰富的大型企业级项目开发经验，熟悉敏捷开发流程。热衷于探索未知，目前专注于Java高并发，JVM。\n\n## 萤火虫\n阿里巴巴高级Java开发工程师，熟悉微服务及DevOps领域，拥有大型国际高并发项目的开发经验和运维经验。对新技术有强烈的好奇心，热爱钻研技术深度，自我驱动能力和学习能力较强。熟悉敏捷实践。热爱开源和分享，具有丰富的演讲经验和写作经验。\n\n## 啄木鸟\n某外包憨憨Java开发工程师，驻阿里巴巴达摩院一线开发，拥有国内外分布式架构高并发项目开发经验，主要从事微服务架构下API设计与开发。对于敏捷实践与持续集成/交付有丰富经验。拥抱开源，善于钻研技术难点。热爱与人沟通，有丰富的培训团队和新人经验。 \n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.267578125,
+          "content": "FROM node:10.23.1-alpine3.9\n\nCOPY . /app/portal\nWORKDIR /app/portal\nRUN npm i gitbook-cli -g \\\n  && gitbook install \\\n  && sed -i 's/confirm: true/confirm: false/g' ~/.gitbook/versions/3.2.3/lib/output/website/copyPluginAssets.js\nCMD [\"gitbook\", \"serve\", \".\"]\n\nEXPOSE 4000\n\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.0771484375,
+          "content": "MIT License\n\nCopyright (c) 2019-present Redspider Group and other contributors\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0947265625,
+          "content": "## 文章地址\n- [深入浅出Java多线程](http://concurrent.redspider.group/RedSpider.html)【强烈推荐！！！】\n- [【GithubBook】深入浅出Java多线程](https://redspider.gitbook.io/concurrent/)\n- [PDF](./book.pdf) (PDF生成比较麻烦，不会每个提交都生成，**建议看网页版本**)\n\n## 本地运行\n\n先安装gitbook\n\n```bash\nnpm install gitbook-cli -g\n```\n\n然后安装gitbook插件\n\n```bash\ngitbook install\n```\n\n运行服务\n\n```bash\ngitbook serve .\n```\n\n然后就可以在本地 [http://localhost:4000](http://localhost:4000)访问了。\n\n## 本书简介\n\n笔者在读完市面上关于Java并发编程的资料后，感觉有些知识点不是很清晰，于是在RedSpider社区内展开了对Java并发编程原理的讨论。鉴于开源精神，我们决定将我们讨论之后的Java并发编程原理整理成书籍，分享给大家。\n\n站在巨人的肩上，我们可以看得更远。本书内容的主要来源有博客、书籍、论文，对于一些已经叙述得很清晰的知识点我们直接引用在本书中；对于一些没有讲解清楚的知识点，我们加以画图或者编写Demo进行加工；而对于一些模棱两可的知识点，本书在查阅了大量资料的情况下，给出最合理的解释。\n\n写本书的过程也是对自己研究和掌握的技术点进行整理的过程，希望本书能帮助读者快速掌握并发编程技术。\n\n如果您或者您的单位愿意赞助本书或本社区，请发送邮件到RedSpider社区邮件组redspider@qun.mail.163.com或加微信**redspider-worker**进行洽谈。\n\n## 勘误和支持 \n\n由于笔者的水平有限，编写时间仓促，书中难免会出现一些错误或者不准确的地方，恳请读者批评指正。如果你有更多的宝贵意见，可以在我们的github上新建issue，笔者会尽快解答，期待能够得到你的真挚反馈。github地址：https://github.com/RedSpider1/concurrent\n\n## 公众号\n\n欢迎关注微信公众号“编了个程”，每周会更新一篇Java方面的**原创技术文章**\n\n![公众号](https://file.yasinshaw.com/202004/20/E432D8F2EA04.jpg)"
+        },
+        {
+          "name": "RedSpider.md",
+          "type": "blob",
+          "size": 2.1328125,
+          "content": "# RedSpider社区介绍\n\nRedSpider技术社区始于2018年秋的成都。\n\n在本书发布时，社区共五位活跃成员，均参与了本书的撰写及审校工作。他们的代号分别是（排名按拼音排序，不分先后）：灵鹤，毛毛虫，潘帕斯雄鹰，萤火虫，啄木鸟。\n\n### 活跃\n\nRedSpider是一个非常活跃的技术社区，虽然现在成员人数不多，但是对于社区的各种活动都非常积极和活跃。目前社区内部大多都是Java开发工程师，且都对技术始终保持极高的热情。\n\nRedSpider是一个自我驱动的技术学习社区，社区内部拥有非常丰富的活动形式，比如一起开技术沙龙、一起写博客、一起写书、一起写代码。\n\n除了与技术相关的活动以外，我们还会偶尔线下聚餐和一起出去运动。虽然有一位成员不在成都，但仍然会“云参与”到我们的每次线下活动。\n\n### 敏捷\n\nRedSpider技术社区是一个敏捷的技术社区。我们通过一些敏捷流程和工具来管理社区的目标和进程。比如在写这本书的时候，我们使用了国内的Teambition软件来追踪每篇文章的初稿和修订状态。\n\n我们每两周一个迭代，我们会在迭代开始时安排下个迭代要做的事情，在迭代结束的时候开迭代会议（Retro）总结这个迭代。\n\n我们使用Git来管理整个书籍的编写工作，托管到GitHub上。\n\n到目前为止总共有两百多次提交记录，地址：[https://github.com/RedSpider1/concurrent](https://github.com/RedSpider1/concurrent)\n\n### 开源与分享\n\n经社区成员一致决定，本书将发布到GitBook。一方面是觉得出版纸质书比较麻烦，要联系出版商以及排版成Word。另一方面，也算是想免费向大众分享RedSpider社区几个月以来的成果，开源本书也算是社区对中国Java开发者做出一点力所能及的贡献。\n\n### 交流群\n\n社区创建了微信群，欢迎广大读者及对技术感兴趣的朋友加入交流群：\n\n请先加微信号：**redspider-worker**，备注“**RedSpider技术社区交流群申请**”，我们会尽快通过并拉你进群哦。\n\n"
+        },
+        {
+          "name": "SUMMARY.md",
+          "type": "blob",
+          "size": 1.2109375,
+          "content": "# Summary\r\n- [RedSpider社区简介](RedSpider.md)\r\n- [本书作者介绍](Author.md)\r\n- [本书简介](README.md)\r\n\r\n* 第一篇：基础篇\r\n  * [1 进程与线程基本概念](./article/01/1.md)\r\n  * [2 Java多线程入门类和接口](./article/01/2.md)\r\n  * [3 线程组和线程优先级](./article/01/3.md)\r\n  * [4 Java线程的状态及主要转化方法](./article/01/4.md)\r\n  * [5 Java线程间的通信](./article/01/5.md)\r\n\r\n* 第二篇：原理篇\r\n  * [6 Java内存模型基础知识](./article/02/6.md)\r\n  * [7 重排序与happens-before](./article/02/7.md)\r\n  * [8 volatile](./article/02/8.md)\r\n  * [9 synchronized与锁](./article/02/9.md)\r\n  * [10 CAS与原子操作](./article/02/10.md)\r\n  * [11 AQS](./article/02/11.md)\r\n\r\n* 第三篇：JDK工具篇\r\n  * [12 线程池原理](./article/03/12.md)\r\n  * [13 阻塞队列](./article/03/13.md)\r\n  * [14 锁接口和类](./article/03/14.md)\r\n  * [15 并发集合容器简介](./article/03/15.md)\r\n  * [16 CopyOnWrite](./article/03/16.md)\r\n  * [17 通信工具类](./article/03/17.md)\r\n  * [18 Fork/Join框架](./article/03/18.md)\r\n  * [19 Java 8 Stream并行计算原理](./article/03/19.md)\r\n  * [20 计划任务](./article/03/20.md)\r\n  * [21 ThreadLocal](./article/03/21.md)"
+        },
+        {
+          "name": "article",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "book.json",
+          "type": "blob",
+          "size": 1.13671875,
+          "content": "{\n    \"title\": \"深入浅出Java多线程\",\n    \"author\": \"RedSpider社区\",\n    \"language\": \"zh-hans\",\n    \"styles\": {\n        \"website\": \"styles/common.css\",\n        \"ebook\": \"styles/common.css\",\n        \"pdf\": \"styles/common.css\",\n        \"mobi\": \"styles/common.css\",\n        \"epub\": \"styles/common.css\"\n    },\n    \"plugins\": [\n        \"anchor-navigation-ex-toc\"\n    ],\n    \"pluginsConfig\": {\n        \"anchor-navigation-ex-toc\": {\n            \"showLevel\": false,\n            \"associatedWithSummary\": false,\n            \"printLog\": false,\n            \"multipleH1\": false,\n            \"mode\": \"float\",\n            \"showGoTop\": true,\n            \"float\": {\n                \"floatIcon\": \"fa fa-navicon\",\n                \"showLevelIcon\": false,\n                \"level1Icon\": \"fa fa-hand-o-right\",\n                \"level2Icon\": \"fa fa-hand-o-right\",\n                \"level3Icon\": \"fa fa-hand-o-right\"\n            },\n            \"pageTop\": {\n                \"showLevelIcon\": false,\n                \"level1Icon\": \"fa fa-hand-o-right\",\n                \"level2Icon\": \"fa fa-hand-o-right\",\n                \"level3Icon\": \"fa fa-hand-o-right\"\n            }\n        }\n    }\n}"
+        },
+        {
+          "name": "book.pdf",
+          "type": "blob",
+          "size": 5149.95703125,
+          "content": ""
+        },
+        {
+          "name": "imgs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package-lock.json",
+          "type": "blob",
+          "size": 0.0869140625,
+          "content": "{\n  \"name\": \"concurrent\",\n  \"lockfileVersion\": 2,\n  \"requires\": true,\n  \"packages\": {}\n}\n"
+        },
+        {
+          "name": "styles",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

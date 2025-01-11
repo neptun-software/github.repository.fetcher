@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "timestamp": 1736609128266,
+    "page": 409,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rom1v/sndcpy",
+      "stars": 3312,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0966796875,
+          "content": "*.iml\n.gradle\n/local.properties\n/.idea/\n.DS_Store\n/build\n/dist\n/captures\n.externalNativeBuild\n.cxx\n"
+        },
+        {
+          "name": "BUILD.md",
+          "type": "blob",
+          "size": 0.9814453125,
+          "content": "# Build\n\n## Debug\n\nThis project is an Android application with some shell scripts to execute on the\ncomputer. Therefore, just use `gradle` as usual:\n\n```\n./gradlew assembleDebug\n```\n\n(or build from _Android Studio_)\n\nTo run it:\n\n```bash\n./run\n./run <serial>  # if several devices are connected\n```\n\n_Since building is very fast, `./run` also executes `./gradlew assembleDebug` to\nalways run an up-to-date version._\n\n\n## Release\n\nTo build and install a release, you need to generate a signed APK.\n\nFor that purpose, first generate a _keystore_:\n\n```bash\n# generate sndcpy.keystore file\nkeytool -genkey -v -keystore sndcpy.keystore -alias sndcpy \\\n        -keyalg RSA -keysize 2048 -validity 30000\n```\n\nThen, add these lines (and adapt) in `~/.gradle/gradle.properties`:\n\n```bash\nSNDCPY_STORE_FILE=/path/to/your/sndcpy.keystore\nSNDCPY_STORE_PASSWORD=the_keystore_password\nSNDCPY_KEY_ALIAS=sndcpy\nSNDCPY_KEY_PASSWORD=the_key_password\n```\n\nThen, execute `./release.sh`. It will generate a release in `dist/`.\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.044921875,
+          "content": "MIT License\n\nCopyright (c) 2020 Romain Vimont\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.8046875,
+          "content": "# sndcpy (v1.1)\n\nThis tool forwards audio from an Android 10 device to the computer. It does not\nrequire any _root_ access. It works on _GNU/Linux_, _Windows_ and _macOS_.\n\nThe purpose is to enable [audio forwarding][issue14] while mirroring with\n[scrcpy]. However, it can be used independently.\n\n**Update: [scrcpy 2.0] now supports audio forwarding natively.**\n\n[issue14]: https://github.com/Genymobile/scrcpy/issues/14\n[scrcpy]: https://github.com/Genymobile/scrcpy\n[scrcpy 2.0]: https://blog.rom1v.com/2023/03/scrcpy-2-0-with-audio/\n\n## Note\n\nThis application is a proof-of-concept. But as explained below, many apps are\nrestricted and could not forward the audio.\n\n## Requirements\n\n - The Android device requires at least Android 10.\n - [VLC] must be installed on the computer.\n\n[vlc]: https://www.videolan.org/\n\n\n## Get the app\n\nDownload the latest release:\n\n - [`sndcpy-v1.1.zip`][release]  \n   <sub>SHA-256: `b045320ddddbc5a237d6d95213c664f03b2f46ef8bbfcef91c2d95644ed42bbc`</sub>\n - [`sndcpy-with-adb-windows-v1.1.zip`][release-adb]  \n   <sub>SHA-256: `0b93c846f574df3f38f53eeee44b1a35b863a49465da8f5cd5b1b69a29305901`</sub>\n\n_On Windows, for simplicity, take the second archive, which also contains\n`adb`._\n\n[release]: https://github.com/rom1v/sndcpy/releases/download/v1.1/sndcpy-v1.1.zip\n[release-adb]: https://github.com/rom1v/sndcpy/releases/download/v1.1/sndcpy-with-adb-windows-v1.1.zip\n\nAlternatively, you could [build the app][BUILD].\n\n[BUILD]: BUILD.md\n\n## Run the app\n\nPlug an Android 10 device with USB debugging enabled, and execute:\n\n```bash\n./sndcpy\n```\n\nIf several devices are connected (listed by `adb devices`):\n\n```bash\n./sndcpy <serial>  # replace <serial> by the device serial\n```\n\n_(omit `./` on Windows)_\n\nIt will install the app on the device and start forwarding audio.\n\nPress `Ctrl`+`c` in the terminal to stop (except on Windows, just disconnect the\ndevice or stop capture from the device notifications).\n\nVLC may print this error message once:\n\n```\nmain stream error: connection error: Connection refused\n```\n\nIt is \"expected\", just ignore it.\n\nThe sound continues to be played on the device. The volume can be adjusted\nindependently on the device and on the computer.\n\n## Uninstall\n\nTo uninstall the app from the device:\n\n```bash\nadb uninstall com.rom1v.sndcpy\n```\n\n## Apps restrictions\n\n`sndcpy` may only forward audio from apps which do not prevent audio\ncapture. The rules are detailed in [§capture policy][rules]:\n\n> - By default, apps that target versions up to and including to Android 9.0 do\n>   not permit playback capture. To enable it, include\n>   `android:allowAudioPlaybackCapture=\"true\"` in the app's `manifest.xml` file.\n> - By default, apps that target Android 10 (API level 29) or higher allow their\n>   audio to be captured. To disable playback capture, include\n>   `android:allowAudioPlaybackCapture=\"false\"` in the app's `manifest.xml`\n>   file.\n\nSo some apps might need to be updated to support audio capture.\n\n[rules]: https://developer.android.com/guide/topics/media/playback-capture#capture_policy\n\n## Audio delay\n\nThis is just a proof-of-concept, so it's far from perfect.\n\nFor example, jitter may cause VLC to automatically increase its buffering,\ncausing an unacceptable delay:\n\n```\nmain input error: ES_OUT_SET_(GROUP_)PCR  is called too late (pts_delay increased to 377 ms)\n```\n\nIn that case, just restart it.\n\n## Environment variables\n\nThe scripts [`sndcpy`](sndcpy) and [`sndcpy.bat`](sndcpy.bat) use some default\nvalues which can be overridden by environment variables.\n\n - `ADB`: the full path to the `adb` executable\n - `VLC`: the full path to the `vlc` executable\n - `SNDCPY_APK`: the full path to `sndcpy.apk`\n - `SNDCPY_PORT`: the local port to forward to communicate with the device\n\n\n## Blog post\n\n - [Audio forwarding on Android 10][blogpost]\n\n[blogpost]: https://blog.rom1v.com/2020/06/audio-forwarding-on-android-10/\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.gradle",
+          "type": "blob",
+          "size": 0.51953125,
+          "content": "// Top-level build file where you can add configuration options common to all sub-projects/modules.\n\nbuildscript {\n    repositories {\n        google()\n        jcenter()\n    }\n    dependencies {\n        classpath 'com.android.tools.build:gradle:7.0.2'\n        // NOTE: Do not place your application dependencies here; they belong\n        // in the individual module build.gradle files\n    }\n}\n\nallprojects {\n    repositories {\n        google()\n        jcenter()\n\n    }\n}\n\ntask clean(type: Delete) {\n    delete rootProject.buildDir\n}\n"
+        },
+        {
+          "name": "gradle.properties",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "# Project-wide Gradle settings.\n# IDE (e.g. Android Studio) users:\n# Gradle settings configured through the IDE *will override*\n# any settings specified in this file.\n# For more details on how to configure your build environment visit\n# http://www.gradle.org/docs/current/userguide/build_environment.html\n# Specifies the JVM arguments used for the daemon process.\n# The setting is particularly useful for tweaking memory settings.\norg.gradle.jvmargs=-Xmx1536m\n# When configured, Gradle will run in incubating parallel mode.\n# This option should only be used with decoupled projects. More details, visit\n# http://www.gradle.org/docs/current/userguide/multi_project_builds.html#sec:decoupled_projects\n# org.gradle.parallel=true\n# AndroidX package structure to make it clearer which packages are bundled with the\n# Android operating system, and which are packaged with your app's APK\n# https://developer.android.com/topic/libraries/support-library/androidx-rn\nandroid.useAndroidX=true\n# Automatically convert third-party libraries to use AndroidX\nandroid.enableJetifier=true\n"
+        },
+        {
+          "name": "gradle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradlew",
+          "type": "blob",
+          "size": 5.171875,
+          "content": "#!/usr/bin/env sh\n\n##############################################################################\n##\n##  Gradle start up script for UN*X\n##\n##############################################################################\n\n# Attempt to set APP_HOME\n# Resolve links: $0 may be a link\nPRG=\"$0\"\n# Need this for relative symlinks.\nwhile [ -h \"$PRG\" ] ; do\n    ls=`ls -ld \"$PRG\"`\n    link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n    if expr \"$link\" : '/.*' > /dev/null; then\n        PRG=\"$link\"\n    else\n        PRG=`dirname \"$PRG\"`\"/$link\"\n    fi\ndone\nSAVED=\"`pwd`\"\ncd \"`dirname \\\"$PRG\\\"`/\" >/dev/null\nAPP_HOME=\"`pwd -P`\"\ncd \"$SAVED\" >/dev/null\n\nAPP_NAME=\"Gradle\"\nAPP_BASE_NAME=`basename \"$0\"`\n\n# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\nDEFAULT_JVM_OPTS=\"\"\n\n# Use the maximum available, or set MAX_FD != -1 to use that value.\nMAX_FD=\"maximum\"\n\nwarn () {\n    echo \"$*\"\n}\n\ndie () {\n    echo\n    echo \"$*\"\n    echo\n    exit 1\n}\n\n# OS specific support (must be 'true' or 'false').\ncygwin=false\nmsys=false\ndarwin=false\nnonstop=false\ncase \"`uname`\" in\n  CYGWIN* )\n    cygwin=true\n    ;;\n  Darwin* )\n    darwin=true\n    ;;\n  MINGW* )\n    msys=true\n    ;;\n  NONSTOP* )\n    nonstop=true\n    ;;\nesac\n\nCLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar\n\n# Determine the Java command to use to start the JVM.\nif [ -n \"$JAVA_HOME\" ] ; then\n    if [ -x \"$JAVA_HOME/jre/sh/java\" ] ; then\n        # IBM's JDK on AIX uses strange locations for the executables\n        JAVACMD=\"$JAVA_HOME/jre/sh/java\"\n    else\n        JAVACMD=\"$JAVA_HOME/bin/java\"\n    fi\n    if [ ! -x \"$JAVACMD\" ] ; then\n        die \"ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\n    fi\nelse\n    JAVACMD=\"java\"\n    which java >/dev/null 2>&1 || die \"ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\nfi\n\n# Increase the maximum file descriptors if we can.\nif [ \"$cygwin\" = \"false\" -a \"$darwin\" = \"false\" -a \"$nonstop\" = \"false\" ] ; then\n    MAX_FD_LIMIT=`ulimit -H -n`\n    if [ $? -eq 0 ] ; then\n        if [ \"$MAX_FD\" = \"maximum\" -o \"$MAX_FD\" = \"max\" ] ; then\n            MAX_FD=\"$MAX_FD_LIMIT\"\n        fi\n        ulimit -n $MAX_FD\n        if [ $? -ne 0 ] ; then\n            warn \"Could not set maximum file descriptor limit: $MAX_FD\"\n        fi\n    else\n        warn \"Could not query maximum file descriptor limit: $MAX_FD_LIMIT\"\n    fi\nfi\n\n# For Darwin, add options to specify how the application appears in the dock\nif $darwin; then\n    GRADLE_OPTS=\"$GRADLE_OPTS \\\"-Xdock:name=$APP_NAME\\\" \\\"-Xdock:icon=$APP_HOME/media/gradle.icns\\\"\"\nfi\n\n# For Cygwin, switch paths to Windows format before running java\nif $cygwin ; then\n    APP_HOME=`cygpath --path --mixed \"$APP_HOME\"`\n    CLASSPATH=`cygpath --path --mixed \"$CLASSPATH\"`\n    JAVACMD=`cygpath --unix \"$JAVACMD\"`\n\n    # We build the pattern for arguments to be converted via cygpath\n    ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`\n    SEP=\"\"\n    for dir in $ROOTDIRSRAW ; do\n        ROOTDIRS=\"$ROOTDIRS$SEP$dir\"\n        SEP=\"|\"\n    done\n    OURCYGPATTERN=\"(^($ROOTDIRS))\"\n    # Add a user-defined pattern to the cygpath arguments\n    if [ \"$GRADLE_CYGPATTERN\" != \"\" ] ; then\n        OURCYGPATTERN=\"$OURCYGPATTERN|($GRADLE_CYGPATTERN)\"\n    fi\n    # Now convert the arguments - kludge to limit ourselves to /bin/sh\n    i=0\n    for arg in \"$@\" ; do\n        CHECK=`echo \"$arg\"|egrep -c \"$OURCYGPATTERN\" -`\n        CHECK2=`echo \"$arg\"|egrep -c \"^-\"`                                 ### Determine if an option\n\n        if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition\n            eval `echo args$i`=`cygpath --path --ignore --mixed \"$arg\"`\n        else\n            eval `echo args$i`=\"\\\"$arg\\\"\"\n        fi\n        i=$((i+1))\n    done\n    case $i in\n        (0) set -- ;;\n        (1) set -- \"$args0\" ;;\n        (2) set -- \"$args0\" \"$args1\" ;;\n        (3) set -- \"$args0\" \"$args1\" \"$args2\" ;;\n        (4) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" ;;\n        (5) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" ;;\n        (6) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" ;;\n        (7) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" ;;\n        (8) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" ;;\n        (9) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" \"$args8\" ;;\n    esac\nfi\n\n# Escape application args\nsave () {\n    for i do printf %s\\\\n \"$i\" | sed \"s/'/'\\\\\\\\''/g;1s/^/'/;\\$s/\\$/' \\\\\\\\/\" ; done\n    echo \" \"\n}\nAPP_ARGS=$(save \"$@\")\n\n# Collect all arguments for the java command, following the shell quoting and substitution rules\neval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \"\\\"-Dorg.gradle.appname=$APP_BASE_NAME\\\"\" -classpath \"\\\"$CLASSPATH\\\"\" org.gradle.wrapper.GradleWrapperMain \"$APP_ARGS\"\n\n# by default we should be in the correct project dir, but when run from Finder on Mac, the cwd is wrong\nif [ \"$(uname)\" = \"Darwin\" ] && [ \"$HOME\" = \"$PWD\" ]; then\n  cd \"$(dirname \"$0\")\"\nfi\n\nexec \"$JAVACMD\" \"$@\"\n"
+        },
+        {
+          "name": "gradlew.bat",
+          "type": "blob",
+          "size": 2.20703125,
+          "content": "@if \"%DEBUG%\" == \"\" @echo off\r\n@rem ##########################################################################\r\n@rem\r\n@rem  Gradle startup script for Windows\r\n@rem\r\n@rem ##########################################################################\r\n\r\n@rem Set local scope for the variables with windows NT shell\r\nif \"%OS%\"==\"Windows_NT\" setlocal\r\n\r\nset DIRNAME=%~dp0\r\nif \"%DIRNAME%\" == \"\" set DIRNAME=.\r\nset APP_BASE_NAME=%~n0\r\nset APP_HOME=%DIRNAME%\r\n\r\n@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\r\nset DEFAULT_JVM_OPTS=\r\n\r\n@rem Find java.exe\r\nif defined JAVA_HOME goto findJavaFromJavaHome\r\n\r\nset JAVA_EXE=java.exe\r\n%JAVA_EXE% -version >NUL 2>&1\r\nif \"%ERRORLEVEL%\" == \"0\" goto init\r\n\r\necho.\r\necho ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\r\necho.\r\necho Please set the JAVA_HOME variable in your environment to match the\r\necho location of your Java installation.\r\n\r\ngoto fail\r\n\r\n:findJavaFromJavaHome\r\nset JAVA_HOME=%JAVA_HOME:\"=%\r\nset JAVA_EXE=%JAVA_HOME%/bin/java.exe\r\n\r\nif exist \"%JAVA_EXE%\" goto init\r\n\r\necho.\r\necho ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%\r\necho.\r\necho Please set the JAVA_HOME variable in your environment to match the\r\necho location of your Java installation.\r\n\r\ngoto fail\r\n\r\n:init\r\n@rem Get command-line arguments, handling Windows variants\r\n\r\nif not \"%OS%\" == \"Windows_NT\" goto win9xME_args\r\n\r\n:win9xME_args\r\n@rem Slurp the command line arguments.\r\nset CMD_LINE_ARGS=\r\nset _SKIP=2\r\n\r\n:win9xME_args_slurp\r\nif \"x%~1\" == \"x\" goto execute\r\n\r\nset CMD_LINE_ARGS=%*\r\n\r\n:execute\r\n@rem Setup the command line\r\n\r\nset CLASSPATH=%APP_HOME%\\gradle\\wrapper\\gradle-wrapper.jar\r\n\r\n@rem Execute Gradle\r\n\"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% \"-Dorg.gradle.appname=%APP_BASE_NAME%\" -classpath \"%CLASSPATH%\" org.gradle.wrapper.GradleWrapperMain %CMD_LINE_ARGS%\r\n\r\n:end\r\n@rem End local scope for the variables with windows NT shell\r\nif \"%ERRORLEVEL%\"==\"0\" goto mainEnd\r\n\r\n:fail\r\nrem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of\r\nrem the _cmd.exe /c_ return code!\r\nif  not \"\" == \"%GRADLE_EXIT_CONSOLE%\" exit 1\r\nexit /b 1\r\n\r\n:mainEnd\r\nif \"%OS%\"==\"Windows_NT\" endlocal\r\n\r\n:omega\r\n"
+        },
+        {
+          "name": "release.sh",
+          "type": "blob",
+          "size": 0.2548828125,
+          "content": "#!/bin/bash\nVERSION=$(git describe --tags --always)\nrm -rf dist\n./gradlew assembleRelease\nmkdir dist\ncd dist\ncp ../app/build/outputs/apk/release/app-release.apk sndcpy.apk\ncp ../sndcpy .\ncp ../sndcpy.bat .\nzip sndcpy-\"$VERSION\".zip sndcpy.apk sndcpy sndcpy.bat\n"
+        },
+        {
+          "name": "run",
+          "type": "blob",
+          "size": 0.107421875,
+          "content": "#!/bin/bash\nset -e\n./gradlew assembleDebug\nSNDCPY_APK=app/build/outputs/apk/debug/app-debug.apk ./sndcpy \"$@\"\n"
+        },
+        {
+          "name": "settings.gradle",
+          "type": "blob",
+          "size": 0.0400390625,
+          "content": "rootProject.name='sndcpy'\ninclude ':app'\n"
+        },
+        {
+          "name": "sndcpy",
+          "type": "blob",
+          "size": 0.7802734375,
+          "content": "#!/bin/bash\nset -e\nADB=${ADB:-adb}\nVLC=${VLC:-vlc}\nSNDCPY_APK=${SNDCPY_APK:-sndcpy.apk}\nSNDCPY_PORT=${SNDCPY_PORT:-28200}\n\nserial=\nif [[ $# -ge 1 ]]\nthen\n    serial=\"-s $1\"\n    echo \"Waiting for device $1...\"\nelse\n    echo 'Waiting for device...'\nfi\n\n\"$ADB\" $serial wait-for-device\n\"$ADB\" $serial install -t -r -g \"$SNDCPY_APK\" ||\n{\n    echo 'Uninstalling existing version first...'\n    \"$ADB\" $serial uninstall com.rom1v.sndcpy\n    \"$ADB\" $serial install -t -g \"$SNDCPY_APK\"\n}\n\n\"$ADB\" $serial shell appops set com.rom1v.sndcpy PROJECT_MEDIA allow\n\"$ADB\" $serial forward tcp:$SNDCPY_PORT localabstract:sndcpy\n\"$ADB\" $serial shell am start com.rom1v.sndcpy/.MainActivity\n\nsleep 2\n\necho Playing audio...\n\"$VLC\" -Idummy --demux rawaud --network-caching=0 --play-and-exit tcp://localhost:\"$SNDCPY_PORT\"\n"
+        },
+        {
+          "name": "sndcpy.bat",
+          "type": "blob",
+          "size": 1.00390625,
+          "content": "@echo off\nif not defined ADB set ADB=adb\nif not defined VLC set VLC=\"C:\\Program Files\\VideoLAN\\VLC\\vlc.exe\"\nif not defined SNDCPY_APK set SNDCPY_APK=sndcpy.apk\nif not defined SNDCPY_PORT set SNDCPY_PORT=28200\n\nif not \"%1\"==\"\" (\n    set serial=-s %1\n    echo Waiting for device %1...\n) else (\n    echo Waiting for device...\n)\n\n%ADB% %serial% wait-for-device || goto :error\n%ADB% %serial% install -t -r -g %SNDCPY_APK% || (\n    echo Uninstalling existing version first...\n    %ADB% %serial% uninstall com.rom1v.sndcpy || goto :error\n    %ADB% %serial% install -t -g %SNDCPY_APK% || goto :error\n)\n%ADB% %serial% shell appops set com.rom1v.sndcpy PROJECT_MEDIA allow\n%ADB% %serial% forward tcp:%SNDCPY_PORT% localabstract:sndcpy || goto :error\n%ADB% %serial% shell am start com.rom1v.sndcpy/.MainActivity || goto :error\n\ntimeout 2\n\necho Playing audio...\n%VLC% -Idummy --demux rawaud --network-caching=0 --play-and-exit tcp://localhost:%SNDCPY_PORT%\ngoto :EOF\n\n:error\necho Failed with error #%errorlevel%.\npause\nexit /b %errorlevel%\n"
+        }
+      ]
+    }
+  ]
+}
