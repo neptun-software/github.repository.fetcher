@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736564135108,
+    "page": 704,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "slackapi/bolt-js",
+      "stars": 2774,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".c8rc.json",
+          "type": "blob",
+          "size": 0.1259765625,
+          "content": "{\n  \"include\": [\"src/**/*.ts\"],\n  \"exclude\": [\"**/*.spec.ts\"],\n  \"reporter\": [\"lcov\", \"text\"],\n  \"all\": false,\n  \"cache\": true\n}\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1513671875,
+          "content": "# node / npm stuff\n/node_modules\n/package-lock.json\n\n# build products\n/dist\n*.tgz\n\n# coverage\n/.nyc_output\n/coverage\n\n# macOS\n.DS_Store\n\n# WebStorm\n.idea/\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.0849609375,
+          "content": "# node / npm stuff\n/node_modules\n/package-lock.json\n\n# coverage\n/.nyc_output\n/coverage\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.10546875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016-2018 Robots & Pencils\nCopyright (c) 2019- Slack Technologies, LLC\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.9091796875,
+          "content": "# Bolt <img src=\"https://raw.githubusercontent.com/slackapi/bolt-js/main/docs/static/img/bolt.svg\" alt=\"Bolt logo\" width=\"32\"/> for JavaScript\n\n[![codecov](https://codecov.io/gh/slackapi/bolt-js/branch/main/graph/badge.svg?token=x4oCgiexvp)](https://codecov.io/gh/slackapi/bolt-js)\n[![Node.js CI](https://github.com/slackapi/bolt-js/actions/workflows/ci-build.yml/badge.svg)](https://github.com/slackapi/bolt-js/actions/workflows/ci-build.yml)\n\nA JavaScript framework to build Slack apps in a flash with the latest platform features. Read the [getting started guide](https://tools.slack.dev/bolt-js/getting-started) to set-up and run your first Bolt app.\n\nRead [the documentation](https://tools.slack.dev/bolt-js) to explore the basic and advanced concepts of Bolt for JavaScript.\n\n## Setup\n\n```bash\nnpm install @slack/bolt\n```\n\n## Initialization\n\nCreate an app by calling the constructor, which is a top-level export.\n\n```js\nconst { App } = require('@slack/bolt');\n\nconst app = new App({\n  signingSecret: process.env.SLACK_SIGNING_SECRET,\n  token: process.env.SLACK_BOT_TOKEN,\n});\n\n/* Add functionality here */\n\n(async () => {\n  // Start the app\n  await app.start(process.env.PORT || 3000);\n\n  console.log('⚡️ Bolt app is running!');\n})();\n```\n\n## Listening for events\n\nThe Slack **Request URL** for a Bolt app must have the path set to `/slack/events`.  \nFor example: `https://my-slack-app.example.com/slack/events`.  \nOtherwise, all incoming requests from Slack won't be handled.\n\nApps typically react to a collection of incoming events, which can correspond [Events API events](https://api.slack.com/events-api), [actions](https://api.slack.com/interactivity/components), [shortcuts](https://api.slack.com/interactivity/shortcuts), [slash commands](https://api.slack.com/interactivity/slash-commands) or [options requests](https://api.slack.com/reference/block-kit/block-elements#external_select). For each type of\nrequest, there's a method to build a listener function.\n\n```js\n// Listen for an action from a Block Kit element (buttons, select menus, date pickers, etc)\napp.action(actionId, fn);\n\n// Listen for dialog submissions\napp.action({ callback_id: callbackId }, fn);\n\n// Listen for slash commands\napp.command(commandName, fn);\n\n// Listen for an event from the Events API\napp.event(eventType, fn);\n\n// Listen for a custom step execution from a workflow\napp.function(callbackId, fn)\n\n// Convenience method to listen to only `message` events using a string or RegExp\napp.message([pattern ,] fn);\n\n// Listen for options requests (from select menus with an external data source)\napp.options(actionId, fn);\n\n// Listen for a global or message shortcuts\napp.shortcut(callbackId, fn);\n\n// Listen for view_submission modal events\napp.view(callbackId, fn);\n\n```\n\n## Making things happen\n\nMost of the app's functionality will be inside listener functions (the `fn` parameters above). These functions are called with a set of arguments.\n\n| Argument  | Description  |\n| :---: | :--- |\n| `payload` | Contents of the incoming event. The payload structure depends on the listener. For example, for an Events API event, `payload` will be the [event type structure](https://api.slack.com/events-api#event_type_structure). For a block action, it will be the action from within the `actions` array. The `payload` object is also accessible via the alias corresponding to the listener (`message`, `event`, `action`, `shortcut`, `view`, `command`, or `options`). For example, if you were building a `message()` listener, you could use the `payload` and `message` arguments interchangeably. **An easy way to understand what's in a payload is to log it**, or use TypeScript. |\n| `say` | Function to send a message to the channel associated with the incoming event. This argument is only available when the listener is triggered for events that contain a `channel_id` (the most common being `message` events). `say` accepts simple strings (for plain-text messages) and objects (for messages containing blocks). `say` returns a promise that will resolve with a [`chat.postMessage` response](https://api.slack.com/methods/chat.postMessage).\n| `ack` | Function that **must** be called to acknowledge that an incoming event was received by your app. `ack` exists for all actions, shortcuts, view, slash command and options requests. `ack` returns a promise that resolves when complete. Read more in [Acknowledging events](#acknowledging-events)\n| `client` | Web API client that uses the token associated with that event. For single-workspace installations, the token is provided to the constructor. For multi-workspace installations, the token is returned by the `authorize` function.\n| `respond` | Function that responds to an incoming event **if** it contains a `response_url` (actions, shortcuts, view submissions, and slash commands). `respond` returns a promise that resolves with the results of responding using the `response_url`.\n| `context` | Event context. This object contains data about the event and the app, such as the `botId`. Middleware can add additional context before the event is passed to listeners.\n| `body` | Object that contains the entire body of the request (superset of `payload`). Some accessory data is only available outside of the payload (such as `trigger_id` and `authorizations`).\n| `complete` | Function used to signal the successful completion of a custom step execution. This tells Slack to proceed with the next steps in the workflow. This argument is only available with the `.function` and `.action` listener when handling custom workflow step executions.\n| `fail` | Function used to signal that a custom step failed to complete. This tells Slack to stop the workflow execution. This argument is only available with the `.function` and `.action` listener when handling custom workflow step executions.\n\n\nThe arguments are grouped into properties of one object, so that it's easier to pick just the ones your listener needs (using\n[object destructuring](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#Unpacking_fields_from_objects_passed_as_function_parameter)). Here is an example where the app sends a simple response, so there's no need for most of these arguments:\n\n```js\n// Reverse all messages the app can hear\napp.message(async ({ message, say }) => {\n  // Filter out message events with subtypes (see https://api.slack.com/events/message)\n  if (message.subtype === undefined || message.subtype === 'bot_message') {\n    const reversedText = [...message.text].reverse().join(\"\");\n    await say(reversedText);\n  }\n});\n```\n\n### Calling the Web API\n\nIn addition to the [`client` property passed to listeners](#making-things-happen), each app has a top-level `client` that can be used to call methods. Unlike the `client` passed to listeners, the top-level client must be passed a `token`. [Read the documentation](https://tools.slack.dev/bolt-js/concepts#web-api) for more details.\n\n### Acknowledging events\n\nSome types of events need to be acknowledged in order to ensure a consistent user experience inside the Slack client (web, mobile, and desktop apps). This includes all action, shortcut, view, command, and options requests. Listeners for these events need to call the `ack()` function, which is passed in as an argument.\n\nIn general, the Slack platform expects an acknowledgement within 3 seconds, so listeners should call this function as soon as possible.\n\nDepending on the type of incoming event a listener is meant for, `ack()` should be called with a parameter:\n\n*  Block actions, global shortcuts, and message shortcuts: Call `ack()` with no parameters.\n\n* View submissions: Call `ack()` with no parameters or with a [response action](https://api.slack.com/surfaces/modals/using#updating_response).\n\n*  Options requests: Call `ack()` with an object containing the options for the user to see.\n\n*  Legacy message button clicks, menu selections, and slash commands: Either call `ack()` with no parameters, a `string` to to update the message with a simple message, or an `object` to replace it with a complex message. Replacing the message to remove the interactive elements is a best practice for any action that should only be performed once.\n\n* Events API events **do not** need an `ack()` function since they are automatically acknowledged by your app.\n\n## Getting Help\n\n[The documentation](https://tools.slack.dev/bolt-js) has more information on basic and advanced concepts for Bolt for JavaScript.\n\nIf you otherwise get stuck, we're here to help. The following are the best ways to get assistance working through your issue:\n\n  * [Issue Tracker](http://github.com/slackapi/bolt-js/issues) for questions, bug reports, feature requests, and general discussion related to Bolt for JavaScript. Try searching for an existing issue before creating a new one.\n  * [Email](mailto:support@slack.com) our developer support team: `support@slack.com`\n## Contributing\n\nWe welcome contributions from everyone! Please check out our\n[Contributor's Guide](.github/contributing.md) for how to contribute in a\nhelpful and collaborative way.\n"
+        },
+        {
+          "name": "app.json",
+          "type": "blob",
+          "size": 1.447265625,
+          "content": "{\n  \"name\": \"Deploying to Heroku ⚡️ Bolt for JavaScript\",\n  \"description\": \"This is a Slack app built with the Bolt for JavaScript framework that showcases deploying to the Heroku platform.\",\n  \"keywords\": [\"slack\", \"heroku\", \"nodejs\", \"bolt\", \"bolt-js\", \"javascript\"],\n  \"logo\": \"https://raw.githubusercontent.com/slackapi/bolt-js/main/docs/static/img/bolt-logo.svg\",\n  \"image\": \"heroku/nodejs\",\n  \"website\": \"https://tools.slack.dev/bolt-js/\",\n  \"repository\": \"https://github.com/slackapi/bolt-js\",\n  \"success_url\": \"/\",\n  \"env\": {\n    \"SLACK_SIGNING_SECRET\": {\n      \"description\": \"Slack creates a unique string for your app and shares it with you. Verify requests from Slack with confidence by verifying signatures using your signing secret.\",\n      \"value\": \"\",\n      \"required\": true\n    },\n    \"SLACK_BOT_TOKEN\": {\n      \"description\": \"Bot tokens represent a bot associated with the app installed in a workspace. Unlike user tokens, they're not tied to a user's identity; they're just tied to your app. Begins with 'xoxb-'.\",\n      \"value\": \"\",\n      \"required\": true\n    },\n    \"APP_BASE\": {\n      \"description\": \"Do not change. Used by heroku-buildpack-monorepo\",\n      \"value\": \"examples/deploy-heroku\",\n      \"required\": false\n    }\n  },\n  \"formation\": {\n    \"web\": {\n      \"quantity\": 1,\n      \"size\": \"eco\"\n    }\n  },\n  \"buildpacks\": [\n    {\n      \"url\": \"https://github.com/lstoll/heroku-buildpack-monorepo\"\n    },\n    {\n      \"url\": \"heroku/nodejs\"\n    }\n  ]\n}\n"
+        },
+        {
+          "name": "biome.json",
+          "type": "blob",
+          "size": 0.65234375,
+          "content": "{\n  \"$schema\": \"./node_modules/@biomejs/biome/configuration_schema.json\",\n  \"files\": {\n    \"ignore\": [\"docs/.docusaurus\", \"examples/**/dist\"]\n  },\n  \"formatter\": {\n    \"enabled\": true,\n    \"formatWithErrors\": false,\n    \"ignore\": [],\n    \"attributePosition\": \"auto\",\n    \"indentStyle\": \"space\",\n    \"indentWidth\": 2,\n    \"lineWidth\": 120,\n    \"lineEnding\": \"lf\"\n  },\n  \"javascript\": {\n    \"formatter\": {\n      \"quoteStyle\": \"single\"\n    }\n  },\n  \"linter\": {\n    \"enabled\": true,\n    \"rules\": {\n      \"recommended\": true\n    }\n  },\n  \"organizeImports\": {\n    \"enabled\": true\n  },\n  \"vcs\": {\n    \"enabled\": true,\n    \"clientKind\": \"git\",\n    \"useIgnoreFile\": true\n  }\n}\n"
+        },
+        {
+          "name": "codecov.yml",
+          "type": "blob",
+          "size": 0.1845703125,
+          "content": "ignore:\n  - \"examples/\"  # ignore examples folder and all its contents\ncoverage:\n  status:\n    project:\n      default:\n        threshold: 2.0%\n    patch:\n      default:\n        target: 50%\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 2.080078125,
+          "content": "{\n  \"name\": \"@slack/bolt\",\n  \"version\": \"4.2.0\",\n  \"description\": \"A framework for building Slack apps, fast.\",\n  \"author\": \"Slack Technologies, LLC\",\n  \"license\": \"MIT\",\n  \"keywords\": [\n    \"slack\",\n    \"bot\",\n    \"events-api\",\n    \"slash-commands\",\n    \"interactive-components\",\n    \"api\",\n    \"chatops\",\n    \"integration\",\n    \"slack-app\"\n  ],\n  \"main\": \"./dist/index.js\",\n  \"types\": \"./dist/index.d.ts\",\n  \"files\": [\n    \"dist/**/*\"\n  ],\n  \"engines\": {\n    \"node\": \">=18\",\n    \"npm\": \">=8.6.0\"\n  },\n  \"scripts\": {\n    \"prepare\": \"npm run build\",\n    \"build\": \"npm run build:clean && tsc\",\n    \"build:clean\": \"shx rm -rf ./dist ./coverage\",\n    \"lint\": \"npx @biomejs/biome check docs src test examples\",\n    \"lint:fix\": \"npx @biomejs/biome check --write docs src test examples\",\n    \"test\": \"npm run build && npm run lint && npm run test:types && npm run test:coverage\",\n    \"test:unit\": \"TS_NODE_PROJECT=tsconfig.json mocha --config test/unit/.mocharc.json\",\n    \"test:coverage\": \"c8 npm run test:unit\",\n    \"test:types\": \"tsd --files test/types\",\n    \"watch\": \"npx nodemon --watch 'src' --ext 'ts' --exec npm run build\"\n  },\n  \"repository\": \"slackapi/bolt-js\",\n  \"homepage\": \"https://tools.slack.dev/bolt-js\",\n  \"bugs\": {\n    \"url\": \"https://github.com/slackapi/bolt-js/issues\"\n  },\n  \"dependencies\": {\n    \"@slack/logger\": \"^4.0.0\",\n    \"@slack/oauth\": \"^3.0.2\",\n    \"@slack/socket-mode\": \"^2.0.3\",\n    \"@slack/types\": \"^2.13.0\",\n    \"@slack/web-api\": \"^7.8.0\",\n    \"axios\": \"^1.7.8\",\n    \"express\": \"^5.0.0\",\n    \"path-to-regexp\": \"^8.1.0\",\n    \"raw-body\": \"^3\",\n    \"tsscmp\": \"^1.0.6\"\n  },\n  \"devDependencies\": {\n    \"@biomejs/biome\": \"^1.9.0\",\n    \"@tsconfig/node18\": \"^18.2.4\",\n    \"@types/chai\": \"^4.1.7\",\n    \"@types/express\": \"^5.0.0\",\n    \"@types/mocha\": \"^10.0.1\",\n    \"@types/node\": \"22.10.5\",\n    \"@types/sinon\": \"^7.0.11\",\n    \"@types/tsscmp\": \"^1.0.0\",\n    \"c8\": \"^10.1.2\",\n    \"chai\": \"~4.3.0\",\n    \"mocha\": \"^10.2.0\",\n    \"rewiremock\": \"^3.13.4\",\n    \"shx\": \"^0.3.2\",\n    \"sinon\": \"^18.0.1\",\n    \"source-map-support\": \"^0.5.12\",\n    \"ts-node\": \"^10.9.2\",\n    \"tsd\": \"^0.31.2\",\n    \"typescript\": \"5.3.3\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tsconfig.json",
+          "type": "blob",
+          "size": 0.46875,
+          "content": "{\n  \"$schema\": \"https://json.schemastore.org/tsconfig\",\n  \"extends\": \"@tsconfig/node18/tsconfig.json\",\n  \"compilerOptions\": {\n    \"declaration\": true,\n    \"declarationMap\": true,\n    \"module\": \"CommonJS\",\n    \"moduleResolution\": \"node\",\n    \"noErrorTruncation\": true,\n    \"noUnusedLocals\": true,\n    \"noUnusedParameters\": true,\n    \"noImplicitReturns\": true,\n    \"outDir\": \"dist\",\n    \"sourceMap\": true\n  },\n  \"include\": [\n    \"src/**/*\"\n  ],\n  \"exclude\": [\n    \"test/**/*\"\n  ]\n}\n"
+        }
+      ]
+    }
+  ]
+}
