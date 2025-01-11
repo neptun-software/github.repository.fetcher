@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "timestamp": 1736566970628,
+    "page": 555,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "geohot/minikeyvalue",
+      "stars": 2981,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "__pycache__\n.*.swp\nsrc/mkv\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.58984375,
+          "content": "FROM ubuntu:20.04\n\nENV DEBIAN_FRONTEND noninteractive\n\n# system basics\nRUN apt-get update && \\\n  apt-get -y --no-install-recommends install \\\n    build-essential \\\n    curl \\\n    python3 \\\n    python3-dev \\\n    python3-setuptools \\\n    python3-pip \\\n    libffi-dev \\\n    nginx \\\n    golang \\\n    git && \\\n  apt-get clean && \\\n  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*\n\nWORKDIR /\nENV GOPATH /go\nENV PATH ${PATH}:/mkv\n\nCOPY requirements.txt mkv/requirements.txt\nRUN pip3 install --no-cache-dir -r mkv/requirements.txt\n\nCOPY mkv volume mkv/\nCOPY src/*.go mkv/src/\nCOPY tools/* mkv/tools/\nWORKDIR /mkv\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0302734375,
+          "content": "Copyright (c) 2019 George Hotz\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.158203125,
+          "content": "# minikeyvalue\n\n![Tests](https://github.com/geohot/minikeyvalue/workflows/Tests/badge.svg)\n\nFed up with the complexity of distributed filesystems?\n\nminikeyvalue is a ~1000 line distributed key value store, with support for replication, multiple machines, and multiple drives per machine. Optimized for values between 1MB and 1GB. Inspired by SeaweedFS, but simple. Should scale to billions of files and petabytes of data. Used in production at [comma.ai](https://comma.ai/).\n\nA key part of minikeyvalue's simplicity is using stock nginx as the volume server.\n\nEven if this code is crap, the on disk format is super simple! We rely on a filesystem for blob storage and a LevelDB for indexing. The index can be reconstructed with rebuild. Volumes can be added or removed with rebalance.\n\n### API\n\n- GET /key\n  - 302 redirect to nginx volume server.\n- PUT /key\n  - Blocks. 201 = written, anything else = probably not written.\n- DELETE /key\n  - Blocks. 204 = deleted, anything else = probably not deleted.\n\nIt also now supports a subset of S3 requests, so some S3 libraries will be somewhat compatible.\n\n### Start Volume Servers (default port 3001)\n\n```\n# this is just nginx under the hood\nPORT=3001 ./volume /tmp/volume1/ &;\nPORT=3002 ./volume /tmp/volume2/ &;\nPORT=3003 ./volume /tmp/volume3/ &;\n```\n\n### Start Master Server (default port 3000)\n\n```\n./mkv -volumes localhost:3001,localhost:3002,localhost:3003 -db /tmp/indexdb/ server\n```\n\n\n### Usage\n\n```\n# put \"bigswag\" in key \"wehave\" (will 403 if it already exists)\ncurl -v -L -X PUT -d bigswag localhost:3000/wehave\n\n# get key \"wehave\" (should be \"bigswag\")\ncurl -v -L localhost:3000/wehave\n\n# delete key \"wehave\"\ncurl -v -L -X DELETE localhost:3000/wehave\n\n# unlink key \"wehave\", this is a virtual delete\ncurl -v -L -X UNLINK localhost:3000/wehave\n\n# list keys starting with \"we\"\ncurl -v -L localhost:3000/we?list\n\n# list unlinked keys ripe for DELETE\ncurl -v -L localhost:3000/?unlinked\n\n# put file in key \"file.txt\"\ncurl -v -L -X PUT -T /path/to/local/file.txt localhost:3000/file.txt\n\n# get file in key \"file.txt\"\ncurl -v -L -o /path/to/local/file.txt localhost:3000/file.txt\n```\n\n### ./mkv Usage\n\n```\nUsage: ./mkv <server, rebuild, rebalance>\n\n  -db string\n        Path to leveldb\n  -fallback string\n        Fallback server for missing keys\n  -port int\n        Port for the server to listen on (default 3000)\n  -protect\n        Force UNLINK before DELETE\n  -replicas int\n        Amount of replicas to make of the data (default 3)\n  -subvolumes int\n        Amount of subvolumes, disks per machine (default 10)\n  -volumes string\n        Volumes to use for storage, comma separated\n```\n\n### Rebalancing (to change the amount of volume servers)\n\n```\n# must shut down master first, since LevelDB can only be accessed by one process\n./mkv -volumes localhost:3001,localhost:3002,localhost:3003 -db /tmp/indexdb/ rebalance\n```\n\n### Rebuilding (to regenerate the LevelDB)\n\n```\n./mkv -volumes localhost:3001,localhost:3002,localhost:3003 -db /tmp/indexdbalt/ rebuild\n```\n\n### Performance\n\n```\n# Fetching non-existent key: 116338 req/sec\nwrk -t2 -c100 -d10s http://localhost:3000/key\n\n# go run thrasher.go\nstarting thrasher\n10000 write/read/delete in 2.620922675s\nthats 3815.40/sec\n```\n\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.21484375,
+          "content": "module github.com/geohot/minikeyvalue\n\ngo 1.17\n\nrequire github.com/syndtr/goleveldb v1.0.0\n\nrequire (\n\tgithub.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect\n\tgithub.com/google/uuid v1.3.0 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 2.5537109375,
+          "content": "github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=\ngithub.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=\ngithub.com/golang/snappy v0.0.0-20180518054509-2e65f85255db h1:woRePGFeVFfLKN/pOkfl+p/TAqKOfFu+7KPlMVpok/w=\ngithub.com/golang/snappy v0.0.0-20180518054509-2e65f85255db/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=\ngithub.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=\ngithub.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=\ngithub.com/hpcloud/tail v1.0.0 h1:nfCOvKYfkgYP8hkirhJocXT2+zOD8yUNjXaWfTlyFKI=\ngithub.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=\ngithub.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=\ngithub.com/onsi/ginkgo v1.7.0 h1:WSHQ+IS43OoUrWtD1/bbclrwK8TTH5hzp+umCiuxHgs=\ngithub.com/onsi/ginkgo v1.7.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=\ngithub.com/onsi/gomega v1.4.3 h1:RE1xgDvH7imwFD45h+u2SgIfERHlS2yNG4DObb5BSKU=\ngithub.com/onsi/gomega v1.4.3/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1CpauHY=\ngithub.com/syndtr/goleveldb v1.0.0 h1:fBdIW9lB4Iz0n9khmH8w27SJ3QEJ7+IgjPEwGSZiFdE=\ngithub.com/syndtr/goleveldb v1.0.0/go.mod h1:ZVVdQEZoIme9iO1Ch2Jdy24qqXrMMOU6lpPAyBWyWuQ=\ngolang.org/x/net v0.0.0-20180906233101-161cd47e91fd h1:nTDtHvHSdCn1m6ITfMRqtOd/9+7a3s8RBNOZ3eYZzJA=\ngolang.org/x/net v0.0.0-20180906233101-161cd47e91fd/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=\ngolang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=\ngolang.org/x/sys v0.0.0-20180909124046-d0be0721c37e h1:o3PsSEY8E4eXWkXrIP9YJALUkVZqzHJT5DOasTyn8Vs=\ngolang.org/x/sys v0.0.0-20180909124046-d0be0721c37e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=\ngolang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=\ngolang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/fsnotify.v1 v1.4.7 h1:xOHLXZwVvI9hhs+cLKq5+I5onOuwQLhQwiu63xxlHs4=\ngopkg.in/fsnotify.v1 v1.4.7/go.mod h1:Tz8NjZHkW78fSQdbUxIjBTcgA1z1m8ZHf0WmKUhAMys=\ngopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 h1:uRGJdciOHaEIrze2W8Q3AKkepLTh2hOroT7a+7czfdQ=\ngopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7/go.mod h1:dt/ZhP58zS4L8KSrWDmTeBkI65Dw0HsyUHuEVlX15mw=\ngopkg.in/yaml.v2 v2.2.1 h1:mUhvW9EsL+naU5Q3cakzfE91YhliOondGd6ZrsDBHQE=\ngopkg.in/yaml.v2 v2.2.1/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=\n"
+        },
+        {
+          "name": "mkv",
+          "type": "blob",
+          "size": 0.0458984375,
+          "content": "#!/bin/bash -e\ncd src\ngo build -o mkv\n./mkv $@\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "requests\npyarrow\nboto3\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "volume",
+          "type": "blob",
+          "size": 1.095703125,
+          "content": "#!/bin/bash -e\nexport VOLUME=${1:-/tmp/volume1/}\nexport TYPE=volume\nexport PORT=${PORT:-3001}\n\nmkdir -p $VOLUME\nchmod 777 $VOLUME\n\nCONF=$(mktemp)\necho \"\ndaemon off; # docker\n#worker_rlimit_nofile 100000;\nworker_processes auto;\npcre_jit on;\n\nerror_log /dev/stderr;\npid $VOLUME/nginx.pid;\n\nevents {\n  #use epoll;\n  multi_accept on;\n  accept_mutex off;\n  worker_connections 4096;\n}\n\nhttp {\n  sendfile on;\n  sendfile_max_chunk 1024k;\n\n  tcp_nopush on;\n  tcp_nodelay on;\n\n  open_file_cache off;\n  types_hash_max_size 2048;\n\n  server_tokens off;\n\n  default_type application/octet-stream;\n\n  error_log /dev/stderr error; # docker\n\n  server {\n    listen $PORT default_server backlog=4096;\n    location / {\n      root $VOLUME;\n      disable_symlinks off;\n\n      client_body_temp_path $VOLUME/body_temp;\n      client_max_body_size 0;\n\n      # this causes tests to fail\n      #client_body_buffer_size 0;\n\n      dav_methods PUT DELETE;\n      dav_access group:rw all:r;\n      create_full_put_path on;\n\n      autoindex on;\n      autoindex_format json;\n    }\n  }\n}\n\" > $CONF\necho \"starting nginx on $PORT\"\nnginx -c $CONF -p $VOLUME/tmp\n\n"
+        }
+      ]
+    }
+  ]
+}

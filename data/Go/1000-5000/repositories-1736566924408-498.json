@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736566924408,
+    "page": 498,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tomnomnom/assetfinder",
+      "stars": 3113,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.03515625,
+          "content": "assetfinder\n*.sw*\n*.tgz\n*.zip\n*.exe\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2019 Tom Hudson\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.416015625,
+          "content": "# assetfinder\n\nFind domains and subdomains potentially related to a given domain.\n\n\n## Install\n\nIf you have Go installed and configured (i.e. with `$GOPATH/bin` in your `$PATH`):\n\n```\ngo get -u github.com/tomnomnom/assetfinder\n```\n\nOtherwise [download a release for your platform](https://github.com/tomnomnom/assetfinder/releases).\nTo make it easier to execute you can put the binary in your `$PATH`.\n\n## Usage\n\n```\nassetfinder [--subs-only] <domain>\n```\n\n## Sources\n\nPlease feel free to issue pull requests with new sources! :)\n\n### Implemented\n* crt.sh\n* certspotter\n* hackertarget\n* threatcrowd\n* wayback machine\n* dns.bufferover.run\n* facebook\n    * Needs `FB_APP_ID` and `FB_APP_SECRET` environment variables set (https://developers.facebook.com/)\n    * You need to be careful with your app's rate limits\n* virustotal\n    * Needs `VT_API_KEY` environment variable set (https://developers.virustotal.com/reference)\n* findsubdomains\n    * Needs `SPYSE_API_TOKEN` environment variable set (the free version always gives the first response page, and you also get \"25 unlimited requests\") — (https://spyse.com/apidocs)\n\n### Sources to be implemented\n* http://api.passivetotal.org/api/docs/\n* https://community.riskiq.com/ (?)\n* https://riddler.io/\n* http://www.dnsdb.org/\n* https://certdb.com/api-documentation\n\n## TODO\n* Flags to control which sources are used\n    * Likely to be all on by default and a flag to disable\n* Read domains from stdin\n"
+        },
+        {
+          "name": "bufferoverrun.go",
+          "type": "blob",
+          "size": 0.49609375,
+          "content": "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc fetchBufferOverrun(domain string) ([]string, error) {\n\tout := make([]string, 0)\n\n\tfetchURL := fmt.Sprintf(\"https://dns.bufferover.run/dns?q=.%s\", domain)\n\n\twrapper := struct {\n\t\tRecords []string `json:\"FDNS_A\"`\n\t}{}\n\terr := fetchJSON(fetchURL, &wrapper)\n\tif err != nil {\n\t\treturn out, err\n\t}\n\n\tfor _, r := range wrapper.Records {\n\t\tparts := strings.SplitN(r, \",\", 2)\n\t\tif len(parts) != 2 {\n\t\t\tcontinue\n\t\t}\n\t\tout = append(out, parts[1])\n\t}\n\n\treturn out, nil\n}\n"
+        },
+        {
+          "name": "certspotter.go",
+          "type": "blob",
+          "size": 0.421875,
+          "content": "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc fetchCertSpotter(domain string) ([]string, error) {\n\tout := make([]string, 0)\n\n\tfetchURL := fmt.Sprintf(\"https://certspotter.com/api/v0/certs?domain=%s\", domain)\n\n\twrapper := []struct {\n\t\tDNSNames []string `json:\"dns_names\"`\n\t}{}\n\terr := fetchJSON(fetchURL, &wrapper)\n\tif err != nil {\n\t\treturn out, err\n\t}\n\n\tfor _, w := range wrapper {\n\t\tout = append(out, w.DNSNames...)\n\t}\n\n\treturn out, nil\n}\n"
+        },
+        {
+          "name": "crtsh.go",
+          "type": "blob",
+          "size": 0.609375,
+          "content": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"io/ioutil\"\n\t\"net/http\"\n)\n\ntype CrtShResult struct {\n\tName string `json:\"name_value\"`\n}\n\nfunc fetchCrtSh(domain string) ([]string, error) {\n\tvar results []CrtShResult\n\n\tresp, err := http.Get(\n\t\tfmt.Sprintf(\"https://crt.sh/?q=%%25.%s&output=json\", domain),\n\t)\n\tif err != nil {\n\t\treturn []string{}, err\n\t}\n\tdefer resp.Body.Close()\n\n\toutput := make([]string, 0)\n\n\tbody, _ := ioutil.ReadAll(resp.Body)\n\n\tif err := json.Unmarshal(body, &results); err != nil {\n\t\treturn []string{}, err\n\t}\n\n\tfor _, res := range results {\n\t\toutput = append(output, res.Name)\n\t}\n\treturn output, nil\n}\n"
+        },
+        {
+          "name": "facebook.go",
+          "type": "blob",
+          "size": 1.8486328125,
+          "content": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"errors\"\n\t\"fmt\"\n\t\"net/http\"\n\t\"os\"\n)\n\nfunc fetchFacebook(domain string) ([]string, error) {\n\n\tappId := os.Getenv(\"FB_APP_ID\")\n\tappSecret := os.Getenv(\"FB_APP_SECRET\")\n\tif appId == \"\" || appSecret == \"\" {\n\t\t// fail silently because it's reasonable not to have\n\t\t// the Facebook API creds\n\t\treturn []string{}, nil\n\t}\n\n\taccessToken, err := facebookAuth(appId, appSecret)\n\tif err != nil {\n\t\treturn []string{}, err\n\t}\n\n\tdomains, err := getFacebookCerts(accessToken, domain)\n\tif err != nil {\n\t\treturn []string{}, err\n\t}\n\n\treturn domains, nil\n}\n\nfunc getFacebookCerts(accessToken, query string) ([]string, error) {\n\tout := make([]string, 0)\n\tfetchURL := fmt.Sprintf(\n\t\t\"https://graph.facebook.com/certificates?fields=domains&access_token=%s&query=*.%s\",\n\t\taccessToken, query,\n\t)\n\n\tfor {\n\n\t\twrapper := struct {\n\t\t\tData []struct {\n\t\t\t\tDomains []string `json:\"domains\"`\n\t\t\t} `json:\"data\"`\n\n\t\t\tPaging struct {\n\t\t\t\tNext string `json:\"next\"`\n\t\t\t} `json:\"paging\"`\n\t\t}{}\n\n\t\terr := fetchJSON(fetchURL, &wrapper)\n\t\tif err != nil {\n\t\t\treturn out, err\n\t\t}\n\n\t\tfor _, data := range wrapper.Data {\n\t\t\tfor _, d := range data.Domains {\n\t\t\t\tout = append(out, d)\n\t\t\t}\n\t\t}\n\n\t\tfetchURL = wrapper.Paging.Next\n\t\tif fetchURL == \"\" {\n\t\t\tbreak\n\t\t}\n\t}\n\treturn out, nil\n}\n\nfunc facebookAuth(appId, appSecret string) (string, error) {\n\tauthUrl := fmt.Sprintf(\n\t\t\"https://graph.facebook.com/oauth/access_token?client_id=%s&client_secret=%s&grant_type=client_credentials\",\n\t\tappId, appSecret,\n\t)\n\n\tresp, err := http.Get(authUrl)\n\tif err != nil {\n\t\treturn \"\", err\n\t}\n\n\tdefer resp.Body.Close()\n\n\tdec := json.NewDecoder(resp.Body)\n\n\tauth := struct {\n\t\tAccessToken string `json:\"access_token\"`\n\t}{}\n\terr = dec.Decode(&auth)\n\tif err != nil {\n\t\treturn \"\", err\n\t}\n\n\tif auth.AccessToken == \"\" {\n\t\treturn \"\", errors.New(\"no access token in Facebook API response\")\n\t}\n\n\treturn auth.AccessToken, nil\n}\n"
+        },
+        {
+          "name": "findsubdomains.go",
+          "type": "blob",
+          "size": 2.3974609375,
+          "content": "package main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n)\n\nvar apiToken = os.Getenv(\"SPYSE_API_TOKEN\")\n\nfunc callSubdomainsAggregateEndpoint(domain string) []string {\n\tout := make([]string, 0)\n\n\tfetchURL := fmt.Sprintf(\n\t\t\"https://api.spyse.com/v1/subdomains-aggregate?api_token=%s&domain=%s\",\n\t\tapiToken, domain,\n\t)\n\n\ttype Cidr struct {\n\t\tResults []struct {\n\t\t\tData struct {\n\t\t\t\tDomains []string `json:\"domains\"`\n\t\t\t} `json:\"data\"`\n\t\t} `json:\"results\"`\n\t}\n\n\ttype Cidrs struct {\n\t\tCidr16, Cidr24 Cidr\n\t}\n\n\twrapper := struct {\n\t\tCidrs Cidrs `json:\"cidr\"`\n\t}{}\n\n\terr := fetchJSON(fetchURL, &wrapper)\n\n\tif err != nil {\n\t\t// Fail silently\n\t\treturn []string{}\n\t}\n\n\tfor _, result := range wrapper.Cidrs.Cidr16.Results {\n\t\tfor _, domain := range result.Data.Domains {\n\t\t\tout = append(out, domain)\n\t\t}\n\t}\n\tfor _, result := range wrapper.Cidrs.Cidr24.Results {\n\t\tfor _, domain := range result.Data.Domains {\n\t\t\tout = append(out, domain)\n\t\t}\n\t}\n\n\treturn out\n}\n\n/**\n\n */\nfunc callSubdomainsEndpoint(domain string) []string {\n\tout := make([]string, 0)\n\n\t// Start querying the Spyse API from page 1\n\tpage := 1\n\n\tfor {\n\t\twrapper := struct {\n\t\t\tRecords []struct {\n\t\t\t\tDomain string `json:\"domain\"`\n\t\t\t} `json:\"records\"`\n\t\t}{}\n\n\t\tfetchURL := fmt.Sprintf(\n\t\t\t\"https://api.spyse.com/v1/subdomains?api_token=%s&domain=%s&page=%d\",\n\t\t\tapiToken, domain, page,\n\t\t)\n\n\t\terr := fetchJSON(fetchURL, &wrapper)\n\t\tif err != nil {\n\t\t\t// Fail silently, by returning what we got so far\n\t\t\treturn out\n\t\t}\n\n\t\t// The API does not respond with any paging, nor does it give us any idea of\n\t\t// the total amount of domains, so we just have to keep asking for a new page until\n\t\t// the returned `records` array is empty\n\t\t// NOTE: The free tier always gives you the first page for free, and you get \"25 unlimited search requests\"\n\t\tif len(wrapper.Records) == 0 {\n\t\t\tbreak\n\t\t}\n\n\t\tfor _, record := range wrapper.Records {\n\t\t\tout = append(out, record.Domain)\n\t\t}\n\n\t\tpage++\n\t}\n\n\treturn out\n}\n\nfunc fetchFindSubDomains(domain string) ([]string, error) {\n\n\tout := make([]string, 0)\n\n\tapiToken := os.Getenv(\"SPYSE_API_TOKEN\")\n\tif apiToken == \"\" {\n\t\t// Must have an API token\n\t\treturn []string{}, nil\n\t}\n\n\t// The Subdomains-Aggregate endpoint returns some, but not all available domains\n\tout = append(out, callSubdomainsAggregateEndpoint(domain)...)\n\n\t// The Subdomains endpoint only guarantees the first 30 domains, the rest needs credit at Spyze\n\tout = append(out, callSubdomainsEndpoint(domain)...)\n\n\treturn out, nil\n}\n"
+        },
+        {
+          "name": "hackertarget.go",
+          "type": "blob",
+          "size": 0.4775390625,
+          "content": "package main\n\nimport (\n\t\"bufio\"\n\t\"bytes\"\n\t\"fmt\"\n\t\"strings\"\n)\n\nfunc fetchHackerTarget(domain string) ([]string, error) {\n\tout := make([]string, 0)\n\n\traw, err := httpGet(\n\t\tfmt.Sprintf(\"https://api.hackertarget.com/hostsearch/?q=%s\", domain),\n\t)\n\tif err != nil {\n\t\treturn out, err\n\t}\n\n\tsc := bufio.NewScanner(bytes.NewReader(raw))\n\tfor sc.Scan() {\n\t\tparts := strings.SplitN(sc.Text(), \",\", 2)\n\t\tif len(parts) != 2 {\n\t\t\tcontinue\n\t\t}\n\n\t\tout = append(out, parts[0])\n\t}\n\n\treturn out, sc.Err()\n}\n"
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 2.2763671875,
+          "content": "package main\n\nimport (\n\t\"bufio\"\n\t\"encoding/json\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"io/ioutil\"\n\t\"net/http\"\n\t\"os\"\n\t\"strings\"\n\t\"sync\"\n\t\"time\"\n)\n\nfunc main() {\n\tvar subsOnly bool\n\tflag.BoolVar(&subsOnly, \"subs-only\", false, \"Only include subdomains of search domain\")\n\tflag.Parse()\n\n\tvar domains io.Reader\n\tdomains = os.Stdin\n\n\tdomain := flag.Arg(0)\n\tif domain != \"\" {\n\t\tdomains = strings.NewReader(domain)\n\t}\n\n\tsources := []fetchFn{\n\t\tfetchCertSpotter,\n\t\tfetchHackerTarget,\n\t\tfetchThreatCrowd,\n\t\tfetchCrtSh,\n\t\tfetchFacebook,\n\t\t//fetchWayback, // A little too slow :(\n\t\tfetchVirusTotal,\n\t\tfetchFindSubDomains,\n\t\tfetchUrlscan,\n\t\tfetchBufferOverrun,\n\t}\n\n\tout := make(chan string)\n\tvar wg sync.WaitGroup\n\n\tsc := bufio.NewScanner(domains)\n\trl := newRateLimiter(time.Second)\n\n\tfor sc.Scan() {\n\t\tdomain := strings.ToLower(sc.Text())\n\n\t\t// call each of the source workers in a goroutine\n\t\tfor _, source := range sources {\n\t\t\twg.Add(1)\n\t\t\tfn := source\n\n\t\t\tgo func() {\n\t\t\t\tdefer wg.Done()\n\n\t\t\t\trl.Block(fmt.Sprintf(\"%#v\", fn))\n\t\t\t\tnames, err := fn(domain)\n\n\t\t\t\tif err != nil {\n\t\t\t\t\t//fmt.Fprintf(os.Stderr, \"err: %s\\n\", err)\n\t\t\t\t\treturn\n\t\t\t\t}\n\n\t\t\t\tfor _, n := range names {\n\t\t\t\t\tn = cleanDomain(n)\n\t\t\t\t\tif subsOnly && !strings.HasSuffix(n, domain) {\n\t\t\t\t\t\tcontinue\n\t\t\t\t\t}\n\t\t\t\t\tout <- n\n\t\t\t\t}\n\t\t\t}()\n\t\t}\n\t}\n\n\t// close the output channel when all the workers are done\n\tgo func() {\n\t\twg.Wait()\n\t\tclose(out)\n\t}()\n\n\t// track what we've already printed to avoid duplicates\n\tprinted := make(map[string]bool)\n\n\tfor n := range out {\n\t\tif _, ok := printed[n]; ok {\n\t\t\tcontinue\n\t\t}\n\t\tprinted[n] = true\n\n\t\tfmt.Println(n)\n\t}\n}\n\ntype fetchFn func(string) ([]string, error)\n\nfunc httpGet(url string) ([]byte, error) {\n\tres, err := http.Get(url)\n\tif err != nil {\n\t\treturn []byte{}, err\n\t}\n\n\traw, err := ioutil.ReadAll(res.Body)\n\n\tres.Body.Close()\n\tif err != nil {\n\t\treturn []byte{}, err\n\t}\n\n\treturn raw, nil\n}\n\nfunc cleanDomain(d string) string {\n\td = strings.ToLower(d)\n\n\t// no idea what this is, but we can't clean it ¯\\_(ツ)_/¯\n\tif len(d) < 2 {\n\t\treturn d\n\t}\n\n\tif d[0] == '*' || d[0] == '%' {\n\t\td = d[1:]\n\t}\n\n\tif d[0] == '.' {\n\t\td = d[1:]\n\t}\n\n\treturn d\n\n}\n\nfunc fetchJSON(url string, wrapper interface{}) error {\n\tresp, err := http.Get(url)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer resp.Body.Close()\n\tdec := json.NewDecoder(resp.Body)\n\n\treturn dec.Decode(wrapper)\n}\n"
+        },
+        {
+          "name": "ratelimit.go",
+          "type": "blob",
+          "size": 1.080078125,
+          "content": "package main\n\nimport (\n\t\"sync\"\n\t\"time\"\n)\n\n// a rateLimiter allows you to delay operations\n// on a per-key basis. I.e. only one operation for\n// a given key can be done within the delay time\ntype rateLimiter struct {\n\tsync.Mutex\n\tdelay time.Duration\n\tops   map[string]time.Time\n}\n\n// newRateLimiter returns a new *rateLimiter for the\n// provided delay\nfunc newRateLimiter(delay time.Duration) *rateLimiter {\n\treturn &rateLimiter{\n\t\tdelay: delay,\n\t\tops:   make(map[string]time.Time),\n\t}\n}\n\n// Block blocks until an operation for key is\n// allowed to proceed\nfunc (r *rateLimiter) Block(key string) {\n\tnow := time.Now()\n\n\tr.Lock()\n\n\t// if there's nothing in the map we can\n\t// return straight away\n\tif _, ok := r.ops[key]; !ok {\n\t\tr.ops[key] = now\n\t\tr.Unlock()\n\t\treturn\n\t}\n\n\t// if time is up we can return straight away\n\tt := r.ops[key]\n\tdeadline := t.Add(r.delay)\n\tif now.After(deadline) {\n\t\tr.ops[key] = now\n\t\tr.Unlock()\n\t\treturn\n\t}\n\n\tremaining := deadline.Sub(now)\n\n\t// Set the time of the operation\n\tr.ops[key] = now.Add(remaining)\n\tr.Unlock()\n\n\t// Block for the remaining time\n\t<-time.After(remaining)\n}\n"
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "threatcrowd.go",
+          "type": "blob",
+          "size": 0.4169921875,
+          "content": "package main\n\nimport (\n\t\"fmt\"\n)\n\nfunc fetchThreatCrowd(domain string) ([]string, error) {\n\tout := make([]string, 0)\n\n\tfetchURL := fmt.Sprintf(\"https://www.threatcrowd.org/searchApi/v2/domain/report/?domain=%s\", domain)\n\n\twrapper := struct {\n\t\tSubdomains []string `json:\"subdomains\"`\n\t}{}\n\terr := fetchJSON(fetchURL, &wrapper)\n\tif err != nil {\n\t\treturn out, err\n\t}\n\n\tout = append(out, wrapper.Subdomains...)\n\n\treturn out, nil\n}\n"
+        },
+        {
+          "name": "urlscan.go",
+          "type": "blob",
+          "size": 0.93359375,
+          "content": "package main\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"net/http\"\n\t\"net/url\"\n)\n\nfunc fetchUrlscan(domain string) ([]string, error) {\n\tresp, err := http.Get(\n\t\tfmt.Sprintf(\"https://urlscan.io/api/v1/search/?q=domain:%s\", domain),\n\t)\n\tif err != nil {\n\t\treturn []string{}, err\n\t}\n\tdefer resp.Body.Close()\n\n\toutput := make([]string, 0)\n\n\tdec := json.NewDecoder(resp.Body)\n\n\twrapper := struct {\n\t\tResults []struct {\n\t\t\tTask struct {\n\t\t\t\tURL string `json:\"url\"`\n\t\t\t} `json:\"task\"`\n\n\t\t\tPage struct {\n\t\t\t\tURL string `json:\"url\"`\n\t\t\t} `json:\"page\"`\n\t\t} `json:\"results\"`\n\t}{}\n\n\terr = dec.Decode(&wrapper)\n\tif err != nil {\n\t\treturn []string{}, err\n\t}\n\n\tfor _, r := range wrapper.Results {\n\t\tu, err := url.Parse(r.Task.URL)\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\n\t\toutput = append(output, u.Hostname())\n\t}\n\n\tfor _, r := range wrapper.Results {\n\t\tu, err := url.Parse(r.Page.URL)\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\n\t\toutput = append(output, u.Hostname())\n\t}\n\n\treturn output, nil\n}\n"
+        },
+        {
+          "name": "virustotal.go",
+          "type": "blob",
+          "size": 0.4892578125,
+          "content": "package main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n)\n\nfunc fetchVirusTotal(domain string) ([]string, error) {\n\n\tapiKey := os.Getenv(\"VT_API_KEY\")\n\tif apiKey == \"\" {\n\t\t// swallow not having an API key, just\n\t\t// don't fetch\n\t\treturn []string{}, nil\n\t}\n\n\tfetchURL := fmt.Sprintf(\n\t\t\"https://www.virustotal.com/vtapi/v2/domain/report?domain=%s&apikey=%s\",\n\t\tdomain, apiKey,\n\t)\n\n\twrapper := struct {\n\t\tSubdomains []string `json:\"subdomains\"`\n\t}{}\n\n\terr := fetchJSON(fetchURL, &wrapper)\n\treturn wrapper.Subdomains, err\n}\n"
+        },
+        {
+          "name": "wayback.go",
+          "type": "blob",
+          "size": 0.6787109375,
+          "content": "package main\n\nimport (\n\t\"fmt\"\n\t\"net/url\"\n)\n\nfunc fetchWayback(domain string) ([]string, error) {\n\n\tfetchURL := fmt.Sprintf(\"http://web.archive.org/cdx/search/cdx?url=*.%s/*&output=json&collapse=urlkey\", domain)\n\n\tvar wrapper [][]string\n\terr := fetchJSON(fetchURL, &wrapper)\n\tif err != nil {\n\t\treturn []string{}, err\n\t}\n\n\tout := make([]string, 0)\n\n\tskip := true\n\tfor _, item := range wrapper {\n\t\t// The first item is always just the string \"original\",\n\t\t// so we should skip the first item\n\t\tif skip {\n\t\t\tskip = false\n\t\t\tcontinue\n\t\t}\n\n\t\tif len(item) < 3 {\n\t\t\tcontinue\n\t\t}\n\n\t\tu, err := url.Parse(item[2])\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\n\t\tout = append(out, u.Hostname())\n\t}\n\n\treturn out, nil\n}\n"
+        }
+      ]
+    }
+  ]
+}

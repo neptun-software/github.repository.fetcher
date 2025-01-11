@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "timestamp": 1736566863709,
+    "page": 434,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ha/doozerd",
+      "stars": 3269,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.080078125,
+          "content": "*-test.sh\n*.DS_Store\n*.[568]\n*.log\n*.out\n*.prof\n.roundup.*\ndoc/*.html\ndoc/*.[0-9]\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.3037109375,
+          "content": "language: go\ninstall:\n  - go get github.com/kr/pretty\n  - go get github.com/bmizerany/assert\n  - go get code.google.com/p/go.net/websocket\n  - go get code.google.com/p/goprotobuf/proto\n  - go get github.com/ha/doozer\nscript:\n    - pushd $TRAVIS_BUILD_DIR\n    - ./all.sh\n    - popd\nnotifications:\n  email: false\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0634765625,
+          "content": "The MIT License\n\nCopyright (c) 2010 Blake Mizerany, Keith Rarick\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.1357421875,
+          "content": "# Doozer\n\n![logo](doc/doozer.png)\n\n[![Build Status](https://secure.travis-ci.org/ha/doozerd.png)](http://travis-ci.org/ha/doozerd)\n\n## What Is It?\n\nDoozer is a highly-available, completely consistent\nstore for small amounts of extremely important data.\nWhen the data changes, it can notify connected clients\nimmediately (no polling), making it ideal for\ninfrequently-updated data for which clients want\nreal-time updates. Doozer is good for name service,\ndatabase master elections, and configuration data shared\nbetween several machines. See *When Should I Use It?*,\nbelow, for details.\n\nSee the [mailing list][mail] to discuss doozer with\nother users and developers.\n\n## Quick Start\n\n1. Download [doozerd](https://github.com/ha/doozerd/downloads)\n2. Unpack the archive and put `doozerd` in your `PATH`\n3. Repeat for [doozer](https://github.com/ha/doozer/downloads)\n4. Start a doozerd with a WebView listening on `:8080`\n\n        $ doozerd -w \":8080\"\n\n5. Set a key and read it back\n\n        $ echo \"hello, world\" | doozer add /message\n        $ doozer get /message\n        hello, world\n\n6. Open <http://localhost:8080> and see your message\n\n![doozer web view](doc/webview.png)\n\n## How Does It Work?\n\nDoozer is a network service. A handful of machines\n(usually three, five, or seven) each run one doozer\nserver process. These processes communicate with each\nother using a standard fully-consistent distributed\nconsensus algorithm. Clients dial in to one or more of\nthe doozer servers, issue commands, such as GET, SET,\nand WATCH, and receive responses.\n\n(insert network diagram here)\n\nEach doozerd process has a complete copy of the\ndatastore and serves both read and write requests; there\nis no distinguished \"master\" or \"leader\". Doozer is\ndesigned to store data that fits entirely in memory; it\nnever writes data to permanent files. A separate tool\nprovides durable storage for backup and recovery.\n\n## When Should I Use It?\n\nHere are some example scenarios:\n\n1. *Name Service*\n\n    You have a set of machines that serve incoming HTTP\n    requests. Due to hardware failure, occasionally one\n    of these machines will fail and you replace it with a\n    new machine at a new network address. A change to DNS\n    data would take time to reach all clients, because\n    the TTL of the old DNS record would cause it to\n    remain in client caches for some time.\n\n    Instead of DNS, you could use Doozer. Clients can\n    subscribe to the names they are interested in, and\n    they will get notified when any of those names&#8217;\n    addresses change.\n\n2. *Database Master Election*\n\n    You are deploying a MySQL system. You want it to have\n    high availability, so you add slaves on separate\n    physical machines. When the master fails, you might\n    promote one slave to become the new master. At any\n    given time, clients need to know which machine is the\n    master, and the slaves must coordinate with each\n    other during failover.\n\n    You can use doozer to store the address of the\n    current master and all information necessary to\n    coordinate failover.\n\n3. *Configuration*\n\n    You have processes on several different machines, and\n    you want them all to use the same config file, which\n    you must occasionally update. It is important that\n    they all use the same configuration.\n\n    Store the config file in doozer, and have the\n    processes read their configuration directly from\n    doozer.\n\n## What can I do with it?\n\nWe have a detailed description of the [data model](doc/data-model.md).\n\nFor ways to manipulate or read the data, see the [protocol spec](doc/proto.md).\n\nTry out doozer's fault-tolerance with some [fire drills](doc/firedrill.md).\n\n## Similar Projects\n\nDoozer is similar to the following pieces of software:\n\n * Apache Zookeeper <http://zookeeper.apache.org/>\n * Google Chubby <http://research.google.com/archive/chubby.html>\n\n## Hacking on Doozer\n\n * [hacking on doozer](doc/hacking.md)\n * [mailing list][mail]\n\n## License and Authors\n\nDoozer is distributed under the terms of the MIT\nLicense. See [LICENSE](LICENSE) for details.\n\nDoozer was created by Blake Mizerany and Keith Rarick.\nType `git shortlog -s` for a full list of contributors.\n\n[mail]: https://groups.google.com/group/doozer\n"
+        },
+        {
+          "name": "all.sh",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "#!/bin/sh\nset -e\nsh make.sh\ngo test -v ./...\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "boot.go",
+          "type": "blob",
+          "size": 3.556640625,
+          "content": "package main\n\nimport (\n\t\"crypto/rand\"\n\t\"encoding/base32\"\n\t\"github.com/ha/doozer\"\n\t\"time\"\n)\n\nconst attachTimeout = 1e9\n\nfunc boot(name, id, laddr, buri string) *doozer.Conn {\n\tb, err := doozer.DialUri(buri, \"\")\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\terr = b.Access(rwsk)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\tcl := lookupAndAttach(b, name)\n\tif cl == nil {\n\t\treturn elect(name, id, laddr, b)\n\t}\n\n\treturn cl\n}\n\n// Elect chooses a seed node, and returns a connection to a cal.\n// If this process is the seed, returns nil.\nfunc elect(name, id, laddr string, b *doozer.Conn) *doozer.Conn {\n\t// advertise our presence, since we might become a cal\n\tnspath := \"/ctl/ns/\" + name + \"/\" + id\n\tr, err := b.Set(nspath, 0, []byte(laddr))\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\t// fight to be the seed\n\t_, err = b.Set(\"/ctl/boot/\"+name, 0, []byte(id))\n\tif err, ok := err.(*doozer.Error); ok && err.Err == doozer.ErrOldRev {\n\t\t// we lost, lookup addresses again\n\t\tcl := lookupAndAttach(b, name)\n\t\tif cl == nil {\n\t\t\tpanic(\"failed to attach after losing election\")\n\t\t}\n\n\t\t// also delete our entry, since we're not officially a cal yet.\n\t\t// it gets set again in peer.Main when we become a cal.\n\t\terr := b.Del(nspath, r)\n\t\tif err != nil {\n\t\t\tpanic(err)\n\t\t}\n\n\t\treturn cl\n\t} else if err != nil {\n\t\tpanic(err)\n\t}\n\n\treturn nil // we are the seed node -- don't attach\n}\n\nfunc lookupAndAttach(b *doozer.Conn, name string) *doozer.Conn {\n\tas := lookup(b, name)\n\tif len(as) > 0 {\n\t\tcl := attach(name, as)\n\t\tif cl != nil {\n\t\t\treturn cl\n\t\t}\n\t}\n\treturn nil\n}\n\nfunc attach(name string, addrs []string) *doozer.Conn {\n\tch := make(chan *doozer.Conn, 1)\n\n\tfor _, a := range addrs {\n\t\tgo func(a string) {\n\t\t\tif c, _ := isCal(name, a); c != nil {\n\t\t\t\tch <- c\n\t\t\t}\n\t\t}(a)\n\t}\n\n\tgo func() {\n\t\t<-time.After(attachTimeout)\n\t\tch <- nil\n\t}()\n\n\treturn <-ch\n}\n\n// IsCal checks if addr is a CAL in the cluster named name.\n// Returns a client if so, nil if not.\nfunc isCal(name, addr string) (*doozer.Conn, error) {\n\tc, err := doozer.Dial(addr)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\terr = c.Access(rwsk)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tv, _, _ := c.Get(\"/ctl/name\", nil)\n\tif string(v) != name {\n\t\treturn nil, nil\n\t}\n\n\trev, err := c.Rev()\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\n\tvar cals []string\n\tnames, err := c.Getdir(\"/ctl/cal\", rev, 0, -1)\n\tif err != nil {\n\t\treturn nil, err\n\t}\n\tfor _, name := range names {\n\t\tcals = append(cals, name)\n\t}\n\n\tfor _, cal := range cals {\n\t\tbody, _, err := c.Get(\"/ctl/cal/\"+cal, nil)\n\t\tif err != nil || len(body) == 0 {\n\t\t\tcontinue\n\t\t}\n\n\t\tid := string(body)\n\n\t\tv, _, err := c.Get(\"/ctl/node/\"+id+\"/addr\", nil)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\t\tif string(v) == addr {\n\t\t\treturn c, nil\n\t\t}\n\t}\n\n\treturn nil, nil\n}\n\n// Find possible addresses for cluster named name.\nfunc lookup(b *doozer.Conn, name string) (as []string) {\n\trev, err := b.Rev()\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\tpath := \"/ctl/ns/\" + name\n\tnames, err := b.Getdir(path, rev, 0, -1)\n\tif err == doozer.ErrNoEnt {\n\t\treturn nil\n\t} else if err, ok := err.(*doozer.Error); ok && err.Err == doozer.ErrNoEnt {\n\t\treturn nil\n\t} else if err != nil {\n\t\tpanic(err)\n\t}\n\n\tpath += \"/\"\n\tfor _, name := range names {\n\t\tbody, _, err := b.Get(path+name, &rev)\n\t\tif err != nil {\n\t\t\tpanic(err)\n\t\t}\n\t\tas = append(as, string(body))\n\t}\n\treturn as\n}\n\nfunc randId() string {\n\tconst bits = 80 // enough for 10**8 ids with p(collision) < 10**-8\n\trnd := make([]byte, bits/8)\n\n\tn, err := rand.Read(rnd)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tif n != len(rnd) {\n\t\tpanic(\"io.ReadFull len mismatch\")\n\t}\n\n\tenc := make([]byte, base32.StdEncoding.EncodedLen(len(rnd)))\n\tbase32.StdEncoding.Encode(enc, rnd)\n\treturn string(enc)\n}\n"
+        },
+        {
+          "name": "consensus",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dist.sh",
+          "type": "blob",
+          "size": 0.26953125,
+          "content": "#!/bin/bash\nset -e\neval `gomake -f Make.inc go-env`\n./clean.sh\n./all.sh\nbase=`./cmd/doozerd/doozerd -v|tr ' ' -`\nfile=$base-$GOOS-$GOARCH.tar\ntrap \"rm -rf $base $file\" 0\nmkdir $base\ncp cmd/doozerd/doozerd $base\ncp ../README.md $base/README.md\ntar cf $file $base\ngzip -9 $file\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doozerd.go",
+          "type": "blob",
+          "size": 3.435546875,
+          "content": "package main\n\nimport (\n\t\"crypto/tls\"\n\t_ \"expvar\"\n\t\"flag\"\n\t\"fmt\"\n\t\"github.com/ha/doozer\"\n\t\"github.com/ha/doozerd/peer\"\n\t\"log\"\n\t\"net\"\n\t\"os\"\n\t\"strconv\"\n)\n\nconst defWebPort = 8000\n\ntype strings []string\n\nfunc (a *strings) Set(s string) error {\n\t*a = append(*a, s)\n\treturn nil\n}\n\nfunc (a *strings) String() string {\n\treturn fmt.Sprint(*a)\n}\n\nvar (\n\tladdr       = flag.String(\"l\", \"127.0.0.1:8046\", \"The address to bind to.\")\n\taaddrs      = strings{}\n\tburi        = flag.String(\"b\", \"\", \"boot cluster uri (tried after -a)\")\n\twaddr       = flag.String(\"w\", \"\", \"web listen addr (default: see below)\")\n\tname        = flag.String(\"c\", \"local\", \"The non-empty cluster name.\")\n\tshowVersion = flag.Bool(\"v\", false, \"print doozerd's version string\")\n\tpi          = flag.Float64(\"pulse\", 1, \"how often (in seconds) to set applied key\")\n\tfd          = flag.Float64(\"fill\", .1, \"delay (in seconds) to fill unowned seqns\")\n\tkt          = flag.Float64(\"timeout\", 60, \"timeout (in seconds) to kick inactive nodes\")\n\thi          = flag.Int64(\"hist\", 2000, \"length of history/revisions to keep\")\n\tcertFile    = flag.String(\"tlscert\", \"\", \"TLS public certificate\")\n\tkeyFile     = flag.String(\"tlskey\", \"\", \"TLS private key\")\n)\n\nvar (\n\trwsk = os.Getenv(\"DOOZER_RWSECRET\")\n\trosk = os.Getenv(\"DOOZER_ROSECRET\")\n)\n\nfunc init() {\n\tflag.Var(&aaddrs, \"a\", \"attach address (may be given multiple times)\")\n}\n\nfunc Usage() {\n\tfmt.Fprintf(os.Stderr, \"Usage: %s [OPTIONS]\\n\", os.Args[0])\n\tfmt.Fprintf(os.Stderr, \"\\nOptions:\\n\")\n\tflag.PrintDefaults()\n\tfmt.Fprintf(os.Stderr, `\nThe default for -w is to use the addr from -l,\nand change the port to 8000. If you give \"-w false\",\ndoozerd will not listen for for web connections.\n`)\n}\n\nfunc main() {\n\t*buri = os.Getenv(\"DOOZER_BOOT_URI\")\n\n\tflag.Usage = Usage\n\tflag.Parse()\n\n\tif *showVersion {\n\t\tfmt.Println(\"doozerd\", peer.Version)\n\t\treturn\n\t}\n\n\tif *laddr == \"\" {\n\t\tfmt.Fprintln(os.Stderr, \"require a listen address\")\n\t\tflag.Usage()\n\t\tos.Exit(1)\n\t}\n\n\tlog.SetPrefix(\"DOOZER \")\n\tlog.SetFlags(log.Ldate | log.Lmicroseconds)\n\n\ttsock, err := net.Listen(\"tcp\", *laddr)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\tif *certFile != \"\" || *keyFile != \"\" {\n\t\ttsock = tlsWrap(tsock, *certFile, *keyFile)\n\t}\n\n\tuaddr, err := net.ResolveUDPAddr(\"udp\", *laddr)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\tusock, err := net.ListenUDP(\"udp\", uaddr)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\tvar wsock net.Listener\n\tif *waddr == \"\" {\n\t\twa, err := net.ResolveTCPAddr(\"tcp\", *laddr)\n\t\tif err != nil {\n\t\t\tpanic(err)\n\t\t}\n\t\twa.Port = defWebPort\n\t\t*waddr = wa.String()\n\t}\n\tif b, err := strconv.ParseBool(*waddr); err != nil && !b {\n\t\twsock, err = net.Listen(\"tcp\", *waddr)\n\t\tif err != nil {\n\t\t\tpanic(err)\n\t\t}\n\t}\n\n\tid := randId()\n\tvar cl *doozer.Conn\n\tswitch {\n\tcase len(aaddrs) > 0 && *buri != \"\":\n\t\tcl = attach(*name, aaddrs)\n\t\tif cl == nil {\n\t\t\tcl = boot(*name, id, *laddr, *buri)\n\t\t}\n\tcase len(aaddrs) > 0:\n\t\tcl = attach(*name, aaddrs)\n\t\tif cl == nil {\n\t\t\tpanic(\"failed to attach\")\n\t\t}\n\tcase *buri != \"\":\n\t\tcl = boot(*name, id, *laddr, *buri)\n\t}\n\n\tpeer.Main(*name, id, *buri, rwsk, rosk, cl, usock, tsock, wsock, ns(*pi), ns(*fd), ns(*kt), *hi)\n\tpanic(\"main exit\")\n}\n\nfunc ns(x float64) int64 {\n\treturn int64(x * 1e9)\n}\n\nfunc tlsWrap(l net.Listener, cfile, kfile string) net.Listener {\n\tif cfile == \"\" || kfile == \"\" {\n\t\tpanic(\"need both cert file and key file\")\n\t}\n\n\tcert, err := tls.LoadX509KeyPair(cfile, kfile)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\ttc := new(tls.Config)\n\ttc.Certificates = append(tc.Certificates, cert)\n\treturn tls.NewListener(l, tc)\n}\n"
+        },
+        {
+          "name": "gc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "make.sh",
+          "type": "blob",
+          "size": 0.244140625,
+          "content": "#!/bin/sh\nset -e\n\nPKG=web\n\nGOFILES=\"\n\tmain.css.go\n\tmain.html.go\n\tstats.html.go\n\tmain.js.go\n\"\n\nfor f in $GOFILES\ndo\n  b=\"web/$(basename $f .go)\"\n  ./web/file2gostring $PKG $b < $b > web/$f.part\n  mv web/$f.part web/$f\ndone\n\ngo get -d ./...\ngo install\n"
+        },
+        {
+          "name": "member",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "peer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "quiet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "store",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

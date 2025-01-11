@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736567239864,
+    "page": 836,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "google/starlark-go",
+      "stars": 2398,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CNAME",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "go.starlark.net\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4716796875,
+          "content": "Copyright (c) 2017 The Bazel Authors.  All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n1. Redistributions of source code must retain the above copyright\n   notice, this list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright\n   notice, this list of conditions and the following disclaimer in the\n   documentation and/or other materials provided with the\n   distribution.\n\n3. Neither the name of the copyright holder nor the names of its\n   contributors may be used to endorse or promote products derived\n   from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nHOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.4140625,
+          "content": "\n<!-- This file is the project homepage for go.starlark.net -->\n\n# Starlark in Go\n\n[![Go Tests](https://github.com/google/starlark-go/actions/workflows/tests.yml/badge.svg)](https://github.com/google/starlark-go/actions/workflows/tests.yml)\n[![Go Reference](https://pkg.go.dev/badge/go.starlark.net/starlark.svg)](https://pkg.go.dev/go.starlark.net/starlark)\n\nThis is the home of the _Starlark in Go_ project.\nStarlark in Go is an interpreter for Starlark, implemented in Go.\nStarlark was formerly known as Skylark.\nThe new import path for Go packages is `\"go.starlark.net/starlark\"`.\n\nStarlark is a dialect of Python intended for use as a configuration language.\nLike Python, it is an untyped dynamic language with high-level data\ntypes, first-class functions with lexical scope, and garbage collection.\nUnlike CPython, independent Starlark threads execute in parallel, so\nStarlark workloads scale well on parallel machines.\nStarlark is a small and simple language with a familiar and highly\nreadable syntax. You can use it as an expressive notation for\nstructured data, defining functions to eliminate repetition, or you\ncan use it to add scripting capabilities to an existing application.\n\nA Starlark interpreter is typically embedded within a larger\napplication, and the application may define additional domain-specific\nfunctions and data types beyond those provided by the core language.\nFor example, Starlark was originally developed for the\n[Bazel build tool](https://bazel.build).\nBazel uses Starlark as the notation both for its BUILD files (like\nMakefiles, these declare the executables, libraries, and tests in a\ndirectory) and for [its macro\nlanguage](https://docs.bazel.build/versions/master/skylark/language.html),\nthrough which Bazel is extended with custom logic to support new\nlanguages and compilers.\n\n\n## Documentation\n\n* Language definition: [doc/spec.md](doc/spec.md)\n\n* About the Go implementation: [doc/impl.md](doc/impl.md)\n\n* API documentation: [pkg.go.dev/go.starlark.net/starlark](https://pkg.go.dev/go.starlark.net/starlark)\n\n* Mailing list: [starlark-go](https://groups.google.com/forum/#!forum/starlark-go)\n\n* Issue tracker: [https://github.com/google/starlark-go/issues](https://github.com/google/starlark-go/issues)\n\n### Getting started\n\nBuild the code:\n\n```shell\n# check out the code and dependencies,\n# and install interpreter in $GOPATH/bin\n$ go install go.starlark.net/cmd/starlark@latest\n```\n\nRun the interpreter:\n\n```console\n$ cat coins.star\ncoins = {\n  'dime': 10,\n  'nickel': 5,\n  'penny': 1,\n  'quarter': 25,\n}\nprint('By name:\\t' + ', '.join(sorted(coins.keys())))\nprint('By value:\\t' + ', '.join(sorted(coins.keys(), key=coins.get)))\n\n$ starlark coins.star\nBy name:\tdime, nickel, penny, quarter\nBy value:\tpenny, nickel, dime, quarter\n```\n\nInteract with the read-eval-print loop (REPL):\n\n```pycon\n$ starlark\n>>> def fibonacci(n):\n...    res = list(range(n))\n...    for i in res[2:]:\n...        res[i] = res[i-2] + res[i-1]\n...    return res\n...\n>>> fibonacci(10)\n[0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n>>>\n```\n\nWhen you have finished, type `Ctrl-D` to close the REPL's input stream.\n\nEmbed the interpreter in your Go program:\n\n```go\nimport \"go.starlark.net/starlark\"\n\n// Execute Starlark program in a file.\nthread := &starlark.Thread{Name: \"my thread\"}\nglobals, err := starlark.ExecFile(thread, \"fibonacci.star\", nil, nil)\nif err != nil { ... }\n\n// Retrieve a module global.\nfibonacci := globals[\"fibonacci\"]\n\n// Call Starlark function from Go.\nv, err := starlark.Call(thread, fibonacci, starlark.Tuple{starlark.MakeInt(10)}, nil)\nif err != nil { ... }\nfmt.Printf(\"fibonacci(10) = %v\\n\", v) // fibonacci(10) = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34]\n```\n\nSee [starlark/example_test.go](starlark/example_test.go) for more examples.\n\n### Contributing\n\nWe welcome submissions but please let us know what you're working on\nif you want to change or add to the Starlark repository.\n\nBefore undertaking to write something new for the Starlark project,\nplease file an issue or claim an existing issue.\nAll significant changes to the language or to the interpreter's Go\nAPI must be discussed before they can be accepted.\nThis gives all participants a chance to validate the design and to\navoid duplication of effort.\n\nDespite some differences, the Go implementation of Starlark strives to\nmatch the behavior of [the Java implementation](https://github.com/bazelbuild/bazel)\nused by Bazel and maintained by the Bazel team.\nFor that reason, proposals to change the language itself should\ngenerally be directed to [the Starlark site](\nhttps://github.com/bazelbuild/starlark/), not to the maintainers of this\nproject.\nOnly once there is consensus that a language change is desirable may\nits Go implementation proceed.\n\nWe use GitHub pull requests for contributions.\n\nPlease complete Google's contributor license agreement (CLA) before\nsending your first change to the project.  If you are the copyright\nholder, you will need to agree to the\n[individual contributor license agreement](https://cla.developers.google.com/about/google-individual),\nwhich can be completed online.\nIf your organization is the copyright holder, the organization will\nneed to agree to the [corporate contributor license agreement](https://cla.developers.google.com/about/google-corporate).\nIf the copyright holder for your contribution has already completed\nthe agreement in connection with another Google open source project,\nit does not need to be completed again.\n\n### Stability\n\nWe reserve the right to make breaking language and API changes at this\nstage in the project, although we will endeavor to keep them to a minimum.\nOnce the Bazel team has finalized the version 1 language specification,\nwe will be more rigorous with interface stability.\n\nWe aim to support the most recent four (go1.x) releases of the Go\ntoolchain. For example, if the latest release is go1.20, we support it\nalong with go1.19, go1.18, and go1.17, but not go1.16.\n\n### Credits\n\nStarlark was designed and implemented in Java by\nJon Brandvein,\nAlan Donovan,\nLaurent Le Brun,\nDmitry Lomov,\nVladimir Moskva,\nFrançois-René Rideau,\nGergely Svigruha, and\nFlorian Weikert,\nstanding on the shoulders of the Python community.\nThe Go implementation was written by Alan Donovan and Jay Conrod;\nits scanner was derived from one written by Russ Cox.\n\n### Legal\n\nStarlark in Go is Copyright (c) 2018 The Bazel Authors.\nAll rights reserved.\n\nIt is provided under a 3-clause BSD license:\n[LICENSE](https://github.com/google/starlark-go/blob/master/LICENSE).\n\nStarlark in Go is not an official Google product.\n"
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.470703125,
+          "content": "module go.starlark.net\n\ngo 1.19\n\nrequire (\n\tgithub.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e\n\tgithub.com/google/go-cmp v0.5.5\n\tgolang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8\n\tgolang.org/x/term v0.0.0-20220526004731-065cf7ba2467\n\tgoogle.golang.org/protobuf v1.33.0\n)\n\nrequire (\n\tgithub.com/chzyer/logex v1.1.10 // indirect\n\tgithub.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 // indirect\n\tgolang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 1.6552734375,
+          "content": "github.com/chzyer/logex v1.1.10 h1:Swpa1K6QvQznwJRcfTfQJmTE72DqScAa40E+fbHEXEE=\ngithub.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=\ngithub.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e h1:fY5BOSpyZCqRo5OhCuC+XN+r/bBCmeuuJtjz+bCNIf8=\ngithub.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=\ngithub.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1 h1:q763qf9huN11kDQavWsoZXJNW3xEE4JJyHa5Q25/sd8=\ngithub.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=\ngithub.com/google/go-cmp v0.5.5 h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=\ngithub.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=\ngolang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 h1:0A+M6Uqn+Eje4kHMK80dtF3JCXC4ykBgQG4Fe06QRhQ=\ngolang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/term v0.0.0-20220526004731-065cf7ba2467 h1:CBpWXWQpIRjzmkkA+M7q9Fqnwd2mZr3AFqexg8YTfoM=\ngolang.org/x/term v0.0.0-20220526004731-065cf7ba2467/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=\ngolang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=\ngolang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=\ngolang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=\ngoogle.golang.org/protobuf v1.33.0 h1:uNO2rsAINq/JlFpSdYEKIZ0uKD/R9cpdv0T+yoGwGmI=\ngoogle.golang.org/protobuf v1.33.0/go.mod h1:c6P6GXX6sHbq/GpV6MGZEdwhWPcYBgnhAHhKbcUYpos=\n"
+        },
+        {
+          "name": "internal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "repl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resolve",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "starlark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "starlarkjson",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "starlarkstruct",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "starlarktest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "syntax",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

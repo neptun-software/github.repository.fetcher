@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": 1736566905153,
+    "page": 475,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "chaozh/MIT-6.824",
+      "stars": 3175,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".check-build",
+          "type": "blob",
+          "size": 2.873046875,
+          "content": "#!/usr/bin/env bash\n\nset -eu\n\nREFERENCE_FILES=(\n    # lab 1\n    src/mrapps/crash.go\n    src/mrapps/indexer.go\n    src/mrapps/mtiming.go\n    src/mrapps/nocrash.go\n    src/mrapps/rtiming.go\n    src/mrapps/wc.go\n    src/main/mrsequential.go\n    src/main/mrcoordinator.go\n    src/main/mrworker.go\n\n    # lab 2\n    src/raft/persister.go\n    src/raft/test_test.go\n    src/raft/config.go\n    src/labrpc/labrpc.go\n\n    # lab 3\n    src/kvraft/test_test.go\n    src/kvraft/config.go\n\n    # lab 4a\n    src/shardctrler/test_test.go\n    src/shardctrler/config.go\n\n    # lab 4b\n    src/shardkv/test_test.go\n    src/shardkv/config.go\n)\n\nmain() {\n    upstream=\"$1\"\n    labnum=\"$2\"\n\n    # make sure we have reference copy of lab, in FETCH_HEAD\n    git fetch \"$upstream\" 2>/dev/null || die \"unable to git fetch $upstream\"\n\n    # copy existing directory\n    tmpdir=\"$(mktemp -d)\"\n    find src -type s -delete # cp can't copy sockets\n    cp -r src \"$tmpdir\"\n    orig=\"$PWD\"\n    cd \"$tmpdir\"\n\n    # check out reference files\n    for f in ${REFERENCE_FILES[@]}; do\n        mkdir -p \"$(dirname $f)\"\n        git --git-dir=\"$orig/.git\" show \"FETCH_HEAD:$f\" > \"$f\"\n    done\n\n    case $labnum in\n        \"lab1\") check_lab1;;\n        \"lab2a\"|\"lab2b\"|\"lab2c\"|\"lab2d\") check_lab2;;\n        \"lab3a\"|\"lab3b\") check_lab3;;\n        \"lab4a\") check_lab4a;;\n        \"lab4b\") check_lab4b;;\n        *) die \"unknown lab: $labnum\";;\n    esac\n\n    cd\n    rm -rf \"$tmpdir\"\n}\n\ncheck_lab1() {\n    check_cmd cd src/mrapps\n    check_cmd go build -buildmode=plugin wc.go\n    check_cmd go build -buildmode=plugin indexer.go\n    check_cmd go build -buildmode=plugin mtiming.go\n    check_cmd go build -buildmode=plugin rtiming.go\n    check_cmd go build -buildmode=plugin crash.go\n    check_cmd go build -buildmode=plugin nocrash.go\n    check_cmd cd ../main\n    check_cmd go build mrcoordinator.go\n    check_cmd go build mrworker.go\n    check_cmd go build mrsequential.go\n}\n\ncheck_lab2() {\n    check_cmd cd src/raft\n    check_cmd go test -c\n}\n\ncheck_lab3() {\n    check_cmd cd src/kvraft\n    check_cmd go test -c\n}\n\ncheck_lab4a() {\n    check_cmd cd src/shardctrler\n    check_cmd go test -c\n}\n\ncheck_lab4b() {\n    check_cmd cd src/shardkv\n    check_cmd go test -c\n    # also check other labs/parts\n    cd \"$tmpdir\"\n    check_lab4a\n    cd \"$tmpdir\"\n    check_lab3\n    cd \"$tmpdir\"\n    check_lab2\n}\n\ncheck_cmd() {\n    if ! \"$@\" >/dev/null 2>&1; then\n        echo \"We tried building your source code with testing-related files reverted to original versions, and the build failed. This copy of your code is preserved in $tmpdir for debugging purposes. Please make sure the code you are trying to hand in does not make changes to test code.\" >&2\n        echo >&2\n        echo \"The build failed while trying to run the following command:\" >&2\n        echo >&2\n        echo \"$ $@\" >&2\n        echo \"  (cwd: ${PWD#$tmpdir/})\" >&2\n        exit 1\n    fi\n}\n\ndie() {\n    echo \"$1\" >&2\n    exit 1\n}\n\nmain \"$@\"\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "pkg/\napi.key\n.api.key.trimmed\n*-handin.tar.gz\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2017 chaozh\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.8623046875,
+          "content": "# This is the Makefile helping you submit the labs.\n# Just create 6.824/api.key with your API key in it,\n# and submit your lab with the following command:\n#     $ make [lab1|lab2a|lab2b|lab2c|lab2d|lab3a|lab3b|lab4a|lab4b]\n\nLABS=\" lab1 lab2a lab2b lab2c lab2d lab3a lab3b lab4a lab4b \"\n\n%: check-%\n\t@echo \"Preparing $@-handin.tar.gz\"\n\t@if echo $(LABS) | grep -q \" $@ \" ; then \\\n\t\techo \"Tarring up your submission...\" ; \\\n\t\tCOPYFILE_DISABLE=1 tar cvzf $@-handin.tar.gz \\\n\t\t\t\"--exclude=src/main/pg-*.txt\" \\\n\t\t\t\"--exclude=src/main/diskvd\" \\\n\t\t\t\"--exclude=src/mapreduce/824-mrinput-*.txt\" \\\n\t\t\t\"--exclude=src/main/mr-*\" \\\n\t\t\t\"--exclude=mrtmp.*\" \\\n\t\t\t\"--exclude=src/main/diff.out\" \\\n\t\t\t\"--exclude=src/main/mrmaster\" \\\n\t\t\t\"--exclude=src/main/mrsequential\" \\\n\t\t\t\"--exclude=src/main/mrworker\" \\\n\t\t\t\"--exclude=*.so\" \\\n\t\t\tMakefile src; \\\n\t\tif ! test -e api.key ; then \\\n\t\t\techo \"Missing $(PWD)/api.key. Please create the file with your key in it or submit the $@-handin.tar.gz via the web interface.\"; \\\n\t\telse \\\n\t\t\techo \"Are you sure you want to submit $@? Enter 'yes' to continue:\"; \\\n\t\t\tread line; \\\n\t\t\tif test \"$$line\" != \"yes\" ; then echo \"Giving up submission\"; exit; fi; \\\n\t\t\tif test `stat -c \"%s\" \"$@-handin.tar.gz\" 2>/dev/null || stat -f \"%z\" \"$@-handin.tar.gz\"` -ge 20971520 ; then echo \"File exceeds 20MB.\"; exit; fi; \\\n\t\t\tcat api.key | tr -d '\\n' > .api.key.trimmed ; \\\n\t\t\tcurl --silent --fail --show-error -F file=@$@-handin.tar.gz -F \"key=<.api.key.trimmed\" \\\n\t\t\thttps://6824.scripts.mit.edu/2021/handin.py/upload > /dev/null || { \\\n\t\t\t\techo ; \\\n\t\t\t\techo \"Submit seems to have failed.\"; \\\n\t\t\t\techo \"Please upload the tarball manually on the submission website.\"; } \\\n\t\tfi; \\\n\telse \\\n\t\techo \"Bad target $@. Usage: make [$(LABS)]\"; \\\n\tfi\n\n.PHONY: check-%\ncheck-%:\n\t@echo \"Checking that your submission builds correctly...\"\n\t@./.check-build git://g.csail.mit.edu/6.824-golabs-2021 $(patsubst check-%,%,$@)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.9775390625,
+          "content": "# MIT-6.824\nBasic Sources for MIT 6.824 Distributed Systems Class\n\nMIT 6.824 课程的学习资料 代码更新为2021版\n\n## 课程安排 Schedule\n\n[课程安排](https://pdos.csail.mit.edu/6.824/schedule.html)\n\n## 视频 Videos\n\n[2020年lectures视频地址](https://www.bilibili.com/video/av87684880)\n\n## 讲座 Lectures\n\n- [Lec1: 入门介绍(以MapReduce为例)](https://github.com/chaozh/MIT-6.824/issues/2)\n- [Lec2: RPC与线程机制(Go语言实战)](https://github.com/chaozh/MIT-6.824/issues/3)\n- [Lec3: GFS](https://github.com/chaozh/MIT-6.824/issues/6)\n- [Lec4：主从备份](https://github.com/chaozh/MIT-6.824/issues/7)\n- [Lec 5：Raft基本](https://github.com/chaozh/MIT-6.824/issues/9)\n- [Lec6：Raft实现](https://github.com/chaozh/MIT-6.824/issues/10)\n\n## 问题 Questions\n\n记录在issues中\n\n- 课前问题：[对分布式系统课程有啥想说的？](https://github.com/chaozh/MIT-6.824/issues/1)\n- [Lab0 完成Crawler与KV的Go语言实验](https://github.com/chaozh/MIT-6.824/issues/4)\n- Lab1 MapReduce实验\n- [Lec3 请描述客户端从GFS读数据的大致流程？](https://github.com/chaozh/MIT-6.824/issues/6)\n- [Lec4 论文中VM FT如何处理网络分区问题？](https://github.com/chaozh/MIT-6.824/issues/7)\n- [Lec5 Raft什么机制会阻止他们当选？](https://github.com/chaozh/MIT-6.824/issues/9)\n- [Lec6 Figure13中第8步能否导致状态机重置，即接收InstallSnapshot RPC消息能否导致状态回退](https://github.com/chaozh/MIT-6.824/issues/10)\n\n## 参考资料 Related\n\n- [MapReduce(2004)](https://pdos.csail.mit.edu/6.824/papers/mapreduce.pdf)\n- [GFS(2003)](https://static.googleusercontent.com/media/research.google.com/zh-CN//archive/gfs-sosp2003.pdf)\n- [Fault-Tolerant Virtual Machines(2010)](https://pdos.csail.mit.edu/6.824/papers/vm-ft.pdf)\n- [Raft Extended(2014)](https://pdos.csail.mit.edu/6.824/papers/raft-extended.pdf)\n\n\n\n## 学习小组 Group\n\nmit6.824自学互助 QQ群：258537180(群已满)\nmit6.824自学互助二群 QQ群：682413790(群已满)\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

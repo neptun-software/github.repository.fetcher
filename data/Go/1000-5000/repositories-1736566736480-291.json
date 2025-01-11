@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "timestamp": 1736566736480,
+    "page": 291,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "adtac/commento",
+      "stars": 3742,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.134765625,
+          "content": "[.*]\ncharset: utf-8\nend_of_line: lf\n\n[*.go]\nindent_style = tab\n\n[*.js]\nindent_style = space\nindent_size = 2\n\n[Makefile]\nindent_style = tab"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3203125,
+          "content": "build\ndevel.env\n\n# Ignoring for IDE-specific files\n.idea/*\n.dir-locals.el\n\n# We don't *need* the vendor directory because Gopkg.lock has all the\n# information you might need about version pinning. The vendor directory\n# needlessly bloats the repo size. Discuss here:\n#   https://gitlab.com/commento/commento-ce/issues/74\nvendor\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 2.1162109375,
+          "content": "stages:\n  - go-fmt\n  - go-test\n  - build-src\n  - build-docker\n  - docker-registry-master\n  - docker-registry-tags\n\nbuild-src:\n  stage: build-src\n  image: debian:buster\n  except:\n    - master\n    - tags\n  before_script:\n    - bash $CI_PROJECT_DIR/scripts/gitlab-ci-build-prescript\n  script:\n    - export GOPATH=/go\n    - export PATH=$PATH:/go/bin\n    - cd /go/src/$CI_PROJECT_NAME\n    - make devel\n    - make prod\n\nbuild-docker:\n  stage: build-docker\n  image: docker:stable\n  services:\n    - docker:dind\n  except:\n    - master\n    - tags\n  script:\n    - docker build -t commento .\n\ngo-test:\n  stage: go-test\n  image: golang:1.14\n  services:\n    - postgres:9.6\n  variables:\n    POSTGRES_USER: postgres\n    POSTGRES_PASSWORD: postgres\n    POSTGRES_DB: commento_test\n    COMMENTO_POSTGRES: postgres://postgres:postgres@postgres/commento_test?sslmode=disable\n  except:\n    - master\n    - tags\n  before_script:\n    - mkdir -p /go/src /go/bin /go/pkg\n    - export GOPATH=/go\n    - export PATH=$PATH:/go/bin\n    - ln -s $CI_PROJECT_DIR /go/src/$CI_PROJECT_NAME\n  script:\n    - cd /go/src/$CI_PROJECT_NAME\n    - make test\n\ngo-fmt:\n  stage: go-fmt\n  image: golang:1.14\n  except:\n    - master\n    - tags\n  script:\n    - cd api\n    - test -z $(go fmt)\n\ndocker-registry-master:\n  stage: docker-registry-master\n  image: docker:stable\n  services:\n    - docker:dind\n  only:\n    - master@commento/commento\n  before_script:\n    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com\n  script:\n    - docker pull registry.gitlab.com/commento/commento:latest || true\n    - docker build --cache-from registry.gitlab.com/commento/commento:latest --tag registry.gitlab.com/commento/commento:latest .\n    - docker push registry.gitlab.com/commento/commento:latest\n\ndocker-registry-tags:\n  stage: docker-registry-tags\n  image: docker:stable\n  services:\n    - docker:dind\n  only:\n    - tags\n  before_script:\n    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com\n  script:\n    - apk add git\n    - docker build --tag registry.gitlab.com/commento/commento:$(git describe --tags) .\n    - docker push registry.gitlab.com/commento/commento:$(git describe --tags)\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.6572265625,
+          "content": "# backend build (api server)\nFROM golang:1.15-alpine AS api-build\nRUN apk add --no-cache --update bash dep make git curl g++\n\nARG RELEASE=prod\nCOPY ./api /go/src/commento/api/\nWORKDIR /go/src/commento/api\nRUN make ${RELEASE} -j$(($(nproc) + 1))\n\n\n# frontend build (html, js, css, images)\nFROM node:12-alpine AS frontend-build\nRUN apk add --no-cache --update bash make python2 g++\n\nARG RELEASE=prod\nCOPY ./frontend /commento/frontend\nWORKDIR /commento/frontend/\nRUN make ${RELEASE} -j$(($(nproc) + 1))\n\n\n# templates and db build\nFROM alpine:3.13 AS templates-db-build\nRUN apk add --no-cache --update bash make\n\nARG RELEASE=prod\nCOPY ./templates /commento/templates\nWORKDIR /commento/templates\nRUN make ${RELEASE} -j$(($(nproc) + 1))\n\nCOPY ./db /commento/db\nWORKDIR /commento/db\nRUN make ${RELEASE} -j$(($(nproc) + 1))\n\n\n# final image\nFROM alpine:3.13\nRUN apk add --no-cache --update ca-certificates\n\nARG RELEASE=prod\n\nCOPY --from=api-build /go/src/commento/api/build/${RELEASE}/commento /commento/commento\nCOPY --from=frontend-build /commento/frontend/build/${RELEASE}/js /commento/js\nCOPY --from=frontend-build /commento/frontend/build/${RELEASE}/css /commento/css\nCOPY --from=frontend-build /commento/frontend/build/${RELEASE}/images /commento/images\nCOPY --from=frontend-build /commento/frontend/build/${RELEASE}/fonts /commento/fonts\nCOPY --from=frontend-build /commento/frontend/build/${RELEASE}/*.html /commento/\nCOPY --from=templates-db-build /commento/templates/build/${RELEASE}/templates /commento/templates/\nCOPY --from=templates-db-build /commento/db/build/${RELEASE}/db /commento/db/\n\nEXPOSE 8080\nWORKDIR /commento/\nENV COMMENTO_BIND_ADDRESS=\"0.0.0.0\"\nENTRYPOINT [\"/commento/commento\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.029296875,
+          "content": "Copyright 2018 Commento, Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.74609375,
+          "content": "SHELL = bash\n\nBUILD_DIR                 = build\nDEVEL_BUILD_DIR           = $(BUILD_DIR)/devel\nPROD_BUILD_DIR            = $(BUILD_DIR)/prod\n\nFRONTEND_BUILD_DIR        = frontend\nFRONTEND_DEVEL_BUILD_DIR  = $(FRONTEND_BUILD_DIR)/$(DEVEL_BUILD_DIR)\nFRONTEND_DEVEL_ROOT_DIR   = $(DEVEL_BUILD_DIR)\nFRONTEND_PROD_BUILD_DIR   = $(FRONTEND_BUILD_DIR)/$(PROD_BUILD_DIR)\nFRONTEND_PROD_ROOT_DIR    = $(PROD_BUILD_DIR)\n\nAPI_BUILD_DIR             = api\nAPI_DEVEL_BUILD_DIR       = $(API_BUILD_DIR)/$(DEVEL_BUILD_DIR)\nAPI_DEVEL_ROOT_DIR        = $(DEVEL_BUILD_DIR)\nAPI_PROD_BUILD_DIR        = $(API_BUILD_DIR)/$(PROD_BUILD_DIR)\nAPI_PROD_ROOT_DIR         = $(PROD_BUILD_DIR)\n\nTEMPLATES_BUILD_DIR       = templates\nTEMPLATES_DEVEL_BUILD_DIR = $(TEMPLATES_BUILD_DIR)/$(DEVEL_BUILD_DIR)\nTEMPLATES_DEVEL_ROOT_DIR  = $(DEVEL_BUILD_DIR)\nTEMPLATES_PROD_BUILD_DIR  = $(TEMPLATES_BUILD_DIR)/$(PROD_BUILD_DIR)\nTEMPLATES_PROD_ROOT_DIR   = $(PROD_BUILD_DIR)\n\nDB_BUILD_DIR              = db\nDB_DEVEL_BUILD_DIR        = $(DB_BUILD_DIR)/$(DEVEL_BUILD_DIR)\nDB_DEVEL_ROOT_DIR         = $(DEVEL_BUILD_DIR)/db\nDB_PROD_BUILD_DIR         = $(DB_BUILD_DIR)/$(PROD_BUILD_DIR)\nDB_PROD_ROOT_DIR          = $(PROD_BUILD_DIR)/db\n\ndevel: devel-frontend devel-api devel-templates devel-db\n\nprod: prod-frontend prod-api prod-templates prod-db\n\ntest: api\n\n# TODO: This can probably be written better: instead of explicitly defining\n# each target subdirectory, define them at the top and automatically do stuff.\n\n.PHONY: frontend\nfrontend:\n\tcd frontend && $(MAKE) $(MAKECMDGOALS)\n\n.PHONY: api\napi:\n\tcd api && $(MAKE) $(MAKECMDGOALS)\n\n.PHONY: templates\ntemplates:\n\tcd templates && $(MAKE) $(MAKECMDGOALS)\n\n.PHONY: db\ndb:\n\tcd db && $(MAKE) $(MAKECMDGOALS)\n\ndevel-frontend: frontend\n\tcp -r $(FRONTEND_DEVEL_BUILD_DIR)/* $(FRONTEND_DEVEL_ROOT_DIR)\n\ndevel-api: api\n\tcp -r $(API_DEVEL_BUILD_DIR)/* $(API_DEVEL_ROOT_DIR)\n\ndevel-templates: templates\n\tcp -r $(TEMPLATES_DEVEL_BUILD_DIR)/* $(TEMPLATES_DEVEL_ROOT_DIR)\n\ndevel-db: db\n\tcp -r $(DB_DEVEL_BUILD_DIR)/* $(DB_DEVEL_ROOT_DIR)\n\nprod-frontend: frontend\n\tcp -r $(FRONTEND_PROD_BUILD_DIR)/* $(FRONTEND_PROD_ROOT_DIR)\n\nprod-api: api\n\tcp -r $(API_PROD_BUILD_DIR)/* $(API_PROD_ROOT_DIR)\n\nprod-templates: templates\n\tcp -r $(TEMPLATES_PROD_BUILD_DIR)/* $(TEMPLATES_PROD_ROOT_DIR)\n\nprod-db: db\n\tcp -r $(DB_PROD_BUILD_DIR)/* $(DB_PROD_ROOT_DIR)\n\nclean: clean-root clean-frontend clean-api clean-templates clean-db\n\nclean-root:\n\trm -rf build\n\nclean-frontend:\n\tcd frontend && $(MAKE) $(MAKECMDGOALS)\n\nclean-api:\n\tcd api && $(MAKE) $(MAKECMDGOALS)\n\nclean-templates:\n\tcd templates && $(MAKE) $(MAKECMDGOALS)\n\nclean-db:\n\tcd db && $(MAKE) $(MAKECMDGOALS)\n\n$(shell mkdir -p $(FRONTEND_DEVEL_ROOT_DIR) $(API_DEVEL_ROOT_DIR) $(TEMPLATES_DEVEL_ROOT_DIR) $(FRONTEND_PROD_ROOT_DIR) $(API_PROD_ROOT_DIR) $(TEMPLATES_DEVEL_ROOT_DIR))\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0908203125,
+          "content": "### Commento\n\n##### [Homepage](https://commento.io) &nbsp;&ndash;&nbsp; [Demo](https://demo.commento.io) &nbsp;&ndash;&nbsp; [Documentation](https://docs.commento.io) &nbsp;&ndash;&nbsp; [Contributing](https://docs.commento.io/contributing/) &nbsp;&ndash;&nbsp; [#commento on Freenode](http://webchat.freenode.net/?channels=%23commento)\n\nCommento is a platform that you can embed in your website to allow your readers to add comments. It's reasonably fast lightweight. Supports markdown, import from Disqus, voting, automated spam detection, moderation tools, sticky comments, thread locking, OAuth login, single sign-on, and email notifications.\n\n###### How is this different from Disqus, Facebook Comments, and the rest?\n\nMost other products in this space do not respect your privacy; showing ads is their primary business model and that nearly always comes at the users' cost. Commento has no ads; you're the customer, not the product. While Commento is [free software](https://www.gnu.org/philosophy/free-sw.en.html), in order to keep the service sustainable, the [hosted cloud version](https://commento.io) is not offered free of cost. Commento is also orders of magnitude lighter than alternatives.\n\n###### Why should I care about my readers' privacy?\n\nFor starters, your readers value their privacy. Not caring about them is disrespectful and you will end up alienating your audience; they won't come back. Disqus still isn't GDPR-compliant (according to their <a href=\"https://help.disqus.com/terms-and-policies/privacy-faq\" title=\"At the time of writing (28 December 2018)\" rel=\"nofollow\">privacy policy</a>). Disqus adds megabytes to your page size; what happens when a random third-party script that is injected into your website turns malicious?\n\n#### Installation\n\nRead the [documentation to get started](https://docs.commento.io/installation/).\n\n#### Contributing\n\nIf this is your first contribution to Commento, please go through the [contribution guidelines](https://docs.commento.io/contributing/) before you begin. If you have any questions, join [#commento on Freenode](http://webchat.freenode.net/?channels=%23commento).\n"
+        },
+        {
+          "name": "api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "db",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.63671875,
+          "content": "version: '3'\n\nservices:\n  server:\n    image: registry.gitlab.com/commento/commento\n    ports:\n      - 8080:8080\n    environment:\n      COMMENTO_ORIGIN: http://commento.example.com:8080\n      COMMENTO_PORT: 8080\n      COMMENTO_POSTGRES: postgres://postgres:postgres@db:5432/commento?sslmode=disable\n    depends_on:\n      - db\n    networks:\n      - db_network\n  db:\n    image: postgres\n    environment:\n      POSTGRES_DB: commento\n      POSTGRES_USER: postgres\n      POSTGRES_PASSWORD: postgres\n    networks:\n      - db_network\n    volumes:\n      - postgres_data_volume:/var/lib/postgresql/data\n\nnetworks:\n  db_network:\n\nvolumes:\n  postgres_data_volume:\n"
+        },
+        {
+          "name": "etc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "frontend",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "timestamp": 1736566857203,
+    "page": 428,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "fogleman/ln",
+      "stars": 3292,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "*.png\n*.svg\n\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.03515625,
+          "content": "Copyright (C) 2016 Michael Fogleman\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.7783203125,
+          "content": "# `ln` The 3D Line Art Engine\n\n`ln` is a vector-based 3D renderer written in Go. It is used to produce 2D\nvector graphics (think SVGs) depicting 3D scenes.\n\n*The output of an OpenGL pipeline is a rastered image. The output of `ln` is\na set of 2D vector paths.*\n\n![Examples](http://i.imgur.com/HY2Fg2t.png)\n\n## Motivation\n\nI created this so I could plot 3D drawings with my\n[Makeblock XY Plotter](http://www.makeblock.cc/xy-plotter-robot-kit/).\n\nHere's one of my drawings from the plotter...\n\n![Example](http://i.imgur.com/NbgpUhQ.jpg)\n\n## Installation\n\n\tgo get github.com/fogleman/ln/ln\n\n## Features\n\n- Primitives\n\t- Sphere\n\t- Cube\n\t- Triangle\n\t- Cylinder\n\t- 3D Functions\n- Triangle Meshes\n\t- OBJ & STL\n- Vector-based \"Texturing\"\n- CSG (Constructive Solid Geometry) Operations\n\t- Intersection\n\t- Difference\n\t- Union\n- Output to PNG or SVG\n\n## How it Works\n\nTo understand how `ln` works, it's useful to start with the `Shape` interface:\n\n```go\ntype Shape interface {\n\tPaths() Paths\n\tIntersect(Ray) Hit\n\tContains(Vector, float64) bool\n\tBoundingBox() Box\n\tCompile()\n}\n```\n\nEach shape must provide some `Paths` which are 3D polylines on the surface\nof the solid. Ultimately anything drawn in the final image is based on these\npaths. These paths can be anything. For a sphere they could be lat/lng grid\nlines, a triangulated-looking surface, dots on the surface, etc. This is what\nwe call vector-based texturing. Each built-in `Shape` ships with a default\n`Paths` function (e.g. a `Cube` simply draws the outline of a cube) but you\ncan easily provide your own.\n\nEach shape must also provide an `Intersect` method that lets the engine test\nfor ray-solid intersection. This is how the engine knows what is visible to the\ncamera and what is hidden.\n\nAll of the `Paths` are chopped up to some granularity and each point is tested\nby shooting a ray toward the camera. If there is no intersection, that point is\nvisible. If there is an intersection, it is hidden and will not be rendered.\n\nThe visible points are then transformed into 2D space using transformation\nmatrices. The result can then be rendered as PNG or SVG.\n\nThe `Contains` method is only needed for CSG (Constructive Solid Geometry)\noperations.\n\n## Hello World: A Single Cube\n\n### The Code\n\n```go\npackage main\n\nimport \"github.com/fogleman/ln/ln\"\n\nfunc main() {\n\t// create a scene and add a single cube\n\tscene := ln.Scene{}\n\tscene.Add(ln.NewCube(ln.Vector{-1, -1, -1}, ln.Vector{1, 1, 1}))\n\n\t// define camera parameters\n\teye := ln.Vector{4, 3, 2}    // camera position\n\tcenter := ln.Vector{0, 0, 0} // camera looks at\n\tup := ln.Vector{0, 0, 1}     // up direction\n\n\t// define rendering parameters\n\twidth := 1024.0  // rendered width\n\theight := 1024.0 // rendered height\n\tfovy := 50.0     // vertical field of view, degrees\n\tznear := 0.1     // near z plane\n\tzfar := 10.0     // far z plane\n\tstep := 0.01     // how finely to chop the paths for visibility testing\n\n\t// compute 2D paths that depict the 3D scene\n\tpaths := scene.Render(eye, center, up, width, height, fovy, znear, zfar, step)\n\n\t// render the paths in an image\n\tpaths.WriteToPNG(\"out.png\", width, height)\n\n\t// save the paths as an svg\n\tpaths.WriteToSVG(\"out.svg\", width, height)\n}\n```\n\n### The Output\n\n![Cube](http://i.imgur.com/d2dGrOJ.png)\n\n## Custom Texturing\n\nSuppose we want to draw cubes with vertical stripes on their sides, as\nshown in the skyscrapers example above. We can just define a new type\nand override the `Paths()` function.\n\n```go\ntype StripedCube struct {\n\tln.Cube\n\tStripes int\n}\n\nfunc (c *StripedCube) Paths() ln.Paths {\n\tvar paths ln.Paths\n\tx1, y1, z1 := c.Min.X, c.Min.Y, c.Min.Z\n\tx2, y2, z2 := c.Max.X, c.Max.Y, c.Max.Z\n\tfor i := 0; i <= c.Stripes; i++ {\n\t\tp := float64(i) / float64(c.Stripes)\n\t\tx := x1 + (x2-x1)*p\n\t\ty := y1 + (y2-y1)*p\n\t\tpaths = append(paths, ln.Path{{x, y1, z1}, {x, y1, z2}})\n\t\tpaths = append(paths, ln.Path{{x, y2, z1}, {x, y2, z2}})\n\t\tpaths = append(paths, ln.Path{{x1, y, z1}, {x1, y, z2}})\n\t\tpaths = append(paths, ln.Path{{x2, y, z1}, {x2, y, z2}})\n\t}\n\treturn paths\n}\n```\n\nNow `StripedCube` instances can be added to the scene.\n\n## Constructive Solid Geometry (CSG)\n\nYou can easily construct complex solids using Intersection, Difference, Union.\n\n```go\nshape := ln.NewDifference(\n\tln.NewIntersection(\n\t\tln.NewSphere(ln.Vector{}, 1),\n\t\tln.NewCube(ln.Vector{-0.8, -0.8, -0.8}, ln.Vector{0.8, 0.8, 0.8}),\n\t),\n\tln.NewCylinder(0.4, -2, 2),\n\tln.NewTransformedShape(ln.NewCylinder(0.4, -2, 2), ln.Rotate(ln.Vector{1, 0, 0}, ln.Radians(90))),\n\tln.NewTransformedShape(ln.NewCylinder(0.4, -2, 2), ln.Rotate(ln.Vector{0, 1, 0}, ln.Radians(90))),\n)\n```\n\nThis is `(Sphere & Cube) - (Cylinder | Cylinder | Cylinder)`.\n\nUnfortunately, it's difficult to compute the joint formed at the boundaries of these combined shapes, so sufficient texturing is needed on the original solids for a decent result.\n\n![Example](http://i.imgur.com/gk8UtVK.gif)\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ln",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

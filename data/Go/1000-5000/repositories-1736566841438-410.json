@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": 1736566841438,
+    "page": 410,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bouk/monkey",
+      "stars": 3368,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 0.17578125,
+          "content": "Copyright Bouke van der Bijl\n\nI do not give anyone permissions to use this tool for any purpose. Don't use it.\n\nI’m not interested in changing this license. Please don’t ask. \n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.009765625,
+          "content": "# Go monkeypatching :monkey_face: :monkey:\n\nActual arbitrary monkeypatching for Go. Yes really.\n\nRead this blogpost for an explanation on how it works: https://bou.ke/blog/monkey-patching-in-go/\n\n## I thought that monkeypatching in Go is impossible?\n\nIt's not possible through regular language constructs, but we can always bend computers to our will! Monkey implements monkeypatching by rewriting the running executable at runtime and inserting a jump to the function you want called instead. **This is as unsafe as it sounds and I don't recommend anyone do it outside of a testing environment.**\n\nMake sure you read the notes at the bottom of the README if you intend to use this library.\n\n## Using monkey\n\nMonkey's API is very simple and straightfoward. Call `monkey.Patch(<target function>, <replacement function>)` to replace a function. For example:\n\n```go\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"strings\"\n\n\t\"bou.ke/monkey\"\n)\n\nfunc main() {\n\tmonkey.Patch(fmt.Println, func(a ...interface{}) (n int, err error) {\n\t\ts := make([]interface{}, len(a))\n\t\tfor i, v := range a {\n\t\t\ts[i] = strings.Replace(fmt.Sprint(v), \"hell\", \"*bleep*\", -1)\n\t\t}\n\t\treturn fmt.Fprintln(os.Stdout, s...)\n\t})\n\tfmt.Println(\"what the hell?\") // what the *bleep*?\n}\n```\n\nYou can then call `monkey.Unpatch(<target function>)` to unpatch the method again. The replacement function can be any function value, whether it's anonymous, bound or otherwise.\n\nIf you want to patch an instance method you need to use `monkey.PatchInstanceMethod(<type>, <name>, <replacement>)`. You get the type by using `reflect.TypeOf`, and your replacement function simply takes the instance as the first argument. To disable all network connections, you can do as follows for example:\n\n```go\npackage main\n\nimport (\n\t\"fmt\"\n\t\"net\"\n\t\"net/http\"\n\t\"reflect\"\n\n\t\"bou.ke/monkey\"\n)\n\nfunc main() {\n\tvar d *net.Dialer // Has to be a pointer to because `Dial` has a pointer receiver\n\tmonkey.PatchInstanceMethod(reflect.TypeOf(d), \"Dial\", func(_ *net.Dialer, _, _ string) (net.Conn, error) {\n\t\treturn nil, fmt.Errorf(\"no dialing allowed\")\n\t})\n\t_, err := http.Get(\"http://google.com\")\n\tfmt.Println(err) // Get http://google.com: no dialing allowed\n}\n\n```\n\nNote that patching the method for just one instance is currently not possible, `PatchInstanceMethod` will patch it for all instances. Don't bother trying `monkey.Patch(instance.Method, replacement)`, it won't work. `monkey.UnpatchInstanceMethod(<type>, <name>)` will undo `PatchInstanceMethod`.\n\nIf you want to remove all currently applied monkeypatches simply call `monkey.UnpatchAll`. This could be useful in a test teardown function.\n\nIf you want to call the original function from within the replacement you need to use a `monkey.PatchGuard`. A patchguard allows you to easily remove and restore the patch so you can call the original function. For example:\n\n```go\npackage main\n\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"reflect\"\n\t\"strings\"\n\n\t\"bou.ke/monkey\"\n)\n\nfunc main() {\n\tvar guard *monkey.PatchGuard\n\tguard = monkey.PatchInstanceMethod(reflect.TypeOf(http.DefaultClient), \"Get\", func(c *http.Client, url string) (*http.Response, error) {\n\t\tguard.Unpatch()\n\t\tdefer guard.Restore()\n\n\t\tif !strings.HasPrefix(url, \"https://\") {\n\t\t\treturn nil, fmt.Errorf(\"only https requests allowed\")\n\t\t}\n\n\t\treturn c.Get(url)\n\t})\n\n\t_, err := http.Get(\"http://google.com\")\n\tfmt.Println(err) // only https requests allowed\n\tresp, err := http.Get(\"https://google.com\")\n\tfmt.Println(resp.Status, err) // 200 OK <nil>\n}\n```\n\n## Notes\n\n1. Monkey sometimes fails to patch a function if inlining is enabled. Try running your tests with inlining disabled, for example: `go test -gcflags=-l`. The same command line argument can also be used for build.\n2. Monkey won't work on some security-oriented operating system that don't allow memory pages to be both write and execute at the same time. With the current approach there's not really a reliable fix for this.\n3. Monkey is not threadsafe. Or any kind of safe.\n4. I've tested monkey on OSX 10.10.2 and Ubuntu 14.04. It should work on any unix-based x86 or x86-64 system.\n\n© Bouke van der Bijl\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "module bou.ke/monkey\n\ngo 1.13\n"
+        },
+        {
+          "name": "monkey.go",
+          "type": "blob",
+          "size": 3.0703125,
+          "content": "package monkey // import \"bou.ke/monkey\"\n\nimport (\n\t\"fmt\"\n\t\"reflect\"\n\t\"sync\"\n\t\"unsafe\"\n)\n\n// patch is an applied patch\n// needed to undo a patch\ntype patch struct {\n\toriginalBytes []byte\n\treplacement   *reflect.Value\n}\n\nvar (\n\tlock = sync.Mutex{}\n\n\tpatches = make(map[uintptr]patch)\n)\n\ntype value struct {\n\t_   uintptr\n\tptr unsafe.Pointer\n}\n\nfunc getPtr(v reflect.Value) unsafe.Pointer {\n\treturn (*value)(unsafe.Pointer(&v)).ptr\n}\n\ntype PatchGuard struct {\n\ttarget      reflect.Value\n\treplacement reflect.Value\n}\n\nfunc (g *PatchGuard) Unpatch() {\n\tunpatchValue(g.target)\n}\n\nfunc (g *PatchGuard) Restore() {\n\tpatchValue(g.target, g.replacement)\n}\n\n// Patch replaces a function with another\nfunc Patch(target, replacement interface{}) *PatchGuard {\n\tt := reflect.ValueOf(target)\n\tr := reflect.ValueOf(replacement)\n\tpatchValue(t, r)\n\n\treturn &PatchGuard{t, r}\n}\n\n// PatchInstanceMethod replaces an instance method methodName for the type target with replacement\n// Replacement should expect the receiver (of type target) as the first argument\nfunc PatchInstanceMethod(target reflect.Type, methodName string, replacement interface{}) *PatchGuard {\n\tm, ok := target.MethodByName(methodName)\n\tif !ok {\n\t\tpanic(fmt.Sprintf(\"unknown method %s\", methodName))\n\t}\n\tr := reflect.ValueOf(replacement)\n\tpatchValue(m.Func, r)\n\n\treturn &PatchGuard{m.Func, r}\n}\n\nfunc patchValue(target, replacement reflect.Value) {\n\tlock.Lock()\n\tdefer lock.Unlock()\n\n\tif target.Kind() != reflect.Func {\n\t\tpanic(\"target has to be a Func\")\n\t}\n\n\tif replacement.Kind() != reflect.Func {\n\t\tpanic(\"replacement has to be a Func\")\n\t}\n\n\tif target.Type() != replacement.Type() {\n\t\tpanic(fmt.Sprintf(\"target and replacement have to have the same type %s != %s\", target.Type(), replacement.Type()))\n\t}\n\n\tif patch, ok := patches[target.Pointer()]; ok {\n\t\tunpatch(target.Pointer(), patch)\n\t}\n\n\tbytes := replaceFunction(target.Pointer(), (uintptr)(getPtr(replacement)))\n\tpatches[target.Pointer()] = patch{bytes, &replacement}\n}\n\n// Unpatch removes any monkey patches on target\n// returns whether target was patched in the first place\nfunc Unpatch(target interface{}) bool {\n\treturn unpatchValue(reflect.ValueOf(target))\n}\n\n// UnpatchInstanceMethod removes the patch on methodName of the target\n// returns whether it was patched in the first place\nfunc UnpatchInstanceMethod(target reflect.Type, methodName string) bool {\n\tm, ok := target.MethodByName(methodName)\n\tif !ok {\n\t\tpanic(fmt.Sprintf(\"unknown method %s\", methodName))\n\t}\n\treturn unpatchValue(m.Func)\n}\n\n// UnpatchAll removes all applied monkeypatches\nfunc UnpatchAll() {\n\tlock.Lock()\n\tdefer lock.Unlock()\n\tfor target, p := range patches {\n\t\tunpatch(target, p)\n\t\tdelete(patches, target)\n\t}\n}\n\n// Unpatch removes a monkeypatch from the specified function\n// returns whether the function was patched in the first place\nfunc unpatchValue(target reflect.Value) bool {\n\tlock.Lock()\n\tdefer lock.Unlock()\n\tpatch, ok := patches[target.Pointer()]\n\tif !ok {\n\t\treturn false\n\t}\n\tunpatch(target.Pointer(), patch)\n\tdelete(patches, target.Pointer())\n\treturn true\n}\n\nfunc unpatch(target uintptr, p patch) {\n\tcopyToLocation(target, p.originalBytes)\n}\n"
+        },
+        {
+          "name": "monkey_386.go",
+          "type": "blob",
+          "size": 0.244140625,
+          "content": "package monkey\n\n// Assembles a jump to a function value\nfunc jmpToFunctionValue(to uintptr) []byte {\n\treturn []byte{\n\t\t0xBA,\n\t\tbyte(to),\n\t\tbyte(to >> 8),\n\t\tbyte(to >> 16),\n\t\tbyte(to >> 24), // mov edx,to\n\t\t0xFF, 0x22,     // jmp DWORD PTR [edx]\n\t}\n}\n"
+        },
+        {
+          "name": "monkey_amd64.go",
+          "type": "blob",
+          "size": 0.3232421875,
+          "content": "package monkey\n\n// Assembles a jump to a function value\nfunc jmpToFunctionValue(to uintptr) []byte {\n\treturn []byte{\n\t\t0x48, 0xBA,\n\t\tbyte(to),\n\t\tbyte(to >> 8),\n\t\tbyte(to >> 16),\n\t\tbyte(to >> 24),\n\t\tbyte(to >> 32),\n\t\tbyte(to >> 40),\n\t\tbyte(to >> 48),\n\t\tbyte(to >> 56), // movabs rdx,to\n\t\t0xFF, 0x22,     // jmp QWORD PTR [rdx]\n\t}\n}\n"
+        },
+        {
+          "name": "monkey_test.go",
+          "type": "blob",
+          "size": 2.2578125,
+          "content": "package monkey_test\n\nimport (\n\t\"reflect\"\n\t\"runtime\"\n\t\"testing\"\n\t\"time\"\n\n\t\"bou.ke/monkey\"\n)\n\nfunc no() bool  { return false }\nfunc yes() bool { return true }\n\nfunc TestTimePatch(t *testing.T) {\n\tbefore := time.Now()\n\tmonkey.Patch(time.Now, func() time.Time {\n\t\treturn time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)\n\t})\n\tduring := time.Now()\n\tassert(t, monkey.Unpatch(time.Now))\n\tafter := time.Now()\n\n\tassert(t, time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC) == during)\n\tassert(t, before != during)\n\tassert(t, during != after)\n}\n\nfunc TestGC(t *testing.T) {\n\tvalue := true\n\tmonkey.Patch(no, func() bool {\n\t\treturn value\n\t})\n\tdefer monkey.UnpatchAll()\n\truntime.GC()\n\tassert(t, no())\n}\n\nfunc TestSimple(t *testing.T) {\n\tassert(t, !no())\n\tmonkey.Patch(no, yes)\n\tassert(t, no())\n\tassert(t, monkey.Unpatch(no))\n\tassert(t, !no())\n\tassert(t, !monkey.Unpatch(no))\n}\n\nfunc TestGuard(t *testing.T) {\n\tvar guard *monkey.PatchGuard\n\tguard = monkey.Patch(no, func() bool {\n\t\tguard.Unpatch()\n\t\tdefer guard.Restore()\n\t\treturn !no()\n\t})\n\tfor i := 0; i < 100; i++ {\n\t\tassert(t, no())\n\t}\n\tmonkey.Unpatch(no)\n}\n\nfunc TestUnpatchAll(t *testing.T) {\n\tassert(t, !no())\n\tmonkey.Patch(no, yes)\n\tassert(t, no())\n\tmonkey.UnpatchAll()\n\tassert(t, !no())\n}\n\ntype s struct{}\n\nfunc (s *s) yes() bool { return true }\n\nfunc TestWithInstanceMethod(t *testing.T) {\n\ti := &s{}\n\n\tassert(t, !no())\n\tmonkey.Patch(no, i.yes)\n\tassert(t, no())\n\tmonkey.Unpatch(no)\n\tassert(t, !no())\n}\n\ntype f struct{}\n\nfunc (f *f) No() bool { return false }\n\nfunc TestOnInstanceMethod(t *testing.T) {\n\ti := &f{}\n\tassert(t, !i.No())\n\tmonkey.PatchInstanceMethod(reflect.TypeOf(i), \"No\", func(_ *f) bool { return true })\n\tassert(t, i.No())\n\tassert(t, monkey.UnpatchInstanceMethod(reflect.TypeOf(i), \"No\"))\n\tassert(t, !i.No())\n}\n\nfunc TestNotFunction(t *testing.T) {\n\tpanics(t, func() {\n\t\tmonkey.Patch(no, 1)\n\t})\n\tpanics(t, func() {\n\t\tmonkey.Patch(1, yes)\n\t})\n}\n\nfunc TestNotCompatible(t *testing.T) {\n\tpanics(t, func() {\n\t\tmonkey.Patch(no, func() {})\n\t})\n}\n\nfunc assert(t *testing.T, b bool, args ...interface{}) {\n\tt.Helper()\n\tif !b {\n\t\tt.Fatal(append([]interface{}{\"assertion failed\"}, args...))\n\t}\n}\n\nfunc panics(t *testing.T, f func()) {\n\tt.Helper()\n\tdefer func() {\n\t\tt.Helper()\n\t\tif v := recover(); v == nil {\n\t\t\tt.Fatal(\"expected panic\")\n\t\t}\n\t}()\n\tf()\n}\n"
+        },
+        {
+          "name": "replace.go",
+          "type": "blob",
+          "size": 0.6123046875,
+          "content": "package monkey\n\nimport (\n\t\"reflect\"\n\t\"syscall\"\n\t\"unsafe\"\n)\n\nfunc rawMemoryAccess(p uintptr, length int) []byte {\n\treturn *(*[]byte)(unsafe.Pointer(&reflect.SliceHeader{\n\t\tData: p,\n\t\tLen:  length,\n\t\tCap:  length,\n\t}))\n}\n\nfunc pageStart(ptr uintptr) uintptr {\n\treturn ptr & ^(uintptr(syscall.Getpagesize() - 1))\n}\n\n// from is a pointer to the actual function\n// to is a pointer to a go funcvalue\nfunc replaceFunction(from, to uintptr) (original []byte) {\n\tjumpData := jmpToFunctionValue(to)\n\tf := rawMemoryAccess(from, len(jumpData))\n\toriginal = make([]byte, len(f))\n\tcopy(original, f)\n\n\tcopyToLocation(from, jumpData)\n\treturn\n}\n"
+        },
+        {
+          "name": "replace_unix.go",
+          "type": "blob",
+          "size": 0.765625,
+          "content": "//+build !windows\n\npackage monkey\n\nimport (\n\t\"syscall\"\n)\n\nfunc mprotectCrossPage(addr uintptr, length int, prot int) {\n\tpageSize := syscall.Getpagesize()\n\tfor p := pageStart(addr); p < addr + uintptr(length); p += uintptr(pageSize) {\n\t\tpage := rawMemoryAccess(p, pageSize)\n\t\terr := syscall.Mprotect(page, prot)\n\t\tif err != nil {\n\t\t\tpanic(err)\n\t\t}\n\t}\n}\n\n// this function is super unsafe\n// aww yeah\n// It copies a slice to a raw memory location, disabling all memory protection before doing so.\nfunc copyToLocation(location uintptr, data []byte) {\n\tf := rawMemoryAccess(location, len(data))\n\n\tmprotectCrossPage(location, len(data), syscall.PROT_READ|syscall.PROT_WRITE|syscall.PROT_EXEC)\n\tcopy(f, data[:])\n\tmprotectCrossPage(location, len(data), syscall.PROT_READ|syscall.PROT_EXEC)\n}\n"
+        },
+        {
+          "name": "replace_windows.go",
+          "type": "blob",
+          "size": 1.1279296875,
+          "content": "package monkey\n\nimport (\n\t\"syscall\"\n\t\"unsafe\"\n)\n\nconst PAGE_EXECUTE_READWRITE = 0x40\n\nvar procVirtualProtect = syscall.NewLazyDLL(\"kernel32.dll\").NewProc(\"VirtualProtect\")\n\nfunc virtualProtect(lpAddress uintptr, dwSize int, flNewProtect uint32, lpflOldProtect unsafe.Pointer) error {\n\tret, _, _ := procVirtualProtect.Call(\n\t\tlpAddress,\n\t\tuintptr(dwSize),\n\t\tuintptr(flNewProtect),\n\t\tuintptr(lpflOldProtect))\n\tif ret == 0 {\n\t\treturn syscall.GetLastError()\n\t}\n\treturn nil\n}\n\n// this function is super unsafe\n// aww yeah\n// It copies a slice to a raw memory location, disabling all memory protection before doing so.\nfunc copyToLocation(location uintptr, data []byte) {\n\tf := rawMemoryAccess(location, len(data))\n\n\tvar oldPerms uint32\n\terr := virtualProtect(location, len(data), PAGE_EXECUTE_READWRITE, unsafe.Pointer(&oldPerms))\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tcopy(f, data[:])\n\n\t// VirtualProtect requires you to pass in a pointer which it can write the\n\t// current memory protection permissions to, even if you don't want them.\n\tvar tmp uint32\n\terr = virtualProtect(location, len(data), oldPerms, unsafe.Pointer(&tmp))\n\tif err != nil {\n\t\tpanic(err)\n\t}\n}\n"
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736567287304,
+    "page": 885,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "FiloSottile/Heartbleed",
+      "stars": 2304,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.259765625,
+          "content": "# Compiled Object files, Static and Dynamic libs (Shared Objects)\n*.o\n*.a\n*.so\n\n# Folders\n_obj\n_test\n\n# Architecture specific extensions/prefixes\n*.[568vq]\n[568vq].out\n\n*.cgo1.go\n*.cgo2.c\n_cgo_defun.c\n_cgo_gotypes.go\n_cgo_export.*\n\n_testmain.go\n\n*.exe\n*.test\n*.prof\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014-2015 Filippo Valsorda\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.8671875,
+          "content": "Heartbleed\n==========\n\nA checker (site and tool) for CVE-2014-0160.\n\nPublic site at https://filippo.io/Heartbleed/\n\nTool usage:\n\n```\n    Heartbleed [-service=\"service_name\"] example.com[:443]\n    Heartbleed service_name://example.com[:443]\n```\n\nExit codes: `0` - SAFE; `1` - VULNERABLE; `2` - ERROR. (*recently changed*)\n\nSee the [online FAQ](http://filippo.io/Heartbleed/faq.html) for an explanation of error messages including `TIMEOUT` and `BROKEN PIPE`.\n\nIf a service name is specified besides `https`, the tool checks the specified service using STARTTLS.\n**You do still need to specify the correct port.**\n\n## Install\n\nYou will need Go >= 1.2, otherwise you'll get `undefined: cipher.AEAD` and other errors\n\n```\ngo get github.com/FiloSottile/Heartbleed\n```\n\nYou can also use Docker to get a ready to run virtual machine with Heartbleed: https://github.com/kasimon/docker-heartbleed\n"
+        },
+        {
+          "name": "deploy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "heartbleed",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "logger",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 1.5859375,
+          "content": "package main\n\nimport (\n\t\"flag\"\n\t\"fmt\"\n\t\"log\"\n\t\"net/url\"\n\t\"os\"\n\n\t\"github.com/FiloSottile/Heartbleed/heartbleed\"\n)\n\nvar usageMessage = `This is a tool for detecting OpenSSL Heartbleed vulnerability (CVE-2014-0160).\n\nUsage:  %s [flags] server_name[:port]\n\nThe default port is 443 (HTTPS).\nIf a URL is supplied in server_name, it will be parsed to extract the host, but not the protocol.\n\nThe following flags are recognized:\n`\n\nfunc usage() {\n\tfmt.Fprintf(os.Stderr, usageMessage, os.Args[0])\n\tflag.PrintDefaults()\n\tos.Exit(2)\n}\n\nfunc main() {\n\tvar (\n\t\tservice = flag.String(\"service\", \"https\", fmt.Sprintf(\n\t\t\t`Specify a service name to test (using STARTTLS if necessary).\n\t\tBesides HTTPS, currently supported services are:\n\t\t%s`, heartbleed.Services))\n\t\tcheck_cert = flag.Bool(\"check-cert\", false, \"check the server certificate\")\n\t)\n\tflag.Parse()\n\n\tif flag.NArg() < 1 {\n\t\tusage()\n\t}\n\n\ttgt := &heartbleed.Target{\n\t\tService: *service,\n\t\tHostIp:  flag.Arg(0),\n\t}\n\n\t// Parse the host out of URLs\n\tu, err := url.Parse(tgt.HostIp)\n\tif err == nil && u.Host != \"\" {\n\t\ttgt.HostIp = u.Host\n\t\tif u.Scheme != \"\" {\n\t\t\ttgt.Service = u.Scheme\n\t\t}\n\t}\n\n\tout, err := heartbleed.Heartbleed(tgt,\n\t\t[]byte(\"github.com/FiloSottile/Heartbleed\"), !(*check_cert))\n\tif err == heartbleed.Safe {\n\t\tlog.Printf(\"%v - SAFE\", tgt.HostIp)\n\t\tos.Exit(0)\n\t} else if err != nil {\n\t\tif err.Error() == \"Please try again\" {\n\t\t\tlog.Printf(\"%v - TRYAGAIN: %v\", tgt.HostIp, err)\n\t\t\tos.Exit(2)\n\t\t} else {\n\t\t\tlog.Printf(\"%v - ERROR: %v\", tgt.HostIp, err)\n\t\t\tos.Exit(2)\n\t\t}\n\t} else {\n\t\tlog.Printf(\"%v\\n\", out)\n\t\tlog.Printf(\"%v - VULNERABLE\", tgt.HostIp)\n\t\tos.Exit(1)\n\t}\n}\n"
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

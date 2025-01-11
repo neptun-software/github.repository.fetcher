@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "timestamp": 1736566869783,
+    "page": 440,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "WireGuard/wireguard-go",
+      "stars": 3256,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "wireguard-go\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.9990234375,
+          "content": "Permission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.8076171875,
+          "content": "PREFIX ?= /usr\nDESTDIR ?=\nBINDIR ?= $(PREFIX)/bin\nexport GO111MODULE := on\n\nall: generate-version-and-build\n\nMAKEFLAGS += --no-print-directory\n\ngenerate-version-and-build:\n\t@export GIT_CEILING_DIRECTORIES=\"$(realpath $(CURDIR)/..)\" && \\\n\ttag=\"$$(git describe --dirty 2>/dev/null)\" && \\\n\tver=\"$$(printf 'package main\\n\\nconst Version = \"%s\"\\n' \"$$tag\")\" && \\\n\t[ \"$$(cat version.go 2>/dev/null)\" != \"$$ver\" ] && \\\n\techo \"$$ver\" > version.go && \\\n\tgit update-index --assume-unchanged version.go || true\n\t@$(MAKE) wireguard-go\n\nwireguard-go: $(wildcard *.go) $(wildcard */*.go)\n\tgo build -v -o \"$@\"\n\ninstall: wireguard-go\n\t@install -v -d \"$(DESTDIR)$(BINDIR)\" && install -v -m 0755 \"$<\" \"$(DESTDIR)$(BINDIR)/wireguard-go\"\n\ntest:\n\tgo test ./...\n\nclean:\n\trm -f wireguard-go\n\n.PHONY: all clean test install generate-version-and-build\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.8212890625,
+          "content": "# Go Implementation of [WireGuard](https://www.wireguard.com/)\n\nThis is an implementation of WireGuard in Go.\n\n## Usage\n\nMost Linux kernel WireGuard users are used to adding an interface with `ip link add wg0 type wireguard`. With wireguard-go, instead simply run:\n\n```\n$ wireguard-go wg0\n```\n\nThis will create an interface and fork into the background. To remove the interface, use the usual `ip link del wg0`, or if your system does not support removing interfaces directly, you may instead remove the control socket via `rm -f /var/run/wireguard/wg0.sock`, which will result in wireguard-go shutting down.\n\nTo run wireguard-go without forking to the background, pass `-f` or `--foreground`:\n\n```\n$ wireguard-go -f wg0\n```\n\nWhen an interface is running, you may use [`wg(8)`](https://git.zx2c4.com/wireguard-tools/about/src/man/wg.8) to configure it, as well as the usual `ip(8)` and `ifconfig(8)` commands.\n\nTo run with more logging you may set the environment variable `LOG_LEVEL=debug`.\n\n## Platforms\n\n### Linux\n\nThis will run on Linux; however you should instead use the kernel module, which is faster and better integrated into the OS. See the [installation page](https://www.wireguard.com/install/) for instructions.\n\n### macOS\n\nThis runs on macOS using the utun driver. It does not yet support sticky sockets, and won't support fwmarks because of Darwin limitations. Since the utun driver cannot have arbitrary interface names, you must either use `utun[0-9]+` for an explicit interface name or `utun` to have the kernel select one for you. If you choose `utun` as the interface name, and the environment variable `WG_TUN_NAME_FILE` is defined, then the actual name of the interface chosen by the kernel is written to the file specified by that variable.\n\n### Windows\n\nThis runs on Windows, but you should instead use it from the more [fully featured Windows app](https://git.zx2c4.com/wireguard-windows/about/), which uses this as a module.\n\n### FreeBSD\n\nThis will run on FreeBSD. It does not yet support sticky sockets. Fwmark is mapped to `SO_USER_COOKIE`.\n\n### OpenBSD\n\nThis will run on OpenBSD. It does not yet support sticky sockets. Fwmark is mapped to `SO_RTABLE`. Since the tun driver cannot have arbitrary interface names, you must either use `tun[0-9]+` for an explicit interface name or `tun` to have the program select one for you. If you choose `tun` as the interface name, and the environment variable `WG_TUN_NAME_FILE` is defined, then the actual name of the interface chosen by the kernel is written to the file specified by that variable.\n\n## Building\n\nThis requires an installation of the latest version of [Go](https://go.dev/).\n\n```\n$ git clone https://git.zx2c4.com/wireguard-go\n$ cd wireguard-go\n$ make\n```\n\n## License\n\n    Copyright (C) 2017-2023 WireGuard LLC. All Rights Reserved.\n    \n    Permission is hereby granted, free of charge, to any person obtaining a copy of\n    this software and associated documentation files (the \"Software\"), to deal in\n    the Software without restriction, including without limitation the rights to\n    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\n    of the Software, and to permit persons to whom the Software is furnished to do\n    so, subject to the following conditions:\n    \n    The above copyright notice and this permission notice shall be included in all\n    copies or substantial portions of the Software.\n    \n    THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n    SOFTWARE.\n"
+        },
+        {
+          "name": "conn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "device",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "format_test.go",
+          "type": "blob",
+          "size": 1.0009765625,
+          "content": "/* SPDX-License-Identifier: MIT\n *\n * Copyright (C) 2017-2023 WireGuard LLC. All Rights Reserved.\n */\npackage main\n\nimport (\n\t\"bytes\"\n\t\"go/format\"\n\t\"io/fs\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"runtime\"\n\t\"sync\"\n\t\"testing\"\n)\n\nfunc TestFormatting(t *testing.T) {\n\tvar wg sync.WaitGroup\n\tfilepath.WalkDir(\".\", func(path string, d fs.DirEntry, err error) error {\n\t\tif err != nil {\n\t\t\tt.Errorf(\"unable to walk %s: %v\", path, err)\n\t\t\treturn nil\n\t\t}\n\t\tif d.IsDir() || filepath.Ext(path) != \".go\" {\n\t\t\treturn nil\n\t\t}\n\t\twg.Add(1)\n\t\tgo func(path string) {\n\t\t\tdefer wg.Done()\n\t\t\tsrc, err := os.ReadFile(path)\n\t\t\tif err != nil {\n\t\t\t\tt.Errorf(\"unable to read %s: %v\", path, err)\n\t\t\t\treturn\n\t\t\t}\n\t\t\tif runtime.GOOS == \"windows\" {\n\t\t\t\tsrc = bytes.ReplaceAll(src, []byte{'\\r', '\\n'}, []byte{'\\n'})\n\t\t\t}\n\t\t\tformatted, err := format.Source(src)\n\t\t\tif err != nil {\n\t\t\t\tt.Errorf(\"unable to format %s: %v\", path, err)\n\t\t\t\treturn\n\t\t\t}\n\t\t\tif !bytes.Equal(src, formatted) {\n\t\t\t\tt.Errorf(\"unformatted code: %s\", path)\n\t\t\t}\n\t\t}(path)\n\t\treturn nil\n\t})\n\twg.Wait()\n}\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.365234375,
+          "content": "module golang.zx2c4.com/wireguard\n\ngo 1.20\n\nrequire (\n\tgolang.org/x/crypto v0.13.0\n\tgolang.org/x/net v0.15.0\n\tgolang.org/x/sys v0.12.0\n\tgolang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2\n\tgvisor.dev/gvisor v0.0.0-20230927004350-cbd86285d259\n)\n\nrequire (\n\tgithub.com/google/btree v1.0.1 // indirect\n\tgolang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 1.2392578125,
+          "content": "github.com/google/btree v1.0.1 h1:gK4Kx5IaGY9CD5sPJ36FHiBJ6ZXl0kilRiiCj+jdYp4=\ngithub.com/google/btree v1.0.1/go.mod h1:xXMiIv4Fb/0kKde4SpL7qlzvu5cMJDRkFDxJfI9uaxA=\ngolang.org/x/crypto v0.13.0 h1:mvySKfSWJ+UKUii46M40LOvyWfN0s2U+46/jDd0e6Ck=\ngolang.org/x/crypto v0.13.0/go.mod h1:y6Z2r+Rw4iayiXXAIxJIDAJ1zMW4yaTpebo8fPOliYc=\ngolang.org/x/net v0.15.0 h1:ugBLEUaxABaB5AJqW9enI0ACdci2RUd4eP51NTBvuJ8=\ngolang.org/x/net v0.15.0/go.mod h1:idbUs1IY1+zTqbi8yxTbhexhEEk5ur9LInksu6HrEpk=\ngolang.org/x/sys v0.12.0 h1:CM0HF96J0hcLAwsHPJZjfdNzs0gftsLfgKt57wWHJ0o=\ngolang.org/x/sys v0.12.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/time v0.0.0-20220210224613-90d013bbcef8 h1:vVKdlvoWBphwdxWKrFZEuM0kGgGLxUOYcY4U/2Vjg44=\ngolang.org/x/time v0.0.0-20220210224613-90d013bbcef8/go.mod h1:tRJNPiyCQ0inRvYxbN9jk5I+vvW/OXSQhTDSoE431IQ=\ngolang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2 h1:B82qJJgjvYKsXS9jeunTOisW56dUokqW/FOteYJJ/yg=\ngolang.zx2c4.com/wintun v0.0.0-20230126152724-0fa3db229ce2/go.mod h1:deeaetjYA+DHMHg+sMSMI58GrEteJUUzzw7en6TJQcI=\ngvisor.dev/gvisor v0.0.0-20230927004350-cbd86285d259 h1:TbRPT0HtzFP3Cno1zZo7yPzEEnfu8EjLfl6IU9VfqkQ=\ngvisor.dev/gvisor v0.0.0-20230927004350-cbd86285d259/go.mod h1:AVgIgHMwK63XvmAzWG9vLQ41YnVHN0du0tEC46fI7yY=\n"
+        },
+        {
+          "name": "ipc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 5.9794921875,
+          "content": "//go:build !windows\n\n/* SPDX-License-Identifier: MIT\n *\n * Copyright (C) 2017-2023 WireGuard LLC. All Rights Reserved.\n */\n\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"os/signal\"\n\t\"runtime\"\n\t\"strconv\"\n\n\t\"golang.org/x/sys/unix\"\n\t\"golang.zx2c4.com/wireguard/conn\"\n\t\"golang.zx2c4.com/wireguard/device\"\n\t\"golang.zx2c4.com/wireguard/ipc\"\n\t\"golang.zx2c4.com/wireguard/tun\"\n)\n\nconst (\n\tExitSetupSuccess = 0\n\tExitSetupFailed  = 1\n)\n\nconst (\n\tENV_WG_TUN_FD             = \"WG_TUN_FD\"\n\tENV_WG_UAPI_FD            = \"WG_UAPI_FD\"\n\tENV_WG_PROCESS_FOREGROUND = \"WG_PROCESS_FOREGROUND\"\n)\n\nfunc printUsage() {\n\tfmt.Printf(\"Usage: %s [-f/--foreground] INTERFACE-NAME\\n\", os.Args[0])\n}\n\nfunc warning() {\n\tswitch runtime.GOOS {\n\tcase \"linux\", \"freebsd\", \"openbsd\":\n\t\tif os.Getenv(ENV_WG_PROCESS_FOREGROUND) == \"1\" {\n\t\t\treturn\n\t\t}\n\tdefault:\n\t\treturn\n\t}\n\n\tfmt.Fprintln(os.Stderr, \"┌──────────────────────────────────────────────────────┐\")\n\tfmt.Fprintln(os.Stderr, \"│                                                      │\")\n\tfmt.Fprintln(os.Stderr, \"│   Running wireguard-go is not required because this  │\")\n\tfmt.Fprintln(os.Stderr, \"│   kernel has first class support for WireGuard. For  │\")\n\tfmt.Fprintln(os.Stderr, \"│   information on installing the kernel module,       │\")\n\tfmt.Fprintln(os.Stderr, \"│   please visit:                                      │\")\n\tfmt.Fprintln(os.Stderr, \"│         https://www.wireguard.com/install/           │\")\n\tfmt.Fprintln(os.Stderr, \"│                                                      │\")\n\tfmt.Fprintln(os.Stderr, \"└──────────────────────────────────────────────────────┘\")\n}\n\nfunc main() {\n\tif len(os.Args) == 2 && os.Args[1] == \"--version\" {\n\t\tfmt.Printf(\"wireguard-go v%s\\n\\nUserspace WireGuard daemon for %s-%s.\\nInformation available at https://www.wireguard.com.\\nCopyright (C) Jason A. Donenfeld <Jason@zx2c4.com>.\\n\", Version, runtime.GOOS, runtime.GOARCH)\n\t\treturn\n\t}\n\n\twarning()\n\n\tvar foreground bool\n\tvar interfaceName string\n\tif len(os.Args) < 2 || len(os.Args) > 3 {\n\t\tprintUsage()\n\t\treturn\n\t}\n\n\tswitch os.Args[1] {\n\n\tcase \"-f\", \"--foreground\":\n\t\tforeground = true\n\t\tif len(os.Args) != 3 {\n\t\t\tprintUsage()\n\t\t\treturn\n\t\t}\n\t\tinterfaceName = os.Args[2]\n\n\tdefault:\n\t\tforeground = false\n\t\tif len(os.Args) != 2 {\n\t\t\tprintUsage()\n\t\t\treturn\n\t\t}\n\t\tinterfaceName = os.Args[1]\n\t}\n\n\tif !foreground {\n\t\tforeground = os.Getenv(ENV_WG_PROCESS_FOREGROUND) == \"1\"\n\t}\n\n\t// get log level (default: info)\n\n\tlogLevel := func() int {\n\t\tswitch os.Getenv(\"LOG_LEVEL\") {\n\t\tcase \"verbose\", \"debug\":\n\t\t\treturn device.LogLevelVerbose\n\t\tcase \"error\":\n\t\t\treturn device.LogLevelError\n\t\tcase \"silent\":\n\t\t\treturn device.LogLevelSilent\n\t\t}\n\t\treturn device.LogLevelError\n\t}()\n\n\t// open TUN device (or use supplied fd)\n\n\ttdev, err := func() (tun.Device, error) {\n\t\ttunFdStr := os.Getenv(ENV_WG_TUN_FD)\n\t\tif tunFdStr == \"\" {\n\t\t\treturn tun.CreateTUN(interfaceName, device.DefaultMTU)\n\t\t}\n\n\t\t// construct tun device from supplied fd\n\n\t\tfd, err := strconv.ParseUint(tunFdStr, 10, 32)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\n\t\terr = unix.SetNonblock(int(fd), true)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\n\t\tfile := os.NewFile(uintptr(fd), \"\")\n\t\treturn tun.CreateTUNFromFile(file, device.DefaultMTU)\n\t}()\n\n\tif err == nil {\n\t\trealInterfaceName, err2 := tdev.Name()\n\t\tif err2 == nil {\n\t\t\tinterfaceName = realInterfaceName\n\t\t}\n\t}\n\n\tlogger := device.NewLogger(\n\t\tlogLevel,\n\t\tfmt.Sprintf(\"(%s) \", interfaceName),\n\t)\n\n\tlogger.Verbosef(\"Starting wireguard-go version %s\", Version)\n\n\tif err != nil {\n\t\tlogger.Errorf(\"Failed to create TUN device: %v\", err)\n\t\tos.Exit(ExitSetupFailed)\n\t}\n\n\t// open UAPI file (or use supplied fd)\n\n\tfileUAPI, err := func() (*os.File, error) {\n\t\tuapiFdStr := os.Getenv(ENV_WG_UAPI_FD)\n\t\tif uapiFdStr == \"\" {\n\t\t\treturn ipc.UAPIOpen(interfaceName)\n\t\t}\n\n\t\t// use supplied fd\n\n\t\tfd, err := strconv.ParseUint(uapiFdStr, 10, 32)\n\t\tif err != nil {\n\t\t\treturn nil, err\n\t\t}\n\n\t\treturn os.NewFile(uintptr(fd), \"\"), nil\n\t}()\n\tif err != nil {\n\t\tlogger.Errorf(\"UAPI listen error: %v\", err)\n\t\tos.Exit(ExitSetupFailed)\n\t\treturn\n\t}\n\t// daemonize the process\n\n\tif !foreground {\n\t\tenv := os.Environ()\n\t\tenv = append(env, fmt.Sprintf(\"%s=3\", ENV_WG_TUN_FD))\n\t\tenv = append(env, fmt.Sprintf(\"%s=4\", ENV_WG_UAPI_FD))\n\t\tenv = append(env, fmt.Sprintf(\"%s=1\", ENV_WG_PROCESS_FOREGROUND))\n\t\tfiles := [3]*os.File{}\n\t\tif os.Getenv(\"LOG_LEVEL\") != \"\" && logLevel != device.LogLevelSilent {\n\t\t\tfiles[0], _ = os.Open(os.DevNull)\n\t\t\tfiles[1] = os.Stdout\n\t\t\tfiles[2] = os.Stderr\n\t\t} else {\n\t\t\tfiles[0], _ = os.Open(os.DevNull)\n\t\t\tfiles[1], _ = os.Open(os.DevNull)\n\t\t\tfiles[2], _ = os.Open(os.DevNull)\n\t\t}\n\t\tattr := &os.ProcAttr{\n\t\t\tFiles: []*os.File{\n\t\t\t\tfiles[0], // stdin\n\t\t\t\tfiles[1], // stdout\n\t\t\t\tfiles[2], // stderr\n\t\t\t\ttdev.File(),\n\t\t\t\tfileUAPI,\n\t\t\t},\n\t\t\tDir: \".\",\n\t\t\tEnv: env,\n\t\t}\n\n\t\tpath, err := os.Executable()\n\t\tif err != nil {\n\t\t\tlogger.Errorf(\"Failed to determine executable: %v\", err)\n\t\t\tos.Exit(ExitSetupFailed)\n\t\t}\n\n\t\tprocess, err := os.StartProcess(\n\t\t\tpath,\n\t\t\tos.Args,\n\t\t\tattr,\n\t\t)\n\t\tif err != nil {\n\t\t\tlogger.Errorf(\"Failed to daemonize: %v\", err)\n\t\t\tos.Exit(ExitSetupFailed)\n\t\t}\n\t\tprocess.Release()\n\t\treturn\n\t}\n\n\tdevice := device.NewDevice(tdev, conn.NewDefaultBind(), logger)\n\n\tlogger.Verbosef(\"Device started\")\n\n\terrs := make(chan error)\n\tterm := make(chan os.Signal, 1)\n\n\tuapi, err := ipc.UAPIListen(interfaceName, fileUAPI)\n\tif err != nil {\n\t\tlogger.Errorf(\"Failed to listen on uapi socket: %v\", err)\n\t\tos.Exit(ExitSetupFailed)\n\t}\n\n\tgo func() {\n\t\tfor {\n\t\t\tconn, err := uapi.Accept()\n\t\t\tif err != nil {\n\t\t\t\terrs <- err\n\t\t\t\treturn\n\t\t\t}\n\t\t\tgo device.IpcHandle(conn)\n\t\t}\n\t}()\n\n\tlogger.Verbosef(\"UAPI listener started\")\n\n\t// wait for program to terminate\n\n\tsignal.Notify(term, unix.SIGTERM)\n\tsignal.Notify(term, os.Interrupt)\n\n\tselect {\n\tcase <-term:\n\tcase <-errs:\n\tcase <-device.Wait():\n\t}\n\n\t// clean up\n\n\tuapi.Close()\n\tdevice.Close()\n\n\tlogger.Verbosef(\"Shutting down\")\n}\n"
+        },
+        {
+          "name": "main_windows.go",
+          "type": "blob",
+          "size": 2.0107421875,
+          "content": "/* SPDX-License-Identifier: MIT\n *\n * Copyright (C) 2017-2023 WireGuard LLC. All Rights Reserved.\n */\n\npackage main\n\nimport (\n\t\"fmt\"\n\t\"os\"\n\t\"os/signal\"\n\n\t\"golang.org/x/sys/windows\"\n\n\t\"golang.zx2c4.com/wireguard/conn\"\n\t\"golang.zx2c4.com/wireguard/device\"\n\t\"golang.zx2c4.com/wireguard/ipc\"\n\n\t\"golang.zx2c4.com/wireguard/tun\"\n)\n\nconst (\n\tExitSetupSuccess = 0\n\tExitSetupFailed  = 1\n)\n\nfunc main() {\n\tif len(os.Args) != 2 {\n\t\tos.Exit(ExitSetupFailed)\n\t}\n\tinterfaceName := os.Args[1]\n\n\tfmt.Fprintln(os.Stderr, \"Warning: this is a test program for Windows, mainly used for debugging this Go package. For a real WireGuard for Windows client, the repo you want is <https://git.zx2c4.com/wireguard-windows/>, which includes this code as a module.\")\n\n\tlogger := device.NewLogger(\n\t\tdevice.LogLevelVerbose,\n\t\tfmt.Sprintf(\"(%s) \", interfaceName),\n\t)\n\tlogger.Verbosef(\"Starting wireguard-go version %s\", Version)\n\n\ttun, err := tun.CreateTUN(interfaceName, 0)\n\tif err == nil {\n\t\trealInterfaceName, err2 := tun.Name()\n\t\tif err2 == nil {\n\t\t\tinterfaceName = realInterfaceName\n\t\t}\n\t} else {\n\t\tlogger.Errorf(\"Failed to create TUN device: %v\", err)\n\t\tos.Exit(ExitSetupFailed)\n\t}\n\n\tdevice := device.NewDevice(tun, conn.NewDefaultBind(), logger)\n\terr = device.Up()\n\tif err != nil {\n\t\tlogger.Errorf(\"Failed to bring up device: %v\", err)\n\t\tos.Exit(ExitSetupFailed)\n\t}\n\tlogger.Verbosef(\"Device started\")\n\n\tuapi, err := ipc.UAPIListen(interfaceName)\n\tif err != nil {\n\t\tlogger.Errorf(\"Failed to listen on uapi socket: %v\", err)\n\t\tos.Exit(ExitSetupFailed)\n\t}\n\n\terrs := make(chan error)\n\tterm := make(chan os.Signal, 1)\n\n\tgo func() {\n\t\tfor {\n\t\t\tconn, err := uapi.Accept()\n\t\t\tif err != nil {\n\t\t\t\terrs <- err\n\t\t\t\treturn\n\t\t\t}\n\t\t\tgo device.IpcHandle(conn)\n\t\t}\n\t}()\n\tlogger.Verbosef(\"UAPI listener started\")\n\n\t// wait for program to terminate\n\n\tsignal.Notify(term, os.Interrupt)\n\tsignal.Notify(term, os.Kill)\n\tsignal.Notify(term, windows.SIGTERM)\n\n\tselect {\n\tcase <-term:\n\tcase <-errs:\n\tcase <-device.Wait():\n\t}\n\n\t// clean up\n\n\tuapi.Close()\n\tdevice.Close()\n\n\tlogger.Verbosef(\"Shutting down\")\n}\n"
+        },
+        {
+          "name": "ratelimiter",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "replay",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rwcancel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tai64n",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tun",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "version.go",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "package main\n\nconst Version = \"0.0.20230223\"\n"
+        }
+      ]
+    }
+  ]
+}

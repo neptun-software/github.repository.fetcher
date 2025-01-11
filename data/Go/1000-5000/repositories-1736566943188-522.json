@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "timestamp": 1736566943188,
+    "page": 522,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nicksnyder/go-i18n",
+      "stars": 3068,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".codecov.yml",
+          "type": "blob",
+          "size": 0.1396484375,
+          "content": "coverage:\n  range: 50..75\n  status:\n    patch:\n      default:\n        only_pulls: true\n    project:\n      default:\n        informational: true\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "*.a\n_*\noutput/\n.DS_Store\n*.test\n*.swp\n\nexample/example\ngoi18n/goi18n\ndist/\ncoverage.txt\n"
+        },
+        {
+          "name": ".goreleaser.yml",
+          "type": "blob",
+          "size": 0.3447265625,
+          "content": "version: 2\nbuilds:\n  - binary: goi18n\n    main: ./goi18n/\n    goos:\n      - windows\n      - darwin\n      - linux\n    goarch:\n      - amd64\n    env:\n      - CGO_ENABLED=0\narchives:\n  - format: binary\n    name_template: \"{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}\"\nbefore:\n  hooks:\n    - go mod download\nchecksum:\n  name_template: \"checksums.txt\"\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 2.349609375,
+          "content": "# Changelog\n\nMajor version changes are documented in the changelog.\n\nTo see the documentation for minor or patch version, [view the release notes](https://github.com/nicksnyder/go-i18n/releases).\n\n## v2\n\n### Motivation\n\nThe first commit to this project was January 2012 (go1 had not yet been released) and v1.0.0 was tagged June 2015 (go1.4).\nThis project has evolved with the Go ecosystem since then in a backwards compatible way,\nbut there is a growing list of issues and warts that cannot be addressed without breaking compatibility.\n\nv2 is rewrite of the API from first principals to make it more idiomatic Go, and to resolve a backlog of issues: https://github.com/nicksnyder/go-i18n/milestone/1\n\n### Improvements\n\n* Use `golang.org/x/text/language` to get standardized behavior for language matching (https://github.com/nicksnyder/go-i18n/issues/30, https://github.com/nicksnyder/go-i18n/issues/44, https://github.com/nicksnyder/go-i18n/issues/76)\n* Remove global state so that the race detector does not complain when downstream projects run tests that depend on go-i18n in parallel (https://github.com/nicksnyder/go-i18n/issues/82)\n* Automatically extract messages from Go source code (https://github.com/nicksnyder/go-i18n/issues/64)\n* Provide clearer documentation and examples (https://github.com/nicksnyder/go-i18n/issues/27)\n* Reduce complexity of file format for simple translations (https://github.com/nicksnyder/go-i18n/issues/85)\n* Support descriptions for messages (https://github.com/nicksnyder/go-i18n/issues/8)\n* Support custom template delimiters (https://github.com/nicksnyder/go-i18n/issues/88)\n\n### Upgrading from v1\n\nThe i18n package in v2 is completely different than v1.\nRefer to the [documentation](https://pkg.go.dev/github.com/nicksnyder/go-i18n/v2/i18n) and [README](https://github.com/nicksnyder/go-i18n/blob/master/README.md) for guidance.\n\nThe goi18n command has similarities and differences:\n\n* `goi18n merge` has a new implementation but accomplishes the same task.\n* `goi18n extract` extracts messages from Go source files.\n* `goi18n constants` no longer exists. Prefer to extract messages directly from Go source files.\n\nv2 makes changes to the canonical message file format, but you can use v1 message files with v2. Message files will be converted to the new format the first time they are processed by the new `goi18n merge` command.\n\nv2 requires Go 1.9 or newer.\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0595703125,
+          "content": "Copyright (c) 2014 Nick Snyder https://github.com/nicksnyder\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.1708984375,
+          "content": "# go-i18n\n![Build status](https://github.com/nicksnyder/go-i18n/workflows/Build/badge.svg) [![Report card](https://goreportcard.com/badge/github.com/nicksnyder/go-i18n/v2)](https://goreportcard.com/report/github.com/nicksnyder/go-i18n/v2) [![codecov](https://codecov.io/gh/nicksnyder/go-i18n/graph/badge.svg?token=A9aMfR9vxG)](https://codecov.io/gh/nicksnyder/go-i18n) [![Sourcegraph](https://sourcegraph.com/github.com/nicksnyder/go-i18n/-/badge.svg)](https://sourcegraph.com/github.com/nicksnyder/go-i18n?badge)\n\ngo-i18n is a Go [package](#package-i18n) and a [command](#command-goi18n) that helps you translate Go programs into multiple languages.\n\n- Supports [pluralized strings](http://cldr.unicode.org/index/cldr-spec/plural-rules) for all 200+ languages in the [Unicode Common Locale Data Repository (CLDR)](https://www.unicode.org/cldr/charts/28/supplemental/language_plural_rules.html).\n  - Code and tests are [automatically generated](https://github.com/nicksnyder/go-i18n/tree/main/internal/plural/codegen) from [CLDR data](http://cldr.unicode.org/index/downloads).\n- Supports strings with named variables using [text/template](http://golang.org/pkg/text/template/) syntax.\n- Supports message files of any format (e.g. JSON, TOML, YAML).\n\n## Package i18n\n\n[![Go Reference](https://pkg.go.dev/badge/github.com/nicksnyder/go-i18n/v2/i18n.svg)](https://pkg.go.dev/github.com/nicksnyder/go-i18n/v2/i18n)\n\nThe i18n package provides support for looking up messages according to a set of locale preferences.\n\n```go\nimport \"github.com/nicksnyder/go-i18n/v2/i18n\"\n```\n\nCreate a Bundle to use for the lifetime of your application.\n\n```go\nbundle := i18n.NewBundle(language.English)\n```\n\nLoad translations into your bundle during initialization.\n\n```go\nbundle.RegisterUnmarshalFunc(\"toml\", toml.Unmarshal)\nbundle.LoadMessageFile(\"es.toml\")\n```\n\n```go\n// If use go:embed\n//go:embed locale.*.toml\nvar LocaleFS embed.FS\n\nbundle.RegisterUnmarshalFunc(\"toml\", toml.Unmarshal)\nbundle.LoadMessageFileFS(LocaleFS, \"locale.es.toml\")\n```\n\nCreate a Localizer to use for a set of language preferences.\n\n```go\nfunc(w http.ResponseWriter, r *http.Request) {\n    lang := r.FormValue(\"lang\")\n    accept := r.Header.Get(\"Accept-Language\")\n    localizer := i18n.NewLocalizer(bundle, lang, accept)\n}\n```\n\nUse the Localizer to lookup messages.\n\n```go\nlocalizer.Localize(&i18n.LocalizeConfig{\n    DefaultMessage: &i18n.Message{\n        ID: \"PersonCats\",\n        One: \"{{.Name}} has {{.Count}} cat.\",\n        Other: \"{{.Name}} has {{.Count}} cats.\",\n    },\n    TemplateData: map[string]interface{}{\n        \"Name\": \"Nick\",\n        \"Count\": 2,\n    },\n    PluralCount: 2,\n}) // Nick has 2 cats.\n```\n\n## Command goi18n\n\n[![Go Reference](https://pkg.go.dev/badge/github.com/nicksnyder/go-i18n/v2/goi18n.svg)](https://pkg.go.dev/github.com/nicksnyder/go-i18n/v2/goi18n)\n\nThe goi18n command manages message files used by the i18n package.\n\n```\ngo install -v github.com/nicksnyder/go-i18n/v2/goi18n@latest\ngoi18n -help\n```\n\n### Extracting messages\n\nUse `goi18n extract` to extract all i18n.Message struct literals in Go source files to a message file for translation.\n\n```toml\n# active.en.toml\n[PersonCats]\ndescription = \"The number of cats a person has\"\none = \"{{.Name}} has {{.Count}} cat.\"\nother = \"{{.Name}} has {{.Count}} cats.\"\n```\n\n### Translating a new language\n\n1. Create an empty message file for the language that you want to add (e.g. `translate.es.toml`).\n2. Run `goi18n merge active.en.toml translate.es.toml` to populate `translate.es.toml` with the messages to be translated.\n\n   ```toml\n   # translate.es.toml\n   [HelloPerson]\n   hash = \"sha1-5b49bfdad81fedaeefb224b0ffc2acc58b09cff5\"\n   other = \"Hello {{.Name}}\"\n   ```\n\n3. After `translate.es.toml` has been translated, rename it to `active.es.toml`.\n\n   ```toml\n   # active.es.toml\n   [HelloPerson]\n   hash = \"sha1-5b49bfdad81fedaeefb224b0ffc2acc58b09cff5\"\n   other = \"Hola {{.Name}}\"\n   ```\n\n4. Load `active.es.toml` into your bundle.\n\n   ```go\n   bundle.RegisterUnmarshalFunc(\"toml\", toml.Unmarshal)\n   bundle.LoadMessageFile(\"active.es.toml\")\n   ```\n\n### Translating new messages\n\nIf you have added new messages to your program:\n\n1. Run `goi18n extract` to update `active.en.toml` with the new messages.\n2. Run `goi18n merge active.*.toml` to generate updated `translate.*.toml` files.\n3. Translate all the messages in the `translate.*.toml` files.\n4. Run `goi18n merge active.*.toml translate.*.toml` to merge the translated messages into the active message files.\n\n## For more information and examples:\n\n- Read the [documentation](https://pkg.go.dev/github.com/nicksnyder/go-i18n/v2).\n- Look at the [code examples](https://github.com/nicksnyder/go-i18n/blob/main/i18n/example_test.go) and [tests](https://github.com/nicksnyder/go-i18n/blob/main/i18n/localizer_test.go).\n- Look at an example [application](https://github.com/nicksnyder/go-i18n/tree/main/example).\n\n## Translations of this document\n\nCommunity translations of this document may be found in the [.github](.github) folder.\n\nThese translations are maintained by the community, and are not maintained by the author of this project.\nThey are not guaranteed to be accurate or up-to-date.\n\n## License\n\ngo-i18n is available under the MIT license. See the [LICENSE](LICENSE) file for more info.\n"
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.1455078125,
+          "content": "module github.com/nicksnyder/go-i18n/v2\n\ngo 1.18\n\nrequire (\n\tgithub.com/BurntSushi/toml v1.4.0\n\tgolang.org/x/text v0.21.0\n\tgopkg.in/yaml.v3 v3.0.1\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 0.669921875,
+          "content": "github.com/BurntSushi/toml v1.4.0 h1:kuoIxZQy2WRRk1pttg9asf+WVv6tWQuBNVmK8+nqPr0=\ngithub.com/BurntSushi/toml v1.4.0/go.mod h1:ukJfTF/6rtPPRCnwkur4qwRxa8vTRFBF0uk2lLoLwho=\ngolang.org/x/text v0.21.0 h1:zyQAAkrwaneQ066sspRyJaG9VNi/YJ1NfzcGB3hZ/qo=\ngolang.org/x/text v0.21.0/go.mod h1:4IBbMaMmOPCJ8SecivzSH54+73PCFmPWxNTLm+vZkEQ=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        },
+        {
+          "name": "goi18n",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "i18n",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "internal",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

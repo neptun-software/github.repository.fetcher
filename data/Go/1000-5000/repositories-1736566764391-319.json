@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": 1736566764391,
+    "page": 319,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tomnomnom/waybackurls",
+      "stars": 3631,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.03515625,
+          "content": "waybackurls\n*.swp\n*.tgz\n*.zip\n*.exe\n"
+        },
+        {
+          "name": "README.mkd",
+          "type": "blob",
+          "size": 0.443359375,
+          "content": "# waybackurls\n\nAccept line-delimited domains on stdin, fetch known URLs from the Wayback Machine for `*.domain` and output them on stdout.\n\nUsage example:\n\n```\n▶ cat domains.txt | waybackurls > urls\n```\n\nInstall:\n\n```\n▶ go install github.com/tomnomnom/waybackurls@latest\n```\n\n## Credit\n\nThis tool was inspired by @mhmdiaa's [waybackurls.py](https://gist.github.com/mhmdiaa/adf6bff70142e5091792841d4b372050) script.\nThanks to them for the great idea!\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": "module github.com/tomnomnom/waybackurls\n\ngo 1.18\n"
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 5.3154296875,
+          "content": "package main\n\nimport (\n\t\"bufio\"\n\t\"encoding/json\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io/ioutil\"\n\t\"net/http\"\n\t\"net/url\"\n\t\"os\"\n\t\"strings\"\n\t\"sync\"\n\t\"time\"\n)\n\nfunc main() {\n\n\tvar domains []string\n\n\tvar dates bool\n\tflag.BoolVar(&dates, \"dates\", false, \"show date of fetch in the first column\")\n\n\tvar noSubs bool\n\tflag.BoolVar(&noSubs, \"no-subs\", false, \"don't include subdomains of the target domain\")\n\n\tvar getVersionsFlag bool\n\tflag.BoolVar(&getVersionsFlag, \"get-versions\", false, \"list URLs for crawled versions of input URL(s)\")\n\n\tflag.Parse()\n\n\tif flag.NArg() > 0 {\n\t\t// fetch for a single domain\n\t\tdomains = []string{flag.Arg(0)}\n\t} else {\n\n\t\t// fetch for all domains from stdin\n\t\tsc := bufio.NewScanner(os.Stdin)\n\t\tfor sc.Scan() {\n\t\t\tdomains = append(domains, sc.Text())\n\t\t}\n\n\t\tif err := sc.Err(); err != nil {\n\t\t\tfmt.Fprintf(os.Stderr, \"failed to read input: %s\\n\", err)\n\t\t}\n\t}\n\n\t// get-versions mode\n\tif getVersionsFlag {\n\n\t\tfor _, u := range domains {\n\t\t\tversions, err := getVersions(u)\n\t\t\tif err != nil {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tfmt.Println(strings.Join(versions, \"\\n\"))\n\t\t}\n\n\t\treturn\n\t}\n\n\tfetchFns := []fetchFn{\n\t\tgetWaybackURLs,\n\t\tgetCommonCrawlURLs,\n\t\tgetVirusTotalURLs,\n\t}\n\n\tfor _, domain := range domains {\n\n\t\tvar wg sync.WaitGroup\n\t\twurls := make(chan wurl)\n\n\t\tfor _, fn := range fetchFns {\n\t\t\twg.Add(1)\n\t\t\tfetch := fn\n\t\t\tgo func() {\n\t\t\t\tdefer wg.Done()\n\t\t\t\tresp, err := fetch(domain, noSubs)\n\t\t\t\tif err != nil {\n\t\t\t\t\treturn\n\t\t\t\t}\n\t\t\t\tfor _, r := range resp {\n\t\t\t\t\tif noSubs && isSubdomain(r.url, domain) {\n\t\t\t\t\t\tcontinue\n\t\t\t\t\t}\n\t\t\t\t\twurls <- r\n\t\t\t\t}\n\t\t\t}()\n\t\t}\n\n\t\tgo func() {\n\t\t\twg.Wait()\n\t\t\tclose(wurls)\n\t\t}()\n\n\t\tseen := make(map[string]bool)\n\t\tfor w := range wurls {\n\t\t\tif _, ok := seen[w.url]; ok {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tseen[w.url] = true\n\n\t\t\tif dates {\n\n\t\t\t\td, err := time.Parse(\"20060102150405\", w.date)\n\t\t\t\tif err != nil {\n\t\t\t\t\tfmt.Fprintf(os.Stderr, \"failed to parse date [%s] for URL [%s]\\n\", w.date, w.url)\n\t\t\t\t}\n\n\t\t\t\tfmt.Printf(\"%s %s\\n\", d.Format(time.RFC3339), w.url)\n\n\t\t\t} else {\n\t\t\t\tfmt.Println(w.url)\n\t\t\t}\n\t\t}\n\t}\n\n}\n\ntype wurl struct {\n\tdate string\n\turl  string\n}\n\ntype fetchFn func(string, bool) ([]wurl, error)\n\nfunc getWaybackURLs(domain string, noSubs bool) ([]wurl, error) {\n\tsubsWildcard := \"*.\"\n\tif noSubs {\n\t\tsubsWildcard = \"\"\n\t}\n\n\tres, err := http.Get(\n\t\tfmt.Sprintf(\"http://web.archive.org/cdx/search/cdx?url=%s%s/*&output=json&collapse=urlkey\", subsWildcard, domain),\n\t)\n\tif err != nil {\n\t\treturn []wurl{}, err\n\t}\n\n\traw, err := ioutil.ReadAll(res.Body)\n\n\tres.Body.Close()\n\tif err != nil {\n\t\treturn []wurl{}, err\n\t}\n\n\tvar wrapper [][]string\n\terr = json.Unmarshal(raw, &wrapper)\n\n\tout := make([]wurl, 0, len(wrapper))\n\n\tskip := true\n\tfor _, urls := range wrapper {\n\t\t// The first item is always just the string \"original\",\n\t\t// so we should skip the first item\n\t\tif skip {\n\t\t\tskip = false\n\t\t\tcontinue\n\t\t}\n\t\tout = append(out, wurl{date: urls[1], url: urls[2]})\n\t}\n\n\treturn out, nil\n\n}\n\nfunc getCommonCrawlURLs(domain string, noSubs bool) ([]wurl, error) {\n\tsubsWildcard := \"*.\"\n\tif noSubs {\n\t\tsubsWildcard = \"\"\n\t}\n\n\tres, err := http.Get(\n\t\tfmt.Sprintf(\"http://index.commoncrawl.org/CC-MAIN-2018-22-index?url=%s%s/*&output=json\", subsWildcard, domain),\n\t)\n\tif err != nil {\n\t\treturn []wurl{}, err\n\t}\n\n\tdefer res.Body.Close()\n\tsc := bufio.NewScanner(res.Body)\n\n\tout := make([]wurl, 0)\n\n\tfor sc.Scan() {\n\n\t\twrapper := struct {\n\t\t\tURL       string `json:\"url\"`\n\t\t\tTimestamp string `json:\"timestamp\"`\n\t\t}{}\n\t\terr = json.Unmarshal([]byte(sc.Text()), &wrapper)\n\n\t\tif err != nil {\n\t\t\tcontinue\n\t\t}\n\n\t\tout = append(out, wurl{date: wrapper.Timestamp, url: wrapper.URL})\n\t}\n\n\treturn out, nil\n\n}\n\nfunc getVirusTotalURLs(domain string, noSubs bool) ([]wurl, error) {\n\tout := make([]wurl, 0)\n\n\tapiKey := os.Getenv(\"VT_API_KEY\")\n\tif apiKey == \"\" {\n\t\t// no API key isn't an error,\n\t\t// just don't fetch\n\t\treturn out, nil\n\t}\n\n\tfetchURL := fmt.Sprintf(\n\t\t\"https://www.virustotal.com/vtapi/v2/domain/report?apikey=%s&domain=%s\",\n\t\tapiKey,\n\t\tdomain,\n\t)\n\n\tresp, err := http.Get(fetchURL)\n\tif err != nil {\n\t\treturn out, err\n\t}\n\tdefer resp.Body.Close()\n\n\twrapper := struct {\n\t\tURLs []struct {\n\t\t\tURL string `json:\"url\"`\n\t\t\t// TODO: handle VT date format (2018-03-26 09:22:43)\n\t\t\t//Date string `json:\"scan_date\"`\n\t\t} `json:\"detected_urls\"`\n\t}{}\n\n\tdec := json.NewDecoder(resp.Body)\n\n\terr = dec.Decode(&wrapper)\n\n\tfor _, u := range wrapper.URLs {\n\t\tout = append(out, wurl{url: u.URL})\n\t}\n\n\treturn out, nil\n\n}\n\nfunc isSubdomain(rawUrl, domain string) bool {\n\tu, err := url.Parse(rawUrl)\n\tif err != nil {\n\t\t// we can't parse the URL so just\n\t\t// err on the side of including it in output\n\t\treturn false\n\t}\n\n\treturn strings.ToLower(u.Hostname()) != strings.ToLower(domain)\n}\n\nfunc getVersions(u string) ([]string, error) {\n\tout := make([]string, 0)\n\n\tresp, err := http.Get(fmt.Sprintf(\n\t\t\"http://web.archive.org/cdx/search/cdx?url=%s&output=json\", u,\n\t))\n\n\tif err != nil {\n\t\treturn out, err\n\t}\n\tdefer resp.Body.Close()\n\n\tr := [][]string{}\n\n\tdec := json.NewDecoder(resp.Body)\n\n\terr = dec.Decode(&r)\n\tif err != nil {\n\t\treturn out, err\n\t}\n\n\tfirst := true\n\tseen := make(map[string]bool)\n\tfor _, s := range r {\n\n\t\t// skip the first element, it's the field names\n\t\tif first {\n\t\t\tfirst = false\n\t\t\tcontinue\n\t\t}\n\n\t\t// fields: \"urlkey\", \"timestamp\", \"original\", \"mimetype\", \"statuscode\", \"digest\", \"length\"\n\t\tif seen[s[5]] {\n\t\t\tcontinue\n\t\t}\n\t\tseen[s[5]] = true\n\t\tout = append(out, fmt.Sprintf(\"https://web.archive.org/web/%sif_/%s\", s[1], s[2]))\n\t}\n\n\treturn out, nil\n}\n"
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

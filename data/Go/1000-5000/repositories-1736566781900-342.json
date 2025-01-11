@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736566781900,
+    "page": 342,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ContainerSolutions/k8s-deployment-strategies",
+      "stars": 3557,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0205078125,
+          "content": "app/vendor\n.DS_Store\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.259765625,
+          "content": "Kubernetes deployment strategies\n================================\n\n> In Kubernetes there are a few different ways to release an application, you have\nto carefully choose the right strategy to make your infrastructure resilient.\n\n- [recreate](recreate/): terminate the old version and release the new one\n- [ramped](ramped/): release a new version on a rolling update fashion, one\n  after the other\n- [blue/green](blue-green/): release a new version alongside the old version\n  then switch traffic\n- [canary](canary/): release a new version to a subset of users, then proceed\n  to a full rollout\n- [a/b testing](ab-testing/): release a new version to a subset of users in a\n  precise way (HTTP headers, cookie, weight, etc.). This doesn’t come out of the\n  box with Kubernetes, it imply extra work to setup a smarter\n  loadbalancing system (Istio, Linkerd, Traeffik, custom nginx/haproxy, etc).\n- [shadow](shadow/): release a new version alongside the old version. Incoming\n  traffic is mirrored to the new version and doesn't impact the\n  response.\n\n![deployment strategy decision diagram](decision-diagram.png)\n\nBefore experimenting, checkout the following resources:\n- [CNCF presentation](https://www.youtube.com/watch?v=1oPhfKye5Pg)\n- [CNCF presentation slides](https://www.slideshare.net/EtienneTremel/kubernetes-deployment-strategies-cncf-webinar)\n- [Kubernetes deployment strategies](https://container-solutions.com/kubernetes-deployment-strategies/)\n- [Six Strategies for Application Deployment](https://thenewstack.io/deployment-strategies/).\n- [Canary deployment using Istio and Helm](https://github.com/etiennetremel/istio-cross-namespace-canary-release-demo)\n- [Automated rollback of Helm releases based on logs or metrics](https://container-solutions.com/automated-rollback-helm-releases-based-logs-metrics/)\n\n## Getting started\n\nThese examples were created and tested on [Minikube](http://github.com/kubernetes/minikube)\nrunning with Kubernetes v1.25.2 and [Rancher Desktop](https://rancherdesktop.io/) running\nwith Kubernetes 1.23.6.\n\nOn MacOS the hypervisor VM does not have external connectivity so docker image pulls\nwill fail. To resolve this, install another driver such as\n[VirtualBox](https://www.virtualbox.org/) and add `--vm-driver virtualbox`\nto the command to be able to pull images.\n\n```\n$ minikube start --kubernetes-version v1.25.2 --memory 8192 --cpus 2\n```\n\n## Visualizing using Prometheus and Grafana\n\nThe following steps describe how to setup Prometheus and Grafana to visualize\nthe progress and performance of a deployment.\n\n### Install Helm3\n\nTo install Helm3, follow the instructions provided on their\n[website](https://github.com/kubernetes/helm/releases).\n\n### Install Prometheus\n\n```\n$ helm install prometheus prometheus-community/prometheus \\\n    --create-namespace --namespace=monitoring \\\n    -f prometheus-override.yaml\n```\n\n### Install Grafana\n\n```\n$ helm install grafana \\\n    --namespace=monitoring \\\n    --set=adminUser=admin \\\n    --set=adminPassword=admin \\\n    --set=service.type=NodePort \\\n    grafana/grafana\n```\n\n### Setup Grafana\n\nNow that Prometheus and Grafana are up and running, you can access Grafana:\n\n```\n$ minikube service grafana -n monitoring\n```\n\nTo login, username: `admin`, password: `admin`.\n\nThen you need to connect Grafana to Prometheus, to do so, add a DataSource:\n\n```\nName: prometheus\nType: Prometheus\nUrl: http://prometheus-server\nAccess: Server\n```\n\nCreate a dashboard with a Time series or import\nthe [JSON export](grafana-dashboard.json) - update the UID first of the Prometheus source. Use the following query:\n\n```\nsum(rate(http_requests_total{app=\"my-app\"}[2m])) by (version)\n```\n\nSince we installed Prometheus with default settings, it is using the default scrape\ninterval of `1m` so the range cannot be lower than that.\n\nTo have a better overview of the version, add `{{version}}` in the legend field.\n\n#### Example graph\n\nRecreate:\n\n![Kubernetes deployment recreate](recreate/grafana-recreate.png)\n\nRamped:\n\n![Kubernetes deployment ramped](ramped/grafana-ramped.png)\n\nBlue/Green:\n\n![Kubernetes deployment blue-green](blue-green/grafana-blue-green.png)\n\nCanary:\n\n![Kubernetes deployment canary](canary/grafana-canary.png)\n\nA/B testing:\n\n![kubernetes ab-testing deployment](ab-testing/grafana-ab-testing.png)\n\nShadow:\n\n![kubernetes shadow deployment](shadow/grafana-shadow.png)\n"
+        },
+        {
+          "name": "ab-testing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "blue-green",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "canary",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "decision-diagram.png",
+          "type": "blob",
+          "size": 216.26171875,
+          "content": null
+        },
+        {
+          "name": "grafana-dashboard.json",
+          "type": "blob",
+          "size": 3.248046875,
+          "content": "{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"grafana\",\n          \"uid\": \"-- Grafana --\"\n        },\n        \"enable\": true,\n        \"hide\": true,\n        \"iconColor\": \"rgba(0, 211, 255, 1)\",\n        \"name\": \"Annotations & Alerts\",\n        \"target\": {\n          \"limit\": 100,\n          \"matchAny\": false,\n          \"tags\": [],\n          \"type\": \"dashboard\"\n        },\n        \"type\": \"dashboard\"\n      }\n    ]\n  },\n  \"editable\": true,\n  \"fiscalYearStartMonth\": 0,\n  \"graphTooltip\": 0,\n  \"id\": 1,\n  \"links\": [],\n  \"liveNow\": false,\n  \"panels\": [\n    {\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"<UPDATE THIS>\"\n      },\n      \"description\": \"\",\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"color\": {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\": {\n            \"axisLabel\": \"\",\n            \"axisPlacement\": \"auto\",\n            \"barAlignment\": 0,\n            \"drawStyle\": \"bars\",\n            \"fillOpacity\": 10,\n            \"gradientMode\": \"none\",\n            \"hideFrom\": {\n              \"legend\": false,\n              \"tooltip\": false,\n              \"viz\": false\n            },\n            \"lineInterpolation\": \"linear\",\n            \"lineStyle\": {\n              \"fill\": \"solid\"\n            },\n            \"lineWidth\": 1,\n            \"pointSize\": 5,\n            \"scaleDistribution\": {\n              \"type\": \"linear\"\n            },\n            \"showPoints\": \"never\",\n            \"spanNulls\": true,\n            \"stacking\": {\n              \"group\": \"A\",\n              \"mode\": \"none\"\n            },\n            \"thresholdsStyle\": {\n              \"mode\": \"off\"\n            }\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n            \"mode\": \"absolute\",\n            \"steps\": [\n              {\n                \"color\": \"green\",\n                \"value\": null\n              },\n              {\n                \"color\": \"red\",\n                \"value\": 80\n              }\n            ]\n          },\n          \"unit\": \"short\"\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 9,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 0\n      },\n      \"id\": 2,\n      \"options\": {\n        \"legend\": {\n          \"calcs\": [],\n          \"displayMode\": \"list\",\n          \"placement\": \"bottom\"\n        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"none\"\n        }\n      },\n      \"pluginVersion\": \"8.5.3\",\n      \"targets\": [\n        {\n          \"datasource\": {\n            \"type\": \"prometheus\",\n            \"uid\": \"<UPDATE THIS>\"\n          },\n          \"editorMode\": \"code\",\n          \"exemplar\": false,\n          \"expr\": \"sum(rate(http_requests_total{app=\\\"my-app\\\"}[2m])) by (version)\",\n          \"format\": \"time_series\",\n          \"instant\": false,\n          \"interval\": \"\",\n          \"legendFormat\": \"{{version}}\",\n          \"range\": true,\n          \"refId\": \"A\"\n        }\n      ],\n      \"title\": \"Requests Total\",\n      \"type\": \"timeseries\"\n    }\n  ],\n  \"refresh\": \"\",\n  \"schemaVersion\": 36,\n  \"style\": \"dark\",\n  \"tags\": [],\n  \"templating\": {\n    \"list\": []\n  },\n  \"time\": {\n    \"from\": \"now-15m\",\n    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"\",\n  \"title\": \"k8s-deployment-strategies dashboard\",\n  \"uid\": \"WM-nwCX7k\",\n  \"version\": 3,\n  \"weekStart\": \"\"\n}\n"
+        },
+        {
+          "name": "prometheus-override.yaml",
+          "type": "blob",
+          "size": 0.1162109375,
+          "content": "# Default scrape interval is 1m, but for demo purposes we want much quicker feedback\nserver.global.scrape_interval: 5s\n"
+        },
+        {
+          "name": "ramped",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "recreate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shadow",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

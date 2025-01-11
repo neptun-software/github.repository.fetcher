@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "timestamp": 1736566996459,
+    "page": 579,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tomnomnom/httprobe",
+      "stars": 2921,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0400390625,
+          "content": "domains\nhosts\nhttprobe\n*.tgz\n*.zip\n*.exe\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.6103515625,
+          "content": "FROM golang:1.11.4-alpine3.7 AS build-env\nRUN apk add --no-cache --upgrade git openssh-client ca-certificates\nRUN go get -u github.com/golang/dep/cmd/dep\nWORKDIR /go/src/app\n\nCOPY . /go/src/app\n\nRUN go build -o httprobe main.go\n\n\nFROM alpine:3.9\n\nRUN apk add shadow bash && \\\n    useradd --create-home --shell /sbin/nologin httprobe && \\\n    mkdir /httprobe && \\\n    chown httprobe:httprobe /httprobe\n\nCOPY --from=build-env /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt\nCOPY --from=build-env /go/src/app/httprobe /httprobe/httprobe\n\n\nUSER httprobe\nWORKDIR /httprobe\n\nENTRYPOINT [\"/httprobe/httprobe\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2019 Tom Hudson\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.7041015625,
+          "content": "# httprobe\n\nTake a list of domains and probe for working http and https servers.\n\n## Install\n\n```\n▶ go install github.com/tomnomnom/httprobe@latest\n```\n\n## Basic Usage\n\nhttprobe accepts line-delimited domains on `stdin`:\n\n```\n▶ cat recon/example/domains.txt\nexample.com\nexample.edu\nexample.net\n▶ cat recon/example/domains.txt | httprobe\nhttp://example.com\nhttp://example.net\nhttp://example.edu\nhttps://example.com\nhttps://example.edu\nhttps://example.net\n```\n\n## Extra Probes\n\nBy default httprobe checks for HTTP on port 80 and HTTPS on port 443. You can add additional\nprobes with the `-p` flag by specifying a protocol and port pair:\n\n```\n▶ cat domains.txt | httprobe -p http:81 -p https:8443\n```\n\n## Concurrency\n\nYou can set the concurrency level with the `-c` flag:\n\n```\n▶ cat domains.txt | httprobe -c 50\n```\n\n## Timeout\n\nYou can change the timeout by using the `-t` flag and specifying a timeout in milliseconds:\n\n```\n▶ cat domains.txt | httprobe -t 20000\n```\n\n## Skipping Default Probes\n\nIf you don't want to probe for HTTP on port 80 or HTTPS on port 443, you can use the\n`-s` flag. You'll need to specify the probes you do want using the `-p` flag:\n\n```\n▶ cat domains.txt | httprobe -s -p https:8443\n```\n\n## Prefer HTTPS\n\nSometimes you don't care about checking HTTP if HTTPS is working. You can do that with the `--prefer-https` flag:\n\n```\n▶ cat domains.txt | httprobe --prefer-https\n```\n\n## Docker\n\nBuild the docker container:\n\n```\n▶ docker build -t httprobe .\n```\n\nRun the container, passing the contents of a file into stdin of the process inside the container. `-i` is required to correctly map `stdin` into the container and to the `httprobe` binary.\n\n```\n▶ cat domains.txt | docker run -i httprobe <args>\n```\n\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "module github.com/tomnomnom/httprobe\n\ngo 1.18\n"
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 5.474609375,
+          "content": "package main\n\nimport (\n\t\"bufio\"\n\t\"crypto/tls\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"io/ioutil\"\n\t\"net\"\n\t\"net/http\"\n\t\"os\"\n\t\"strings\"\n\t\"sync\"\n\t\"time\"\n)\n\ntype probeArgs []string\n\nfunc (p *probeArgs) Set(val string) error {\n\t*p = append(*p, val)\n\treturn nil\n}\n\nfunc (p probeArgs) String() string {\n\treturn strings.Join(p, \",\")\n}\n\nfunc main() {\n\n\t// concurrency flag\n\tvar concurrency int\n\tflag.IntVar(&concurrency, \"c\", 20, \"set the concurrency level (split equally between HTTPS and HTTP requests)\")\n\n\t// probe flags\n\tvar probes probeArgs\n\tflag.Var(&probes, \"p\", \"add additional probe (proto:port)\")\n\n\t// skip default probes flag\n\tvar skipDefault bool\n\tflag.BoolVar(&skipDefault, \"s\", false, \"skip the default probes (http:80 and https:443)\")\n\n\t// timeout flag\n\tvar to int\n\tflag.IntVar(&to, \"t\", 10000, \"timeout (milliseconds)\")\n\n\t// prefer https\n\tvar preferHTTPS bool\n\tflag.BoolVar(&preferHTTPS, \"prefer-https\", false, \"only try plain HTTP if HTTPS fails\")\n\n\t// HTTP method to use\n\tvar method string\n\tflag.StringVar(&method, \"method\", \"GET\", \"HTTP method to use\")\n\n\tflag.Parse()\n\n\t// make an actual time.Duration out of the timeout\n\ttimeout := time.Duration(to * 1000000)\n\n\tvar tr = &http.Transport{\n\t\tMaxIdleConns:      30,\n\t\tIdleConnTimeout:   time.Second,\n\t\tDisableKeepAlives: true,\n\t\tTLSClientConfig:   &tls.Config{InsecureSkipVerify: true},\n\t\tDialContext: (&net.Dialer{\n\t\t\tTimeout:   timeout,\n\t\t\tKeepAlive: time.Second,\n\t\t}).DialContext,\n\t}\n\n\tre := func(req *http.Request, via []*http.Request) error {\n\t\treturn http.ErrUseLastResponse\n\t}\n\n\tclient := &http.Client{\n\t\tTransport:     tr,\n\t\tCheckRedirect: re,\n\t\tTimeout:       timeout,\n\t}\n\n\t// domain/port pairs are initially sent on the httpsURLs channel.\n\t// If they are listening and the --prefer-https flag is set then\n\t// no HTTP check is performed; otherwise they're put onto the httpURLs\n\t// channel for an HTTP check.\n\thttpsURLs := make(chan string)\n\thttpURLs := make(chan string)\n\toutput := make(chan string)\n\n\t// HTTPS workers\n\tvar httpsWG sync.WaitGroup\n\tfor i := 0; i < concurrency/2; i++ {\n\t\thttpsWG.Add(1)\n\n\t\tgo func() {\n\t\t\tfor url := range httpsURLs {\n\n\t\t\t\t// always try HTTPS first\n\t\t\t\twithProto := \"https://\" + url\n\t\t\t\tif isListening(client, withProto, method) {\n\t\t\t\t\toutput <- withProto\n\n\t\t\t\t\t// skip trying HTTP if --prefer-https is set\n\t\t\t\t\tif preferHTTPS {\n\t\t\t\t\t\tcontinue\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\thttpURLs <- url\n\t\t\t}\n\n\t\t\thttpsWG.Done()\n\t\t}()\n\t}\n\n\t// HTTP workers\n\tvar httpWG sync.WaitGroup\n\tfor i := 0; i < concurrency/2; i++ {\n\t\thttpWG.Add(1)\n\n\t\tgo func() {\n\t\t\tfor url := range httpURLs {\n\t\t\t\twithProto := \"http://\" + url\n\t\t\t\tif isListening(client, withProto, method) {\n\t\t\t\t\toutput <- withProto\n\t\t\t\t\tcontinue\n\t\t\t\t}\n\t\t\t}\n\n\t\t\thttpWG.Done()\n\t\t}()\n\t}\n\n\t// Close the httpURLs channel when the HTTPS workers are done\n\tgo func() {\n\t\thttpsWG.Wait()\n\t\tclose(httpURLs)\n\t}()\n\n\t// Output worker\n\tvar outputWG sync.WaitGroup\n\toutputWG.Add(1)\n\tgo func() {\n\t\tfor o := range output {\n\t\t\tfmt.Println(o)\n\t\t}\n\t\toutputWG.Done()\n\t}()\n\n\t// Close the output channel when the HTTP workers are done\n\tgo func() {\n\t\thttpWG.Wait()\n\t\tclose(output)\n\t}()\n\n\t// accept domains on stdin\n\tsc := bufio.NewScanner(os.Stdin)\n\tfor sc.Scan() {\n\t\tdomain := strings.ToLower(sc.Text())\n\n\t\t// submit standard port checks\n\t\tif !skipDefault {\n\t\t\thttpsURLs <- domain\n\t\t}\n\n\t\t// Adding port templates\n\t\txlarge := []string{\"81\", \"300\", \"591\", \"593\", \"832\", \"981\", \"1010\", \"1311\", \"2082\", \"2087\", \"2095\", \"2096\", \"2480\", \"3000\", \"3128\", \"3333\", \"4243\", \"4567\", \"4711\", \"4712\", \"4993\", \"5000\", \"5104\", \"5108\", \"5800\", \"6543\", \"7000\", \"7396\", \"7474\", \"8000\", \"8001\", \"8008\", \"8014\", \"8042\", \"8069\", \"8080\", \"8081\", \"8088\", \"8090\", \"8091\", \"8118\", \"8123\", \"8172\", \"8222\", \"8243\", \"8280\", \"8281\", \"8333\", \"8443\", \"8500\", \"8834\", \"8880\", \"8888\", \"8983\", \"9000\", \"9043\", \"9060\", \"9080\", \"9090\", \"9091\", \"9200\", \"9443\", \"9800\", \"9981\", \"12443\", \"16080\", \"18091\", \"18092\", \"20720\", \"28017\"}\n\t\tlarge := []string{\"81\", \"591\", \"2082\", \"2087\", \"2095\", \"2096\", \"3000\", \"8000\", \"8001\", \"8008\", \"8080\", \"8083\", \"8443\", \"8834\", \"8888\"}\n\n\t\t// submit any additional proto:port probes\n\t\tfor _, p := range probes {\n\t\t\tswitch p {\n\t\t\tcase \"xlarge\":\n\t\t\t\tfor _, port := range xlarge {\n\t\t\t\t\thttpsURLs <- fmt.Sprintf(\"%s:%s\", domain, port)\n\t\t\t\t}\n\t\t\tcase \"large\":\n\t\t\t\tfor _, port := range large {\n\t\t\t\t\thttpsURLs <- fmt.Sprintf(\"%s:%s\", domain, port)\n\t\t\t\t}\n\t\t\tdefault:\n\t\t\t\tpair := strings.SplitN(p, \":\", 2)\n\t\t\t\tif len(pair) != 2 {\n\t\t\t\t\tcontinue\n\t\t\t\t}\n\n\t\t\t\t// This is a little bit funny as \"https\" will imply an\n\t\t\t\t// http check as well unless the --prefer-https flag is\n\t\t\t\t// set. On balance I don't think that's *such* a bad thing\n\t\t\t\t// but it is maybe a little unexpected.\n\t\t\t\tif strings.ToLower(pair[0]) == \"https\" {\n\t\t\t\t\thttpsURLs <- fmt.Sprintf(\"%s:%s\", domain, pair[1])\n\t\t\t\t} else {\n\t\t\t\t\thttpURLs <- fmt.Sprintf(\"%s:%s\", domain, pair[1])\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n\n\t// once we've sent all the URLs off we can close the\n\t// input/httpsURLs channel. The workers will finish what they're\n\t// doing and then call 'Done' on the WaitGroup\n\tclose(httpsURLs)\n\n\t// check there were no errors reading stdin (unlikely)\n\tif err := sc.Err(); err != nil {\n\t\tfmt.Fprintf(os.Stderr, \"failed to read input: %s\\n\", err)\n\t}\n\n\t// Wait until the output waitgroup is done\n\toutputWG.Wait()\n}\n\nfunc isListening(client *http.Client, url, method string) bool {\n\n\treq, err := http.NewRequest(method, url, nil)\n\tif err != nil {\n\t\treturn false\n\t}\n\n\treq.Header.Add(\"Connection\", \"close\")\n\treq.Close = true\n\n\tresp, err := client.Do(req)\n\tif resp != nil {\n\t\tio.Copy(ioutil.Discard, resp.Body)\n\t\tresp.Body.Close()\n\t}\n\n\tif err != nil {\n\t\treturn false\n\t}\n\n\treturn true\n}\n"
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

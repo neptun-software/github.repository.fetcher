@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "timestamp": 1736566890682,
+    "page": 462,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "progrium/localtunnel",
+      "stars": 3198,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.03125,
+          "content": "Copyright (C) 2015 Jeff Lindsay\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.5947265625,
+          "content": "# localtunnel\n\nWhat happened to localtunnel? After pioneering instant public tunnels to localhost, many people copied the project and started businesses around the idea. Localtunnel fell into obscurity. Today, Alan Shreve's [Ngrok](https://ngrok.com) rightly dominates mindshare on the idea. \n\nThis repo now contains localtunnel v3, a very minimal implementation (under 200 lines) written in Go using my new project [Duplex](https://github.com/progrium/duplex). Duplex lets you make stuff like localtunnel very easily. Although usable, there is no public server and the scope of the project is pretty fixed where it is.\n\nThis repo also continues to exist to archive the history of the project. You'll find several interesting branches here:\n\n * [v2](https://github.com/progrium/localtunnel/tree/v2) (2011-2013) - Attempt to revitalize the project and service, v2 was written end-to-end in Python gevent and resolved many issues and requests from v1.\n * [v1](https://github.com/progrium/localtunnel/tree/v1) (mid 2010) - The original implementation that became popular. It worked quite well, but was a dirty hack. It wrapped OpenSSH, with a client in Ruby and a control server in Python Twisted.\n * [prototype](https://github.com/progrium/localtunnel/tree/prototype) (early 2010) - When I first had the idea, I tried using Python Twisted to implement the whole system. I didn't have the experience to get stream multiplexing to work, so this version is pretty broken.\n\n## Using localtunnel v3\n\nBinary releases have not been set up yet, so you'll need Go to get started:\n\n\t$ go install github.com/progrium/localtunnel\n\n\n## License\n\nBSD"
+        },
+        {
+          "name": "client.go",
+          "type": "blob",
+          "size": 0.650390625,
+          "content": "package main\n\nimport (\n\t\"log\"\n\t\"net\"\n\n\t\"github.com/progrium/duplex/poc2/duplex\"\n)\n\nfunc client(backendConnect, localConnect, vhostName string) {\n\tclient := duplex.NewPeer()\n\tclient.SetOption(duplex.OptName, vhostName)\n\terr := client.Connect(\"tcp://\" + backendConnect)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\ttunnel, err := client.Open(client.NextPeer(), \"tunnel\", nil)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tfor {\n\t\tmeta, ch := tunnel.Accept()\n\t\tif meta == nil {\n\t\t\tbreak\n\t\t}\n\t\tgo func() {\n\t\t\tconn, err := net.Dial(\"tcp\", localConnect)\n\t\t\tif err != nil {\n\t\t\t\tlog.Println(err)\n\t\t\t\tch.Close()\n\t\t\t\treturn\n\t\t\t}\n\t\t\tprintln(\"connection received\")\n\t\t\tch.Join(conn)\n\t\t}()\n\t}\n}\n"
+        },
+        {
+          "name": "localtunnel.go",
+          "type": "blob",
+          "size": 0.2353515625,
+          "content": "package main\n\nimport (\n\t\"flag\"\n)\n\nvar serverMode = flag.Bool(\"s\", false, \"run in server mode\")\n\nfunc main() {\n\tflag.Parse()\n\n\tif *serverMode {\n\t\tserver(flag.Arg(0), flag.Arg(1))\n\t} else {\n\t\tclient(flag.Arg(0), flag.Arg(1), flag.Arg(2))\n\t}\n}\n"
+        },
+        {
+          "name": "server.go",
+          "type": "blob",
+          "size": 1.3251953125,
+          "content": "package main\n\nimport (\n\t\"log\"\n\t\"net\"\n\t\"time\"\n\n\t\"github.com/inconshreveable/go-vhost\"\n\t\"github.com/progrium/duplex/poc2/duplex\"\n)\n\nfunc server(backendListen, frontendListen string) {\n\t// bind frontend\n\tfrontend, err := net.Listen(\"tcp\", frontendListen)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tlog.Println(\"frontend listening on\", frontendListen, \"...\")\n\tmux, err := vhost.NewHTTPMuxer(frontend, 1*time.Second)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tgo func() {\n\t\tfor {\n\t\t\tconn, err := mux.NextError()\n\t\t\tlog.Println(\"vhost:\", err)\n\t\t\tif conn != nil {\n\t\t\t\tconn.Write([]byte(\"error: \" + err.Error()))\n\t\t\t\tconn.Close()\n\t\t\t}\n\t\t}\n\t}()\n\n\t// bind backend\n\tbackend := duplex.NewPeer()\n\terr = backend.Bind(\"tcp://\" + backendListen)\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tlog.Println(\"backend listening on\", backendListen, \"...\")\n\tfor {\n\t\tmeta, ch := backend.Accept()\n\t\tif meta == nil {\n\t\t\tbreak\n\t\t}\n\t\t// register vhost\n\t\tif meta.Service() == \"tunnel\" {\n\t\t\tlog.Println(\"registering\", meta.RemotePeer())\n\t\t\tvhostListener, err := mux.Listen(meta.RemotePeer())\n\t\t\tif err != nil {\n\t\t\t\tlog.Println(err)\n\t\t\t}\n\t\t\tgo func() {\n\t\t\t\tfor {\n\t\t\t\t\tconn, err := vhostListener.Accept()\n\t\t\t\t\tif err != nil {\n\t\t\t\t\t\tlog.Println(err)\n\t\t\t\t\t}\n\t\t\t\t\ttunnelCh, err := ch.Open(\"\", nil)\n\t\t\t\t\tif err != nil {\n\t\t\t\t\t\tlog.Println(err)\n\t\t\t\t\t}\n\t\t\t\t\tgo tunnelCh.Join(conn)\n\t\t\t\t}\n\t\t\t}()\n\t\t\tcontinue\n\t\t}\n\t}\n}\n"
+        }
+      ]
+    }
+  ]
+}
