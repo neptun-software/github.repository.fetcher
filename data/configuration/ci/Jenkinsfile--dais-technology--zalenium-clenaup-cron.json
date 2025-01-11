@@ -1,0 +1,8 @@
+{
+  "timestamp": 1736620767878,
+  "repository": "dais-technology/zalenium-clenaup-cron",
+  "path": "Jenkinsfile",
+  "category": "ci",
+  "stars": 0,
+  "content": "#!/usr/bin/env groovy\n\n@Library('dais-lib@dais-pipeline') _\n\nproperties([\n        pipelineTriggers([cron('00 13 * * *')]), // Every day at 8 AM\n])\n\npipelineWrapper(true, 2) {\n    stage('Cleanup') {\n        env.alertChannels = \"automation-team\"\n        def result = sh script: 'curl http://zalenium.service.dev.dais.com/dashboard/cleanup?action=doCleanup', returnStdout: true\n        if (result != 'SUCCESS') {\n            slack('FAILED')\n        }\n        assert result == 'SUCCESS'\n    }\n}\n"
+}
