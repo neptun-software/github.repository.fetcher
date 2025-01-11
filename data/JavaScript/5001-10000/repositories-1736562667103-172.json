@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736562667103,
+    "page": 172,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mailcheck/mailcheck",
+      "stars": 7951,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.037109375,
+          "content": ".DS_Store\n\nnode_modules\nnpm-debug.log\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0888671875,
+          "content": "language: node_js\nscript: phantomjs spec/lib/run_jasmine_test.coffee spec/spec_runner.html\n"
+        },
+        {
+          "name": "Gruntfile.coffee",
+          "type": "blob",
+          "size": 0.814453125,
+          "content": "module.exports = (grunt) ->\n\n  grunt.initConfig\n    pkg: grunt.file.readJSON('package.json'),\n    jshint:\n      files: 'src/mailcheck.js'\n      options:\n        jshintrc: 'jshint.json'\n\n    uglify:\n      options:\n        banner: '/*! <%= pkg.name %> v<%= pkg.version %> @licence MIT */'\n      main:\n        files:\n          'src/mailcheck.min.js': 'src/mailcheck.js'\n\n    jasmine_node:\n      specNameMatcher: \"spec\"\n      requirejs: false\n      forceExit: true\n      jUnit:\n        report: false\n        savePath : \"spec\"\n        useDotNotation: true\n        consolidate: true\n\n  grunt.loadNpmTasks 'grunt-contrib-uglify'\n  grunt.loadNpmTasks 'grunt-jasmine-node'\n  grunt.loadNpmTasks 'grunt-contrib-jshint'\n\n  grunt.registerTask 'default', ['jshint', 'jasmine_node', 'uglify']\n  grunt.registerTask 'test', ['jshint', 'jasmine_node']\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.080078125,
+          "content": "The MIT License (MIT)\nCopyright © 2012 Received Inc, http://kicksend.com\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the “Software”), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.064453125,
+          "content": "mailcheck.js\n=========\n\n[![TravisCI Build Status](https://secure.travis-ci.org/mailcheck/mailcheck.png?branch=master)](https://travis-ci.org/mailcheck/mailcheck)\n\nThe Javascript library and jQuery plugin that suggests a right domain when your users misspell it in an email address.\n\nmailcheck.js is part of the [Mailcheck family](http://getmailcheck.org), and we're always on the lookout for more ports and adaptions. Get in touch!\n\nWhat does it do?\n----------------\n\nWhen your user types in \"user@gmil.con\", Mailcheck will suggest \"user@gmail.com\".\n\nMailcheck will offer up suggestions for second and top level domains too. For example, when a user types in \"user@hotmail.cmo\", \"hotmail.com\" will be suggested. Similarly, if only the second level domain is misspelled, it will be corrected independently of the top level domain.\n\n![diagram](https://raw.githubusercontent.com/mailcheck/mailcheck/master/doc/example.png)\n\nSee it live in action [here](https://www.kickstarter.com/signup).\n\nInstallation\n------------\n\nFor instant use, download the minified library [mailcheck.min.js](https://raw.githubusercontent.com/mailcheck/mailcheck/d25dc9a119ca844bb35b1baf341cca0a634e4ac9/src/mailcheck.min.js) into your javascripts directory. [mailcheck.js](https://raw.githubusercontent.com/mailcheck/mailcheck/d25dc9a119ca844bb35b1baf341cca0a634e4ac9/src/mailcheck.js) is also available unminimised if you want to hack on it, or have your own minimizer.\n\n#### Bower ####\n\n```\n> bower install --save mailcheck\n```\n\n#### Node/Browserify ####\n\n```\n> npm install --save mailcheck\n```\n\nUsage with jQuery\n-----\n\nFirst, include jQuery and Mailcheck into the page.\n\n```html\n<script src=\"jquery.min.js\"></script>\n<script src=\"mailcheck.min.js\"></script>\n```\n\nHave a text field.\n\n```html\n<input id=\"email\" name=\"email\" type=\"email\" />\n```\n\nNow, attach Mailcheck to the text field. You can declare an array of domains, second level domains and top level domains you want to check against.\n\n```html\n<script>\nvar domains = ['gmail.com', 'aol.com'];\nvar secondLevelDomains = ['hotmail']\nvar topLevelDomains = [\"com\", \"net\", \"org\"];\n\nvar superStringDistance = function(string1, string2) {\n  // a string distance algorithm of your choosing\n}\n\n$('#email').on('blur', function() {\n  $(this).mailcheck({\n    domains: domains,                       // optional\n    secondLevelDomains: secondLevelDomains, // optional\n    topLevelDomains: topLevelDomains,       // optional\n    distanceFunction: superStringDistance,  // optional\n    suggested: function(element, suggestion) {\n      // callback code\n    },\n    empty: function(element) {\n      // callback code\n    }\n  });\n});\n</script>\n```\n\nMailcheck takes in two callbacks, `suggested` and `empty`. We recommend you supply both.\n\n`suggested` is called when there's a suggestion. Mailcheck passes in the target element and the suggestion. The suggestion is an object with the following members:\n\n```js\n{\n  address: 'test',          // the address; part before the @ sign\n  domain: 'gmail.com',    // the suggested domain\n  full: 'test@gmail.com'  // the full suggested email\n}\n```\nMailcheck does not want to get in the way of how you can show suggestions. Use the suggestion object to display suggestions in your preferred manner.\n\n`empty` is called when there's no suggestion. Mailcheck just passes in the target element. It is a good idea to use this callback to clear an existing suggestion.\n\nUsage without jQuery\n--------------------\n\nMailcheck is decoupled from jQuery, so its usage without jQuery is almost identical.\n\nUsing the example from above, you would call `Mailcheck.run` instead.\n\n```html\n<script>\nMailcheck.run({\n  email: yourTextInput.value,\n  domains: domains,                       // optional\n  topLevelDomains: topLevelDomains,       // optional\n  secondLevelDomains: secondLevelDomains, // optional\n  distanceFunction: superStringDistance,  // optional\n  suggested: function(suggestion) {\n    // callback code\n  },\n  empty: function() {\n    // callback code\n  }\n});\n</script>\n```\n\nThe rest works similarly. In fact, the Mailcheck jQuery plugin just wraps `Mailcheck.run`.\n\nUsage on Node.js\n----------------\n\nIf you're running this on Node.js, you can just `require('mailcheck')` to get the `mailcheck` object, and call `run` on that:\n\n```js\nvar mailcheck = require('mailcheck');\n\nmailcheck.run({\n  // see 'usage without jQuery' above.\n});\n```\n\nDomains\n-------\n\nMailcheck has inbuilt defaults if the `domains`, `secondLevelDomains` or `topLevelDomains` options aren't provided. We still recommend supplying your own domains based on the distribution of your users.\n\n#### Adding your own Domains ####\n\nYou can replace Mailcheck's default domain/TLD suggestions by supplying replacements to `mailcheck.run`:\n\n```js\nMailcheck.run({\n  domains: ['customdomain.com', 'anotherdomain.net'], // replaces existing domains\n  secondLevelDomains: ['domain', 'yetanotherdomain'], // replaces existing SLDs\n  topLevelDomains: ['com.au', 'ru'] // replaces existing TLDs\n});\n```\n\nAlternatively, you can *extend* Mailcheck's global set of default domains and TLDs by adding items to `Mailcheck.defaultDomains` and `Mailcheck.defaultTopLevelDomains`:\n\n```js\nMailcheck.defaultDomains.push('customdomain.com', 'anotherdomain.net') // extend existing domains\nMailcheck.defaultSecondLevelDomains.push('domain', 'yetanotherdomain') // extend existing SLDs\nMailcheck.defaultTopLevelDomains.push('com.au', 'ru') // extend existing TLDs\n```\n\nCustomization\n-------------\n\nThe Mailcheck jQuery plugin wraps Mailcheck. The prime candidates for customization are the methods\n`Mailcheck.findClosestDomain` and `Mailcheck.stringDistance`.\n\nMailcheck currently uses the [sift3](http://siderite.blogspot.com/2007/04/super-fast-and-accurate-string-distance.html) string similarity algorithm by [Siderite](http://siderite.blogspot.com/). You can modify the inbuilt string distance function, or pass in your own when calling Mailcheck.\n\nSince Mailcheck runs client side, keep in mind file size, memory usage and performance.\n\nTests\n-----\n\nMailcheck is tested with [Jasmine](https://jasmine.github.io/). Run `npm test` from the command line to run the test suite. Alternatively, you can Load `spec/spec_runner.html` in your browser.\n\nContributing\n------------\n\nLet's make Mailcheck awesome. We're on the lookout for maintainers and [contributors](https://github.com/mailcheck/mailcheck/contributors).\n\nAnd do send in those pull requests! To get them accepted, please:\n\n- Test your code. Add test cases to `spec/mailcheckSpec.js`, and run it across browsers (yes, including IE).\n- Minify the plugin by running `grunt` in the Mailcheck directory (npm install should have installed a git pre-commit hook that takes care of this for you).\n\nUpcoming features, bugs and feature requests are managed in [Issues](https://github.com/mailcheck/mailcheck/issues).\n\nWho uses Mailcheck?\n-----------------------\n\n- [Dropbox](http://dropbox.com/)\n- [Hack Design](https://hackdesign.org/)\n- [Kicksend](http://kicksend.com/)\n- [Kickstarter](http://kickstarter.com/)\n- [Khan Academy](http://khanacademy.org/)\n- [Lyft](http://lyft.com/)\n- [Minecraft](http://minecraft.net/)\n- [SB Nation](http://sbnation.com/)\n- [The Verge](http://theverge.com/)\n\nDo you use Mailcheck? [Tweet me](http://twitter.com/derrickko) your link.\n\nRelated Links\n-------------\n\n- [Official Mailcheck Ports](https://github.com/mailcheck/)\n- [Two ways to reduce bounced welcome emails](http://blog.postmarkapp.com/post/19685472721/two-ways-to-reduce-bounced-welcome-emails) by [Postmark](http://postmark.com)\n- [MooTools port](https://github.com/DimitarChristoff/mailcheck) by [Dimitar Christoff](https://github.com/DimitarChristoff)\n- [WordPress Plugin](https://github.com/bmoredrew/mailcheck-wordpress-plugin/) by [Drew Poland](https://github.com/bmoredrew)\n- [WordPress e-Commerce Plugin](http://wordpress.org/extend/plugins/e-commerce-mailcheck/)\n- [Mailcheck for Drupal](http://drupal.org/project/Mailcheck) by [Martin Elvar](https://twitter.com/MartinElvar)\n\nCore Team\n-------\n\n- Derrick Ko, [@derrickko](http://twitter.com/derrickko). Created Mailcheck.\n- Wei Lu, [Hive](https://www.hivewallet.com/), [@luweidewei](http://twitter.com/luweidewei).\n\nLicense\n-------\n\nReleased under the MIT License.\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.19140625,
+          "content": "{\n  \"name\": \"mailcheck\",\n  \"main\": \"src/mailcheck.js\",\n  \"scripts\": [\n    \"src/mailcheck.js\",\n    \"src/mailcheck.min.js\"\n  ],\n  \"ignore\": [\n    \"**/.*\",\n    \"node_modules\",\n    \"components\"\n  ]\n}\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jshint.json",
+          "type": "blob",
+          "size": 0.119140625,
+          "content": "{\n\t\"undef\": true,\n\t\"unused\": \"vars\",\n\t\"browser\": true, \n\t\"devel\": true,\n\t\"esversion\": 3,\n\t\"curly\": true,\n\t\"forin\": true\n}\n"
+        },
+        {
+          "name": "mailcheck.jquery.json",
+          "type": "blob",
+          "size": 0.853515625,
+          "content": "{\n  \"name\": \"mailcheck\",\n  \"title\": \"mailcheck\",\n  \"description\": \"The Javascript library and jQuery plugin that suggests a right domain when your users misspell it in an email address.\",\n  \"keywords\": [\n    \"form\",\n    \"email\",\n    \"spell-check\"\n  ],\n  \"version\": \"1.1.2\",\n  \"author\": {\n    \"name\": \"Derrick Ko\",\n    \"url\": \"http://derrickko.com\",\n    \"email\": \"hello@derrickko.com\"\n  },\n  \"maintainers\": [\n    {\n      \"name\": \"Wei Lu\",\n      \"url\": \"http://neo.com\",\n      \"email\": \"wei@neo.com\"\n    }\n  ],\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"https://github.com/mailcheck/mailcheck/blob/master/LICENSE\"\n    }\n  ],\n  \"bugs\": \"https://github.com/mailcheck/mailcheck/issues\",\n  \"homepage\": \"https://github.com/mailcheck/mailcheck\",\n  \"docs\": \"https://github.com/mailcheck/mailcheck/blob/master/README.md\",\n  \"dependencies\": {\n    \"jquery\": \">=1.7\"\n  }\n}\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.2861328125,
+          "content": "{\n  \"name\": \"mailcheck\",\n  \"title\": \"mailcheck\",\n  \"description\": \"Reduce misspelled email addresses in your forms.\",\n  \"keywords\": [\n    \"form\",\n    \"email\",\n    \"spell check\"\n  ],\n  \"version\": \"1.1.2\",\n  \"author\": {\n    \"name\": \"Derrick Ko\",\n    \"url\": \"http://derrickko.com\",\n    \"email\": \"hello@derrickko.com\"\n  },\n  \"maintainers\": [\n    {\n      \"name\": \"Wei Lu\",\n      \"url\": \"http://neo.com\",\n      \"email\": \"wei@neo.com\"\n    }\n  ],\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"https://github.com/mailcheck/mailcheck/blob/master/LICENSE\"\n    }\n  ],\n  \"bugs\": \"https://github.com/mailcheck/mailcheck/issues\",\n  \"homepage\": \"https://github.com/mailcheck/mailcheck\",\n  \"docs\": \"https://github.com/mailcheck/mailcheck/blob/master/README.md\",\n  \"dependencies\": {},\n  \"devDependencies\": {\n    \"ghooks\": \"^1.3.2\",\n    \"grunt\": \"~0.4\",\n    \"grunt-cli\": \"~0.1.9\",\n    \"grunt-contrib-jshint\": \"^1.0.0\",\n    \"grunt-contrib-uglify\": \"~0.2\",\n    \"grunt-jasmine-node\": \"~0.1.0\",\n    \"jasmine-node\": \"1.x\"\n  },\n  \"main\": \"src/mailcheck.js\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/mailcheck/mailcheck.git\"\n  },\n  \"scripts\": {\n    \"test\": \"grunt test\",\n    \"prepublish\": \"grunt test\",\n    \"uglify\": \"grunt uglify\"\n  },\n  \"config\": {\n    \"ghooks\": {\n      \"pre-commit\": \"grunt\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

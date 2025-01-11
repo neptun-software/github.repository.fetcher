@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736562636391,
+    "page": 130,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "layui/layer",
+      "stars": 8260,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1806640625,
+          "content": "1.8.5/\n*.iml\n.idea/\n.ipr\n.iws\n*~\n~*\n*.diff\n*.patch\n*.bak\n.DS_Store\nThumbs.db\n.svn/\n*.swp\n.nojekyll\n.project\n.settings/\nnode_modules/\n_site/\n.npmignore\nrelease/\nskin/moon/\nsrc/skin/moon/"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0361328125,
+          "content": "MIT License\n\nCopyright (c) 2016 layui\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.26171875,
+          "content": "## 📣 提示\n\n**layer 组件已完全集成到 Layui 中，不再做单独维护。建议直接使用 layui 中 layer。**\n\n> layer 文档：https://layui.dev/docs/layer/\n\n\n## 概要\nlayer 是一款历来都备受青睐的 Web 弹出层组件，具备全方位的解决方案，面向的是各个水平段的开发人员，您的页面会轻松地拥有丰富友好的操作体验。在与同类组件的比较中，layer 会更能被开发者所选择。这不仅是凭「脸」取胜，而是它尽可能地在以更少的代码展现更强健的功能，且格外注重性能的提升、易用和实用性，layer 甚至还兼容了包括 IE6 在内的所有主流浏览器。其数量可观的基础属性和方法，使得您可以自定义太多您需要的风格，每一种弹层模式各具特色，广受欢迎。当然，这种「王婆卖瓜」的陈述听起来总是有点难受，因此你需要进一步了解她是否真的如你所愿。\n\n[文档与演示](http://layui.dev/docs/2/layer/) \n\n## 愿景\n成为网页弹出层的首先交互方案\n\n## 影响\n因着数年的坚持维护，layer 已被运用在不计其数 Web 平台，几乎所处可见，其中还不乏众多知名大型网站。layer 已被国内乃至全世界至少数十万的开发者所使用过。\n\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gulpfile.js",
+          "type": "blob",
+          "size": 1.9990234375,
+          "content": "﻿/**\n layer 构建\n*/\n\nvar pkg = require('./package.json');\n\nvar gulp = require('gulp');\nvar uglify = require('gulp-uglify');\nvar minify = require('gulp-minify-css');\nvar rename = require('gulp-rename');\nvar header = require('gulp-header');\nvar del = require('del');\n\nvar task = {\n  layer: function() {\n    gulp.src('./src/**/*.css')\n    .pipe(minify({\n      compatibility: 'ie7'\n    }))\n    .pipe(gulp.dest('./dist'));\n    \n    return gulp.src('./src/layer.js').pipe(uglify({\n      output: {\n        ascii_only: true //escape Unicode characters in strings and regexps\n      }\n    }))\n     .pipe(header('/*! <%= pkg.realname %>-v<%= pkg.version %> <%= pkg.description %> <%= pkg.license %> License */\\n ;', {pkg: pkg}))\n    .pipe(gulp.dest('./dist'));\n    \n  }\n  ,mobile: function() {\n    return gulp.src('./src/mobile/layer.js').pipe(uglify({\n      output: {\n        ascii_only: true //escape Unicode characters in strings and regexps\n      }\n    }))\n     .pipe(header('/*! <%= pkg.realname %> mobile-v<%= pkg.mobile %> <%= pkg.description %> <%= pkg.license %> License */\\n ;', {pkg: pkg}))\n    .pipe(gulp.dest('./dist/mobile'));\n  }\n  ,other: function(){\n    gulp.src('./src/**/*.{png,gif}').pipe(rename({}))\n    .pipe(gulp.dest('./dist'));\n  }\n};\n\n\ngulp.task('clear', function(cb){ //清理\n  return del(['./dist/*'], cb);\n});\ngulp.task('layer', task.minjs); //压缩PC版本\ngulp.task('mobile', task.mincss); //压缩Mobile文件\ngulp.task('other', task.other); //移动一些配件\n\n//发行版本目录\nvar releaseDir = './release/zip/layer-v' + pkg.version;\nvar release = releaseDir + '/layer';\n\n//打包发行版\ngulp.task('clearZip', function(cb){ //清理\n  return del([releaseDir], cb);\n});\ngulp.task('r', ['clearZip'], function(){\n  gulp.src('./release/doc/**/*')\n  .pipe(gulp.dest(releaseDir));\n  \n  return gulp.src([\n    './dist/**/*'\n    ,'!./dist/**/moon'\n    ,'!./dist/**/moon/*'\n  ])\n  .pipe(gulp.dest(release));\n});\n\n//全部\ngulp.task('default', ['clear'], function(){\n  for(var key in task){\n    task[key]();\n  }\n});\n\n\n\n\n\n\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.7412109375,
+          "content": "{\n  \"name\": \"layer-src\",\n  \"realname\": \"layer\",\n  \"version\": \"3.5.1\",\n  \"mobile\": \"2.0.0\",\n  \"description\": \"Web 通用弹出层组件\",\n  \"main\": \"src/layer.js\",\n  \"license\": \"MIT\",\n  \"scripts\": {\n    \"run\": \"gulp\"\n  },\n  \"repository\": {\n    \"type\": \"https\",\n    \"url\": \"git+https://github.com/sentsin/layer.git\"\n  },\n  \"devDependencies\": {\n    \"gulp\": \"^3.9.0\",\n    \"gulp-minify-css\": \"^1.2.4\",\n    \"gulp-uglify\": \"^1.5.4\",\n    \"gulp-rename\": \"^1.2.2\",\n    \"gulp-header\": \"^1.8.8\",\n    \"del\": \"^2.2.2\"\n  },\n  \"bugs\": {\n    \"url\": \"https://github.com/sentsin/layer/issues\"\n  },\n  \"directories\": {\n    \"test\": \"test\"\n  },\n  \"dependencies\": {},\n  \"keywords\": [\n    \"layui\",\n    \"layer\",\n    \"dialog\",\n    \"tips\",\n    \"alert\",\n    \"confirm\",\n    \"window\"\n  ]\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

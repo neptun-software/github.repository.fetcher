@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736562563171,
+    "page": 30,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "HackTricks-wiki/hacktricks",
+      "stars": 9299,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1484375,
+          "content": ".dccache\nscripts/\nscripts/*\n.DS_Store\n**/.DS_Store\n.vscode\n.vscode/*\n\n#mdbook\nbook\nbook/*\nhacktricks-preprocessor.log\nhacktricks-preprocessor-error.log\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "src/README.md"
+        },
+        {
+          "name": "book.toml",
+          "type": "blob",
+          "size": 0.8623046875,
+          "content": "[book]\nauthors = [\"HackTricks Team\"]\nlanguage = \"en\"\nmultilingual = false\nsrc = \"src\"\ntitle = \"HackTricks\"\n\n[build]\ncreate-missing = false\nextra-watch-dirs = [\"translations\"]\n\n[preprocessor.alerts]\nafter = [\"links\"]\n\n[preprocessor.reading-time]\n\n[preprocessor.pagetoc]\n\n[preprocessor.tabs]\n\n[preprocessor.codename]\n\n[preprocessor.hacktricks]\ncommand = \"python3 ./hacktricks-preprocessor.py\"\nenv = \"prod\"\n\n[output.html]\nadditional-css = [\"theme/pagetoc.css\", \"theme/tabs.css\"]\nadditional-js = [\n    \"theme/pagetoc.js\",\n    \"theme/tabs.js\",\n    \"theme/ht_searcher.js\",\n    \"theme/sponsor.js\",\n]\nno-section-label = true\npreferred-dark-theme = \"hacktricks-dark\"\ndefault-theme = \"hacktricks-light\"\n\n[output.html.fold]\nenable = true # whether or not to enable section folding\nlevel = 0     # the depth to start folding\n\n\n[output.html.print]\nenable = false # whether or not to enable print\n"
+        },
+        {
+          "name": "clean_unused_images.sh",
+          "type": "blob",
+          "size": 1.0947265625,
+          "content": "#!/bin/bash\n\n# Define the image folder and the root of your project\nIMAGE_FOLDER=\"./src/images\"\nPROJECT_ROOT=\".\"\n\n# Move to the project root\ncd \"$PROJECT_ROOT\" || exit\n\n# Loop through each image file in the folder\nfind \"$IMAGE_FOLDER\" -type f | while IFS= read -r image; do\n    # Extract the filename without the path\n    image_name=$(basename \"$image\")\n\n    # If image file name contains \"sponsor\", skip it\n    if [[ \"$image_name\" == *\"sponsor\"* ]]; then\n        echo \"Skipping sponsor image: $image_name\"\n        continue\n    fi\n\n    echo \"Checking image: $image_name\"\n\n    # Search for the image name using rg and capture the result\n    search_result=$(rg -F --files-with-matches \"$image_name\" \\\n        --no-ignore --hidden \\\n        --glob '!.git/*' \\\n        --glob '!$IMAGE_FOLDER/*' < /dev/null)\n\n    echo \"Search result: $search_result\"\n\n    # If rg doesn't find any matches, delete the image\n    if [ -z \"$search_result\" ]; then\n        echo \"Deleting unused image: $image\"\n        rm \"$image\"\n    else\n        echo \"Image used: $image_name\"\n        echo \"$search_result\"\n    fi\ndone\n\necho \"Cleanup completed!\"\n"
+        },
+        {
+          "name": "hacktricks-preprocessor.py",
+          "type": "blob",
+          "size": 6.4248046875,
+          "content": "import json\nimport os\nimport sys\nimport re\nimport logging\nfrom os import path\nfrom urllib.request import urlopen, Request\n\nlogger = logging.getLogger(__name__)\nlogger.setLevel(logging.DEBUG)\nhandler = logging.FileHandler(filename='hacktricks-preprocessor.log', mode='w', encoding='utf-8')\nhandler.setLevel(logging.DEBUG)\nlogger.addHandler(handler)\n\nhandler2 = logging.FileHandler(filename='hacktricks-preprocessor-error.log', mode='w', encoding='utf-8')\nhandler2.setLevel(logging.ERROR)\nlogger.addHandler(handler2)\n\n\ndef findtitle(search ,obj, key, path=(),):\n    # logger.debug(f\"Looking for {search} in {path}\")\n    if isinstance(obj, dict) and key in obj and obj[key] == search: \n        return obj, path\n    if isinstance(obj, list):\n        for k, v in enumerate(obj):\n            item = findtitle(search, v, key, (*path, k))\n            if item is not None:\n                return item\n    if isinstance(obj, dict):\n        for k, v in obj.items():\n            item = findtitle(search, v, key, (*path, k))\n            if item is not None:\n                return item\n\n\ndef ref(matchobj):\n    logger.debug(f'Ref match: {matchobj.groups(0)[0].strip()}')\n    href =  matchobj.groups(0)[0].strip()\n    title = href\n    if href.startswith(\"http://\") or href.startswith(\"https://\"):\n        if context['config']['preprocessor']['hacktricks']['env'] == 'dev':\n            pass\n        else:\n            try:\n                raw_html = str(urlopen(Request(href, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0'})).read())\n                match = re.search('<title>(.*?)</title>', raw_html)\n                title = match.group(1) if match else href\n            except Exception as e:\n                logger.debug(f'Error opening URL {href}: {e}')\n                pass #nDont stop on broken link\n    else:\n        try:\n            if href.endswith(\"/\"):\n                href = href+\"README.md\" # Fix if ref points to a folder\n            if \"#\" in  href:\n                chapter, _path = findtitle(href.split(\"#\")[0], book, \"source_path\")\n                title = \" \".join(href.split(\"#\")[1].split(\"-\")).title()\n                logger.debug(f'Ref has # using title: {title}')\n            else:\n                chapter, _path = findtitle(href, book, \"source_path\")\n                logger.debug(f'Recursive title search result: {chapter[\"name\"]}')\n                title = chapter['name']\n        except Exception as e:\n            try:\n                dir = path.dirname(current_chapter['source_path'])\n                logger.debug(f'Error getting chapter title: {href} trying with relative path {path.normpath(path.join(dir,href))}')\n                if \"#\" in  href:\n                    chapter, _path = findtitle(path.normpath(path.join(dir,href.split('#')[0])), book, \"source_path\")\n                    title = \" \".join(href.split(\"#\")[1].split(\"-\")).title()\n                    logger.debug(f'Ref has # using title: {title}')\n                else:\n                    chapter, _path = findtitle(path.normpath(path.join(dir,href.split('#')[0])), book, \"source_path\")\n                    title = chapter[\"name\"]\n                    logger.debug(f'Recursive title search result: {chapter[\"name\"]}')\n            except Exception as e:\n                logger.debug(e)\n                logger.error(f'Error getting chapter title: {path.normpath(path.join(dir,href))}')\n                sys.exit(1)\n\n\n    template = f\"\"\"<a class=\"content_ref\" href=\"{href}\"><span class=\"content_ref_label\">{title}</span></a>\"\"\"\n\n    # translate_table = str.maketrans({\"\\\"\":\"\\\\\\\"\",\"\\n\":\"\\\\n\"})\n    # translated_text = template.translate(translate_table)\n    result = template\n\n    return result\n\n\ndef files(matchobj):\n    logger.debug(f'Files match: {matchobj.groups(0)[0].strip()}')\n    href =  matchobj.groups(0)[0].strip()\n    title = \"\"\n\n    try:\n        for root, dirs, files in os.walk(os.getcwd()+'/src/files'):\n            logger.debug(root)\n            logger.debug(files)\n            if href in files:\n                title = href\n                logger.debug(f'File search result: {os.path.join(root, href)}')\n        \n    except Exception as e:\n        logger.debug(e)\n        logger.error(f'Error searching file: {href}')\n        sys.exit(1)\n\n        if title==\"\":\n            logger.error(f'Error searching file: {href}')\n            sys.exit(1)\n\n    template = f\"\"\"<a class=\"content_ref\" href=\"/files/{href}\"><span class=\"content_ref_label\">{title}</span></a>\"\"\"\n\n    result = template\n\n    return result\n\n\ndef add_read_time(content):\n    regex = r'(<\\/style>\\n# .*(?=\\n))'\n    new_content = re.sub(regex, lambda x: x.group(0) + \"\\n\\nReading time: {{ #reading_time }}\", content)\n    return new_content\n\n\ndef iterate_chapters(sections):\n    if isinstance(sections, dict) and \"PartTitle\" in sections: # Not a chapter section\n        return\n    elif isinstance(sections, dict) and \"Chapter\" in sections: # Is a chapter return it and look into sub items\n        # logger.debug(f\"Chapter {sections['Chapter']}\")\n        yield sections['Chapter']\n        yield from iterate_chapters(sections['Chapter'][\"sub_items\"])\n    elif isinstance(sections, list):                            # Iterate through list when in sections and in sub_items\n        for k, v in enumerate(sections):\n            yield from iterate_chapters(v)\n\n\nif __name__ == '__main__':\n    global context, book, current_chapter\n    if len(sys.argv) > 1: # we check if we received any argument\n        if sys.argv[1] == \"supports\": \n            # then we are good to return an exit status code of 0, since the other argument will just be the renderer's name\n            sys.exit(0)\n    logger.debug('Started hacktricks preprocessor')\n    # load both the context and the book representations from stdin\n    context, book = json.load(sys.stdin)\n\n    logger.debug(f\"Context: {context}\")\n\n    for chapter in iterate_chapters(book['sections']):\n        logger.debug(f\"Chapter: {chapter['path']}\")\n        current_chapter = chapter\n        # regex = r'{{[\\s]*#ref[\\s]*}}(?:\\n)?([^\\\\\\n]*)(?:\\n)?{{[\\s]*#endref[\\s]*}}'\n        regex = r'{{[\\s]*#ref[\\s]*}}(?:\\n)?([^\\\\\\n#]*(?:#(.*))?)(?:\\n)?{{[\\s]*#endref[\\s]*}}'\n        new_content = re.sub(regex, ref, chapter['content'])\n        regex = r'{{[\\s]*#file[\\s]*}}(?:\\n)?([^\\\\\\n]*)(?:\\n)?{{[\\s]*#endfile[\\s]*}}'\n        new_content = re.sub(regex, files, new_content)\n        new_content = add_read_time(new_content)\n        chapter['content'] = new_content\n\n    content = json.dumps(book)\n    logger.debug(content)\n    \n\n    print(content)"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "theme",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

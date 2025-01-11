@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "timestamp": 1736562659255,
+    "page": 162,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "harthur/brain",
+      "stars": 8008,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0517578125,
+          "content": "# Mac.\n.DS_STORE\n\n# Node.\nnode_modules\nnpm-debug.log\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.623046875,
+          "content": "Thanks for taking the time to contribute to brain.js. Follow these guidelines to make the process smoother:\n\n1. One feature per pull request. Each PR should have one focus, and all the code changes should be supporting that one feature or bug fix. Using a [separate branch](https://guides.github.com/introduction/flow/index.html) for each feature should help you manage developing multiple features at once.\n\n2. Follow the style of the file when it comes to syntax like curly braces and indents.\n\n3. Add a test for the feature or fix, if possible. See the `test` directory for existing tests and README describing how to run these tests.\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 1.2978515625,
+          "content": "/*\n * To run this file:\n *  `npm install --dev`\n *  `npm install -g grunt`\n *\n *  `grunt --help`\n */\n\nvar fs = require(\"fs\"),\n    browserify = require(\"browserify\"),\n    pkg = require(\"./package.json\");\n\nmodule.exports = function(grunt) {\n  grunt.initConfig({\n    mochaTest: {\n      test: {\n        options: {\n          style: 'bdd',\n          reporter: 'spec'\n        },\n        src: ['test/unit/*.js']\n      }\n    },\n    pkg: grunt.file.readJSON('package.json'),\n    uglify: {\n      options: {\n        banner: \"/*\\n\" + grunt.file.read('LICENSE') + \"*/\"\n      },\n      dist: {\n        files: {\n          '<%=pkg.name%>-<%=pkg.version%>.min.js': ['<%=pkg.name%>-<%=pkg.version%>.js']\n        }\n      }\n    }\n  });\n\n  grunt.registerTask('build', 'build a browser file', function() {\n    var done = this.async();\n\n    var outfile = './brain-' + pkg.version + '.js';\n\n    var bundle = browserify('./browser.js').bundle(function(err, src) {\n      console.log(\"> \" + outfile);\n\n      // prepend license\n      var license = fs.readFileSync(\"./LICENSE\");\n      src = \"/*\\n\" + license + \"*/\" + src;\n\n      // write out the browser file\n      fs.writeFileSync(outfile, src);\n      done();\n    });\n  });\n  grunt.registerTask('test', 'mochaTest');\n\n  grunt.loadNpmTasks('grunt-mocha-test');\n  grunt.loadNpmTasks('grunt-contrib-uglify');\n};\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0341796875,
+          "content": "Copyright (c) 2010 Heather Arthur\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.2021484375,
+          "content": "*This project has reached the end of its development as a simple neural network library. Feel free to browse the code, but please use other JavaScript neural network libraries in development like [brain.js](https://github.com/BrainJS/brain.js) and [convnetjs](https://github.com/karpathy/convnetjs).*\n\n# brain\n\n`brain` is a JavaScript [neural network](http://neuralnetworksanddeeplearning.com/) library. Here's an example of using it to approximate the XOR function:\n\n```javascript\nvar net = new brain.NeuralNetwork();\n\nnet.train([{input: [0, 0], output: [0]},\n           {input: [0, 1], output: [1]},\n           {input: [1, 0], output: [1]},\n           {input: [1, 1], output: [0]}]);\n\nvar output = net.run([1, 0]);  // [0.987]\n```\n\nThere's no reason to use a neural network to figure out XOR however (-: so here's a more involved, realistic example:\n[Demo: training a neural network to recognize color contrast](http://harthur.github.com/brain/)\n\n## Using in node\nIf you have [node](http://nodejs.org/) you can install with [npm](http://npmjs.org):\n\n```\nnpm install brain\n```\n\n## Using in the browser\nDownload the latest [brain.js](https://github.com/harthur/brain/tree/gh-pages). Training is computationally expensive, so you should try to train the network offline (or on a Worker) and use the `toFunction()` or `toJSON()` options to plug the pre-trained network in to your website.\n\n## Training\nUse `train()` to train the network with an array of training data. The network has to be trained with all the data in bulk in one call to `train()`. The more training patterns, the longer it will probably take to train, but the better the network will be at classifiying new patterns.\n\n#### Data format\nEach training pattern should have an `input` and an `output`, both of which can be either an array of numbers from `0` to `1` or a hash of numbers from `0` to `1`. For the [color constrast demo](http://harthur.github.com/brain/) it looks something like this:\n\n```javascript\nvar net = new brain.NeuralNetwork();\n\nnet.train([{input: { r: 0.03, g: 0.7, b: 0.5 }, output: { black: 1 }},\n           {input: { r: 0.16, g: 0.09, b: 0.2 }, output: { white: 1 }},\n           {input: { r: 0.5, g: 0.5, b: 1.0 }, output: { white: 1 }}]);\n\nvar output = net.run({ r: 1, g: 0.4, b: 0 });  // { white: 0.99, black: 0.002 }\n```\n\n#### Options\n`train()` takes a hash of options as its second argument:\n\n```javascript\nnet.train(data, {\n  errorThresh: 0.005,  // error threshold to reach\n  iterations: 20000,   // maximum training iterations\n  log: true,           // console.log() progress periodically\n  logPeriod: 10,       // number of iterations between logging\n  learningRate: 0.3    // learning rate\n})\n```\n\nThe network will train until the training error has gone below the threshold (default `0.005`) or the max number of iterations (default `20000`) has been reached, whichever comes first.\n\nBy default training won't let you know how its doing until the end, but set `log` to `true` to get periodic updates on the current training error of the network. The training error should decrease every time. The updates will be printed to console. If you set `log` to a function, this function will be called with the updates instead of printing to the console.\n\nThe learning rate is a parameter that influences how quickly the network trains. It's a number from `0` to `1`. If the learning rate is close to `0` it will take longer to train. If the learning rate is closer to `1` it will train faster but it's in danger of training to a local minimum and performing badly on new data. The default learning rate is `0.3`.\n\n#### Output\nThe output of `train()` is a hash of information about how the training went:\n\n```javascript\n{\n  error: 0.0039139985510105032,  // training error\n  iterations: 406                // training iterations\n}\n```\n\n#### Failing\nIf the network failed to train, the error will be above the error threshold. This could happen because the training data is too noisy (most likely), the network doesn't have enough hidden layers or nodes to handle the complexity of the data, or it hasn't trained for enough iterations.\n\nIf the training error is still something huge like `0.4` after 20000 iterations, it's a good sign that the network can't make sense of the data you're giving it.\n\n## JSON\nSerialize or load in the state of a trained network with JSON:\n\n```javascript\nvar json = net.toJSON();\n\nnet.fromJSON(json);\n```\n\nYou can also get a custom standalone function from a trained network that acts just like `run()`:\n\n```javascript\nvar run = net.toFunction();\n\nvar output = run({ r: 1, g: 0.4, b: 0 });\n\nconsole.log(run.toString()); // copy and paste! no need to import brain.js\n```\n\n## Options\n`NeuralNetwork()` takes a hash of options:\n\n```javascript\nvar net = new brain.NeuralNetwork({\n  hiddenLayers: [4],\n  learningRate: 0.6 // global learning rate, useful when training using streams\n});\n```\n\n#### hiddenLayers\nSpecify the number of hidden layers in the network and the size of each layer. For example, if you want two hidden layers - the first with 3 nodes and the second with 4 nodes, you'd give:\n\n```\nhiddenLayers: [3, 4]\n```\n\nBy default `brain` uses one hidden layer with size proportionate to the size of the input array.\n\n## Streams\nThe network now has a [WriteStream](http://nodejs.org/api/stream.html#stream_class_stream_writable). You can train the network by using `pipe()` to send the training data to the network.\n\n#### Example\nRefer to `stream-example.js` for an example on how to train the network with a stream.\n\n#### Initialization\nTo train the network using a stream you must first create the stream by calling `net.createTrainStream()` which takes the following options:\n\n* `floodCallback()` - the callback function to re-populate the stream. This gets called on every training iteration.\n* `doneTrainingCallback(info)` - the callback function to execute when the network is done training. The `info` param will contain a hash of information about how the training went:\n\n```javascript\n{\n  error: 0.0039139985510105032,  // training error\n  iterations: 406                // training iterations\n}\n```\n\n#### Transform\nUse a [Transform](http://nodejs.org/api/stream.html#stream_class_stream_transform) to coerce the data into the correct format. You might also use a Transform stream to normalize your data on the fly.\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.4052734375,
+          "content": "{\n  \"name\": \"brain\",\n  \"version\": \"0.7.0\",\n  \"homepage\": \"https://github.com/harthur/brain\",\n  \"authors\": [\n    \"Heather Arthur <fayearthur@gmail.com>\"\n  ],\n  \"description\": \"Neural network library\",\n  \"keywords\": [\n    \"neural-networks\",\n    \"machine-learning\",\n    \"classifier\"\n  ],\n  \"main\": \"lib/brain.js\",\n  \"ignore\": [\n    \"node_modules\",\n    \"test\"\n  ],\n  \"dependencies\": {\n    \"underscore\": \">=1.5.1\"\n  }\n}\n"
+        },
+        {
+          "name": "browser.js",
+          "type": "blob",
+          "size": 0.1044921875,
+          "content": "// this file is the entrypoint for building a browser file with browserify\n\nbrain = require(\"./lib/brain\");"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.833984375,
+          "content": "{\n    \"name\": \"brain\",\n    \"description\": \"Neural network library\",\n    \"version\": \"0.7.0\",\n    \"author\": \"Heather Arthur <fayearthur@gmail.com>\",\n    \"repository\": {\n        \"type\": \"git\",\n        \"url\": \"http://github.com/harthur/brain.git\"\n    },\n    \"scripts\": {\n        \"test-unit\": \"mocha test/unit\",\n        \"test-cv\": \"mocha test/cross-validation --timeout 10000\",\n        \"test\": \"npm run test-unit && npm run test-cv\"\n    },\n    \"main\": \"./lib/brain\",\n    \"dependencies\": {\n        \"underscore\": \">=1.5.1\",\n        \"inherits\": \"~2.0.1\"\n    },\n    \"devDependencies\": {\n        \"mocha\": \">=1.0.0\",\n        \"canvas\": \">=0.10.0\",\n        \"grunt\": \"~0.4.3\",\n        \"grunt-contrib-uglify\": \"~0.2.0\",\n        \"grunt-mocha-test\": \"~0.11.0\",\n        \"browserify\": \"~3.32.0\"\n    },\n    \"keywords\": [\"neural network\", \"classifier\", \"machine learning\"]\n}\n"
+        },
+        {
+          "name": "stream-example.js",
+          "type": "blob",
+          "size": 0.943359375,
+          "content": "var assert = require(\"assert\"),\n    brain = require(\"./lib/brain\");\n\nvar net = new brain.NeuralNetwork();\n\nvar xor = [\n  { input: [0, 0], output: [0]},\n  { input: [0, 1], output: [1]},\n  { input: [1, 0], output: [1]},\n  { input: [1, 1], output: [0]}];\n\nvar trainStream = net.createTrainStream({\n  /**\n   * Write training data to the stream. Called on each training iteration.\n   */\n  floodCallback: function() {\n    flood(trainStream, xor);\n  },\n\n  /**\n   * Called when the network is done training.\n   */\n  doneTrainingCallback: function(obj) {\n    console.log(\"trained in \" + obj.iterations + \" iterations with error: \"\n                + obj.error);\n\n    var result = net.run([0, 1]);\n\n    console.log(\"0 XOR 1: \", result);  // 0.987\n  }\n});\n\n// kick it off\nflood(trainStream, xor);\n\n\nfunction flood(stream, data) {\n  for (var i = 0; i < data.length; i++) {\n    stream.write(data[i]);\n  }\n  // let it know we've reached the end of the data\n  stream.write(null);\n}\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

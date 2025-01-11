@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "timestamp": 1736562682958,
+    "page": 196,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bramp/js-sequence-diagrams",
+      "stars": 7815,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".eslintrc.js",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "module.exports = {\n    \"extends\": \"google\"\n};"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0380859375,
+          "content": "node_modules/\nbower_components/\nbuild/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0888671875,
+          "content": "[submodule \"_site\"]\n\tpath = _site\n\turl = https://github.com/bramp/js-sequence-diagrams.git\n"
+        },
+        {
+          "name": ".jscsrc",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "{\n\t\"preset\": \"google\",\n\t\"maximumLineLength\": 120\n}\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.048828125,
+          "content": "language: node_js\nsudo: false\nnode_js:\n  - \"0.12\"\n"
+        },
+        {
+          "name": "DESIGN.md",
+          "type": "blob",
+          "size": 0.5380859375,
+          "content": "Random Design Notes\n-------------------\n\n## Supported Browsers\n* IE 9+\n* Safari 5.1+\n* Firefox 3.6+\n* Opera 11.50+\n* Android 4.4+\n* iOS 5.1+\n\n## Text Alignment\n* Title: Left aligned\n* Actors: Horz center aligned (TODO) and Vertically center aligned\n* Signals: Center aligned\n* Self Signal: Horz left aligned, Vertically center aligned (TODO)\n* Notes: Left aligned\n\nWhitespace is trimmed from the ends of each line\n\n## CSS Classes\n* SVG: 'sequence' and the name of the theme e.g. 'simple' or 'hand'\n* Title: 'title'\n* Actor: 'actor'\n* Signal: 'signal'\n"
+        },
+        {
+          "name": "LICENCE",
+          "type": "blob",
+          "size": 1.2783203125,
+          "content": "Copyright (c) 2012-2017, Andrew Brampton\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met: \n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer. \n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution. \n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 3.5302734375,
+          "content": ".PHONY : all test dependencies clean veryclean lint js css font\n\nNODE_MODULES := node_modules/.bin\nBOWER_COMPONENTS := bower_components\n\nall: lint js css test\njs: dist/sequence-diagram-min.js dist/sequence-diagram-raphael-min.js dist/sequence-diagram-snap-min.js\ncss: dist/sequence-diagram-min.css font\nfont: dist/danielbd.woff2 dist/danielbd.woff\n\nnode_modules: package.json\n\t#\n\t# NPM update needed.\n\t#\n\tnpm update\n\ttouch $@\n\nbower_components: bower.json\n\t#\n\t# Bower update needed.\n\t#\n\t$(NODE_MODULES)/bower update\n\ttouch $@\n\ndependencies: node_modules bower_components\n\nclean:\n\t-rm build/*\n\t-git checkout -- dist\n\nveryclean: clean\n\t-rm -rf node_modules\n\t-rm -rf bower_components\n\nlint: dependencies package.json bower.json\n\t$(NODE_MODULES)/jsonlint package.json -q\n\t$(NODE_MODULES)/jsonlint bower.json -q\n\n\t$(NODE_MODULES)/eslint src/*.js\n\t$(NODE_MODULES)/eslint test/*.js\n\ntest: dependencies dist/sequence-diagram-min.js\n\n\t# Test the un-minifed file (with underscore)\n\t$(NODE_MODULES)/qunit \\\n\t\t-c dist/sequence-diagram.js \\\n\t\t-t test/*-tests.js \\\n\t\t-d test/*-mock.js $(BOWER_COMPONENTS)/underscore/underscore-min.js\n\n\t# Test the un-minifed file (with lodash)\n\t$(NODE_MODULES)/qunit \\\n\t\t-c dist/sequence-diagram.js \\\n\t\t-t test/*-tests.js \\\n\t\t-d test/*-mock.js $(BOWER_COMPONENTS)/lodash/dist/lodash.min.js\n\n\t# Test the minifed file (with underscore)\n\t$(NODE_MODULES)/qunit \\\n\t\t-c dist/sequence-diagram-min.js \\\n\t\t-t test/*-tests.js \\\n\t\t-d test/*-mock.js $(BOWER_COMPONENTS)/underscore/underscore-min.js\n\n\t# Test the minifed file (with lodash)\n\t$(NODE_MODULES)/qunit \\\n\t\t-c dist/sequence-diagram-min.js \\\n\t\t-t test/*-tests.js \\\n\t\t-d test/*-mock.js $(BOWER_COMPONENTS)/lodash/dist/lodash.min.js\n\nbuild/grammar.js: src/grammar.jison\n\tmkdir -p build\n\t$(NODE_MODULES)/jison $< -o $@.tmp\n\n\t# After building the grammar, run it through the uglifyjs to fix some non-strict issues.\n\t# Until https://github.com/zaach/jison/issues/285 is fixed, we must do this to create valid non-minified code.\n\t$(NODE_MODULES)/uglifyjs \\\n\t\t$@.tmp -o $@ \\\n\t\t--comments all --compress --beautify\n\n\trm $@.tmp\n\n# Compile the grammar\nbuild/diagram-grammar.js: src/diagram.js build/grammar.js\n\t$(NODE_MODULES)/preprocess $< . > $@\n\n# Combine all javascript files together (Raphael and Snap.svg)\ndist/sequence-diagram.js: src/main.js build/diagram-grammar.js src/jquery-plugin.js src/sequence-diagram.js src/theme.js src/theme-snap.js src/theme-raphael.js fonts/daniel/daniel_700.font.js\n\tmkdir -p dist\n\t$(NODE_MODULES)/preprocess $< . -SNAP=true -RAPHAEL=true  > $@\n\n# Combine just Raphael theme\ndist/sequence-diagram-raphael.js: src/main.js build/diagram-grammar.js src/jquery-plugin.js src/sequence-diagram.js src/theme.js src/theme-raphael.js fonts/daniel/daniel_700.font.js\n\t$(NODE_MODULES)/preprocess $< . -RAPHAEL=true > $@\n\n# Combine just Snap.svg theme\ndist/sequence-diagram-snap.js: src/main.js build/diagram-grammar.js src/jquery-plugin.js src/sequence-diagram.js src/theme.js src/theme-snap.js\n\t$(NODE_MODULES)/preprocess $< . -SNAP=true > $@\n\ndist/sequence-diagram.css: src/sequence-diagram.css\n\tcp $< $@\n\n# Minify the CSS\ndist/sequence-diagram-min.css: dist/sequence-diagram.css\n\t$(NODE_MODULES)/minify --output $@ $<\n\n# Move some fonts TODO optomise the fonts\ndist/%.woff: fonts/daniel/%.woff\n\tcp $< $@\n\ndist/%.woff2: fonts/daniel/%.woff2\n\tcp $< $@\n\n# Minify the final javascript\ndist/%-min.js dist/%-min.js.map: dist/%.js\n\n\t#\n\t# Please ignore the warnings below (these are in combined js code)\n\t#\n\t$(NODE_MODULES)/uglifyjs \\\n\t\t$< -o $@ \\\n\t\t--compress --comments --lint \\\n\t\t--source-map $@.map \\\n\t\t--source-map-url `basename $<`\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.2001953125,
+          "content": "JS Sequence Diagrams [![Bower](https://img.shields.io/bower/v/js-sequence-diagrams.svg)](https://libraries.io/bower/js-sequence-diagrams) [![Build Status](https://img.shields.io/travis/bramp/js-sequence-diagrams.svg)](https://travis-ci.org/bramp/js-sequence-diagrams) [![Code Climate](https://img.shields.io/codeclimate/github/bramp/js-sequence-diagrams.svg)](https://codeclimate.com/github/bramp/js-sequence-diagrams) [![Libraries.io](https://img.shields.io/librariesio/github/bramp/js-sequence-diagrams.svg)](https://libraries.io/github/bramp/js-sequence-diagrams) ![License](https://img.shields.io/npm/l/js-sequence-diagrams.svg)\n=============================================\n**Generates UML sequence diagrams from simple text**  \n<https://bramp.github.io/js-sequence-diagrams/>\n\nby [Andrew Brampton](https://bramp.net) 2012-2017\n\n\nExample\n-------\nWe turn\n\n    Alice->Bob: Hello Bob, how are you?\n    Note right of Bob: Bob thinks\n    Bob-->Alice: I am good thanks!\n\ninto\n\n![Sample generated UML diagram](https://bramp.github.io/js-sequence-diagrams/images/sample.svg)\n\nRequirements\n------------\nYou will need [Snap.svg](http://snapsvg.io/), [Web Font Loader](https://github.com/typekit/webfontloader) (if you wish to use custom fonts), [underscore.js](http://underscorejs.org/) (or [lodash](https://lodash.com/)), and optionally [jQuery](https://jquery.com/).\n\n\nInstallation\n----------------------\n\n### bower\n\nRun `bower install bramp/js-sequence-diagrams` and include the scripts below:\n\n```html\n<script src=\"{{ bower directory }}/bower-webfontloader/webfont.js\" />\n<script src=\"{{ bower directory }}/snap.svg/dist/snap.svg-min.js\" />\n<script src=\"{{ bower directory }}/underscore/underscore-min.js\" />\n<script src=\"{{ bower directory }}/js-sequence-diagrams/dist/sequence-diagram-min.js\" />\n```\n\nalso import the CSS if you plan to use the hand drawn theme:\n \n```html\n<link href=\"{{ bower directory }}/js-sequence-diagrams/dist/sequence-diagram-min.css\" rel=\"stylesheet\" />\n```\n\nNot using bower? No problem. Just download the dependencies, and include them yourself.\nIf you plan to use the hand draw theme, don't forget to put the two fontfiles in your css folder: \n /fonts/daniel/danielbd.woff and /fonts/daniel/danielbd.woff2\n\nUsage\n-----\n\nYou can use the Diagram class like:\n\n```html\n<div id=\"diagram\">Diagram will be placed here</div>\n<script> \n  var d = Diagram.parse(\"A->B: Does something\");\n  var options = {theme: 'simple'};\n  d.drawSVG('diagram', options);\n</script>\n```\n\nor use jQuery to do all the work:\n```html\n<script src=\"{{ bower directory }}/jquery/dist/jquery.min.js\" />\n<div class=\"diagram\">A->B: Message</div>\n<script>\n  var options = {theme: 'hand'};\n  $(\".diagram\").sequenceDiagram(options);\n</script>\n```\n\nFor full examples check out [the demo site](https://bramp.github.io/js-sequence-diagrams/).\n\nOptions\n-------\n\n```javascript\nvar options = {\n    // Change the styling of the diagram, typically one of 'simple', 'hand'. New themes can be registered with registerTheme(...).\n    theme: string,\n\n    // CSS style to apply to the diagram's svg tag. (Only supported if using snap.svg)\n    css_class: string,\n};\n```\n\nStyling\n-------\n\nThe following CSS classes are applied to the SVG diagram when using snap.svg:\n\n* `sequence`: Applies to main SVG tag.\n* `title`: Applied to the title of the diagram.\n* `actor`: Applied to the actors.\n* `signal`: Applied to the signals.\n* `note`: Applied to all notes.\n\nThe diagram can then be customised, for example:\n\n```css\n.signal text {\n    fill: #000000;\n}\n.signal text:hover {\n    fill: #aaaaaa\n}\n.note rect, .note path {\n    fill: #ffff00;\n}\n.title rect, .title path,\n.actor rect, .actor path {\n    fill: #ffffff\n}\n```\n\nRaphaël Deprecation\n-------------------\n\nVersion 1.x of this library used [Raphaël](http://raphaeljs.com/) for drawing the diagrams, however, Raphaël had some limitations, and since disappeared from the Internet. We've decided to move to [Snap.svg](http://snapsvg.io/), which is a pure SVG implementation, instead of  Raphaël which in addition to SVG, also supported VML (on Internet Explorer). This support of VML made it impossible to use some newer SVG capabilities. Native SVG allows us to use CSS styling, better font support, animations and more.\n\nTo aid in the transition Version 2.x will support both Raphaël and Snap.svg (preferring Snap.svg). If you include Raphaël instead of snap.svg, it will default to using Raphaël as the rendering library. For example \n\n```html\n<script src=\"{{ bower directory }}/raphael/raphael-min.js\"></script>\n```\n\nThere are also four transitional themes, 'snapSimple', 'snapHand', 'raphaelSimple', 'raphaelHand', which force the use of either Snap.svg, or Raphaël.\n\nThe plan is to drop support for Raphaël in a future release, simplifying the library, and reducing the file size.\n\n### Adding a Font\n\nRaphael requires Cufon style fonts. Find the font you want in ttf or otf format, visit [Cufon's site](http://cufon.shoqolate.com/generate/) and process it into a javascript file. Then ensure the font is included via the HTML, or recompile after altering main.js. So far only the hand drawn font, Daniel Bold, has been included.\n\n\nBuild requirements\n------------------\nThe build is managed by a Makefile, and uses various tools available from npm. Thus both `make` and [npm](https://github.com/npm/npm) are required, and can easily be installed on any Linux or Mac machine.\n\n```bash\nmake\n```\n\nThe Makefile will use npm to install all the dev dependencies, build, and test.\n\nTesting\n-------\n\nWe use [qunit](https://qunitjs.com/) for testing. It can be ran from the command line, or via a browser. The command line actually tests multiple permutations of [lodash](https://lodash.com/), [Underscore](http://underscorejs.org/), and with and without minification.\n\n```bash\nmake test\n...\nGlobal summary:\n┌───────┬───────┬────────────┬────────┬────────┬─────────┐\n│ Files │ Tests │ Assertions │ Failed │ Passed │ Runtime │\n├───────┼───────┼────────────┼────────┼────────┼─────────┤\n│ 1     │ 13    │ 231        │ 0      │ 231    │ 250     │\n└───────┴───────┴────────────┴────────┴────────┴─────────┘\n```\n\nor `make` and then open test/qunit.html in a browser. Finally a simple playground is available at test/test.html.\n\nHow to release\n--------------\n* Make sure all changes checked in\n* Bump version in src/main.js and bower.json\n* ``make clean``\n* ``make``\n* ``git add -f src/main.js bower.json dist/*``\n* ``git commit -m \"Released version 2.x.x\"``\n* ``git push origin master``\n* ``git tag -a v2.x.x -m v2.x.x``\n* ``git push origin v2.x.x``\n\n\nTODO\n----\n* Other themes\n* Automate the release process\n* Testing that checks the generated SVG is correct\n* Improve the hand drawn theme\n  * \"Note left of Bob: \" generates a small empty box.\n  * The font seems to have extra margin at the bottom.\n  * The wiggly lines don't always touch.\n\n* Dozens of other issues on [https://github.com/bramp/js-sequence-diagrams/issues](https://github.com/bramp/js-sequence-diagrams/issues)\n\nContributors\n------------\n\nvia [GitHub](https://github.com/bramp/js-sequence-diagrams/graphs/contributors)\n\nThanks\n------\nThis project makes use of [Jison](https://zaach.github.io/jison/), snap.svg, underscore.js, and the awesome [Daniel font](http://www.dafont.com/daniel.font) (which is free to use for any purpose).\n\nMany thanks to [Web Sequence Diagrams](http://www.websequencediagrams.com/) which greatly inspired this project, and forms the basis for the syntax.\n\nRelated\n-------\n\n* [Web Sequence Diagrams](http://www.websequencediagrams.com/) Server side version with a commercial offering\n* [flowchart.js](https://adrai.github.io/flowchart.js/) A similar project that draws flow charts in the browser\n\n\nLicence (Simplified BSD License)\n-------\n\nCopyright (c) 2012-2017, Andrew Brampton\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n- Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n- Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "_site",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.900390625,
+          "content": "{\n  \"name\": \"js-sequence-diagrams\",\n  \"version\": \"2.0.1\",\n  \"authors\": \"Andrew Brampton (bramp.net)\",\n  \"description\": \"Generates UML sequence diagrams from simple text\",\n  \"homepage\": \"https://bramp.github.io/js-sequence-diagrams/\",\n  \"main\": \"dist/sequence-diagram-min.js\",\n  \"namespace\": \"Diagram\",\n  \"keywords\": [\n    \"uml\",\n    \"sequence\",\n    \"diagram\"\n  ],\n  \"license\": \"BSD-2-Clause\",\n  \"readmeFilename\": \"README.md\",\n  \"ignore\": [\n    \".*\",\n    \"_site\",\n    \"node_modules\",\n    \"bower_components\"\n  ],\n  \"dependencies\": {\n    \"underscore\": \"1.8.x\",\n    \"lodash\": \"4.17.x\",\n    \"raphael\": \"2.2.x\",\n    \"snap.svg\": \"0.4.x\",\n    \"bower-webfontloader\": \"~1.6.x\"\n  },\n  \"devDependencies\": {\n    \"qunit\": \"1.11.x\",\n    \"jquery\": \"3.1.x\",\n    \"seedrandom\": \"2.4.x\"\n  },\n  \"scripts\": {\n    \"test\": \"make test\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/bramp/js-sequence-diagrams.git\"\n  }\n}\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fonts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.486328125,
+          "content": "{\n  \"name\": \"js-sequence-diagrams\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/bramp/js-sequence-diagrams.git\"\n  },\n  \"license\": \"BSD-2-Clause\",\n  \"devDependencies\": {\n    \"bower\": \"1.8.x\",\n    \"eslint\": \"3.16.x\",\n    \"eslint-config-google\": \"0.7.x\",\n    \"jison\": \"0.4.15\",\n    \"jshint\": \"2.9.x\",\n    \"jsonlint\": \"1.6.x\",\n    \"minifier\": \"0.8.x\",\n    \"preprocessor\": \"1.4.x\",\n    \"qunit\": \"0.9.x\",\n    \"uglify-js\": \"2.8.x\"\n  },\n  \"scripts\": {\n    \"test\": \"make test\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

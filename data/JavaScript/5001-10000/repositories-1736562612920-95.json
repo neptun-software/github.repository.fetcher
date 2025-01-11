@@ -1,0 +1,239 @@
+{
+  "metadata": {
+    "timestamp": 1736562612920,
+    "page": 95,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bigbluebutton/bigbluebutton",
+      "stars": 8623,
+      "defaultBranch": "v3.0.x-release",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.6005859375,
+          "content": ".DS_Store\n._.DS_Store*\n.metadata/\nrecord-and-playback/playback-client-js/testmeeting/\nrecord-and-playback/playback-web/playback-web-0.1.war\nrecord-and-playback/.project\n**/target/*\n**/.cache-main\n**/.cache-tests\n.vagrant/*\n**/.settings/*\n*/.gradle\nbigbluebutton-web/.settings*\nbigbluebutton-web/.classpath\nbigbluebutton-web/.project\nakka-bbb-apps/akka-bbb-apps*.log\nbigbluebutton-web/target-eclipse*\nrecord-and-playback/.loadpath\n**/.idea/*\n*.iml\n*~\ncache/*\nartifacts/*\nbbb-presentation-video.zip\nbbb-presentation-video\nbbb-graphql-actions-adapter-server/\nbigbluebutton-html5/public/locales/index.json\nnode_modules\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 5.2587890625,
+          "content": "# set up stages\n#\n\nvariables:\n  GIT_STRATEGY: fetch\n\nstages:\n  - change detection\n  - get external dependencies\n  - build\n  - push packages\n\n# define which docker image to use for builds\ndefault:\n  image: bigbluebutton/bbb-build:v3.0.x-release--2024-08-30-014114\n\n# This stage uses git to find out since when each package has been unmodified.\n# it then checks an API endpoint on the package server to find out for which of\n# these versions a build exists. If a viable build (from a commit where the\n# package is identical) is found, that package name and .deb-filename are\n# written to a file `packages_to_skip.txt` the root of the repo. This file is\n# passed to the subsequent stages:\n# - The jobs in the build stage check whether \"their\" package is listed in\n#   `packages_to_skip.txt` and don't build a new one if it is.\n# - The bigbluebutton-build job includes the package versions listed in that\n#   file as version-pinned dependencies of the `bigbluebutton` package (instead\n#   of the current commit version)\n# - The push_packages job sends the filenames of the packages that can be reused\n#   to the server, so they are included with the current branch. (Relevant for\n#   commits that start a new branch and don't change all packages)\nchange_detection:\n  stage: change detection\n  script: build/change_detection.sh\n  artifacts:\n    paths:\n      - packages_to_skip.txt\n\n# replace placeholder files with actual external repos\n# (for source and version of the package see the placeholder file)\n# this step will be obsolete once dependencies can be tracked as\n# git submodules\nget_external_dependencies:\n  stage: get external dependencies\n  script: build/get_external_dependencies.sh\n  artifacts:\n    paths:\n      - bbb-etherpad\n      - bbb-webhooks\n      - bbb-webrtc-sfu\n      - bbb-webrtc-recorder\n      - freeswitch\n      - bbb-pads\n      - bbb-playback\n      - bbb-transcription-controller\n    expire_in: 1h 30min\n\n# template job for build step\n.build_job:\n  stage: build\n  artifacts:\n    paths:\n      - artifacts/*.deb\n    expire_in: 1h 30min\n  cache:\n    key: $CI_COMMIT_REF_SLUG\n    paths:\n      - cache/.gradle\n\n# jobs for all packages in the \"build\" stage (templated from above)\nbbb-apps-akka-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-apps-akka\n\nbbb-config-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-config\n\nbbb-etherpad-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-etherpad\n\nbbb-freeswitch-core-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-freeswitch-core\n\nbbb-freeswitch-sounds-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-freeswitch-sounds\n\nbbb-fsesl-akka-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-fsesl-akka\n\nbbb-html5-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-html5\n\nbbb-graphql-middleware-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-graphql-middleware\n\nbbb-graphql-server-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-graphql-server\n\nbbb-learning-dashboard-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-learning-dashboard\n\nbbb-libreoffice-docker-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-libreoffice-docker\n\nbbb-mkclean-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-mkclean\n\nbbb-pads-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-pads\n\nbbb-playback-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-playback\n\nbbb-playback-notes-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-playback-notes\n\nbbb-playback-podcast-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-playback-podcast\n\nbbb-playback-presentation-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-playback-presentation\n\nbbb-playback-screenshare-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-playback-screenshare\n\nbbb-record-core-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-record-core\n\nbbb-web-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-web\n\nbbb-webhooks-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-webhooks\n\nbbb-webrtc-sfu-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-webrtc-sfu\n\nbbb-webrtc-recorder-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-webrtc-recorder\n\nbbb-livekit:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-livekit\n\nbbb-transcription-controller-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bbb-transcription-controller\n\nbigbluebutton-build:\n  extends: .build_job\n  script:\n    - build/setup-inside-docker.sh bigbluebutton\n\n# upload packages to repo server\npush_packages:\n  stage: push packages\n  script: build/push_packages.sh\n  resource_group: push_packages\n\n  # uncomment the lines below if you want one final\n  # \"artifacts\" dir with all packages (increases runtime, fills up space on gitlab server)\n  #artifacts:\n  #    paths:\n  #      - artifacts/*\n  #    expire_in: 2 days\n\n\n"
+        },
+        {
+          "name": ".nvmrc",
+          "type": "blob",
+          "size": 0.00390625,
+          "content": "node"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 7.47265625,
+          "content": "                   GNU LESSER GENERAL PUBLIC LICENSE\n                       Version 3, 29 June 2007\n\n Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>\n Everyone is permitted to copy and distribute verbatim copies\n of this license document, but changing it is not allowed.\n\n\n  This version of the GNU Lesser General Public License incorporates\nthe terms and conditions of version 3 of the GNU General Public\nLicense, supplemented by the additional permissions listed below.\n\n  0. Additional Definitions.\n\n  As used herein, \"this License\" refers to version 3 of the GNU Lesser\nGeneral Public License, and the \"GNU GPL\" refers to version 3 of the GNU\nGeneral Public License.\n\n  \"The Library\" refers to a covered work governed by this License,\nother than an Application or a Combined Work as defined below.\n\n  An \"Application\" is any work that makes use of an interface provided\nby the Library, but which is not otherwise based on the Library.\nDefining a subclass of a class defined by the Library is deemed a mode\nof using an interface provided by the Library.\n\n  A \"Combined Work\" is a work produced by combining or linking an\nApplication with the Library.  The particular version of the Library\nwith which the Combined Work was made is also called the \"Linked\nVersion\".\n\n  The \"Minimal Corresponding Source\" for a Combined Work means the\nCorresponding Source for the Combined Work, excluding any source code\nfor portions of the Combined Work that, considered in isolation, are\nbased on the Application, and not on the Linked Version.\n\n  The \"Corresponding Application Code\" for a Combined Work means the\nobject code and/or source code for the Application, including any data\nand utility programs needed for reproducing the Combined Work from the\nApplication, but excluding the System Libraries of the Combined Work.\n\n  1. Exception to Section 3 of the GNU GPL.\n\n  You may convey a covered work under sections 3 and 4 of this License\nwithout being bound by section 3 of the GNU GPL.\n\n  2. Conveying Modified Versions.\n\n  If you modify a copy of the Library, and, in your modifications, a\nfacility refers to a function or data to be supplied by an Application\nthat uses the facility (other than as an argument passed when the\nfacility is invoked), then you may convey a copy of the modified\nversion:\n\n   a) under this License, provided that you make a good faith effort to\n   ensure that, in the event an Application does not supply the\n   function or data, the facility still operates, and performs\n   whatever part of its purpose remains meaningful, or\n\n   b) under the GNU GPL, with none of the additional permissions of\n   this License applicable to that copy.\n\n  3. Object Code Incorporating Material from Library Header Files.\n\n  The object code form of an Application may incorporate material from\na header file that is part of the Library.  You may convey such object\ncode under terms of your choice, provided that, if the incorporated\nmaterial is not limited to numerical parameters, data structure\nlayouts and accessors, or small macros, inline functions and templates\n(ten or fewer lines in length), you do both of the following:\n\n   a) Give prominent notice with each copy of the object code that the\n   Library is used in it and that the Library and its use are\n   covered by this License.\n\n   b) Accompany the object code with a copy of the GNU GPL and this license\n   document.\n\n  4. Combined Works.\n\n  You may convey a Combined Work under terms of your choice that,\ntaken together, effectively do not restrict modification of the\nportions of the Library contained in the Combined Work and reverse\nengineering for debugging such modifications, if you also do each of\nthe following:\n\n   a) Give prominent notice with each copy of the Combined Work that\n   the Library is used in it and that the Library and its use are\n   covered by this License.\n\n   b) Accompany the Combined Work with a copy of the GNU GPL and this license\n   document.\n\n   c) For a Combined Work that displays copyright notices during\n   execution, include the copyright notice for the Library among\n   these notices, as well as a reference directing the user to the\n   copies of the GNU GPL and this license document.\n\n   d) Do one of the following:\n\n       0) Convey the Minimal Corresponding Source under the terms of this\n       License, and the Corresponding Application Code in a form\n       suitable for, and under terms that permit, the user to\n       recombine or relink the Application with a modified version of\n       the Linked Version to produce a modified Combined Work, in the\n       manner specified by section 6 of the GNU GPL for conveying\n       Corresponding Source.\n\n       1) Use a suitable shared library mechanism for linking with the\n       Library.  A suitable mechanism is one that (a) uses at run time\n       a copy of the Library already present on the user's computer\n       system, and (b) will operate properly with a modified version\n       of the Library that is interface-compatible with the Linked\n       Version.\n\n   e) Provide Installation Information, but only if you would otherwise\n   be required to provide such information under section 6 of the\n   GNU GPL, and only to the extent that such information is\n   necessary to install and execute a modified version of the\n   Combined Work produced by recombining or relinking the\n   Application with a modified version of the Linked Version. (If\n   you use option 4d0, the Installation Information must accompany\n   the Minimal Corresponding Source and Corresponding Application\n   Code. If you use option 4d1, you must provide the Installation\n   Information in the manner specified by section 6 of the GNU GPL\n   for conveying Corresponding Source.)\n\n  5. Combined Libraries.\n\n  You may place library facilities that are a work based on the\nLibrary side by side in a single library together with other library\nfacilities that are not Applications and are not covered by this\nLicense, and convey such a combined library under terms of your\nchoice, if you do both of the following:\n\n   a) Accompany the combined library with a copy of the same work based\n   on the Library, uncombined with any other library facilities,\n   conveyed under the terms of this License.\n\n   b) Give prominent notice with the combined library that part of it\n   is a work based on the Library, and explaining where to find the\n   accompanying uncombined form of the same work.\n\n  6. Revised Versions of the GNU Lesser General Public License.\n\n  The Free Software Foundation may publish revised and/or new versions\nof the GNU Lesser General Public License from time to time. Such new\nversions will be similar in spirit to the present version, but may\ndiffer in detail to address new problems or concerns.\n\n  Each version is given a distinguishing version number. If the\nLibrary as you received it specifies that a certain numbered version\nof the GNU Lesser General Public License \"or any later version\"\napplies to it, you have the option of following the terms and\nconditions either of that published version or of any later version\npublished by the Free Software Foundation. If the Library as you\nreceived it does not specify a version number of the GNU Lesser\nGeneral Public License, you may choose any version of the GNU Lesser\nGeneral Public License ever published by the Free Software Foundation.\n\n  If the Library as you received it specifies that a proxy can decide\nwhether future versions of the GNU Lesser General Public License shall\napply, that proxy's public statement of acceptance of any version is\npermanent authorization for you to choose that version for the\nLibrary.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.3779296875,
+          "content": "BigBlueButton\n=============\nBigBlueButton is an open-source virtual classroom designed to help teachers teach and learners learn.  \n\nBigBlueButton supports real-time sharing of audio, video, slides (with whiteboard annotations), chat, and the screen.  Instructors can engage remote students with polling, emojis, multi-user whiteboards, shared notes, and breakout rooms.  During the session, BigBlueButton generates analytics that are visible to moderators in the Learning Analytics Dashboard.\n\nPresenters can record and playback content for later sharing with others.\n\nWe designed BigBlueButton for online learning, it can be used for many other applications as well.  The educational use cases for BigBlueButton are\n\n  * Online tutoring (one-to-one)\n  * Flipped classrooms (recording content ahead of your session)\n  * Group collaboration (many-to-many)\n  * Online classes (one-to-many)\n\nThe latest version is BigBlueButton 2.7.  You can install BigBlueButton 2.6 on Ubuntu 20.04 using [bbb-install.sh](https://github.com/bigbluebutton/bbb-install) within 30 minutes (or your money back 😉).\n\nFor full technical documentation of BigBlueButton -- including architecture, features, API, and GreenLight (the default front-end) -- see [https://docs.bigbluebutton.org/](https://docs.bigbluebutton.org/).\n\nBigBlueButton and the BigBlueButton Logo are trademarks of [BigBlueButton Inc](https://bigbluebutton.org).\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 1.1240234375,
+          "content": "# Security Policy\n\n## Supported Versions\n\nWe actively support BigBlueButton through the community forums and through security updates.\n\n| Version | Supported          |\n| ------- | ------------------ |\n| 2.5.x (or earlier)  | :x:    |\n| 2.6.x   | :white_check_mark: |\n| 2.7.x   | :white_check_mark: |\n| 3.0.x   | :x: |\n\nWe have released 2.7 to the community and are going to support both 2.6 and 2.7 together for the coming months (while we're actively developing the next release).  Also, BigBlueButton 2.5 is now end of life.\n\nAs such, we recommend that all administrators deploy 2.7 going forward.  You'll find [many improvements](https://docs.bigbluebutton.org/2.7/new-features) in this newer version.\n\n## Reporting a Vulnerability\n\nIf you believe you have found a security vulnerability in BigBlueButton please let us know directly by\n- using GitHub's \"Report a vulnerability\" functionality on https://github.com/bigbluebutton/bigbluebutton/security/advisories\n- or e-mailing security@bigbluebutton.org with as much detail as possible.\n\nRegards,... [BigBlueButton Team](https://docs.bigbluebutton.org/support/faq.html#bigbluebutton-committer)\n"
+        },
+        {
+          "name": "akka-bbb-apps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "akka-bbb-fsesl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-common-message",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-common-web",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-etherpad.placeholder.sh",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "git clone --branch 1.9.4 --depth 1 https://github.com/ether/etherpad-lite bbb-etherpad\n\n"
+        },
+        {
+          "name": "bbb-export-annotations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-fsesl-client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-graphql-actions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-graphql-client-test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-graphql-middleware",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-graphql-server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-learning-dashboard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-libreoffice",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-livekit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-pads.placeholder.sh",
+          "type": "blob",
+          "size": 0.0849609375,
+          "content": "git clone --branch v1.5.3 --depth 1 https://github.com/bigbluebutton/bbb-pads bbb-pads\n"
+        },
+        {
+          "name": "bbb-playback.placeholder.sh",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "git clone --branch v5.2.0 --depth 1 https://github.com/bigbluebutton/bbb-playback bbb-playback\n"
+        },
+        {
+          "name": "bbb-presentation-video.placeholder.sh",
+          "type": "blob",
+          "size": 0.5810546875,
+          "content": "#!/bin/sh\nset -ex\nRELEASE=5.0.0-beta.2\ncat <<MSG\nThis tool downloads prebuilt packages built on Github Actions\nThe corresponding source can be browsed at https://github.com/bigbluebutton/bbb-presentation-video/tree/${RELEASE}\nBuild logs are at https://github.com/bigbluebutton/bbb-presentation-video/actions/workflows/package.yml?query=branch%3A${RELEASE}\nMSG\ncurl -Lf -o bbb-presentation-video.zip \"https://github.com/bigbluebutton/bbb-presentation-video/releases/download/${RELEASE}/ubuntu-20.04.zip\"\nrm -rf bbb-presentation-video\nunzip -o bbb-presentation-video.zip -d bbb-presentation-video\n"
+        },
+        {
+          "name": "bbb-recording-imex",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-transcription-controller.placeholder.sh",
+          "type": "blob",
+          "size": 0.1240234375,
+          "content": "git clone --branch v0.2.9 --depth 1 https://github.com/bigbluebutton/bbb-transcription-controller bbb-transcription-controller\n"
+        },
+        {
+          "name": "bbb-voice-conference",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bbb-webhooks.placeholder.sh",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "git clone --branch v3.3.0 --depth 1 https://github.com/bigbluebutton/bbb-webhooks bbb-webhooks\n"
+        },
+        {
+          "name": "bbb-webrtc-recorder.placeholder.sh",
+          "type": "blob",
+          "size": 0.1064453125,
+          "content": "git clone --branch v0.7.0 --depth 1 https://github.com/bigbluebutton/bbb-webrtc-recorder bbb-webrtc-recorder\n"
+        },
+        {
+          "name": "bbb-webrtc-sfu.placeholder.sh",
+          "type": "blob",
+          "size": 0.1044921875,
+          "content": "git clone --branch v2.17.0-beta.2 --depth 1 https://github.com/bigbluebutton/bbb-webrtc-sfu bbb-webrtc-sfu\n"
+        },
+        {
+          "name": "bigbluebutton-config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bigbluebutton-html5",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bigbluebutton-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bigbluebutton-web",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "freeswitch.placeholder.sh",
+          "type": "blob",
+          "size": 0.1630859375,
+          "content": "mkdir freeswitch\ncd freeswitch\ngit init\ngit remote add origin https://github.com/signalwire/freeswitch.git\ngit fetch --depth 1 origin v1.10.12\ngit checkout FETCH_HEAD\n"
+        },
+        {
+          "name": "labs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "record-and-playback",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "transifex.yml",
+          "type": "blob",
+          "size": 0.2373046875,
+          "content": "git:\n  filters:\n    - filter_type: file\n      source_file: bigbluebutton-html5/public/locales/en.json\n      file_format: KEYVALUEJSON\n      source_language: en\n      translation_files_expression: bigbluebutton-html5/public/locales/<lang>.json\n"
+        }
+      ]
+    }
+  ]
+}

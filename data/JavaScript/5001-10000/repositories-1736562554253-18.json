@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "timestamp": 1736562554253,
+    "page": 18,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mobz/elasticsearch-head",
+      "stars": 9433,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "node_modules\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.060546875,
+          "content": ".idea\n*.iml\n*.tmproj\n*.sublime-workspace\n.project\nnode_modules"
+        },
+        {
+          "name": ".jshintrc",
+          "type": "blob",
+          "size": 0.533203125,
+          "content": "{\n\t\"maxerr\": 1000,\n\n\t\"predef\": [\n\t\t\"exports\",\n\t\t\"describe\",\n\t\t\"expect\",\n\t\t\"it\",\n\t\t\"beforeEach\",\n\t\t\"afterEach\",\n\t\t\"jasmine\",\n\t\t\"test\",\n\t\t\"spyOn\"\n\t],\n\n\t\"jquery\" : true,\n\t\"browser\" : true,\n\n\t\"curly\": true,\n\t\"debug\": false,\n\t\"devel\": true,\n\t\"eqeqeq\": true,\n\t\"eqnull\": true,\n\t\"expr\": true,\n\t\"forin\": false,\n\t\"immed\": false,\n\t\"latedef\": true,\n\t\"newcap\": true,\n\t\"noarg\": true,\n\t\"noempty\": false,\n\t\"nonew\": false,\n\t\"nomen\": false,\n\t\"plusplus\": false,\n\t\"regexp\": false,\n\t\"undef\": true,\n\t\"sub\": true,\n\t\"white\": false,\n\t\"scripturl\": true,\n\t\"esnext\": true\n}\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.2421875,
+          "content": "FROM node\nMAINTAINER Niko Bellic <niko.bellic@kakaocorp.com>\n\nRUN mkdir -p /usr/src/app\nWORKDIR /usr/src/app\n\nRUN npm install -g grunt\n\nCOPY package.json /usr/src/app/package.json\nRUN npm install\n\nCOPY . /usr/src/app\n\nEXPOSE 9100\n\nCMD grunt server\n"
+        },
+        {
+          "name": "Dockerfile-alpine",
+          "type": "blob",
+          "size": 0.2158203125,
+          "content": "# docker build -t mobz/elasticsearch-head:5-alpine -f Dockerfile-alpine .\n\nFROM node:alpine\nWORKDIR /usr/src/app\nRUN npm install http-server\nCOPY . .\nEXPOSE 9100\nCMD node_modules/http-server/bin/http-server _site -p 9100\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 2.1875,
+          "content": "module.exports = function(grunt) {\n\n\tvar fileSets = require(\"./grunt_fileSets.js\");\n\n\t// Project configuration.\n\tgrunt.initConfig({\n\t\tclean: {\n\t\t\t_site: {\n\t\t\t\tsrc: ['_site']\n\t\t\t}\n\t\t},\n\t\tconcat: {\n\t\t\tvendorjs: {\n\t\t\t\tsrc: fileSets.vendorJs,\n\t\t\t\tdest: '_site/vendor.js'\n\t\t\t},\n\t\t\tvendorcss: {\n\t\t\t\tsrc: fileSets.vendorCss,\n\t\t\t\tdest: '_site/vendor.css'\n\t\t\t},\n\t\t\tappjs: {\n\t\t\t\tsrc: fileSets.srcJs,\n\t\t\t\tdest: '_site/app.js'\n\t\t\t},\n\t\t\tappcss: {\n\t\t\t\tsrc: fileSets.srcCss,\n\t\t\t\tdest: '_site/app.css'\n\t\t\t}\n\t\t},\n\n\t\tcopy: {\n\t\t\tsite_index: {\n\t\t\t\tsrc: 'index.html',\n\t\t\t\tdest: '_site/index.html',\n\t\t\t\toptions: {\n\t\t\t\t\tprocess: function( src ) {\n\t\t\t\t\t\treturn src.replace(/_site\\//g, \"\");\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t},\n\t\t\tbase: {\n\t\t\t\texpand: true,\n\t\t\t\tcwd: 'src/app/base/',\n\t\t\t\tsrc: [ '*.gif', '*.png', '*.css' ],\n\t\t\t\tdest: '_site/base/'\n\t\t\t},\n\t\t\ticonFonts: {\n\t\t\t\texpand: true,\n\t\t\t\tcwd: 'src/vendor/font-awesome/fonts/',\n\t\t\t\tsrc: '**',\n\t\t\t\tdest: '_site/fonts'\n\t\t\t},\n\t\t\ti18n: {\n\t\t\t\tsrc: 'src/vendor/i18n/i18n.js',\n\t\t\t\tdest: '_site/i18n.js'\n\t\t\t},\n\t\t\tlang: {\n\t\t\t\texpand: true,\n\t\t\t\tcwd: 'src/app/lang/',\n\t\t\t\tsrc: '**',\n\t\t\t\tdest: '_site/lang/'\n\t\t\t},\n\t\t\tchrome: {\n\t\t\t\tsrc: 'src/chrome_ext/*.*',\n\t\t\t\tdest: '_site/'\n\t\t\t}\n\t\t},\n\n\t\tjasmine: {\n\t\t\ttask: {\n\t\t\t\tsrc: [ fileSets.vendorJs, 'src/vendor/i18n/i18n.js', 'src/app/lang/en_strings.js', fileSets.srcJs ],\n\t\t\t\toptions: {\n\t\t\t\t\tspecs: 'src/app/**/*Spec.js',\n\t\t\t\t\thelpers: 'test/spec/*Helper.js',\n\t\t\t\t\tdisplay: \"short\",\n\t\t\t\t\tsummary: true\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\n\t\twatch: {\n\t\t\t\"scripts\": {\n\t\t\t\tfiles: ['src/**/*', 'test/spec/*' ],\n\t\t\t\ttasks: ['default'],\n\t\t\t\toptions: {\n\t\t\t\t\tspawn: false\n\t\t\t\t}\n\t\t\t},\n\t\t\t\"grunt\": {\n\t\t\t\tfiles: [ 'Gruntfile.js' ]\n\t\t\t}\n\t\t},\n\n\t\tconnect: {\n\t\t\tserver: {\n\t\t\t\toptions: {\n\t\t\t\t\tport: 9100,\n\t\t\t\t\tbase: '.',\n\t\t\t\t\tkeepalive: true\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n\t});\n\n\tgrunt.loadNpmTasks('grunt-contrib-clean');\n\tgrunt.loadNpmTasks('grunt-contrib-concat');\n\tgrunt.loadNpmTasks('grunt-contrib-watch');\n\tgrunt.loadNpmTasks('grunt-contrib-connect');\n\tgrunt.loadNpmTasks('grunt-contrib-copy');\n\tgrunt.loadNpmTasks('grunt-contrib-jasmine');\n\n\t// Default task(s).\n\tgrunt.registerTask('default', ['clean', 'concat', 'copy', 'jasmine']);\n\tgrunt.registerTask('server', ['connect:server']);\n\tgrunt.registerTask('dev', [ 'default', 'watch' ]);\n\n\n};\n"
+        },
+        {
+          "name": "LICENCE",
+          "type": "blob",
+          "size": 0.5458984375,
+          "content": "Copyright 2010-2013 Ben Birch\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this software except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "README.textile",
+          "type": "blob",
+          "size": 7.0732421875,
+          "content": "h1. elasticsearch-head\n\nh2. A web front end for an Elasticsearch cluster\n\nh3. \"http://mobz.github.io/elasticsearch-head\":http://mobz.github.io/elasticsearch-head\n\nh2. Running\n\nThere are multiple ways of running elasticsearch-head.\n\nh4. Running with built in server\n\n* @git clone git://github.com/mobz/elasticsearch-head.git@\n* @cd elasticsearch-head@\n* @npm install@\n* @npm run start@\n\n* @open@ \"http://localhost:9100/\":http://localhost:9100/\n\nThis will start a local webserver running on port 9100 serving elasticsearch-head\n\nh4. Running with docker\n\n* for Elasticsearch 5.x: @docker run -p 9100:9100 mobz/elasticsearch-head:5@\n* for Elasticsearch 2.x: @docker run -p 9100:9100 mobz/elasticsearch-head:2@\n* for Elasticsearch 1.x: @docker run -p 9100:9100 mobz/elasticsearch-head:1@\n* for fans of alpine there is @mobz/elasticsearch-head:5-alpine@\n  \n* @open@ \"http://localhost:9100/\":http://localhost:9100/\n\nh4. Running as a Chrome extension\n\n* Install \"ElasticSearch Head\":https://chrome.google.com/webstore/detail/elasticsearch-head/ffmkiejjmecolpfloofpjologoblkegm/ from the Chrome Web Store.\n* Click the extension icon in the toolbar of your web browser.\n* Note that you don't need to \"enable CORS\":#enable-cors-in-elasticsearch with this method.\n\nh4. Running as a plugin of Elasticsearch (deprecated)\n\n* for Elasticsearch 5.x, 6.x, and 7.x: site plugins are not supported. Run \"as a standalone server\":#running-with-built-in-server\n* for Elasticsearch 2.x: @sudo elasticsearch/bin/plugin install mobz/elasticsearch-head@\n* for Elasticsearch 1.x: @sudo elasticsearch/bin/plugin -install mobz/elasticsearch-head/1.x@\n* for Elasticsearch 0.x: @sudo elasticsearch/bin/plugin -install mobz/elasticsearch-head/0.9@\n\n* @open http://localhost:9200/_plugin/head/@\n\nThis will automatically download the appropriate version of elasticsearch-head from github and run it as a plugin within the elasticsearch cluster. In this mode elasticsearch-head automatically connects to the node that is running it\n\nh4. Running with the local proxy\n\nThis is an _experimental feature_ which creates a local proxy for many remote elasticsearch clusters\n\n* configure clusters in proxy/clusters\n* create a file per remote cluster you want to connect to ( see @localhost9200.json@ as example )\n* requires node >= 6.0 \n* @npm install@\n* @npm run proxy@\n\nAt the moment it only works with @grunt server@ running on http://localhost:9100\n\nh4. Alternatives\n\n* File System: elastisearch-head is a standalone webapp written in good-ol' html5. This means, you can put it up on any webserver, run it directly from the filesystem. It'll even fit on a floppy disk.\n* DEB package: There is an unofficial deb package. the plugin executable will be available at @/usr/share/elasticsearch/bin/plugin@.\n* Homebrew: There is an unofficial keg. The plugin executable will be available at @/usr/local/Cellar/elasticsearch/(elasticsearch version)/libexec/bin/plugin@.\n\nh3. Connecting to elasticsearch\n\nBy default elasticsearch exposes a http rest API on port 9200 which elasticsearch-head connects to.\n\nh4. Enable CORS in elasticsearch\n\nWhen not running as a Chrome extension or as a plugin of elasticsearch (which is not even possible from version 5), you must enable \"CORS\":https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-http.html in elasticsearch, or else your browser will reject elasticsearch-head's requests due to violation of the same-origin policy.\n\nIn elasticsearch configuration;\n\n* add @http.cors.enabled: true@\n* you must also set @http.cors.allow-origin@ because no origin allowed by default. @http.cors.allow-origin: \"*\"@ is valid value, however it's considered as a security risk as your cluster is open to cross origin from *anywhere*.\n\nh4. Basic Authentication\n\nelasticsearch-head will add basic auth headers to each request if you pass in the \"correct url parameters\":#url-parameters\nYou will also need to add @http.cors.allow-headers: Authorization@ to the elasticsearch configuration\n\nh4. x-pack\n\nelasticsearch x-pack requires basic authentication _and_ CORS as described above. Make sure you have the correct CORS setup and then open es-head with a url like \"http://localhost:9100/?auth_user=elastic&auth_password=changeme\"\n\nh4. URL Parameters\n\nParameters may be appended to the url to set an initial state eg. @head/index.html?base_uri=http://node-01.example.com:9200@\n\n* @base_uri@ force elasticsearch-head to connect to a particular node.\n* @dashboard@ experimental feature to open elasticsearch-head in a mode suitable for dashboard / radiator. Accepts one parameter @dashboard=cluster@\n* @auth_user@ adds basic auth credentials to http requests ( requires \"elasticsearch-http-basic\":https://github.com/karussell/elasticsearch-http-basic plugin or a reverse proxy )\n* @auth_password@ basic auth password as above (note: without \"additional security layers\":http://security.stackexchange.com/questions/988/is-basic-auth-secure-if-done-over-https, passwords are sent over the network *in the clear* )\n* @lang@ force elasticsearch-head to use specified ui language (eg: en, fr, pt, zh, zh-TW, tr, ja)\n\nh4. Contributing\n\nTo contribute to elasticsearch-head you will need the following developer tools\n\n# git and a \"github\":https://github.com/ account\n# \"node ( including npm )\":http://nodejs.org/download\n# \"grunt-cli\":http://gruntjs.com/getting-started\n# (to run jasmine tests) \"phantomjs\":http://phantomjs.org\n\nThen\n\n# create a fork of elasticsearch-head on github\n# clone your fork to your machine\n# @cd elasticsearch-head@\n# @npm install@ # downloads node dev dependencies\n# @grunt dev@ # builds the distribution files, then watches the src directory for changes (if you have an warning like \"Warning: Task \"clean\" failed. Use --force to continue.\", well use --force ;) )\n\nChanges to both _site and src directories *must* be committed, to allow people to \nrun elasticsearch-head without running dev tools and follow existing dev patterns, \nsuch as indenting with tabs.\n\nh5. Contributing an Internationalisation\n\n* Simplified Chinese by \"darkcount\":https://github.com/hangxin1940\n* Traditional Chinese by \"kewang\":https://github.com/kewang\n* English (primary) by \"Ben Birch\":https://twitter.com/mobz\n* French by \"David Pilato\":https://twitter.com/dadoonet\n* Portuguese by \"caiodangelo\":https://github.com/caiodangelo\n* Turkish by \"Cemre Mengu\":https://github.com/cemremengu\n* Japanese by \"Satoshi Kimura\":https://github.com/satoshi-kimura\n* Vietnamese by \"Du Tran\":https://github.com/quangdutran\n\nTo contribute an internationalisation\n\n# Follow \"Contributing\" instructions above\n# Find your 2-character \"ISO 639-1 language code\":http://en.wikipedia.org/wiki/List_of_ISO_639-1_codes\n# edit _site/index.html to add your 2 letter language code to the data-langs attribute of this line @<script src=\"_site/i18n.js\" data-baseDir=\"_site/lang\" data-langs=\"en,fr,your_lang_here\"></script>@\n# make a copy of @src/app/langs/en_strings.js@ prefixed with your language code\n# convert english strings and fragments to your language. \"Formatting Rules\":http://docs.oracle.com/javase/tutorial/i18n/format/messageintro.html\n# Submit a pull request\n\n!http://mobz.github.com/elasticsearch-head/screenshots/clusterOverview.png(ClusterOverview Screenshot)!\n"
+        },
+        {
+          "name": "_site",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "crx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "elasticsearch-head.sublime-project",
+          "type": "blob",
+          "size": 0.1015625,
+          "content": "{\n\t\"folders\":\n\t[\n\t\t{\n\t\t\t\"path\": \".\",\n\t\t\t\"folder_exclude_patterns\": [ \"node_modules\", \"_site\" ]\n\t\t}\n\t]\n}\n"
+        },
+        {
+          "name": "grunt_fileSets.js",
+          "type": "blob",
+          "size": 3.400390625,
+          "content": "exports.vendorJs = [\n\t'src/vendor/jquery/jquery.js',\n\t'src/vendor/joey/joey.js',\n\t'src/vendor/nohtml/jquery-nohtml.js',\n\t'src/vendor/graphael/g.raphael.standalone.js',\n\t'src/vendor/dateRangeParser/date-range-parser.js'\n];\n\nexports.vendorCss = [\n\t'src/vendor/font-awesome/css/font-awesome.css'\n];\n\nexports.srcJs = [\n\t'src/app/base/boot.js',\n\n\t'src/app/ux/class.js',\n\t'src/app/ux/templates/templates.js',\n\t'src/app/ux/observable.js',\n\t'src/app/ux/singleton.js',\n\t'src/app/ux/dragdrop.js',\n\t'src/app/ux/fieldCollection.js',\n\n\t'src/app/data/model/model.js',\n\t'src/app/data/dataSourceInterface.js',\n\t'src/app/data/resultDataSourceInterface.js',\n\t'src/app/data/metaData.js',\n\t'src/app/data/metaDataFactory.js',\n\t'src/app/data/query.js',\n\t'src/app/data/queryDataSourceInterface.js',\n\t'src/app/data/boolQuery.js',\n\n\t'src/app/services/preferences/preferences.js',\n\t'src/app/services/cluster/cluster.js',\n\t'src/app/services/clusterState/clusterState.js',\n\n\t'src/app/ui/abstractWidget/abstractWidget.js',\n\t'src/app/ui/abstractField/abstractField.js',\n\t'src/app/ui/textField/textField.js',\n\t'src/app/ui/checkField/checkField.js',\n\t'src/app/ui/button/button.js',\n\t'src/app/ui/menuButton/menuButton.js',\n\t'src/app/ui/splitButton/splitButton.js',\n\t'src/app/ui/refreshButton/refreshButton.js',\n\t'src/app/ui/toolbar/toolbar.js',\n\t'src/app/ui/abstractPanel/abstractPanel.js',\n\t'src/app/ui/draggablePanel/draggablePanel.js',\n\t'src/app/ui/infoPanel/infoPanel.js',\n\t'src/app/ui/dialogPanel/dialogPanel.js',\n\t'src/app/ui/menuPanel/menuPanel.js',\n\t'src/app/ui/selectMenuPanel/selectMenuPanel.js',\n\t'src/app/ui/table/table.js',\n\t'src/app/ui/csvTable/csvTable.js',\n\t'src/app/ui/jsonPretty/jsonPretty.js',\n\t'src/app/ui/panelForm/panelForm.js',\n\t'src/app/ui/helpPanel/helpPanel.js',\n\t'src/app/ui/jsonPanel/jsonPanel.js',\n\t'src/app/ui/sidebarSection/sidebarSection.js',\n\t'src/app/ui/resultTable/resultTable.js',\n\t'src/app/ui/queryFilter/queryFilter.js',\n\t'src/app/ui/page/page.js',\n\t'src/app/ui/browser/browser.js',\n\t'src/app/ui/anyRequest/anyRequest.js',\n\t'src/app/ui/nodesView/nodesView.js',\n\t'src/app/ui/clusterOverview/clusterOverview.js',\n\t'src/app/ui/dateHistogram/dateHistogram.js',\n\t'src/app/ui/clusterConnect/clusterConnect.js',\n\t'src/app/ui/structuredQuery/structuredQuery.js',\n\t'src/app/ui/filterBrowser/filterBrowser.js',\n\t'src/app/ui/indexSelector/indexSelector.js',\n\t'src/app/ui/header/header.js',\n\t'src/app/ui/indexOverview/indexOverview.js',\n\n\t'src/app/app.js'\n];\n\nexports.srcCss = [\n\t'src/app/ux/table.css',\n\t'src/app/ui/abstractField/abstractField.css',\n\t'src/app/ui/button/button.css',\n\t'src/app/ui/menuButton/menuButton.css',\n\t'src/app/ui/splitButton/splitButton.css',\n\t'src/app/ui/toolbar/toolbar.css',\n\t'src/app/ui/abstractPanel/abstractPanel.css',\n\t'src/app/ui/infoPanel/infoPanel.css',\n\t'src/app/ui/menuPanel/menuPanel.css',\n\t'src/app/ui/selectMenuPanel/selectMenuPanel.css',\n\t'src/app/ui/table/table.css',\n\t'src/app/ui/jsonPretty/jsonPretty.css',\n\t'src/app/ui/jsonPanel/jsonPanel.css',\n\t'src/app/ui/panelForm/panelForm.css',\n\t'src/app/ui/sidebarSection/sidebarSection.css',\n\t'src/app/ui/queryFilter/queryFilter.css',\n\t'src/app/ui/browser/browser.css',\n\t'src/app/ui/anyRequest/anyRequest.css',\n\t'src/app/ui/nodesView/nodesView.css',\n\t'src/app/ui/clusterOverview/clusterOverview.css',\n\t'src/app/ui/clusterConnect/clusterConnect.css',\n\t'src/app/ui/structuredQuery/structuredQuery.css',\n\t'src/app/ui/filterBrowser/filterBrowser.css',\n\t'src/app/ui/header/header.css',\n\t'src/app/app.css'\n];\n"
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 1.07421875,
+          "content": "<!DOCTYPE html>\n\n<html>\n\t<head>\n\t\t<meta charset=\"UTF-8\">\n\t\t<title>elasticsearch-head</title>\n\t\t<link rel=\"stylesheet\" href=\"_site/base/reset.css\">\n\t\t<link rel=\"stylesheet\" href=\"_site/vendor.css\">\n\t\t<link rel=\"stylesheet\" href=\"_site/app.css\">\n\t\t<script src=\"_site/i18n.js\" data-baseDir=\"_site/lang\" data-langs=\"en,fr,pt,zh,zh-TW,tr,ja\"></script>\n\t\t<script src=\"_site/vendor.js\"></script>\n\t\t<script src=\"_site/app.js\"></script>\n\t\t<script>\n\t\t\twindow.onload = function() {\n\t\t\t\tif(location.href.contains(\"/_plugin/\")) {\n\t\t\t\t\tvar base_uri = location.href.replace(/_plugin\\/.*/, '');\n\t\t\t\t}\n\t\t\t\tvar args = location.search.substring(1).split(\"&\").reduce(function(r, p) {\n\t\t\t\t\tr[decodeURIComponent(p.split(\"=\")[0])] = decodeURIComponent(p.split(\"=\")[1]); return r;\n\t\t\t\t}, {});\n\t\t\t\tnew app.App(\"body\", {\n\t\t\t\t\tid: \"es\",\n\t\t\t\t\tbase_uri: args[\"base_uri\"] || base_uri,\n\t\t\t\t\tauth_user : args[\"auth_user\"] || \"\",\n\t\t\t\t\tauth_password : args[\"auth_password\"],\n\t\t\t\t\tdashboard: args[\"dashboard\"]\n\t\t\t\t});\n\t\t\t};\n\t\t</script>\n\t\t<link rel=\"icon\" href=\"_site/base/favicon.png\" type=\"image/png\">\n\t</head>\n\t<body></body>\n</html>\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.865234375,
+          "content": "{\n  \"name\": \"elasticsearch-head\",\n  \"version\": \"0.0.0\",\n  \"description\": \"Front end for an elasticsearch cluster\",\n  \"main\": \"_site/index.html\",\n  \"directories\": {\n    \"test\": \"test\"\n  },\n  \"scripts\": {\n    \"start\": \"grunt server\",\n    \"test\": \"grunt jasmine\",\n    \"proxy\": \"node proxy/index.js\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/mobz/elasticsearch-head.git\"\n  },\n  \"author\": \"\",\n  \"license\": \"Apache2\",\n  \"gitHead\": \"0c2ac0b5723b493e4454baa7398f386ecb829412\",\n  \"readmeFilename\": \"README.textile\",\n  \"devDependencies\": {\n    \"grunt\": \"1.0.1\",\n    \"grunt-contrib-concat\": \"1.0.1\",\n    \"grunt-contrib-watch\": \"1.0.0\",\n    \"grunt-contrib-connect\": \"1.0.2\",\n    \"grunt-contrib-copy\": \"1.0.0\",\n    \"grunt-contrib-clean\": \"1.0.0\",\n    \"grunt-contrib-jasmine\": \"1.0.3\",\n    \"karma\": \"1.3.0\",\n    \"grunt-karma\": \"2.0.0\",\n    \"http-proxy\": \"1.16.x\"\n  }\n}\n"
+        },
+        {
+          "name": "plugin-descriptor.properties",
+          "type": "blob",
+          "size": 0.09765625,
+          "content": "description=head - A web front end for an elastic search cluster\nversion=master\nsite=true\nname=head\n"
+        },
+        {
+          "name": "proxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
