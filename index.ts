@@ -22,6 +22,7 @@ if (!GITHUB_TOKEN) {
 const graphqlWithAuth = graphql.defaults({
   headers: {
     authorization: `token ${GITHUB_TOKEN}`,
+    'user-agent': 'neptun-repository-fetcher/1.0',
   },
 });
 
@@ -164,6 +165,10 @@ async function fetchTopRepositories() {
       });
     } else {
       console.log(`\n⚠️ Previous run was ${lastChunk.completionStatus}, starting fresh`);
+      // Reset pagination when starting fresh
+      cursor = null;
+      page = 1;
+      hasNextPage = true;
     }
   }
 
@@ -199,8 +204,13 @@ async function fetchTopRepositories() {
           }
         }
       `, {
-        cursor: cursor
+        cursor
       });
+
+      // Update pagination variables before processing repositories
+      // This ensures we don't lose our place if processing fails
+      hasNextPage = search.pageInfo.hasNextPage;
+      cursor = search.pageInfo.endCursor ?? null;
 
       console.log('\n=== GitHub API Rate Limit ===');
       console.log(`Remaining: ${rateLimit.remaining}/${rateLimit.limit}`);
@@ -288,8 +298,8 @@ async function fetchTopRepositories() {
           const metadata: ChunkMetadata = {
             timestamp: Date.now(),
             page,
-            hasNextPage: search.pageInfo.hasNextPage,
-            endCursor: search.pageInfo.endCursor ?? null,
+            hasNextPage,
+            endCursor: cursor,
             completionStatus: 'IN_PROGRESS'
           };
 
@@ -298,10 +308,6 @@ async function fetchTopRepositories() {
           page++;
         }
       }
-
-      // Update pagination variables
-      hasNextPage = search.pageInfo.hasNextPage;
-      cursor = search.pageInfo.endCursor ?? null;
 
       // Add delay to avoid rate limiting issues
       await new Promise(resolve => setTimeout(resolve, 50));
