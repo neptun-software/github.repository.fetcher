@@ -1,0 +1,147 @@
+{
+  "metadata": {
+    "timestamp": 1736560472379,
+    "page": 57,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "scrapinghub/portia",
+      "stars": 9339,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.10546875,
+          "content": ".git\n.vagrant\ndocs\n*/node_modules\n*/bower_components\n*/tests\n*/tmp\n*/db.sqlite3\n*/.tox\n*/.pyc\n*/__pycache__\n"
+        },
+        {
+          "name": ".drone.yml",
+          "type": "blob",
+          "size": 0.4755859375,
+          "content": "image: scrapinghub\n\nscript:\n  - echo \"Portia is at:\"`git show -s --pretty=%d HEAD`\n  - git restore-mtime\n  - shopt -s extglob\n  - nvm install 10.16.0\n  - nvm use 10.16.0\n  - sudo mkdir -p ~/.npm ~/.node-gyp ~/.cache\n  - sudo chown -R ubuntu ~/.npm ~/.node-gyp ~/.cache\n  - npm install -g bower ember-cli@2.6.3 --cache-min 999999\n  - docker/compile-assets.sh\n  - build_docker_image\n  - publish_to_dockerhub\n\ncache:\n  - /home/ubuntu/.npm\n  - /home/ubuntu/.node-gyp\n  - /home/ubuntu/.cache\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.501953125,
+          "content": "# EditorConfig helps developers define and maintain consistent\n# coding styles between different editors and IDEs\n# editorconfig.org\n\nroot = true\n\n\n[*]\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\nindent_style = space\nindent_size = 2\n\n[*.js]\nindent_style = space\nindent_size = 2\n\n[*.hbs]\nindent_style = space\nindent_size = 2\n\n[*.css]\nindent_style = space\nindent_size = 2\n\n[*.html]\nindent_style = space\nindent_size = 2\n\n[*.{diff,md}]\ntrim_trailing_whitespace = false\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.2470703125,
+          "content": "*.sh eol=lf\n*.bat eol=crlf\n*.js text\n*.py text\n*.css text\n*.hbs text\n*.json text\n*.html text\n*.xml text\n*.yml text\n*.txt text\n*.rst text\n*.md text\n*.cfg text\n*.conf text\nMakefile* text\n\n*.png binary\n*.swf binary\n*.ttf binary\n*.woff binary\n*.woff2 binary"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.5078125,
+          "content": "# Python compiled files\n*__pycache__/*\n*.pyc\n\n# Vagrant files\n.vagrant/\n/.idea/\n\n# Python build files\n*.egg-info\nslybot/dist\nslybot/build\nslyd/slyd/dist\nslyd/slyd/build\n\n# npm files\nnode_modules/*\nslyd/bower_components/*\nslyd/tmp/*\nnpm-debug.log\nslybot/slybot/splash-script-combined.js\n\n# Local Settings\nslyd/slyd/local_settings.py\nslybot/slybot/local_slybot_settings.py\n\n# Testing\nslybot/.tox\n\n# Docs build directory\ndocs/_build\n\n# Development Databases\n*.sqlite*\n\n# Default Portia data directory\nslyd/slyd/data\n/data/\n"
+        },
+        {
+          "name": ".jshintrc",
+          "type": "blob",
+          "size": 0.505859375,
+          "content": "{\n  \"predef\": [\n    \"document\",\n    \"window\",\n    \"-Promise\"\n  ],\n  \"browser\": true,\n  \"boss\": true,\n  \"curly\": true,\n  \"debug\": false,\n  \"devel\": true,\n  \"eqeqeq\": true,\n  \"evil\": true,\n  \"forin\": false,\n  \"immed\": false,\n  \"laxbreak\": false,\n  \"newcap\": true,\n  \"noarg\": true,\n  \"noempty\": false,\n  \"nonew\": false,\n  \"nomen\": false,\n  \"onevar\": false,\n  \"plusplus\": false,\n  \"regexp\": false,\n  \"undef\": true,\n  \"sub\": true,\n  \"strict\": false,\n  \"white\": false,\n  \"eqnull\": true,\n  \"esnext\": true,\n  \"unused\": true\n}\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.08984375,
+          "content": "language: python\npython: 3.7\ndist: bionic\nservices:\n  - docker\nenv:\n- WHEELHOUSE=$HOME/.cache/wheelhouse PIP_FIND_LINKS=file://$WHEELHOUSE PIP_WHEEL_DIR=$WHEELHOUSE\ncache:\n  directories:\n  - \"$HOME/.cache/pip\"\n  - \"$HOME/.cache/wheelhouse\"\n  - portiaui/node_modules\n  - portiaui/bower_components\n\nbefore_install:\n  - docker build -t scrapinghub/portia .\n  - docker ps -a\n\ninstall:\n- docker run scrapinghub/portia /app/docker/run-tests.sh\n- pushd portiaui\n- nvm install 10.16.0\n- nvm use 10.16.0\n- npm install -g bower ember-cli@2.6.3\n- npm install\n- bower install\n- popd\n\nscript:\n- pushd portiaui\n- npm rebuild node-sass\n- npm test\n- popd\n\nbefore_deploy:\n- cd slybot\n- pip install twine\n- sudo chown -R $USER .\ndeploy:\n  provider: pypi\n  distributions: sdist bdist_wheel\n  user: scrapinghub\n  password:\n    secure: S5hZT2YBncUSkPTyR5RUQnACfTsW2ZtpHeQucIamKWN+xkE8KK9O0cWUMuKQ0q3U5ShFkZdhO4PnBjvtP54Dq9IogJAudkDJCylctf4qGoIlWu01mAoJzcUfrS5KW+VolF/opBJObwG38EIOOsVy9UYq7DeQcryAAG1RuMjONAk=\n  on:\n    all_branches: true\n    tags: true\n    repo: scrapinghub/portia\n    condition: \"$TRAVIS_TAG =~ ^slybot-[0-9][.][0-9]*\"\n"
+        },
+        {
+          "name": "CHANGES",
+          "type": "blob",
+          "size": 6.8212890625,
+          "content": "2.0.8 - 2017-04-20\n\nLimit project and spider id length to avoid causing issues in windows\nOnly use auto annotations when calculating container selectors\nUpdate portia2code to 0.0.12 - Handle malformed schemas\nConvert splash url to unicode instead of bytes\nEnable item nesting in samples from ember config\nAdd logic for keeping track of, and blocking pages that fail to load in Portia\nFix 404 error when downloading projects from git backend as a new user\n\n2.0.7 - 2017-03-28\n\nPin ember data to 2.11.x\nDo not initialize tree mirror in web page until after initial page load\nChange order of compilation for injected JS files in splash\nSet text content correctly for html elements with a content attribute\n\n2.0.6 - 2017-03-07\n\nAdd option to have default data format for project\nDo not show any version control info if it is not enabled\nFix Extractor overflow bug\nFix error when loading broken samples in UI\nFix splash browser tab storing wrong html\nFix bug with repr for tab\n\n2.0.5 - 2017-02-27\n\nAdd data directory for storing spider data and ignore all new data in it\nUpdate install instructions and scripts\nUpdate Docs\nThrow KeyError when trying to get non existent model from collection\nFix loading html as raw from the tab in the socket for extraction\nFix missing objects in branch by deleting the branch\nFix UnicodeDecodeError for downloads and css parsing\nFix bytes/unicode issue with slybot extractors\n\n2.0.4 - 2017-02-23\n\nFix error when trying to load assets by proxy from an invalid tab\nFix value resolved to `None` when merging lists\nFix unicode error in regex for removing XSS from CSS assets\nFix sample loading for old spiders\nFix for running legacy spiders\nFix storage being cleared by another message while in use\nFix error caused by downloading invalid project name\nDisable error logging for missing websocket command, just log debug message\nCache selector searches for container to increase sample build speed\nDo not throw error for missing annotation data in sample when finding schema\nDo not log model error when operating on deleted model\n\n2.0.3 - 2017-02-21\n\nAdd download option for downloading a Portia project for use with slybot\nAdd download option for downloading a Portia project as Python code\nAdd copy for moving spiders from one project to another\nAdd loading slider when changing page or loading models\nAdd droplet to inform use that they have changes\nAdd better message when websocket is reconnecting\nAdd help icon describing what crawl rules do\nAdd message informing user when they have an unused required field in their schema\nAdd automatic selection of new field type in some cases\nAdd dropdown for projects - publish, discard, download\nAdd option to create new projects from UI (open source only)\nAdd dropdown for spiders - Copy, Download and delete\nAdd dropdown for schemas - delete\nFix bug with using master when scheduling spider\nFix error when errors with numeric ids are returned by server\nFix spider listing loading in UI\nFix so that project changes show up whenever there is a change\nFix model not being loaded when changing field or schema\nFix handling malformed extractor objects\nFix merging html data during a conflict - take mine\nFix when changing item schema in UI\nFix extractors were not shown in UI\nFix spiders would not run after a rename\nFix deletes where file may be requested for delete more than once\nFix with missing node when mirroring page from server\nFix incorrect node data when mirroring page from server\nFix loading extractors during migration\nFix RuntimeError when loading tab url after tab has been closed\nFix deletion of html files during cascade delete\nFix loading extractors when reading annotations\nFix loading html into sample in websocket for extraction\nFix logged error due to missing `save_html` callback\nFix html not being saved while creating sample\nFix loading samples from `template_names` field instead of spider directory\n\n2.0.2 - 2017-01-20\n\nGracefully handle missing objects in DB\n\n2.0.1 - 2017-01-19\n\nLimit number of spiders shown at once in UI to 15\nFix scheduling when spider has been run from Portia\nDisplay helpful error messages to users\nReplace guid spider ids with spider name\nAdd spider id if it is missing\nAdd a schema for newly created items\nFix PathResolutionError for unmigrated samples\nBetter migrate samples that extract from tables\n\n2.0.0 - 2017-01-02\nChange backend to use Django instead of Twisted web\nCreated a new JSON API and ORM to handle all Portia objects for greater consistency + efficiency\nAutomatically detect if a user should enable or disable JS for better extraction\nAdded support for generating urls\nAdded support for using a feed as a start url\nAdded support for extracting multiple values to a single field\nAdded support for a spinner showing the extraction progress for a better UX\nMany bug fixes and stability improvements\n\n16.07.2 - 2016-07-26\nFix bug with `project_filename` method missing Fix bug when initializing project\n\n16.05.1 - 2016-05-17\nNew transactional request handling\nInline element overlays (correctly show tags that may wrap around the page)\nNew download endpoint for projects/spiders `GET portia/api/projects/<PROJECT_ID>/download[/<SPIDER_ID>]`\nSave selection_mode, pre_text and post_text for annotations\nAdd toggle CSS button\n\n16.04.1 - 2016-04-05\nAdd link to docs\nAdd auto pagination, learns from start_urls\nAdd git status endpoint for projects\nLoad page when it is specified as url param `url`\nSave selection mode for annotation when using xpath/css selector\nImprove Portia on smaller screens Notify users of unpublished changes\nReject annotations with elements that share a container with the hovered element\nFix issue with extracting items with more than one sibling\nFix bug where clicking on help icon toggled checkbox\n\n16.02.2 - 2016-02-16\n\nFix incompatability with latest splash\nFix error with next page link following\nLog traceback if error occurs in websocket\n\n16.02.1 - 2016-02-09\nAdd automatic next page link extractor to slybot\nShow errors to user instead of event id\nFix bug where items are not initialized correctly\nLog websocket errors\nFix regex validation\nFix conflicts resolution errors\n\n16.01.1 - 2016-01-25\nFix Unicode error when creating spiders\nFix install packages\nExtract data from a list of urls `POST portia/projects/<PROJECT>/spec/extract/<SPIDER> {\"urls\": [\"http://example.com\"]}`\nAllow `.` to be used in spider and sample names\nCorrectly handle Atom, RSS and XML sitemaps\nAutomatically dismiss suggested annotations if user doesn't use them\nCorrectly place annotations when page contains `<ins>` tags\nUse Qt5 for internal splash instance\nFix scrolling page action\nFix URL validation\n\n15.12.2 - 2015-12-30\nFix issue when copying spiders that reference deleted extractors\nFix issue with using srcdoc in IE\nEnable annotation suggestions and page actions by default\n\n15.12.1 - 2015-12-03\nFix issue with overwritten JSON library in splash\nFix error when merging samples modified in one or more branches\nFix event passing in Safari\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.2744140625,
+          "content": "FROM ubuntu:16.04\nWORKDIR /app/slyd\n\nENV PATH=\"/opt/qt59/5.9.1/gcc_64/bin:${PATH}\"\nENV DEBIAN_FRONTEND noninteractive\nENV QT_MIRROR http://ftp.fau.de/qtproject/official_releases/qt/5.9/5.9.1/qt-opensource-linux-x64-5.9.1.run\n\nCOPY docker/portia.conf /app/portia.conf\nCOPY docker/qt_install.qs /app/script.qs\nCOPY docker/provision.sh /app/provision.sh\nCOPY slybot/requirements.txt /app/slybot/requirements.txt\nCOPY slyd/requirements.txt /app/slyd/requirements.txt\nCOPY portia_server/requirements.txt /app/portia_server/requirements.txt\n\nRUN /app/provision.sh prepare_install && \\\n    /app/provision.sh install_deps && \\\n    /app/provision.sh install_qtwebkit_deps && \\\n    /app/provision.sh download_official_qt && \\\n    /app/provision.sh install_official_qt && \\\n    /app/provision.sh install_qtwebkit && \\\n    /app/provision.sh install_pyqt5 && \\\n    /app/provision.sh install_python_deps && \\\n    /app/provision.sh install_flash && \\\n    /app/provision.sh install_msfonts && \\\n    /app/provision.sh install_extra_fonts && \\\n    /app/provision.sh remove_builddeps && \\\n    /app/provision.sh remove_extra\n\nADD docker/nginx /etc/nginx\nADD . /app\nRUN pip install -e /app/slyd && \\\n    pip install -e /app/slybot\nRUN python3 /app/portia_server/manage.py migrate\n\nEXPOSE 9001\nENTRYPOINT [\"/app/docker/entry\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4794921875,
+          "content": "Copyright (c) Scrapinghub.\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n    1. Redistributions of source code must retain the above copyright notice, \n       this list of conditions and the following disclaimer.\n    \n    2. Redistributions in binary form must reproduce the above copyright \n       notice, this list of conditions and the following disclaimer in the\n       documentation and/or other materials provided with the distribution.\n\n    3. Neither the name of Portia nor the names of its contributors may be used\n       to endorse or promote products derived from this software without\n       specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.1279296875,
+          "content": "Portia\n======\n\nPortia is a tool that allows you to visually scrape websites without any programming knowledge required. With Portia you can annotate a web page to identify the data you wish to extract, and Portia will understand based on these annotations how to scrape data from similar pages.\n\n# Running Portia\n\nThe easiest way to run Portia is using [Docker]:\n\nYou can run Portia using Docker & official Portia-image by running:\n\n    docker run -v ~/portia_projects:/app/data/projects:rw -p 9001:9001 scrapinghub/portia\n\nYou can also set up a local instance with [Docker-compose] by cloning this repo & running from the root of the folder:\n\n    docker-compose up\n\nFor more detailed instructions, and alternatives to using Docker, see the [Installation] docs.\n\n# Documentation\n\nDocumentation can be found from [Read the docs]. Source files can be found in the ``docs`` directory.\n\n[Docker]: https://www.docker.com/\n[Docker-compose]:https://docs.docker.com/compose\n[Installation]: http://portia.readthedocs.org/en/latest/installation.html\n[Read the docs]: http://portia.readthedocs.org/en/latest/index.html\n[Scrapinghub]: https://portia.scrapinghub.com/\n"
+        },
+        {
+          "name": "VERSION",
+          "type": "blob",
+          "size": 0.005859375,
+          "content": "2.0.8\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 0.5126953125,
+          "content": "# vim:ft=ruby\n\nVagrant.configure(\"2\") do |config|\n\tconfig.vm.box = \"ubuntu/trusty64\"\n\tconfig.vm.host_name = \"portia\"\n\tconfig.vm.provision :shell, :path => 'docker/provision.sh', :args => [\n\t\t\"install_deps\", \"install_splash\", \"install_python_deps\", \"configure_nginx\", \"configure_initctl\", \"migrate_django_db\", \"start_portia\"\n\t]\n\tconfig.vm.network \"private_network\", ip: \"33.33.33.10\"\n\tconfig.vm.network \"forwarded_port\", guest: 9001, host: 9001\n\tconfig.vm.provider \"virtualbox\" do |v|\n\t\tv.memory = 2048\n\t\tv.cpus = 2\n\tend\nend\n\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.32421875,
+          "content": "version: '3'\nservices:\n  app:\n    build: .\n    command: /app/docker/entry start-dev\n    volumes:\n      - ./data/projects:/app/data/projects:rw\n      - ./portiaui/dist:/app/portiaui/dist\n      - ./slyd:/app/slyd\n      - ./portia_server:/app/portia_server\n      - ./slybot:/app/slybot\n    ports:\n      - 9001:9001\n    restart: always\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "portia_server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "portiaui",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "slybot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "slyd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "splash_utils",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": 1736560532267,
+    "page": 134,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "miguelgrinberg/flasky",
+      "stars": 8574,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3994140625,
+          "content": "*.py[cod]\n\n# C extensions\n*.so\n\n# Packages\n*.egg\n*.egg-info\ndist\nbuild\neggs\nparts\nbin\nvar\nsdist\ndevelop-eggs\n.installed.cfg\nlib\nlib64\n__pycache__\n\n# Installer logs\npip-log.txt\n\n# Unit test / coverage reports\n.coverage\n.tox\nnosetests.xml\n\n# Translations\n*.mo\n\n# Mr Developer\n.mr.developer.cfg\n.project\n.pydevproject\n\n# SQLite databases\n*.sqlite\n\n# Virtual environment\nvenv\n\n# Environment files\n.env\n.env-mysql\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.3720703125,
+          "content": "FROM python:3.6-alpine\n\nENV FLASK_APP flasky.py\nENV FLASK_CONFIG production\n\nRUN adduser -D flasky\nUSER flasky\n\nWORKDIR /home/flasky\n\nCOPY requirements requirements\nRUN python -m venv venv\nRUN venv/bin/pip install -r requirements/docker.txt\n\nCOPY app app\nCOPY migrations migrations\nCOPY flasky.py config.py boot.sh ./\n\n# run-time configuration\nEXPOSE 5000\nENTRYPOINT [\"./boot.sh\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0576171875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 Miguel Grinberg\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n"
+        },
+        {
+          "name": "Procfile",
+          "type": "blob",
+          "size": 0.0244140625,
+          "content": "web: gunicorn flasky:app\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.6767578125,
+          "content": "Flasky\n======\n\nThis repository contains the source code examples for the second edition of my O'Reilly book [Flask Web Development](http://www.flaskbook.com).\n\nThe commits and tags in this repository were carefully created to match the sequence in which concepts are presented in the book. Please read the section titled \"How to Work with the Example Code\" in the book's preface for instructions.\n\nFor Readers of the First Edition of the Book\n--------------------------------------------\n\nThe code examples for the first edition of the book were moved to a different repository: [https://github.com/miguelgrinberg/flasky-first-edition](https://github.com/miguelgrinberg/flasky-first-edition).\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "boot.sh",
+          "type": "blob",
+          "size": 0.2568359375,
+          "content": "#!/bin/sh\nsource venv/bin/activate\n\nwhile true; do\n    flask deploy\n    if [[ \"$?\" == \"0\" ]]; then\n        break\n    fi\n    echo Deploy command failed, retrying in 5 secs...\n    sleep 5\ndone\n\nexec gunicorn -b :5000 --access-logfile - --error-logfile - flasky:app\n"
+        },
+        {
+          "name": "config.py",
+          "type": "blob",
+          "size": 3.7919921875,
+          "content": "import os\nbasedir = os.path.abspath(os.path.dirname(__file__))\n\n\nclass Config:\n    SECRET_KEY = os.environ.get('SECRET_KEY') or 'hard to guess string'\n    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.googlemail.com')\n    MAIL_PORT = int(os.environ.get('MAIL_PORT', '587'))\n    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in \\\n        ['true', 'on', '1']\n    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')\n    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')\n    FLASKY_MAIL_SUBJECT_PREFIX = '[Flasky]'\n    FLASKY_MAIL_SENDER = 'Flasky Admin <flasky@example.com>'\n    FLASKY_ADMIN = os.environ.get('FLASKY_ADMIN')\n    SSL_REDIRECT = False\n    SQLALCHEMY_TRACK_MODIFICATIONS = False\n    SQLALCHEMY_RECORD_QUERIES = True\n    FLASKY_POSTS_PER_PAGE = 20\n    FLASKY_FOLLOWERS_PER_PAGE = 50\n    FLASKY_COMMENTS_PER_PAGE = 30\n    FLASKY_SLOW_DB_QUERY_TIME = 0.5\n\n    @staticmethod\n    def init_app(app):\n        pass\n\n\nclass DevelopmentConfig(Config):\n    DEBUG = True\n    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \\\n        'sqlite:///' + os.path.join(basedir, 'data-dev.sqlite')\n\n\nclass TestingConfig(Config):\n    TESTING = True\n    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \\\n        'sqlite://'\n    WTF_CSRF_ENABLED = False\n\n\nclass ProductionConfig(Config):\n    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \\\n        'sqlite:///' + os.path.join(basedir, 'data.sqlite')\n\n    @classmethod\n    def init_app(cls, app):\n        Config.init_app(app)\n\n        # email errors to the administrators\n        import logging\n        from logging.handlers import SMTPHandler\n        credentials = None\n        secure = None\n        if getattr(cls, 'MAIL_USERNAME', None) is not None:\n            credentials = (cls.MAIL_USERNAME, cls.MAIL_PASSWORD)\n            if getattr(cls, 'MAIL_USE_TLS', None):\n                secure = ()\n        mail_handler = SMTPHandler(\n            mailhost=(cls.MAIL_SERVER, cls.MAIL_PORT),\n            fromaddr=cls.FLASKY_MAIL_SENDER,\n            toaddrs=[cls.FLASKY_ADMIN],\n            subject=cls.FLASKY_MAIL_SUBJECT_PREFIX + ' Application Error',\n            credentials=credentials,\n            secure=secure)\n        mail_handler.setLevel(logging.ERROR)\n        app.logger.addHandler(mail_handler)\n\n\nclass HerokuConfig(ProductionConfig):\n    SSL_REDIRECT = True if os.environ.get('DYNO') else False\n\n    @classmethod\n    def init_app(cls, app):\n        ProductionConfig.init_app(app)\n\n        # handle reverse proxy server headers\n        try:\n            from werkzeug.middleware.proxy_fix import ProxyFix\n        except ImportError:\n            from werkzeug.contrib.fixers import ProxyFix\n        app.wsgi_app = ProxyFix(app.wsgi_app)\n\n        # log to stderr\n        import logging\n        from logging import StreamHandler\n        file_handler = StreamHandler()\n        file_handler.setLevel(logging.INFO)\n        app.logger.addHandler(file_handler)\n\n\nclass DockerConfig(ProductionConfig):\n    @classmethod\n    def init_app(cls, app):\n        ProductionConfig.init_app(app)\n\n        # log to stderr\n        import logging\n        from logging import StreamHandler\n        file_handler = StreamHandler()\n        file_handler.setLevel(logging.INFO)\n        app.logger.addHandler(file_handler)\n\n\nclass UnixConfig(ProductionConfig):\n    @classmethod\n    def init_app(cls, app):\n        ProductionConfig.init_app(app)\n\n        # log to syslog\n        import logging\n        from logging.handlers import SysLogHandler\n        syslog_handler = SysLogHandler()\n        syslog_handler.setLevel(logging.INFO)\n        app.logger.addHandler(syslog_handler)\n\n\nconfig = {\n    'development': DevelopmentConfig,\n    'testing': TestingConfig,\n    'production': ProductionConfig,\n    'heroku': HerokuConfig,\n    'docker': DockerConfig,\n    'unix': UnixConfig,\n\n    'default': DevelopmentConfig\n}\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.234375,
+          "content": "version: '3'\nservices:\n  flasky:\n    build: .\n    ports:\n      - \"8000:5000\"\n    env_file: .env\n    restart: always\n    links:\n      - mysql:dbserver\n  mysql:\n    image: \"mysql/mysql-server:5.7\"\n    env_file: .env-mysql\n    restart: always\n"
+        },
+        {
+          "name": "flasky.py",
+          "type": "blob",
+          "size": 2.474609375,
+          "content": "import os\nfrom dotenv import load_dotenv\n\ndotenv_path = os.path.join(os.path.dirname(__file__), '.env')\nif os.path.exists(dotenv_path):\n    load_dotenv(dotenv_path)\n\nCOV = None\nif os.environ.get('FLASK_COVERAGE'):\n    import coverage\n    COV = coverage.coverage(branch=True, include='app/*')\n    COV.start()\n\nimport sys\nimport click\nfrom flask_migrate import Migrate, upgrade\nfrom app import create_app, db\nfrom app.models import User, Follow, Role, Permission, Post, Comment\n\napp = create_app(os.getenv('FLASK_CONFIG') or 'default')\nmigrate = Migrate(app, db)\n\n\n@app.shell_context_processor\ndef make_shell_context():\n    return dict(db=db, User=User, Follow=Follow, Role=Role,\n                Permission=Permission, Post=Post, Comment=Comment)\n\n\n@app.cli.command()\n@click.option('--coverage/--no-coverage', default=False,\n              help='Run tests under code coverage.')\n@click.argument('test_names', nargs=-1)\ndef test(coverage, test_names):\n    \"\"\"Run the unit tests.\"\"\"\n    if coverage and not os.environ.get('FLASK_COVERAGE'):\n        import subprocess\n        os.environ['FLASK_COVERAGE'] = '1'\n        sys.exit(subprocess.call(sys.argv))\n\n    import unittest\n    if test_names:\n        tests = unittest.TestLoader().loadTestsFromNames(test_names)\n    else:\n        tests = unittest.TestLoader().discover('tests')\n    unittest.TextTestRunner(verbosity=2).run(tests)\n    if COV:\n        COV.stop()\n        COV.save()\n        print('Coverage Summary:')\n        COV.report()\n        basedir = os.path.abspath(os.path.dirname(__file__))\n        covdir = os.path.join(basedir, 'tmp/coverage')\n        COV.html_report(directory=covdir)\n        print('HTML version: file://%s/index.html' % covdir)\n        COV.erase()\n\n\n@app.cli.command()\n@click.option('--length', default=25,\n              help='Number of functions to include in the profiler report.')\n@click.option('--profile-dir', default=None,\n              help='Directory where profiler data files are saved.')\ndef profile(length, profile_dir):\n    \"\"\"Start the application under the code profiler.\"\"\"\n    from werkzeug.contrib.profiler import ProfilerMiddleware\n    app.wsgi_app = ProfilerMiddleware(app.wsgi_app, restrictions=[length],\n                                      profile_dir=profile_dir)\n    app.run()\n\n\n@app.cli.command()\ndef deploy():\n    \"\"\"Run deployment tasks.\"\"\"\n    # migrate database to latest revision\n    upgrade()\n\n    # create or update user roles\n    Role.insert_roles()\n\n    # ensure all users are following themselves\n    User.add_self_follows()\n"
+        },
+        {
+          "name": "migrations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.1513671875,
+          "content": "# this requirements file is used by Heroku\n# requirements for other configurations are located in the requirements subdirectory\n-r requirements/heroku.txt\n"
+        },
+        {
+          "name": "requirements",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

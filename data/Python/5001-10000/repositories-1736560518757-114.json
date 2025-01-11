@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "timestamp": 1736560518757,
+    "page": 114,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "encode/uvicorn",
+      "stars": 8766,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": ".cache\n.coverage\n.mypy_cache/\n__pycache__/\nuvicorn.egg-info/\nvenv/\nhtmlcov/\nsite/\ndist/\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.0205078125,
+          "content": "docs/release-notes.md"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.490234375,
+          "content": "Copyright © 2017-present, [Encode OSS Ltd](https://www.encode.io/).\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the copyright holder nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.5390625,
+          "content": "<p align=\"center\">\n  <img width=\"320\" height=\"320\" src=\"https://raw.githubusercontent.com/tomchristie/uvicorn/master/docs/uvicorn.png\" alt='uvicorn'>\n</p>\n\n<p align=\"center\">\n<em>An ASGI web server, for Python.</em>\n</p>\n\n---\n\n[![Build Status](https://github.com/encode/uvicorn/workflows/Test%20Suite/badge.svg)](https://github.com/encode/uvicorn/actions)\n[![Package version](https://badge.fury.io/py/uvicorn.svg)](https://pypi.python.org/pypi/uvicorn)\n[![Supported Python Version](https://img.shields.io/pypi/pyversions/uvicorn.svg?color=%2334D058)](https://pypi.org/project/uvicorn)\n\n**Documentation**: [https://www.uvicorn.org](https://www.uvicorn.org)\n\n---\n\nUvicorn is an ASGI web server implementation for Python.\n\nUntil recently Python has lacked a minimal low-level server/application interface for\nasync frameworks. The [ASGI specification][asgi] fills this gap, and means we're now able to\nstart building a common set of tooling usable across all async frameworks.\n\nUvicorn supports HTTP/1.1 and WebSockets.\n\n## Quickstart\n\nInstall using `pip`:\n\n```shell\n$ pip install uvicorn\n```\n\nThis will install uvicorn with minimal (pure Python) dependencies.\n\n```shell\n$ pip install 'uvicorn[standard]'\n```\n\nThis will install uvicorn with \"Cython-based\" dependencies (where possible) and other \"optional extras\".\n\nIn this context, \"Cython-based\" means the following:\n\n- the event loop `uvloop` will be installed and used if possible.\n- the http protocol will be handled by `httptools` if possible.\n\nMoreover, \"optional extras\" means that:\n\n- the websocket protocol will be handled by `websockets` (should you want to use `wsproto` you'd need to install it manually) if possible.\n- the `--reload` flag in development mode will use `watchfiles`.\n- windows users will have `colorama` installed for the colored logs.\n- `python-dotenv` will be installed should you want to use the `--env-file` option.\n- `PyYAML` will be installed to allow you to provide a `.yaml` file to `--log-config`, if desired.\n\nCreate an application, in `example.py`:\n\n```python\nasync def app(scope, receive, send):\n    assert scope['type'] == 'http'\n\n    await send({\n        'type': 'http.response.start',\n        'status': 200,\n        'headers': [\n            (b'content-type', b'text/plain'),\n        ],\n    })\n    await send({\n        'type': 'http.response.body',\n        'body': b'Hello, world!',\n    })\n```\n\nRun the server:\n\n```shell\n$ uvicorn example:app\n```\n\n---\n\n## Why ASGI?\n\nMost well established Python Web frameworks started out as WSGI-based frameworks.\n\nWSGI applications are a single, synchronous callable that takes a request and returns a response.\nThis doesn’t allow for long-lived connections, like you get with long-poll HTTP or WebSocket connections,\nwhich WSGI doesn't support well.\n\nHaving an async concurrency model also allows for options such as lightweight background tasks,\nand can be less of a limiting factor for endpoints that have long periods being blocked on network\nI/O such as dealing with slow HTTP requests.\n\n---\n\n## Alternative ASGI servers\n\nA strength of the ASGI protocol is that it decouples the server implementation\nfrom the application framework. This allows for an ecosystem of interoperating\nwebservers and application frameworks.\n\n### Daphne\n\nThe first ASGI server implementation, originally developed to power Django Channels, is [the Daphne webserver][daphne].\n\nIt is run widely in production, and supports HTTP/1.1, HTTP/2, and WebSockets.\n\nAny of the example applications given here can equally well be run using `daphne` instead.\n\n```\n$ pip install daphne\n$ daphne app:App\n```\n\n### Hypercorn\n\n[Hypercorn][hypercorn] was initially part of the Quart web framework, before\nbeing separated out into a standalone ASGI server.\n\nHypercorn supports HTTP/1.1, HTTP/2, and WebSockets.\n\nIt also supports [the excellent `trio` async framework][trio], as an alternative to `asyncio`.\n\n```\n$ pip install hypercorn\n$ hypercorn app:App\n```\n\n### Mangum\n\n[Mangum][mangum] is an adapter for using ASGI applications with AWS Lambda & API Gateway.\n\n### Granian\n\n[Granian][granian] is an ASGI compatible Rust HTTP server which supports HTTP/2, TLS and WebSockets.\n\n---\n\n<p align=\"center\"><i>Uvicorn is <a href=\"https://github.com/encode/uvicorn/blob/master/LICENSE.md\">BSD licensed</a> code.<br/>Designed & crafted with care.</i><br/>&mdash; 🦄  &mdash;</p>\n\n[asgi]: https://asgi.readthedocs.io/en/latest/\n[daphne]: https://github.com/django/daphne\n[hypercorn]: https://github.com/pgjones/hypercorn\n[trio]: https://trio.readthedocs.io\n[mangum]: https://github.com/jordaneremieff/mangum\n[granian]: https://github.com/emmett-framework/granian\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mkdocs.yml",
+          "type": "blob",
+          "size": 1.4833984375,
+          "content": "site_name: Uvicorn\nsite_description: The lightning-fast ASGI server.\nsite_url: https://www.uvicorn.org\n\ntheme:\n  name: material\n  custom_dir: docs/overrides\n  logo: uvicorn.png\n  favicon: uvicorn.png\n  palette:\n    - scheme: \"default\"\n      media: \"(prefers-color-scheme: light)\"\n      toggle:\n        icon: \"material/lightbulb\"\n        name: \"Switch to dark mode\"\n    - scheme: \"slate\"\n      media: \"(prefers-color-scheme: dark)\"\n      primary: \"blue\"\n      toggle:\n        icon: \"material/lightbulb-outline\"\n        name: \"Switch to light mode\"\n  features:\n    - content.code.copy # https://squidfunk.github.io/mkdocs-material/upgrade/?h=content+copy#contentcodecopy\n    - navigation.top # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#back-to-top-button\n    - navigation.footer # https://squidfunk.github.io/mkdocs-material/upgrade/?h=content+copy#navigationfooter\n    - toc.follow # https://squidfunk.github.io/mkdocs-material/setup/setting-up-navigation/#anchor-following\n\nrepo_name: encode/uvicorn\nrepo_url: https://github.com/encode/uvicorn\nedit_uri: edit/master/docs/\n\nnav:\n  - Introduction: index.md\n  - Settings: settings.md\n  - Deployment: deployment.md\n  - Server Behavior: server-behavior.md\n  - Release Notes: release-notes.md\n  - Contributing: contributing.md\n\nmarkdown_extensions:\n  - admonition\n  - codehilite:\n      css_class: highlight\n  - toc:\n      permalink: true\n  - pymdownx.inlinehilite\n  - pymdownx.snippets\n  - pymdownx.superfences\n\nhooks:\n  - docs/plugins/main.py\n"
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 3.79296875,
+          "content": "[build-system]\nrequires = [\"hatchling\"]\nbuild-backend = \"hatchling.build\"\n\n[project]\nname = \"uvicorn\"\ndynamic = [\"version\"]\ndescription = \"The lightning-fast ASGI server.\"\nreadme = \"README.md\"\nlicense = \"BSD-3-Clause\"\nrequires-python = \">=3.9\"\nauthors = [\n    { name = \"Tom Christie\", email = \"tom@tomchristie.com\" },\n    { name = \"Marcelo Trylesinski\", email = \"marcelotryle@gmail.com\" },\n]\nclassifiers = [\n    \"Development Status :: 4 - Beta\",\n    \"Environment :: Web Environment\",\n    \"Intended Audience :: Developers\",\n    \"License :: OSI Approved :: BSD License\",\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3.9\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Programming Language :: Python :: Implementation :: CPython\",\n    \"Programming Language :: Python :: Implementation :: PyPy\",\n    \"Topic :: Internet :: WWW/HTTP\",\n]\ndependencies = [\n    \"click>=7.0\",\n    \"h11>=0.8\",\n    \"typing_extensions>=4.0; python_version < '3.11'\",\n]\n\n[project.optional-dependencies]\nstandard = [\n    \"colorama>=0.4; sys_platform == 'win32'\",\n    \"httptools>=0.6.3\",\n    \"python-dotenv>=0.13\",\n    \"PyYAML>=5.1\",\n    \"uvloop>=0.14.0,!=0.15.0,!=0.15.1; sys_platform != 'win32' and (sys_platform != 'cygwin' and platform_python_implementation != 'PyPy')\",\n    \"watchfiles>=0.13\",\n    \"websockets>=10.4\",\n]\n\n[project.scripts]\nuvicorn = \"uvicorn.main:main\"\n\n[project.urls]\nChangelog = \"https://www.uvicorn.org/release-notes\"\nFunding = \"https://github.com/sponsors/encode\"\nHomepage = \"https://www.uvicorn.org/\"\nSource = \"https://github.com/encode/uvicorn\"\n\n[tool.hatch.version]\npath = \"uvicorn/__init__.py\"\n\n[tool.hatch.build.targets.sdist]\ninclude = [\"/uvicorn\", \"/tests\", \"/requirements.txt\"]\n\n[tool.ruff]\nline-length = 120\n\n[tool.ruff.lint]\nselect = [\"E\", \"F\", \"I\", \"FA\", \"UP\"]\nignore = [\"B904\", \"B028\", \"UP031\"]\n\n[tool.ruff.lint.isort]\ncombine-as-imports = true\n\n[tool.mypy]\nwarn_unused_ignores = true\nwarn_redundant_casts = true\nshow_error_codes = true\ndisallow_untyped_defs = true\nignore_missing_imports = true\nfollow_imports = \"silent\"\n\n[[tool.mypy.overrides]]\nmodule = \"tests.*\"\ndisallow_untyped_defs = false\ncheck_untyped_defs = true\n\n[tool.pytest.ini_options]\naddopts = \"-rxXs --strict-config --strict-markers\"\nxfail_strict = true\nfilterwarnings = [\n    \"error\",\n    \"ignore:Uvicorn's native WSGI implementation is deprecated.*:DeprecationWarning\",\n    \"ignore: 'cgi' is deprecated and slated for removal in Python 3.13:DeprecationWarning\",\n    \"ignore: remove second argument of ws_handler:DeprecationWarning:websockets\",\n]\n\n[tool.coverage.run]\nsource_pkgs = [\"uvicorn\", \"tests\"]\nplugins = [\"coverage_conditional_plugin\"]\nomit = [\"uvicorn/workers.py\", \"uvicorn/__main__.py\"]\n\n[tool.coverage.report]\nprecision = 2\nfail_under = 100\nshow_missing = true\nskip_covered = true\nexclude_lines = [\n    \"pragma: no cover\",\n    \"pragma: nocover\",\n    \"pragma: full coverage\",\n    \"if TYPE_CHECKING:\",\n    \"if typing.TYPE_CHECKING:\",\n    \"raise NotImplementedError\",\n]\n\n[tool.coverage.coverage_conditional_plugin.omit]\n\"sys_platform == 'win32'\" = [\n    \"uvicorn/loops/uvloop.py\",\n    \"uvicorn/supervisors/multiprocess.py\",\n    \"tests/supervisors/test_multiprocess.py\",\n]\n\"sys_platform != 'win32'\" = [\"uvicorn/loops/asyncio.py\"]\n\n[tool.coverage.coverage_conditional_plugin.rules]\npy-win32 = \"sys_platform == 'win32'\"\npy-not-win32 = \"sys_platform != 'win32'\"\npy-linux = \"sys_platform == 'linux'\"\npy-darwin = \"sys_platform == 'darwin'\"\npy-gte-39 = \"sys_version_info >= (3, 9)\"\npy-lt-39 = \"sys_version_info < (3, 9)\"\npy-gte-310 = \"sys_version_info >= (3, 10)\"\npy-lt-310 = \"sys_version_info < (3, 10)\"\npy-gte-311 = \"sys_version_info >= (3, 11)\"\npy-lt-311 = \"sys_version_info < (3, 11)\"\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.552734375,
+          "content": "-e .[standard]\n\n# TODO: Remove this after h11 makes a release. By this writing, h11 was on 0.14.0.\n# Core dependencies\nh11 @ git+https://github.com/python-hyper/h11.git@master\n\n# Explicit optionals\na2wsgi==1.10.7\nwsproto==1.2.0\nwebsockets==13.1\n\n# Packaging\nbuild==1.2.2.post1\ntwine==6.0.1\n\n# Testing\nruff==0.8.4\npytest==8.3.4\npytest-mock==3.14.0\nmypy==1.14.1\ntypes-click==7.1.8\ntypes-pyyaml==6.0.12.20241230\ntrustme==1.2.0\ncryptography==44.0.0\ncoverage==7.6.10\ncoverage-conditional-plugin==0.9.0\nhttpx==0.28.1\n\n# Documentation\nmkdocs==1.6.1\nmkdocs-material==9.5.49\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uvicorn",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

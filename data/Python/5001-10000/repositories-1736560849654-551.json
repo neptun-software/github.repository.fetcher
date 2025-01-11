@@ -1,0 +1,165 @@
+{
+  "metadata": {
+    "timestamp": 1736560849654,
+    "page": 551,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "QingdaoU/OnlineJudge",
+      "stars": 6170,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".coveragerc",
+          "type": "blob",
+          "size": 0.123046875,
+          "content": "[run]\nomit = */urls/*\n       */__init__.py\n       */tests.py\n       */migrations/*\n       *urls.py\n       utils/xss_filter.py\n"
+        },
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "venv\n.idea\n.git\n.DS_Store\n"
+        },
+        {
+          "name": ".flake8",
+          "type": "blob",
+          "size": 0.15234375,
+          "content": "[flake8]\nexclude = \n  xss_filter.py,\n  */migrations/,\n  *settings.py\n  */apps.py\n  venv/\nmax-line-length = 180\ninline-quotes = \"\nno-accept-encodings = True\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.9970703125,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n# C extensions\n*.so\n# Distribution / packaging\n.Python\nenv/\nbin/\nbuild/\ndevelop-eggs/\ndist/\neggs/\nlib64/\nparts/\nsdist/\nvar/\n*.egg-info/\n.installed.cfg\n*.egg\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.cache\nnosetests.xml\ncoverage.xml\n# Translations\n*.mo\n# Mr Developer\n.mr.developer.cfg\n.project\n.pydevproject\n# Rope\n.ropeproject\n.idea/\n# Django stuff:\n*.log\n*.pot\n# Sphinx documentation\ndocs/_build/\n# Back up file\n*~\n#db file\ndb.db\n#vim cache\n*swp\n*swo\n#redis dump\n*.rdb\n#*.out\n*.sqlite3\n.python-version\n.DS_Store\nbuild.txt\ntmp/\ncustom_settings.py\n*.zip\n\ndata/log/*\n!data/log/.gitkeep\ndata/test_case/*\n!data/test_case/.gitkeep\ndata/ssl/*\n!data/ssl/.gitkeep\ndata/public/upload/*\n!data/public/upload/.gitkeep\ndata/public/avatar/*\n!data/public/avatar/default.png\ndata/config/*\n!data/config/.gitkeep\n\nhttp_locations.conf\nhttps_locations.conf\n\nvenv/\n#test docker-compose\ndocker-compose.yml"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.4296875,
+          "content": "language: python\npython:\n    - \"3.8\"\nservices:\n    - docker\n    - postgresql\ninstall:\n    - pip install -r deploy/requirements.txt\n    - echo `cat /dev/urandom | head -1 | md5sum | head -c 32` > data/config/secret.key\n    - ./init_db.sh\nscript:\n    - docker ps -a\n    - flake8 --config=./.flake8 .\n    - coverage run --include=\"$PWD/*\" manage.py test\n    - coverage report\nnotifications:\n    slack: onlinejudgeteam:BzBz8UFgmS5crpiblof17K2W\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.142578125,
+          "content": "FROM alpine:3.19 AS downloader\n\nWORKDIR /app\n\nRUN <<EOS\nset -ex\napk add unzip\nwget https://github.com/QingdaoU/OnlineJudgeFE/releases/download/oj_2.7.5/dist.zip\nunzip dist.zip\nrm -f dist.zip\nEOS\n\nFROM python:3.12-alpine\nARG TARGETARCH\nARG TARGETVARIANT\n\nENV OJ_ENV production\nWORKDIR /app\n\nCOPY ./deploy/requirements.txt /app/deploy/\n# psycopg2: libpg-dev\n# pillow: libjpeg-turbo-dev zlib-dev freetype-dev\nRUN --mount=type=cache,target=/etc/apk/cache,id=apk-cahce-$TARGETARCH$TARGETVARIANT-final \\\n    --mount=type=cache,target=/root/.cache/pip,id=pip-cahce-$TARGETARCH$TARGETVARIANT-final \\\n    <<EOS\nset -ex\napk add gcc libc-dev python3-dev libpq libpq-dev libjpeg-turbo libjpeg-turbo-dev zlib zlib-dev freetype freetype-dev supervisor openssl nginx curl unzip\npip install -r /app/deploy/requirements.txt\napk del gcc libc-dev python3-dev libpq-dev libjpeg-turbo-dev zlib-dev freetype-dev\nEOS\n\nCOPY ./ /app/\nCOPY --from=downloader --link /app/dist/ /app/dist/\nRUN chmod -R u=rwX,go=rX ./ && chmod +x ./deploy/entrypoint.sh\n\nHEALTHCHECK --interval=5s CMD [ \"/usr/local/bin/python3\", \"/app/deploy/health_check.py\" ]\nEXPOSE 8000\nENTRYPOINT [ \"/app/deploy/entrypoint.sh\" ]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0595703125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2017-present OnineJudge\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README-CN.md",
+          "type": "blob",
+          "size": 3.7470703125,
+          "content": "# OnlineJudge 2.0\n\n[![Python](https://img.shields.io/badge/python-3.8.0-blue.svg?style=flat-square)](https://www.python.org/downloads/release/python-362/)\n[![Django](https://img.shields.io/badge/django-3.2.9-blue.svg?style=flat-square)](https://www.djangoproject.com/)\n[![Django Rest Framework](https://img.shields.io/badge/django_rest_framework-3.12.0-blue.svg?style=flat-square)](http://www.django-rest-framework.org/)\n[![Build Status](https://travis-ci.org/QingdaoU/OnlineJudge.svg?branch=master)](https://travis-ci.org/QingdaoU/OnlineJudge)\n\n> #### 基于 Python 和 Vue 的在线评测系统。 [Demo](https://qduoj.com)\n\n[English Document](README.md)\n\n## 概览\n\n+ 基于 Docker，真正一键部署\n+ 前后端分离，模块化编程，微服务\n+ ACM/OI 两种比赛模式、实时/非实时评判 任意选择\n+ 丰富的可视化图表，一图胜千言\n+ 支持 Template Problem，可以添加函数题甚至填空题\n+ 更细致的权限划分，超级管理员和普通管理员各司其职\n+ 多语言支持：`C`, `C++`, `Java`, `Python2`, `Python3`，题目可以选择使用的语言\n+ Markdown & MathJax 支持\n+ 比赛用户IP限制 (CIDR ranges)\n\n主要模块均已开源:\n\n+ 后端(Django): [https://github.com/QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge)\n+ 前端(Vue): [https://github.com/QingdaoU/OnlineJudgeFE](https://github.com/QingdaoU/OnlineJudgeFE)\n+ 判题沙箱(Seccomp): [https://github.com/QingdaoU/Judger](https://github.com/QingdaoU/Judger)\n+ 判题服务器(对Judger的封装): [https://github.com/QingdaoU/JudgeServer](https://github.com/QingdaoU/JudgeServer)\n\n## 安装\n\n请根据此进行安装:  [https://github.com/QingdaoU/OnlineJudgeDeploy/tree/2.0](https://github.com/QingdaoU/OnlineJudgeDeploy/tree/2.0)\n\n## 文档\n\n[http://opensource.qduoj.com/](http://opensource.qduoj.com/)\n\n## 截图\n\n### OJ前台\n\n![problem-list](https://user-images.githubusercontent.com/20637881/33372506-402022e4-d539-11e7-8e64-6656f8ceb75a.png)\n\n![problem-details](https://user-images.githubusercontent.com/20637881/33372507-4061a782-d539-11e7-8835-076ddae6b529.png)\n\n![statistic-info](https://user-images.githubusercontent.com/20637881/33372508-40a0c6ce-d539-11e7-8d5e-024541b76750.png)\n\n![contest-list](https://user-images.githubusercontent.com/20637881/33372509-40d880dc-d539-11e7-9eba-1f08dcb6b9a0.png)\n\nRankings 中可以控制图表和菜单的显隐。\n![acm-rankings](https://user-images.githubusercontent.com/20637881/33372510-41117f68-d539-11e7-9947-70e60bad3cf2.png)\n![oi-rankings](https://user-images.githubusercontent.com/20637881/33372511-41d406fa-d539-11e7-9947-7a2a088785b0.png)\n\n![status](https://user-images.githubusercontent.com/20637881/33372512-420ba240-d539-11e7-8645-594cac4a0b78.png)\n\n![status-details](https://user-images.githubusercontent.com/20637881/33365523-787bd0ea-d523-11e7-953f-dacbf7a506df.png)\n\n![user-home](https://user-images.githubusercontent.com/20637881/33365521-7842d808-d523-11e7-84c1-2e2aa0079f32.png)\n\n### 后台管理\n\n![admin-users](https://user-images.githubusercontent.com/20637881/33372516-42c34fda-d539-11e7-9f4e-5109477f83be.png)\n\n![judge-server](https://user-images.githubusercontent.com/20637881/33372517-42faef9e-d539-11e7-9f17-df9be3583900.png)\n\n![create-problem](https://user-images.githubusercontent.com/20637881/33372513-42472162-d539-11e7-8659-5497bf52dbea.png)\n\n![create-contest](https://user-images.githubusercontent.com/20637881/33372514-428ab922-d539-11e7-8f68-da55dedf3ad3.png)\n\n\n## 浏览器支持\n\nModern browsers(chrome, firefox) 和 Internet Explorer 10+.\n\n## 特别感谢\n\n+ 所有为本项目做出贡献的人\n+ [heb1c](https://github.com/hebicheng) 同学为我们提供了很多意见和建议\n\n如果您觉得这个项目还不错，就star一下吧 ：)\n\n## 许可\n\nThe [MIT](http://opensource.org/licenses/MIT) License\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.6630859375,
+          "content": "# OnlineJudge 2.0\n\n[![Python](https://img.shields.io/badge/python-3.8.0-blue.svg?style=flat-square)](https://www.python.org/downloads/release/python-362/)\n[![Django](https://img.shields.io/badge/django-3.2.9-blue.svg?style=flat-square)](https://www.djangoproject.com/)\n[![Django Rest Framework](https://img.shields.io/badge/django_rest_framework-3.12.0-blue.svg?style=flat-square)](http://www.django-rest-framework.org/)\n[![Build Status](https://travis-ci.org/QingdaoU/OnlineJudge.svg?branch=master)](https://travis-ci.org/QingdaoU/OnlineJudge)\n\n> #### An onlinejudge system based on Python and Vue. [Demo](https://qduoj.com)\n\n[中文文档](README-CN.md)\n\n## Overview\n\n+ Based on Docker; One-click deployment\n+ Separated backend and frontend; Modular programming; Micro service\n+ ACM/OI rule support; realtime/non-realtime rank support\n+ Amazing charting and visualization\n+ Template-problem support\n+ More reasonable permission control\n+ Multi-language support: `C`, `C++`, `Java`, `Python2`, `Python3`\n+ Markdown & MathJax support\n+ Contest participants IP limit(CIDR)\n\nMain modules are available below:\n\n+ Backend(Django): [https://github.com/QingdaoU/OnlineJudge](https://github.com/QingdaoU/OnlineJudge)\n+ Frontend(Vue): [https://github.com/QingdaoU/OnlineJudgeFE](https://github.com/QingdaoU/OnlineJudgeFE)\n+ Judger Sandbox(Seccomp): [https://github.com/QingdaoU/Judger](https://github.com/QingdaoU/Judger)\n+ JudgeServer(A wrapper for Judger): [https://github.com/QingdaoU/JudgeServer](https://github.com/QingdaoU/JudgeServer)\n\n## Installation\n\nFollow me:  [https://github.com/QingdaoU/OnlineJudgeDeploy/tree/2.0](https://github.com/QingdaoU/OnlineJudgeDeploy/tree/2.0)\n\n## Documents\n\n[http://opensource.qduoj.com/](http://opensource.qduoj.com/)\n\n## Screenshots\n\n### Frontend:\n\n![problem-list](https://user-images.githubusercontent.com/20637881/33372506-402022e4-d539-11e7-8e64-6656f8ceb75a.png)\n\n![problem-details](https://user-images.githubusercontent.com/20637881/33372507-4061a782-d539-11e7-8835-076ddae6b529.png)\n\n![statistic-info](https://user-images.githubusercontent.com/20637881/33372508-40a0c6ce-d539-11e7-8d5e-024541b76750.png)\n\n![contest-list](https://user-images.githubusercontent.com/20637881/33372509-40d880dc-d539-11e7-9eba-1f08dcb6b9a0.png)\n\nYou can control the menu and chart status in rankings.\n\n![acm-rankings](https://user-images.githubusercontent.com/20637881/33372510-41117f68-d539-11e7-9947-70e60bad3cf2.png)\n\n![oi-rankings](https://user-images.githubusercontent.com/20637881/33372511-41d406fa-d539-11e7-9947-7a2a088785b0.png)\n\n![status](https://user-images.githubusercontent.com/20637881/33372512-420ba240-d539-11e7-8645-594cac4a0b78.png)\n\n![status-details](https://user-images.githubusercontent.com/20637881/33365523-787bd0ea-d523-11e7-953f-dacbf7a506df.png)\n\n![user-home](https://user-images.githubusercontent.com/20637881/33365521-7842d808-d523-11e7-84c1-2e2aa0079f32.png)\n\n### Admin: \n\n![admin-users](https://user-images.githubusercontent.com/20637881/33372516-42c34fda-d539-11e7-9f4e-5109477f83be.png)\n\n![judge-server](https://user-images.githubusercontent.com/20637881/33372517-42faef9e-d539-11e7-9f17-df9be3583900.png)\n\n![create-problem](https://user-images.githubusercontent.com/20637881/33372513-42472162-d539-11e7-8659-5497bf52dbea.png)\n\n![create-contest](https://user-images.githubusercontent.com/20637881/33372514-428ab922-d539-11e7-8f68-da55dedf3ad3.png)\n\n## Browser Support\n\nModern browsers(chrome, firefox) and Internet Explorer 10+.\n\n## Thanks\n\n+ I'd appreciate a star if you find this helpful.\n+ Thanks to everyone that contributes to this project.\n+ Special thanks to [heb1c](https://github.com/hebicheng), who has given us a lot of suggestions.\n\n## License\n\n[MIT](http://opensource.org/licenses/MIT)\n"
+        },
+        {
+          "name": "account",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "announcement",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "contest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "deploy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "init_db.sh",
+          "type": "blob",
+          "size": 0.638671875,
+          "content": "#! /bin/bash\nset -x\n\nif [[ ! -f manage.py ]]; then\n    echo \"No manage.py, wrong location\"\n    exit 1\nfi\n\nsleep 2\ndocker rm -f oj-postgres-dev oj-redis-dev\ndocker run -it -d -e POSTGRES_DB=onlinejudge -e POSTGRES_USER=onlinejudge -e POSTGRES_PASSWORD=onlinejudge -p 127.0.0.1:5435:5432 --name oj-postgres-dev postgres:10\ndocker run -it -d -p 127.0.0.1:6380:6379 --name oj-redis-dev redis:4.0-alpine\n\nif [ \"$1\" = \"--migrate\" ]; then\n    sleep 3\n    echo `cat /dev/urandom | head -1 | md5sum | head -c 32` > data/config/secret.key\n    python manage.py migrate\n    python manage.py inituser --username root --password rootroot --action create_super_admin\nfi"
+        },
+        {
+          "name": "judge",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "manage.py",
+          "type": "blob",
+          "size": 0.32421875,
+          "content": "#!/usr/bin/env python\nimport os\nimport sys\n\nif __name__ == \"__main__\":\n    os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"oj.settings\")\n\n    from django.core.management import execute_from_command_line\n    import django\n    sys.stdout.write(\"Django VERSION \" + str(django.VERSION) + \"\\n\")\n\n    execute_from_command_line(sys.argv)\n"
+        },
+        {
+          "name": "oj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "options",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "problem",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run_test.py",
+          "type": "blob",
+          "size": 0.7314453125,
+          "content": "import getopt\nimport os\nimport sys\n\nopts, args = getopt.getopt(sys.argv[1:], \"cm:\", [\"coverage=\", \"module=\"])\n\nis_coverage = False\ntest_module = \"\"\nsetting = \"oj.settings\"\n\nfor opt, arg in opts:\n    if opt in [\"-c\", \"--coverage\"]:\n        is_coverage = True\n    if opt in [\"-m\", \"--module\"]:\n        test_module = arg\n\nprint(\"Coverage: {cov}\".format(cov=is_coverage))\nprint(\"Module: {mod}\".format(mod=(test_module if test_module else \"All\")))\n\nprint(\"running flake8...\")\nif os.system(\"flake8 --statistics .\"):\n    exit()\n\nret = os.system('coverage run --include=\"$PWD/*\" manage.py test {module} --settings={setting}'.format(module=test_module, setting=setting))\n\nif not ret and is_coverage:\n    os.system(\"coverage html && open htmlcov/index.html\")\n"
+        },
+        {
+          "name": "submission",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

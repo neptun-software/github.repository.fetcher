@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "timestamp": 1736560797227,
+    "page": 489,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "isnowfy/snownlp",
+      "stars": 6467,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": "*.py[cod]\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013-2014 isnowfy\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": "include *.md\nrecursive-include snownlp *.txt *.marshal *.marshal.3\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.8896484375,
+          "content": "# SnowNLP: Simplified Chinese Text Processing\n\nSnowNLP是一个python写的类库，可以方便的处理中文文本内容，是受到了[TextBlob](https://github.com/sloria/TextBlob)的启发而写的，由于现在大部分的自然语言处理库基本都是针对英文的，于是写了一个方便处理中文的类库，并且和TextBlob不同的是，这里没有用NLTK，所有的算法都是自己实现的，并且自带了一些训练好的字典。注意本程序都是处理的unicode编码，所以使用时请自行decode成unicode。\n\n~~~~{python}\nfrom snownlp import SnowNLP\n\ns = SnowNLP(u'这个东西真心很赞')\n\ns.words         # [u'这个', u'东西', u'真心',\n                #  u'很', u'赞']\n\ns.tags          # [(u'这个', u'r'), (u'东西', u'n'),\n                #  (u'真心', u'd'), (u'很', u'd'),\n                #  (u'赞', u'Vg')]\n\ns.sentiments    # 0.9769663402895832 positive的概率\n\ns.pinyin        # [u'zhe', u'ge', u'dong', u'xi',\n                #  u'zhen', u'xin', u'hen', u'zan']\n\ns = SnowNLP(u'「繁體字」「繁體中文」的叫法在臺灣亦很常見。')\n\ns.han           # u'「繁体字」「繁体中文」的叫法\n                # 在台湾亦很常见。'\n\ntext = u'''\n自然语言处理是计算机科学领域与人工智能领域中的一个重要方向。\n它研究能实现人与计算机之间用自然语言进行有效通信的各种理论和方法。\n自然语言处理是一门融语言学、计算机科学、数学于一体的科学。\n因此，这一领域的研究将涉及自然语言，即人们日常使用的语言，\n所以它与语言学的研究有着密切的联系，但又有重要的区别。\n自然语言处理并不是一般地研究自然语言，\n而在于研制能有效地实现自然语言通信的计算机系统，\n特别是其中的软件系统。因而它是计算机科学的一部分。\n'''\n\ns = SnowNLP(text)\n\ns.keywords(3)\t# [u'语言', u'自然', u'计算机']\n\ns.summary(3)\t# [u'因而它是计算机科学的一部分',\n                #  u'自然语言处理是一门融语言学、计算机科学、\n\t\t\t\t#\t 数学于一体的科学',\n\t\t\t\t#  u'自然语言处理是计算机科学领域与人工智能\n\t\t\t\t#\t 领域中的一个重要方向']\ns.sentences\n\ns = SnowNLP([[u'这篇', u'文章'],\n             [u'那篇', u'论文'],\n             [u'这个']])\ns.tf\ns.idf\ns.sim([u'文章'])# [0.3756070762985226, 0, 0]\n~~~~\n\n## Features\n\n* 中文分词（[Character-Based Generative Model](http://aclweb.org/anthology//Y/Y09/Y09-2047.pdf)）\n* 词性标注（[TnT](http://aclweb.org/anthology//A/A00/A00-1031.pdf) 3-gram 隐马）\n* 情感分析（现在训练数据主要是买卖东西时的评价，所以对其他的一些可能效果不是很好，待解决）\n* 文本分类（Naive Bayes）\n* 转换成拼音（Trie树实现的最大匹配）\n* 繁体转简体（Trie树实现的最大匹配）\n* 提取文本关键词（[TextRank](https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf)算法）\n* 提取文本摘要（[TextRank](https://web.eecs.umich.edu/~mihalcea/papers/mihalcea.emnlp04.pdf)算法）\n* tf，idf\n* Tokenization（分割成句子）\n* 文本相似（[BM25](http://en.wikipedia.org/wiki/Okapi_BM25)）\n* 支持python3（感谢[erning](https://github.com/erning)）\n\n## Get It now\n\n~~~~\n$ pip install snownlp\n~~~~\n\n## 关于训练\n\n现在提供训练的包括分词，词性标注，情感分析，而且都提供了我用来训练的原始文件\n以分词为例\n分词在`snownlp/seg`目录下\n~~~~{python}\nfrom snownlp import seg\nseg.train('data.txt')\nseg.save('seg.marshal')\n# from snownlp import tag\n# tag.train('199801.txt')\n# tag.save('tag.marshal')\n# from snownlp import sentiment\n# sentiment.train('neg.txt', 'pos.txt')\n# sentiment.save('sentiment.marshal')\n~~~~\n这样训练好的文件就存储为`seg.marshal`了，之后修改`snownlp/seg/__init__.py`里的`data_path`指向刚训练好的文件即可\n\n## License\n\nMIT licensed.\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 2.0517578125,
+          "content": "import os\nimport sys\nimport subprocess\n\ntry:\n    from setuptools import setup, find_packages\nexcept ImportError:\n    from distutils.core import setup\n    from distutils.util import convert_path\n\n    def _find_packages(where='.', exclude=()):\n        \"\"\"Return a list all Python packages found within directory 'where'\n\n        'where' should be supplied as a \"cross-platform\" (i.e. URL-style)\n        path; it will be converted to the appropriate local path syntax.\n        'exclude' is a sequence of package names to exclude; '*' can be used\n        as a wildcard in the names, such that 'foo.*' will exclude all\n        subpackages of 'foo' (but not 'foo' itself).\n        \"\"\"\n        out = []\n        stack = [(convert_path(where), '')]\n        while stack:\n            where, prefix = stack.pop(0)\n            for name in os.listdir(where):\n                fn = os.path.join(where, name)\n                if ('.' not in name and os.path.isdir(fn) and\n                        os.path.isfile(os.path.join(fn, '__init__.py'))):\n                    out.append(prefix+name)\n                    stack.append((fn, prefix + name + '.'))\n        for pat in list(exclude)+['ez_setup', 'distribute_setup']:\n            from fnmatch import fnmatchcase\n            out = [item for item in out if not fnmatchcase(item, pat)]\n\nPUBLISH_CMD = 'python setup.py register sdist upload'\n\nif 'publish' in sys.argv:\n    status = subprocess.call(PUBLISH_CMD, shell=True)\n    sys.exit(status)\n\n\ndef read(fname):\n    with open(fname) as fp:\n        content = fp.read()\n    return content\n\nsetup(\n    name='snownlp',\n    version='0.12.3',\n    description='Python library for processing Chinese text',\n    author='isnowfy',\n    url='https://github.com/isnowfy/snownlp',\n    packages=find_packages(exclude=('test*', )),\n    classifiers=[\n        'Development Status :: 3 - Alpha',\n        'Intended Audience :: Developers',\n        'License :: OSI Approved :: MIT License',\n        'Programming Language :: Python',\n\n    ],\n    package_data={'': ['*.md', '*.txt', '*.marshal', '*.marshal.3']},\n    include_package_data=True,\n)\n"
+        },
+        {
+          "name": "snownlp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.py",
+          "type": "blob",
+          "size": 6.5947265625,
+          "content": "# -*- coding: utf-8 -*-\nfrom __future__ import print_function\nfrom __future__ import unicode_literals\n\ntext = '''\n如果你是一位教师，那么不管你的工作单位是高中、大学还是职业培训等教育机构，你都能在MOOC上找到对学生有用的内容。近期许多MOOC实验项目的目标都是建设一个课堂教学支持系统。我们根据研究结果、采访和我们参与的课程整理出以下建议，希望能够指导教师将MOOC的经验和资源运用到传统课堂教学中。\n\n\n1900年挪威特隆赫姆的科学课，图片来自WikiMedia。\n\n1．善用电子设备\n学生们都具备参与在线课堂的工具，而教师也可以利用自己的设备参与线上社交。如果你是一名学生，就把这篇文章转给你的老师吧。让老师看看怎样用智能手机和笔记本电脑记录你的活动，并迅速回复评论；看看你用哪些手机应用查看地图、搜索信息和购物；展示你的微博、人人和网盘，还有其他人留下的评论。最后，告诉老师，如果他们要开在线课程，并且需要学生助手，别忘了叫上你。\n\n2．让课堂更广阔\nMOOC的成功证明，相比课堂教学，许多学生更喜欢在线学习。随着智能手机、平板电脑和笔记本电脑在学生族中的流行，学生们有了与朋友、家人和老师交流的新方式。显然，在头脑清醒、精神集中的时候，看课程视频、做练习和参与课堂讨论的效率都更高。在MOOC，这意味着一个印度学生和一个新汉普郡的学生能够达到同一水平。因此在传统课堂中，我们也要让那些在足球训练场上、在滑雪度假村和在家养病的学生能够和坐在课时第一排的学生学到同样多的东西。在线工具能够让课堂不再受限于校园，学生们也能够获得更加美好而难忘的学习体验。\n\n3．参与是成功之母\nMOOC研究显示，成功的学生都会充分利用所有的在线资源，例如视频、测试、课堂讨论和由其他学生编写的课程维基百科。对于课堂教学，教师可以建立在线平台，让学生在课堂之外也能参与到学校中。这种交流可以只是发一条微博或者公告，邀请学生对备课提出建议。邀请学生把能够帮助他们复习所学知识的相关文章或图片发布到网上。只要利用这些小诀窍，大家就都能看到谁能跟上课程进度，进而鼓励他们或者提出建议。在课堂上可以表扬在网络上活跃的学生，或者解答学生在网上提出的问题。\n\n4．建立网络社区\n为了活跃课堂，你需要在网络上建一个“据点”，也就是说，需要建立一个网站，为学生提供课件，提醒任务完成时间，并且让学生之间建立联系。假设你是一位老师，并且已经有了自己的注册、评分和考勤系统，那就把这些运用到网络上吧。我们的目标是为学生建立一个平台，让他们能在现有的网络社交活动、与班上同学的交流和课堂作业之间自由转换。\n\n\n\nW·伊恩-欧伯恩(W. Ian O’Byrne)是纽黑文大学的教育技术助教，他建议利用谷歌协作平台实现这个目的。他指出，学生们都有自己的移动设备，并且希望有一个“够酷而且适合聚会”的地方学习。只把课程都放到网上是不够的，需要精心设计漂亮的页面，并且这个网页要方便学生进行互动。\n\n他说：“用好谷歌协作平台的关键仅仅是迈出第一步。把它当作一项工程，认真编辑，打造你自己的在线学习空间，就像每年组织一批学生一样。你可以在每个新学年调整课程内容，不断建设升级，把你的数字学习社区建设得越来越好。”\n\nMOOC是学校的一种新形式，欧伯恩建议在起步的时候，先为每门课程的课件加上指针，再利用软件工具，就可以轻松根据学生的学习进度添加课程。他希望，在学生使用在线社区的同时，教师也能发现参与在线社区的方式。\n\n5．从线上到线下\nMOOC的一个缺陷就是无法组建高效的学习小组，而教师在这方面可以大有作为。当学生们看到其他同学更新了课程内容，他们就知道谁掌握了所学的知识，从而邀请这些同学合作完成任务，或向他们请教。我经常向教师们介绍这个例子：我在Google+圈子里发了一条信息，例如“明天我们会讨论矛盾冲突在吸引读者注意力方面的作用。今晚，在你回家的路上，拍一张照片或一段录像。用文字介绍你的见闻，以证明这个观点，并邀请其他同学参与讨论。”我收到的作业包括交通堵塞，猫狗对峙，被泡在水里的花园以及足球训练中的射门。第二天，学生们就可以归纳整理前一天晚上在网络上收集到的评论了。\n\n6．用好你的相机\n随着智能手机和平板电脑的普及，相机也变得无处不在，而且分享照片也越来越简单。MOOC的明星教授说，把45分钟的讲座变成10分钟一段的视频让他们被迫“升级课程”。不是每个老师都能通过这种方式吸引一批学生，但是他们可以参考这个经验，为课堂制作自己的视频，例如实地考察录像。让整个班都出去跑一趟可能不可行，但利用视频和照片，可以把考察点“带”到课室中来。利用智能手机耳机上配备的话筒，还可以为视频配上讲解，从而高效地用多个视频介绍完一个知识点。\n\n将MOOC应用到传统课堂教学\n随着大规模网络公开课的发展，教师可以考虑把在线教育的方法应用到自己的课堂教学中。MOOC的课程制作涉及比较复杂的技术，但使用这些课程几乎不费吹灰之力，而且成本也远远不及课程制作。没有加入edX或Coursera的大部分学校可以进行更多自创内容的尝试，就像自出版一样，这也是许多cMOOC的尝试。教师也可以向自己的目标努力。通过打开课堂，建立网络社区和制作教学视频，可以让更多的教师和学生享受到MOOC的投入带来的收益。\n'''\n\n\nfrom snownlp import normal\nfrom snownlp import seg\nfrom snownlp.summary import textrank\n\n\nif __name__ == '__main__':\n    t = normal.zh2hans(text)\n    sents = normal.get_sentences(t)\n    doc = []\n    for sent in sents:\n        words = seg.seg(sent)\n        words = normal.filter_stop(words)\n        doc.append(words)\n    rank = textrank.TextRank(doc)\n    rank.solve()\n    for index in rank.top_index(5):\n        print(sents[index])\n    keyword_rank = textrank.KeywordTextRank(doc)\n    keyword_rank.solve()\n    for w in keyword_rank.top_index(5):\n        print(w)\n"
+        }
+      ]
+    }
+  ]
+}

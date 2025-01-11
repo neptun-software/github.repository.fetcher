@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "timestamp": 1736560598302,
+    "page": 221,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bayesian-optimization/BayesianOptimization",
+      "stars": 8017,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3720703125,
+          "content": ".ipynb_checkpoints\n*.pyc\n*.egg-info/\nbuild/\ndist/\nscratch/\n.idea/\n.DS_Store\nbo_eg*.png\ngif/\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*,cover\n.hypothesis/\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n*temp*\n\ndocs/*\ndocsrc/.ipynb_checkpoints/*\ndocsrc/*.ipynb\ndocsrc/static/*\ndocsrc/README.md\n\npoetry.lock"
+        },
+        {
+          "name": ".pre-commit-config.yaml",
+          "type": "blob",
+          "size": 0.1982421875,
+          "content": "repos:\n  - hooks:\n      - id: ruff\n        name: ruff-lint\n      - id: ruff-format\n        name: ruff-format\n        args: [--check]\n    repo: https://github.com/astral-sh/ruff-pre-commit\n    rev: v0.6.6"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0634765625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Fernando M. F. Nogueira\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.3798828125,
+          "content": "<div align=\"center\">\n  <img src=\"https://raw.githubusercontent.com/bayesian-optimization/BayesianOptimization/master/docsrc/static/func.png\"><br><br>\n</div>\n\n# Bayesian Optimization\n\n![tests](https://github.com/bayesian-optimization/BayesianOptimization/actions/workflows/run_tests.yml/badge.svg)\n[![docs - stable](https://img.shields.io/badge/docs-stable-blue)](https://bayesian-optimization.github.io/BayesianOptimization/index.html)\n[![Codecov](https://codecov.io/github/bayesian-optimization/BayesianOptimization/badge.svg?branch=master&service=github)](https://codecov.io/github/bayesian-optimization/BayesianOptimization?branch=master)\n[![Pypi](https://img.shields.io/pypi/v/bayesian-optimization.svg)](https://pypi.python.org/pypi/bayesian-optimization)\n![PyPI - Python Version](https://img.shields.io/pypi/pyversions/bayesian-optimization)\n\n\nPure Python implementation of bayesian global optimization with gaussian\nprocesses.\n\n\nThis is a constrained global optimization package built upon bayesian inference\nand gaussian processes, that attempts to find the maximum value of an unknown\nfunction in as few iterations as possible. This technique is particularly\nsuited for optimization of high cost functions and situations where the balance\nbetween exploration and exploitation is important.\n\n## Installation\n\n* pip (via PyPI):\n\n```console\n$ pip install bayesian-optimization\n```\n\n* Conda (via conda-forge):\n\n```console\n$ conda install -c conda-forge bayesian-optimization\n```\n\n## How does it work?\n\nSee the [documentation](https://bayesian-optimization.github.io/BayesianOptimization/) for how to use this package.\n\nBayesian optimization works by constructing a posterior distribution of functions (gaussian process) that best describes the function you want to optimize. As the number of observations grows, the posterior distribution improves, and the algorithm becomes more certain of which regions in parameter space are worth exploring and which are not, as seen in the picture below.\n\n![BayesianOptimization in action](docsrc/static/bo_example.png)\n\nAs you iterate over and over, the algorithm balances its needs of exploration and exploitation taking into account what it knows about the target function. At each step a Gaussian Process is fitted to the known samples (points previously explored), and the posterior distribution, combined with a exploration strategy (such as UCB (Upper Confidence Bound), or EI (Expected Improvement)), are used to determine the next point that should be explored (see the gif below).\n\n![BayesianOptimization in action](docsrc/static/bayesian_optimization.gif)\n\nThis process is designed to minimize the number of steps required to find a combination of parameters that are close to the optimal combination. To do so, this method uses a proxy optimization problem (finding the maximum of the acquisition function) that, albeit still a hard problem, is cheaper (in the computational sense) and common tools can be employed. Therefore Bayesian Optimization is most adequate for situations where sampling the function to be optimized is a very expensive endeavor. See the references for a proper discussion of this method.\n\nThis project is under active development. If you run into trouble, find a bug or notice\nanything that needs correction, please let us know by filing an issue.\n\n\n## Basic tour of the Bayesian Optimization package\n\n### 1. Specifying the function to be optimized\n\nThis is a function optimization package, therefore the first and most important ingredient is, of course, the function to be optimized.\n\n**DISCLAIMER:** We know exactly how the output of the function below depends on its parameter. Obviously this is just an example, and you shouldn't expect to know it in a real scenario. However, it should be clear that you don't need to. All you need in order to use this package (and more generally, this technique) is a function `f` that takes a known set of parameters and outputs a real number.\n\n\n```python\ndef black_box_function(x, y):\n    \"\"\"Function with unknown internals we wish to maximize.\n\n    This is just serving as an example, for all intents and\n    purposes think of the internals of this function, i.e.: the process\n    which generates its output values, as unknown.\n    \"\"\"\n    return -x ** 2 - (y - 1) ** 2 + 1\n```\n\n### 2. Getting Started\n\nAll we need to get started is to instantiate a `BayesianOptimization` object specifying a function to be optimized `f`, and its parameters with their corresponding bounds, `pbounds`. This is a constrained optimization technique, so you must specify the minimum and maximum values that can be probed for each parameter in order for it to work\n\n\n```python\nfrom bayes_opt import BayesianOptimization\n\n# Bounded region of parameter space\npbounds = {'x': (2, 4), 'y': (-3, 3)}\n\noptimizer = BayesianOptimization(\n    f=black_box_function,\n    pbounds=pbounds,\n    random_state=1,\n)\n```\n\nThe BayesianOptimization object will work out of the box without much tuning needed. The main method you should be aware of is `maximize`, which does exactly what you think it does.\n\nThere are many parameters you can pass to maximize, nonetheless, the most important ones are:\n- `n_iter`: How many steps of bayesian optimization you want to perform. The more steps the more likely to find a good maximum you are.\n- `init_points`: How many steps of **random** exploration you want to perform. Random exploration can help by diversifying the exploration space.\n\n\n```python\noptimizer.maximize(\n    init_points=2,\n    n_iter=3,\n)\n```\n\n    |   iter    |  target   |     x     |     y     |\n    -------------------------------------------------\n    |  1        | -7.135    |  2.834    |  1.322    |\n    |  2        | -7.78     |  2.0      | -1.186    |\n    |  3        | -19.0     |  4.0      |  3.0      |\n    |  4        | -16.3     |  2.378    | -2.413    |\n    |  5        | -4.441    |  2.105    | -0.005822 |\n    =================================================\n\n\nThe best combination of parameters and target value found can be accessed via the property `optimizer.max`.\n\n\n```python\nprint(optimizer.max)\n>>> {'target': -4.441293113411222, 'params': {'y': -0.005822117636089974, 'x': 2.104665051994087}}\n```\n\n\nWhile the list of all parameters probed and their corresponding target values is available via the property `optimizer.res`.\n\n\n```python\nfor i, res in enumerate(optimizer.res):\n    print(\"Iteration {}: \\n\\t{}\".format(i, res))\n\n>>> Iteration 0:\n>>>     {'target': -7.135455292718879, 'params': {'y': 1.3219469606529488, 'x': 2.8340440094051482}}\n>>> Iteration 1:\n>>>     {'target': -7.779531005607566, 'params': {'y': -1.1860045642089614, 'x': 2.0002287496346898}}\n>>> Iteration 2:\n>>>     {'target': -19.0, 'params': {'y': 3.0, 'x': 4.0}}\n>>> Iteration 3:\n>>>     {'target': -16.29839645063864, 'params': {'y': -2.412527795983739, 'x': 2.3776144540856503}}\n>>> Iteration 4:\n>>>     {'target': -4.441293113411222, 'params': {'y': -0.005822117636089974, 'x': 2.104665051994087}}\n```\n\n\n## Minutiae\n\n### Citation\n\nIf you used this package in your research, please cite it:\n\n```\n@Misc{,\n    author = {Fernando Nogueira},\n    title = {{Bayesian Optimization}: Open source constrained global optimization tool for {Python}},\n    year = {2014--},\n    url = \" https://github.com/bayesian-optimization/BayesianOptimization\"\n}\n```\nIf you used any of the advanced functionalities, please additionally cite the corresponding publication:\n\nFor the `SequentialDomainTransformer`:\n```\n@article{\n    author = {Stander, Nielen and Craig, Kenneth},\n    year = {2002},\n    month = {06},\n    pages = {},\n    title = {On the robustness of a simple domain reduction scheme for simulation-based optimization},\n    volume = {19},\n    journal = {International Journal for Computer-Aided Engineering and Software (Eng. Comput.)},\n    doi = {10.1108/02644400210430190}\n}\n```\n\nFor constrained optimization:\n```\n@inproceedings{gardner2014bayesian,\n    title={Bayesian optimization with inequality constraints.},\n    author={Gardner, Jacob R and Kusner, Matt J and Xu, Zhixiang Eddie and Weinberger, Kilian Q and Cunningham, John P},\n    booktitle={ICML},\n    volume={2014},\n    pages={937--945},\n    year={2014}\n}\n```\n\nFor optimization over non-float parameters:\n```\n@article{garrido2020dealing,\n  title={Dealing with categorical and integer-valued variables in bayesian optimization with gaussian processes},\n  author={Garrido-Merch{\\'a}n, Eduardo C and Hern{\\'a}ndez-Lobato, Daniel},\n  journal={Neurocomputing},\n  volume={380},\n  pages={20--35},\n  year={2020},\n  publisher={Elsevier}\n}\n```\n"
+        },
+        {
+          "name": "bayes_opt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docsrc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 1.2490234375,
+          "content": "[tool.poetry]\nname = \"bayesian-optimization\"\nversion = \"3.0.0b1\"\ndescription = \"Bayesian Optimization package\"\nauthors = [\"Fernando Nogueira\"]\nlicense = \"MIT\"\nreadme = \"README.md\"\npackages = [{include = \"bayes_opt\"}]\n\n[tool.poetry.dependencies]\npython = \"^3.9\"\nscikit-learn = \"^1.0.0\"\nnumpy = \">=1.25\"\nscipy =  [\n    {version = \"^1.0.0\", python = \"<3.13\"},\n    {version = \"^1.14.1\", python = \">=3.13\"}\n]\ncolorama = \"^0.4.6\"\n\n\n[tool.poetry.group.dev]  # for testing/developing\noptional = true\n[tool.poetry.group.dev.dependencies]\npytest = \"^8.0.0\"\npytest-cov = \"^4.1.0\"\ncoverage = \"^7.4.1\"\nruff = \"0.6.6\"\npre-commit = \"^3.7.1\"\n\n\n[tool.poetry.group.nbtools]  # for running/converting notebooks\noptional = true\n[tool.poetry.group.nbtools.dependencies]\nnbformat = \"^5.9.2\"\nnbconvert = \"^7.14.2\"\njupyter = \"^1.0.0\"\nmatplotlib = \"^3.0\"\nnbsphinx = \"^0.9.4\"\nsphinx-immaterial = \"^0.12.0\"\nsphinx = [\n    {version = \"^7.0.0\", python = \"<3.10\"},\n    {version = \"^8.0.0\", python = \">=3.10\"}\n]\nsphinx-autodoc-typehints = [\n    {version = \"^2.3.0\", python = \"<3.10\"},\n    {version = \"^2.4.0\", python = \">=3.10\"}\n]\n\n\n[build-system]\nrequires = [\"poetry-core\"]\nbuild-backend = \"poetry.core.masonry.api\"\n\n[tool.coverage.report]\nexclude_lines = [\n    \"pragma: no cover\",\n    \"if TYPE_CHECKING:\",\n]\n"
+        },
+        {
+          "name": "ruff.toml",
+          "type": "blob",
+          "size": 2.7255859375,
+          "content": "line-length = 110\nunsafe-fixes = false\ntarget-version = \"py39\"\nextend = \"./pyproject.toml\"\nexclude = [\n    # docs\n    \"docsrc/**/*\",\n    # examples\n    \"examples/**/*\",\n]\n\n[lint]\nextend-select = [\n    \"D\",      # pydocstyle\n    \"D417\",   # undocumented-param\n    \"I\",      # isort\n    \"UP\",     # pyupgrade\n    \"G\",      # flake8-logging-format\n    \"LOG\",    # flake8-logging\n    \"PT\",     # flake8-pytest-style\n    \"E\",      # pycodestyle\n    \"W\",      # pycodestyle\n    \"PGH\",    # pygrep-hooks\n    \"B\",      # flake8-bugbear\n    \"SIM\",    # flake8-simplify\n    \"S\",      # flake8-bandit\n    \"DTZ\",    # flake8-datetimez\n    \"EM\",     # flake8-errmsg \n    \"LOG\",    # flake8-logging \n    \"G\",      # flake8-logging-format\n    \"PIE\",    # flake8-pie\n    \"Q\",      # flake8-quotes\n    \"RET\",    # flake8-return\n    \"TID\",    # flake8-tidy-imports \n    \"PTH\",    # flake8-use-pathlib\n    \"F\",      # Pyflakes\n    \"NPY\",    # NumPy-specific rules\n    \"PERF\",   # Perflint\n    \"FURB\",   # refurb\n    \"RUF\",    # Ruff-specific rules\n    \"ISC\",    # flake8-implicit-str-concat\n    \"TRY002\", # raise-vanilla-class\n]\nignore = [\n    \"PT011\", # TODO\n    # pydocstyle numpy default\n    \"D203\",\n    \"D212\",\n    \"D213\",\n    \"D214\",\n    \"D215\",\n    \"D404\",\n    \"D405\",\n    \"D406\",\n    \"D407\",\n    \"D408\",\n    \"D409\",\n    \"D410\",\n    \"D411\",\n    \"D413\",\n    \"D415\",\n    \"D416\",\n    # ruff format\n    \"W191\",   # tab-indentation\n    \"E111\",   # indentation-with-invalid-multiple\n    \"E114\",   # indentation-with-invalid-multiple-comment\n    \"E117\",   # over-indented\n    \"D206\",   # indent-with-spaces\n    \"D300\",   # triple-single-quotes\n    \"Q000\",   # bad-quotes-inline-string\n    \"Q001\",   # bad-quotes-multiline-string\n    \"Q002\",   # bad-quotes-docstring\n    \"Q003\",   # avoidable-escaped-quote\n    \"COM812\", # missing-trailing-comma\n    \"COM819\", # prohibited-trailing-comma\n    \"ISC001\", # single-line-implicit-string-concatenation\n    \"ISC002\", # multi-line-implicit-string-concatenation\n]\nfixable = [\n    \"I\",\n    \"UP\",\n    \"ISC\",\n    \"G\",\n    \"LOG\",\n    \"PT\",\n    \"E\",\n    \"W\",\n    \"PGH\",\n    \"B\",\n    \"SIM\",\n    \"S\",\n    \"LOG\",\n    \"G\",\n    \"PIE\",\n    \"Q\",\n    \"RET\",\n    \"TID\",\n    \"PTH\",\n    \"F\",\n    \"NPY\",\n    \"PERF\",\n    \"FURB\",\n    \"RUF\",\n]\n\n[lint.per-file-ignores]\n\"tests/test_*.py\" = [\"S101\", \"D\"]\n\n[format]\nindent-style = \"space\"\nquote-style = \"double\"\nskip-magic-trailing-comma = true\ndocstring-code-format = true\ndocstring-code-line-length = \"dynamic\"\n\n[lint.pylint]\nmax-args = 10\n\n[lint.isort]\nknown-local-folder = [\"bayes_opt\"]\nrequired-imports = [\"from __future__ import annotations\"]\n# ruff format\nforce-single-line = false\nforce-wrap-aliases = false\nsplit-on-trailing-comma = false\n\n[lint.pydocstyle]\nconvention = \"numpy\"\n\n[lint.flake8-pytest-style]\nfixture-parentheses = false\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

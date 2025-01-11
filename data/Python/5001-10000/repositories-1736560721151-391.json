@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "timestamp": 1736560721151,
+    "page": 391,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nadermx/backgroundremover",
+      "stars": 6976,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": ".git/\n.github/\ndist/\nexamplefiles/\nmodels/"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.171875,
+          "content": "# https://editorconfig.org/\n\nroot = true\n\n[*]\nindent_style = space\nindent_size = 4\ninsert_final_newline = true\ntrim_trailing_whitespace = true\nend_of_line = lf\ncharset = utf-8\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 3.4296875,
+          "content": ".idea/\n# Created by https://www.toptal.com/developers/gitignore/api/python\n# Edit at https://www.toptal.com/developers/gitignore?templates=python\n\n### Python ###\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\nshare/python-wheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.nox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n*.py,cover\n.hypothesis/\n.pytest_cache/\ncover/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\ndb.sqlite3-journal\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\n.pybuilder/\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# IPython\nprofile_default/\nipython_config.py\n\n# pyenv\n#   For a library or package, you might want to ignore these files since the code is\n#   intended to run in multiple environments; otherwise, check them in:\n# .python-version\n\n# pipenv\n#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.\n#   However, in case of collaboration, if having platform-specific dependencies or dependencies\n#   having no cross-platform support, pipenv may install dependencies that don't work, or not\n#   install all needed dependencies.\n#Pipfile.lock\n\n# poetry\n#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.\n#   This is especially recommended for binary packages to ensure reproducibility, and is more\n#   commonly ignored for libraries.\n#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control\n#poetry.lock\n\n# pdm\n#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.\n#pdm.lock\n#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it\n#   in version control.\n#   https://pdm.fming.dev/#use-with-ide\n.pdm.toml\n\n# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm\n__pypackages__/\n\n# Celery stuff\ncelerybeat-schedule\ncelerybeat.pid\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.dmypy.json\ndmypy.json\n\n# Pyre type checker\n.pyre/\n\n# pytype static type analyzer\n.pytype/\n\n# Cython debug symbols\ncython_debug/\n\n# PyCharm\n#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can\n#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore\n#  and can be added to the global gitignore or merged into this file.  For a more nuclear\n#  option (not recommended) you can uncomment the following to ignore the entire idea folder.\n#.idea/\n\n### Python Patch ###\n# Poetry local configuration file - https://python-poetry.org/docs/configuration/#local-configuration\npoetry.toml\n\n# ruff\n.ruff_cache/\n\n# LSP config files\npyrightconfig.json\n\n# End of https://www.toptal.com/developers/gitignore/api/python\n\n.DS_Store\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.55859375,
+          "content": "FROM continuumio/miniconda3:23.5.2-0 as builder\n\nRUN apt-get update && \\\n    apt-get install -y --no-install-recommends \\\n      apt-transport-https \\\n      bash \\\n      build-essential \\\n      git\n\nRUN conda install 'ffmpeg>=4.4.0' -c conda-forge\nRUN conda install pytorch torchvision torchaudio cpuonly -c pytorch\n\nWORKDIR /usr/local/src\nCOPY . .\n\nRUN pip --no-cache-dir -v install .\n\n# optimize layers\nFROM debian:bullseye-slim\nCOPY --from=builder /opt/conda /opt/conda\nENV PATH=/opt/conda/bin:$PATH\n\nWORKDIR /tmp\nENTRYPOINT [\"python\", \"-m\", \"backgroundremover.cmd.cli\"]"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.1435546875,
+          "content": "MIT License\n\nCopyright (c) 2021 Johnathan Nader\nCopyright (c) 2020 Lucas Nestler\nCopyright (c) 2020 Dr. Tim Scarfe\nCopyright (c) 2020 Daniel Gatis\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.1787109375,
+          "content": "include pyproject.toml\n\n# Include the README\ninclude *.md\n\n# Include the license file\ninclude LICENSE.txt\n\n# Include the data files\nrecursive-include data *\n\ninclude requirements.txt\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.876953125,
+          "content": "# BackgroundRemover\n![Background Remover](https://raw.githubusercontent.com/nadermx/backgroundremover/main/examplefiles/backgroundremoverexample.png)\n<img alt=\"background remover video\" src=\"https://raw.githubusercontent.com/nadermx/backgroundremover/main/examplefiles/backgroundremoverprocessed.gif\" height=\"200\" /><br>\nBackgroundRemover is a command line tool to remove background from [image](https://github.com/nadermx/backgroundremover#image) and [video](https://github.com/nadermx/backgroundremover#video) using AI, made by [nadermx](https://john.nader.mx) to power [https://BackgroundRemoverAI.com](https://backgroundremoverai.com). If you wonder why it was made read this [short blog post](https://johnathannader.com/my-first-open-source-project/).<br>\n\n\n### Requirements\n\n* python >= 3.6\n* python3.6-dev #or what ever version of python you use\n* torch and torchvision stable version (https://pytorch.org)\n* ffmpeg 4.4+\n\n* To clarify, you must install both python and whatever dev version of python you installed. IE; python3.10-dev with python3.10 or python3.8-dev with python3.8\n\n#### How to install torch and ffmpeg\n\nGo to https://pytorch.org and scroll down to `INSTALL PYTORCH` section and follow the instructions.\n\nFor example:\n\n```\nPyTorch Build: Stable (1.7.1)\nYour OS: Windows\nPackage: Pip\nLanguage: Python\nCUDA: None\n```\n\nTo install ffmpeg and python-dev\n\n```\nsudo apt install ffmpeg python3.6-dev\n```\n\n### Installation\nTo Install backgroundremover, install it from pypi\n\n```bash\npip install --upgrade pip\npip install backgroundremover\n```\nPlease note that when you first run the program, it will check to see if you have the u2net models, if you do not, it will pull them from this repo\n\nIt is also possible to run this without installing it via pip, just clone the git to local start a virtual env and install requirements and run\n```bash\npython -m backgroundremover.cmd.cli -i \"video.mp4\" -mk -o \"output.mov\"\n```\nand for windows\n```bash\npython.exe -m backgroundremover.cmd.cli -i \"video.mp4\" -mk -o \"output.mov\"\n```\n### Installation using Docker\n```bash\ngit clone https://github.com/nadermx/backgroundremover.git\ncd backgroundremover\ndocker build -t bgremover .\nalias backgroundremover='docker run -it --rm -v \"$(pwd):/tmp\" bgremover:latest'\n```\n### Usage as a cli\n## Image\n\nRemove the background from a local file image\n\n```bash\nbackgroundremover -i \"/path/to/image.jpeg\" -o \"output.png\"\n```\n\n### Advance usage for image background removal\n\nSometimes it is possible to achieve better results by turning on alpha matting. Example:\n\n```bash\nbackgroundremover -i \"/path/to/image.jpeg\" -a -ae 15 -o \"output.png\"\n```\nchange the model for different background removal methods between `u2netp`, `u2net`, or `u2net_human_seg`\n```bash\nbackgroundremover -i \"/path/to/image.jpeg\" -m \"u2net_human_seg\" -o \"output.png\"\n```\n## Video\n\n### remove background from video and make transparent mov\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -tv -o \"output.mov\"\n```\n### remove background from local video and overlay it over other video\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -tov \"/path/to/videtobeoverlayed.mp4\" -o \"output.mov\"\n```\n### remove background from local video and overlay it over an image\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -toi \"/path/to/videtobeoverlayed.mp4\" -o \"output.mov\"\n```\n\n### remove background from video and make transparent gif\n\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -tg -o \"output.gif\"\n```\n### Make matte key file (green screen overlay)\n\nMake a matte file for premiere\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -mk -o \"output.matte.mp4\"\n```\n\n### Advance usage for video\n\nChange the framerate of the video (default is set to 30)\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -fr 30 -tv -o \"output.mov\"\n```\n\nSet total number of frames of the video (default is set to -1, ie the remove background from full video)\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -fl 150 -tv -o \"output.mov\"\n```\n\nChange the gpu batch size of the video (default is set to 1)\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -gb 4 -tv -o \"output.mov\"\n```\n\nChange the number of workers working on video (default is set to 1)\n\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -wn 4 -tv -o \"output.mov\"\n```\nchange the model for different background removal methods between `u2netp`, `u2net`, or `u2net_human_seg` and limit the frames to 150\n```bash\nbackgroundremover -i \"/path/to/video.mp4\" -m \"u2net_human_seg\" -fl 150 -tv -o \"output.mov\"\n```\n\n## As a library\n### Remove background image\n\n```\nfrom backgroundremover.bg import remove\ndef remove_bg(src_img_path, out_img_path):\n    model_choices = [\"u2net\", \"u2net_human_seg\", \"u2netp\"]\n    f = open(src_img_path, \"rb\")\n    data = f.read()\n    img = remove(data, model_name=model_choices[0],\n                 alpha_matting=True,\n                 alpha_matting_foreground_threshold=240,\n                 alpha_matting_background_threshold=10,\n                 alpha_matting_erode_structure_size=10,\n                 alpha_matting_base_size=1000)\n    f.close()\n    f = open(out_img_path, \"wb\")\n    f.write(img)\n    f.close()\n```\n\n## Todo\n\n- convert logic from video to image to utilize more GPU on image removal\n- clean up documentation a bit more\n- add ability to adjust and give feedback images or videos to datasets\n- add ability to realtime background removal for videos, for streaming\n- finish flask server api\n- add ability to use other models than u2net, ie your own\n- other\n\n### Pull requests\n\nAccepted\n\n### If you like this library\n\nGive a link to our project [BackgroundRemoverAI.com](https://backgroundremoverai.com) or this git, telling people that you like it or use it.\n\n### Reason for project\n\nWe made it our own package after merging together parts of others, adding in a few features of our own via posting parts as bounty questions on superuser, etc.  As well as asked on hackernews earlier to open source the image part, so decided to add in video, and a bit more.\n\n\n\n### References\n\n- https://arxiv.org/pdf/2005.09007.pdf\n- https://github.com/NathanUA/U-2-Net\n- https://github.com/pymatting/pymatting\n- https://github.com/danielgatis/rembg\n- https://github.com/ecsplendid/rembg-greenscreen\n- https://superuser.com/questions/1647590/have-ffmpeg-merge-a-matte-key-file-over-the-normal-video-file-removing-the-backg\n- https://superuser.com/questions/1648680/ffmpeg-alphamerge-two-videos-into-a-gif-with-transparent-background/1649339?noredirect=1#comment2522687_1649339\n- https://superuser.com/questions/1649817/ffmpeg-overlay-a-video-after-alphamerging-two-others/1649856#1649856\n\n### License\n\n- Copyright (c) 2021-present [Johnathan Nader](https://github.com/nadermx)\n- Copyright (c) 2020-present [Lucas Nestler](https://github.com/ClashLuke)\n- Copyright (c) 2020-present [Dr. Tim Scarfe](https://github.com/ecsplendid)\n- Copyright (c) 2020-present [Daniel Gatis](https://github.com/danielgatis)\n\nCode Licensed under [MIT License](./LICENSE.txt)\nModels Licensed under [Apache License 2.0](./models/license)\n"
+        },
+        {
+          "name": "backgroundremover",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examplefiles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "models",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "olddist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 0.224609375,
+          "content": "[build-system]\n# These are the assumed default build requirements from pip:\n# https://pip.pypa.io/en/stable/reference/pip/#pep-517-and-518-support\nrequires = [\"setuptools>=40.8.0\", \"wheel\"]\nbuild-backend = \"setuptools.build_meta\"\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.349609375,
+          "content": "certifi>=2021.5.30\ncharset-normalizer>=2.0.4\nfilelock>=3.0.12\nidna>=3.2\nPySocks>=1.7.1\nsix>=1.16.0\nurllib3>=1.26.6\nnumpy>=1.19.4\nscikit-image>=0.17.2\ntorch>=1.7.0\ntorchvision>=0.8.1\nwaitress>=1.4.4\ntqdm>=4.51.0\nrequests>=2.24.0\nscipy>=1.5.4\npymatting>=1.1.1\nfiletype>=1.0.7\nhsh>=1.1.0\nmore_itertools>=8.7.0\nmoviepy==1.0.3\nPillow>=8.1.1,<10.0.0\nffmpeg-python\n"
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 0.193359375,
+          "content": "[metadata]\n# This includes the license file(s) in the wheel.\n# https://wheel.readthedocs.io/en/stable/user_guide.html#including-license-files-in-the-generated-wheel-file\nlicense_files = LICENSE.txt\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.0029296875,
+          "content": "import pathlib\n\nfrom setuptools import find_packages, setup\n\nhere = pathlib.Path(__file__).parent.resolve()\n\nlong_description = (here / \"README.md\").read_text(encoding=\"utf-8\")\n\nwith open(\"requirements.txt\") as f:\n    requireds = f.read().splitlines()\n\nsetup(\n    name=\"backgroundremover\",\n    version=\"0.2.9\",\n    description=\"Background remover from image and video using AI\",\n    long_description=long_description,\n    long_description_content_type=\"text/markdown\",\n    url=\"https://github.com/nadermx/backgroundremover\",\n    author=\"Johnathan Nader\",\n    author_email=\"john@nader.mx\",\n    classifiers=[\n        \"License :: OSI Approved :: MIT License\",\n        \"Programming Language :: Python :: 3 :: Only\",\n    ],\n    keywords=\"remove, background, u2net, remove background, background remover\",\n    packages=find_packages(),\n    python_requires=\">=3.6, <4\",\n    install_requires=requireds,\n    entry_points={\n        \"console_scripts\": [\n            \"backgroundremover=backgroundremover.cmd.cli:main\",\n        ],\n    },\n)\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736560841974,
+    "page": 541,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "openai/consistency_models",
+      "stars": 6230,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.248046875,
+          "content": "# Compiled python modules.\n*.pyc\n\n# Byte-compiled\n_pycache__/\n.cache/\n.idea/\n\n# Python egg metadata, regenerated from source files by setuptools.\n/*.egg-info\n.eggs/\n\n# PyPI distribution artifacts.\nbuild/\ndist/\n\n# Tests\n.pytest_cache/\n\n# Other\n*.DS_Store\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2023 OpenAI\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.3671875,
+          "content": "# Consistency Models\n\nThis repository contains the codebase for [Consistency Models](https://arxiv.org/abs/2303.01469), implemented using PyTorch for conducting large-scale experiments on ImageNet-64, LSUN Bedroom-256, and LSUN Cat-256. We have based our repository on [openai/guided-diffusion](https://github.com/openai/guided-diffusion), which was initially released under the MIT license. Our modifications have enabled support for consistency distillation, consistency training, as well as several sampling and editing algorithms discussed in the paper.\n\nThe repository for CIFAR-10 experiments is in JAX and can be found at [openai/consistency_models_cifar10](https://github.com/openai/consistency_models_cifar10).\n\n# Pre-trained models\n\nWe have released checkpoints for the main models in the paper. Before using these models, please review the corresponding [model card](model-card.md) to understand the intended use and limitations of these models.\n\nHere are the download links for each model checkpoint:\n\n * EDM on ImageNet-64: [edm_imagenet64_ema.pt](https://openaipublic.blob.core.windows.net/consistency/edm_imagenet64_ema.pt)\n * CD on ImageNet-64 with l2 metric: [cd_imagenet64_l2.pt](https://openaipublic.blob.core.windows.net/consistency/cd_imagenet64_l2.pt)\n * CD on ImageNet-64 with LPIPS metric: [cd_imagenet64_lpips.pt](https://openaipublic.blob.core.windows.net/consistency/cd_imagenet64_lpips.pt)\n * CT on ImageNet-64: [ct_imagenet64.pt](https://openaipublic.blob.core.windows.net/consistency/ct_imagenet64.pt)\n * EDM on LSUN Bedroom-256: [edm_bedroom256_ema.pt](https://openaipublic.blob.core.windows.net/consistency/edm_bedroom256_ema.pt)\n * CD on LSUN Bedroom-256 with l2 metric: [cd_bedroom256_l2.pt](https://openaipublic.blob.core.windows.net/consistency/cd_bedroom256_l2.pt)\n * CD on LSUN Bedroom-256 with LPIPS metric: [cd_bedroom256_lpips.pt](https://openaipublic.blob.core.windows.net/consistency/cd_bedroom256_lpips.pt)\n * CT on LSUN Bedroom-256: [ct_bedroom256.pt](https://openaipublic.blob.core.windows.net/consistency/ct_bedroom256.pt)\n * EDM on LSUN Cat-256: [edm_cat256_ema.pt](https://openaipublic.blob.core.windows.net/consistency/edm_cat256_ema.pt)\n * CD on LSUN Cat-256 with l2 metric: [cd_cat256_l2.pt](https://openaipublic.blob.core.windows.net/consistency/cd_cat256_l2.pt)\n * CD on LSUN Cat-256 with LPIPS metric: [cd_cat256_lpips.pt](https://openaipublic.blob.core.windows.net/consistency/cd_cat256_lpips.pt)\n * CT on LSUN Cat-256: [ct_cat256.pt](https://openaipublic.blob.core.windows.net/consistency/ct_cat256.pt)\n\n# Dependencies\n\nTo install all packages in this codebase along with their dependencies, run\n```sh\npip install -e .\n```\n\nTo install with Docker, run the following commands:\n```sh\ncd docker && make build && make run\n```\n\n# Model training and sampling\n\nWe provide examples of EDM training, consistency distillation, consistency training, single-step generation, and multistep generation in [scripts/launch.sh](scripts/launch.sh).\n\n# Evaluations\n\nTo compare different generative models, we use FID, Precision, Recall, and Inception Score. These metrics can all be calculated using batches of samples stored in `.npz` (numpy) files. One can evaluate samples with [cm/evaluations/evaluator.py](evaluations/evaluator.py) in the same way as described in [openai/guided-diffusion](https://github.com/openai/guided-diffusion), with reference dataset batches provided therein.\n\n## Use in 🧨 diffusers\n\nConsistency models are supported in [🧨 diffusers](https://github.com/huggingface/diffusers) via the [`ConsistencyModelPipeline` class](https://huggingface.co/docs/diffusers/main/en/api/pipelines/consistency_models). Below we provide an example:\n\n```python\nimport torch\n\nfrom diffusers import ConsistencyModelPipeline\n\ndevice = \"cuda\"\n# Load the cd_imagenet64_l2 checkpoint.\nmodel_id_or_path = \"openai/diffusers-cd_imagenet64_l2\"\npipe = ConsistencyModelPipeline.from_pretrained(model_id_or_path, torch_dtype=torch.float16)\npipe.to(device)\n\n# Onestep Sampling\nimage = pipe(num_inference_steps=1).images[0]\nimage.save(\"consistency_model_onestep_sample.png\")\n\n# Onestep sampling, class-conditional image generation\n# ImageNet-64 class label 145 corresponds to king penguins\n\nclass_id = 145\nclass_id = torch.tensor(class_id, dtype=torch.long)\n\nimage = pipe(num_inference_steps=1, class_labels=class_id).images[0]\nimage.save(\"consistency_model_onestep_sample_penguin.png\")\n\n# Multistep sampling, class-conditional image generation\n# Timesteps can be explicitly specified; the particular timesteps below are from the original Github repo.\n# https://github.com/openai/consistency_models/blob/main/scripts/launch.sh#L77\nimage = pipe(timesteps=[22, 0], class_labels=class_id).images[0]\nimage.save(\"consistency_model_multistep_sample_penguin.png\")\n```\nYou can further speed up the inference process by using `torch.compile()` on `pipe.unet` (only supported from PyTorch 2.0). For more details, please check out the [official documentation](https://huggingface.co/docs/diffusers/main/en/api/pipelines/consistency_models). This support was contributed to 🧨 diffusers by [dg845](https://github.com/dg845) and [ayushtues](https://github.com/ayushtues).\n\n# Citation\n\nIf you find this method and/or code useful, please consider citing\n\n```bibtex\n@article{song2023consistency,\n  title={Consistency Models},\n  author={Song, Yang and Dhariwal, Prafulla and Chen, Mark and Sutskever, Ilya},\n  journal={arXiv preprint arXiv:2303.01469},\n  year={2023},\n}\n```\n"
+        },
+        {
+          "name": "cm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "datasets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "evaluations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "model-card.md",
+          "type": "blob",
+          "size": 3.7119140625,
+          "content": "# Overview\n\nThese are diffusion models and consistency models described in the paper [Consistency Models](https://arxiv.org/abs/2303.01469). We include the following models in this release:\n\n * Consistency models trained by CD (with both l2 and LPIPS metrics) on ImageNet 64x64, LSUN Bedroom 256x256, and LSUN Cat 256x256.\n * Consistency models trained by CT on ImageNet 64x64, LSUN Bedroom 256x256, and LSUN Cat 256x256.\n\n# Datasets\n\nThe models that we are making available have been trained on the [ILSVRC 2012 subset of ImageNet](http://www.image-net.org/challenges/LSVRC/2012/) or on individual categories from [LSUN](https://arxiv.org/abs/1506.03365). Here we outline the characteristics of these datasets that influence the behavior of the models:\n\n**ILSVRC 2012 subset of ImageNet**: This dataset was curated in 2012 and has around a million pictures, each of which belongs to one of 1,000 categories. A significant number of the categories in this dataset are animals, plants, and other naturally occurring objects. Although many photographs include humans, these humans are typically not represented by the class label (for example, the category \"Tench, tinca tinca\" includes many photographs of individuals holding fish).\n\n**LSUN**: This dataset was collected in 2015 by a combination of human labeling via Amazon Mechanical Turk and automated data labeling. Both classes that we consider have more than a million images. The dataset creators discovered that when assessed by trained experts, the label accuracy was approximately 90% throughout the entire LSUN dataset. The pictures are gathered from the internet, and those in the cat class often follow a \"meme\" format. Occasionally, people, including faces, appear in these photographs.\n\n\n# Performance\n\nThese models are intended to generate samples consistent with their training distributions.\nThis has been measured in terms of FID, Inception Score, Precision, and Recall.\nThese metrics all rely on the representations of a [pre-trained Inception-V3 model](https://arxiv.org/abs/1512.00567),\nwhich was trained on ImageNet, and so is likely to focus more on the ImageNet classes (such as animals) than on other visual features (such as human faces).\n\n\n# Intended Use\n\nThese models are intended to be used for research purposes only. In particular, they can be used as a baseline for generative modeling research, or as a starting point for advancing such research. These models are not intended to be commercially deployed. Additionally, they are not intended to be used to create propaganda or offensive imagery.\n\n# Limitations\n\nThese models sometimes produce highly unrealistic outputs, particularly when generating images containing human faces.\nThis may stem from ImageNet's emphasis on non-human objects.\n\nIn consistency distillation and training, minimizing LPIPS results in better sample quality, as evidenced by improved FID and Inception scores. However, it also carries the risk of overestimating model performance, because LPIPS uses a VGG network pre-trained on ImageNet, while FID and Inception scores also rely on convolutional neural networks (the Inception network in particular) pre-trained on the same ImageNet dataset. Although these two convolutional neural networks do not share the same architecture and we extract latents from them in substantially different ways, knowledge leakage is still plausible which can undermine the fidelity of FID and Inception scores.\n\nBecause ImageNet and LSUN contain images from the internet, they include photos of real people, and the model may have memorized some of the information contained in these photos. However, these images are already publicly available, and existing generative models trained on ImageNet have not demonstrated significant leakage of this information.\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 0.4755859375,
+          "content": "from setuptools import setup\n\nsetup(\n    name=\"consistency-models\",\n    py_modules=[\"cm\", \"evaluations\"],\n    install_requires=[\n        \"blobfile>=1.0.5\",\n        \"torch\",\n        \"tqdm\",\n        \"numpy\",\n        \"scipy\",\n        \"pandas\",\n        \"Cython\",\n        \"piq==0.7.0\",\n        \"joblib==0.14.0\",\n        \"albumentations==0.4.3\",\n        \"lmdb\",\n        \"clip @ git+https://github.com/openai/CLIP.git\",\n        \"mpi4py\",\n        \"flash-attn==0.2.8\",\n        \"pillow\",\n    ],\n)\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "timestamp": 1736560820044,
+    "page": 511,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "p-e-w/maybe",
+      "stars": 6348,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.421875,
+          "content": "# Based on .gitignore from https://github.com/pypa/sampleproject\n\n# Backup files\n*.~\n\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n\n# C extensions\n*.so\n\n# Testing\n.cache/\n.tox/\n.coverage\n\n# Distribution / packaging\nbin/\nbuild/\ndevelop-eggs/\ndist/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Translations\n*.mo\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.287109375,
+          "content": "language: python\n\npython:\n  - 3.6\n\nenv:\n  - TOX_ENV=py27\n  - TOX_ENV=py33\n  - TOX_ENV=py34\n  - TOX_ENV=py35\n  - TOX_ENV=py36\n  - TOX_ENV=pypy\n  - TOX_ENV=pypy3\n  - TOX_ENV=flake8\n\ninstall:\n  - pip install \"tox>=2.3.1\" \"coveralls>=1.1\"\n\nscript:\n  - tox -e $TOX_ENV\n\nafter_success:\n  - coveralls\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.326171875,
+          "content": "<table>\n  <tr>\n    <td><strong>Package</strong></td>\n    <td>\n      <a href=\"https://pypi.python.org/pypi/maybe\">\n        <img src=\"https://img.shields.io/pypi/v/maybe.svg\">\n      </a>\n      <img src=\"https://img.shields.io/badge/os-linux-blue.svg\">\n      <img src=\"https://img.shields.io/pypi/pyversions/maybe.svg\">\n    </td>\n  </tr>\n  <tr>\n    <td><strong>Tests</strong></td>\n    <td>\n      <a href=\"https://travis-ci.org/p-e-w/maybe\">\n        <img src=\"https://travis-ci.org/p-e-w/maybe.svg?branch=master\">\n      </a>\n      <a href=\"https://coveralls.io/github/p-e-w/maybe?branch=master\">\n        <img src=\"https://coveralls.io/repos/github/p-e-w/maybe/badge.svg?branch=master\">\n      </a>\n      <a href=\"https://gemnasium.com/github.com/p-e-w/maybe\">\n        <img src=\"https://gemnasium.com/badges/github.com/p-e-w/maybe.svg\">\n      </a>\n    </td>\n  </tr>\n</table>\n\n\n---\n\n\n```\nrm -rf pic*\n```\n\nAre you sure? Are you *one hundred percent* sure?\n\n\n# `maybe`...\n\n... allows you to run a command and see what it does to your files *without actually doing it!* After reviewing the operations listed, you can then decide whether you really want these things to happen or not.\n\n![Screenshot](screenshot.png)\n\n\n## What is this sorcery?!?\n\n`maybe` runs processes under the control of [ptrace](https://en.wikipedia.org/wiki/Ptrace) (with the help of the excellent [python-ptrace](https://github.com/haypo/python-ptrace) library). When it intercepts a system call that is about to make changes to the file system, it logs that call, and then modifies CPU registers to both redirect the call to an invalid syscall ID (effectively turning it into a no-op) and set the return value of that no-op call to one indicating success of the original call.\n\nAs a result, the process believes that everything it is trying to do is actually happening, when in reality nothing is.\n\nThat being said, `maybe` **should :warning: NEVER :warning: be used to run untrusted code** on a system you care about! A process running under `maybe` can still do serious damage to your system because only a handful of syscalls are blocked. It can also check whether an operation such as deleting a file succeeded using read-only syscalls, and *alter its behavior accordingly.* Therefore, a rerun without restrictions is not guaranteed to always produce the displayed operations.\n\nCurrently, `maybe` is best thought of as an (alpha-quality) \"what exactly will this command I typed myself do?\" tool.\n\n\n## Installation\n\n`maybe` runs on Linux :penguin: and requires [Python](https://www.python.org/) 2.7+/3.3+ :snake:. If you have the [pip](https://pip.pypa.io) package manager, all you need to do is run\n\n```\npip install maybe\n```\n\neither as a superuser or from a [virtualenv](https://virtualenv.pypa.io) environment. To develop `maybe`, clone the repository and run\n\n```\npip install -e .\n```\n\nin its main directory to install the package in editable mode.\n\n\n## Usage\n\n```\nmaybe [options] command [argument ...]\n```\n\n### Positional arguments\n\n| Argument | Description |\n| --- | --- |\n| `command` | the command to run under `maybe`'s control |\n| `argument ...` | argument(s) to pass to `command` |\n\n### Optional arguments\n\n| Argument | Description |\n| --- | --- |\n| `-a OPERATION ...`,<br>`--allow OPERATION ...`<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | allow the command to perform the specified operation(s). all other operations will be denied. possible values for `OPERATION` are: `change_owner`, `change_permissions`, `create_directory`, `create_link`, `create_write_file`, `delete`, `move`; as well as any filter scopes defined by loaded plugins |\n| `-d OPERATION ...`,<br>`--deny OPERATION ...` | deny the command the specified operation(s). all other operations will be allowed. see `--allow` for a list of possible values for `OPERATION`. `--allow` and `--deny` cannot be combined |\n| `-p FILE ...`,<br>`--plugin FILE ...` | load the specified [plugin](#plugin-api) script(s) |\n| `-l`, `--list-only` | list operations without header, indentation and rerun prompt |\n| `--style-output {yes,no,auto}` | colorize output using ANSI escape sequences (`yes`/`no`) or automatically decide based on whether stdout is a terminal (`auto`, default) |\n| `-v`, `--verbose` | if specified once, print every filtered syscall. if specified twice, print every syscall, highlighting filtered syscalls |\n| `--version` | show program's version number and exit |\n| `-h`, `--help` | show a help message and exit |\n\n\n## Plugin API\n\nBy default, `maybe` intercepts and blocks all syscalls that can make permanent modifications to the system. For more specialized syscall filtering needs, `maybe` provides a simple yet powerful plugin API. Filter plugins are written in pure Python and use the same interfaces as [`maybe`'s built-in filters](maybe/filters).\n\nThe public API is composed of the following two members:\n\n#### *maybe.*`T`\n\nA [Blessings](https://github.com/erikrose/blessings) `Terminal` object that can be used to format console output (such as `operation` as documented below). Output formatted with this object automatically complies with the `--style-output` command line argument.\n\n#### *maybe.*`register_filter(syscall, filter_function, filter_scope=None)`\n\nAdd the filter `filter_function` to the filter registry. If the filter is enabled (which is the default, but can be altered with the `--allow` and `--deny` command line arguments), it intercepts all calls to `syscall` made by the controlled process. `filter_scope` determines the key to be used in conjunction with `--allow` and `--deny` to enable/disable the filter (multiple filters can share the same key). If `filter_scope` is omitted or `None`, the last part of the plugin's module name is used.\n\n`filter_function` itself must conform to the signature `filter_function(process, args)`. `process` is a [`Process`](maybe/process.py) control object that can be used to inspect and manipulate the process, while `args` is the list of arguments passed to the syscall in the order in which they appear in the syscall's signature. If an argument represents a (pointer to a) filename, the argument will be of type `str` and contain the filename, otherwise it will be of type `int` and contain the numerical value of the argument.\n\nWhen called, `filter_function` must return a tuple `(operation, return_value)`. `operation` can either be a string description of the operation that was prevented by the filter, to be printed after the process terminates, or `None`, in which case nothing will be printed. `return_value` can either be a numerical value, in which case the syscall invocation will be prevented and the return value received by the caller will be set to that value, or `None`, in which case the invocation will be allowed to proceed as normal.\n\n### Example\n\nHere, `maybe`'s plugin API is used to implement an exotic type of access control: Restricting read access based on the *content* of the file in question. If a file being opened for reading contains the word **SECRET**, the plugin blocks the `open`/`openat` syscall and returns an error.\n\n#### `read_secret_file.py`\n\n```python\nfrom os import O_WRONLY\nfrom os.path import isfile\nfrom maybe import T, register_filter\n\ndef filter_open(path, flags):\n    if path.startswith(\"/home/\") and isfile(path) and not (flags & O_WRONLY):\n        with open(path, \"r\") as f:\n            if \"SECRET\" in f.read():\n                return \"%s %s\" % (T.red(\"read secret file\"), T.underline(path)), -1\n            else:\n                return None, None\n    else:\n        return None, None\n\nregister_filter(\"open\", lambda process, args:\n                filter_open(process.full_path(args[0]), args[1]))\nregister_filter(\"openat\", lambda process, args:\n                filter_open(process.full_path(args[1], args[0]), args[2]))\n```\n\nIndeed, the plugin works as expected:\n\n```\n[user@localhost]$ maybe --plugin read_secret_file.py --deny read_secret_file -- bash\n$ echo \"This is a normal file.\" > file_1\n$ echo \"This is a SECRET file.\" > file_2\n$ cat file_1\nThis is a normal file.\n$ cat file_2\ncat: file_2: Operation not permitted\n```\n\n\n## License\n\nCopyright &copy; 2016-2017 Philipp Emanuel Weidmann (<pew@worldwidemann.com>)\n\nReleased under the terms of the [GNU General Public License, version 3](https://gnu.org/licenses/gpl.html)\n"
+        },
+        {
+          "name": "maybe",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshot.png",
+          "type": "blob",
+          "size": 51.1025390625,
+          "content": null
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 0.0234375,
+          "content": "[aliases]\ntest = pytest\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.501953125,
+          "content": "# Based on setup.py from https://github.com/pypa/sampleproject\n\nfrom setuptools import setup\n\nsetup(\n    name=\"maybe\",\n\n    version=\"0.4.0\",\n\n    description=\"See what a program does before deciding whether you really want it to happen.\",\n    long_description=\"For a detailed description, see https://github.com/p-e-w/maybe.\",\n\n    url=\"https://github.com/p-e-w/maybe\",\n\n    author=\"Philipp Emanuel Weidmann\",\n    author_email=\"pew@worldwidemann.com\",\n\n    license=\"GPLv3\",\n\n    classifiers=[\n        \"Development Status :: 3 - Alpha\",\n\n        \"Intended Audience :: End Users/Desktop\",\n        \"Intended Audience :: System Administrators\",\n\n        \"Topic :: Utilities\",\n\n        \"License :: OSI Approved :: GNU General Public License v3 (GPLv3)\",\n\n        \"Operating System :: POSIX :: Linux\",\n\n        \"Programming Language :: Python :: 2\",\n        \"Programming Language :: Python :: 2.7\",\n        \"Programming Language :: Python :: 3\",\n        \"Programming Language :: Python :: 3.3\",\n        \"Programming Language :: Python :: 3.4\",\n        \"Programming Language :: Python :: 3.5\",\n        \"Programming Language :: Python :: 3.6\",\n    ],\n\n    keywords=\"sandbox files access\",\n\n    packages=[\"maybe\"],\n\n    install_requires=[\n        \"six==1.10.0\",\n        \"blessings==1.6\",\n        \"python-ptrace==0.9.1\",\n    ],\n\n    setup_requires=[\n        \"pytest-runner>=2.7\",\n    ],\n    tests_require=[\n        \"pytest>=2.9.1\",\n    ],\n\n    entry_points={\n        \"console_scripts\": [\n            \"maybe = maybe.maybe:main\",\n        ],\n    },\n)\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 0.271484375,
+          "content": "[tox]\nenvlist = py27, py33, py34, py35, py36, pypy, pypy3, flake8\n\n[testenv]\ndeps =\n  coverage>=4.0\ncommands =\n  coverage run --branch --source=maybe setup.py test\n  coverage report -m\n\n[testenv:flake8]\ndeps =\n  flake8>=2.5.4\ncommands =\n  flake8\n\n[flake8]\nmax-line-length = 120\n"
+        }
+      ]
+    }
+  ]
+}

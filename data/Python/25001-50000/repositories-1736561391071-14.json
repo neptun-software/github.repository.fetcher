@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": 1736561391071,
+    "page": 14,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "faif/python-patterns",
+      "stars": 40750,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".coveragerc",
+          "type": "blob",
+          "size": 0.1923828125,
+          "content": "[report]\nexclude_lines =\n    pragma: no cover\n    # Don't complain if tests don't hit defensive assertion code:\n    # See: https://stackoverflow.com/a/9212387/3407256\n    raise NotImplementedError\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1083984375,
+          "content": "__pycache__\n*.pyc\n.idea\n*.egg-info/\n.tox/\nenv/\nvenv/\n.env\n.venv\n.vscode/\n.python-version\n.coverage\nbuild/\ndist/"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.236328125,
+          "content": "os: linux\ndist: focal\nlanguage: python\n\njobs:\n  include:\n    - python: \"3.8\"\n      env: TOXENV=py38\n    - python: \"3.9\"\n      env: TOXENV=py39\n\ncache:\n  - pip\n\ninstall:\n  - pip install codecov tox\n\nscript:\n  - tox\n\nafter_success:\n  - codecov\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.8212890625,
+          "content": "# REDNAFI\n# This only works with embedded venv not virtualenv\n# Install venv: python3.8 -m venv venv\n# Activate venv: source venv/bin/activate\n\n# Usage (line =black line length, path = action path, ignore= exclude folders)\n# ------\n# make pylinter [make pylinter line=88 path=.]\n# make pyupgrade\n\npath := .\nline := 88\nignore := *env\n\nall:\n\t@echo\n\n.PHONY: checkvenv\ncheckvenv:\n# raises error if environment is not active\nifeq (\"$(VIRTUAL_ENV)\",\"\")\n\t@echo \"Venv is not activated!\"\n\t@echo \"Activate venv first.\"\n\t@echo\n\texit 1\nendif\n\n.PHONY: pyupgrade\npyupgrade: checkvenv\n# checks if pip-tools is installed\nifeq (\"$(wildcard venv/bin/pip-compile)\",\"\")\n\t@echo \"Installing Pip-tools...\"\n\t@pip install pip-tools\nendif\n\nifeq (\"$(wildcard venv/bin/pip-sync)\",\"\")\n\t@echo \"Installing Pip-tools...\"\n\t@pip install pip-tools\nendif\n\n# pip-tools\n\t# @pip-compile --upgrade requirements-dev.txt\n\t@pip-sync requirements-dev.txt\n\n\n.PHONY: pylinter\npylinter: checkvenv\n# checks if black is installed\nifeq (\"$(wildcard venv/bin/black)\",\"\")\n\t@echo \"Installing Black...\"\n\t@pip install black\nendif\n\n# checks if isort is installed\nifeq (\"$(wildcard venv/bin/isort)\",\"\")\n\t@echo \"Installing Isort...\"\n\t@pip install isort\nendif\n\n# checks if flake8 is installed\nifeq (\"$(wildcard venv/bin/flake8)\",\"\")\n\t@echo -e \"Installing flake8...\"\n\t@pip install flake8\n\t@echo\nendif\n\n# black\n\t@echo \"Applying Black\"\n\t@echo \"----------------\\n\"\n\t@black --line-length $(line) --exclude $(ignore) $(path)\n\t@echo\n\n# isort\n\t@echo \"Applying Isort\"\n\t@echo \"----------------\\n\"\n\t@isort --atomic --profile black $(path)\n\t@echo\n\n# flake8\n\t@echo \"Applying Flake8\"\n\t@echo \"----------------\\n\"\n\t@flake8 --max-line-length \"$(line)\" \\\n\t\t\t--max-complexity \"18\" \\\n\t\t\t--select \"B,C,E,F,W,T4,B9\" \\\n\t\t\t--ignore \"E203,E266,E501,W503,F403,F401,E402\" \\\n\t\t\t--exclude \".git,__pycache__,old, build, \\\n\t\t\t\t\t\tdist, venv, .tox\" $(path)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.373046875,
+          "content": "python-patterns\n===============\n\nA collection of design patterns and idioms in Python.\n\nRemember that each pattern has its own trade-offs. And you need to pay attention more to why you're choosing a certain pattern than to how to implement it.\n\nCurrent Patterns\n----------------\n\n__Creational Patterns__:\n\n| Pattern | Description |\n|:-------:| ----------- |\n| [abstract_factory](patterns/creational/abstract_factory.py) | use a generic function with specific factories |\n| [borg](patterns/creational/borg.py) | a singleton with shared-state among instances |\n| [builder](patterns/creational/builder.py) | instead of using multiple constructors, builder object receives parameters and returns constructed objects |\n| [factory](patterns/creational/factory.py) | delegate a specialized function/method to create instances |\n| [lazy_evaluation](patterns/creational/lazy_evaluation.py) | lazily-evaluated property pattern in Python |\n| [pool](patterns/creational/pool.py) | preinstantiate and maintain a group of instances of the same type |\n| [prototype](patterns/creational/prototype.py) | use a factory and clones of a prototype for new instances (if instantiation is expensive) |\n\n__Structural Patterns__:\n\n| Pattern | Description |\n|:-------:| ----------- |\n| [3-tier](patterns/structural/3-tier.py) | data<->business logic<->presentation separation (strict relationships) |\n| [adapter](patterns/structural/adapter.py) | adapt one interface to another using a white-list |\n| [bridge](patterns/structural/bridge.py) | a client-provider middleman to soften interface changes |\n| [composite](patterns/structural/composite.py) | lets clients treat individual objects and compositions uniformly |\n| [decorator](patterns/structural/decorator.py) | wrap functionality with other functionality in order to affect outputs |\n| [facade](patterns/structural/facade.py) | use one class as an API to a number of others |\n| [flyweight](patterns/structural/flyweight.py) | transparently reuse existing instances of objects with similar/identical state |\n| [front_controller](patterns/structural/front_controller.py) | single handler requests coming to the application |\n| [mvc](patterns/structural/mvc.py) | model<->view<->controller (non-strict relationships) |\n| [proxy](patterns/structural/proxy.py) | an object funnels operations to something else |\n\n__Behavioral Patterns__:\n\n| Pattern | Description |\n|:-------:| ----------- |\n| [chain_of_responsibility](patterns/behavioral/chain_of_responsibility.py) | apply a chain of successive handlers to try and process the data |\n| [catalog](patterns/behavioral/catalog.py) | general methods will call different specialized methods based on construction parameter |\n| [chaining_method](patterns/behavioral/chaining_method.py) | continue callback next object method |\n| [command](patterns/behavioral/command.py) | bundle a command and arguments to call later |\n| [iterator](patterns/behavioral/iterator.py) | traverse a container and access the container's elements |\n| [iterator](patterns/behavioral/iterator_alt.py) (alt. impl.)| traverse a container and access the container's elements |\n| [mediator](patterns/behavioral/mediator.py) | an object that knows how to connect other objects and act as a proxy |\n| [memento](patterns/behavioral/memento.py) | generate an opaque token that can be used to go back to a previous state |\n| [observer](patterns/behavioral/observer.py) | provide a callback for notification of events/changes to data |\n| [publish_subscribe](patterns/behavioral/publish_subscribe.py) | a source syndicates events/data to 0+ registered listeners |\n| [registry](patterns/behavioral/registry.py) | keep track of all subclasses of a given class |\n| [specification](patterns/behavioral/specification.py) |  business rules can be recombined by chaining the business rules together using boolean logic |\n| [state](patterns/behavioral/state.py) | logic is organized into a discrete number of potential states and the next state that can be transitioned to |\n| [strategy](patterns/behavioral/strategy.py) | selectable operations over the same data |\n| [template](patterns/behavioral/template.py) | an object imposes a structure but takes pluggable components |\n| [visitor](patterns/behavioral/visitor.py) | invoke a callback for all items of a collection |\n\n__Design for Testability Patterns__:\n\n| Pattern | Description |\n|:-------:| ----------- |\n| [dependency_injection](patterns/dependency_injection.py) | 3 variants of dependency injection |\n\n__Fundamental Patterns__:\n\n| Pattern | Description |\n|:-------:| ----------- |\n| [delegation_pattern](patterns/fundamental/delegation_pattern.py) | an object handles a request by delegating to a second object (the delegate) |\n\n__Others__:\n\n| Pattern | Description |\n|:-------:| ----------- |\n| [blackboard](patterns/other/blackboard.py) | architectural model, assemble different sub-system knowledge to build a solution, AI approach - non gang of four pattern |\n| [graph_search](patterns/other/graph_search.py) | graphing algorithms - non gang of four pattern |\n| [hsm](patterns/other/hsm/hsm.py) | hierarchical state machine - non gang of four pattern |\n\n\nVideos\n------\n[Design Patterns in Python by Peter Ullrich](https://www.youtube.com/watch?v=bsyjSW46TDg)\n\n[Sebastian Buczyński - Why you don't need design patterns in Python?](https://www.youtube.com/watch?v=G5OeYHCJuv0)\n\n[You Don't Need That!](https://www.youtube.com/watch?v=imW-trt0i9I)\n\n[Pluggable Libs Through Design Patterns](https://www.youtube.com/watch?v=PfgEU3W0kyU)\n\n\nContributing\n------------\nWhen an implementation is added or modified, please review the following guidelines:\n\n##### Docstrings\nAdd module level description in form of a docstring with links to corresponding references or other useful information.\n\nAdd \"Examples in Python ecosystem\" section if you know some. It shows how patterns could be applied to real-world problems.\n\n[facade.py](patterns/structural/facade.py) has a good example of detailed description,\nbut sometimes the shorter one as in [template.py](patterns/behavioral/template.py) would suffice.\n\n##### Python 2 compatibility\nTo see Python 2 compatible versions of some patterns please check-out the [legacy](https://github.com/faif/python-patterns/tree/legacy) tag.\n\n##### Update README\nWhen everything else is done - update corresponding part of README.\n\n##### Travis CI\nPlease run the following before submitting a patch\n- `black .` This lints your code.\n\nThen either:\n- `tox` or `tox -e ci37` This runs unit tests. see tox.ini for further details.\n- If you have a bash compatible shell use `./lint.sh` This script will lint and test your code. This script mirrors the CI pipeline actions.      \n\nYou can also run `flake8` or `pytest` commands manually. Examples can be found in `tox.ini`.\n\n## Contributing via issue triage [![Open Source Helpers](https://www.codetriage.com/faif/python-patterns/badges/users.svg)](https://www.codetriage.com/faif/python-patterns)\n\nYou can triage issues and pull requests which may include reproducing bug reports or asking for vital information, such as version numbers or reproduction instructions. If you would like to start triaging issues, one easy way to get started is to [subscribe to python-patterns on CodeTriage](https://www.codetriage.com/faif/python-patterns).\n\n## AI codebase assistance ##\n\nThe folks at Mutable.ai have built an AI assistant that is codebase-aware. Give it a try [![Mutable.ai Auto Wiki](https://img.shields.io/badge/Auto_Wiki-Mutable.ai-blue)](https://wiki.mutable.ai/faif/python-patterns)\n"
+        },
+        {
+          "name": "lint.sh",
+          "type": "blob",
+          "size": 0.3984375,
+          "content": "#! /bin/bash\n\npip install --upgrade pip\npip install black codespell flake8 isort mypy pytest pyupgrade tox\nblack --check .\ncodespell --quiet-level=2  # --ignore-words-list=\"\" --skip=\"\"\nflake8 . --count --show-source --statistics\nisort --profile black .\ntox\npip install -e .\nmypy --ignore-missing-imports . || true\npytest .\npytest --doctest-modules . || true\nshopt -s globstar && pyupgrade --py37-plus **/*.py"
+        },
+        {
+          "name": "patterns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements-dev.txt",
+          "type": "blob",
+          "size": 0.099609375,
+          "content": "-e .\n\npytest~=6.2.0\npytest-cov~=2.11.0\npytest-randomly~=3.1.0\nblack>=20.8b1\nisort~=5.7.0\nflake8~=3.8.0"
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 0.2529296875,
+          "content": "[flake8]\nmax-line-length = 120\nignore = E266 E731 W503\nexclude = venv*\n\n[tool:pytest]\nfilterwarnings =\n    ; ignore TestRunner class from facade example\n    ignore:.*test class 'TestRunner'.*:Warning\n\n[mypy]\npython_version = 3.8\nignore_missing_imports = True\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 0.578125,
+          "content": "from setuptools import find_packages, setup\n\nsetup(\n    name=\"patterns\",\n    packages=find_packages(),\n    description=\"A collection of design patterns and idioms in Python.\",\n    classifiers=[\n        \"Programming Language :: Python :: 2\",\n        \"Programming Language :: Python :: 2.7\",\n        \"Programming Language :: Python :: 3\",\n        \"Programming Language :: Python :: 3.6\",\n        \"Programming Language :: Python :: 3.7\",\n        \"Programming Language :: Python :: 3.8\",\n        \"Programming Language :: Python :: 3.9\",\n        \"Programming Language :: Python :: 3.10\",\n    ],\n)\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 0.59765625,
+          "content": "[tox]\nenvlist = py38,py39,py310,cov-report\nskip_missing_interpreters = true\n\n\n[testenv]\nsetenv =\n    COVERAGE_FILE = .coverage.{envname}\ndeps =\n    -r requirements-dev.txt\ncommands =\n    flake8 . --exclude=\"./.*, venv\"\n    ; `randomly-seed` option from `pytest-randomly` helps with deterministic outputs for examples like `other/blackboard.py`\n    pytest --randomly-seed=1234 --doctest-modules patterns/\n    pytest -s -vv --cov={envsitepackagesdir}/patterns --log-level=INFO tests/\n\n\n[testenv:cov-report]\nsetenv =\n    COVERAGE_FILE = .coverage\ndeps = coverage\ncommands =\n    coverage combine\n    coverage report\n"
+        }
+      ]
+    }
+  ]
+}
