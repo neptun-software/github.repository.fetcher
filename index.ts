@@ -196,38 +196,50 @@ async function fetchTopRepositories() {
 
   try {
     while (hasNextPage) {
-      const { search, rateLimit }: {
-        search: SearchResultItemConnection;
-        rateLimit: RateLimit;
-      } = await graphqlWithAuth(`
-        query getTopRepos($cursor: String) {
-          search(
-            query: "stars:>1000 sort:stars-desc"
-            type: REPOSITORY
-            first: 10
-            after: $cursor
-          ) {
-            nodes {
-              ... on Repository {
-                nameWithOwner
-                stargazerCount
+      let search: SearchResultItemConnection;
+      let rateLimit: RateLimit;
+
+      try {
+        const result: { search: SearchResultItemConnection; rateLimit: RateLimit } = await graphqlWithAuth(`
+          query getTopRepos($cursor: String) {
+            search(
+              query: "stars:>1000 sort:stars-desc"
+              type: REPOSITORY
+              first: 10
+              after: $cursor
+            ) {
+              nodes {
+                ... on Repository {
+                  nameWithOwner
+                  stargazerCount
+                }
+              }
+              pageInfo {
+                hasNextPage
+                endCursor
               }
             }
-            pageInfo {
-              hasNextPage
-              endCursor
+            rateLimit {
+              remaining
+              limit
+              cost
+              resetAt
             }
           }
-          rateLimit {
-            remaining
-            limit
-            cost
-            resetAt
-          }
+        `, {
+          cursor
+        });
+        search = result.search;
+        rateLimit = result.rateLimit;
+      } catch (error: any) {
+        if (isIpAllowlistError(error)) {
+          console.log('⚠️ Skipping repositories due to IP allowlist restrictions');
+          // Move to next page
+          cursor = error.response?.data?.search?.pageInfo?.endCursor ?? cursor;
+          continue;
         }
-      `, {
-        cursor
-      });
+        throw error;
+      }
 
       // Update pagination variables before processing repositories
       // This ensures we don't lose our place if processing fails
@@ -253,11 +265,16 @@ async function fetchTopRepositories() {
           // First try with blob contents
           fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, true);
           if (fetchedRepo.defaultBranchRef?.name === 'unknown') {
-            console.log(`⚠️ Limited access to ${repo.nameWithOwner} due to IP restrictions - storing minimal data`);
+            console.log(`⚠️ Limited access to ${repo.nameWithOwner} due to IP restrictions - skipping`);
+            continue;
           } else {
             console.log(`✅ Successfully fetched ${repo.nameWithOwner} with blob contents`);
           }
         } catch (error) {
+          if (isIpAllowlistError(error)) {
+            console.log(`⚠️ Skipping ${repo.nameWithOwner} due to IP allowlist restrictions`);
+            continue;
+          }
           await logError(`Failed to fetch ${repo.nameWithOwner} with blob contents, retrying without...`, error);
           try {
             // Retry without blob contents
