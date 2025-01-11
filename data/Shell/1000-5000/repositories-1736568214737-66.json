@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "timestamp": 1736568214737,
+    "page": 66,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "docker-easyconnect/docker-easyconnect",
+      "stars": 3916,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.7275390625,
+          "content": "FROM debian:bookworm-slim\n\nARG ANDROID_PATCH MIRROR_URL=http://ftp.cn.debian.org/debian/ EC_HOST VPN_TYPE=EC_GUI\n\nCOPY [\"./build-scripts/config-apt.sh\", \"./build-scripts/get-echost-names.sh\",  \"./build-scripts/add-qemu.sh\", \\\n      \"/tmp/build-scripts/\"]\n\nRUN . /tmp/build-scripts/config-apt.sh && \\\n    . /tmp/build-scripts/get-echost-names.sh && \\\n    . /tmp/build-scripts/add-qemu.sh && \\\n    apt-get update && \\\n    if [ \"ATRUST\" = \"$VPN_TYPE\" ]; then \\\n        extra_pkgs=\"libssl1.1 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libqt5x11extras5 procps \\\n                    libqt5core5a libqt5network5 libqt5widgets5 libldap-2.4-2 stalonetray\"; \\\n    else \\\n        extra_pkgs=\"libgtk2.0-0 libdbus-glib-1-2 libgconf-2-4 libnspr4:$EC_HOST libnss3:$EC_HOST\"; \\\n    fi && \\\n    apt-get install -y --no-install-recommends --no-install-suggests \\\n        libx11-xcb1 libnss3 libasound2 iptables xclip libxtst6 \\\n        dante-server tigervnc-standalone-server tigervnc-tools psmisc flwm x11-utils \\\n        busybox libssl-dev iproute2 tinyproxy-bin libxss1 ca-certificates \\\n        fonts-wqy-microhei socat $qemu_pkgs $extra_pkgs && \\\n    rm -rf /var/lib/apt/lists/*\n\nRUN groupadd -r socks && useradd -r -g socks socks\n\nCOPY [\"./build-scripts/install-vpn-gui.sh\", \"./build-scripts/mk-qemu-wrapper.sh\", \"/tmp/build-scripts/\"]\n\nCOPY ./docker-root-preinst /\n\nARG VPN_URL ELECTRON_URL USE_VPN_ELECTRON VPN_DEB_PATH\n\nRUN /tmp/build-scripts/install-vpn-gui.sh\n\nCOPY ./docker-root /\n\nCOPY --from=hagb/docker-easyconnect:build /results/fake-hwaddr/ /results/fake-getlogin/ /results/tinyproxy-ws/ /results/novnc/ /\n\n#ENV TYPE=\"\" PASSWORD=\"\" LOOP=\"\"\n#ENV DISPLAY\n#ENV USE_NOVNC=\"\"\n\nENV PING_INTERVAL=1800\n\nVOLUME /root/ /usr/share/sangfor/EasyConnect/resources/logs/\n\nCMD [\"start.sh\"]\n"
+        },
+        {
+          "name": "Dockerfile.build",
+          "type": "blob",
+          "size": 3.060546875,
+          "content": "FROM debian:bookworm-slim AS build\n\nARG ANDROID_PATCH BUILD_ENV=local MIRROR_URL=http://ftp.cn.debian.org/debian/ EC_HOST\n\nCOPY [\"./build-scripts/config-apt.sh\", \"./build-scripts/get-echost-names.sh\", \"/tmp/build-scripts/\"]\n\nRUN . /tmp/build-scripts/config-apt.sh && \\\n    . /tmp/build-scripts/get-echost-names.sh && \\\n    case \"$(dpkg --print-architecture)\" in \\\n        amd64 | i386 | arm64 ) go=golang-go ;; \\\n        * ) go=gccgo-go ;; \\\n    esac && \\\n    apt-get update && \\\n    apt-get install -y --no-install-recommends --no-install-suggests ca-certificates \\\n                    busybox libssl-dev automake $go $ecgccpkg build-essential\n\nRUN mkdir results && cd results && mkdir fake-hwaddr tinyproxy-ws novnc fake-getlogin && mkdir /tmp/src -p\n\nCOPY fake-hwaddr /tmp/src/fake-hwaddr/\nCOPY fake-getlogin /tmp/src/fake-getlogin/\n\nRUN . /tmp/build-scripts/get-echost-names.sh && \\\n    cd /tmp/src/fake-hwaddr && CC=${ec_cc} make clean all && install -D fake-hwaddr.so /results/fake-hwaddr/usr/local/lib/fake-hwaddr.so && \\\n    cd /tmp/src/fake-getlogin && CC=${ec_cc} make clean all && install -D fake-getlogin.so /results/fake-getlogin/usr/local/lib/fake-getlogin.so\n\n# https://github.com/tinyproxy/tinyproxy/pull/211#issue-382736027\nARG TINYPROXY_COMMIT=991e47d8ebd4b12710828b2b486535e4c25ba26c\n\nRUN cd /tmp/src/ && \\\n    busybox wget https://github.com/tinyproxy/tinyproxy/archive/${TINYPROXY_COMMIT}.zip -O tinyproxy.zip && \\\n    busybox unzip tinyproxy.zip && mv tinyproxy-${TINYPROXY_COMMIT} tinyproxy && cd tinyproxy && \\\n    ./autogen.sh --prefix=/usr && make && install -D src/tinyproxy /results/tinyproxy-ws/usr/bin/tinyproxy\n\nARG NOVNC_METHOD=min-size GOPROXY=http://proxy.golang.com.cn,direct\n\nRUN cd /tmp/src/ && \\\n    case \"${NOVNC_METHOD}\" in \\\n      min-size ) \\\n        busybox wget https://github.com/novnc/noVNC/archive/refs/heads/master.zip -O novnc.zip && \\\n        busybox wget https://github.com/novnc/websockify-other/archive/refs/heads/master.zip -O novnc-websockify.zip && \\\n        busybox unzip novnc.zip && mv noVNC-master novnc && ln -s vnc.html novnc/index.html && \\\n        sed -i \"s#UI.initSetting('path', 'websockify')#UI.initSetting('path','websockify/websockify')#\" novnc/app/ui.js && \\\n        mkdir -p /results/novnc/usr/local/share/ && mv novnc /results/novnc/usr/local/share/novnc && \\\n        busybox unzip novnc-websockify.zip && mv websockify-other-master novnc-websockify && \\\n        cd novnc-websockify/c/ && make && install -D websockify /results/novnc/usr/local/bin/websockify ;; \\\n      easy-novnc ) \\\n        busybox wget https://github.com/pgaskin/easy-novnc/archive/refs/heads/master.zip -O easy-novnc.zip && \\\n        busybox unzip easy-novnc.zip && mv easy-novnc-master easy-novnc && cd easy-novnc && \\\n        go build -ldflags \"-s -w\" -gccgoflags \"-Wl,-s,-gc-sections -fdata-sections -ffunction-sections -static-libgo\" && \\\n        install -D easy-novnc /results/novnc/usr/local/bin/easy-novnc ;; \\\n      * ) printf \"Not a vaild value of NOVNC_METHOD: %s\\n\" \"${NOVNC_METHOD}\" >&2 && false ;; \\\n    esac && ln -s novnc-${NOVNC_METHOD}.sh /results/novnc/usr/local/bin/novnc\n"
+        },
+        {
+          "name": "Dockerfile.cli",
+          "type": "blob",
+          "size": 2.8203125,
+          "content": "FROM debian:bookworm-slim\n\nARG ANDROID_PATCH BUILD_ENV=local MIRROR_URL=http://ftp.cn.debian.org/debian/ EC_HOST\n\nCOPY [\"./build-scripts/config-apt.sh\", \"./build-scripts/get-echost-names.sh\",  \"./build-scripts/add-qemu.sh\", \\\n      \"/tmp/build-scripts/\"]\n\nRUN . /tmp/build-scripts/config-apt.sh && \\\n    . /tmp/build-scripts/get-echost-names.sh && \\\n    . /tmp/build-scripts/add-qemu.sh && \\\n    apt-get update && \\\n    apt-get install -y --no-install-recommends --no-install-suggests iptables \\\n        dante-server busybox iproute2 tinyproxy-bin ca-certificates ${qemu_pkgs} socat && \\\n    for command in ps kill killall; do ln -s \"$(which busybox)\" /usr/local/bin/\"${command}\" || exit 1 ; done && \\\n    rm -rf /var/lib/apt/lists/*\n\nRUN groupadd -r socks && useradd -r -g socks socks\n\nARG EC_CLI_URL=\"https://github.com/shmilee/scripts/releases/download/v0.0.1/easyconn_7.6.8.2-ubuntu_amd64.deb\"\nCOPY ./build-scripts/mk-qemu-wrapper.sh /tmp/build-scripts/\n\nRUN EC_DIR=/usr/share/sangfor/EasyConnect/resources && cd /tmp && \\\n    busybox wget \"${EC_CLI_URL}\" -O easyconn.deb && \\\n    dpkg -x easyconn.deb easyconn && \\\n    bash -c \"mkdir -p ${EC_DIR}/{bin,lib64,shell,logs}/\" && \\\n    bash -c \"cp easyconn/${EC_DIR}/bin/{CSClient,easyconn,ECAgent,svpnservice,ca.crt,cert.crt} \\\n               /${EC_DIR}/bin/\" && \\\n    bash -c \"chmod +xs ${EC_DIR}/bin/{CSClient,ECAgent,svpnservice}\" && \\\n    extra_bins=easyconn . /tmp/build-scripts/mk-qemu-wrapper.sh && \\\n    bash -c \"cp easyconn/${EC_DIR}/lib64/lib{nspr4,nss3,nssutil3,plc4,plds4,smime3}.so \\\n               /${EC_DIR}/lib64/\" && \\\n    cp easyconn/${EC_DIR}/shell/* \\\n               /${EC_DIR}/shell/ && \\\n    chmod +x ${EC_DIR}/shell/* && \\\n    ln -s ${EC_DIR}/bin/easyconn /usr/local/bin/ && \\\n    cp -r easyconn/${EC_DIR}/conf ${EC_DIR}/conf_7.6.8 && rm -r * && echo \"EC_CLI\" > /etc/vpn-type\n\nARG EC_763_URL=\"http://download.sangfor.com.cn/download/product/sslvpn/pkg/linux_01/EasyConnect_x64.deb\"\nARG EC_767_URL=\"http://download.sangfor.com.cn/download/product/sslvpn/pkg/linux_767/EasyConnect_x64_7_6_7_3.deb\"\n\nRUN cd /tmp && \\\n    for ver in 7.6.3 7.6.7 ; do { \\\n        vername=EC_$( echo \"$ver\" | sed 's/\\.//g' )_URL && \\\n        url=\"$(eval printf %s \\\"\\$$vername\\\")\" && \\\n        if [ -n \"${url}\" ]; then busybox wget \"${url}\" -O EasyConnect.deb && dpkg -x EasyConnect.deb ec && \\\n        cp -r ec/usr/share/sangfor/EasyConnect/resources/conf \\\n                /usr/share/sangfor/EasyConnect/resources/conf_$ver && \\\n        rm -r *; fi ;} || exit 1 ; done\n\nRUN for i in /usr/share/sangfor/EasyConnect/resources/conf_*/; do \\\n        ln -s /root/.easyconn $i/.easyconn ; \\\n    done && touch /root/.easyconn\n\nCOPY ./docker-root /\n\nCOPY --from=hagb/docker-easyconnect:build /results/fake-hwaddr/ /results/tinyproxy-ws/ /\n\nENV PING_INTERVAL=1800\n\nVOLUME /root/ /usr/share/sangfor/EasyConnect/resources/logs/\n\nCMD [\"start.sh\"]\n"
+        },
+        {
+          "name": "Dockerfile.vncless",
+          "type": "blob",
+          "size": 1.7783203125,
+          "content": "FROM debian:bookworm-slim\n\nARG ANDROID_PATCH MIRROR_URL=http://ftp.cn.debian.org/debian/ EC_HOST VPN_TYPE=EC_GUI\n\nCOPY [\"./build-scripts/config-apt.sh\", \"./build-scripts/get-echost-names.sh\",  \"./build-scripts/add-qemu.sh\", \\\n      \"/tmp/build-scripts/\"]\n\nRUN . /tmp/build-scripts/config-apt.sh && \\\n    . /tmp/build-scripts/get-echost-names.sh && \\\n    . /tmp/build-scripts/add-qemu.sh && \\\n    apt-get update && \\\n    if [ \"ATRUST\" = \"$VPN_TYPE\" ]; then \\\n        extra_pkgs=\"libssl1.1 libatk-bridge2.0-0 libgtk-3-0 libgbm1 libqt5x11extras5 procps \\\n                    libqt5core5a libqt5network5 libqt5widgets5 libldap-2.4-2\"; \\\n    else \\\n        extra_pkgs=\"libgtk2.0-0 libdbus-glib-1-2 libgconf-2-4 libnspr4:$EC_HOST libnss3:$EC_HOST\"; \\\n    fi && \\\n    apt-get install -y --no-install-recommends --no-install-suggests $qemu_pkgs $extra_pkgs \\\n        ca-certificates libx11-xcb1 libnss3 libasound2 iptables fonts-wqy-microhei \\\n        dante-server psmisc libxaw7 xclip busybox libssl-dev iproute2 tinyproxy-bin libxss1 \\\n        socat libxtst6 && \\\n    cd /tmp && apt-get download x11-utils && dpkg -x x11-utils_*.deb x11-utils && \\\n    mkdir -p /usr/local/bin && cp x11-utils/usr/bin/xmessage /usr/local/bin && rm -r x11-utils* && \\\n    rm -rf /var/lib/apt/lists/*\n\nRUN groupadd -r socks && useradd -r -g socks socks\n\nCOPY [\"./build-scripts/install-vpn-gui.sh\", \"./build-scripts/mk-qemu-wrapper.sh\", \"/tmp/build-scripts/\"]\n\nCOPY ./docker-root-preinst /\n\nARG VPN_URL ELECTRON_URL USE_VPN_ELECTRON VPN_DEB_PATH\n\nRUN /tmp/build-scripts/install-vpn-gui.sh\n\nCOPY ./docker-root /\n\nCOPY --from=hagb/docker-easyconnect:build /results/fake-hwaddr/ /results/fake-getlogin/ /results/tinyproxy-ws/ /\n\nENV PING_INTERVAL=1800\n\nVOLUME /root/ /usr/share/sangfor/EasyConnect/resources/logs/\n\nCMD [\"env\", \"TYPE=x11\", \"start.sh\"]\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 0.4892578125,
+          "content": "        DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE \r\n                    Version 2, December 2004 \r\n\r\n Copyright (C) 2004 Sam Hocevar <sam@hocevar.net> \r\n\r\n Everyone is permitted to copy and distribute verbatim or modified \r\n copies of this license document, and changing it is allowed as long \r\n as the name is changed. \r\n\r\n            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE \r\n   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION \r\n\r\n  0. You just DO WHAT THE FUCK YOU WANT TO. \r\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.8623046875,
+          "content": "# docker-easyconnect\n\n让深信服开发的**非自由**的 VPN 软件 EasyConnect 或 aTrust 运行在 docker 中，提供 [socks5 和 http 代理](doc/usage.md#代理服务)服务和[网关](doc/usage.md#ip-forward)供宿主机连接使用。\n\n本项目基于 EasyConnect 官方“Linux”版的 deb 包、[@shmille](https://github.com/shmilee) 提供的[命令行版客户端 deb 包](https://github.com/shmilee/scripts/releases/download/v0.0.1/easyconn_7.6.8.2-ubuntu_amd64.deb)、aTrust 官方“Linux”版 deb 包，这些 deb 包的版权归深信服（Sangfor）所有，请不要滥用本项目。本项目**不是**深信服官方项目。\n\n**招募项目维护者，有兴趣可在 [#275](https://github.com/docker-easyconnect/docker-easyconnect/issues/275) 下回复。**\n\n欢迎批评、指正，提交 issue、PR，包括但不仅限于 bug、各种疑问、代码和文档的改进。\n\n详细用法见于 [doc/usage.md](doc/usage.md)，常见问题见于 [doc/faq.md](doc/faq.md)，自行构建可参照构建说明 [doc/build.md](doc/build.md)。\n\n## 简明使用步骤\n\n使用下述方式登录后，可以通过 `127.0.0.1:1080`、`127.0.0.1:8888` 分别访问 [socks5 和 http 代理](doc/usage.md#代理服务)。\n\n### 纯命令行版 EasyConnect（amd64 架构）\n\n注意，纯命令行版本仅支持下列登录方式：用户名+密码、硬件特征码。\n\n1. [安装Docker并运行](https://docs.docker.com/get-docker/)；\n2.  在终端输入：\n\t``` bash\n\tdocker run --rm --device /dev/net/tun --cap-add NET_ADMIN -ti -p 127.0.0.1:1080:1080 -p 127.0.0.1:8888:8888 -e EC_VER=7.6.3 -e CLI_OPTS=\"-d vpnaddress -u username -p password\" hagb/docker-easyconnect:cli\n\t```\n\t其中 `-e EC_VER=7.6.7` 表示使用 `7.6.7` 版本的 EasyConnect，请根据实际情况修改版本号（选择 `7.6.7` 或 `7.6.3`，详见 [EasyConnect 版本选择](doc/usage.md#easyconnect-版本选择)）；\n3. 根据提示输入服务器地址、登录凭据。\n\n### 图形界面版 EasyConnect（x86、amd64、arm64、mips64el 架构）\n\n1. [安装Docker并运行](https://docs.docker.com/get-docker/)；\n2. 在终端输入： `docker run --rm --device /dev/net/tun --cap-add NET_ADMIN -ti -e PASSWORD=xxxx -e URLWIN=1 -v $HOME/.ecdata:/root -p 127.0.0.1:5901:5901 -p 127.0.0.1:1080:1080 -p 127.0.0.1:8888:8888 hagb/docker-easyconnect:7.6.7`（末尾 EasyConnect 版本号 `7.6.7` 请根据实际情况修改；arm64 和 mips64el 架构需要加入 `-e DISABLE_PKG_VERSION_XML=1` 参数）；\n3. 使用vnc客户端连接vnc， 地址：`127.0.0.1`，端口: 5901, 密码 xxxx；\n4. 成功连上后你应该能看到 EasyConnect 的登录窗口，填写登录凭据并登录，若需要 web 登录可参看 [web 登录](doc/usage.md#web-登录)。\n\n### 图形界面版 aTrust（amd64、arm64、mips64el 架构）\n\n1. [安装Docker并运行](https://docs.docker.com/get-docker/)；\n2. 在终端输入： `docker run --rm --device /dev/net/tun --cap-add NET_ADMIN -ti -e PASSWORD=xxxx -e URLWIN=1 -v $HOME/.atrust-data:/root -p 127.0.0.1:5901:5901 -p 127.0.0.1:1080:1080 -p 127.0.0.1:8888:8888 -p 127.0.0.1:54631:54631 --sysctl net.ipv4.conf.default.route_localnet=1 hagb/docker-atrust`；\n3. 使用vnc客户端连接vnc， 地址：127.0.0.1，端口: 5901, 密码 xxxx；\n4. 成功连上后你应该能看到 aTrust 的登录窗口；若需要 web 登录，在宿主机的浏览器打开 aTrust 弹出的网址网址登录即可；若需要无人值守的自动化登录和保活，请[参见此处](https://github.com/kenvix/aTrustLogin)。\n\n\n## 拉取\n\n### 从 Docker Hub 上直接获取：\n\n```\ndocker pull hagb/docker-easyconnect:TAG\n```\n\n其中 TAG 可以是如下值（不带 VNC 服务端的 image 比带 VNC 服务端的 image 小）：\n\n- `latest`: 默认值，带 VNC 服务端的`7.6.7`版 image，\n- `cli`: 多版本（`7.6.3`, `7.6.7`, `7.6.8`）纯命令行版\n- `vncless`: 不带 VNC 服务端的`7.6.7`版 image\n- `7.6.3`: 带 VNC 服务端的`7.6.3`版 image\n- `vncless-7.6.3`: 不带 VNC 服务端的`7.6.3`版 image\n- `7.6.7`: 带 VNC 服务端的`7.6.7`版 image\n- `vncless-7.6.7`: 不带 VNC 服务端的`7.6.7`版 image\n\n## 参考资料\n\n登录过程的一个 hack ([docker-root/usr/local/bin/start-sangfor.sh](docker-root/usr/local/bin/start-sangfor.sh))参考了这篇文章：<https://blog.51cto.com/13226459/2476193>。在此对该文作者表示感谢。\n\n## 其他 EasyConnect 相关项目\n\n- [@shmilee](https://github.com/shmilee) 的 [easyconnect-in-docker 方案](https://github.com/shmilee/scripts/tree/master/easyconnect-in-docker)（另见 [#35](https://github.com/Hagb/docker-easyconnect/issues/35)）实现了多 EasyConnect 版本共用容器\n- [ultranity/minimal-EasyConnect](https://github.com/ultranity/minimal-EasyConnect): minimal EasyConnect CLI in docker-alpine\n- [Mythologyli/ZJU-Connect](https://github.com/Mythologyli/ZJU-Connect): ZJU RVPN 客户端的 Go 语言实现\n- [zhangt2333/actions-easyconnect](https://github.com/zhangt2333/actions-easyconnect): Github Actions: run code with EasyConnect VPN\n- [CoolSpring8/rwppa](https://github.com/CoolSpring8/rwppa): 将浙江大学网页版 RVPN 模拟为本地 HTTP 代理 - (ZJU) RVPN Web Portal Proxy Adapter\n\n## 版权及许可证\n\n> Copyright © 2020 contributors\n>\n> This work is free. You can redistribute it and/or modify it under the  \n> terms of the Do What The Fuck You Want To Public License, Version 2,  \n> as published by Sam Hocevar. See the COPYING file for more details. \n>\n>        DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE  \n>                    Version 2, December 2004  \n>\n> Copyright (C) 2004 Sam Hocevar <sam@hocevar.net>  \n>\n> Everyone is permitted to copy and distribute verbatim or modified  \n> copies of this license document, and changing it is allowed as long  \n> as the name is changed.  \n>  \n>            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE  \n>   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION  \n>  \n>  0. You just DO WHAT THE FUCK YOU WANT TO. \n"
+        },
+        {
+          "name": "build-args",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build-scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.4521484375,
+          "content": "version: '2'\nservices:\n    easyconnect:\n        image: hagb/docker-easyconnect:7.6.7 # latest, vncless, 7.6.3, vncless-7.6.3, 7.6.7, vncless-7.6.7\n        devices:\n          - /dev/net/tun\n        cap_add: \n          - NET_ADMIN\n        volumes:\n          - $HOME/.ecdata:/root\n        environment:\n          - URLWIN=1\n          - PASSWORD=xxxx\n        ports:\n          - \"127.0.0.1:5901:5901\"\n          - \"127.0.0.1:1080:1080\"\n          - \"127.0.0.1:8888:8888\"\n"
+        },
+        {
+          "name": "docker-root-preinst",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-root",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fake-getlogin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fake-hwaddr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "macos_example.sh",
+          "type": "blob",
+          "size": 0.50390625,
+          "content": "#!/bin/sh\n\n# You should install Docker desktop for mac first.\ndocker images\nif [ $? != 0 ]\nthen\n    open /Applications/Docker.app\nfi\ndocker images\nSTATUS=$?\nwhile [ $STATUS != 0 ]\ndo\n    echo \"WAIT FOR DOCKER RUNNING...\"\n    sleep 5\n    docker images\n    STATUS=$?\ndone\ndocker run --rm --device /dev/net/tun --cap-add NET_ADMIN -ti -e PASSWORD=xxxx -e URLWIN=1 -v $HOME/.ecdata:/root -p 127.0.0.1:5901:5901 -p 127.0.0.1:1080:1080 -p 127.0.0.1:8888:8888 hagb/docker-easyconnect\n# Then you can connect with vnc client\n"
+        },
+        {
+          "name": "pkg_version.xml",
+          "type": "blob",
+          "size": 2.548828125,
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- \n1.mac_01或linux_01等为系列号，也是URL路径中文件夹名，里面的版本兼容该系列所有VPN版本；\n2.系列号（文件夹名）下面只有一个安装包，version为该安装包的版本号；\n3.force_update_le表示，同系列号下已安装的客户端，若其版本号小于等于这个版本，都需要进行强制升级；\n4.mac节点表示为mac安装包信息；\n5.linux节点表示为linux安装包信息，deb/rpm表示安装包格式，x86/x64表示系统架构。\n-->\n<root>\n    <mac>\n        <mac_ec_sp>\n            <version>7.5.2.6</version>\n            <force_update_le>7.5.2.5</force_update_le>\n        </mac_ec_sp>\n        <mac_01>\n            <version>7.6.6.6</version>\n            <force_update_le>7.6.6.5</force_update_le>\n        </mac_01>\n        <mac_765>\n            <version>7.6.5.0</version>\n            <force_update_le>7.6.3.0</force_update_le>\n        </mac_765>\n        <mac_767>\n            <version>7.6.7.10</version>\n            <force_update_le>7.6.7.9</force_update_le>\n        </mac_767>\n    </mac>\n    <linux>\n        <linux_01>\n            <deb>\n                <x86>\n                    <version>7.6.3.7</version>\n                    <force_update_le>7.6.3.6</force_update_le>\n                </x86>\n                <x64>\n                    <version>7.6.3.7</version>\n                    <force_update_le>7.6.3.6</force_update_le>\n                </x64>\n                </deb>\n            <rpm>\n                <x86>\n                    <version>7.6.3.7</version>\n                    <force_update_le>7.6.3.6</force_update_le>\n                </x86>\n                <x64>\n                    <version>7.6.3.7</version>\n                    <force_update_le>7.6.3.6</force_update_le>\n                </x64>\n            </rpm>\n        </linux_01>\n        <linux_767>\n            <deb>\n                <x86>\n                    <version>7.6.7.7</version>\n                    <force_update_le>7.6.7.6</force_update_le>\n                </x86>\n                <x64>\n                    <version>7.6.7.7</version>\n                    <force_update_le>7.6.7.6</force_update_le>\n                </x64>\n            </deb>\n            <rpm>\n                <x86>\n                    <version>7.6.7.7</version>\n                    <force_update_le>7.6.7.6</force_update_le>\n                </x86>\n                <x64>\n                    <version>7.6.7.7</version>\n                    <force_update_le>7.6.7.6</force_update_le>\n                </x64>\n            </rpm>\n        </linux_767>\n    </linux>\n</root>\n"
+        }
+      ]
+    }
+  ]
+}

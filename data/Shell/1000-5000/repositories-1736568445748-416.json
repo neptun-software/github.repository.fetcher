@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736568445748,
+    "page": 416,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hmaverickadams/breach-parse",
+      "stars": 1889,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0400390625,
+          "content": "*-master.txt\n*-passwords.txt\n*-users.txt\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.6748046875,
+          "content": "# breach-parse\nA tool for parsing breached passwords\n\n### Installation\n\nInstall: `sudo ./install.sh`\n\nDownload breached password list from magnet located here: `magnet:?xt=urn:btih:7ffbcd8cee06aba2ce6561688cf68ce2addca0a3&dn=BreachCompilation&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fglotorrents.pw%3A6969&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337`\n\nIf you don't store the password list (BreachCompilation) in `/opt/breach-parse`, specify the location like: \n\n`breach-parse @gmail.com gmail.txt \"~/Downloads/BreachCompilation/data\"`\n\nRun `breach-parse` for instructions"
+        },
+        {
+          "name": "breach-parse.sh",
+          "type": "blob",
+          "size": 3.0576171875,
+          "content": "#!/usr/bin/env bash\n\nif [ $# -lt 2 ]; then\n    echo \"Breach-Parse v2: A Breached Domain Parsing Tool by Heath Adams\"\n    echo \" \"\n    echo \"Usage: ./breach-parse.sh <domain to search> <file to output> [breach data location]\"\n    echo \"Example: ./breach-parse.sh @gmail.com gmail.txt\"\n    echo 'Example: ./breach-parse.sh @gmail.com gmail.txt \"~/Downloads/BreachCompilation/data\"'\n    echo \"You only need to specify [breach data location] if its not in the expected location (/opt/breach-parse/BreachCompilation/data)\"\n    echo \" \"\n    echo 'For multiple domains: ./breach-parse.sh \"<domain to search>|<domain to search>\" <file to output>'\n    echo 'Example: ./breach-parse.sh \"@gmail.com|@yahoo.com\" multiple.txt'\n    exit 1\nelse\n    if [ $# -ge 4 ]; then\n        echo 'You supplied more than 3 arguments, make sure to double quote your strings:'\n        echo 'Example: ./breach-parse.sh @gmail.com gmail.txt \"~/Downloads/Temp Files/BreachCompilation\"'\n        exit 1\n    fi\n\n    # assume default location\n    breachDataLocation=\"/opt/breach-parse/BreachCompilation/data\"\n    # check if BreachCompilation was specified to be somewhere else\n    if [ $# -eq 3 ]; then\n        if [ -d \"$3\" ]; then\n            breachDataLocation=\"$3\"\n        else\n            echo \"Could not find a directory at ${3}\"\n            echo 'Pass the BreachCompilation/data directory as the third argument'\n            echo 'Example: ./breach-parse.sh @gmail.com gmail.txt \"~/Downloads/BreachCompilation/data\"'\n            exit 1\n        fi\n    else\n        if [ ! -d \"${breachDataLocation}\" ]; then\n            echo \"Could not find a directory at ${breachDataLocation}\"\n            echo 'Put the breached password list there or specify the location of the BreachCompilation/data as the third argument'\n            echo 'Example: ./breach-parse.sh @gmail.com gmail.txt \"~/Downloads/BreachCompilation/data\"'\n            exit 1\n        fi\n    fi\n\n    # set output filenames\n    fullfile=$2\n    fbname=$(basename \"$fullfile\" | cut -d. -f1)\n    master=$fbname-master.txt\n    users=$fbname-users.txt\n    passwords=$fbname-passwords.txt\n\n    touch $master\n    # count files for progressBar\n    # -not -path '*/\\.*' ignores hidden files/directories that may have been created by the OS\n    total_Files=$(find \"$breachDataLocation\" -type f -not -path '*/\\.*' | wc -l)\n    file_Count=0\n\n    function ProgressBar() {\n\n        let _progress=$(((file_Count * 100 / total_Files * 100) / 100))\n        let _done=$(((_progress * 4) / 10))\n        let _left=$((40 - _done))\n\n        _fill=$(printf \"%${_done}s\")\n        _empty=$(printf \"%${_left}s\")\n\n        printf \"\\rProgress : [${_fill// /\\#}${_empty// /-}] ${_progress}%%\"\n\n    }\n\n    # grep for passwords\n    find \"$breachDataLocation\" -type f -not -path '*/\\.*' -print0 | while read -d $'\\0' file; do\n        grep -a -E \"$1\" \"$file\" >>$master\n        ((++file_Count))\n        ProgressBar ${number} ${total_Files}\n\n    done\nfi\n\nsleep 3\n\necho # newline\necho \"Extracting usernames...\"\nawk -F':' '{print $1}' $master >$users\n\nsleep 1\n\necho \"Extracting passwords...\"\nawk -F':' '{print $2}' $master >$passwords\necho\nexit 0\n"
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 0.2392578125,
+          "content": "#!/bin/bash\n\nuid=$(id -u)\n\nif [ \"$uid\" -ne 0 ]\n    then echo \"Error: To install, please run as root (uid 0).\"\n    exit\nfi\n\ncp ./breach-parse.sh ./breach-parse\nmv ./breach-parse /usr/local/bin/\n\necho \"Installation complete. Usage: $ breach-parse\""
+        }
+      ]
+    }
+  ]
+}

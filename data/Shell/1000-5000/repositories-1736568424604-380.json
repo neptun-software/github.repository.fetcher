@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "timestamp": 1736568424604,
+    "page": 380,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM4OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dominictarr/JSON.sh",
+      "stars": 2001,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.046875,
+          "content": "test/errlog\ntest/outlog\n\n# vi .swp files\n.*.swp\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.3466796875,
+          "content": "language: python\n\naddons:\n  apt:\n    packages:\n      - bash\n      - dash\n      - zsh\n\n# Whatever the current shebang, replace with hardcoded shell\nscript: >\n  sed -i '1s@.*@#!/usr/bin/env bash@' JSON.sh && ./all-tests.sh &&\n  sed -i '1s@.*@#!/usr/bin/env zsh@'  JSON.sh && ./all-tests.sh &&\n  sed -i '1s@.*@#!/usr/bin/env dash@' JSON.sh && ./all-tests.sh\n"
+        },
+        {
+          "name": "JSON.sh",
+          "type": "blob",
+          "size": 4.6962890625,
+          "content": "#!/bin/sh\n\nthrow() {\n  echo \"$*\" >&2\n  exit 1\n}\n\nBRIEF=0\nLEAFONLY=0\nPRUNE=0\nNO_HEAD=0\nNORMALIZE_SOLIDUS=0\n\nusage() {\n  echo\n  echo \"Usage: JSON.sh [-b] [-l] [-p] [-s] [-h]\"\n  echo\n  echo \"-p - Prune empty. Exclude fields with empty values.\"\n  echo \"-l - Leaf only. Only show leaf nodes, which stops data duplication.\"\n  echo \"-b - Brief. Combines 'Leaf only' and 'Prune empty' options.\"\n  echo \"-n - No-head. Do not show nodes that have no path (lines that start with []).\"\n  echo \"-s - Remove escaping of the solidus symbol (straight slash).\"\n  echo \"-h - This help text.\"\n  echo\n}\n\nparse_options() {\n  set -- \"$@\"\n  local ARGN=$#\n  while [ \"$ARGN\" -ne 0 ]\n  do\n    case $1 in\n      -h) usage\n          exit 0\n      ;;\n      -b) BRIEF=1\n          LEAFONLY=1\n          PRUNE=1\n      ;;\n      -l) LEAFONLY=1\n      ;;\n      -p) PRUNE=1\n      ;;\n      -n) NO_HEAD=1\n      ;;\n      -s) NORMALIZE_SOLIDUS=1\n      ;;\n      ?*) echo \"ERROR: Unknown option.\"\n          usage\n          exit 0\n      ;;\n    esac\n    shift 1\n    ARGN=$((ARGN-1))\n  done\n}\n\nawk_egrep () {\n  local pattern_string=$1\n\n  gawk '{\n    while ($0) {\n      start=match($0, pattern);\n      token=substr($0, start, RLENGTH);\n      print token;\n      $0=substr($0, start+RLENGTH);\n    }\n  }' pattern=\"$pattern_string\"\n}\n\ntokenize () {\n  local GREP\n  local ESCAPE\n  local CHAR\n\n  if echo \"test string\" | egrep -ao --color=never \"test\" >/dev/null 2>&1\n  then\n    GREP='egrep -ao --color=never'\n  else\n    GREP='egrep -ao'\n  fi\n\n  if echo \"test string\" | egrep -o \"test\" >/dev/null 2>&1\n  then\n    ESCAPE='(\\\\[^u[:cntrl:]]|\\\\u[0-9a-fA-F]{4})'\n    CHAR='[^[:cntrl:]\"\\\\]'\n  else\n    GREP=awk_egrep\n    ESCAPE='(\\\\\\\\[^u[:cntrl:]]|\\\\u[0-9a-fA-F]{4})'\n    CHAR='[^[:cntrl:]\"\\\\\\\\]'\n  fi\n\n  local STRING=\"\\\"$CHAR*($ESCAPE$CHAR*)*\\\"\"\n  local NUMBER='-?(0|[1-9][0-9]*)([.][0-9]*)?([eE][+-]?[0-9]*)?'\n  local KEYWORD='null|false|true'\n  local SPACE='[[:space:]]+'\n\n  # Force zsh to expand $A into multiple words\n  local is_wordsplit_disabled=$(unsetopt 2>/dev/null | grep -c '^shwordsplit$')\n  if [ $is_wordsplit_disabled != 0 ]; then setopt shwordsplit; fi\n  $GREP \"$STRING|$NUMBER|$KEYWORD|$SPACE|.\" | egrep -v \"^$SPACE$\"\n  if [ $is_wordsplit_disabled != 0 ]; then unsetopt shwordsplit; fi\n}\n\nparse_array () {\n  local index=0\n  local ary=''\n  read -r token\n  case \"$token\" in\n    ']') ;;\n    *)\n      while :\n      do\n        parse_value \"$1\" \"$index\"\n        index=$((index+1))\n        ary=\"$ary\"\"$value\" \n        read -r token\n        case \"$token\" in\n          ']') break ;;\n          ',') ary=\"$ary,\" ;;\n          *) throw \"EXPECTED , or ] GOT ${token:-EOF}\" ;;\n        esac\n        read -r token\n      done\n      ;;\n  esac\n  [ \"$BRIEF\" -eq 0 ] && value=$(printf '[%s]' \"$ary\") || value=\n  :\n}\n\nparse_object () {\n  local key\n  local obj=''\n  read -r token\n  case \"$token\" in\n    '}') ;;\n    *)\n      while :\n      do\n        case \"$token\" in\n          '\"'*'\"') key=$token ;;\n          *) throw \"EXPECTED string GOT ${token:-EOF}\" ;;\n        esac\n        read -r token\n        case \"$token\" in\n          ':') ;;\n          *) throw \"EXPECTED : GOT ${token:-EOF}\" ;;\n        esac\n        read -r token\n        parse_value \"$1\" \"$key\"\n        obj=\"$obj$key:$value\"        \n        read -r token\n        case \"$token\" in\n          '}') break ;;\n          ',') obj=\"$obj,\" ;;\n          *) throw \"EXPECTED , or } GOT ${token:-EOF}\" ;;\n        esac\n        read -r token\n      done\n    ;;\n  esac\n  [ \"$BRIEF\" -eq 0 ] && value=$(printf '{%s}' \"$obj\") || value=\n  :\n}\n\nparse_value () {\n  local jpath=\"${1:+$1,}$2\" isleaf=0 isempty=0 print=0\n  case \"$token\" in\n    '{') parse_object \"$jpath\" ;;\n    '[') parse_array  \"$jpath\" ;;\n    # At this point, the only valid single-character tokens are digits.\n    ''|[!0-9]) throw \"EXPECTED value GOT ${token:-EOF}\" ;;\n    *) value=$token\n       # if asked, replace solidus (\"\\/\") in json strings with normalized value: \"/\"\n       [ \"$NORMALIZE_SOLIDUS\" -eq 1 ] && value=$(echo \"$value\" | sed 's#\\\\/#/#g')\n       isleaf=1\n       [ \"$value\" = '\"\"' ] && isempty=1\n       ;;\n  esac\n  [ \"$value\" = '' ] && return\n  [ \"$NO_HEAD\" -eq 1 ] && [ -z \"$jpath\" ] && return\n\n  [ \"$LEAFONLY\" -eq 0 ] && [ \"$PRUNE\" -eq 0 ] && print=1\n  [ \"$LEAFONLY\" -eq 1 ] && [ \"$isleaf\" -eq 1 ] && [ $PRUNE -eq 0 ] && print=1\n  [ \"$LEAFONLY\" -eq 0 ] && [ \"$PRUNE\" -eq 1 ] && [ \"$isempty\" -eq 0 ] && print=1\n  [ \"$LEAFONLY\" -eq 1 ] && [ \"$isleaf\" -eq 1 ] && \\\n    [ $PRUNE -eq 1 ] && [ $isempty -eq 0 ] && print=1\n  [ \"$print\" -eq 1 ] && printf \"[%s]\\t%s\\n\" \"$jpath\" \"$value\"\n  :\n}\n\nparse () {\n  read -r token\n  parse_value\n  read -r token\n  case \"$token\" in\n    '') ;;\n    *) throw \"EXPECTED EOF GOT $token\" ;;\n  esac\n}\n\nif ([ \"$0\" = \"$BASH_SOURCE\" ] || ! [ -n \"$BASH_SOURCE\" ]);\nthen\n  parse_options \"$@\"\n  tokenize | parse\nfi\n\n# vi: expandtab sw=2 ts=2\n"
+        },
+        {
+          "name": "LICENSE.APACHE2",
+          "type": "blob",
+          "size": 0.572265625,
+          "content": "Apache License, Version 2.0\n\nCopyright (c) 2011 Dominic Tarr\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "LICENSE.MIT",
+          "type": "blob",
+          "size": 1.0625,
+          "content": "The MIT License\n\nCopyright (c) 2011 Dominic Tarr\n\nPermission is hereby granted, free of charge, \nto any person obtaining a copy of this software and \nassociated documentation files (the \"Software\"), to \ndeal in the Software without restriction, including \nwithout limitation the rights to use, copy, modify, \nmerge, publish, distribute, sublicense, and/or sell \ncopies of the Software, and to permit persons to whom \nthe Software is furnished to do so, \nsubject to the following conditions:\n\nThe above copyright notice and this permission notice \nshall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, \nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES \nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. \nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR \nANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, \nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE \nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.0615234375,
+          "content": "include README.md\r\ninclude LICENSE.MIT\r\ninclude LICENSE.APACHE2"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0458984375,
+          "content": "# JSON.sh\n\nyo, so it's a json parser written in shell, compatible with ash, bash, dash and zsh\n\n[![travis](https://secure.travis-ci.org/dominictarr/JSON.sh.png?branch=master)](https://travis-ci.org/dominictarr/JSON.sh)\n\npipe json to it, and it traverses the json objects and prints out the \npath to the current object (as a JSON array) and then the object, without whitespace.\n\n``` bash\n$ json_parse < package.json\n[\"name\"]  \"JSON.sh\"\n[\"version\"]  \"0.0.0\"\n[\"description\"]  \"\"\n[\"homepage\"]  \"http://github.com/dominictarr/JSON.sh\"\n[\"repository\",\"type\"]  \"git\"\n[\"repository\",\"url\"]  \"https://github.com/dominictarr/JSON.sh.git\"\n[\"repository\"]  {\"type\":\"git\",\"url\":\"https://github.com/dominictarr/JSON.sh.git\"}\n[\"bin\",\"json_parse\"]  \"./JSON.sh\"\n[\"bin\"]  {\"json_parse\":\"./JSON.sh\"}\n[\"dependencies\"]  {}\n#  ... etc\n```\n\na more complex example:\n\n``` bash\ncurl registry.npmjs.org/express | ./JSON.sh | egrep '\\[\"versions\",\"[^\"]*\"\\]'\n... try it and see\n```\n\n## Options\n\n-b\n> Brief output. Combines 'Leaf only' and 'Prune empty' options.\n\n-l\n> Leaf only. Only show leaf nodes, which stops data duplication.\n\n-p\n> Prune empty. Exclude fields with empty values.\n\n-n\n> No-head. Don't show nodes that have no path. Normally these output a leading '[]', which you can't use in a bash array.\n\n-s\n> Remove escaping of the solidus symbol (stright slash).\n\n-h\n> Show help text.\n\n## Cool Links\n\n* [step-/JSON.awk](https://github.com/step-/JSON.awk) JSON.sh ported to awk\n* [kristopolous/TickTick](https://github.com/kristopolous/TickTick) Object Oriented BASH\n* [archan937/jsonv.sh](https://github.com/archan937/jsonv.sh)\n* [mclarkson/JSONPath.sh](https://github.com/mclarkson/JSONPath.sh) JSONPath based on JSON.sh\n\n## Installation\n\nInstall with npm, pip or from AUR on Archlinux:\n\n* `npm install -g JSON.sh`\n* `pip install git+https://github.com/dominictarr/JSON.sh#egg=JSON.sh`\n* `yaourt -Sy json-sh`\n  ([json-sh on aur](https://aur.archlinux.org/packages/json-sh/)\n  thanks to [kremlin-](https://github.com/kremlin-))\n\n## License\n\nThis software is available under the following licenses:\n\n  * MIT\n  * Apache 2\n"
+        },
+        {
+          "name": "all-tests.sh",
+          "type": "blob",
+          "size": 0.4736328125,
+          "content": "#!/bin/sh\n\ncd \"${0%/*}\"\n\n#set -e\nfail=0\ntests=0\npassed=0\n#all_tests=${__dirname:}\n#echo PLAN ${#all_tests}\nfor test in test/*.sh ;\ndo\n  tests=$((tests+1))\n  echo TEST: $test\n  ./$test\n  ret=$?\n  if [ $ret -eq 0 ] ; then\n    echo OK: ---- $test\n    passed=$((passed+1))\n  else\n    echo FAIL: $test $fail\n    fail=$((fail+ret))\n  fi\ndone\n\nif [ $fail -eq 0 ]; then\n  /bin/echo -n 'SUCCESS '\n  exitcode=0\nelse\n  /bin/echo -n 'FAILURE '\n  exitcode=1\nfi\necho $passed / $tests\nexit $exitcode\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.45703125,
+          "content": "{\n  \"name\": \"JSON.sh\",\n  \"version\": \"0.3.3\",\n  \"description\": \"JSON parser written in shell\",\n  \"homepage\": \"http://github.com/dominictarr/JSON.sh\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/dominictarr/JSON.sh.git\"\n  },\n  \"bin\": {\n    \"JSON.sh\": \"./JSON.sh\"\n  },\n  \"dependencies\": {},\n  \"devDependencies\": {},\n  \"author\": \"Dominic Tarr <dominic.tarr@gmail.com> (http://bit.ly/dominictarr)\",\n  \"scripts\": {\n    \"test\": \"./all-tests.sh\"\n  }\n}\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 0.9375,
+          "content": "#!/usr/bin/env python\r\n# -*- coding: utf-8 -*-\r\n\r\nfrom setuptools import setup\r\nimport os\r\n\r\n# Allow setup.py to be run from any path\r\nos.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))\r\n\r\nsetup(\r\n    name='JSON.sh',\r\n    scripts=[\r\n        'JSON.sh',\r\n    ],\r\n    version='0.3.2',\r\n    description=\"JSON parser written in shell\",\r\n    long_description=\"\",\r\n    author='Dominic Tarr (http://bit.ly/dominictarr)',\r\n    author_email='dominic.tarr@gmail.com',\r\n    url='https://github.com/dominictarr/JSON.sh',\r\n    classifiers=[\r\n        \"Programming Language :: Unix Shell\",\r\n        \"License :: OSI Approved :: MIT License\",\r\n        \"License :: OSI Approved :: Apache Software License\",\r\n        \"Intended Audience :: System Administrators\",\r\n        \"Intended Audience :: Developers\",\r\n        \"Operating System :: POSIX :: Linux\",\r\n        \"Topic :: Utilities\",\r\n        \"Topic :: Software Development :: Libraries\",\r\n    ],\r\n)\r\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

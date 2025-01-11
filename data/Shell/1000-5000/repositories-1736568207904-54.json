@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "timestamp": 1736568207904,
+    "page": 54,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kaitai-io/kaitai_struct",
+      "stars": 4057,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 1.9248046875,
+          "content": "[submodule \"runtime/java\"]\n\tpath = runtime/java\n\turl = https://github.com/kaitai-io/kaitai_struct_java_runtime.git\n[submodule \"runtime/python\"]\n\tpath = runtime/python\n\turl = https://github.com/kaitai-io/kaitai_struct_python_runtime.git\n[submodule \"runtime/ruby\"]\n\tpath = runtime/ruby\n\turl = https://github.com/kaitai-io/kaitai_struct_ruby_runtime.git\n[submodule \"tests\"]\n\tpath = tests\n\turl = https://github.com/kaitai-io/kaitai_struct_tests.git\n[submodule \"compiler\"]\n\tpath = compiler\n\turl = https://github.com/kaitai-io/kaitai_struct_compiler.git\n[submodule \"runtime/javascript\"]\n\tpath = runtime/javascript\n\turl = https://github.com/kaitai-io/kaitai_struct_javascript_runtime.git\n[submodule \"runtime/cpp_stl\"]\n\tpath = runtime/cpp_stl\n\turl = https://github.com/kaitai-io/kaitai_struct_cpp_stl_runtime.git\n[submodule \"runtime/csharp\"]\n\tpath = runtime/csharp\n\turl = https://github.com/kaitai-io/kaitai_struct_csharp_runtime\n[submodule \"formats\"]\n\tpath = formats\n\turl = https://github.com/kaitai-io/kaitai_struct_formats.git\n[submodule \"visualizer\"]\n\tpath = visualizer\n\turl = https://github.com/kaitai-io/kaitai_struct_visualizer.git\n[submodule \"runtime/php\"]\n\tpath = runtime/php\n\turl = https://github.com/kaitai-io/kaitai_struct_php_runtime\n[submodule \"runtime/perl\"]\n\tpath = runtime/perl\n\turl = https://github.com/kaitai-io/kaitai_struct_perl_runtime\n[submodule \"benchmarks\"]\n\tpath = benchmarks\n\turl = https://github.com/kaitai-io/kaitai_struct_benchmarks\n[submodule \"doc\"]\n\tpath = doc\n\turl = https://github.com/kaitai-io/kaitai_struct_doc\n[submodule \"runtime/go\"]\n\tpath = runtime/go\n\turl = https://github.com/kaitai-io/kaitai_struct_go_runtime\n[submodule \"runtime/lua\"]\n\tpath = runtime/lua\n\turl = https://github.com/kaitai-io/kaitai_struct_lua_runtime\n[submodule \"runtime/nim\"]\n\tpath = runtime/nim\n\turl = https://github.com/kaitai-io/kaitai_struct_nim_runtime\n[submodule \"runtime/rust\"]\n\tpath = runtime/rust\n\turl = https://github.com/kaitai-io/kaitai_struct_rust_runtime\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.728515625,
+          "content": "# Kaitai Struct\n\n[![Join the chat at https://gitter.im/kaitai_struct/Lobby](https://badges.gitter.im/kaitai_struct/Lobby.svg)](https://gitter.im/kaitai_struct/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n\n> **Note:** if you want to make changes to the project, do **not** fork this repository *kaitai_struct*. Instead, choose the component you want to modify in the file tree above and fork **that** individual component instead.\n>\n> This is an umbrella repository, containing the components only as submodules to make it easier to check out the entire project. Unless you want to modify this README, it is not the repo where you can make edits.\n\n## What is Kaitai Struct?\n\nKaitai Struct is a declarative language used for describing various\nbinary data structures laid out in files or in memory: i.e. binary\nfile formats, network stream packet formats, etc.\n\nThe main idea is that a particular format is described in Kaitai\nStruct language only once and then can be compiled with a `ksc` into\nsource files in one of the supported programming languages. These\nmodules will include a generated code for a parser that can read\ndescribed data structure from a file / stream and give access to it in\na nice, easy-to-comprehend API.\n\n## What it's used for?\n\nHave you ever found yourself writing repetitive, error-prone and\nhard-to-debug code that reads binary data structures from file /\nnetwork stream and somehow represents them in memory for easier\naccess?\n\nKaitai Struct tries to make this job easier — you only have to\ndescribe the binary format once and then everybody can use it from their\nprogramming languages — cross-language, cross-platform.\n\nKaitai Struct includes a growing collection of format descriptions,\navailable in\n[formats](https://github.com/kaitai-io/kaitai_struct_formats)\nsubmodule repository.\n\n## Can you give me a quick example?\n\nSure. Consider this simple `.ksy` format description file that\ndescribes the header of a GIF file (a popular web image format):\n\n```yaml\nmeta:\n  id: gif\n  file-extension: gif\n  endian: le\nseq:\n  - id: header\n    type: header\n  - id: logical_screen\n    type: logical_screen\ntypes:\n  header:\n    seq:\n      - id: magic\n        contents: 'GIF'\n      - id: version\n        size: 3\n  logical_screen:\n    seq:\n      - id: image_width\n        type: u2\n      - id: image_height\n        type: u2\n      - id: flags\n        type: u1\n      - id: bg_color_index\n        type: u1\n      - id: pixel_aspect_ratio\n        type: u1\n```\n\nIt declares that GIF files usually have a `.gif` extension and use\nlittle-endian integer encoding. The file itself starts with two\nblocks: first comes `header` and then comes `logical_screen`:\n\n* \"Header\" consists of \"magic\" string of 3 bytes (\"GIF\") that\n  identifies that it's a GIF file starting and then there are 3 more\n  bytes that identify format version (`87a` or `89a`).\n* \"Logical screen descriptor\" is a block of integers:\n  * `image_width` and `image_height` are 2-byte unsigned ints\n  * `flags`, `bg_color_index` and `pixel_aspect_ratio` take 1-byte\n    unsigned int each\n\nThis `.ksy` file can be compiled it into `Gif.cs` / `Gif.java` /\n`Gif.js` / `Gif.php` / `gif.py` / `gif.rb` and then instantly one can load .gif\nfile and access, for example, it's width and height.\n\n### In C\\#\n\n```cs\nGif g = Gif.FromFile(\"path/to/some.gif\");\nConsole.WriteLine(\"width = \" + g.LogicalScreen.ImageWidth);\nConsole.WriteLine(\"height = \" + g.LogicalScreen.ImageHeight);\n```\n\n### In Java\n\n```java\nGif g = Gif.fromFile(\"path/to/some.gif\");\nSystem.out.println(\"width = \" + g.logicalScreen().imageWidth());\nSystem.out.println(\"height = \" + g.logicalScreen().imageHeight());\n```\n\n### In JavaScript\n\nSee [JavaScript notes in the documentation](http://doc.kaitai.io/lang_javascript.html) for a more complete quick start guide.\n\n```javascript\nvar g = new Gif(new KaitaiStream(someArrayBuffer));\nconsole.log(\"width = \" + g.logicalScreen.imageWidth);\nconsole.log(\"height = \" + g.logicalScreen.imageHeight);\n```\n\n### In Lua\n\n```lua\nlocal g = Gif:from_file(\"path/to/some.gif\")\nprint(\"width = \" .. g.logical_screen.image_width)\nprint(\"height = \" .. g.logical_screen.image_height)\n```\n\n### In Nim\n```nim\nlet g = Gif.fromFile(\"path/to/some.gif\")\necho \"width = \" & $g.logicalScreen.imageWidth\necho \"height = \" & $g.logicalScreen.imageHeight\n```\n\n### In PHP\n\n```php\n$g = Gif::fromFile('path/to/some.gif');\nprintf(\"width = %d\\n\", $g->logicalScreen()->imageWidth());\nprintf(\"height = %d\\n\", $g->logicalScreen()->imageHeight());\n```\n\n### In Python\n\n```python\ng = Gif.from_file(\"path/to/some.gif\")\nprint \"width = %d\" % (g.logical_screen.image_width)\nprint \"height = %d\" % (g.logical_screen.image_height)\n```\n\n### In Ruby\n\n```ruby\ng = Gif.from_file(\"path/to/some.gif\")\nputs \"width = #{g.logical_screen.image_width}\"\nputs \"height = #{g.logical_screen.image_height}\"\n```\n\nOf course, this example shows only a very limited subset of what Kaitai\nStruct can do. Please refer to the tutorials and documentation for\nmore insights.\n\n## Supported languages\n\nOfficial Kaitai Struct [compiler] now supports compiling `.ksy` into\nsource modules for the following languages:\n\n* C#\n* Java\n* JavaScript\n* Lua\n* Nim\n* PHP\n* Python\n* Ruby\n\n## Downloading and installing\n\nThe easiest way to check out the whole Kaitai Struct project is to\ndownload the main project repository that already imports all other parts\nas submodules. Use:\n\n    git clone --recursive https://github.com/kaitai-io/kaitai_struct.git\n\nNote the `--recursive` option.\n\nAlternatively, one can check out individual subprojects that\nconsitute Kaitai Struct suite. They are:\n\n* [kaitai_struct_compiler](https://github.com/kaitai-io/kaitai_struct_compiler) — compiler that translates `.ksy` into a parser source code written in a target programming language\n* [kaitai_struct_tests](https://github.com/kaitai-io/kaitai_struct_tests) — tests & specs to ensure that compiler work as planned\n* Runtime libraries\n  * [kaitai_struct_cpp_stl_runtime](https://github.com/kaitai-io/kaitai_struct_cpp_stl_runtime) — for C++/STL\n  * [kaitai_struct_csharp_runtime](https://github.com/kaitai-io/kaitai_struct_csharp_runtime) — for C#\n  * [kaitai_struct_java_runtime](https://github.com/kaitai-io/kaitai_struct_java_runtime) — for Java\n  * [kaitai_struct_javascript_runtime](https://github.com/kaitai-io/kaitai_struct_javascript_runtime) — for JavaScript\n  * [kaitai_struct_nim_runtime](https://github.com/kaitai-io/kaitai_struct_nim_runtime) — for Nim\n  * [kaitai_struct_lua_runtime](https://github.com/kaitai-io/kaitai_struct_lua_runtime) — for Lua\n  * [kaitai_struct_python_runtime](https://github.com/kaitai-io/kaitai_struct_python_runtime) — for Python\n  * [kaitai_struct_ruby_runtime](https://github.com/kaitai-io/kaitai_struct_ruby_runtime) — for Ruby\n  * [kaitai_struct_swift_runtime](https://github.com/kaitai-io/kaitai_struct_swift_runtime) — for Swift\n* [kaitai_struct_formats](https://github.com/kaitai-io/kaitai_struct_formats)\n  — library of widely used formats and binary structures described as\n  `.ksy` files\n\n## Using KS in your project\n\nTypically, using formats described in KS in your project, involves the\nfollowing steps:\n\n* Describe the format — i.e. create a `.ksy` file\n* Compile `.ksy` file into target language source file and include\n  that file in your project\n* Add KS runtime library for your particular language into your\n  project (don't worry, it's small and it's there mostly to ensure\n  readability of generated code)\n* Use generated class(es) to parse your binary file / stream and\n  access its components\n\nCheck out the tutorial and documentation for more information.\n\n## Licensing\n\n* [Compiler] — GPLv3+\n* Runtime libraries — MIT or Apache v2 (=> you can include generated\n  code even into proprietary applications) — see individual libraries\n  for details\n\n[compiler]: https://github.com/kaitai-io/kaitai_struct_compiler\n"
+        },
+        {
+          "name": "benchmarks",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "compiler",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "formats",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "runtime",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "trigger-kaitai_struct_python_docker",
+          "type": "blob",
+          "size": 0.5126953125,
+          "content": "#!/bin/sh -ef\n\n# https://gitlab.com/kaitaiStructCompile.py/kaitai_struct_python_docker\n# build depends on fresh unstable .deb being published. This call\n# triggers GitLab CI pipeline that will build a new Docker image\n# including latest unstable compiler build .deb.\n\necho Triggering build for kaitai_struct_python_docker project\nif [ -n \"$KAITAI_STRUCT_PYTHON_DOCKER_TOKEN\" ]; then\n\tcurl -F \"token=${KAITAI_STRUCT_PYTHON_DOCKER_TOKEN}\" -F \"ref=master\" https://gitlab.com/api/v4/projects/10444125/trigger/pipeline || true\nfi\n"
+        },
+        {
+          "name": "trigger-kaitai_struct_webide",
+          "type": "blob",
+          "size": 0.9013671875,
+          "content": "#!/bin/sh -ef\n\n# ide.kaitai.io/devel needs to be rebuilt after we publish the latest JS build of KSC to npm.\n\nif [ \"$#\" -ne 1 ]; then\n    echo \"Usage: $0 <ksc_version>\"\n    exit 1\nfi\n\nksc_version=$1\n\nPROJECT='kaitai-io/kaitai_struct_webide'\n\necho \"Triggering build for $PROJECT project...\"\nif [ -n \"$KAITAI_STRUCT_WEBIDE_GITHUB_TOKEN\" ]; then\n\t# `event_type` must match the name whitelisted in the CI workflow config in\n\t# https://github.com/kaitai-io/kaitai_struct_webide\n\tbody=$(jq -n -c --arg ksc_version \"$ksc_version\" '{event_type: \"rebuild\", client_payload: {ksc_version: $ksc_version}}')\n\n\tprintf '%s\\n' \"$body\"\n\n\tcurl -fsSL \\\n\t\t-H \"Accept: application/vnd.github+json\" \\\n\t\t-H \"Authorization: Bearer $KAITAI_STRUCT_WEBIDE_GITHUB_TOKEN\" \\\n\t\t-H \"X-GitHub-Api-Version: 2022-11-28\" \\\n\t\t-d \"$body\" \\\n\t\t\"https://api.github.com/repos/$PROJECT/dispatches\"\nelse\n\techo \"No KAITAI_STRUCT_WEBIDE_GITHUB_TOKEN found!\"\n\texit 1\nfi\n"
+        },
+        {
+          "name": "visualizer",
+          "type": "commit",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

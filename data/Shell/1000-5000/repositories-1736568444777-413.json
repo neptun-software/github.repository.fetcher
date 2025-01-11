@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "timestamp": 1736568444777,
+    "page": 413,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bpkg/bpkg",
+      "stars": 1907,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".shellcheckrc",
+          "type": "blob",
+          "size": 1.302734375,
+          "content": "# ============================================================================ #\n# Disable specific checks\n# ---------------------------------------------------------------------------- #\n# shellcheck disable=SC2034\n\n## Allow: To read lines rather than words, pipe/redirect to a 'while read' loop\ndisable=SC2013\n\n## Allow: Declare and assign separately to avoid masking return values\ndisable=SC2155\n\n## Allow: Prefer mapfile or read -a to split command output (or quote to avoid splitting)\ndisable=SC2207\n\n## Allow: Instead of 'let expr', prefer (( expr ))\ndisable=SC2219\n\n#Allow: non-standard `which` in shellcheck < 0.7.1\ndisable=SC2230\n# ============================================================================ #\n\n# ============================================================================ #\n# Enable optional checks (since 0.7.0).\n# ---------------------------------------------------------------------------- #\n## Suggest adding a default case in `case` statements\n#enable=add-default-case\n\n## Suggest explicitly using -n in `[ $var ]`\n#enable=avoid-nullary-conditions\n\n## Suggest quoting variables without metacharacters\n#enable=quote-safe-variables\n\n## Suggest putting braces around all variable references\n#enable=require-variable-braces\n# ============================================================================ #\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "language: ruby\nsudo: required\ninstall:\n- sudo ./setup.sh\nscript:\n- bpkg update\n- bpkg list\n- bpkg show bpkg/github\n- sudo bpkg install bpkg/github -g\n- bpkg install bpkg/term\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014-2022 bpkg\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.244140625,
+          "content": "SETUP := ./setup.sh\nCOMMANDS := install uninstall link unlink\n\n.PHONY: default\ndefault:\n\t@echo \"make: Nothing to make.\"\n\t@echo \"make: Try one of the following:\"\n\t@for c in $(COMMANDS); do printf '\\t%s\\n' \"make $$c\"; done\n\n$(COMMANDS):\n\t@$(SETUP) $@\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 12.8671875,
+          "content": "# bpkg [![Build Status](https://travis-ci.org/bpkg/bpkg.svg?branch=master)](https://travis-ci.org/bpkg/bpkg) [![Backers on Open Collective](https://opencollective.com/bpkg/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/bpkg/sponsors/badge.svg)](#sponsors) \n\n_JavaScript has npm, Ruby has Gems, Python has pip and now Shell has bpkg!_\n\n`bpkg` is a lightweight bash package manager. It takes care of fetching the shell scripts, installing them appropriately, setting the execution permission and more.\n\nYou can install shell scripts globally (on `${PREFIX:-/usr/local/bin}`) or use them on a _per-project basis_ (on `${BPKG_DEPS:-./deps/}`), as a lazy-man \"copy and paste\".\n\n<!-- BEGIN-MARKDOWN-TOC -->\n* [Install](#install)\n    * [0. Dependencies](#0-dependencies)\n    * [1. Install script](#1-install-script)\n    * [2. clib](#2-clib)\n    * [3. Source Code](#3-source-code)\n* [Usage](#usage)\n    * [Installing packages](#installing-packages)\n    * [Packages With Dependencies](#packages-with-dependencies)\n    * [Running packages with `bpkg`](#running-packages-with-bpkg)\n    * [Retrieving package info](#retrieving-package-info)\n* [Package details](#package-details)\n* [bpkg.json](#bpkgjson)\n    * [name](#name)\n    * [version (optional)](#version-optional)\n    * [description](#description)\n    * [global](#global)\n    * [install](#install-1)\n    * [scripts](#scripts)\n    * [files (optional)](#files-optional)\n    * [dependencies (optional)](#dependencies-optional)\n    * [dependencies-dev (optional)](#dependencies-dev-optional)\n    * [commands (optional)](#commands-optional)\n    * [commands-description (optional)](#commands-description-optional)\n* [Packaging best practices](#packaging-best-practices)\n    * [Package exports](#package-exports)\n* [Sponsors](#sponsors)\n    * [Contributors](#contributors)\n    * [Backers](#backers)\n* [License](#license)\n<!-- END-MARKDOWN-TOC -->\n\n## Install\n\nYou can install `bpkg` from three distinct ways:\n\n### 0. Dependencies\n\n* [curl](http://curl.haxx.se/)\n* [coreutils](https://www.gnu.org/software/coreutils/)\n\n### 1. Install script\n\nOur install script is the simplest way. It takes care of everything for you, placing `bpkg` and related scripts on `/usr/local/bin`.\n\nYou can install `bpkg` with the [`get.bpkg.sh`](https://get.bpkg.sh) endpoint:\n\n```sh\ncurl -Lo - get.bpkg.sh | bash\n```\n\nOr optionally paste the following on your shell and you're good to go:\n\n```sh\ncurl -Lo- \"https://raw.githubusercontent.com/bpkg/bpkg/master/setup.sh\" | bash\n```\n\nor by tag/version\n\n```sh\ncurl -Lo- \"https://raw.githubusercontent.com/bpkg/bpkg/1.0.15/setup.sh\" | bash\n```\n\n### 2. clib\n\n[clib][clib] is a package manager for C projects. If you already have it, installing `bpkg` is a simple matter of:\n\n```sh\nclib install bpkg/bpkg\n```\n\n### 3. Source Code\n\nTo directly install `bpkg` from its source code you have to clone its repository and run the `setup.sh` script:\n\n```sh\ngit clone https://github.com/bpkg/bpkg.git\ncd bpkg\n./setup.sh                             # Will install bpkg in $HOME/.local/bin\nsudo ./setup.sh                        # Will install bpkg in /usr/local/bin.\nPREFIX=/my/custom/directory ./setup.sh # Will install bpkg in a custom directory.\n```\n\n## Usage\n\nYou use `bpkg` by simply sending commands, pretty much like `npm` or `pip`.\n\n### Installing packages\n\nPackages can either be global (on `${PREFIX:-/usr/local/bin}` if installed as root or\n `${PREFIX:-$HOME/.local/bin}` otherwize) or local (under `${BPKG_DEPS:-./deps}`).\n\nFor example, here's a **global install for the current user** of the [term package][term]:\n\n```sh\nbpkg install term -g\nterm\n```\n\nAnd the same package as a **local install**:\n\n```sh\nbpkg install term\n./deps/term/term.sh\n```\n\nAfter a local install the `term.sh` script is copied as `term` to the `deps/bin` directory, you can add this directory to the `PATH` with\n\n```sh\nexport PATH=$PATH:/path_to_bkpg/deps/bin\n```\n\nAs a bonus, you can specify a **specific version**:\n\n```sh\nbpkg install jwerle/suggest.sh@0.0.1 -g\n```\n\n**Note:** to do that the packages **must be tagged releases** on the repository.\n\nYou can also *install packages without a `bpkg.json` (or `package.json`)*.\nAs long as there is a `Makefile` in the repository it will try to invoke `make install` as long as the `-g` or `--global` flags are set when invoking `bpkg install`.\n\nFor example you could install [git-standup](https://github.com/stephenmathieson/git-standup) with an omitted `bpkg.json` (or `package.json`) because of the `Makefile` and the `install` target found in it.\n\n```sh\nbpkg install stephenmathieson/git-standup -g\n\n    warn: bpkg.json doesn`t exist\n    warn: package.json doesn`t exist\n    warn: Trying `make install'...\n    info: install: `make install'\ncp -f git-standup /usr/local/bin\n```\n\n### Packages With Dependencies\n\nYou can install a packages dependencies with the `bpkg getdeps` command. These will recursively install in `deps/` sub-folders to resolve all dependencies.\n\n_Note: There is no protection against circular dependencies, so be careful!_\n\n### Running packages with `bpkg`\n\nYou can run a package script with `bpkg run` which will install your\npackage globally and execute it as a command\n\n### Retrieving package info\n\nAfter installing a package, you can obtain info from it using `bpkg`.\n\nSupposing you're on the root of a package directory, the following commands show that package metadata:\n\n```sh\n# Asking for single information\nbpkg package name\n \"bpkg\"\nbpkg package version\n \"0.0.5\"\n# Dumping all the metadata\nbpkg package\n[\"name\"]        \"bpkg\"\n[\"version\"]     \"0.0.5\"\n[\"description\"] \"Lightweight bash package manager\"\n[\"global\"]      true\n[\"install\"]     \"make install\"\n```\n\n## Package details\n\nHere we lay down some info on the structure of a package.\n\n## bpkg.json\n\nEvery package must have a file called `bpkg.json` (for backward-compatibility\n`package.json` can also be used); it specifies package metadata on the [JSON format][json].\n\nHere's an example of a well-formed `bpkg.json`:\n\n```json\n{\n  \"name\": \"term\",\n  \"version\": \"0.0.1\",\n  \"description\": \"Terminal utility functions\",\n  \"scripts\": [ \"term.sh\" ],\n  \"install\": \"make install\"\n}\n```\n\nAll fields are mandatory except when noted.\nHere's a detailed explanation on all fields:\n\n### name\n\nThe `name` attribute is required as it is used to tell `bpkg` where to put it in the `deps/` directory in you project.\n\n```json\n  \"name\": \"my-script\"\n```\n\n### version (optional)\n\nThe `version` attribute is not required but can be useful. It should correspond to the version that is associated with the installed package.\n\n```json\n  \"version\": \"0.0.1\"\n```\n\n### description\n\nA human readable description of what the package offers for functionality.\n\n```json\n  \"description\": \"This script makes monkeys jump out of your keyboard\"\n```\n\n### global\n\nIndicates that the package is only intended to be install as a script. This allows the omission of the `-g` or `--global` flag during installation.\n\n```json\n  \"global\": \"true\"\n```\n\n### install\n\nShell script used to invoke in the install script. This is required if the `global` attribute is set to `true` or if the `-g` or `--global` flags are provided.\n\n```json\n  \"install\": \"make install\"\n```\n\n### scripts\n\nThis is an array of scripts that will be installed into a project.\n\n```json\n  \"scripts\": [\"script.sh\"]\n```\n\n### files (optional)\n\nThis is an array of non-script files that will be installed into a project.\n\n```json\n  \"files\": [\"bar.txt\", \"foo.txt\"]\n```\n\n### dependencies (optional)\n\nThis is a hash of dependencies. The keys are the package names, and the values are the version specifiers. If you want the latest code use `'master'` in the version specifier. Otherwise, use a tagged release identifier. This works the same as `bpkg install`'s package/version specifiers.\n\n```json\n  \"dependencies\": {\n    \"term\": \"0.0.1\"\n  }\n```\n\n### dependencies-dev (optional)\n\nThis is a hash of dependencies only needed during development.  Like the `dependencies` array, the keys are the package names, and the values are the version specifiers; `'master'` or a tagged release can be used as the identifier. These development dependencies are installed by adding the `-d` or `--dev` flags to the `bpkg install` command.\n\n```json\n  \"dependencies-dev\": {\n    \"term\": \"0.0.1\"\n  }\n```\n\n### commands (optional)\n\nThis is a hash of commands. The keys are the names of the commands and the values are the commands to execute in a shell.  The commands can be called from the command line with `bpkg run` followed by the command name.\n\n```json\n  \"commands\": {\n    \"say-hello\": \"echo \\\"Hello $1\\\"\"\n  }\n```\n\nThe commands are run with `eval`, which runs the command as if on the command line. Commands can contain environment variables, and supports [shell features] (including *[special parameters]* and *[shell expansions]*). Passed parameters (on the command line after the command name) can be accessed in the command by using `$@` or `$1`.\n\n```bash\n$ bpkg run say-hello \"Bash Package Manager\"\nHello Bash Package Manager\n```\n\n### commands-description (optional)\n\nThis is a hash of descriptions for configured commands.  The keys are the names of the commands and the values are the descriptions for the specified commands.  The command descriptions can be listed on the command line by providing the `-l` or `--list` flags after the `bpkg run` command.\n\n```json\n  \"commands-description\": {\n    \"say-hello\": \"Output hello to provided name (ex: bpkg run say-hello John)\"\n  }\n```\n\n## Packaging best practices\n\nThese are guidelines that we strongly encourage developers to follow.\n\n### Package exports\n\nIt's nice to have a bash package that can be used in the terminal and also be invoked as a command line function. To achieve this the exporting of your functionality *should* follow this pattern:\n\n```sh\nif [[ ${BASH_SOURCE[0]} != \"$0\" ]]; then\n  export -f my_script\nelse\n  my_script \"${@}\"\n  exit $?\nfi\n```\n\nThis allows a user to `source` your script or invoke as a script.\n\n```sh\n# Running as a script\n./my_script.sh some args --blah\n# Sourcing the script\nsource my_script.sh\nmy_script some more args --blah\n```\n\n## Sponsors\n\n**bpkg** wouldn't be where it is today without the help of its authors, contributors, and sponsors:\n\n* [@socketsupply](https://github.com/socketsupply) ([socketsupply.co](https://socketsupply.co))\n* [@little-core-labs](https://github.com/little-core-labs)\n* [@littlstar](https://github.com/littlstar) ([littlstar.com](https://littlstar.com))\n* [@spotify](https://github.com/spotify) ([spotify.com](https://spotify.com))\n\nSupport this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/bpkg#sponsor)]\n\n<a href=\"https://opencollective.com/bpkg/sponsor/0/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/0/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/1/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/1/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/2/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/2/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/3/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/3/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/4/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/4/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/5/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/5/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/6/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/6/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/7/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/7/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/8/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/8/avatar.svg\"></a>\n<a href=\"https://opencollective.com/bpkg/sponsor/9/website\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/sponsor/9/avatar.svg\"></a>\n\n### Contributors\n\nThis project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].\n<a href=\"graphs/contributors\"><img src=\"https://opencollective.com/bpkg/contributors.svg?width=890&button=false\" /></a>\n\n### Backers\n\nThank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/bpkg#backer)]\n\n<a href=\"https://opencollective.com/bpkg#backers\" target=\"_blank\"><img src=\"https://opencollective.com/bpkg/backers.svg?width=890\"></a>\n\n## License\n\n`bpkg` is released under the **MIT license**.\n\nSee file `LICENSE` for a more detailed description of its terms.\n\n[clib]: https://github.com/clibs/clib\n[term]: https://github.com/bpkg/term\n[json]: http://json.org/example\n[shell features]: https://www.gnu.org/software/bash/manual/html_node/Basic-Shell-Features.html\n[special parameters]: https://www.gnu.org/software/bash/manual/html_node/Special-Parameters.html\n[shell expansions]: https://www.gnu.org/software/bash/manual/html_node/Shell-Expansions.html\n"
+        },
+        {
+          "name": "bpkg",
+          "type": "blob",
+          "size": 0.0068359375,
+          "content": "bpkg.sh"
+        },
+        {
+          "name": "bpkg-env",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "lib/env/env.sh"
+        },
+        {
+          "name": "bpkg-getdeps",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "lib/getdeps/getdeps.sh"
+        },
+        {
+          "name": "bpkg-init",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "lib/init/init.sh"
+        },
+        {
+          "name": "bpkg-install",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "lib/install/install.sh"
+        },
+        {
+          "name": "bpkg-json",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "lib/json/JSON.sh"
+        },
+        {
+          "name": "bpkg-list",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "lib/list/list.sh"
+        },
+        {
+          "name": "bpkg-package",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "lib/package/package.sh"
+        },
+        {
+          "name": "bpkg-realpath",
+          "type": "blob",
+          "size": 0.0234375,
+          "content": "lib/realpath/realpath.sh"
+        },
+        {
+          "name": "bpkg-run",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "lib/run/run.sh"
+        },
+        {
+          "name": "bpkg-show",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "lib/show/show.sh"
+        },
+        {
+          "name": "bpkg-source",
+          "type": "blob",
+          "size": 0.01953125,
+          "content": "lib/source/source.sh"
+        },
+        {
+          "name": "bpkg-suggest",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "lib/suggest/suggest.sh"
+        },
+        {
+          "name": "bpkg-term",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "lib/term/term.sh"
+        },
+        {
+          "name": "bpkg-update",
+          "type": "blob",
+          "size": 0.01953125,
+          "content": "lib/update/update.sh"
+        },
+        {
+          "name": "bpkg-utils",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": "lib/utils/utils.sh"
+        },
+        {
+          "name": "bpkg.json",
+          "type": "blob",
+          "size": 0.4404296875,
+          "content": "{\n  \"name\": \"bpkg\",\n  \"version\": \"1.1.4\",\n  \"description\": \"Lightweight bash package manager\",\n  \"global\": true,\n  \"repo\": \"bpkg/bpkg\",\n  \"install\": \"bash setup.sh\",\n  \"commands\": {\n    \"lint\": \"command shellcheck **/*.sh\",\n    \"list-sources\": \"echo ${BPKG_PACKAGE_SOURCES[@]} | sed 's/ /\\n/g'\"\n  },\n  \"commands-description\": {\n    \"lint\": \"Execute shellcheck against all .sh files in project\",\n    \"list-sources\": \"Output package source files\"\n  }\n}\n"
+        },
+        {
+          "name": "bpkg.sh",
+          "type": "blob",
+          "size": 2.1943359375,
+          "content": "#!/usr/bin/env bash\n\n## prevent sourcing\nif [[ ${BASH_SOURCE[0]} != \"$0\" ]]; then\n  echo >&2 \"error: \\`bpkg' cannot be sourced\"\n  return 1\nfi\n\n## bpkg version\nVERSION=\"1.1.4\"\n\n## output error to stderr\nerror () {\n  printf >&2 \"error: %s\\n\" \"${@}\"\n}\n\n## output usage\nusage () {\n  echo \"\"\n  echo \"  usage: bpkg [-hV] <command> [args]\"\n  echo \"\"\n}\n\n## commands\ncommands () {\n  bpkg-suggest 'bpkg-' 2>/dev/null |\n    tail -n+2                      |\n    sed 's/.*\\/bpkg-//g'           |\n    sort -u                        |\n    tr '\\n' ' '\n  return $?\n}\n\n## feature tests\nfeatures () {\n  local features\n  declare -a features=(bpkg-json bpkg-suggest)\n  for ((i = 0; i < ${#features[@]}; ++i)); do\n    local f=\"${features[$i]}\"\n    if ! type \"${f}\"  > /dev/null 2>&1; then\n      error \"Missing \\\"${f}\\\" dependency\"\n      return 1\n    fi\n  done\n}\n\nbpkg () {\n  local arg=\"$1\"\n  local cmd=\"\"\n  shift\n\n  ## test for required features\n  features || return $?\n\n  case \"${arg}\" in\n\n    ## flags\n    -V|--version)\n      echo \"${VERSION}\"\n      return 0\n      ;;\n\n    -h|--help)\n      usage\n      echo\n      echo \"Here are some commands available in your path:\"\n      echo\n      local cmds=($(commands))\n      for cmd in \"${cmds[@]}\"; do\n        echo \"    ${cmd}\"\n      done\n      return 0\n      ;;\n\n    *)\n      if [ -z \"${arg}\" ]; then\n        usage\n        return 1\n      fi\n      cmd=\"bpkg-${arg}\"\n      if type -f \"${cmd}\" > /dev/null 2>&1; then\n        \"${cmd}\" \"${@}\"\n        return $?\n      else\n        echo >&2 \"error: \\`${arg}' is not a bpkg command.\"\n        {\n          local res\n          declare -a res=($(commands))\n\n          if [ -n \"${res[*]}\" ]; then\n            echo\n            echo  >&2 \"Did you mean one of these?\"\n            found=0\n            for r in \"${res[@]}\"; do\n              if [[ \"$r\" == *\"${arg}\"* ]]; then\n                echo \"     $ bpkg ${r}\"\n                found=1\n              fi\n            done\n            if [ \"$found\" == \"0\" ]; then\n              for r in \"${res[@]}\"; do\n                echo \"     $ bpkg ${r}\"\n              done\n            fi\n            return 1\n          else\n            usage\n            return 1\n          fi\n        }\n      fi\n      ;;\n\n  esac\n  usage\n  return 1\n}\n\nbpkg \"${@}\"\nexit $?\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.sh",
+          "type": "blob",
+          "size": 3.275390625,
+          "content": "#!/usr/bin/env bash\n#\n# #             #\n# #mmm   mmmm   #   m   mmmm\n# #\" \"#  #\" \"#  # m\"   #\" \"#\n# #   #  #   #  #\"#    #   #\n# ##m#\"  ##m#\"  #  \"m  \"#m\"#\n#        #              m  #\n#        \"               \"\"\n#        bash package manager\n\nVERSION=\"1.1.4\"\nTAG=${TAG:-$VERSION}\nBRANCH=${BRANCH:-$TAG}\nREMOTE=${REMOTE:-https://github.com/bpkg/bpkg.git}\nTMPDIR=${TMPDIR:-/tmp}\nDEST=${DEST:-$TMPDIR/bpkg-$BRANCH}\n\n## test if command exists\nftest () {\n  echo \"  info: Checking for $1...\"\n  if ! type -f \"$1\" > /dev/null 2>&1; then\n    return 1\n  else\n    return 0\n  fi\n}\n\n## feature tests\nfeatures () {\n  for f in \"${@}\"; do\n    ftest \"$f\" || {\n      echo >&2 \"  error: Missing \\`$f'! Make sure it exists and try again.\"\n      return 1\n    }\n  done\n  return 0\n}\n\n## main setup\nsetup () {\n  echo \"  info: Welcome to the 'bpkg' installer!\"\n  ## test for require features\n  features git || return $?\n\n  ## build\n  {\n    echo\n    echo \"  info: Creating temporary files...\"\n    cd \"$TMPDIR\" || exit\n    test -d \"$DEST\" && { echo \"  warn: Already exists: '$DEST'\"; }\n    rm -rf \"$DEST\"\n\n    echo \"  info: Fetching 'bpkg@$BRANCH'...\"\n    if ! output=$(git clone --depth=1 --branch \"$BRANCH\" \"$REMOTE\" \"$DEST\" 2>&1); then\n      printf '%s\\n' \"  error: Failed to clone repository.\" >&2\n      printf '%s\\n' \"GIT ERROR OUTPUT:\"\n      printf '%s\\n' \"$output\"\n      exit 1\n    fi\n    cd \"$DEST\" || exit\n\n    echo \"  info: Installing...\"\n    echo\n    make_install\n    echo \"  info: Done!\"\n  } >&2\n  return $?\n}\n\n## make targets\nBIN=\"bpkg\"\nif [ -z \"$PREFIX\" ]; then\n  if [ \"$(whoami)\" == \"root\" ]; then\n    PREFIX=\"/usr/local\"\n  else\n    PREFIX=\"$HOME/.local\"\n  fi\nfi\n\n# All 'bpkg' supported commands\ndeclare -a CMDS=()\nCMDS+=(\"env\")\nCMDS+=(\"getdeps\")\nCMDS+=(\"init\")\nCMDS+=(\"install\")\nCMDS+=(\"json\")\nCMDS+=(\"list\")\nCMDS+=(\"package\")\nCMDS+=(\"run\")\nCMDS+=(\"show\")\nCMDS+=(\"source\")\nCMDS+=(\"suggest\")\nCMDS+=(\"term\")\nCMDS+=(\"update\")\nCMDS+=(\"utils\")\nCMDS+=(\"realpath\")\n\nmake_install () {\n  local source\n\n  ## do 'make uninstall'\n  make_uninstall\n\n  echo \"  info: Installing $PREFIX/bin/$BIN...\"\n  install -d \"$PREFIX/bin\"\n  source=$(<$BIN)\n\n  if [ -f \"$source\" ]; then\n    install \"$source\" \"$PREFIX/bin/$BIN\"\n  else\n    install \"$BIN\" \"$PREFIX/bin\"\n  fi\n\n  for cmd in \"${CMDS[@]}\"; do\n    if test -f \"$BIN-$cmd\"; then\n      source=$(<\"$BIN-$cmd\")\n\n      if [ -f \"$source\" ]; then\n        install \"$source\" \"$PREFIX/bin/$BIN-$cmd\"\n      else\n        install \"$BIN-$cmd\" \"$PREFIX/bin\"\n      fi\n    fi\n\n  done\n  return $?\n}\n\nmake_uninstall () {\n  echo \"  info: Uninstalling $PREFIX/bin/$BIN*\"\n  echo \"    rm: $PREFIX/bin/$BIN'\"\n  rm -f \"$PREFIX/bin/$BIN\"\n  for cmd in \"${CMDS[@]}\"; do\n    if test -f \"$PREFIX/bin/$BIN-$cmd\"; then\n      echo \"    rm: $PREFIX/bin/$BIN-$cmd'\"\n      rm -f \"$PREFIX/bin/$BIN-$cmd\"\n    fi\n  done\n  return $?\n}\n\nmake_link () {\n  make_uninstall\n  echo \"  info: Linking $PREFIX/bin/$BIN*\"\n  echo \"  link: '$PWD/$BIN' -> '$PREFIX/bin/$BIN'\"\n  ln -s \"$PWD/$BIN\" \"$PREFIX/bin/$BIN\"\n  for cmd in \"${CMDS[@]}\"; do\n    if test -f \"$PWD/$BIN-$cmd\"; then\n      echo \"  link: '$PWD/$BIN-$cmd' -> '$PREFIX/bin/$BIN-$cmd'\"\n      ln -s \"$PWD/$BIN-$cmd\" \"$PREFIX/bin/$BIN-$cmd\"\n    fi\n  done\n  return $?\n}\n\nmake_unlink () {\n  make_uninstall\n}\n\n## do setup or `make_{install|uninstall|link|unlink}` command\nif [ $# -eq 0 ]; then\n  setup\nelse\n  \"make_$1\"\nfi\n\nexit $?\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736568322915,
+    "page": 245,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gabrielelana/awesome-terminal-fonts",
+      "stars": 2463,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0029296875,
+          "content": ".*\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.080078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 Gabriele Lana <gabriele.lana@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.12109375,
+          "content": "# Why?\nWhy do you want to use fancy symbols in your standard monospace font? Obviously to have a fancy prompt like mine :-)\n\n![prompt](https://github.com/gabrielelana/awesome-terminal-fonts/raw/master/why.png)\n\nAnd because when you live in a terminal a symbol can convey more informations in less space creating a dense and beautiful (for those who have a certain aesthetic taste) informative workspace\n\nHeavily inspired by <https://github.com/Lokaltog/vim-powerline> and the relative patch script from **Kim Silkebækken** (kim.silkebaekken+vim@gmail.com)\n\n## Patching vs Fallback\nThere are two strategies that could be used to have symbols in a terminal\n* you can take a bunch of symbol fonts, your favourite monospace font and merge them together (patching strategy)\n* you can use a feature of `freetype2` font engine, basically you can say that whenever the current font doesn't have a glyph for a certain codepoint then fallback and go look into other fonts (fallback strategy)\n\nInitially I used the first strategy, later I switched to the second. The patching strategy it's more reliable and portable, the problem is that you need to patch every monospace font you want to use and patching a single font it's a lot of manual fine tuning. If you want you can find all previous patched fonts in [patching-strategy branch](https://github.com/gabrielelana/awesome-terminal-fonts/tree/patching-strategy)\n\n## Font Maps\nReferring to glyphs by codepints (eg. `\\uf00c`) in your scripts or shell configuration it's not recommended because icon fonts like [Font Awesome](http://fontawesome.io/) use [code points ranges](https://en.wikipedia.org/wiki/Private_Use_Areas) those ranges are not disciplined by the unicode consortium, every font can associate every glyphs to those codepoints. This means that [Font Awesome](http://fontawesome.io/) can choose to move glyphs around freely, today `\\uf00c` is associated to the `check` symbol, tomorrow it can be associated to something else. Moreover, more than one icon font can use the same codepoint for different glyphs and if we want to use them both we need to move one of them. So, if you use a codepoint to refer to a glyph after an update that codepoint can point to another glyph. To avoid this situation you can use the font maps in the `./build` directory, font maps are scripts which define shell variables that give names to glyphs, by sourcing those files in your shell you can refer to glyphs by name (eg. `$CODEPOINT_OF_AWESOME_CHECK`).\n\nTLDR: don't refer to glyphs by codepoints (eg. `\\uf00c`) but by name (eg. `$CODEPOINT_OF_AWESOME_CHECK`) to make your scripts and shell configurations resilient to future updates. To do that don't forget to copy font maps (`*.sh` files) in the `./build` directory in your home directory and to source them in your shell startup\n\n## Included Fonts\nIn this repository you can find a bunch of fonts that I use as symbol fonts with the relative font maps\n* **Font Awesome 4.7.0**: `./fonts/fontawesome-regular.ttf`, for further informations and license see http://fortawesome.github.io/Font-Awesome\n* **Devicons 1.8.0**: `./fonts/devicons-regular.ttf`, for further informations and license see https://github.com/vorillaz/devicons\n* **Octicons 1.0.0**: `./fonts/octicons-regular.ttf`, for further informations and license see https://github.com/blog/1135-the-making-of-octicons\n* **Pomicons 1.0.0**: `./fonts/pomicons-regular.ttf`, for further informations and license see https://github.com/gabrielelana/pomicons\n\n## How to install (Linux)\n* copy all the fonts from `./build` directory to `~/.fonts` directory\n* copy all the font maps (all `*.sh` files) from `./build` directory to `~/.fonts` directory\n* run `fc-cache -fv ~/.fonts` to let freetype2 know of those fonts\n* customize the configuration file `./config/10-symbols.conf` replacing `PragmataPro` with the name of the font you want to use in the terminal (I will add more fonts in the future so that this step could be skippable)\n* copy the above configuration file to `~/.config/fontconfig/conf.d` directory\n* source the font maps (`source ~/.fonts/*.sh`) in your shell startup script (eg. `~/.bashrc` or `~/.zshrc`)\n\n### Arch Linux\nWe have been included in the [official repositories](https://www.archlinux.org/packages/community/any/awesome-terminal-fonts/), so if you are running an Arch Linux\n* run `pacman -Syu awesome-terminal-fonts`\n\n## How to install (OSX)\n* follow [this detailed instructions](https://github.com/gabrielelana/awesome-terminal-fonts/wiki/OS-X) contributed by [@inkrement](https://github.com/inkrement)\n* copy all the fonts maps (all `*.sh` files) from `./build` directory to `~/.fonts` directory\n* source the font maps (`source ~/.fonts/*.sh`) in your shell startup script (eg. `~/.bashrc` or `~/.zshrc`)\n* If it still doesn't work, consider to use the [patching strategy](#patching-vs-fallback)\n\n## How to install (Windows)\n* make sure you have permissions to execute Powershell scripts in your machine. To do so, open Windows Powershell as Administrator and paste & run the following command `Set-ExecutionPolicy RemoteSigned`\n* then run the install script `./install.ps1`\n\n## License\n[MIT](https://github.com/gabrielelana/awesome-terminal-fonts/blob/master/LICENSE)\n"
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 1.6142578125,
+          "content": "#!/bin/sh\n\ncd \"$(dirname \"$0\")\"\n\nrm -f ./build/*\nmkdir -p ./.work\n\necho 'build all symbols fonts...'\ncp ./fonts/pomicons-regular.ttf ./build\ncp ./fonts/fontawesome-regular.ttf ./build\ncp ./fonts/devicons-regular.ttf ./build\n\n./scripts/fu-relocate ./fonts/octicons-regular.ttf --save-as='.work/octicons-regular-relocated.ttf' --to='0xf300' 2> /dev/null\ncp ./.work/octicons-regular-relocated.ttf ./build/octicons-regular.ttf\n\necho 'export maps for all fonts...'\n./scripts/fu-map ./build/pomicons-regular.ttf --namespace 'POMICONS' 2> /dev/null > ./build/pomicons-regular.sh\n./scripts/fu-map ./build/octicons-regular.ttf --namespace 'OCTICONS' 2> /dev/null > ./build/octicons-regular.sh\n./scripts/fu-map ./build/fontawesome-regular.ttf --namespace 'AWESOME' 2> /dev/null > ./build/fontawesome-regular.sh\n./scripts/fu-map ./build/devicons-regular.ttf --namespace 'DEVICONS' 2> /dev/null > ./build/devicons-regular.sh\n\necho 'override supplied font maps...'\nfor file in ./fonts/*.sh; do\n  [ -f \"$file\" ] && cp $file ./build\ndone\n\necho 'check if fonts are overlapping...'\ncat ./build/*.sh | \\\n  grep 'CODEPOINT_OF' | \\\n  sed -e \"s/^.*\\+='\\([^']\\+\\)'/\\1/g\" | \\\n  sort | uniq | \\\n  while read cp; do\n    hits=`cat ./build/*.sh | grep $cp | wc -l`\n    if [ \"$hits\" -gt \"1\" ]; then\n      fonts=`\\\n        cat ./build/*.sh | \\\n        grep $cp | \\\n        sed -e 's/^\\(CODEPOINT_OF_[^_]\\+\\).*$/\\1/' | \\\n        sort | uniq | wc -l`\n      if [ \"$fonts\" -gt \"1\" ]; then\n        echo \"more than one font defines $cp, found in: \"\n        cat ./build/*.sh | grep $cp\n      fi\n    fi\n  done\n\necho 'you can find fonts and maps in local ./build directory :-)'\necho 'done!'\n"
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fonts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install.ps1",
+          "type": "blob",
+          "size": 0.416015625,
+          "content": "﻿$LocalPath = \".\\build\"\n \n$FONTS = 0x14\n$objShell = New-Object -ComObject Shell.Application\n$objFolder = $objShell.Namespace($FONTS)\n \n$Fontdir = Get-ChildItem $LocalPath | Where-Object {$_.Extension -EQ \".ttf\"}\n\nWrite-Output \"Installing awesome-terminal-fonts\"\nforeach($File in $Fontdir) \n{\n    [Console]::Write(\"Installing $File.Name...\")\n    $objFolder.CopyHere($File.fullname, 0x10)\n    Write-Output \" installed.\"\n}"
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 0.20703125,
+          "content": "#!/bin/sh\n\ncd \"$(dirname \"$0\")\"\n\nmkdir -p ~/.fonts\ncp -f ./build/*.ttf ~/.fonts\ncp -f ./build/*.sh ~/.fonts\nmkdir -p ~/.config/fontconfig/conf.d\ncp -f ./config/* ~/.config/fontconfig/conf.d\nfc-cache -rv ~/.fonts\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "why.png",
+          "type": "blob",
+          "size": 1359,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

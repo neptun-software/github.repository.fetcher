@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "timestamp": 1736568251646,
+    "page": 126,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "andrew-d/static-binaries",
+      "stars": 3249,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.470703125,
+          "content": "The actual binaries in this repository are released under their own\nlicense terms, and are not covered by this license. All other code,\nconfiguration, and or other artifacts are covered by The Unlicense,\nreproduced below.\n\n----------------------------------------------------------------------\n\nThis is free and unencumbered software released into the public domain.\n\nAnyone is free to copy, modify, publish, use, compile, sell, or\ndistribute this software, either in source code form or as a compiled\nbinary, for any purpose, commercial or non-commercial, and by any\nmeans.\n\nIn jurisdictions that recognize copyright laws, the author or authors\nof this software dedicate any and all copyright interest in the\nsoftware to the public domain. We make this dedication for the benefit\nof the public at large and to the detriment of our heirs and\nsuccessors. We intend this dedication to be an overt act of\nrelinquishment in perpetuity of all present and future rights to this\nsoftware under copyright law.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR\nOTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,\nARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n\nFor more information, please refer to <https://unlicense.org>\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.544921875,
+          "content": "Q       ?= @\nSHELL   := /bin/bash\nROOT    := $(abspath .)\nOUT_DIR := $(ROOT)/binaries2\n\nall:\n\t@echo \"TODO: should we build everything?\"\n\n$(OUT_DIR):\n\t$(Q)mkdir -p $@\n\n# Helper rule to run a Docker image to perform a given build.\ndefine DOCKER_RUN\n.PHONY: $1-$2\n$1-$2: | $$(OUT_DIR)\n\t$$(Q)./run-docker.sh $1 $2 $3 $$(OUT_DIR) @\nendef\n\n$(eval $(call DOCKER_RUN,linux,amd64,andrewd/musl-cross))\n$(eval $(call DOCKER_RUN,android,arm,andrewd/musl-cross-arm))\n$(eval $(call DOCKER_RUN,darwin,amd64,andrewd/osxcross))\n\n.PHONY: clean\nclean:\n\t$(Q)$(RM) -r $(OUT_DIR)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.7802734375,
+          "content": "# static-binaries\n\nThis repo contains a bunch of statically-linked binaries of various tools,\nalong with the Dockerfiles / other build scripts that can be used to build\nthem.  I generally just create these as I need them - not all tools are\navailable for every platform or architecture.  Please [file an issue][1]\nif you want a new tool or a tool on a new platform.\n\n## Current List of Tools\n\n- [ag / the_silver_searcher](https://github.com/ggreer/the_silver_searcher)\n- [binutils](https://www.gnu.org/software/binutils/)\n- [file](http://www.darwinsys.com/file/)\n- [ht](https://github.com/sebastianbiallas/ht)\n- [nano](https://www.nano-editor.org)\n- [nmap](http://nmap.org)\n- [p0f v3](http://lcamtuf.coredump.cx/p0f3/)\n- [pv (Pipe Viewer)](https://www.ivarch.com/programs/pv.shtml)\n- [python](https://www.python.org)\n- [socat](http://www.dest-unreach.org/socat/)\n- [strace](http://linux.die.net/man/1/strace)\n- [tcpdump](http://www.tcpdump.org)\n- [yasm](http://yasm.tortall.net)\n\n## Building\n\nGenerally, if the directory contains a Dockerfile, you can run the build by\ndoing something like (where `FOO` is the directory name):\n\n```\ncd FOO\ndocker build -t static-binaries-FOO .\ndocker run -v `pwd`/../binaries:/output static-binaries-FOO\n```\n\n## Notes:\n\n### nmap\n\n- In order to do script scans, Nmap must know where the various Lua files live.\n  You can do this by setting the `NMAPDIR` environment variable:  \n    `NMAPDIR=/usr/share/nmap nmap -vvv -A www.target.com`\n\n- The `nmap_centos5` binary isn't statically-linked; rather, it's built on\n  CentOS5, so it \"should\" run on just about every modern version of Linux.\n  Use this if something in the static binary doesn't work properly.\n\n- On Windows, the nmap binary will probably not work without WinPcap.  It also\n  appears to have a random crashing problem with regular TCP scans - I'm not\n  quite sure what's up with that yet.\n\n### nping\n\n- On Windows, nping has the same issues as nmap (see above).\n\n### python\n\n- Getting a static build of Python that works is **HARD**.  Not everything in this\n  particular tool functions properly, and you have to run it with some strange options,\n  but it's usable.  In short, you need to run it like so:  \n    `PYTHONPATH=/path/to/python2.7.zip python -sS`\n\n- Note: sqlite isn't currently supported.  Adding this is an ongoing TODO of mine.\n\n### ht\n\n- On Linux, the appropriate terminal information must be present.  On some versions of\n  Linux (e.g. Debian Jessie), the information may be in a different place - you can use\n  the `TERMINFO` environment variable to specify the correct location:\n  `TERMINFO=/lib/terminfo ./ht`\n\n## file\n\n- You need to pass the correct magic database to file - one is provided named\n  `magic.mgc`.  Run `file` as such: `file -m /path/to/magic.mgc myfile.foo`.\n\n[1]: https://github.com/andrew-d/static-binaries/issues/new\n"
+        },
+        {
+          "name": "TODO.md",
+          "type": "blob",
+          "size": 1.5419921875,
+          "content": "# Random Thoughts\n\n- We could/should write a build manager that automates a lot of the common tasks.\n  - The manager would run WITHIN the Docker container - i.e. it doesn't know\n    anything about Docker itself.\n  - Have the build manager enumerate and require all SBUILD files\n  - Each SBUILD file allows building a single library (statically) for a\n    single platform and architecture (i.e. different SBUILD for linux and\n    mac, and within linux, a different one for Linux/x64 and Linux/ARM)\n  - SBUILDs are declarative - should expose:\n     * package name\n     * platform\n     * architecture\n     * package version\n     * dependencies (if any, other SBUILDs)\n     * build dependencies (if any, would be apt-get install'd)\n     * fetch function which retrieves all sources\n     * prepare function which prepares for building (incl. running any\n       configure scripts, if necessary)\n     * build function that runs the build\n     * various flags (i.e. -I${thisdir} or -L{thisdir} -lthelibrary)\n     * finish function that allows copying build artefacts to output\n  - When we call 'sbuild thing', we topologically sort all libraries that\n    need to be built, build them all in order, and then run all the finish\n    functions at the end\n\n- NOTE: The above is ... pretty much what Makefiles are designed for, despite\n  the fact that writing them isn't particularly pleasant.  While writing a new\n  thing would be fun, NIH syndrome is also a thing, and Make solves a lot of\n  these problems already.\n  Alternatively (to support, e.g. package installation): http://pydoit.org\n"
+        },
+        {
+          "name": "binaries",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "binutils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "file",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ht",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "make",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nano",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nmap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "p0f",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run-docker.sh",
+          "type": "blob",
+          "size": 1.5595703125,
+          "content": "#!/bin/bash\n\nset -e\nset -o pipefail\n#set -x\n\nPLATFORM=$1\nARCH=$2\nIMAGE=$3\nOUT_DIR=$4\nQ=$5\n\n# Colors\nRED=\"\\x1b[31m\"\nGREEN=\"\\x1b[32m\"\nYELLOW=\"\\x1b[33m\"\nBLUE=\"\\x1b[34m\"\nRESET=\"\\x1b[0m\"\nERASE_LINE=\"\\x1b[2K\"\n\n# Find our real path of this directory\nREALPATH=\nfor bin in realpath grealpath; do\n\t##echo \"Testing for ${bin}...\"\n\tif [ -x \"`which $bin`\" ]; then\n\t\tREALPATH=`which $bin`\n\tfi\ndone\n\nif [ -z \"$REALPATH\" ]; then\n\tprintf \"${RED}ERROR:${RESET} Could not find 'realpath' binary\\n\"\n\texit 1\nfi\n\nROOT=`$REALPATH .`\n\nif [ -z \"$PLATFORM\" ]; then\n\tprintf \"${RED}ERROR:${RESET} No platform specified\\n\"\n\texit 1\nfi\n\nif [ -z \"$ARCH\" ]; then\n\tprintf \"${RED}ERROR:${RESET} No architecture specified\\n\"\n\texit 1\nfi\n\nif [ -z \"$IMAGE\" ]; then\n\tprintf \"${RED}ERROR:${RESET} No container specified\\n\"\n\texit 1\nfi\n\nif [ ! -d \"$OUT_DIR\" ]; then\n\tprintf \"${RED}ERROR:${RESET} Output directory not given or not a directory\\n\"\n\tprintf \"    $$OUT_DIR = $OUT_DIR\\n\"\n\texit 1\nfi\n\n\nCID=$(docker run \\\n\t-d \\\n\t--name=static-build-${PLATFORM}-${ARCH} \\\n\t-v ${ROOT}/make:/make \\\n\t-v ${OUT_DIR}:/output \\\n\t$IMAGE \\\n\t/bin/bash \\\n\t-c \"cd /make && make PLATFORM=${PLATFORM} ARCH=${ARCH} Q=$Q install\"\n)\n\nDESC=$(printf \"%s/%s\" \"$PLATFORM\" \"$ARCH\")\nHEADER=$(printf \"  ${GREEN}%-10s${RESET} | ${BLUE}%-15s${RESET} | %s | \" \"DOCKER\" \"$DESC\" \"${CID:0:12}\")\n\nprintf \"${HEADER}${YELLOW}WAITING${RESET}\"\n\nEXIT_CODE=$(docker wait $CID)\n\nif [ \"$EXIT_CODE\" == \"0\" ]; then\n\tdocker rm $CID >/dev/null\n\tprintf \"\\r${ERASE_LINE}${HEADER}${GREEN}SUCCESS${RESET}\\n\"\nelse\n\tprintf \"\\r${ERASE_LINE}${HEADER}${RED}ERROR (code %d)${RESET}\\n\" \"$EXIT_CODE\"\nfi\n"
+        },
+        {
+          "name": "sbuild",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "socat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "strace",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tcpdump",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "the_silver_searcher",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "xxd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "yasm",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

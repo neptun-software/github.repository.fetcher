@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "timestamp": 1736568478855,
+    "page": 455,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "NVISOsecurity/MagiskTrustUserCerts",
+      "stars": 1804,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "META-INF",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.689453125,
+          "content": "# Magisk Trust User Certs\nThis module makes all installed user certificates part of the system certificate store, so that they will automatically be used when building the trust chain. This module makes it unnecessary to add the network_security_config property to an application's manifest.\n\n## Accompanying blogpost\n[Intercepting HTTPS Traffic from Apps on Android 7+ using Magisk & Burp](https://blog.nviso.be/2017/12/22/intercepting-https-traffic-from-apps-on-android-7-using-magisk-burp/)\n\n### Installation\n1. Install [Magisk](https://forum.xda-developers.com/apps/magisk/official-magisk-v7-universal-systemless-t3473445)\n2. Zip files `zip -r AlwaysTrustUserCerts.zip ./*` or download zip from releases\n3. Install in Magisk\n4. Install client certificates through [normal flow](https://support.portswigger.net/customer/portal/articles/1841102-installing-burp-s-ca-certificate-in-an-android-device)\n5. Restart your device. Certificate copying happens during boot.\n6. The installed user certificates can now be found in the system store.\n\n### Adding certificates\nInstall the certificate as a user certificate and restart the device.\n\n### Removing certificates\nRemove the certificate from the user store through the settings, and restart the device.\n\n### Changelog\n\n#### v0.4.1\n* Supports Android 10\n* Updated Module to be compatible with latest Magisk module template (v20.4+)\n\n#### v0.3\n* The module now removes all user-installed certificates from the system store before copying them over, so that user certificates that were removed will no longer be kept in the system store.\n\n#### v0.2\n* Fixed directory creation bug\n* Updated Module to be compatible with latest Magisk module template (v15+)\n\n#### v0.1\n* Initial release\n"
+        },
+        {
+          "name": "module.prop",
+          "type": "blob",
+          "size": 0.2001953125,
+          "content": "id=trustusercerts\nname=Always Trust User Certificates\nversion=v0.4.2\nversionCode=42\nauthor=Jeroen Beckers (NVISO.eu)\ndescription=This module adds all installed user certificates to the system trust store.\n"
+        },
+        {
+          "name": "post-fs-data.sh",
+          "type": "blob",
+          "size": 0.515625,
+          "content": "#!/system/bin/sh\n# Please don't hardcode /magisk/modname/... ; instead, please use $MODDIR/...\n# This will make your scripts compatible even if Magisk change its mount point in the future\nMODDIR=${0%/*}\n\nmkdir -p $MODDIR/system/etc/security/cacerts\nrm $MODDIR/system/etc/security/cacerts/*\ncp -f /data/misc/user/0/cacerts-added/* $MODDIR/system/etc/security/cacerts/\nset_perm_recursive $MODDIR/system/etc/security/cacerts/ root root 644\n\n# This script will be executed in post-fs-data mode\n# More info in the main Magisk thread\n"
+        }
+      ]
+    }
+  ]
+}

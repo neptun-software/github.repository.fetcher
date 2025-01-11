@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": 1736560899476,
+    "page": 623,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Python3WebSpider/ProxyPool",
+      "stars": 5833,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 1.8544921875,
+          "content": "# Created by .ignore support plugin (hsz.mobi)\n### Python template\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\npip-wheel-metadata/\nshare/python-wheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.nox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n*.py,cover\n.hypothesis/\n.pytest_cache/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\ndb.sqlite3-journal\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# IPython\nprofile_default/\nipython_config.py\n\n# pyenv\n.python-version\n\n# pipenv\n#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.\n#   However, in case of collaboration, if having platform-specific dependencies or dependencies\n#   having no cross-platform support, pipenv may install dependencies that don't work, or not\n#   install all needed dependencies.\n#Pipfile.lock\n\n# PEP 582; used by e.g. github.com/David-OConnor/pyflow\n__pypackages__/\n\n# Celery stuff\ncelerybeat-schedule\ncelerybeat.pid\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.dmypy.json\ndmypy.json\n\n# Pyre type checker\n.pyre/\n\nproxypool/.env\n.DS_Store\n.vscode"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0458984375,
+          "content": "*.vscode\n*.pyc\n*.db\nvenv\n/.idea\n*.log\n.DS_Store"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.650390625,
+          "content": "FROM python:3.7-alpine AS build\nCOPY requirements.txt .\nRUN apk update &&\\\n    apk add --no-cache gcc g++ libffi-dev openssl-dev libxml2-dev libxslt-dev build-base musl-dev &&\\\n    pip install -U pip &&\\\n    pip install --timeout 30 --user --no-cache-dir --no-warn-script-location -r requirements.txt\n\nFROM python:3.7-alpine\nENV APP_ENV=prod\nENV LOCAL_PKG=\"/root/.local\"\nCOPY --from=build ${LOCAL_PKG} ${LOCAL_PKG}\nRUN apk update && apk add --no-cache libffi-dev openssl-dev libxslt-dev &&\\\n    ln -sf ${LOCAL_PKG}/bin/* /usr/local/bin/\nWORKDIR /app\nCOPY . .\nEXPOSE 5555\nVOLUME [\"/app/proxypool/crawlers/private\"]\nENTRYPOINT [\"supervisord\", \"-c\", \"supervisord.conf\"]"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2020 Germey\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 12.91796875,
+          "content": "# ProxyPool\n\n![build](https://github.com/Python3WebSpider/ProxyPool/workflows/build/badge.svg)\n![deploy](https://github.com/Python3WebSpider/ProxyPool/workflows/deploy/badge.svg)\n![](https://img.shields.io/badge/python-3.6%2B-brightgreen)\n![Docker Pulls](https://img.shields.io/docker/pulls/germey/proxypool)\n\n简易高效的代理池，提供如下功能：\n\n- 定时抓取免费代理网站，简易可扩展。\n- 使用 Redis 对代理进行存储并对代理可用性进行排序。\n- 定时测试和筛选，剔除不可用代理，留下可用代理。\n- 提供代理 API，随机取用测试通过的可用代理。\n\n代理池原理解析可见「[如何搭建一个高效的代理池](https://cuiqingcai.com/7048.html)」，建议使用之前阅读。\n\n## 使用前注意\n\n本代理池是基于市面上各种公开代理源搭建的，所以可用性并不高，很可能上百上千个代理中才能找到一两个可用代理，不适合直接用于爬虫爬取任务。\n\n如果您的目的是为了尽快使用代理完成爬取任务，建议您对接一些付费代理或者直接使用已有代理资源；如果您的目的是为了学习如何搭建一个代理池，您可以参考本项目继续完成后续步骤。\n\n付费代理推荐：\n\n- [ADSL 拨号代理](https://platform.acedata.cloud/documents/a82a528a-8e32-4c4c-a9d0-a21be7c9ef8c)：海量拨号（中国境内）高质量代理\n- [海外/全球代理](https://platform.acedata.cloud/documents/50f1437a-1857-43c5-85cf-5800ae1b31e4)：中国境外高质量代理\n- [蜂窝 4G/5G 代理](https://platform.acedata.cloud/documents/1cc59b19-1550-4169-a59d-ad6faf7f7517)：极高质量（中国境内）防风控代理\n\n## 使用准备\n\n首先当然是克隆代码并进入 ProxyPool 文件夹：\n\n```\ngit clone https://github.com/Python3WebSpider/ProxyPool.git\ncd ProxyPool\n```\n\n然后选用下面 Docker 和常规方式任意一个执行即可。\n\n## 使用要求\n\n可以通过两种方式来运行代理池，一种方式是使用 Docker（推荐），另一种方式是常规方式运行，要求如下：\n\n### Docker\n\n如果使用 Docker，则需要安装如下环境：\n\n- Docker\n- Docker-Compose\n\n安装方法自行搜索即可。\n\n官方 Docker Hub 镜像：[germey/proxypool](https://hub.docker.com/r/germey/proxypool)\n\n### 常规方式\n\n常规方式要求有 Python 环境、Redis 环境，具体要求如下：\n\n- Python>=3.6\n- Redis\n\n## Docker 运行\n\n如果安装好了 Docker 和 Docker-Compose，只需要一条命令即可运行。\n\n```shell script\ndocker-compose up\n```\n\n运行结果类似如下：\n\n```\nredis        | 1:M 19 Feb 2020 17:09:43.940 * DB loaded from disk: 0.000 seconds\nredis        | 1:M 19 Feb 2020 17:09:43.940 * Ready to accept connections\nproxypool    | 2020-02-19 17:09:44,200 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.\nproxypool    | 2020-02-19 17:09:44,203 INFO supervisord started with pid 1\nproxypool    | 2020-02-19 17:09:45,209 INFO spawned: 'getter' with pid 10\nproxypool    | 2020-02-19 17:09:45,212 INFO spawned: 'server' with pid 11\nproxypool    | 2020-02-19 17:09:45,216 INFO spawned: 'tester' with pid 12\nproxypool    | 2020-02-19 17:09:46,596 INFO success: getter entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)\nproxypool    | 2020-02-19 17:09:46,596 INFO success: server entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)\nproxypool    | 2020-02-19 17:09:46,596 INFO success: tester entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)\n```\n\n可以看到 Redis、Getter、Server、Tester 都已经启动成功。\n\n这时候访问 [http://localhost:5555/random](http://localhost:5555/random) 即可获取一个随机可用代理。\n\n如果下载速度特别慢，可以自行修改 Dockerfile，修改：\n\n```diff\n- RUN pip install -r requirements.txt\n+ RUN pip install -r requirements.txt -i https://pypi.douban.com/simple\n```\n\n## 常规方式运行\n\n如果不使用 Docker 运行，配置好 Python、Redis 环境之后也可运行，步骤如下。\n\n### 安装和配置 Redis\n\n本地安装 Redis、Docker 启动 Redis、远程 Redis 都是可以的，只要能正常连接使用即可。\n\n首先可以需要一下环境变量，代理池会通过环境变量读取这些值。\n\n设置 Redis 的环境变量有两种方式，一种是分别设置 host、port、password，另一种是设置连接字符串，设置方法分别如下：\n\n设置 host、port、password，如果 password 为空可以设置为空字符串，示例如下：\n\n```shell script\nexport PROXYPOOL_REDIS_HOST='localhost'\nexport PROXYPOOL_REDIS_PORT=6379\nexport PROXYPOOL_REDIS_PASSWORD=''\nexport PROXYPOOL_REDIS_DB=0\n```\n\n或者只设置连接字符串：\n\n```shell script\nexport PROXYPOOL_REDIS_CONNECTION_STRING='redis://localhost'\n```\n\n这里连接字符串的格式需要符合 `redis://[:password@]host[:port][/database]` 的格式，\n中括号参数可以省略，port 默认是 6379，database 默认是 0，密码默认为空。\n\n以上两种设置任选其一即可。\n\n### 安装依赖包\n\n这里强烈推荐使用 [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)\n或 [virtualenv](https://virtualenv.pypa.io/en/latest/user_guide.html) 创建虚拟环境，Python 版本不低于 3.6。\n\n然后 pip 安装依赖即可：\n\n```shell script\npip3 install -r requirements.txt\n```\n\n### 运行代理池\n\n两种方式运行代理池，一种是 Tester、Getter、Server 全部运行，另一种是按需分别运行。\n\n一般来说可以选择全部运行，命令如下：\n\n```shell script\npython3 run.py\n```\n\n运行之后会启动 Tester、Getter、Server，这时访问 [http://localhost:5555/random](http://localhost:5555/random) 即可获取一个随机可用代理。\n\n或者如果你弄清楚了代理池的架构，可以按需分别运行，命令如下：\n\n```shell script\npython3 run.py --processor getter\npython3 run.py --processor tester\npython3 run.py --processor server\n```\n\n这里 processor 可以指定运行 Tester、Getter 还是 Server。\n\n## 使用\n\n成功运行之后可以通过 [http://localhost:5555/random](http://localhost:5555/random) 获取一个随机可用代理。\n\n可以用程序对接实现，下面的示例展示了获取代理并爬取网页的过程：\n\n```python\nimport requests\n\nproxypool_url = 'http://127.0.0.1:5555/random'\ntarget_url = 'http://httpbin.org/get'\n\ndef get_random_proxy():\n    \"\"\"\n    get random proxy from proxypool\n    :return: proxy\n    \"\"\"\n    return requests.get(proxypool_url).text.strip()\n\ndef crawl(url, proxy):\n    \"\"\"\n    use proxy to crawl page\n    :param url: page url\n    :param proxy: proxy, such as 8.8.8.8:8888\n    :return: html\n    \"\"\"\n    proxies = {'http': 'http://' + proxy}\n    return requests.get(url, proxies=proxies).text\n\n\ndef main():\n    \"\"\"\n    main method, entry point\n    :return: none\n    \"\"\"\n    proxy = get_random_proxy()\n    print('get random proxy', proxy)\n    html = crawl(target_url, proxy)\n    print(html)\n\nif __name__ == '__main__':\n    main()\n```\n\n运行结果如下：\n\n```\nget random proxy 116.196.115.209:8080\n{\n  \"args\": {},\n  \"headers\": {\n    \"Accept\": \"*/*\",\n    \"Accept-Encoding\": \"gzip, deflate\",\n    \"Host\": \"httpbin.org\",\n    \"User-Agent\": \"python-requests/2.22.0\",\n    \"X-Amzn-Trace-Id\": \"Root=1-5e4d7140-662d9053c0a2e513c7278364\"\n  },\n  \"origin\": \"116.196.115.209\",\n  \"url\": \"https://httpbin.org/get\"\n}\n```\n\n可以看到成功获取了代理，并请求 httpbin.org 验证了代理的可用性。\n\n## 可配置项\n\n代理池可以通过设置环境变量来配置一些参数。\n\n### 开关\n\n- ENABLE_TESTER：允许 Tester 启动，默认 true\n- ENABLE_GETTER：允许 Getter 启动，默认 true\n- ENABLE_SERVER：运行 Server 启动，默认 true\n\n### 环境\n\n- APP_ENV：运行环境，可以设置 dev、test、prod，即开发、测试、生产环境，默认 dev\n- APP_DEBUG：调试模式，可以设置 true 或 false，默认 true\n- APP_PROD_METHOD: 正式环境启动应用方式，默认是`gevent`，\n  可选：`tornado`，`meinheld`（分别需要安装 tornado 或 meinheld 模块）\n\n### Redis 连接\n\n- PROXYPOOL_REDIS_HOST / REDIS_HOST：Redis 的 Host，其中 PROXYPOOL_REDIS_HOST 会覆盖 REDIS_HOST 的值。\n- PROXYPOOL_REDIS_PORT / REDIS_PORT：Redis 的端口，其中 PROXYPOOL_REDIS_PORT 会覆盖 REDIS_PORT 的值。\n- PROXYPOOL_REDIS_PASSWORD / REDIS_PASSWORD：Redis 的密码，其中 PROXYPOOL_REDIS_PASSWORD 会覆盖 REDIS_PASSWORD 的值。\n- PROXYPOOL_REDIS_DB / REDIS_DB：Redis 的数据库索引，如 0、1，其中 PROXYPOOL_REDIS_DB 会覆盖 REDIS_DB 的值。\n- PROXYPOOL_REDIS_CONNECTION_STRING / REDIS_CONNECTION_STRING：Redis 连接字符串，其中 PROXYPOOL_REDIS_CONNECTION_STRING 会覆盖 REDIS_CONNECTION_STRING 的值。\n- PROXYPOOL_REDIS_KEY / REDIS_KEY：Redis 储存代理使用字典的名称，其中 PROXYPOOL_REDIS_KEY 会覆盖 REDIS_KEY 的值。\n\n### 处理器\n\n- CYCLE_TESTER：Tester 运行周期，即间隔多久运行一次测试，默认 20 秒\n- CYCLE_GETTER：Getter 运行周期，即间隔多久运行一次代理获取，默认 100 秒\n- TEST_URL：测试 URL，默认百度\n- TEST_TIMEOUT：测试超时时间，默认 10 秒\n- TEST_BATCH：批量测试数量，默认 20 个代理\n- TEST_VALID_STATUS：测试有效的状态码\n- API_HOST：代理 Server 运行 Host，默认 0.0.0.0\n- API_PORT：代理 Server 运行端口，默认 5555\n- API_THREADED：代理 Server 是否使用多线程，默认 true\n\n### 日志\n\n- LOG_DIR：日志相对路径\n- LOG_RUNTIME_FILE：运行日志文件名称\n- LOG_ERROR_FILE：错误日志文件名称\n- LOG_ROTATION: 日志记录周转周期或大小，默认 500MB，见 [loguru - rotation](https://github.com/Delgan/loguru#easier-file-logging-with-rotation--retention--compression)\n- LOG_RETENTION: 日志保留日期，默认 7 天，见 [loguru - retention](https://github.com/Delgan/loguru#easier-file-logging-with-rotation--retention--compression)\n- ENABLE_LOG_FILE：是否输出 log 文件，默认 true，如果设置为 false，那么 ENABLE_LOG_RUNTIME_FILE 和 ENABLE_LOG_ERROR_FILE 都不会生效\n- ENABLE_LOG_RUNTIME_FILE：是否输出 runtime log 文件，默认 true\n- ENABLE_LOG_ERROR_FILE：是否输出 error log 文件，默认 true\n\n以上内容均可使用环境变量配置，即在运行前设置对应环境变量值即可，如更改测试地址和 Redis 键名：\n\n```shell script\nexport TEST_URL=http://weibo.cn\nexport REDIS_KEY=proxies:weibo\n```\n\n即可构建一个专属于微博的代理池，有效的代理都是可以爬取微博的。\n\n如果使用 Docker-Compose 启动代理池，则需要在 docker-compose.yml 文件里面指定环境变量，如：\n\n```yaml\nversion: \"3\"\nservices:\n  redis:\n    image: redis:alpine\n    container_name: redis\n    command: redis-server\n    ports:\n      - \"6379:6379\"\n    restart: always\n  proxypool:\n    build: .\n    image: \"germey/proxypool\"\n    container_name: proxypool\n    ports:\n      - \"5555:5555\"\n    restart: always\n    environment:\n      REDIS_HOST: redis\n      TEST_URL: http://weibo.cn\n      REDIS_KEY: proxies:weibo\n```\n\n## 扩展代理爬虫\n\n代理的爬虫均放置在 proxypool/crawlers 文件夹下，目前对接了有限几个代理的爬虫。\n\n若扩展一个爬虫，只需要在 crawlers 文件夹下新建一个 Python 文件声明一个 Class 即可。\n\n写法规范如下：\n\n```python\nfrom pyquery import PyQuery as pq\nfrom proxypool.schemas.proxy import Proxy\nfrom proxypool.crawlers.base import BaseCrawler\n\nBASE_URL = 'http://www.664ip.cn/{page}.html'\nMAX_PAGE = 5\n\nclass Daili66Crawler(BaseCrawler):\n    \"\"\"\n    daili66 crawler, http://www.66ip.cn/1.html\n    \"\"\"\n    urls = [BASE_URL.format(page=page) for page in range(1, MAX_PAGE + 1)]\n\n    def parse(self, html):\n        \"\"\"\n        parse html file to get proxies\n        :return:\n        \"\"\"\n        doc = pq(html)\n        trs = doc('.containerbox table tr:gt(0)').items()\n        for tr in trs:\n            host = tr.find('td:nth-child(1)').text()\n            port = int(tr.find('td:nth-child(2)').text())\n            yield Proxy(host=host, port=port)\n```\n\n在这里只需要定义一个 Crawler 继承 BaseCrawler 即可，然后定义好 urls 变量和 parse 方法即可。\n\n- urls 变量即为爬取的代理网站网址列表，可以用程序定义也可写成固定内容。\n- parse 方法接收一个参数即 html，代理网址的 html，在 parse 方法里只需要写好 html 的解析，解析出 host 和 port，并构建 Proxy 对象 yield 返回即可。\n\n网页的爬取不需要实现，BaseCrawler 已经有了默认实现，如需更改爬取方式，重写 crawl 方法即可。\n\n欢迎大家多多发 Pull Request 贡献 Crawler，使其代理源更丰富强大起来。\n\n## 部署\n\n本项目提供了 Kubernetes 部署脚本，如需部署到 Kubernetes，请参考 [kubernetes](./kubernetes)。\n\n如有一起开发的兴趣可以在 Issue 留言，非常感谢！\n\n## LICENSE\n\nMIT\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.3857421875,
+          "content": "version: \"3\"\nservices:\n  redis4proxypool:\n    image: redis:alpine\n    container_name: redis4proxypool\n  proxypool:\n    build: .\n    image: \"germey/proxypool:master\"\n    container_name: proxypool\n    ports:\n      - \"5555:5555\"\n    restart: always\n    # volumes:\n    #   - proxypool/crawlers/private:~/proxypool/crawlers/private\n    environment:\n      PROXYPOOL_REDIS_HOST: redis4proxypool\n      \n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kubernetes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proxypool",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "release.sh",
+          "type": "blob",
+          "size": 0.080078125,
+          "content": "git tag -a \"`date +'%Y%m%d'`\" -m \"Release `date +'%Y%m%d'`\"\ngit push origin --tags"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.3662109375,
+          "content": "environs>=9.3.0,<10.0.0\nFlask>=1.1.2,<2.0.0\nattrs>=20.3.0,<21.0.0\nretrying>=1.3.3,<2.0.0\naiohttp>=3.8.1,<4.0.0\nrequests>=2.25.1,<3.0.0\nloguru>=0.5.3,<1.0.0\npyquery>=1.4.3,<2.0.0\nsupervisor>=4.2.1,<5.0.0\nredis>=3.5.3,<4.0.0\nlxml>=4.6.5,<5.0.0\nfake_headers>=1.0.2,<2.0.0\nmaxminddb_geolite2==2018.703\ngevent>=21.8.0,<24.0.0\ntornado>=6.0,<7.0\nitsdangerous==0.24\nMarkupSafe<2.1.0\n"
+        },
+        {
+          "name": "run.py",
+          "type": "blob",
+          "size": 0.384765625,
+          "content": "from proxypool.scheduler import Scheduler\nimport argparse\n\n\nparser = argparse.ArgumentParser(description='ProxyPool')\nparser.add_argument('--processor', type=str, help='processor to run')\nargs = parser.parse_args()\n\nif __name__ == '__main__':\n    # if processor set, just run it\n    if args.processor:\n        getattr(Scheduler(), f'run_{args.processor}')()\n    else:\n        Scheduler().run()\n"
+        },
+        {
+          "name": "supervisord.conf",
+          "type": "blob",
+          "size": 0.8564453125,
+          "content": "[unix_http_server]\nfile=/run/supervisor.sock\nchmod=0700\n\n[supervisord]\npidfile=/run/supervisord.pid\nnodaemon=true\n\n[supervisorctl]\nserverurl=unix:///run/supervisor.sock\n\n[rpcinterface:supervisor]\nsupervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface\n\n[program:tester]\nprocess_name=tester\ncommand=python3 run.py --processor tester\ndirectory=/app\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0\n\n[program:getter]\nprocess_name=getter\ncommand=python3 run.py --processor getter\ndirectory=/app\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0\n\n[program:server]\nprocess_name=server\ncommand=python3 run.py --processor server\ndirectory=/app\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nstderr_logfile=/dev/stderr\nstderr_logfile_maxbytes=0"
+        }
+      ]
+    }
+  ]
+}

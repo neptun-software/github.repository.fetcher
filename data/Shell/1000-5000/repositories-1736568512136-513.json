@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "timestamp": 1736568512136,
+    "page": 513,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUxOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "samtap/fang-hacks",
+      "stars": 1680,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0146484375,
+          "content": "bak/\nreleases/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.19921875,
+          "content": "[submodule \"bootstrap\"]\n\tpath = bootstrap\n\turl = https://github.com/samtap/fang-hacks\n\tbranch = bootstrap\n[submodule \"data\"]\n\tpath = data\n\turl = https://github.com/samtap/fang-hacks.git\n\tbranch = xf-data\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8193359375,
+          "content": "# Fang Hacks\n\nCollection of modifications for the XiaoFang WiFi Camera\n\n**For questions, support and collaboration please join us on gitter. The discord channel is not used anymore.**\n\n[![Join the chat at https://gitter.im/samtap/fang-hacks](https://badges.gitter.im/samtap/fang-hacks.svg)](https://gitter.im//fang-hacks/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n\n## General usage\n\nDownload an sd-card image from the [releases](https://github.com/samtap/fang-hacks/releases) page or follow the manual steps below.\n\n**Updating**: If you've applied the hack before and are updating to a newer release, the web-interface will not allow you to apply the hack since (older versions of) scripts are already on the device. Make sure to click the Update button on the status page before rebooting!! This will copy all relevant files to the device, overwriting the previous version.\n\n### 1. Prepare an sd-card with two partitions.\nThe first partition on the device must be a vfat partition. It will only contain some small scripts so 100MiB should be more than enough.\nThe second partition must be an ext2 partition and will contain all other files.\n\n### 2. Copy bootstrap folder and snx_autorun.sh\nThe bootstrap folder contains CGI scripts for the embedded Boa webserver. The ```snx_autorun.sh``` script is the entry-point for enabling the hacks.\n\nBoth must be copied to the vfat partition.\n\n### 3. Copy data folder\nThe data folder must be copied to the ext2 partition.\n\n### 4. Place sd-card in device\nBoot the device without sd-card, wait until the blue led stops flashing. The device will automatically run ```snx_autorun.sh``` when the sd-card is inserted. Do not boot the device with the card inserted and then re-insert it, to prevent it from being mounted incorrectly (mmcblk1 instead of mmcblk0).\n\n### 5. Enable hacks\nWhen you visit ```http://device-ip/cgi-bin/status``` you should now be presented with a status page. If you get a '404 Not Found' page, the ```snx_autorun.sh``` script didn't run. You can visit ``http://device-ip/cgi-bin/hello.cgi`` to check if the sd-card is mounted correctly. \n\nClick 'Apply' to enable the hacks. \n\n## Background\nThe modifications aim to be as least intrusive as possible. Currently there's no known recovery methode, i.e. an image to flash to the device when it doesn't boot, though you can solder wires to it and get access to a serial console. When it still boots and mounts vfat partitions automatically, limited recovery options are available through snx_autorun.sh and config files in the bootstrap folder. \nAs long as you don't completely disable the cloud apps (DISABLE_CLOUD=1), you can always revert to original behavior by simply removing the sd-card. When cloud apps are disabled and no boot scripts are found on the sd-card (i.e. when it's not inserted), nothing is started when the device boots so you will not be able to access it through the web-interface, telnet, etc.\n\nSmall system modifications are made when you click Apply on the status page:\n\n- A modified sdcard hotplug script is placed on the device to automatically mount ext2 volumes.\n- Modified rc.local and rcS scripts are placed in /etc/init.d to enable hacks when the device is rebooted. It also disables copying original files from /root/etc_default to prevent overwriting changes to files in /etc. This poses a risk so always be extra careful when editing files in /etc\n- The fang_hacks.sh script and cfg file are placed in /etc.\n\n## Hacks\nWhen the status page shows the hacks have been applied successfully, the following features are available:\n- The data partition can be extended to use all the space available, in case you installed a pre-created sdcard image.\n- You can switch the network mode to WiFi Client or HotSpot mode, completely disable the cloud apps and have a RTSP server running in 15 seconds after applying power. \n- You can place any binaries, scripts etc. you need in the data folder on the sd-card. The device only has limited space available on internal flash so you don't risk running out of space.\n- A busybox build is provided with many applets available such as telnetd, ftpd, netcat.\n- A dropbear build is provided with support for SSH/SFTP. Use sshfs to access all data on the sdcard remotely.\n- Scripts placed in data/etc/scripts will be automatically executed after the device boots.\n\n## Services\nBy default the following services are enabled:\n- FTP server\n- RTSP server (url: ```rtsp://device-ip/unicast```)\n- Telnetd on port 2323 (user: root, password: ismart12)\n- Dropbear SSH/SCP/SFTP \n- A script controls the IR filter and LEDs\n- Manage the device via the status page ```http://device-ip/cgi-bin/status```\n\n## License\nAny files in this repo that are not already licensed (i.e. my scripts and tools but *not* 3rd party binaries like busybox, dropbear et.al) are licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). \n"
+        },
+        {
+          "name": "bootstrap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "snx_autorun.sh",
+          "type": "blob",
+          "size": 0.630859375,
+          "content": "#!/bin/sh\n\n[ -z \"$MDEV\" ] && return\n\necho \"$(date) - $0: Running (device: $MDEV)\" >> /tmp/hacks.log 2>&1\n\n# if [ ! $(pidof telnetd >/dev/null) ]; then\n#   echo \"$(date) - $0: Starting telnetd\" >> /tmp/hacks.log 2>&1\n#   telnetd &\n# else\n#   echo \"$(date) - $0: Telnetd already running! (PID: $(pidof telnetd))\" >> /tmp/hacks.log 2>&1\n# fi\n\nif [ ! -d \"/tmp/www/cgi-bin\" ]; then\n\tmkdir -p \"/tmp/www/cgi-bin\";\n\techo \"$(date) - $0: Created /tmp/www/cgi-bin\" >> /tmp/hacks.log 2>&1\nfi\nfor i in /media/$MDEV/bootstrap/www/*; do\n  echo \"$i -> /tmp/www/cgi-bin/$(basename $i)\"\n  ln -sf \"$i\" \"/tmp/www/cgi-bin/$(basename $i)\" >> /tmp/hacks.log 2>&1\ndone \n"
+        }
+      ]
+    }
+  ]
+}

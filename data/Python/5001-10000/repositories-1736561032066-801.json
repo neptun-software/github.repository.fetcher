@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736561032066,
+    "page": 801,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "biobootloader/wolverine",
+      "stars": 5192,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".env.sample",
+          "type": "blob",
+          "size": 0.0556640625,
+          "content": "OPENAI_API_KEY=your_api_key\n#DEFAULT_MODEL=gpt-3.5-turbo\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "venv\n.venv\n.env\nenv/\n.vscode/\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "MIT License\n\nCopyright (c) [2023] [BioBootloader]\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.7744140625,
+          "content": "# DEPRECATED: Try Mentat instead! https://github.com/AbanteAI/mentat\n\n\n# Wolverine\n\n## About\n\nGive your python scripts regenerative healing abilities!\n\nRun your scripts with Wolverine and when they crash, GPT-4 edits them and explains what went wrong. Even if you have many bugs it will repeatedly rerun until it's fixed.\n\nFor a quick demonstration see my [demo video on twitter](https://twitter.com/bio_bootloader/status/1636880208304431104).\n\n## Setup\n\n    python3 -m venv venv\n    source venv/bin/activate\n    pip install -r requirements.txt\n    cp .env.sample .env\n\nAdd your openAI api key to `.env`\n\n_warning!_ By default wolverine uses GPT-4 and may make many repeated calls to the api.\n\n## Example Usage\n\nTo run with gpt-4 (the default, tested option):\n\n    python -m wolverine examples/buggy_script.py \"subtract\" 20 3\n\nYou can also run with other models, but be warned they may not adhere to the edit format as well:\n\n    python -m wolverine --model=gpt-3.5-turbo examples/buggy_script.py \"subtract\" 20 3\n\nIf you want to use GPT-3.5 by default instead of GPT-4 uncomment the default model line in `.env`:\n\n    DEFAULT_MODEL=gpt-3.5-turbo\n\nYou can also use flag `--confirm=True` which will ask you `yes or no` before making changes to the file. If flag is not used then it will apply the changes to the file\n\n    python -m wolverine examples/buggy_script.py \"subtract\" 20 3 --confirm=True\n\n## Environment variables\n\n| env name            | description                                                       | default value |\n| ------------------- | ----------------------------------------------------------------- | ------------- |\n| OPENAI_API_KEY      | OpenAI API key                                                    | None          |\n| DEFAULT_MODEL       | GPT model to use                                                  | \"gpt-4\"       |\n| VALIDATE_JSON_RETRY | Number of retries when requesting OpenAI API (-1 means unlimites) | -1            |\n\n## Future Plans\n\nThis is just a quick prototype I threw together in a few hours. There are many possible extensions and contributions are welcome:\n\n- add flags to customize usage, such as asking for user confirmation before running changed code\n- further iterations on the edit format that GPT responds in. Currently it struggles a bit with indentation, but I'm sure that can be improved\n- a suite of example buggy files that we can test prompts on to ensure reliability and measure improvement\n- multiple files / codebases: send GPT everything that appears in the stacktrace\n- graceful handling of large files - should we just send GPT relevant classes / functions?\n- extension to languages other than python\n\n## Star History\n\n[![Star History Chart](https://api.star-history.com/svg?repos=biobootloader/wolverine&type=Date)](https://star-history.com/#biobootloader/wolverine)\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "prompt.txt",
+          "type": "blob",
+          "size": 1.7685546875,
+          "content": "You are part of an elite automated software fixing team. You will be given a script followed by the arguments it was provided and the stacktrace of the error it produced. Your job is to figure out what went wrong and suggest changes to the code.\n\nBecause you are part of an automated system, the format you respond in is very strict. You must provide changes in JSON format, using one of 3 actions: 'Replace', 'Delete', or 'InsertAfter'. 'Delete' will remove that line from the code. 'Replace' will replace the existing line with the content you provide. 'InsertAfter' will insert the new lines you provide after the code already at the specified line number. For multi-line insertions or replacements, provide the content as a single string with '\\n' as the newline character. The first line in each file is given line number 1. Edits will be applied in reverse line order so that line numbers won't be impacted by other edits.\n\nIn addition to the changes, please also provide short explanations of the what went wrong. A single explanation is required, but if you think it's helpful, feel free to provide more explanations for groups of more complicated changes. Be careful to use proper indentation and spacing in your changes. An example response could be:\n\nBe ABSOLUTELY SURE to include the CORRECT INDENTATION when making replacements.\n\nexample response:\n[\n  {\"explanation\": \"this is just an example, this would usually be a brief explanation of what went wrong\"},\n  {\"operation\": \"InsertAfter\", \"line\": 10, \"content\": \"x = 1\\ny = 2\\nz = x * y\"},\n  {\"operation\": \"Delete\", \"line\": 15, \"content\": \"\"},\n  {\"operation\": \"Replace\", \"line\": 18, \"content\": \"        x += 1\"},\n  {\"operation\": \"Delete\", \"line\": 20, \"content\": \"\"}\n]\n\nFrom now, your response must be only the json object, no talking, no comments.\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.4130859375,
+          "content": "aiohttp==3.8.4\naiosignal==1.3.1\nasync-timeout==4.0.2\nattrs==23.1.0\ncertifi==2022.12.7\ncharset-normalizer==3.1.0\nexceptiongroup==1.1.1\nfire==0.5.0\nfrozenlist==1.3.3\nidna==3.4\niniconfig==2.0.0\nmultidict==6.0.4\nopenai==0.27.4\npackaging==23.1\npluggy==1.0.0\npytest==7.3.1\npytest-mock==3.10.0\npython-dotenv==1.0.0\nrequests==2.29.0\nruff==0.0.263\nsix==1.16.0\ntermcolor==2.3.0\ntomli==2.0.1\ntqdm==4.65.0\nurllib3==1.26.15\nyarl==1.9.2\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wolverine",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

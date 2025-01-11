@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "timestamp": 1736568190744,
+    "page": 24,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rauchg/wifi-password",
+      "stars": 4461,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "History.md",
+          "type": "blob",
+          "size": 0.1396484375,
+          "content": "\n0.1.0 / 2015-02-14\n==================\n\n * default to `quiet` when piping (non-tty)\n\n0.0.1 / 2015-02-14\n==================\n\n * initial release\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 1.2119140625,
+          "content": "\n# wifi-password\n\nPeople ask you for the Wi-Fi password. Answer quickly. **macOS only**.\n[Windows version](https://github.com/RReverser/WiFi-Password).\n\n![](https://i.cloudup.com/uUo8iSbKXRh/km6iJT.gif)\n\n## How to use\n\n**1. Install it**\n\nWith [bpkg](https://github.com/bpkg/bpkg):\n\n```\n$ bpkg install rauchg/wifi-password\n```\n\nWith [Homebrew](https://github.com/Homebrew/homebrew):\n\n```\n$ brew install wifi-password\n```\n\nWith [Antigen](https://github.com/zsh-users/antigen):\n\nAdd `antigen bundle rauchg/wifi-password` to your `.zshrc` with your other antigen commands\n\nWith [Zgen](https://github.com/tarjoilija/zgen)\n\nAdd `zgen load rauchg/wifi-password` to your `.zshrc` with your other zgen commands\n\nor with `curl`:\n\n```\ncurl -L https://raw.github.com/rauchg/wifi-password/master/wifi-password.sh -o ~/bin/wifi-password && chmod +x ~/bin/wifi-password\n```\n\nIf you don't have `~/bin` in your `$PATH`, replace it with `/usr/local/bin` or\nsimilar.\n\n**2. Use it:**\n\nTo get the password for the WiFi you're currently logged onto:\n\n```\n$ wifi-password\n```\n\nTo get it for a specific SSID:\n\n```\n$ wifi-password <ssid>\n```\n\nTo put it straight in your clipboard for pasting elsewhere (OS X only):\n\n```\n$ wifi-password | pbcopy\n```\n\n## License\n\nMIT\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.259765625,
+          "content": "{\n  \"name\": \"wifi-password\",\n  \"version\": \"0.1.0\",\n  \"description\": \"People ask you for the Wi-Fi password. Answer quickly.\",\n  \"global\": \"1\",\n  \"install\": \"install -b wifi-password.sh ${PREFIX:-/usr/local}/bin/wifi-password\",\n  \"scripts\": [ \"wifi-password.sh\" ]\n}\n\n"
+        },
+        {
+          "name": "wifi-password.plugin.zsh",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "# This plugin is MIT licensed.\n#\n# Make git-open easy to install and keep up to date if you're using a\n# ZSH framework like Zgen or Antigen\n\nexport PATH=$(dirname $0):${PATH}\n"
+        },
+        {
+          "name": "wifi-password.sh",
+          "type": "blob",
+          "size": 1.9482421875,
+          "content": "#!/usr/bin/env sh\n\nversion=\"0.1.0\"\n\n# locate airport(1)\nairport=\"/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport\"\nif [ ! -f $airport ]; then\n  echo \"ERROR: Can't find \\`airport\\` CLI program at \\\"$airport\\\".\"\n  exit 1\nfi\n\n# by default we are verbose (unless non-tty)\nif [ -t 1 ]; then\n  verbose=1\nelse\n  verbose=\nfi\n\n# usage info\nusage() {\n  cat <<EOF\n\n  Usage: wifi-password [options] [ssid]\n\n  Options:\n    -q, --quiet      Only output the password.\n    -V, --version    Output version\n    -h, --help       This message.\n    --               End of options\n\nEOF\n}\n\n# parse options\nwhile [[ \"$1\" =~ ^- && ! \"$1\" == \"--\" ]]; do\n  case $1 in\n    -V | --version )\n      echo $version\n      exit\n      ;;\n    -q | --quiet )\n      verbose=\n      ;;\n    -h | --help )\n      usage\n      exit\n      ;;\n  esac\n  shift\ndone\nif [[ \"$1\" == \"--\" ]]; then shift; fi\n\n# merge args for SSIDs with spaces\nargs=\"$@\"\n\n# check for user-provided ssid \nif [ \"\" != \"$args\" ]; then\n  ssid=\"$@\"\nelse\n  # get current ssid\n  ssid=\"`$airport -I | awk '/ SSID/ {print substr($0, index($0, $2))}'`\"\n  if [ \"$ssid\" = \"\" ]; then\n    echo \"ERROR: Could not retrieve current SSID. Are you connected?\" >&2\n    exit 1\n  fi\nfi\n\n# warn user about keychain dialog\nif [ $verbose ]; then\n  echo \"\"\n  echo \"\\033[90m … getting password for \\\"$ssid\\\". \\033[39m\"\n  echo \"\\033[90m … keychain prompt incoming. \\033[39m\"\nfi\n\nsleep 2\n\n# source: http://blog.macromates.com/2006/keychain-access-from-shell/\npwd=\"`security find-generic-password -D 'AirPort network password' -ga \\\"$ssid\\\" 2>&1 >/dev/null`\"\n\nif [[ $pwd =~ \"could\" ]]; then\n  echo \"ERROR: Could not find SSID \\\"$ssid\\\"\" >&2\n  exit 1\nfi\n\n# clean up password\npwd=$(echo \"$pwd\" | sed -e \"s/^.*\\\"\\(.*\\)\\\".*$/\\1/\")\n\nif [ \"\" == \"$pwd\" ]; then\n  echo \"ERROR: Could not get password. Did you enter your Keychain credentials?\" >&2\n  exit 1\nfi\n\n# print\nif [ $verbose ]; then\n  echo \"\\033[96m ✓ \\\"$pwd\\\" \\033[39m\"\n  echo \"\"\nelse\n  echo $pwd\nfi\n"
+        }
+      ]
+    }
+  ]
+}

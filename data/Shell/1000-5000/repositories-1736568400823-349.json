@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": 1736568400823,
+    "page": 349,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "sgerrand/alpine-pkg-glibc",
+      "stars": 2087,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "*.rsa\n*.pkg*\nsrc\npkg\npackages\n"
+        },
+        {
+          "name": "APKBUILD",
+          "type": "blob",
+          "size": 2,
+          "content": "# Maintainer: Sasha Gerrand <alpine-pkgs@sgerrand.com>\n\npkgname=\"glibc\"\npkgver=\"2.35\"\n_pkgrel=\"0\"\npkgrel=\"1\"\npkgdesc=\"GNU C Library compatibility layer\"\narch=\"x86_64\"\nurl=\"https://github.com/sgerrand/alpine-pkg-glibc\"\nlicense=\"LGPL\"\nsource=\"https://github.com/sgerrand/docker-glibc-builder/releases/download/$pkgver-$_pkgrel/glibc-bin-$pkgver-$_pkgrel-x86_64.tar.gz\nld.so.conf\"\nsubpackages=\"$pkgname-bin $pkgname-dev $pkgname-i18n\"\ntriggers=\"$pkgname-bin.trigger=/lib:/usr/lib:/usr/glibc-compat/lib\"\n\npackage() {\n  mkdir -p \"$pkgdir/lib\" \"$pkgdir/usr/glibc-compat/lib/locale\"  \"$pkgdir\"/usr/glibc-compat/lib64 \"$pkgdir\"/etc\n  cp -a \"$srcdir\"/usr \"$pkgdir\"\n  cp \"$srcdir\"/ld.so.conf \"$pkgdir\"/usr/glibc-compat/etc/ld.so.conf\n  rm \"$pkgdir\"/usr/glibc-compat/etc/rpc\n  rm -rf \"$pkgdir\"/usr/glibc-compat/bin\n  rm -rf \"$pkgdir\"/usr/glibc-compat/sbin\n  rm -rf \"$pkgdir\"/usr/glibc-compat/lib/gconv\n  rm -rf \"$pkgdir\"/usr/glibc-compat/lib/getconf\n  rm -rf \"$pkgdir\"/usr/glibc-compat/lib/audit\n  rm -rf \"$pkgdir\"/usr/glibc-compat/share\n  rm -rf \"$pkgdir\"/usr/glibc-compat/var\n  ln -s /usr/glibc-compat/lib/ld-linux-x86-64.so.2 ${pkgdir}/lib/ld-linux-x86-64.so.2\n  ln -s /usr/glibc-compat/lib/ld-linux-x86-64.so.2 ${pkgdir}/usr/glibc-compat/lib64/ld-linux-x86-64.so.2\n  ln -s /usr/glibc-compat/etc/ld.so.cache ${pkgdir}/etc/ld.so.cache\n}\n\nbin() {\n  depends=\"$pkgname bash libc6-compat libgcc\"\n  mkdir -p \"$subpkgdir\"/usr/glibc-compat\n  cp -a \"$srcdir\"/usr/glibc-compat/bin \"$subpkgdir\"/usr/glibc-compat\n  cp -a \"$srcdir\"/usr/glibc-compat/sbin \"$subpkgdir\"/usr/glibc-compat\n}\n\ni18n() {\n  depends=\"$pkgname-bin\"\n  arch=\"noarch\"\n  mkdir -p \"$subpkgdir\"/usr/glibc-compat\n  cp -a \"$srcdir\"/usr/glibc-compat/share \"$subpkgdir\"/usr/glibc-compat\n}\n\nsha512sums=\"\n0aff0ec76f4d341957a792b8635c0770148eba9a5cb64f9bbd85228c14d9cb93c1a402063cab533a9f536f5f7be92c27bc5be8ed13c2b4f7aa416510c754d071  glibc-bin-2.35-0-x86_64.tar.gz\n2912f254f8eceed1f384a1035ad0f42f5506c609ec08c361e2c0093506724a6114732db1c67171c8561f25893c0dd5c0c1d62e8a726712216d9b45973585c9f7  ld.so.conf\n\"\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0078125,
+          "content": "# alpine-pkg-glibc\n\n[![CircleCI](https://circleci.com/gh/sgerrand/alpine-pkg-glibc/tree/main.svg?style=svg)](https://circleci.com/gh/sgerrand/alpine-pkg-glibc/tree/main) ![x86_64](https://img.shields.io/badge/x86__64-supported-brightgreen.svg)\n\nThis is the [GNU C Library](https://gnu.org/software/libc/) as a Alpine Linux package to run binaries linked against `glibc`. This package utilizes a custom built glibc binary based on the vanilla glibc source. Built binary artifacts come from https://github.com/sgerrand/docker-glibc-builder.\n\n## Releases\n\nSee the [releases page](https://github.com/sgerrand/alpine-pkg-glibc/releases) for the latest download links. If you are using tools like `localedef` you will need the `glibc-bin` and `glibc-i18n` packages in addition to the `glibc` package.\n\n## Installing\n\nThe current installation method for these packages is to pull them in using `wget` or `curl` and install the local file with `apk`:\n\n    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub\n    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-2.35-r1.apk\n    apk add glibc-2.35-r1.apk\n\n### Please Note\n\n:warning: The URL of the public signing key has changed! :warning:\n\nAny previous reference to `https://raw.githubusercontent.com/sgerrand/alpine-pkg-glibc/master/sgerrand.rsa.pub` should be updated with immediate effect to `https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub`.\n\n## Locales\n\nYou will need to generate your locale if you would like to use a specific one for your glibc application. You can do this by installing the `glibc-i18n` package and generating a locale using the `localedef` binary. An example for en_US.UTF-8 would be:\n\n    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-bin-2.35-r1.apk\n    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r1/glibc-i18n-2.35-r1.apk\n    apk add glibc-bin-2.35-r1.apk glibc-i18n-2.35-r1.apk\n    /usr/glibc-compat/bin/localedef -i en_US -f UTF-8 en_US.UTF-8\n"
+        },
+        {
+          "name": "glibc-bin.trigger",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "#!/bin/sh\n/usr/glibc-compat/sbin/ldconfig\n"
+        },
+        {
+          "name": "ld.so.conf",
+          "type": "blob",
+          "size": 0.0791015625,
+          "content": "# libc default configuration\n/usr/local/lib\n\n/usr/glibc-compat/lib\n/usr/lib\n/lib\n"
+        }
+      ]
+    }
+  ]
+}

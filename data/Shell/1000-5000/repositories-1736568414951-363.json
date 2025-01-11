@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736568414951,
+    "page": 363,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "big-data-europe/docker-spark",
+      "stars": 2042,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": "*~\n.vscode"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.5595703125,
+          "content": "[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)\n[![Build Status](https://travis-ci.org/big-data-europe/docker-spark.svg?branch=master)](https://travis-ci.org/big-data-europe/docker-spark)\n[![Twitter](https://img.shields.io/twitter/follow/BigData_Europe.svg?style=social)](https://twitter.com/BigData_Europe)\n# Spark docker\n\nDocker images to:\n* Setup a standalone [Apache Spark](https://spark.apache.org/) cluster running one Spark Master and multiple Spark workers\n* Build Spark applications in Java, Scala or Python to run on a Spark cluster\n\n<details open>\n<summary>Currently supported versions:</summary>\n\n* Spark 3.3.0 for Hadoop 3.3 with OpenJDK 8 and Scala 2.12\n* Spark 3.2.1 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 3.2.0 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 3.1.2 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 3.1.1 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 3.1.1 for Hadoop 3.2 with OpenJDK 11 and Scala 2.12\n* Spark 3.0.2 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 3.0.1 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 3.0.0 for Hadoop 3.2 with OpenJDK 11 and Scala 2.12\n* Spark 3.0.0 for Hadoop 3.2 with OpenJDK 8 and Scala 2.12\n* Spark 2.4.5 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.4.4 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.4.3 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.4.1 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.4.0 for Hadoop 2.8 with OpenJDK 8 and Scala 2.12\n* Spark 2.4.0 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.3.2 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.3.1 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.3.1 for Hadoop 2.8 with OpenJDK 8\n* Spark 2.3.0 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.2.2 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.2.1 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.2.0 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.1.3 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.1.2 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.1.1 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.1.0 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.0.2 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.0.1 for Hadoop 2.7+ with OpenJDK 8\n* Spark 2.0.0 for Hadoop 2.7+ with Hive support and OpenJDK 8\n* Spark 2.0.0 for Hadoop 2.7+ with Hive support and OpenJDK 7\n* Spark 1.6.2 for Hadoop 2.6 and later\n* Spark 1.5.1 for Hadoop 2.6 and later\n\n</details>\n\n## Using Docker Compose\n\nAdd the following services to your `docker-compose.yml` to integrate a Spark master and Spark worker in [your BDE pipeline](https://github.com/big-data-europe/app-bde-pipeline):\n```yml\nversion: '3'\nservices:\n  spark-master:\n    image: bde2020/spark-master:3.3.0-hadoop3.3\n    container_name: spark-master\n    ports:\n      - \"8080:8080\"\n      - \"7077:7077\"\n    environment:\n      - INIT_DAEMON_STEP=setup_spark\n  spark-worker-1:\n    image: bde2020/spark-worker:3.3.0-hadoop3.3\n    container_name: spark-worker-1\n    depends_on:\n      - spark-master\n    ports:\n      - \"8081:8081\"\n    environment:\n      - \"SPARK_MASTER=spark://spark-master:7077\"\n  spark-worker-2:\n    image: bde2020/spark-worker:3.3.0-hadoop3.3\n    container_name: spark-worker-2\n    depends_on:\n      - spark-master\n    ports:\n      - \"8082:8081\"\n    environment:\n      - \"SPARK_MASTER=spark://spark-master:7077\"\n  spark-history-server:\n      image: bde2020/spark-history-server:3.3.0-hadoop3.3\n      container_name: spark-history-server\n      depends_on:\n        - spark-master\n      ports:\n        - \"18081:18081\"\n      volumes:\n        - /tmp/spark-events-local:/tmp/spark-events\n```\nMake sure to fill in the `INIT_DAEMON_STEP` as configured in your pipeline.\n\n## Running Docker containers without the init daemon\n### Spark Master\nTo start a Spark master:\n\n    docker run --name spark-master -h spark-master -d bde2020/spark-master:3.3.0-hadoop3.3\n\n### Spark Worker\nTo start a Spark worker:\n\n    docker run --name spark-worker-1 --link spark-master:spark-master -d bde2020/spark-worker:3.3.0-hadoop3.3\n\n## Launch a Spark application\nBuilding and running your Spark application on top of the Spark cluster is as simple as extending a template Docker image. Check the template's README for further documentation.\n* [Maven template](template/maven)\n* [Python template](template/python)\n* [Sbt template](template/sbt)\n\n## Kubernetes deployment\nThe BDE Spark images can also be used in a Kubernetes enviroment.\n\nTo deploy a simple Spark standalone cluster issue\n\n`kubectl apply -f https://raw.githubusercontent.com/big-data-europe/docker-spark/master/k8s-spark-cluster.yaml`\n\nThis will setup a Spark standalone cluster with one master and a worker on every available node using the default namespace and resources. The master is reachable in the same namespace at `spark://spark-master:7077`.\nIt will also setup a headless service so spark clients can be reachable from the workers using hostname `spark-client`.\n\nThen to use `spark-shell` issue\n\n`kubectl run spark-base --rm -it --labels=\"app=spark-client\" --image bde2020/spark-base:3.3.0-hadoop3.3 -- bash ./spark/bin/spark-shell --master spark://spark-master:7077 --conf spark.driver.host=spark-client`\n\nTo use `spark-submit` issue for example\n\n`kubectl run spark-base --rm -it --labels=\"app=spark-client\" --image bde2020/spark-base:3.3.0-hadoop3.3 -- bash ./spark/bin/spark-submit --class CLASS_TO_RUN --master spark://spark-master:7077 --deploy-mode client --conf spark.driver.host=spark-client URL_TO_YOUR_APP`\n\nYou can use your own image packed with Spark and your application but when deployed it must be reachable from the workers.\nOne way to achieve this is by creating a headless service for your pod and then use `--conf spark.driver.host=YOUR_HEADLESS_SERVICE` whenever you submit your application.\n"
+        },
+        {
+          "name": "base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.5478515625,
+          "content": "#!/bin/bash\n\nset -e\n\nTAG=3.3.0-hadoop3.3\n\nbuild() {\n    NAME=$1\n    IMAGE=bde2020/spark-$NAME:$TAG\n    cd $([ -z \"$2\" ] && echo \"./$NAME\" || echo \"$2\")\n    echo '--------------------------' building $IMAGE in $(pwd)\n    docker build -t $IMAGE .\n    cd -\n}\n\nif [ $# -eq 0 ]\n  then\n    build base\n    build master\n    build worker\n    build history-server\n    build submit\n    build maven-template template/maven\n    build sbt-template template/sbt\n    build python-template template/python\n    \n    build python-example examples/python\n  else\n    build $1 $2\nfi\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.44921875,
+          "content": "version: '3'\nservices:\n  spark-master:\n    image: bde2020/spark-master:3.3.0-hadoop3.3\n    container_name: spark-master\n    ports:\n      - \"8080:8080\"\n      - \"7077:7077\"\n    environment:\n      - INIT_DAEMON_STEP=setup_spark\n  spark-worker-1:\n    image: bde2020/spark-worker:3.3.0-hadoop3.3\n    container_name: spark-worker-1\n    depends_on:\n      - spark-master\n    ports:\n      - \"8081:8081\"\n    environment:\n      - \"SPARK_MASTER=spark://spark-master:7077\"\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "history-server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "k8s-spark-cluster.yaml",
+          "type": "blob",
+          "size": 1.322265625,
+          "content": "apiVersion: v1\nkind: Service\nmetadata:\n  name: spark-master\nspec:\n  selector:\n    app: spark-master\n  ports:\n  - name: web-ui\n    protocol: TCP\n    port: 8080\n    targetPort: 8080\n  - name: master\n    protocol: TCP\n    port: 7077\n    targetPort: 7077\n  - name: master-rest\n    protocol: TCP\n    port: 6066\n    targetPort: 6066\n  clusterIP: None\n---\napiVersion: v1\nkind: Service\nmetadata:\n  name: spark-client\nspec:\n  selector:\n    app: spark-client\n  clusterIP: None\n---\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: spark-master\n  labels:\n    app: spark-master\nspec:\n  selector:\n    matchLabels:\n      app: spark-master\n  template:\n    metadata:\n      labels:\n        app: spark-master\n    spec:\n      containers:\n      - name: spark-master\n        image: bde2020/spark-master:3.3.0-hadoop3.3\n        imagePullPolicy: Always\n        ports:\n        - containerPort: 8080\n        - containerPort: 7077\n        - containerPort: 6066\n---\napiVersion: apps/v1\nkind: DaemonSet\nmetadata:\n  name: spark-worker\n  labels:\n    app: spark-worker\nspec:\n  selector:\n    matchLabels:\n      name: spark-worker\n  template:\n    metadata:\n      labels:\n        name: spark-worker\n    spec:\n      containers:\n      - name: spark-worker\n        image: bde2020/spark-worker:3.3.0-hadoop3.3\n        imagePullPolicy: Always\n        ports:\n        - containerPort: 8081\n"
+        },
+        {
+          "name": "master",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "submit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "template",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "worker",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

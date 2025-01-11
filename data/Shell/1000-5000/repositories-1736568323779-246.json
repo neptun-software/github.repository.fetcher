@@ -1,0 +1,185 @@
+{
+  "metadata": {
+    "timestamp": 1736568323779,
+    "page": 246,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "matryer/xbar-plugins",
+      "stars": 2462,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0390625,
+          "content": ".DS_Store\n.DS_Store\n.ruby-version\n.idea\n"
+        },
+        {
+          "name": ".jshintrc",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "{\n\t\"esversion\": 6,\n\t\"asi\": true\n}\n"
+        },
+        {
+          "name": ".rubocop.yml",
+          "type": "blob",
+          "size": 0.0380859375,
+          "content": "Lint/BooleanSymbol:\n    Enabled: false\n"
+        },
+        {
+          "name": ".test.py",
+          "type": "blob",
+          "size": 10.525390625,
+          "content": "#!/usr/bin/env python3\nimport re\nimport os\nimport subprocess\nimport argparse\nimport warnings\nfrom distutils.spawn import find_executable\nfrom tempfile import NamedTemporaryFile\nfrom urllib.request import urlopen\n\nignore_file_types = ['.md']\nignore_file_names = ['package.json', 'package-lock.json']\nallowed_image_content_types = ['image/png', 'image/jpeg', 'image/gif']\nrequired_metadata = ['author', 'author.github', 'title']\nrecommended_metadata = ['image', 'desc', 'version']\nerror_count = 0\n\n\ndef debug(s):\n    global args\n    if args.debug:\n        print(\"\\033[1;44mDBG!\\033[0;0m %s\\n\" % s)\n\n\ndef passed(s):\n    global args\n    if args.verbose:\n        print(\"\\033[1;42mPASS\\033[0;0m %s\\n\" % s)\n\n\ndef warn(s):\n    global args\n    if args.warn:\n        print(\"\\033[1;43mWRN!\\033[0;0m %s\\n\" % s)\n\n\ndef error(s):\n    global error_count\n    error_count += 1\n    print(\"\\033[1;41mERR!\\033[0;0m %s\\n\" % s)\n\n\nclass Language(object):\n    _languages = {}\n\n    def __init__(self, exts, shebang, linter, trim_shebang=False, full_options=[], pr_options=[]):\n        self.extensions = exts\n        self.shebang = shebang\n        self.cmd = linter\n        self.trim = trim_shebang\n        self.full = full_options\n        self.pr = pr_options\n\n        self.enabled = True\n        if not find_executable(self.cmd[0]):\n            error(\"Linter %s not present, skipping %s files\" % (self.cmd[0], ', '.join(exts)))\n            self.enabled = False\n\n    @staticmethod\n    def registerLanguage(lang):\n        for extension in lang.extensions:\n            if extension in Language._languages:\n                Language._languages[extension].append(lang)\n            else:\n                Language._languages[extension] = [lang, ]\n\n    @staticmethod\n    def getLanguagesForFileExtension(ext):\n        if ext in Language._languages:\n            return Language._languages[ext]\n        else:\n            return None\n\n    def validShebang(self, bang):\n        return re.search(self.shebang, bang) is not None\n\n    def lint(self, file, is_pr):\n        if not self.enabled:\n            return None\n        if self.trim:\n            with open(file, 'r') as fp:\n                lines = fp.readlines()[1:]\n                with warnings.catch_warnings():\n                    warnings.simplefilter(\"ignore\")\n                with NamedTemporaryFile(mode='w', delete=False) as t:\n                    file = t.name\n                    t.writelines(lines)\n        command = list(self.cmd)\n        if is_pr and self.pr:\n            command.extend(self.pr)\n        elif not is_pr and self.full:\n            command.extend(self.full)\n        command.append(file)\n        result = subprocess.check_output(command, stderr=subprocess.STDOUT)\n        if self.trim:\n            os.remove(file)\n        return result\n\n\nclass Python2(Language):\n    def __init__(self):\n        super().__init__(['.py', '.py2'], r'python(|2(\\.\\d+)?)$', ['python2', '-m', 'pyflakes'])\n\n    def lint(self, file, pr):\n        if pr:\n            raise subprocess.CalledProcessError(\n                cmd=\"\", returncode=1,\n                output=b\"python3 support required for all PRs\")\n        else:\n            return super(Python2, self).lint(file, pr)\n\n\nclass Rscript(Language):\n    def __init__(self):\n        super().__init__(['.r', '.R'], '(r|R)script$', ['Rscript'])\n\n    def lint(self, file, pr):\n        if not self.enabled:\n            return None\n        result = subprocess.check_output([\n            'Rscript',\n            '-e',\n            'library(lintr); l=lint(\"%s\", with_defaults(line_length_linter = NULL));l; quit(status=if (length(l) > 0) { 1 } else { 0 })' % file\n        ], stderr=subprocess.STDOUT)\n        return result\n\n\nLanguage.registerLanguage(Language(['.sh'], '(bash|ksh|zsh|sh|fish)$', ['shellcheck'], full_options=['-e', 'SC1117,SC2164,SC2183,SC2196,SC2197,SC2206,SC2207,SC2215,SC2219,SC2230,SC2236']))\nLanguage.registerLanguage(Python2())\nLanguage.registerLanguage(Language(['.py', '.py3'], r'python(|3(\\.\\d+)?)$', ['python3', '-m', 'pyflakes']))\nLanguage.registerLanguage(Language(['.rb'], 'ruby$', ['rubocop', '-l'], full_options=['--except', 'Lint/RedundantStringCoercion,Lint/BigDecimalNew']))\nLanguage.registerLanguage(Language(['.js'], 'node$', ['jshint']))\nLanguage.registerLanguage(Language(['.php'], 'php$', ['php', '-l']))\nLanguage.registerLanguage(Language(['.pl'], 'perl( -[wW])?$', ['perl', '-MO=Lint']))\nLanguage.registerLanguage(Language(['.swift'], 'swift$', ['xcrun', '-sdk', 'macosx', 'swiftc', '-o', '/dev/null']))\nLanguage.registerLanguage(Language(['.lisp', '.clisp'], 'clisp$', ['clisp']))\nLanguage.registerLanguage(Language(['.rkt'], 'racket$', ['raco', 'make']))\n# go does not actually support shebang on line 1.  gorun works around this, so we need to strip it before we lint\nLanguage.registerLanguage(Language(['.go'], 'gorun$', ['golint', '-set_exit_status'], trim_shebang=True))\nLanguage.registerLanguage(Language(['.lua'], 'lua$', ['luacheck']))\nLanguage.registerLanguage(Rscript())\n\n\ndef check_file(file_full_path, pr=False):\n\n    file_short_name, file_extension = os.path.splitext(file_full_path)\n    candidates = Language.getLanguagesForFileExtension(file_extension)\n\n    if not candidates:\n        error(\"%s unrecognized file extension\" % file_full_path)\n        return\n    else:\n        passed(\"%s has a recognized file extension\" % file_full_path)\n\n    if not os.access(file_full_path, os.R_OK):\n        error(\"%s not readable\" % file_full_path)\n        return\n\n    if not os.access(file_full_path, os.X_OK):\n        error(\"%s not executable\" % file_full_path)\n    else:\n        passed(\"%s is executable\" % file_full_path)\n\n    metadata = {}\n    linters = []\n    with open(file_full_path, \"r\") as fp:\n        first_line = fp.readline().strip()\n\n        for candidate in candidates:\n            if candidate.validShebang(first_line):\n                linters.append(candidate)\n\n        if not re.match(r'#! ?/', first_line):\n            error(\"'%s' does not look like a valid shebang\" % first_line)\n\n        if not linters:\n            error(\"%s has incorrect shebang.\\n  Got %s\\n  Wanted %s\" % (\n                  file_full_path, first_line,\n                  ' or '.join([\"'%s'\" % candidate.shebang for candidate in candidates])))\n        else:\n            passed(\"%s has a good shebang (%s)\" % (file_full_path, first_line))\n\n        for line in fp:\n            match = re.search(\"<xbar.(?P<lho_tag>[^>]+)>(?P<value>[^<]+)</xbar.(?P<rho_tag>[^>]+)>\", line)\n            if match is not None:\n                if match.group('lho_tag') != match.group('rho_tag'):\n                    error('%s includes mismatched metatags: %s' % (file_full_path, line))\n                else:\n                    metadata[match.group('lho_tag')] = match.group('value')\n\n    for key in required_metadata:\n        if key not in metadata:\n            error('%s missing required metadata for %s' % (file_full_path, key))\n        else:\n            passed('%s has required metadata for %s (%s)' % (file_full_path, key, metadata[key]))\n\n    for key in recommended_metadata:\n        if key not in metadata:\n            warn('%s missing recommended metadata for %s' % (file_full_path, key))\n        else:\n            passed('%s has recommended metadata for %s (%s)' % (file_full_path, key, metadata[key]))\n\n    if metadata.get('image', False):\n        try:\n            response = urlopen(metadata['image'])\n            response_content_type = response.info().get_content_type()\n            if response_content_type not in allowed_image_content_types:\n                error('%s image metadata has bad content type: %s' % (file_full_path, response_content_type))\n            else:\n                passed('%s image content type looks good: %s' % (file_full_path, response_content_type))\n        except Exception:\n            warn('%s cannot fetch image: %s' % (file_full_path, metadata['image']))\n\n    errors = []\n    for linter in linters:\n        try:\n            debug('running %s' % \" \".join(linter.cmd))\n            linter.lint(file_full_path, pr)\n        except subprocess.CalledProcessError as cpe:\n            debug('%s failed linting with \"%s\"' % (file_full_path, \" \".join(linter.cmd)))\n            errors.append({'linter': linter, 'output': cpe.output})\n        else:\n            errors = []\n            passed('%s linted successfully with \"%s\"' %\n                   (file_full_path, \" \".join(list(linter.cmd))))\n            break\n\n    for e in errors:\n        error('%s failed linting with \"%s\", please correct the following:' %\n              (file_full_path, \" \".join(e['linter'].cmd)))\n        print(e['output'].decode('UTF-8'))\n\n\ndef boolean_string(string):\n    if string.lower() == \"false\":\n        return False\n    return True\n\n\nparser = argparse.ArgumentParser()\nparser.add_argument(\n    '--pr', action='store', nargs='?', const=\"True\",\n    default=os.environ.get('TRAVIS_PULL_REQUEST', \"False\"),\n    type=boolean_string,\n    help='Run tests on changes from the root branch to HEAD.  verbose is implied!')\nparser.add_argument('--verbose', '-v', action='store_true', help='Turn on success and other non-critical messages')\nparser.add_argument('--debug', action='store_true', help='Turn on debug messages')\nparser.add_argument('--no-warn', action='store_false', dest='warn', help='Disable warnings', default=True)\nparser.add_argument('files', nargs=argparse.REMAINDER)\nargs = parser.parse_args()\n\nif args.pr:\n    output = subprocess.check_output(['git', 'diff', '--name-only', '--diff-filter=ACMR',\n                                      'origin/%s..HEAD' %\n                                      os.environ.get('TRAVIS_BRANCH', 'master')]).strip()\n    if not output:\n        warn('No changed files in this PR... weird...')\n        exit(0)\n    else:\n        args.files = output.decode(\"UTF-8\").split('\\n')\n    args.verbose = True\nelif not args.files:\n    for root, dirs, files_in_folder in os.walk(\".\"):\n        for _file in files_in_folder:\n            args.files.append(os.path.join(root, _file).strip())\n\n        skip = [d for d in dirs if d.startswith(\".\")]\n        for d in skip:\n            debug('skipping directory %s' % d)\n            dirs.remove(d)\n\nfor _file in args.files:\n    file_name, file_ext = os.path.splitext(_file)\n    components = _file.split('/')\n    if components[0] == \".\":\n        del components[0]\n    if any(s[0] == '.' for s in components):\n        debug('skipping file %s' % _file)\n    elif file_ext in ignore_file_types:\n        debug('ignoring file by type %s' % _file)\n    elif components[-1] in ignore_file_names:\n        debug('ignoring file by name %s' % _file)\n    else:\n        debug('checking file %s' % _file)\n        check_file(os.path.join(os.getcwd(), _file), args.pr)\n\nif error_count > 0:\n    error('failed with %i errors' % error_count)\n    exit(1)\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.78515625,
+          "content": "os: osx\nosx_image: xcode11.2\n\n\naddons:\n    homebrew:\n        packages:\n            - python\n            - shellcheck\n            - luarocks\n            - node\n            - cpanminus\n            - clisp\n            - golang\n            - r\n        casks:\n            - racket\n\nbefore_install:\n  - pip3 install virtualenv\n  - mkdir ~/venv\n  - virtualenv -p python2 ~/venv\n\ninstall:\n  - pip3 install pyflakes\n  - source ~/venv/bin/activate\n  - pip install pyflakes\n  - gem install rubocop\n  - luarocks install luacheck\n  - npm install -g jshint\n  - sudo cpanm Mozilla::CA\n  - go get -u golang.org/x/lint/golint\n  - export PATH=\"$PATH:${GOROOT:-$HOME/go}/bin\"\n  - raco pkg install --deps search-auto rackjure\n  - Rscript -e 'install.packages(\"lintr\", repos=\"http://cran.rstudio.com/\")'\n\n\nscript: ./.test.py\n"
+        },
+        {
+          "name": "AWS",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 13.5380859375,
+          "content": "# Writing plugins\n\nTo write a plugin, you need to be able to produce some kind of executable (usually a script) that prints out lines of text.\n\nThe text is converted into menus by xbar.\n\n### Share your plugin\n\nIf you want to add your plugin to the app, please open a pull request in this repository.\n\n  * Ensure the plugin is executable\n  * Be sure to include [appropriate Metadata](#metadata) to enhance the plugin's entry on xbarapp.com\n\n### Configure the refresh time\n\nThe refresh time is in the filename of the plugin, following this format:\n\n    {name}.{time}.{ext}\n\n  * `name` - The name of the file\n  * `time` - The refresh rate (see below)\n  * `ext` - The file extension\n\nFor example:\n\n  * `date.1m.sh` would refresh every minute.\n\nMost plugins will come with a default, but you can change it to anything you like using the app:\n\n  * 10s - ten seconds\n  * 1m - one  minute\n  * 2h - two hours\n  * 1d - a day\n\n### Ensure the plugin is executable\n\nEnsure the plugin is executable by running `chmod +x plugin.sh`.\n\nIt is recommended to use `#!/usr/bin/env`. For example, `#!/usr/bin/env bash`.\n\n## Plugin API\n\nTo write a plugin, just write some form of executable script that outputs to the standard output.\n\n* Multiple lines will be cycled through over and over.\n* If your output contains a line consisting only of `---`, the lines below it will appear in the dropdown for that plugin, but won't appear in the menu bar itself.\n* Lines beginning with `--` will appear in submenus.\n* * Use `----` etc. for nested submenus. Two dashes per level of nesting.\n* Your lines might contain `|` to separate the title from other parameters\n\n### Parameters\n\nUse the pipe `|` character to specify extra parameters onto the menu item.\n\nFor example:\n\n```\nOpen website | href=https://xbarapp.com | color=red | key=CmdOrCtrl+o\nOpen home folder | shell=open | param1=\"~/\"\nApp version: v1.0 | disabled=true | size=10\n```\n\nThe supported parameters are:\n\n* `key=shift+k` to add a key shortcut \n* * Use `+` to create combinations\n* * Example options: `CmdOrCtrl`, `OptionOrAlt`, `shift`, `ctrl`, `super`, `tab`, `plus`, `return`, `escape`, `f12`, `up`, `down`, `space`\n* `href=..` to make the item clickable\n* `color=..` to change the text color. eg. `color=red` or `color=#ff0000`\n* `font=..` to change the text font. eg. `font=UbuntuMono-Bold`\n* `size=..` to change the text size. eg. `size=12`\n* `shell=..` to make the item run a given script terminal with your script (e.g. `shell=\"/Users/user/xbar Plugins/scripts/nginx.restart.sh\"`, or `shell=\"\\\"$(realpath \"$0\")\\\"\"` to call itself)\n* `param1=` to specify arguments to the script. Additional params like this `param2=foo param3=bar`\n* * For example `shell=\"/Users/user/xbar_Plugins/scripts/nginx.restart.sh\" param1=--verbose` assuming that nginx.restart.sh is executable or `shell=/usr/bin/ruby param1=/Users/user/rubyscript.rb param2=arg1 param3=arg2` if script is not executable\n* `terminal=..` start bash script without opening Terminal. `true` or `false`\n* `refresh=..` to make the item refresh the plugin it belongs to. If the item runs a script, refresh is performed after the script finishes. eg. `refresh=true`\n* `dropdown=..` May be set to `true` or `false`. If `false`, the line will only appear and cycle in the status bar but not in the dropdown\n* `length=..` to truncate the line to the specified number of characters. A `…` will be added to any truncated strings, as well as a tooltip displaying the full string. eg. `length=10`\n* `trim=..` whether to trim leading/trailing whitespace from the title.  `true` or `false` (defaults to `true`)\n* `alternate=true` to mark a line as an alternate to the previous one for when the Option key is pressed in the dropdown\n* `templateImage=..` set an image for this item. The image data must be passed as base64 encoded string and should consist of only black and clear pixels. The alpha channel in the image can be used to adjust the opacity of black content, however. This is the recommended way to set an image for the statusbar. Use a 144 DPI resolution to support Retina displays. The imageformat can be any of the formats supported by Mac OS X\n* `image=..` set an image for this item. The image data must be passed as base64 encoded string. Use a 144 DPI resolution to support Retina displays. The imageformat can be any of the formats supported by Mac OS X\n* `emojize=false` will disable parsing of github style `:mushroom:` into :mushroom:\n* `ansi=false` turns off parsing of ANSI codes.\n* `disabled=true` greyed out the line and disable click\n\n### Metadata\n\nYou must add the following metadata to your source code (usually in comments somewhere):\n\n```\n# Metadata allows your plugin to show up in the app, and website.\n#\n#  <xbar.title>Title goes here</xbar.title>\n#  <xbar.version>v1.0</xbar.version>\n#  <xbar.author>Your Name, Another author name</xbar.author>\n#  <xbar.author.github>your-github-username,another-github-username</xbar.author.github>\n#  <xbar.desc>Short description of what your plugin does.</xbar.desc>\n#  <xbar.image>http://www.hosted-somewhere/pluginimage</xbar.image>\n#  <xbar.dependencies>python,ruby,node</xbar.dependencies>\n#  <xbar.abouturl>http://url-to-about.com/</xbar.abouturl>\n\n# Variables become preferences in the app:\n#\n#  <xbar.var>string(VAR_NAME=\"Mat Ryer\"): Your name.</xbar.var>\n#  <xbar.var>number(VAR_COUNTER=1): A counter.</xbar.var>\n#  <xbar.var>boolean(VAR_VERBOSE=true): Whether to be verbose or not.</xbar.var>\n#  <xbar.var>select(VAR_STYLE=\"normal\"): Which style to use. [small, normal, big]</xbar.var>\n```\n\n* The comment characters can be anything - use what is suitable for your language\n* `xbar.title` - The title of the plugin\n* `xbar.version` - The version of the plugin (start with `v1.0`)\n* `xbar.author` - Comma separated list of authors (primary author first)\n* `xbar.author.github` - Comma separated list of github usernames (without `@`)\n* `xbar.desc` - A short description of what your plugin does\n* `xbar.image` - A hosted image showing a preview of your plugin (ideally open)\n* `xbar.dependencies` - Comma separated list of dependencies\n* `xbar.abouturl` - Absolute URL to about information\n* `xbar.var` - A user-input parameter which will be available as an environment variable with the same name (learn more about [Variables in xbar](https://xbarapp.com/docs/2021/03/14/variables-in-xbar.html))\n\nFor a real example, see the [Cycle text and detail plugin source code](https://github.com/matryer/xbar-plugins/blob/master/Dev/Tutorial/cycle_text_and_detail.sh).\n\n### Useful tips\n\n  * If you're writing scripts, ensure it has a [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) at the top.\n  * You can add to `PATH` by including something like `export PATH='/usr/local/bin:/usr/bin:$PATH'` in your plugin script.\n  * You can use emoji in the output (find an example in the Music/vox Plugin).\n  * If your bash script generates text in another language, set the `LANG` variable with: `export LANG=\"es_ES.UTF-8\"` (for Spanish) to show the text in correct format.\n  * If you want to call the plugin script for action, you can use `bash=$0`\n  * If your plugin should support Retina displays, export your icon at 36x36 with a resolution of 144 DPI (see [this issue](https://github.com/matryer/xbar/issues/314) for a more thorough explanation).\n\n### Examples\n\n#### One line plugin\n\n    #!/usr/bin/env bash\n    date\n\n#### Multi-line plugin\n\n    #!/usr/bin/env bash\n\n    # the current date and time\n    date\n\n    # the current username\n    echo $USER\n\n    # the current user id\n    id -u\n\n#### Multi-line plugin with extra data\n\n    #!/usr/bin/env bash\n    echo \"One\"\n    echo \"Two\"\n    echo \"Three\"\n    echo \"---\"\n    echo \"Four\"\n    echo \"Five\"\n    echo \"Six\"\n\n  * Only One, Two and Three will appear in the top bar\n  * Clicking the plugin menu item will show the remaining items in the dropdown\n\n#### Multi-line plugin with links and colors\n\n    #!/usr/bin/env bash\n    curl -m 1 http://example.com -I >/dev/null 2>&1\n    [ $? -gt 0 ] && echo \"FAIL | color=red\" || echo \"OK | color=green\"\n    echo \"---\"\n    echo \"Show Graphs | color=#123def href=http://example.com/graph?foo=bar\"\n    echo \"Show KPI Report | color=purple href=http://example.com/report\"\n\n#### Multi-line plugin with fonts and colors\n\n![xbar Example showing colored fonts](https://raw.github.com/xbar/master/Docs/xbar-Example-Menu-Colors-Fonts.png)\n\n    #!/usr/bin/env zsh\n    FONT=( 'size=14' 'font=UbuntuMono' )\n    if ((0)); then echo \"DO | $FONT color=orange\"\n    else           echo \"DO | $FONT color=cadetblue\"\n    echo \"---\"\n    ...\n\n#### Plugin with variables\n\nSpecifying variables in the metadata will cause end-users to be prompted\nfor values when they install the plugin.\n\nFrom there, the values will be available as environment variables.\n\n```bash\n#!/usr/bin/env zsh\n\n# ... other metadata ...\n#\n# <xbar.var>string(VAR_API_KEY=\"\"): API key to get access to remote data.</xbar.var>\n\n# VAR_API_KEY will be available as an environment variable\nload_data -apikey=$VAR_API_KEY\n```\n\n#### Detecting dark mode\n\nWhen the system appearance changes, xbar will update the following environment variable:\n\n```\nXBARDarkMode=true|false\n```\n\n* Use `XBARDarkMode` in your plugins to render different things in light/dark modes\n\n### Supported languages\n\nAnything that can write to standard out is supported, but here is a list that have been explicitly tested, along with some helpful tips.\n\n1. Ruby\n   - Status: Working\n   - Output: `puts \"your string here\"`\n1. Python2\n   - Status: Working\n   - Output: `print \"your string here\"`\n1. Python3\n   - Status: Working\n   - Output: `print(\"your string here\")`\n   - Caveats: To output unicode shebang has to be in the format `#!/usr/bin/env python3`\n1. JavaScript (`node`)\n   - Status: Working\n   - Caveats: Shebang has to be in the format `#!/usr/bin/env /path/to/the/node/executable`\n   - Output: `console.log(\"your string here\")`\n   - Notes:\n      - `process.stdout.write` doesn't output desired text.\n      - There may be a better way to run JavaScript files.\n   - Tips:\n      - Use the Node.js [`bitbar` module](https://github.com/sindresorhus/bitbar) to simplify plugin creation.\n1. JavaScript/Typescript (`deno`)\n   - Status: Working\n   - Caveats: \n      - Shebang has to be in the format `#!/usr/bin/env -S -P/${HOME}/.deno/bin:/usr/local/bin:/opt/homebrew/bin deno run <permissions>`\n      - Shebang will work for standard deno installations\n   - Output: `console.log(\"your string here\")`\n   - Notes:\n      - `process.stdout.write` doesn't output desired text.\n   - Tips:\n      - Use the deno [`xbar` module](https://deno.land/x/xbar@v2.0.0) to simplify plugin creation.\n1. CoffeeScript (`coffee`)\n   - Status: Working\n   - Caveats:\n      - Shebang has to be in the format `#!/usr/bin/env /path/to/the/coffee/executable`\n      - `coffee` shebang also had to be modified.\n         - `#!/usr/bin/env /path/to/the/node/executable`\n   - Output: `console.log \"your string here\"`\n   - Notes:\n      - `process.stdout.write` doesn't output desired text.\n      - There may be a better way to run CoffeeScript files.\n1. Swift (Interpreted)\n   - Status: Working\n   - Output: `print(\"your string here\")`\n1. Swift (Compiled)\n   - Status: Working\n   - Caveats: You still need a file extension (`file.1s.cswift`)\n   - Output: `print(\"your string here\")`\n   - Notes:\n      - To compile a swift file, use: `xcrun -sdk macosx swiftc -o file.1s.cswift file.1s.swift`\n1. Go (Interpreted)\n   - Status: Working\n   - Caveats:\n      - Your script's shebang must be: `//usr/bin/env go run $0 $@; exit`\n      - `go` must be in your `PATH`\n   - Output: `Println(\"your string here\")`\n1. Go (Compiled)\n   - Status: Working\n   - Caveats: You still need a file extension (`file.1s.cgo`)\n   - Output: `Println(\"your string here\")`\n   - Notes\n      - To compile a Go file, use: `go build file.1s.go`\n1. Lisp\n   - Status: Working\n   - Caveats: `lisp`/`clisp` must be in your `PATH`\n   - Output: `(format t \"your string here\")`\n1. Perl5\n   - Status: Working\n   - Output: `print \"your string here\"`\n   - Notes\n      - Add `-l` to shebang to automatic add newline to print function: `#!/usr/bin/perl -l`\n1. PHP\n   - Status: Working\n   - Output: `echo 'your string here'`\n   - Notes\n      - Add shebang `#!/usr/bin/php` \n   - Utilities:\n      - xbar PHP Formatter - <https://github.com/SteveEdson/bitbar-php>  \n\n## Advanced APIs\n\n### xbar:// control API\n\nIt is possible to control xbar using special `xbar://` URLs:\n\n* `xbar://app.xbarapp.com/openPlugin?path=path/to/plugin` - `openPlugin` opens a plugin in the app\n* `xbar://app.xbarapp.com/refreshPlugin?path=path/to/plugin` - `refreshPlugin` refreshes a specific plugin\n* `xbar://app.xbarapp.com/refreshAllPlugins` - `refreshAllPlugins` refreshes all plugins\n\n### Plugin variable JSON files\n\nVariables are stored in JSON files alongside your plugin. The key is the name of the Variable and the name of the environment variable. The values are the user's preferences.\n\nYou can programmatically modify the JSON files to adjust the values. Use the refresh control API above to refresh plugins after changing variables.\n\nFor example, the variables file for the `tail.5s.sh` plugin looks like this:\n\n```json\n{\n\t\"VAR_FILE\": \"./001-tail.5s.sh\",\n\t\"VAR_LINES\": 15\n}\n```\n\n### Xbar config\n\nYou can control xbar behaviour by modifying the `/Library/Application Support/xbar/xbar.config.json` file:\n\n* This file doesn't exist by default, you may need to create it.\n\n```json\n{\n\t\"autoupdate\": true,\n\t\"terminal\": {\n\t\t\"appleScriptTemplate3\": \"\"\n\t}\n}\n```\n\n* Changes take effect next time xbar starts\n* `autoupdate` - (boolean) whether to keep xbar automatically updated or not\n* `terminal.appleScriptTemplate3` - (string) the AppleScript to use when **Run in terminal** option is used (use `\"false\"` to turn this feature off)\n\nYou can delete this file and restart xbar to reset to defaults.\n\n"
+        },
+        {
+          "name": "Cloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Cryptocurrency",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "E-Commerce",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Email",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Enabled",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Environment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Finance",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Games",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Google",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "IoT",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Lifestyle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Music",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Network",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Politics",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.2587890625,
+          "content": "# xbar Plugins\n\nThis repo contains scripts, programs and command-line tools that add functionality to [xbar](https://github.com/matryer/xbar#get-started).\n\n* [Reporting issues](#reporting-issues)\n* [Available Plugins](https://github.com/matryer/xbar-plugins#available-plugins)\n* [Contributors](https://github.com/matryer/xbar-plugins#contributors)\n* [Add your own plugin](https://github.com/matryer/xbar-plugins#add-your-own-plugin)\n\n### Reporting issues\n\nThe best way to report an issue with a plugin is to find the plugin on https://xbarapp.com and click \"Open issue\". If possible, the author will be tagged in the issue - which greatly increases your chances of getting the issue looked at quickly.\n\n### How to use them\n\n  * Just drop the plugin into your xbar plugins folder (if you have the repo, why not use the `Enabled` folder?)\n  * Make sure it's executable (in Terminal, do `chmod +x plugin.sh`)\n  * Then choose `Refresh all` from the xbar menus\n\n### Available Plugins\n\nTo see a list of available plugins, visit https://xbarapp.com/\n\n## Contributors\n\nSpecial thanks to everyone who has contributed: https://xbarapp.com/docs/contributors/index.html\n\n## Add your own plugin\n\nTo contribute your own plugin, consult the [plugin development and contribution guide](./CONTRIBUTING.md)\n"
+        },
+        {
+          "name": "Science",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Sports",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "System",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Time",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Travel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Weather",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Web",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

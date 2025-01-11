@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "timestamp": 1736568498214,
+    "page": 485,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ4OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "qrush/sub",
+      "stars": 1746,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "Copyright (c) 2012-2021 Sam Stephenson, Nick Quaranto\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.3310546875,
+          "content": "# sub: a delicious way to organize programs\n\nSub is a model for setting up shell programs that use subcommands, like `git` or `rbenv` using bash. Making a sub does not require you to write shell scripts in bash, you can write subcommands in any scripting language you prefer.\n\nA sub program is run at the command line using this style:\n\n    $ [name of program] [subcommand] [(args)]\n\nHere's some quick examples:\n\n    $ rbenv                    # prints out usage and subcommands\n    $ rbenv versions           # runs the \"versions\" subcommand\n    $ rbenv shell 1.9.3-p194   # runs the \"shell\" subcommand, passing \"1.9.3-p194\" as an argument\n\nEach subcommand maps to a separate, standalone executable program. Sub programs are laid out like so:\n\n    .\n    ├── bin               # contains the main executable for your program\n    ├── completions       # (optional) bash/zsh completions\n    ├── libexec           # where the subcommand executables are\n    └── share             # static data storage\n\n## Subcommands\n\nEach subcommand executable does not necessarily need to be in bash. It can be any program, shell script, or even a symlink. It just needs to run.\n\nHere's an example of adding a new subcommand. Let's say your sub is named `rush`. Run:\n\n    touch libexec/rush-who\n    chmod a+x libexec/rush-who\n\nNow open up your editor, and dump in:\n\n``` bash\n#!/usr/bin/env bash\nset -e\n\nwho\n```\n\nOf course, this is a simple example... but now `rush who` should work!\n\n    $ rush who\n    qrush     console  Sep 14 17:15 \n\nYou can run *any* executable in the `libexec` directly, as long as it follows the `NAME-SUBCOMMAND` convention. Try out a Ruby script or your favorite language!\n\n## What's on your sub\n\nYou get a few commands that come with your sub:\n\n* `commands`: Prints out every subcommand available.\n* `completions`: Helps kick off subcommand autocompletion.\n* `help`: Document how to use each subcommand.\n* `init`: Shows how to load your sub with autocompletions, based on your shell.\n* `shell`: Helps with calling subcommands that might be named the same as builtin/executables.\n\nIf you ever need to reference files inside of your sub's installation, say to access a file in the `share` directory, your sub exposes the directory path in the environment, based on your sub name. For a sub named `rush`, the variable name will be `_RUSH_ROOT`.\n\nHere's an example subcommand you could drop into your `libexec` directory to show this in action: (make sure to correct the name!)\n\n``` bash\n#!/usr/bin/env bash\nset -e\n\necho $_RUSH_ROOT\n```\n\nYou can also use this environment variable to call other commands inside of your `libexec` directly. Composition of this type very much encourages reuse of small scripts, and keeps scripts doing *one* thing simply.\n\n## Self-documenting subcommands\n\nEach subcommand can opt into self-documentation, which allows the subcommand to provide information when `sub` and `sub help [SUBCOMMAND]` is run.\n\nThis is all done by adding a few magic comments. Here's an example from `rush who` (also see `sub commands` for another example):\n\n``` bash\n#!/usr/bin/env bash\n# Usage: sub who\n# Summary: Check who's logged in\n# Help: This will print out when you run `sub help who`.\n# You can have multiple lines even!\n#\n#    Show off an example indented\n#\n# And maybe start off another one?\n\nset -e\n\nwho\n```\n\nNow, when you run `sub`, the \"Summary\" magic comment will now show up:\n\n    usage: sub <command> [<args>]\n\n    Some useful sub commands are:\n       commands               List all sub commands\n       who                    Check who's logged in\n\nAnd running `sub help who` will show the \"Usage\" magic comment, and then the \"Help\" comment block:\n\n    Usage: sub who\n\n    This will print out when you run `sub help who`.\n    You can have multiple lines even!\n\n       Show off an example indented\n\n    And maybe start off another one?\n\nThat's not all you get by convention with sub...\n\n## Autocompletion\n\nYour sub loves autocompletion. It's the mustard, mayo, or whatever topping you'd like that day for your commands. Just like real toppings, you have to opt into them! Sub provides two kinds of autocompletion:\n\n1. Automatic autocompletion to find subcommands (What can this sub do?)\n2. Opt-in autocompletion of potential arguments for your subcommands (What can this subcommand do?)\n\nOpting into autocompletion of subcommands requires that you add a magic comment of (make sure to replace with your sub's name!):\n\n    # Provide YOUR_SUB_NAME completions\n\nand then your script must support parsing of a flag: `--complete`. Here's an example from rbenv, namely `rbenv whence`:\n\n``` bash\n#!/usr/bin/env bash\nset -e\n[ -n \"$RBENV_DEBUG\" ] && set -x\n\n# Provide rbenv completions\nif [ \"$1\" = \"--complete\" ]; then\n  echo --path\n  exec rbenv shims --short\nfi\n\n# lots more bash...\n```\n\nPassing the `--complete` flag to this subcommand short circuits the real command, and then runs another subcommand instead. The output from your subcommand's `--complete` run is sent to your shell's autocompletion handler for you, and you don't ever have to once worry about how any of that works!\n\nRun the `init` subcommand after you've prepared your sub to get your sub loading automatically in your shell.\n\n## Shortcuts\n\nCreating shortcuts for commands is easy, just symlink the shorter version you'd like to run inside of your `libexec` directory.\n\nLet's say we want to shorten up our `rush who` to `rush w`. Just make a symlink!\n\n    cd libexec\n    ln -s rush-who rush-w\n\nNow, `rush w` should run `libexec/rush-who`, and save you mere milliseconds of typing every day!\n\n## Prepare your sub\n\nClone this repo:\n\n    git clone git@github.com:qrush/sub.git [name of your sub]\n    cd [name of your sub]\n    ./prepare.sh [name of your sub]\n\nThe prepare script will run you through the steps for making your own sub. Also, don't call it `sub`, by the way! Give it a better name.\n\n## Install your sub\n\nSo you've prepared your own sub, now how do you use it? Here's one way you could install your sub in your `$HOME` directory:\n\n    cd\n    git clone [YOUR GIT HOST URL]/sub.git .sub\n\nFor bash users:\n\n    echo 'eval \"$($HOME/.sub/bin/sub init -)\"' >> ~/.bash_profile\n    exec bash\n\nFor zsh users:\n\n    echo 'eval \"$($HOME/.sub/bin/sub init -)\"' >> ~/.zshenv\n    source ~/.zshenv\n\nYou could also install your sub in a different directory, say `/usr/local`. This is just one way you could provide a way to install your sub.\n\n## License\n\nMIT. See `LICENSE`.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "completions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libexec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "prepare.sh",
+          "type": "blob",
+          "size": 0.953125,
+          "content": "#!/usr/bin/env bash\nset -e\n\nNAME=\"$1\"\nif [ -z \"$NAME\" ]; then\n  echo \"usage: prepare.sh NAME_OF_YOUR_SUB\" >&2\n  exit 1\nfi\n\nSUBNAME=$(echo $NAME | tr '[A-Z]' '[a-z]')\nENVNAME=\"$(echo $NAME | tr '[a-z-]' '[A-Z_]')_ROOT\"\n\necho \"Preparing your '$SUBNAME' sub!\"\n\nif [ \"$NAME\" != \"sub\" ]; then\n  rm bin/sub\n  mv share/sub share/$SUBNAME\n\n  for file in **/sub*; do\n    sed \"s/sub/$SUBNAME/g;s/SUB_ROOT/$ENVNAME/g\" \"$file\" > $(echo $file | sed \"s/sub/$SUBNAME/\")\n    rm $file\n  done\n\n  for file in libexec/*; do\n    chmod a+x $file\n  done\n\n  ln -s ../libexec/$SUBNAME bin/$SUBNAME\nfi\n\nrm README.md\nrm prepare.sh\n\necho \"Done! Enjoy your new sub! If you're happy with your sub, run:\"\necho\necho \"    rm -rf .git\"\necho \"    git init\"\necho \"    git add .\"\necho \"    git commit -m 'Starting off $SUBNAME'\"\necho \"    ./bin/$SUBNAME init\"\necho\necho \"Made a mistake? Want to make a different sub? Run:\"\necho\necho \"    git add .\"\necho \"    git checkout -f\"\necho\necho \"Thanks for making a sub!\"\n"
+        },
+        {
+          "name": "share",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

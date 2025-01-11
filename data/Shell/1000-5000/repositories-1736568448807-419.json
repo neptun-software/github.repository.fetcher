@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "timestamp": 1736568448807,
+    "page": 419,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nezhar/wordpress-docker-compose",
+      "stars": 1878,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": ".env\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2018 nezhar\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.94921875,
+          "content": "# WPDC - WordPress Docker Compose\n\nEasy WordPress development with Docker and Docker Compose.\n\nWith this project you can quickly run the following:\n\n- [WordPress and WP CLI](https://hub.docker.com/_/wordpress/)\n- [phpMyAdmin](https://hub.docker.com/r/phpmyadmin/phpmyadmin/)\n- [MySQL](https://hub.docker.com/_/mysql/)\n\nContents:\n\n- [Requirements](#requirements)\n- [Configuration](#configuration)\n- [Installation](#installation)\n- [Usage](#usage)\n\n## Requirements\n\nMake sure you have the latest versions of **Docker** and **Docker Compose** installed on your machine.\n\nClone this repository or copy the files from this repository into a new folder. In the **docker-compose.yml** file you may change the IP address (in case you run multiple containers) or the database from MySQL to MariaDB.\n\nMake sure to [add your user to the `docker` group](https://docs.docker.com/install/linux/linux-postinstall/#manage-docker-as-a-non-root-user) when using Linux.\n\n## Configuration\n\nCopy the example environment into `.env`\n\n```\ncp env.example .env\n```\n\nEdit the `.env` file to change the default IP address, MySQL root password and WordPress database name.\n\n## Installation\n\nOpen a terminal and `cd` to the folder in which `docker-compose.yml` is saved and run:\n\n```\ndocker-compose up\n```\n\nThis creates two new folders next to your `docker-compose.yml` file.\n\n* `wp-data` – used to store and restore database dumps\n* `wp-app` – the location of your WordPress application\n\nThe containers are now built and running. You should be able to access the WordPress installation with the configured IP in the browser address. By default it is `http://127.0.0.1`.\n\nFor convenience you may add a new entry into your hosts file.\n\n## Usage\n\n### Starting containers\n\nYou can start the containers with the `up` command in daemon mode (by adding `-d` as an argument) or by using the `start` command:\n\n```\ndocker-compose start\n```\n\n### Stopping containers\n\n```\ndocker-compose stop\n```\n\n### Removing containers\n\nTo stop and remove all the containers use the`down` command:\n\n```\ndocker-compose down\n```\n\nUse `-v` if you need to remove the database volume which is used to persist the database:\n\n```\ndocker-compose down -v\n```\n\n### Project from existing source\n\nCopy the `docker-compose.yml` file into a new directory. In the directory you create two folders:\n\n* `wp-data` – here you add the database dump\n* `wp-app` – here you copy your existing WordPress code\n\nYou can now use the `up` command:\n\n```\ndocker-compose up\n```\n\nThis will create the containers and populate the database with the given dump. You may set your host entry and change it in the database, or you simply overwrite it in `wp-config.php` by adding:\n\n```\ndefine('WP_HOME','http://wp-app.local');\ndefine('WP_SITEURL','http://wp-app.local');\n```\n\n### Creating database dumps\n\n```\n./export.sh\n```\n\n### Developing a Theme\n\nConfigure the volume to load the theme in the container in the `docker-compose.yml`:\n\n```\nvolumes:\n  - ./theme-name/trunk/:/var/www/html/wp-content/themes/theme-name\n```\n\n### Developing a Plugin\n\nConfigure the volume to load the plugin in the container in the `docker-compose.yml`:\n\n```\nvolumes:\n  - ./plugin-name/trunk/:/var/www/html/wp-content/plugins/plugin-name\n```\n\n### WP CLI\n\nThe docker compose configuration also provides a service for using the [WordPress CLI](https://developer.wordpress.org/cli/commands/).\n\nSample command to install WordPress:\n\n```\ndocker-compose run --rm wpcli core install --url=http://localhost --title=test --admin_user=admin --admin_email=test@example.com\n```\n\nOr to list installed plugins:\n\n```\ndocker-compose run --rm wpcli plugin list\n```\n\nFor an easier usage you may consider adding an alias for the CLI:\n\n```\nalias wp=\"docker-compose run --rm wpcli\"\n```\n\nThis way you can use the CLI command above as follows:\n\n```\nwp plugin list\n```\n\n### phpMyAdmin\n\nYou can also visit `http://127.0.0.1:8080` to access phpMyAdmin after starting the containers.\n\nThe default username is `root`, and the password is the same as supplied in the `.env` file.\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 2.0751953125,
+          "content": "version: '3'\n\nservices:\n  wp:\n    image: wordpress:latest # https://hub.docker.com/_/wordpress/\n    ports:\n      - ${IP}:${PORT}:80 # change ip if required\n    volumes:\n      - ./config/wp_php.ini:/usr/local/etc/php/conf.d/conf.ini\n      - ./wp-app:/var/www/html # Full wordpress project\n      #- ./plugin-name/trunk/:/var/www/html/wp-content/plugins/plugin-name # Plugin development\n      #- ./theme-name/trunk/:/var/www/html/wp-content/themes/theme-name # Theme development\n    environment:\n      WORDPRESS_DB_HOST: db\n      WORDPRESS_DB_NAME: \"${DB_NAME}\"\n      WORDPRESS_DB_USER: root\n      WORDPRESS_DB_PASSWORD: \"${DB_ROOT_PASSWORD}\"\n    depends_on:\n      - db\n    links:\n      - db\n\n  wpcli:\n    image: wordpress:cli\n    volumes:\n      - ./config/wp_php.ini:/usr/local/etc/php/conf.d/conf.ini\n      - ./wp-app:/var/www/html\n    environment:\n      WORDPRESS_DB_HOST: db\n      WORDPRESS_DB_NAME: \"${DB_NAME}\"\n      WORDPRESS_DB_USER: root\n      WORDPRESS_DB_PASSWORD: \"${DB_ROOT_PASSWORD}\"\n    depends_on:\n      - db\n      - wp\n\n  pma:\n    image: phpmyadmin:latest  # https://hub.docker.com/_/phpmyadmin\n    environment:\n      # https://docs.phpmyadmin.net/en/latest/setup.html#docker-environment-variables\n      PMA_HOST: db\n      PMA_PORT: 3306\n      MYSQL_ROOT_PASSWORD: \"${DB_ROOT_PASSWORD}\"\n      UPLOAD_LIMIT: 50M\n    ports:\n      - ${IP}:8080:80\n    links:\n      - db:db\n    volumes:\n     - ./config/pma_php.ini:/usr/local/etc/php/conf.d/conf.ini\n     - ./config/pma_config.php:/etc/phpmyadmin/config.user.inc.php\n\n  db:\n    image: mysql:latest # https://hub.docker.com/_/mysql/ - or mariadb https://hub.docker.com/_/mariadb\n    # platform: linux/x86_64  # Uncomment if your machine is running on arm (ex: Apple Silicon processor)\n    ports:\n      - ${IP}:3306:3306 # change ip if required\n    command: [\n        '--character-set-server=utf8mb4',\n        '--collation-server=utf8mb4_unicode_ci'\n    ]\n    volumes:\n      - ./wp-data:/docker-entrypoint-initdb.d\n      - db_data:/var/lib/mysql\n    environment:\n      MYSQL_DATABASE: \"${DB_NAME}\"\n      MYSQL_ROOT_PASSWORD: \"${DB_ROOT_PASSWORD}\"\n\nvolumes:\n  db_data:\n"
+        },
+        {
+          "name": "env.example",
+          "type": "blob",
+          "size": 0.0634765625,
+          "content": "IP=127.0.0.1\nPORT=80\nDB_ROOT_PASSWORD=password\nDB_NAME=wordpress\n"
+        },
+        {
+          "name": "export.sh",
+          "type": "blob",
+          "size": 0.36328125,
+          "content": "#!/bin/bash\n_os=\"`uname`\"\n_now=$(date +\"%m_%d_%Y\")\n_file=\"wp-data/data_$_now.sql\"\n\n# Export dump\nEXPORT_COMMAND='exec mysqldump \"$MYSQL_DATABASE\" -uroot -p\"$MYSQL_ROOT_PASSWORD\"'\ndocker-compose exec db sh -c \"$EXPORT_COMMAND\" > $_file\n\nif [[ $_os == \"Darwin\"* ]] ; then\n  sed -i '.bak' 1,1d $_file\nelse\n  sed -i 1,1d $_file # Removes the password warning from the file\nfi\n"
+        }
+      ]
+    }
+  ]
+}

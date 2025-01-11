@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "timestamp": 1736568481173,
+    "page": 459,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nix-community/nixos-anywhere",
+      "stars": 1796,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".envrc",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": "use flake\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "result\n/.direnv\n/docs/book\n"
+        },
+        {
+          "name": ".mergify.yml",
+          "type": "blob",
+          "size": 0.306640625,
+          "content": "queue_rules:\n  - name: default\n    merge_conditions:\n      - check-success=buildbot/nix-build\ndefaults:\n  actions:\n    queue:\n      merge_method: rebase\npull_request_rules:\n  - name: merge using the merge queue\n    conditions:\n      - base=main\n      - label~=merge-queue|dependencies\n    actions:\n      queue: {}\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.2529296875,
+          "content": "To run `nixos-anywhere` from the repo:\n\n```console\nnix run . -- --help\n```\n\nTo format the code:\n\n```console\nnix fmt\n```\n\nTo run all tests:\n\n```console\nnix flake check -vL\n```\n\nTo run an individual test:\n\n```\nnix build .#checks.x86_64-linux.from-nixos -vL\n```\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2022 Numtide\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.1337890625,
+          "content": "# nixos-anywhere\n\n**_Install NixOS everywhere via ssh_**\n\n<img src=\"https://raw.githubusercontent.com/nix-community/nixos-anywhere/main/docs/logo.png\" width=\"150\" height=\"150\">\n\n[Documentation Index](docs/INDEX.md)\n\n## README\n\nSetting up a new machine is time-consuming, and becomes complicated when it\nneeds to be done remotely. If you're installing NixOS, the **nixos-anywhere**\ntool allows you to pre-configure the whole process including:\n\n- Disk partitioning and formatting\n- Configuring and installing NixOS\n- Installing additional files and software\n\nYou can then initiate an unattended installation with a single CLI command.\nSince **nixos-anywhere** can access the new machine using SSH, it's ideal for\nremote installations.\n\nOnce you have initiated the command, there is no need to 'babysit' the\ninstallation. It all happens automatically.\n\nYou can use the stored configuration to repeat the same installation if you need\nto.\n\n## Overview\n\nIf you have machines on a mix of platforms, you'll need a common installation\nsolution that works anywhere. **nixos-anywhere** is ideal in this situation.\n\n**nixos-anywhere** can be used equally well for cloud servers, bare metal\nservers such as Hetzner, and local servers accessible via a LAN. You can create\nstandard configurations, and use the same configuration to create identical\nservers anywhere.\n\nYou first create Nix configurations to specify partitioning, formatting and\nNixOS configurations. Further options can be controlled by a flake and by\nrun-time switches.\n\nOnce the configuration has been created, a single command will:\n\n- Connect to the remote server via SSH\n- Detect whether a NixOS installer is present; if not, it will use the Linux\n  `kexec` tool to boot into a Nixos installer.\n- Use the [disko](https://github.com/nix-community/disko) tool to partition and\n  format the hard drive\n- Install NixOS\n- Optionally install any Nix packages and other software required.\n- Optionally copy additional files to the new machine\n\nIt's also possible to use **nixos-anywhere** to simplify the installation on a\nmachine that has no current operating system, first booting from a NixOS\ninstaller image. This feature is described in the\n[how-to guide](./docs/howtos/no-os.md#installing-on-a-machine-with-no-operating-system).\nIt's useful because you can pre-configure your required software and\npreferences, and build the new machine with a single command.\n\n**Important Note:** Never use a production server as the target. It will be\ncompletely overwritten and all data lost. This tool should only be used for\ncommissioning a new computer or repurposing an old machine once all important\ndata has been migrated.\n\n## Prerequisites\n\n- Source Machine:\n\n  - Can be any machine with Nix installed, e.g. a NixOS machine.\n  - Should be able to build nix derivations for the target platform. Otherwise\n    `--build-on-remote` can be used.\n\n- Target Machine:\n\n  - Unless you're using the option to boot from a NixOS installer image, or\n    providing your own `kexec` image, it must be running x86-64 Linux with kexec\n    support. Most `x86_64` Linux systems do have kexec support. By providing\n    your own [image](./docs/howtos/custom-kexec.md#using-your-own-kexec-image)\n    you can also perform kexec for other architectures eg aarch64\n  - The machine must be reachable over the public internet or local network.\n    Nixos-anywhere does not support wifi networks. If a VPN is needed, define a\n    custom installer via the --kexec flag which connects to your VPN.\n  - When `kexec` is used the target must have at least 1 GB of RAM, excluding\n    swap.\n\n## How to use nixos-anywhere\n\nThe [Quickstart Guide](./docs/quickstart.md) gives more information on how to\nrun **nixos-anywhere** in its simplest form. For more specific instructions to\nsuit individual requirements, see the [How To Guide](./docs/howtos/INDEX.md).\n\n## Related Tools\n\n**nixos-anywhere** makes use of the\n[disko](https://github.com/nix-community/disko) tool to handle the partitioning\nand formatting of the disks.\n\n## Contact\n\nFor questions, come join us in the\n[nixos-anywhere](https://matrix.to/#/#nixos-anywhere:nixos.org) matrix room.\n\n## Licensing and Contribution details\n\nThis software is provided free under the\n[MIT License](https://opensource.org/licenses/MIT).\n\n---\n\nThis project is supported by [Numtide](https://numtide.com/).\n![Untitledpng](https://codahosted.io/docs/6FCIMTRM0p/blobs/bl-sgSunaXYWX/077f3f9d7d76d6a228a937afa0658292584dedb5b852a8ca370b6c61dabb7872b7f617e603f1793928dc5410c74b3e77af21a89e435fa71a681a868d21fd1f599dd10a647dd855e14043979f1df7956f67c3260c0442e24b34662307204b83ea34de929d)\n\nWe are a team of independent freelancers that love open source.  We help our\ncustomers make their project lifecycles more efficient by:\n\n- Providing and supporting useful tools such as this one\n- Building and deploying infrastructure, and offering dedicated DevOps support\n- Building their in-house Nix skills, and integrating Nix with their workflows\n- Developing additional features and tools\n- Carrying out custom research and development.\n\n[Contact us](https://numtide.com/contact) if you have a project in mind, or if\nyou need help with any of our supported tools, including this one. We'd love to\nhear from you.\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "flake.lock",
+          "type": "blob",
+          "size": 3.2236328125,
+          "content": "{\n  \"nodes\": {\n    \"disko\": {\n      \"inputs\": {\n        \"nixpkgs\": [\n          \"nixpkgs\"\n        ]\n      },\n      \"locked\": {\n        \"lastModified\": 1734088167,\n        \"narHash\": \"sha256-OIitVU+IstPbX/NWn2jLF+/sT9dVKcO2FKeRAzlyX6c=\",\n        \"owner\": \"nix-community\",\n        \"repo\": \"disko\",\n        \"rev\": \"d32f2d1750d61a476a236526b725ec5a32e16342\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"nix-community\",\n        \"ref\": \"master\",\n        \"repo\": \"disko\",\n        \"type\": \"github\"\n      }\n    },\n    \"flake-parts\": {\n      \"inputs\": {\n        \"nixpkgs-lib\": [\n          \"nixpkgs\"\n        ]\n      },\n      \"locked\": {\n        \"lastModified\": 1733312601,\n        \"narHash\": \"sha256-4pDvzqnegAfRkPwO3wmwBhVi/Sye1mzps0zHWYnP88c=\",\n        \"owner\": \"hercules-ci\",\n        \"repo\": \"flake-parts\",\n        \"rev\": \"205b12d8b7cd4802fbcb8e8ef6a0f1408781a4f9\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"hercules-ci\",\n        \"repo\": \"flake-parts\",\n        \"type\": \"github\"\n      }\n    },\n    \"nixos-images\": {\n      \"inputs\": {\n        \"nixos-stable\": [\n          \"nixos-stable\"\n        ],\n        \"nixos-unstable\": [\n          \"nixpkgs\"\n        ]\n      },\n      \"locked\": {\n        \"lastModified\": 1734098258,\n        \"narHash\": \"sha256-3mzGstXtPqt+zWzXqesgQ2haEI6LNCFhc/uU3Bcj6Ak=\",\n        \"owner\": \"nix-community\",\n        \"repo\": \"nixos-images\",\n        \"rev\": \"231f5f6370e78d04675c9fa8199be6c3b1b85773\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"nix-community\",\n        \"repo\": \"nixos-images\",\n        \"type\": \"github\"\n      }\n    },\n    \"nixos-stable\": {\n      \"locked\": {\n        \"lastModified\": 1733808091,\n        \"narHash\": \"sha256-KWwINTQelKOoQgrXftxoqxmKFZb9pLVfnRvK270nkVk=\",\n        \"owner\": \"NixOS\",\n        \"repo\": \"nixpkgs\",\n        \"rev\": \"a0f3e10d94359665dba45b71b4227b0aeb851f8e\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"NixOS\",\n        \"ref\": \"nixos-24.11\",\n        \"repo\": \"nixpkgs\",\n        \"type\": \"github\"\n      }\n    },\n    \"nixpkgs\": {\n      \"locked\": {\n        \"lastModified\": 1734057604,\n        \"narHash\": \"sha256-EC3eHb8Mk54jnk+C8Mtq2sRAaPJzg6zPvRY6OdNHwSc=\",\n        \"owner\": \"nixos\",\n        \"repo\": \"nixpkgs\",\n        \"rev\": \"403845c37839bd698e8c36587f0601e36f76d2a8\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"nixos\",\n        \"ref\": \"nixos-unstable-small\",\n        \"repo\": \"nixpkgs\",\n        \"type\": \"github\"\n      }\n    },\n    \"root\": {\n      \"inputs\": {\n        \"disko\": \"disko\",\n        \"flake-parts\": \"flake-parts\",\n        \"nixos-images\": \"nixos-images\",\n        \"nixos-stable\": \"nixos-stable\",\n        \"nixpkgs\": \"nixpkgs\",\n        \"treefmt-nix\": \"treefmt-nix\"\n      }\n    },\n    \"treefmt-nix\": {\n      \"inputs\": {\n        \"nixpkgs\": [\n          \"nixpkgs\"\n        ]\n      },\n      \"locked\": {\n        \"lastModified\": 1733761991,\n        \"narHash\": \"sha256-s4DalCDepD22jtKL5Nw6f4LP5UwoMcPzPZgHWjAfqbQ=\",\n        \"owner\": \"numtide\",\n        \"repo\": \"treefmt-nix\",\n        \"rev\": \"0ce9d149d99bc383d1f2d85f31f6ebd146e46085\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"numtide\",\n        \"repo\": \"treefmt-nix\",\n        \"type\": \"github\"\n      }\n    }\n  },\n  \"root\": \"root\",\n  \"version\": 7\n}\n"
+        },
+        {
+          "name": "flake.nix",
+          "type": "blob",
+          "size": 1.4853515625,
+          "content": "{\n  description = \"A universal nixos installer, just needs ssh access to the target system\";\n\n  inputs = {\n    nixpkgs.url = \"github:nixos/nixpkgs/nixos-unstable-small\";\n    flake-parts = { url = \"github:hercules-ci/flake-parts\"; inputs.nixpkgs-lib.follows = \"nixpkgs\"; };\n\n    # used for testing\n    disko = { url = \"github:nix-community/disko/master\"; inputs.nixpkgs.follows = \"nixpkgs\"; };\n    nixos-stable.url = \"github:NixOS/nixpkgs/nixos-24.11\";\n    nixos-images.url = \"github:nix-community/nixos-images\";\n    nixos-images.inputs.nixos-unstable.follows = \"nixpkgs\";\n    nixos-images.inputs.nixos-stable.follows = \"nixos-stable\";\n\n    # used for development\n    treefmt-nix = { url = \"github:numtide/treefmt-nix\"; inputs.nixpkgs.follows = \"nixpkgs\"; };\n  };\n\n\n  outputs = inputs:\n    inputs.flake-parts.lib.mkFlake { inherit inputs; } {\n      systems = [ \"x86_64-linux\" \"x86_64-darwin\" \"aarch64-linux\" \"aarch64-darwin\" ];\n      imports = [\n        ./src/flake-module.nix\n        ./tests/flake-module.nix\n        ./docs/flake-module.nix\n        # allow to disable treefmt in downstream flakes\n      ] ++ inputs.nixpkgs.lib.optional (inputs.treefmt-nix ? flakeModule) ./treefmt/flake-module.nix;\n\n      perSystem = { self', lib, ... }: {\n        checks =\n          let\n            packages = lib.mapAttrs' (n: lib.nameValuePair \"package-${n}\") self'.packages;\n            devShells = lib.mapAttrs' (n: lib.nameValuePair \"devShell-${n}\") self'.devShells;\n          in\n          packages // devShells;\n      };\n    };\n}\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "terraform",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "treefmt",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

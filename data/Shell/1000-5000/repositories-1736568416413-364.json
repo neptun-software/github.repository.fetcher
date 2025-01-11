@@ -1,0 +1,289 @@
+{
+  "metadata": {
+    "timestamp": 1736568416413,
+    "page": 364,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "DoTheEvo/selfhosted-apps-docker",
+      "stars": 2040,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "NUT-Network UPS Tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.80859375,
+          "content": "# Selfhosted-Apps-Docker\n\n###### guide-by-example\n\n---\n\n![logo](https://i.imgur.com/u5LH0jI.png)\n\n---\n\n* [caddy_v2](caddy_v2/) - reverse proxy\n* [vaultwarden](vaultwarden/) - password manager\n* [bookstack](bookstack/) - notes and documentation\n* [kopia](kopia_backup/) - backup utility replacing borg\n* [borg_backup](borg_backup/) - backup utility\n* [ddclient](ddclient/) - automatic DNS update\n* [dnsmasq](dnsmasq/) - DNS and DHCP server\n* [gotify / ntfy / signal](gotify-ntfy-signal/) - instant notifications apps\n* [frigate](frigate/) - managing security cameras\n* [jellyfin](jellyfin/) - video and music streaming\n* [minecraft](minecraft/) - game server\n* [meshcrentral](meshcrentral/) - web based remote desktop, like teamviewer or anydesk\n* [rustdesk](rustdesk/) - remote desktop, like teamviewer or anydesk\n* [nextcloud](nextcloud/) - file share & sync\n* [opnsense](opnsense/) - a firewall, enterprise level \n* [qbittorrent](qbittorrent/) - torrent client\n* [portainer](portainer/) - docker management\n* [prometheus_grafana_loki](prometheus_grafana_loki/) - monitoring\n* [unifi](unifi/) - management utility for ubiquiti devices\n* [snipeit](snipeit/) - IT inventory management\n* [trueNAS scale](trueNASscale/) - network file sharing\n* [uptime kuma](uptime-kuma/) - uptime alerting tool \n* [squid](squid/) - anonymize forward proxy\n* [wireguard](wireguard/) - the one and only VPN to ever consider\n* [wg-easy](wg-easy/) - wireguard in docker with web gui\n* [zammad](zammad/) - ticketing system\n* [arch_linux_host_install](arch_linux_host_install)\n\nCan also just check the directories listed at the top for work in progress\n\nCheck also [StarWhiz / docker_deployment_notes](https://github.com/StarWhiz/docker_deployment_notes/blob/master/README.md)<br>\nRepo documents self hosted apps in similar format and also uses caddy for reverse proxy\n\n---\n\n* ### [For Docker Noobs](#for-docker-noobs-1)\n\n---\n\n# Core concepts\n\n- `docker-compose.yml` does **not** need any **editing** to get something up,\n   **changes** are to be done in the `.env` file.\n- For **persistent** storage **bind mount** `./whatever_data` is used.\n  No volumes, nor static path somewhere... just relative path next to compose file.\n- **No version** declaration at the beginning of **compose**, as the practice was\n  [**deprecated**](https://nickjanetakis.com/blog/docker-tip-51-which-docker-compose-api-version-should-you-use)\n\n---\n\n### Requirements \n\n**Basic linux and basic docker-compose knowledge.**\nThe shit here is pretty hand holding and detailed, but it still should not be\nyour first time running a docker container.\n\n---\n\n### Caddy reverse proxy\n\nKinda the heart of the setup is [Caddy reverse proxy](https://github.com/DoTheEvo/selfhosted-apps-docker/tree/master/caddy_v2).</br>\nIt's described in most details and all guides have reverse proxy section\nwith Caddyfile config specific for them.</br>\nCaddy is really great at simplifying the mess of https certificates, where\nyou don't really have to deal with anything, while having a one simple,\nreadable config file.\n\nBut no problem if using [traefik](https://github.com/DoTheEvo/Traefik-v2-examples)\nor nginx proxy manager. You just have to deal with proxy settings on your own,\nand 90% of the time its just sending traffic to port 80 and nothing else.\n\n---\n\n### Docker network\n\nYou really want to create a custom named docker network and use it.\n\n`docker network create caddy_net`\n\nIt can be named whatever, but what it does over default is that it provides\n[automatic DNS resolution](https://docs.docker.com/network/bridge/)\nbetween containers. Meaning one can exec in to a container and ping another\ncontainer by its hostname.<br>\nThis makes config files simpler and cleaner.\n\n---\n\n### .env\n\nOften the `.env` file is used as `env_file`,\nwhich can be a bit difficult concept at a first glance.\n\n`env_file: .env`\n\n* `.env` - actual name of a file that is used only by compose.</br>\n  It is used automatically just by being in the directory\n  with the `docker-compose.yml`</br>\n  Variables in it are available during the building of a container,\n  but unless named in the `environment:` option, they are not available\n  once the container is running.\n* `env_file` - an option in compose that defines an existing external file.</br>\n  Variables in this file will be available in the running container,\n  but not during building of the container.\n\nSo a compose file having `env_file: .env` mixes these two together.\n\nBenefit is that you do not need to make changes at multiple places.\nAdding variables or changing a name in `.env` does not require you\nto also go in to compose to add/change it there...  also the compose file\nlooks much cleaner, less cramped.\n\nOnly issue is that **all** variables from the `.env` file are available in\nall containers that use this `env_file: .env` method.</br>\nThat can lead to potential issues if a container picks up environment\nvariable that is intended for a different container of the stack.\n\nIn the setups here it works and is tested, but if you start to use this\neverywhere without understanding it, you can encounter issues.\nSo one of the troubleshooting steps might be abandoning `.env` and write out \nthe variables directly in the compose file only under containers that want them.\n\n---\n\n### Docker images latest tag\n\nMost of the time the images are without any tag,\nwhich defaults to `latest` tag being used.</br>\nThis is [frowned upon](https://vsupalov.com/docker-latest-tag/),\nand you should put there the current tags once things are going.\nIt will make updates easier when you know you can go back to a working version\nwith backups and knowing image version.<br>\n\n---\n\n### Cloudflare\n\nFor managing DNS records. The free tier provides lot of management options and \nbenefits. Like proxy between your domain and your server, so no one\ncan get your public IP just from your domain name. Or 5 firewall rules that allow\nyou to geoblock whole world except your country.\n\n[How to move to cloudflare.](https://support.cloudflare.com/hc/en-us/articles/205195708-Changing-your-domain-nameservers-to-Cloudflare)\n\n---\n\n### ctop\n\n[official site](https://github.com/bcicen/ctop)\n\n![ctop-look](https://i.imgur.com/nGAd1MQ.png)\n\nhtop like utility for quick containers management.\n\nIt is absofuckinglutely amazing in how simple yet effective it is.\n\n* hardware use overview, so you know which container uses how much cpu, ram, bandwidth, IO,...\n* detailed info on a container, it's IP, published and exposed ports, when it was created,..\n* quick management, quick exec in to a container, check logs, stop it,...\n\nWritten in Go, so its super fast and installation is trivial when it is a single binary.<br>\ndownload `linux-amd64` version; make it executable with chmod +x; move it to `/usr/bin/`;\nnow you can ctop anywhere.\n\n---\n\n### Brevo\n\nServices often need ability to send emails, for notification, registration,\npassword reset and such... Sendinblue is free, offers 300 mails a day\nand is easy to setup.\n\n```\nEMAIL_HOST=smtp-relay.brevo.com\nEMAIL_PORT=587\nEMAIL_HOST_USER=whoever_example@gmail.com\nEMAIL_HOST_PASSWORD=xcmpwik-c31d9eykwef3342df2fwfj04-FKLzpHgMjGqP23\nEMAIL_USE_TLS=1\n```\n\n---\n\n### Archlinux as a docker host \n\nMy go-to is archlinux as I know it the best.\nUsually in a virtual machine with snapshots before updates.\n\nFor Arch installation I had [this notes](arch_linux_host_install/)\non how to install and what to do afterwards.<br>\nBut after [archinstall script](https://wiki.archlinux.org/title/archinstall)\nstarted to be included with arch ISO I switched to that.<br>\nFor after the install setup I created \n[Ansible-Arch repo](https://github.com/DoTheEvo/ansible-arch) that gets shit \ndone in few minutes without danger of forgetting something.<br>\nAnsible is really easy to use and very easy to read and understand playbooks,\nso it might be worth the time to check out the concept to setup own ansible scripts.\n\nThe best aspect of having such repo is that it is a dedicated place where \none can write solution to issues encountered, \nor enable freshly discovered feature for all future deployments.\n\n---\n\n### Other guides\n\n* [StarWhiz/docker_deployment_notes](https://github.com/StarWhiz/docker_deployment_notes)\n    - got inspired and wrote in similar way setup for various services\n* [BaptisteBdn/docker-selfhosted-apps](https://github.com/BaptisteBdn/docker-selfhosted-apps)\n   - many services using traefik for reverse proxy\n* [Awesome Docker Compose Examples](https://github.com/Haxxnet/Compose-Examples)\n\n---\n\n### For docker noobs\n\n* [Beginners speedrun to selfhosting](beginners-speedrun-selfhosting/)\n* [How to setup Windows 11 as a Home Server/NAS](https://www.youtube.com/watch?v=5pZu35hTipo)\n* [Docke rTechnical Deep Dive](https://medium.com/@furkan.turkal/how-does-docker-actually-work-the-hard-way-a-technical-deep-diving-c5b8ea2f0422)\n\n---\n\n### YouTube channels\n\nMaybe list of some youtube channels to follow would not be bad idea.\n\n* [Fireship](https://www.youtube.com/@Fireship/videos) - funny news and tips\n* [TechnoTim](https://www.youtube.com/@TechnoTim/videos) - general homeserver selfhosting\n* [Craft Computing](https://www.youtube.com/@CraftComputing/videos) - general homeserver, bit more focus on hw and building\n* [Wolfgang's Channel](https://www.youtube.com/@WolfgangsChannel/videos) - general homeserver selfhosting, power consumption priority\n* [Lawrence Systems](https://www.youtube.com/@LAWRENCESYSTEMS/videos) - general homeserver selfhosting\n* [Christian Lempa](https://www.youtube.com/@christianlempa/videos) -  general homeserver selfhosting\n* [NASCompares](https://www.youtube.com/@nascompares) - Nas builds / home servers\n* [Peter Brockie](https://www.youtube.com/@PeterBrockie/videos) - Nas builds / home servers\n* [Awesome Open Source](https://www.youtube.com/@AwesomeOpenSource/videos)\n  \\- open source software insight\n* [Hardware Haven](https://www.youtube.com/@HardwareHaven/videos) - nas, servers, miniPCs focused\n* [ServeTheHome](https://www.youtube.com/@ServeTheHomeVideo/videos) - hardware, miniPCs, switches,.\n\n"
+        },
+        {
+          "name": "_knowledge-base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "arch_linux_host_install",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "arch_raspberry_pi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "audiobookshelf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "beginners-speedrun-selfhosting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bookstack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "borg_backup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "caddy_v2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "checkmk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ddclient",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "disk_NAS_bench_Fio",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dnsmasq",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-basics-and-troubleshoot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "esxi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "free_cloud_hosting_VPS",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "frigate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "get_good_linux_terminal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gotify-ntfy-signal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "home_assistant",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "homer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jellyfin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kopia_backup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lubelog",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mealie",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "meshcrentral",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mikrotik",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "minecraft",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mounting_network_share_linux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "network-knowledge-base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nextcloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "opnsense",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpipam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "port_forwarding_guide",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "portainer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "prometheus_grafana_loki",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proxmox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "qbittorrent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rustdesk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "snipeit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "squid",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "syncthing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "trueNASscale",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "umami",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "unifi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uptime-kuma",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vaultwarden",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "watchtower",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "watchyourlan",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wg-easy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "windows_package_managers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wireguard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zammad",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

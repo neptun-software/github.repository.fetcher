@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "timestamp": 1736568501454,
+    "page": 490,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ5OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "niklasb/libc-database",
+      "stars": 1734,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "/db/\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.03125,
+          "content": "Copyright 2020 Niklas Baumstark\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.5478515625,
+          "content": "## Web interface\n\nlibc-database now has a web service and frontend. Visit https://libc.rip/ to\ntry it out! Read https://github.com/niklasb/libc-database/tree/master/searchengine\nif you are interested in the API.\n\n\n## Building a libc offset database\n\nIf you're getting errors, please check the \"Requirements\" section below.\n\nFetch the desired libc categories and extract the symbol offsets.\nIt will not download anything twice, so you can also use it to update your\ndatabase:\n\n    $ ./get  # List categories\n    $ ./get ubuntu debian  # Download Ubuntu's and Debian's libc, old default behavior\n    $ ./get all  # Download all categories. Can take a while!\n\nYou can also add a custom libc to your database.\n\n    $ ./add /usr/lib/libc-2.21.so\n\nFind all the libc's in the database that have the given names at the given\naddresses. Only the last 12 bits are checked because randomization usually\nworks on page size level.\n\n    $ ./find printf 260 puts f30\n    archive-glibc (libc6_2.19-10ubuntu2_i386)\n\nFind a libc from the leaked return address into `__libc_start_main`.\n\n    $ ./find __libc_start_main_ret a83\n    ubuntu-trusty-i386-libc6 (libc6_2.19-0ubuntu6.6_i386)\n    archive-eglibc (libc6_2.19-0ubuntu6_i386)\n    ubuntu-utopic-i386-libc6 (libc6_2.19-10ubuntu2.3_i386)\n    archive-glibc (libc6_2.19-10ubuntu2_i386)\n    archive-glibc (libc6_2.19-15ubuntu2_i386)\n\nDump some useful offsets, given a libc ID. You can also provide your own names\nto dump.\n\n    $ ./dump libc6_2.19-0ubuntu6.6_i386\n    offset___libc_start_main_ret = 0x19a83\n    offset_system = 0x00040190\n    offset_dup2 = 0x000db590\n    offset_recv = 0x000ed2d0\n    offset_str_bin_sh = 0x160a24\n\nCheck whether a library is already in the database.\n\n    $ ./identify /usr/lib/libc.so.6\n    local-f706181f06104ef6c7008c066290ea47aa4a82c5\n\nOr find a libc using a hash (currently BuildID, MD5, SHA1 and SHA256 is\nimplemented):\n\n    $ ./identify bid=ebeabf5f7039f53748e996fc976b4da2d486a626\n    libc6_2.17-93ubuntu4_i386\n    $ ./identify md5=af7c40da33c685d67cdb166bd6ab7ac0\n    libc6_2.17-93ubuntu4_i386\n    $ ./identify sha1=9054f5cb7969056b6816b1e2572f2506370940c4\n    libc6_2.17-93ubuntu4_i386\n    $ ./identify sha256=8dc102c06c50512d1e5142ce93a6faf4ec8b6f5d9e33d2e1b45311aef683d9b2\n    libc6_2.17-93ubuntu4_i386\n\nDownload the whole libs corresponding to a libc ID.\n\n    $ ./download libc6_2.23-0ubuntu10_amd64\n    Getting libc6_2.23-0ubuntu10_amd64\n        -> Location: http://security.ubuntu.com/ubuntu/pool/main/g/glibc/libc6_2.23-0ubuntu10_amd64.deb\n        -> Downloading package\n        -> Extracting package\n        -> Package saved to libs/libc6_2.23-0ubuntu10_amd64\n    $ ls libs/libc6_2.23-0ubuntu10_amd64\n    ld-2.23.so ... libc.so.6 ... libpthread.so.0 ...\n\n\n## Requirements\n\n### General\n\nTo run these scripts, you will need following command on your PATH:\n\n* readelf\n* objdump\n* strings\n* perl\n* find\n* grep\n* md5sum\n* sha1sum\n* sha256sum\n* file\n\n\n### Debian-based (Ubuntu, Debian, Kali Linux, ParrotSec)\n\n* mktemp\n* perl\n* wget\n* ar\n* tar\n* grep\n* zstd\n\n\n### RPM-based (category 'rpm')\n\n* mktemp\n* perl\n* wget\n* rpm2cpio\n* cpio\n* grep\n\n\n### CentOS-based\n\nIn addition to the RPM-Based requirements, you will need:\n\n* wget\n* gzip\n* grep\n\n\n### Pacman-based\n\n* mktemp\n* perl\n* grep\n* sed\n* cat\n* wget\n* zstd\n* xz-utils\n* tar\n\n\n### APK Based\n\n* mktemp\n* perl\n* wget\n* tar\n* gzip\n* grep\n\n\n### Launchpad-based\n\nIn addition to the Debian-based requirements, you will need:\n\n* jq\n\n\n### Install everything\n\nTo install everything on Debian 10, run these commands:\n\n```sh\napt-get update\napt-get install -y \\\n  binutils file \\\n  wget \\\n  rpm2cpio cpio \\\n  zstd jq\n```\n\n\n"
+        },
+        {
+          "name": "add",
+          "type": "blob",
+          "size": 0.4140625,
+          "content": "#!/bin/bash\nif [[ $# != 1 ]]; then\n  echo >&2 \"Usage: $0 libc_filename\"\n  exit 2\nfi\nlibc=\"$(readlink -f \"$1\")\"\ncd \"$(dirname \"$0\")\"\n\n. common/libc.sh\n\nrequirements_general || die \"General requirements are not met. Please, refer to README.md for installation instructions\"\nrequirements_local || die \"Requirements for index a local libc are not met. Please, refer to README.md for installation instructions\"\nadd_local \"$libc\"\n"
+        },
+        {
+          "name": "common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "download",
+          "type": "blob",
+          "size": 0.9990234375,
+          "content": "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n\ndie() {\n  echo >&2 $1\n  exit 1\n}\n\nusage() {\n  echo >&2 \"Usage: $0 id\"\n  exit 2\n}\n\ndownload_single() {\n  local id=$1\n  echo \"Getting $id\"\n  if [ -d \"libs/$id\" ]; then\n    die \"  --> Downloaded before. Remove it to download again.\"\n  fi\n\n  if [ ! -f \"db/$1.url\" ]; then\n    die \"Invalid ID, maybe the library was fetched in an older version or added manually?\"\n  fi\n\n  local url=\"$(cat \"db/$1.url\")\"\n  echo \"  -> Location: $url\"\n  local tmp=`mktemp -d`\n  echo \"  -> Downloading package\"\n  wget \"$url\" 2>/dev/null -O $tmp/pkg.deb || die \"Failed to download package from $url\"\n  echo \"  -> Extracting package\"\n\n  pushd $tmp 1>/dev/null\n  ar x pkg.deb || die \"ar failed\"\n  tar xf data.tar.* || die \"tar failed\"\n  popd 1>/dev/null\n\n  mkdir libs/$id\n  cp $tmp/lib/*/* libs/$id 2>/dev/null || cp $tmp/lib32/* libs/$id 2>/dev/null \\\n    || die \"Failed to save. Check it manually $tmp\"\n  echo \"  -> Package saved to libs/$id\"\n\n  rm -rf $tmp\n}\n\nif [[ $# != 1 ]]; then\n  usage\nfi\ndownload_single \"$1\"\n"
+        },
+        {
+          "name": "dump",
+          "type": "blob",
+          "size": 0.4853515625,
+          "content": "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n. common/libc.sh\nif [[ $# < 1 ]]; then\n  echo >&2 \"Usage: $0 id [name1 [name2 ...]]\"\n  exit 2\nfi\nid=$1\nshift 1\nif [[ $# == 0 ]]; then\n  names=\"__libc_start_main_ret system dup2 read write str_bin_sh\"\nelse\n  names=\"$@\"\nfi\nls -1 \"db/${id}.\"* >/dev/null 2>&1 || die \"Invalid ID '$id'\"\nfor name in $names; do\n  offset=`cat db/${id}.symbols | grep \"^$name \" | cut -d' ' -f2`\n  [ -z \"$offset\" ] && die \"Invalid symbol '$name'\"\n  echo \"offset_${name} = 0x${offset}\"\ndone\n"
+        },
+        {
+          "name": "find",
+          "type": "blob",
+          "size": 0.63671875,
+          "content": "#!/bin/bash\ncd \"$(dirname \"$0\")\"\nfunction usage() {\n  echo >&2 \"Usage: $0 name address [name address ...]\"\n  exit 2\n}\n\nfunction find_single() {\n  name=$1\n  address=$2\n  addr_last12=`echo -n \"$address\" | tail -c 3`\n  grep -i -e \"^$name .*$addr_last12$\" db/*.symbols \\\n    | perl -n -e '/db\\/(.*)\\.symbols/ && print \"$1\\n\"' \\\n    | sort\n}\n\nfunction find() {\n  [[ $# -lt 2 ]] && usage\n  name=$1; shift\n  address=$1; shift\n  if [[ $# == 0 ]]; then\n    find_single $name $address\n  else\n    comm -12 \\\n      <(find_single $name $address) \\\n      <(find \"$@\")\n  fi\n}\n\nret=1\nfor id in `find \"$@\"`; do\n  echo \"`cat db/${id}.info` ($id)\"\n  ret=0\ndone\nexit $ret\n"
+        },
+        {
+          "name": "get",
+          "type": "blob",
+          "size": 5.58984375,
+          "content": "#!/bin/bash\ncd \"$(dirname \"$0\")\"\n. common/libc.sh\n\ncntr_category=1\ndeclare -a categories\ndeclare -A requirements\n\ncategories[cntr_category]=\"ubuntu\"\nrequirements[\"ubuntu\"]=\"requirements_debian\"\ncntr_category=$((cntr_category + 1))\nubuntu() {\n  get_all_debian ubuntu-eglibc http://archive.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6\n  get_all_debian ubuntu-glibc http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6\n  get_all_debian ubuntu-musl http://archive.ubuntu.com/ubuntu/pool/universe/m/musl/ musl\n  get_all_debian ubuntu-dietlibc http://archive.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc\n  get_all_debian ubuntu-security-eglibc http://security.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6\n  get_all_debian ubuntu-security-glibc http://security.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6\n  get_all_debian ubuntu-security-musl http://security.ubuntu.com/ubuntu/pool/universe/m/musl/ musl\n  get_all_debian ubuntu-security-dietlibc http://security.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc\n  get_all_debian ubuntu-old-eglibc http://old-releases.ubuntu.com/ubuntu/pool/main/e/eglibc/ libc6\n  get_all_debian ubuntu-old-glibc http://old-releases.ubuntu.com/ubuntu/pool/main/g/glibc/ libc6\n  get_all_debian ubuntu-old-musl http://old-releases.ubuntu.com/ubuntu/pool/universe/m/musl/ musl\n  get_all_debian ubuntu-old-dietlibc http://old-releases.ubuntu.com/ubuntu/pool/universe/d/dietlibc/ dietlibc\n}\n\ncategories[cntr_category]=\"debian\"\nrequirements[\"debian\"]=\"requirements_debian\"\ncntr_category=$((cntr_category + 1))\ndebian() {\n  get_all_debian debian-glibc https://deb.debian.org/debian/pool/main/g/glibc/ libc6\n  get_all_debian debian-musl https://deb.debian.org/debian/pool/main/m/musl/ musl\n  get_all_debian debian-dietlibc https://deb.debian.org/debian/pool/main/d/dietlibc/ dietlibc\n}\n\ncategories[cntr_category]=\"rpm\"\nrequirements[\"rpm\"]=\"requirements_rpm\"\ncntr_category=$((cntr_category + 1))\nrpm() {\n  get_all_rpm rpm glibc libc x86_64\n  get_all_rpm rpm glibc libc i586\n  get_all_rpm rpm glibc libc i686\n  get_all_rpm rpm musl musl x86_64\n  get_all_rpm rpm musl musl i586\n  get_all_rpm rpm musl musl i686\n}\n\ncategories[cntr_category]=\"centos\"\nrequirements[\"centos\"]=\"requirements_centos\"\ncntr_category=$((cntr_category + 1))\ncentos() {\n  get_from_filelistgz centos-glibc https://vault.centos.org/ glibc i686\n  get_from_filelistgz centos-glibc https://vault.centos.org/ glibc x86_64\n}\n\ncategories[cntr_category]=\"centos_stream\"\nrequirements[\"centos_stream\"]=\"requirements_centos_stream\"\ncntr_category=$((cntr_category + 1))\ncentos_stream() {\n  get_from_fullfiletimelist centos-glibc https://mirror.stream.centos.org/ glibc i686\n  get_from_fullfiletimelist centos-glibc https://mirror.stream.centos.org/ glibc x86_64\n}\n\ncategories[cntr_category]=\"arch\"\nrequirements[\"arch\"]=\"requirements_pkg\"\ncntr_category=$((cntr_category + 1))\narch() {\n  get_all_pkg arch-glibc https://archive.archlinux.org/packages/g/glibc/ libc\n  get_all_pkg arch-lib32-glibc https://archive.archlinux.org/packages/l/lib32-glibc/ libc\n  get_all_pkg arch-musl https://archive.archlinux.org/packages/m/musl/ musl\n}\n\ncategories[cntr_category]=\"alpine\"\nrequirements[\"alpine\"]=\"requirements_apk\"\ncntr_category=$((cntr_category + 1))\nalpine() {\n  alpine_versions=(\n      latest-stable\n      edge\n      v3.0\n      v3.1\n      v3.2\n      v3.3\n      v3.4\n      v3.5\n      v3.6\n      v3.7\n      v3.8\n      v3.9\n      v3.10\n      v3.11\n      v3.12\n      v3.13\n      v3.14\n      v3.15\n      v3.16\n      v3.17\n      v3.18\n      v3.19\n  )\n\n  for version in \"${alpine_versions[@]}\"; do\n    get_all_apk alpine-musl http://dl-cdn.alpinelinux.org/alpine/ \"$version\" main x86_64 musl\n    get_all_apk alpine-musl http://dl-cdn.alpinelinux.org/alpine/ \"$version\" main x86 musl\n  done\n}\n\ncategories[cntr_category]=\"kali\"\nrequirements[\"kali\"]=\"requirements_debian\"\ncntr_category=$((cntr_category + 1))\nkali() {\n  get_all_debian kali-glibc https://http.kali.org/pool/main/g/glibc/ libc6\n  get_all_debian kali-musl https://http.kali.org/pool/main/m/musl/ musl\n}\ncategories[cntr_category]=\"parrotsec\"\nrequirements[\"parrotsec\"]=\"requirements_debian\"\ncntr_category=$((cntr_category + 1))\nparrotsec() {\n  get_all_debian parrotsec-glibc https://download.parrot.sh/parrot/pool/main/g/glibc/ libc6\n  get_all_debian parrotsec-musl https://download.parrot.sh/parrot/pool/main/m/musl/ musl\n}\ncategories[cntr_category]=\"launchpad\"\nrequirements[\"launchpad\"]=\"requirements_launchpad\"\ncntr_category=$((cntr_category + 1))\nlaunchpad() {\n  get_all_launchpad launchpad-ubuntu-glibc ubuntu libc6 amd64\n  get_all_launchpad launchpad-ubuntu-glibc ubuntu libc6 i386\n}\n\nhelp() {\n  exec 1>&2\n  echo \"Please specify libc categories to download:\"\n  for category in \"${categories[@]}\" ; do\n    echo -e \"\\t* $category\"\n  done\n  echo \"\"\n  echo \"You may also specify 'all' to download all categories available.\"\n  echo \"\"\n  echo \"Example:\"\n  echo \"\"\n  echo \"$ ./get ubuntu rpm arch\"\n  echo \"$ ./get all\"\n  exit 1\n}\n\nif [[ \"$#\" -eq 0 ]] ; then\n  help\nfi\nif [[ \" $@ \" == *\" all \"* ]] ; then\n  set -- \"${categories[@]}\"\nfi\n\n# Verify arguments, requirements, and display a recap\nrequirements_general || die \"General requirements are not met. Please, refer to README.md for installation instructions\"\necho \"Will download or update for:\"\nfor category in \"$@\" ; do\n  if [[ ! \" ${categories[@]} \" == *\" ${category} \"* ]] ; then\n    die \"Invalid category '$category'\"\n  fi\n  ${requirements[$category]} || die \"Requirements for download or update '$category' are not met. Please, refer to README.md for installation instructions\"\n  echo -e \"\\t* $category ; Requirements are met\"\ndone\n\n\n# Let's start :)\nfor category in \"$@\" ; do\n  echo \"Downloading/updating $category\"\n  $category\ndone\n"
+        },
+        {
+          "name": "identify",
+          "type": "blob",
+          "size": 0.8681640625,
+          "content": "#!/bin/bash\nset -o pipefail\nhelp() {\n  echo >&2 \"Usage: $0 path/to/libc.so\"\n  echo >&2 \"    OR $0 bid=<BUILD_ID>\"\n  echo >&2 \"    OR $0 md5=<MD5>\"\n  echo >&2 \"    OR $0 sha1=<SHA1>\"\n  echo >&2 \"    OR $0 sha256=<SHA256>\"\n  exit 2\n}\n\nif [[ $# != 1 ]]; then\n  help\nfi\n\narg=\"$1\"\n\nif [ -f \"$arg\" ]; then\n  libc=\"$(readlink -f \"$arg\")\"\nfi\n\ncd \"$(dirname \"$0\")\"\n\nif [[ -f \"$libc\" ]]; then\n  arg=\"sha1=$(sha1sum \"$libc\" | awk '{print $1}')\"\nfi\n\ncase \"$arg\" in\n  bid=*)\n    hash=\"${arg#\"bid=\"}\"\n    tool=\"file\"\n    regex=\"=$hash,\"\n    ;;\n  md5=*)\n    hash=\"${arg#\"md5=\"}\"\n    tool=\"md5sum\"\n    regex=\"$hash \"\n    ;;\n  sha1=*)\n    hash=\"${arg#\"sha1=\"}\"\n    tool=\"sha1sum\"\n    regex=\"$hash \"\n    ;;\n  sha256=*)\n    hash=\"${arg#\"sha256=\"}\"\n    tool=\"sha256sum\"\n    regex=\"$hash \"\n    ;;\n  *)\n    help\nesac\n\nls -1 db/*.so | xargs $tool | grep -- \"$regex\" | perl -n -e '/([^\\/: ]+)\\.so/&&print \"$1\\n\"'\n"
+        },
+        {
+          "name": "libs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "searchengine",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "metadata": {
+    "timestamp": 1736568443915,
+    "page": 411,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lakshayg/tensorflow-build-archived",
+      "stars": 1907,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "This repository has moved to https://github.com/lakshayg/tensorflow-build\n"
+        },
+        {
+          "name": "build_tf_ubuntu.sh",
+          "type": "blob",
+          "size": 3.7958984375,
+          "content": "function update_package_lists() {\n    printf \"Updating package lists\"\n    apt-get update -y 2> /dev/null > /dev/null\n    if [ $? -eq 0 ]; then\n        printf \" => Done\\n\"\n        return 0\n    else\n        printf \" => ERROR\\n\"\n        return 1\n    fi\n}\n\nto_upgrade=(`apt-get --just-print upgrade | awk '/^Inst/ { print $2 }'`)\nSTATUS_needs_upgrade=\"needs to be upgraded\"\nSTATUS_up_to_date=\"up to date\"\nSTATUS_installing=\"installing\"\nfunction package_status() {\n    package=$1\n    if `printf '%s\\n' \"${to_upgrade[@]}\" | grep -x -q ${package}`; then\n        echo \"${STATUS_needs_upgrade}\"\n    elif `dpkg -l ${package} > /dev/null 2> /dev/null`; then\n        echo \"${STATUS_up_to_date}\"\n    else\n        echo \"${STATUS_installing}\"\n    fi\n}\n\nfunction backspace25() {\n    printf '\\b%.0s' {1..25}\n}\n\nfunction install_or_update() {\n    packages=\"$@\"\n    for package in ${packages[@]}; do\n        status=`package_status ${package}`\n        printf \"> %-15s => %-25s\" \"${package}\" \"${status}\"\n        if [ \"${status}\" != \"${STATUS_up_to_date}\" ]; then\n            apt-get install --upgrade -y ${package} 2> /dev/null > /dev/null\n            if [ $? -ne 0 ]; then\n            \tbackspace25\n                printf '%-25s' \"error\"\n            else\n            \tbackspace25\n                printf '%-25s' \"${STATUS_up_to_date}\"\n            fi\n        fi\n        printf '\\n'\n    done\n}\n\nfunction latest_release_tag() {\n    repo=$1\n    curl -s https://api.github.com/repos/${repo}/releases/latest \\\n    | grep -F \"tag_name\"                                         \\\n    | cut -d'\"' -f4\n}\n\nfunction current_bazel_version() {\n    if `$HOME/bin/bazel version 2> /dev/null > /dev/null`; then\n        $HOME/bin/bazel version 2>&1 | grep label | cut -d' ' -f3\n    else\n        echo \"not installed\"\n    fi\n}\n\nbazel_prereqs=(pkg-config zip g++ zlib1g-dev unzip python)\nfunction install_bazel_version() {\n    required_version=$1\n    current_version=`current_bazel_version`\n    echo \"Current bazel version is: ${current_version}\"\n    if [ \"${required_version}\" == \"${current_version}\" ]; then\n        echo \"Bazel is already at the required version (${required_version})\"\n        return 0\n    fi\n    installer_name=\"bazel-${required_version}-installer-linux-x86_64.sh\"\n    installer_path=\"/tmp/${installer_name}\"\n    if [ -e \"${installer_path}\" ]; then\n        echo \"Found bazel installer at ${installer_path}\"\n    else\n        echo \"Downlading bazel ${required_version} installer\"\n        dl_url=\"https://github.com/bazelbuild/bazel/releases/download/${required_version}/${installer_name}\"\n        curl -L -o ${installer_path} ${dl_url}\n    fi\n    echo \"Installing/upgrading dependencies for Bazel\"\n    install_or_update \"${bazel_prereqs[@]}\"\n    chmod +x ${installer_path}\n    ${installer_path} --user\n}\n\npackagelist=(\n    curl git\n    libc-ares-dev\n    python-dev python3-dev\n    python-pip python3-pip\n)\n\nupdate_package_lists\nprintf \"Installing/upgrading system packages\\n\"\ninstall_or_update \"${packagelist[@]}\"\ninstall_bazel_version `latest_release_tag \"bazelbuild/bazel\"`\necho \"Installing/upgrading required python packages\"\nfor python in \"python2\" \"python3\"; do\n    ${python} -m pip install -U --user pip six numpy wheel mock scipy h5py enum34\n    ${python} -m pip install -U --user keras_applications==1.0.5 --no-deps\n    ${python} -m pip install -U --user keras_preprocessing==1.0.3 --no-deps\ndone\ntf_version=`latest_release_tag \"tensorflow/tensorflow\"`\necho Latest TF version is $tf_version\ntf_dir=\"/tmp/tensorflow-${tf_version:1}\"\ntf_zip=\"${tf_dir}.zip\"\ncurl -L -o ${tf_zip} \"https://github.com/tensorflow/tensorflow/archive/${tf_version}.zip\"\nunzip ${tf_zip} -d /tmp\ncd ${tf_dir}\nfor i in 1 2; do\n    PATH=\"$HOME/bin/:$PATH\" ./configure\n    bazel build --config=opt //tensorflow/tools/pip_package:build_pip_package\n    ./bazel-bin/tensorflow/tools/pip_package/build_pip_package /tmp/tensorflow_pkg\ndone\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "timestamp": 1736568493321,
+    "page": 475,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ3OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lanceseidman/PiCAST",
+      "stars": 1771,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.083984375,
+          "content": "# PiCAST 3 (MICRO EDITION; STREAMING FIRST)\nPiCAST turns your $35 Raspberry Pi in to a Chromecast and beyond like Device.\n\n<b>GET/INSTALL PiCAST</b>\n\n1). Download the setup.sh file and in a terminal (on your Pi) type: chmod +x setup.sh\n\n2). After setup is done? Make sure it's running, in a browser visit: http://ip-to-your-Pi:3000.\n\nNote: PiCAST uses Forever which means PiCAST runs forever, UNTIL the Pi Reboots.\n\n3). Try streaming a Video (e.g. YouTube) by typing: http://ip-to-pi:3000/yt-stream/<YouTube Video ID>\n\nThat's it! We've made PiCAST as easy and small as possible using web technologies. This will run easy on\nalmost ANY Linux Distro as well that's Debian based or modify to run on RHEL/CENT.\n\n<b>PiCAST COMMANDS (CURRENT)</b>\n\nStart PiCAST: sh /path-to/PiCAST/picast_start.sh \n\nStop PiCAST: sh /path-to/PiCAST/picast_stop.sh \n\nBROWSER REQUESTS\n\nStream YouTube Video: http://pi-ip:3000/yt-stream/video-id\n\n\n<b>I WANT MORE COMMANDS!</b>\n\nI've made PiCAST3 so simple, anyone can add/create his/her own feature they'd like BUT I do ask that you'd\nrelease it to the project so that everyone can enjoy your new features and so on. I have more coming, but\nthis was just to get this edition out already.\n\n<b>MY PI REBOOTED, PICAST DOESN'T WORK!</b>\n\nAs I mentioned before, once your Pi reboots you'll need to manually type the forever command (see above)\nOR you can just cd into the PiCAST Directory (e.g. cd /home/pi/PiCAST) and type: sh picast_start.sh OR\njust type & paste: sh /home/pi/PiCAST/picast_start.sh\n\n<b>Why Make PiCAST?</b>\n\nSeveral years back I wanted to buy a Google Chromecast originally but it was sold out. So, I thought what do I have that I could use w/HDMI and wouldn't be terribly hard to do? My Raspberry Pi can do it all & now the PiZERO can too!\n\nAs Chromecast has changed over the past few years, my interest in this project went away... BUT... I had some time off and wanted to see how tiny we could make PiCAST (not including just the requirements- which to be debated). So, PiCAST 3 is here.\n\n<b>THIS ISN'T CHROMECAST! YOU LIE!!!</b>\n\nAs many seem unable to read or understand where the project CURRENTLY is and where it WILL go, I felt I need to dumb it down even more. This project doesn't have over 20-100+ paid-staffers, millions of dollars backed to ensure it succeeds, a dedicated team, and MONTHS & MONTHS of work where the PiCAST HAS NONE OF THE ABOVE-- so, calm down!\n\nI made it very clear, this is \"LIKE\" a chromecast, as it can be sent commands REMOTELY just like the Chromecast (now via Browser/HTTP Request via CURL or even WGET)... I am working on the BEST possible method(s) to continue forward.\n\nSo before you go nuts that the project isn't what YOU think, think twice. I do have a full-time job BUT I am so upset with Google, I want an OPEN, FREE, US/NON-US PERMITTED USERBASE, and if you're against it? Don't download it, go make your own and share it or don't. \n\n<b>WHAT TO EXPECT TO BE INSTALLED...</b>\n\npython-dev python-pip nodejs npm youtube-dl lame mpg321\n\n<b>I WANT MY TIME/FREE EXCHANGE! WHO DO I COMPLAIN TO?</b>\n\nEasy does it... Tweet me, @LanceSeidman as that's the best chance of a response.\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.51171875,
+          "content": "{\n  \"name\": \"PiCAST\",\n  \"version\": \"3.0.0\",\n  \"description\": \"PiCAST is a Chromecast-like Project\",\n  \"main\": \"picast.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified at this time, sorry!\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"http://www.github.com/lanceseidman/PiCAST\"\n  },\n  \"keywords\": [\n    \"picast\",\n    \"chromecast\",\n    \"raspberry pi\",\n    \"raspi\"\n  ],\n  \"author\": \"Lance Seidman\",\n  \"license\": \"ISC\",\n  \"dependencies\": {\n    \"express\": \"^4.13.3\",\n    \"sys\": \"0.0.1\"\n  }\n}\n"
+        },
+        {
+          "name": "picast.js",
+          "type": "blob",
+          "size": 0.6484375,
+          "content": "var sys = require('sys');\nvar exec = require('child_process').exec;\nvar express = require('express');\nvar app = express();\n\napp.get('/', function (req, res) {\n        res.send('Welcome to PiCAST 3! In the URL, type what you want to do...');\n});\n\napp.get('/yt-stream/:url', function (req, res) {\n        res.send('Streaming YouTube Video...');\n        exec(\"livestreamer --player=mplayer https://www.youtube.com/watch?v=\" + req.params.url + \" best\");\n});\n\n// Setup PiCAST Server\nvar srv = app.listen(3000, function () {\n        var host = srv.address().address;\n        var port = srv.address().port;\n\n        console.log('Access at http://%s:%s', host, port);\n});\n"
+        },
+        {
+          "name": "picast_daemon",
+          "type": "blob",
+          "size": 0.3515625,
+          "content": "#!/bin/sh\n#/etc/init.d/picast\n\nexport PATH=$PATH:/usr/local/bin\nexport NODE_PATH=$NODE_PATH:/usr/local/lib/node_modules\n\ncase \"$1\" in\n  start)\n  exec forever start --sourceDir=~/PiCAST -p /var/run/forever picast.js\n  ;;\nstop)\n  exec forever stop --sourceDir=~/PiCAST picast.js\n  ;;\n*)\n  echo \"Usage: /etc/init.d/picast {start|stop}\"\n  exit 1\n  ;;\nesac\n\nexit 0\n"
+        },
+        {
+          "name": "picast_start.sh",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "echo \"Starting PiCAST3...\"\nforever start picast.js\n"
+        },
+        {
+          "name": "picast_stop.sh",
+          "type": "blob",
+          "size": 0.0556640625,
+          "content": "echo \"Stopping PiCAST...\"\nsleep 1\nforever stop picast.js\n"
+        },
+        {
+          "name": "setup.sh",
+          "type": "blob",
+          "size": 2.6884765625,
+          "content": "#!/bin/sh\n############################################\necho \"Welcome to PiCAST 3! \\n\\n\\n\"\n\necho \"Performing Aptitude Update... \\n\"\nsudo apt-get update\n\necho \"Performing any upgrades (just in case)... \\n\"\nsudo apt-get upgrade\n\necho \"Ok, lets get to the requirements, bare with me... \\n\"\nsudo apt-get install python-dev python-pip nodejs npm youtube-dl lame mpg321 mplayer livestreamer git build-essential -y\n\necho \"I'm too lazy to check if all went well, so lets move on...\"\nsleep 2\nclear # wipe everything away...\necho \"I'm going to install H264 Support now, this WILL take some time!!!\"\nsleep 3\n\n# We need to get H264 Support & FFMPEG on the system... Repo won't have it...\n\n# H264 Process...\ncd /usr/src\nsudo git clone git://git.videolan.org/x264\ncd x264\nsudo ./configure --host=arm-unknown-linux-gnueabi --enable-static --disable-opencl\nsudo make\nsudo make install\n\necho \"\\n \\n I am now going to grab a copy of FFMPEG for MP3 & other reasons...\"\nsleep 1\necho \"\\n Understand, this would be a good time for coffee or tea... Going to be awhile!\"\nsleep 2\n\n# Process for FFMPEG...\ncd /usr/src # We could have done cd.. but we're taking NO CHANCES...\nsudo git clone git://source.ffmpeg.org/ffmpeg.git\ncd ffmpeg\nsudo ./configure --arch=armel --target-os=linux --enable-gpl --enable-libx264 --enable-nonfree\nsudo make\nsudo make install\n\n# DOWNLOAD/INSTALL FOREVER TO KEEP PICAST RUNNING FOREVER... HAHA?\nsudo npm install forever -g\nsudo npm install forever-monitor -g\n\n# GET PICAST NEEDED FILES...\ncd ~\necho \"Making PiCAST Folder...\"\nmkdir PiCAST\necho \"Entering PiCAST Folder...\"\ncd PiCAST\n\necho \"Getting PiCAST Server file...\"\nsleep 1\nwget https://raw.githubusercontent.com/lanceseidman/PiCAST/master/picast.js\necho \"Getting Start/Stop Server files...\"\nsleep 1\nwget https://raw.githubusercontent.com/lanceseidman/PiCAST/master/picast_start.sh\nwget https://raw.githubusercontent.com/lanceseidman/PiCAST/master/picast_stop.sh\n\n# INSTALL PICAST DAEMON\nread -p \"Do you want to start PiCAST automatically on system boot? \" -n 1 -r\necho    # (optional) move to a new line\nif [[ $REPLY =~ ^[Yy]$ ]]\nthen\n  cd /etc/init.d\n  echo \"Getting PiCAST Daemon file...\"\n  sleep 1\n  wget https://raw.githubusercontent.com/lanceseidman/PiCAST/master/picast_daemon\n  mv picast_daemon picast\n  sudo chown root:root picast\n  sudo chmod +x picast\n  sudo update-rc.d picast defaults\n  cd ~\nfi\n\n# RUN PICAST FOR THE FIRST TIME...\nchmod +x picast_start.sh\nchmod +x picast_stop.sh\n\necho \"Goodbye from PiCAST3 Installer! In the future, run PiCAST3 from picast_start.sh...\"\nsleep 2\necho \"Remember, build upon PiCAST3 & make donations to lance@compulsivetech.biz via PayPal & Help Donate to Opportunity Village.\"\nsleep 3\necho \"Launching PiCAST3 for the first time...\"\nsh picast_start.sh\n"
+        }
+      ]
+    }
+  ]
+}

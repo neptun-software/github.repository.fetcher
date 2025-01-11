@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "timestamp": 1736568387973,
+    "page": 332,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Khan/style-guides",
+      "stars": 2136,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 1.9677734375,
+          "content": "# Khan Academy Coding Style Guides\n\nWe implement a style guide for our code with the intention of keeping things readable and consistent. Please do your part on the team to help keep the spirit of this consistency in both your own code, as well as politely pointing out violations in other people's code when doing their code reviews. While code prettiness should never be valued over launching or any user-visible impacting changes to the code, the idea is that maintaining a readable codebase helps things be more maintainable, and in the long run will make it easier to do the real changes that do make user-visible changes.\n\nThere may be lots of legacy files that do not adhere to the current style guide; if you're editing an old file, be consistent with what's around you.\n\nTo help adhere to these rules, some tools are available to automatically catch, and in some cases fix, style violations. See the per-language guides below for more info.\n\n## TODOs\n\nIf there is something that you want to deal with later, it’s appropriate to mark it in code. There’s an advantage to using a standard format, which is this:\n\n```\n# TODO(your_username): Fix this to work with frobnozzes too\n# TODO(your_username): Remove this once we support quxxes (at least by Dec 2012)\n```\n\nThe text TODO is followed by your username in parentheses. This does not mean that you are on the hook to follow through on the TODO. Rather, it means that you are the person most knowledgeable about it, so if others run across the TODO and have questions about it, they know who to talk to.\n\nIn code reviews, it is common to put in TODOs when a reviewer points out some thing in the code that could be improved, but is not necessary to do right away.\n\n## Language Style Guides\n\n- [JavaScript](/style/javascript.md)\n- [React](/style/react.md)\n- [CSS](/style/css.md)\n- [Python](/style/python.md)\n- [Go](/style/go.md)\n- [Java](/style/java.md)\n- [ObjC](https://github.com/Khan/objective-c-style-guide) (hosted separately)\n- [iOS](/style/ios.md)\n"
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gh-md-toc",
+          "type": "blob",
+          "size": 4.669921875,
+          "content": "#!/usr/bin/env bash\n\n#\n# Steps:\n#\n#  1. Download corresponding html file for some README.md:\n#       curl -s $1\n#\n#  2. Discard rows where no substring 'user-content-' (github's markup):\n#       awk '/user-content-/ { ...\n#\n#  3.1 Get last number in each row like ' ... </span></a>sitemap.js</h1>'.\n#      It's a level of the current header (NF — number of fields):\n#       substr($NF, length($NF)-1, 1)\n#\n#  3.2 Get level from 3.1 and insert corresponding number of spaces before '*':\n#       sprintf(\"%*s\", substr($NF, length($NF)-1, 1)*2, \" \")\n#\n#  4. Find head's text and insert it inside \"* [ ... ]\":\n#       substr($0, match($0, /a>.*<\\/h/)+2, RLENGTH-5)\n#\n#  5. Find anchor and insert it inside \"(...)\":\n#       substr($0, match($0, \"href=\\\".*\\\" \")+5, RLENGTH-6)\n#\n\ngh_toc_version=\"0.4.5\"\n\ngh_user_agent=\"gh-md-toc v$gh_toc_version\"\n\n#\n# Download rendered into html README.md by its url.\n#\n#\ngh_toc_load() {\n    local gh_url=$1\n\n    if type curl &>/dev/null; then\n        curl --user-agent \"$gh_user_agent\" -s \"$gh_url\"\n    elif type wget &>/dev/null; then\n        wget --user-agent=\"$gh_user_agent\" -qO- \"$gh_url\"\n    else\n        echo \"Please, install 'curl' or 'wget' and try again.\"\n        exit 1\n    fi\n}\n\n# \n# Converts local md file into html by GitHub\n#\n# ➥ curl -X POST --data '{\"text\": \"Hello world github/linguist#1 **cool**, and #1!\"}' https://api.github.com/markdown\n# <p>Hello world github/linguist#1 <strong>cool</strong>, and #1!</p>'\"\ngh_toc_md2html() {\n    local gh_file_md=$1\n    curl -s --user-agent \"$gh_user_agent\" \\\n        --data-binary @$gh_file_md -H \"Content-Type:text/plain\" \\\n        https://api.github.com/markdown/raw\n}\n\n#\n# Is passed string url\n#\ngh_is_url() {\n    if [[ $1 == https* || $1 == http* ]]; then\n        echo \"yes\"\n    else\n        echo \"no\"\n    fi\n}\n\n#\n# TOC generator\n#\ngh_toc(){\n    local gh_src=$1\n    local gh_src_copy=$1\n    local gh_ttl_docs=$2\n\n    if [ \"$gh_src\" = \"\" ]; then\n        echo \"Please, enter URL or local path for a README.md\"\n        exit 1\n    fi\n\n\n    # Show \"TOC\" string only if working with one document\n    if [ \"$gh_ttl_docs\" = \"1\" ]; then\n\n        echo \"Table of Contents\"\n        echo \"=================\"\n        echo \"\"\n        gh_src_copy=\"\"\n\n    fi\n\n    if [ \"$(gh_is_url $gh_src)\" == \"yes\" ]; then\n        gh_toc_load \"$gh_src\" | gh_toc_grab \"$gh_src_copy\"\n    else\n        gh_toc_md2html \"$gh_src\" | gh_toc_grab \"$gh_src_copy\"\n    fi\n}\n\nGH_GREP=\"grep -E --null-data --text -o\"\nif [ \"`uname`\" = \"Darwin\" ]; then\n    GH_GREP=\"grep -E --text -o\"\nfi\n\n#\n# Grabber of the TOC from rendered html\n#\n# $1 — a source url of document.\n# It's need if TOC is generated for multiple documents.\n#\ngh_toc_grab() {\n    # find strings that corresponds to template\n    $GH_GREP \\\n    '<h[1-6]>\\s*<a\\s*id=\"user-content-[^\"]*\"\\s*class=\"anchor\"\\s*href=\"[^\"]*\"[^>]*>\\s*<span[^<*]*</span>\\s*</a>.*?\\s*</h' | \\\n    # replace all new lines except last one\n    sed 's/h$/h\\nendd/g' | tr '\\n' ' ' | sed 's/h endd/\\h\\n/g' | \\\n    # trim head spaces\n    sed 's/^\\s*//' |\n    # remove code tags\n    sed 's/<code>//g' | sed 's/<\\/code>//g' |\n    # now all rows are like:\n    #   <h1> <a id=\"user-content-...\" href=\"...\"><span ...></span></a> ... </h\n    # format result line\n    echo -e \"$(awk -v \"gh_url=$1\" '{\n    print sprintf(\"%*s\", substr($1, 3, 1)*2, \" \") \"* [\" substr($0, match($0, /a>.*<\\/h/)+2, RLENGTH-5)\"](\" gh_url substr($0, match($0, \"href=\\\".*\\\" \")+6, RLENGTH-8) \")\"}' | sed 'y/+/ /; s/%/\\\\x/g')\"\n} \n\n#\n# Returns filename only from full path or url\n#\ngh_toc_get_filename() {\n    echo \"${1##*/}\"\n}\n\n#\n# Options hendlers\n#\ngh_toc_app() {\n    local app_name=\"gh-md-toc\"\n\n    if [ \"$1\" = '--help' ] || [ $# -eq 0 ] ; then\n        echo \"GitHub TOC generator ($app_name): $gh_toc_version\"\n        echo \"\"\n        echo \"Usage:\"\n        echo \"  $app_name src [src]     Create TOC for a README file (url or local path)\"\n        echo \"  $app_name -             Create TOC for markdown from STDIN\"\n        echo \"  $app_name --help        Show help\"\n        echo \"  $app_name --version     Show version\"\n        return\n    fi\n\n    if [ \"$1\" = '--version' ]; then\n        echo \"$gh_toc_version\"\n        return\n    fi\n\n    if [ \"$1\" = \"-\" ]; then\n        if [ -z \"$TMPDIR\" ]; then\n            TMPDIR=\"/tmp\"\n        elif [ -n \"$TMPDIR\" -a ! -d \"$TMPDIR\" ]; then\n            mkdir -p \"$TMPDIR\"\n        fi\n        local gh_tmp_md=$(mktemp $TMPDIR/tmp.XXXXXX)\n        while read input; do\n            echo $input >> $gh_tmp_md\n        done\n        gh_toc_md2html \"$gh_tmp_md\" | gh_toc_grab \"\"\n        return\n    fi\n\n    for md in \"$@\"\n    do\n        echo \"\"\n        gh_toc \"$md\" \"$#\"\n    done\n\n    echo \"\"\n    echo \"Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)\"\n}\n\n#\n# Entry point\n#\ngh_toc_app \"$@\"\n"
+        },
+        {
+          "name": "style",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

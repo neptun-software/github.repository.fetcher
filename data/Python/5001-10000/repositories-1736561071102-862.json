@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "timestamp": 1736561071102,
+    "page": 862,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjg2OA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "CryptoSignal/Crypto-Signal",
+      "stars": 5016,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0546875,
+          "content": ".env\nsettings.env\nconfig.yml\n.vscode\n.idea/\nlib/ta-lib/\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.58203125,
+          "content": "FROM python:3.6-jessie\n\n# TA-lib is required by the python TA-lib wrapper. This provides analysis.\nCOPY lib/ta-lib-0.4.0-src.tar.gz /tmp/ta-lib-0.4.0-src.tar.gz\n\nRUN cd /tmp && \\\n  tar -xvzf ta-lib-0.4.0-src.tar.gz && \\\n  cd ta-lib/ && \\\n  ./configure --prefix=/usr && \\\n  make && \\\n  make install\n\nADD app/ /app\nWORKDIR /app\n\n# Pip doesn't install requirements sequentially.\n# To ensure pre-reqs are installed in the correct\n# order they have been split into two files\nRUN pip install -r requirements-step-1.txt\nRUN pip install -r requirements-step-2.txt\n\nCMD [\"/usr/local/bin/python\",\"app.py\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.044921875,
+          "content": "MIT License\n\nCopyright (c) 2017 Abenezer Mamo\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.4033203125,
+          "content": "DOCKER_REPO_NAME ?= shadowreaver/\nDOCKER_CONTAINER_NAME ?= crypto-signal\nDOCKER_IMAGE_NAME ?= ${DOCKER_REPO_NAME}${DOCKER_CONTAINER_NAME}\nGIT_BRANCH ?= $(shell git rev-parse --abbrev-ref HEAD)\n\nbuild:\n\tdocker build -t ${DOCKER_IMAGE_NAME}:${GIT_BRANCH} .\n\tdocker tag ${DOCKER_IMAGE_NAME}:${GIT_BRANCH} ${DOCKER_IMAGE_NAME}:latest\n\nrun:\n\tdocker run -it --rm -v $PWD/config.yml:/app/config.yml ${DOCKER_IMAGE_NAME}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.0634765625,
+          "content": "# CryptoSignal - #1 Quant Trading & Technical Analysis Bot - 4,100+ stars & 1,000+ forks https://github.com/CryptoSignal/Crypto-Signal\n\n### Development state: Beta (Code is stable, documentation is often lagging)\n\n### Join our community [Discord](https://discord.gg/MWTJVFf) channel! (2,100+ members)\n\nCrypto Signals is a command line tool that automates your crypto currency Technical Analysis (TA). It is maintained by a community of traders, engineers, data scientists, PMs, & countless generous individuals who wish to democratize the equal & open access to the greatest wealth re-distribution experiment in human and monetary policy history - Bitcoin\n\n## Track over 500 coins across Bittrex, Binance, Bittrex, Bitfinex, Coinbase, Gemini and more!\n(Subject to local financial regulations under the jurisdiction you and your financial activities are under. Marketing or enabling does not imply nor justify the facilitation or condoning of any activity - financial or otherwise. You assume and bare all risk. Be careful & act wisely.)\n\n## Technical Analysis Automated:\n* Momentum\n* Relative Strength Index (RSI)\n* Ichimoku Cloud (Leading Span A, Leading Span B, Conversion Line, Base Line)\n* Simple Moving Average\n* Exponential Moving Average\n* MACD\n* MFI\n* OBV\n* VWAP\n\n## Alerts:\n* SMS via Twilio\n* Email\n* Slack\n* Telegram\n* Discord\n\n## Features:\n* Modular code for easy trading strategy implementation\n* Easy install with Docker\n\nYou can build on top of this tool and implement algorithm trading and some machine learning models to experiment with predictive analysis.\n\n### Founded by Abenezer Mamo @ www.Mamo.io & www.linkedin.com/in/AbenezerMamo\n\n## Installing And Running\nThe commands listed below are intended to be run in a terminal.\n\n1. Install [docker CE](https://docs.docker.com/install/)\n\n1. Create a config.yml file in your current directory. See the Configuring config.yml section below for customizing settings.\n\n1. In a terminal run the application. `docker run --rm -v $PWD/config.yml:/app/config.yml shadowreaver/crypto-signal:master`.\n\n1. When you want to update the application run `docker pull shadowreaver/crypto-signal:master`\n\n### Configuring config.yml\n\nFor a list of all possible options for config.yml and some example configurations look [here](docs/config.md)\n\n# FAQ\n\n## Common Questions\n\n### Why does Tradingview show me different information than crypto-signal?\nThere are a number of reasons why the information crypto-signal provides could be different from tradingview and the truth is we have no way to be 100% certain of why the differences exist. Below are some things that affect the indicators that _may_ differ between crypto-signal and tradingview.\n\n- tradingview will have more historical data and for some indicators this can make a [big difference](https://ta-lib.org/d_api/ta_setunstableperiod.html).\n\n- tradingview uses a rolling 15 minute timeframe which means that the data they are analyzing can be more recent than ours by a factor of minutes or hours depending on what candlestick timeframe you are using.\n\n- tradingview may collect data in a way that means the timeperiods we have may not line up with theirs, which can have an effect on the analysis. This seems unlikely to us, but stranger things have happened.\n\n### So if it doesn't match Tradingview how do you know your information is accurate?\nUnderpinning crypto-signal for most of our technical analysis is [TA-Lib](https://ta-lib.org/index.html) which is an open source technical analysis project started in 1999. This project has been used in a rather large number of technical analysis projects over the last two decades and is one of the most trusted open source libraries for analyzing candlestick data.\n\n# Liability\nI am not your financial adviser, nor is this tool. Use this program as an educational tool, and nothing more. None of the contributors to this project are liable for any losses you may incur. Be wise and always do your own research.\n\nWe recommend you begin by learning the core principles used in traditional asset classes since they are less volatile & apply your knowledge in simulated trading before liquidating your dreams.\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "default-config.yml",
+          "type": "blob",
+          "size": 0.32421875,
+          "content": "# Copy this file to config.yml to get started and then add your own configuration.\n# Full documentation here: https://github.com/CryptoSignal/crypto-signal/blob/master/docs/config.md\n\nsettings:\n  update_interval: 300\n  market_pairs:\n    - ETH/BTC\n    - LTC/BTC\n    - XMR/BTC\n\nexchanges:\n  bittrex:\n    required:\n      enabled: true\n"
+        },
+        {
+          "name": "docker-compose.dev.yml",
+          "type": "blob",
+          "size": 0.1416015625,
+          "content": "version: '3'\n\nservices:\n  app:\n    image: shadowreaver/crypto-signal:latest\n    volumes:\n      - ./app:/app\n      - ./config.yml:/app/config.yml\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.123046875,
+          "content": "version: '3'\n\nservices:\n  app:\n    image: shadowreaver/crypto-signal:master\n    volumes:\n      - ./config.yml:/app/config.yml\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

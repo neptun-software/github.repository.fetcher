@@ -1,0 +1,53 @@
+{
+  "metadata": {
+    "timestamp": 1736568257338,
+    "page": 137,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wmnnd/nginx-certbot",
+      "stars": 3169,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "/data/certbot\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "MIT License\n\nCopyright (c) 2018 Philipp Schmieder\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.34375,
+          "content": "# Boilerplate for nginx with Let’s Encrypt on docker-compose\n\n> This repository is accompanied by a [step-by-step guide on how to\nset up nginx and Let’s Encrypt with Docker](https://medium.com/@pentacent/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71).\n\n`init-letsencrypt.sh` fetches and ensures the renewal of a Let’s\nEncrypt certificate for one or multiple domains in a docker-compose\nsetup with nginx.\nThis is useful when you need to set up nginx as a reverse proxy for an\napplication.\n\n## Installation\n1. [Install docker-compose](https://docs.docker.com/compose/install/#install-compose).\n\n2. Clone this repository: `git clone https://github.com/wmnnd/nginx-certbot.git .`\n\n3. Modify configuration:\n- Add domains and email addresses to init-letsencrypt.sh\n- Replace all occurrences of example.org with primary domain (the first one you added to init-letsencrypt.sh) in data/nginx/app.conf\n\n4. Run the init script:\n\n        ./init-letsencrypt.sh\n\n5. Run the server:\n\n        docker-compose up\n\n## Got questions?\nFeel free to post questions in the comment section of the [accompanying guide](https://medium.com/@pentacent/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71)\n\n## License\nAll code in this repository is licensed under the terms of the `MIT License`. For further information please refer to the `LICENSE` file.\n"
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.64453125,
+          "content": "version: '3'\n\nservices:\n  nginx:\n    image: nginx:1.15-alpine\n    restart: unless-stopped\n    volumes:\n      - ./data/nginx:/etc/nginx/conf.d\n      - ./data/certbot/conf:/etc/letsencrypt\n      - ./data/certbot/www:/var/www/certbot\n    ports:\n      - \"80:80\"\n      - \"443:443\"\n    command: \"/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \\\"daemon off;\\\"'\"\n  certbot:\n    image: certbot/certbot\n    restart: unless-stopped\n    volumes:\n      - ./data/certbot/conf:/etc/letsencrypt\n      - ./data/certbot/www:/var/www/certbot\n    entrypoint: \"/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'\"\n"
+        },
+        {
+          "name": "init-letsencrypt.sh",
+          "type": "blob",
+          "size": 2.4326171875,
+          "content": "#!/bin/bash\n\nif ! [ -x \"$(command -v docker-compose)\" ]; then\n  echo 'Error: docker-compose is not installed.' >&2\n  exit 1\nfi\n\ndomains=(example.org www.example.org)\nrsa_key_size=4096\ndata_path=\"./data/certbot\"\nemail=\"\" # Adding a valid address is strongly recommended\nstaging=0 # Set to 1 if you're testing your setup to avoid hitting request limits\n\nif [ -d \"$data_path\" ]; then\n  read -p \"Existing data found for $domains. Continue and replace existing certificate? (y/N) \" decision\n  if [ \"$decision\" != \"Y\" ] && [ \"$decision\" != \"y\" ]; then\n    exit\n  fi\nfi\n\n\nif [ ! -e \"$data_path/conf/options-ssl-nginx.conf\" ] || [ ! -e \"$data_path/conf/ssl-dhparams.pem\" ]; then\n  echo \"### Downloading recommended TLS parameters ...\"\n  mkdir -p \"$data_path/conf\"\n  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > \"$data_path/conf/options-ssl-nginx.conf\"\n  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > \"$data_path/conf/ssl-dhparams.pem\"\n  echo\nfi\n\necho \"### Creating dummy certificate for $domains ...\"\npath=\"/etc/letsencrypt/live/$domains\"\nmkdir -p \"$data_path/conf/live/$domains\"\ndocker-compose run --rm --entrypoint \"\\\n  openssl req -x509 -nodes -newkey rsa:$rsa_key_size -days 1\\\n    -keyout '$path/privkey.pem' \\\n    -out '$path/fullchain.pem' \\\n    -subj '/CN=localhost'\" certbot\necho\n\n\necho \"### Starting nginx ...\"\ndocker-compose up --force-recreate -d nginx\necho\n\necho \"### Deleting dummy certificate for $domains ...\"\ndocker-compose run --rm --entrypoint \"\\\n  rm -Rf /etc/letsencrypt/live/$domains && \\\n  rm -Rf /etc/letsencrypt/archive/$domains && \\\n  rm -Rf /etc/letsencrypt/renewal/$domains.conf\" certbot\necho\n\n\necho \"### Requesting Let's Encrypt certificate for $domains ...\"\n#Join $domains to -d args\ndomain_args=\"\"\nfor domain in \"${domains[@]}\"; do\n  domain_args=\"$domain_args -d $domain\"\ndone\n\n# Select appropriate email arg\ncase \"$email\" in\n  \"\") email_arg=\"--register-unsafely-without-email\" ;;\n  *) email_arg=\"--email $email\" ;;\nesac\n\n# Enable staging mode if needed\nif [ $staging != \"0\" ]; then staging_arg=\"--staging\"; fi\n\ndocker-compose run --rm --entrypoint \"\\\n  certbot certonly --webroot -w /var/www/certbot \\\n    $staging_arg \\\n    $email_arg \\\n    $domain_args \\\n    --rsa-key-size $rsa_key_size \\\n    --agree-tos \\\n    --force-renewal\" certbot\necho\n\necho \"### Reloading nginx ...\"\ndocker-compose exec nginx nginx -s reload\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "timestamp": 1736568452767,
+    "page": 427,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gilesbowkett/rewind",
+      "stars": 1857,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "Gemfile",
+          "type": "blob",
+          "size": 0.0625,
+          "content": "source \"https://rubygems.org\"\n\ngem 'flyrb'\ngem 'awesome_print'\n\n"
+        },
+        {
+          "name": "determine_authors.sh",
+          "type": "blob",
+          "size": 0.595703125,
+          "content": "# determine who are the key authors on the site; this file collects the data, another\n# (Ruby) file sorts it to determine an **extremely** primitive measure of authority\n\n# usage: determine_authors.sh [filetype]\n#\n# e.g.   determine_authors.sh \"js\"           # examines authorship for *.js files\n#        determine_authors.sh \"handlebars\"\n#        determine_authors.sh \"ruby\"\n#        determine_authors.sh \"et_cetera\"\n\nfunction generate_authors_file {\n  for filename in $(git ls-tree --full-tree -r --name-only HEAD | grep \".*\\.$1\"); do\n    git log $filename | grep Author;\n  done\n}\n\ngenerate_authors_file $1\n\n"
+        },
+        {
+          "name": "file_stats.sh",
+          "type": "blob",
+          "size": 1.13671875,
+          "content": "function git_history {\n  git log $filename | grep \"Date: \"\n}\n\nfunction first_commit {\n  git_history | tail -1\n}\n\nfunction last_commit {\n  git_history | head -1\n}\n\nfunction number_of_commits {\n  git_history | wc -l\n}\n \nfunction legible_output {\n  # $2:   filename\n  # $1:   lines of code\n  # $3:   number of commits\n  # $6:   month (first)\n  # $7:   date (first)\n  # $9:   year (first)\n  # $13:  month (last)\n  # $14:  date (last)\n  # $16:  year (last)\n  awk '{print $2 \",\" $1 \",\" $3 \",\" $6 \" \" $7 \" \" $9 \",\" $13 \" \" $14 \" \" $16}'\n}\n\nfunction lines_of_code {\n  echo $(wc -l $1) | sed 's/\\(\\/.*\\)[ ]/\\1_/'\n}\n\nfunction csv_lines_for {\n\n  # allow spaces in filenames, via file separator; re PR #7, Issue #5\n  STORED_IFS=$IFS\n  IFS=$(echo -en \"\\n\\b\")\n\n  for filename in $(find . -iname \"*.$1\"); do\n    echo \"$(lines_of_code $filename) $(number_of_commits) $(first_commit) $(last_commit)\" |\n    legible_output |\n    xargs echo\n  done\n\n  IFS=$STORED_IFS\n\n}\n\nfunction create_csv {\n  echo \"filename,lines of code,number of commits,date of first commit,date of last commit\"\n\n  for argument in \"$@\"\n  do\n    csv_lines_for $argument\n  done\n}\n\ncd $1\ncreate_csv ${@:2:$#}\ncd -\n\n"
+        },
+        {
+          "name": "license.md",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "The MIT License\n\nCopyright (c) 2011-2015 Giles Bowkett\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "merge-hashes.rb",
+          "type": "blob",
+          "size": 0.2578125,
+          "content": "require 'rubygems'\nrequire 'awesome_print'\nrequire './the-hashes'\n\ntotal_commit_matrix = THE_HASHES.inject(Hash.new(0)) do |memo, commit_matrix|\n  commit_matrix.each do |committer, commits|\n    memo[committer] += commits\n  end\n\n  memo\nend\n\nap total_commit_matrix\n\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 2.2578125,
+          "content": "# Rewind: git history analysis scripts\n\nA small library of handy git analysis scripts\nroughly inspired by Gary Bernhardt's [Destroy All\nSoftware](https://www.destroyallsoftware.com/) screencasts, and\nextensively documented in my ebook _[Unfuck A Monorail For Great\nJustice](http://gilesbowkett.blogspot.com/2013/03/new-ebook-unfuck-monorail-for-great.html)_.\n\nUse these when you want to quickly generate meaningful history reports\nfor git projects.\n\n## stats\n\nRun a statistics bash script against a git repository. For each\nfilename, discover lines of code, number of commits, and the date of the\nfirst and the last commit. Then pull that into a spreadsheet app, sort\nby each metric, and get an idea which files are the most important files\nin the history of the project.\n\n    bash file_stats.sh [dir] [filetypes] > stats.csv\n    open -a Numbers stats.csv\n\nFor example:\n\n    bash file_stats.sh /ember-project \"js\" \"handlebars\"\n\nOr:\n\n    bash file_stats.sh /rails-project \"rb\" \"haml\" \"coffee\" \"scss\"\n\n## authorship\n\nThis is more tricky, and requires Ruby. First run the\n`determine_authors.sh` script to get a count of all the authorship\nevents in the repo; then run the `tally_authors.rb` Ruby script to sort\nthe authorship events by name.\n\nYou can do all that as a one-liner in bash like this:\n\n    ruby tally_authors.rb <(cd /project && /this_dir/determine_authors.sh \"js\")\n\nThe code isn't tricky at all, and the output is easy to understand, but\nit's also easy to misconstrue. That's the tricky part. A developer\ncould show up with few authorship events because they're new to a team,\nbecause they often do pair programming, because they prefer large\ncommits to small ones, or for several other possible reasons. Exercise\ngood judgement.\n\nAlso, where `file_stats.sh` will examine multiple file types,\n`determine_authors.sh` and `tally_authors.rb` assumes you're only\nworking with one type of file at a time. Pull requests welcome!\n\nCaveat: Running this code against extremely large projects with very\nlong histories (e.g. Rails) might be very slow.\n\n## Why Rewind?\n\n<img src=\"http://s3.amazonaws.com/giles/rewind_041113/LiarsAtoD1-Rewind.jpg\">\n\n[Rewind is currently a key character in the IDW _Transformers_\ncomics](http://tfwiki.net/wiki/Rewind_\\(G1\\)#IDW_Generation_1_continuity).\n\n## license\n\nMIT license.\n\n"
+        },
+        {
+          "name": "tally_authors.rb",
+          "type": "blob",
+          "size": 0.52734375,
+          "content": "# this file parses git log scrapes of commit authors and counts them.\n# in some cases it gives you a very primitive metric for authorship and\n# authority; however these are definitely numbers to consider with a\n# grain of salt.\n\nrequire 'rubygems'\nrequire 'awesome_print'\n\nfilename = ARGV[0]\nauthorship = {}\n\nFile.open(filename).each_line do |line|\n  author = line.gsub(/Author: /, \"\").chomp.split.tap(&:pop).join(' ').downcase\n  if authorship[author]\n    authorship[author] += 1\n  else\n    authorship[author] = 1\n  end\nend\n\nap authorship\n\n"
+        },
+        {
+          "name": "the-hashes.rb",
+          "type": "blob",
+          "size": 0.44921875,
+          "content": "THE_HASHES = []\n\n# fill this constant with the hashes generated by running tally_authors against multiple languages.\n# example:\n#  for language in json coffee jade md cson styl;\n#    do ruby tally_authors.rb <(cd ../projectname/ && ~/code/rewind/determine_authors.sh $language);\n#  done\n# then copy-paste the stack of hashes in here and push each into the constant\n\n# example\nTHE_HASHES << {\n    \"developer's name\" => 16,\n    \"other developer's name\" => 19\n}\n\n"
+        }
+      ]
+    }
+  ]
+}

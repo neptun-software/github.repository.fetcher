@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "timestamp": 1736568369694,
+    "page": 303,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "big-data-europe/docker-hadoop",
+      "stars": 2223,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.005859375,
+          "content": "data/\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.4033203125,
+          "content": "DOCKER_NETWORK = docker-hadoop_default\nENV_FILE = hadoop.env\ncurrent_branch := $(shell git rev-parse --abbrev-ref HEAD)\nbuild:\n\tdocker build -t bde2020/hadoop-base:$(current_branch) ./base\n\tdocker build -t bde2020/hadoop-namenode:$(current_branch) ./namenode\n\tdocker build -t bde2020/hadoop-datanode:$(current_branch) ./datanode\n\tdocker build -t bde2020/hadoop-resourcemanager:$(current_branch) ./resourcemanager\n\tdocker build -t bde2020/hadoop-nodemanager:$(current_branch) ./nodemanager\n\tdocker build -t bde2020/hadoop-historyserver:$(current_branch) ./historyserver\n\tdocker build -t bde2020/hadoop-submit:$(current_branch) ./submit\n\nwordcount:\n\tdocker build -t hadoop-wordcount ./submit\n\tdocker run --network ${DOCKER_NETWORK} --env-file ${ENV_FILE} bde2020/hadoop-base:$(current_branch) hdfs dfs -mkdir -p /input/\n\tdocker run --network ${DOCKER_NETWORK} --env-file ${ENV_FILE} bde2020/hadoop-base:$(current_branch) hdfs dfs -copyFromLocal -f /opt/hadoop-3.2.1/README.txt /input/\n\tdocker run --network ${DOCKER_NETWORK} --env-file ${ENV_FILE} hadoop-wordcount\n\tdocker run --network ${DOCKER_NETWORK} --env-file ${ENV_FILE} bde2020/hadoop-base:$(current_branch) hdfs dfs -cat /output/*\n\tdocker run --network ${DOCKER_NETWORK} --env-file ${ENV_FILE} bde2020/hadoop-base:$(current_branch) hdfs dfs -rm -r /output\n\tdocker run --network ${DOCKER_NETWORK} --env-file ${ENV_FILE} bde2020/hadoop-base:$(current_branch) hdfs dfs -rm -r /input\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.1201171875,
+          "content": "[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/big-data-europe/Lobby)\n\n# Changes\n\nVersion 2.0.0 introduces uses wait_for_it script for the cluster startup\n\n# Hadoop Docker\n\n## Supported Hadoop Versions\nSee repository branches for supported hadoop versions\n\n## Quick Start\n\nTo deploy an example HDFS cluster, run:\n```\n  docker-compose up\n```\n\nRun example wordcount job:\n```\n  make wordcount\n```\n\nOr deploy in swarm:\n```\ndocker stack deploy -c docker-compose-v3.yml hadoop\n```\n\n`docker-compose` creates a docker network that can be found by running `docker network list`, e.g. `dockerhadoop_default`.\n\nRun `docker network inspect` on the network (e.g. `dockerhadoop_default`) to find the IP the hadoop interfaces are published on. Access these interfaces with the following URLs:\n\n* Namenode: http://<dockerhadoop_IP_address>:9870/dfshealth.html#tab-overview\n* History server: http://<dockerhadoop_IP_address>:8188/applicationhistory\n* Datanode: http://<dockerhadoop_IP_address>:9864/\n* Nodemanager: http://<dockerhadoop_IP_address>:8042/node\n* Resource manager: http://<dockerhadoop_IP_address>:8088/\n\n## Configure Environment Variables\n\nThe configuration parameters can be specified in the hadoop.env file or as environmental variables for specific services (e.g. namenode, datanode etc.):\n```\n  CORE_CONF_fs_defaultFS=hdfs://namenode:8020\n```\n\nCORE_CONF corresponds to core-site.xml. fs_defaultFS=hdfs://namenode:8020 will be transformed into:\n```\n  <property><name>fs.defaultFS</name><value>hdfs://namenode:8020</value></property>\n```\nTo define dash inside a configuration parameter, use triple underscore, such as YARN_CONF_yarn_log___aggregation___enable=true (yarn-site.xml):\n```\n  <property><name>yarn.log-aggregation-enable</name><value>true</value></property>\n```\n\nThe available configurations are:\n* /etc/hadoop/core-site.xml CORE_CONF\n* /etc/hadoop/hdfs-site.xml HDFS_CONF\n* /etc/hadoop/yarn-site.xml YARN_CONF\n* /etc/hadoop/httpfs-site.xml HTTPFS_CONF\n* /etc/hadoop/kms-site.xml KMS_CONF\n* /etc/hadoop/mapred-site.xml  MAPRED_CONF\n\nIf you need to extend some other configuration file, refer to base/entrypoint.sh bash script.\n"
+        },
+        {
+          "name": "base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "datanode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose-v3.yml",
+          "type": "blob",
+          "size": 2.462890625,
+          "content": "version: '3'\n\nservices:\n  namenode:\n    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8\n    networks:\n      - hbase\n    volumes:\n      - namenode:/hadoop/dfs/name\n    environment:\n      - CLUSTER_NAME=test\n    env_file:\n      - ./hadoop.env\n    deploy:\n      mode: replicated\n      replicas: 1\n      restart_policy:\n        condition: on-failure\n      placement:\n        constraints:\n          - node.hostname == akswnc4.aksw.uni-leipzig.de\n      labels:\n        traefik.docker.network: hbase\n        traefik.port: 50070\n\n  datanode:\n    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8\n    networks:\n      - hbase\n    volumes:\n      - datanode:/hadoop/dfs/data\n    env_file:\n      - ./hadoop.env\n    environment:\n      SERVICE_PRECONDITION: \"namenode:50070\"\n    deploy:\n      mode: global\n      restart_policy:\n        condition: on-failure\n      labels:\n        traefik.docker.network: hbase\n        traefik.port: 50075\n\n  resourcemanager:\n    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8\n    networks:\n      - hbase\n    environment:\n      SERVICE_PRECONDITION: \"namenode:50070 datanode:50075\"\n    env_file:\n      - ./hadoop.env\n    deploy:\n      mode: replicated\n      replicas: 1\n      restart_policy:\n        condition: on-failure\n      placement:\n        constraints:\n          - node.hostname == akswnc4.aksw.uni-leipzig.de\n      labels:\n        traefik.docker.network: hbase\n        traefik.port: 8088\n    healthcheck:\n      disable: true\n\n  nodemanager:\n    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8\n    networks:\n      - hbase\n    environment:\n      SERVICE_PRECONDITION: \"namenode:50070 datanode:50075 resourcemanager:8088\"\n    env_file:\n      - ./hadoop.env\n    deploy:\n      mode: global\n      restart_policy:\n        condition: on-failure\n      labels:\n        traefik.docker.network: hbase\n        traefik.port: 8042\n\n  historyserver:\n    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8\n    networks:\n      - hbase\n    volumes:\n      - hadoop_historyserver:/hadoop/yarn/timeline\n    environment:\n      SERVICE_PRECONDITION: \"namenode:50070 datanode:50075 resourcemanager:8088\"\n    env_file:\n      - ./hadoop.env\n    deploy:\n      mode: replicated\n      replicas: 1\n      placement:\n        constraints:\n          - node.hostname == akswnc4.aksw.uni-leipzig.de\n      labels:\n        traefik.docker.network: hbase\n        traefik.port: 8188\n\nvolumes:\n  datanode:\n  namenode:\n  hadoop_historyserver:\n\nnetworks:\n  hbase:\n    external:\n      name: hbase\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 1.5224609375,
+          "content": "version: \"3\"\n\nservices:\n  namenode:\n    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8\n    container_name: namenode\n    restart: always\n    ports:\n      - 9870:9870\n      - 9000:9000\n    volumes:\n      - hadoop_namenode:/hadoop/dfs/name\n    environment:\n      - CLUSTER_NAME=test\n    env_file:\n      - ./hadoop.env\n\n  datanode:\n    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8\n    container_name: datanode\n    restart: always\n    volumes:\n      - hadoop_datanode:/hadoop/dfs/data\n    environment:\n      SERVICE_PRECONDITION: \"namenode:9870\"\n    env_file:\n      - ./hadoop.env\n  \n  resourcemanager:\n    image: bde2020/hadoop-resourcemanager:2.0.0-hadoop3.2.1-java8\n    container_name: resourcemanager\n    restart: always\n    environment:\n      SERVICE_PRECONDITION: \"namenode:9000 namenode:9870 datanode:9864\"\n    env_file:\n      - ./hadoop.env\n\n  nodemanager1:\n    image: bde2020/hadoop-nodemanager:2.0.0-hadoop3.2.1-java8\n    container_name: nodemanager\n    restart: always\n    environment:\n      SERVICE_PRECONDITION: \"namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088\"\n    env_file:\n      - ./hadoop.env\n  \n  historyserver:\n    image: bde2020/hadoop-historyserver:2.0.0-hadoop3.2.1-java8\n    container_name: historyserver\n    restart: always\n    environment:\n      SERVICE_PRECONDITION: \"namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088\"\n    volumes:\n      - hadoop_historyserver:/hadoop/yarn/timeline\n    env_file:\n      - ./hadoop.env\n  \nvolumes:\n  hadoop_namenode:\n  hadoop_datanode:\n  hadoop_historyserver:\n"
+        },
+        {
+          "name": "hadoop.env",
+          "type": "blob",
+          "size": 2.4482421875,
+          "content": "CORE_CONF_fs_defaultFS=hdfs://namenode:9000\nCORE_CONF_hadoop_http_staticuser_user=root\nCORE_CONF_hadoop_proxyuser_hue_hosts=*\nCORE_CONF_hadoop_proxyuser_hue_groups=*\nCORE_CONF_io_compression_codecs=org.apache.hadoop.io.compress.SnappyCodec\n\nHDFS_CONF_dfs_webhdfs_enabled=true\nHDFS_CONF_dfs_permissions_enabled=false\nHDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false\n\nYARN_CONF_yarn_log___aggregation___enable=true\nYARN_CONF_yarn_log_server_url=http://historyserver:8188/applicationhistory/logs/\nYARN_CONF_yarn_resourcemanager_recovery_enabled=true\nYARN_CONF_yarn_resourcemanager_store_class=org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore\nYARN_CONF_yarn_resourcemanager_scheduler_class=org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler\nYARN_CONF_yarn_scheduler_capacity_root_default_maximum___allocation___mb=8192\nYARN_CONF_yarn_scheduler_capacity_root_default_maximum___allocation___vcores=4\nYARN_CONF_yarn_resourcemanager_fs_state___store_uri=/rmstate\nYARN_CONF_yarn_resourcemanager_system___metrics___publisher_enabled=true\nYARN_CONF_yarn_resourcemanager_hostname=resourcemanager\nYARN_CONF_yarn_resourcemanager_address=resourcemanager:8032\nYARN_CONF_yarn_resourcemanager_scheduler_address=resourcemanager:8030\nYARN_CONF_yarn_resourcemanager_resource__tracker_address=resourcemanager:8031\nYARN_CONF_yarn_timeline___service_enabled=true\nYARN_CONF_yarn_timeline___service_generic___application___history_enabled=true\nYARN_CONF_yarn_timeline___service_hostname=historyserver\nYARN_CONF_mapreduce_map_output_compress=true\nYARN_CONF_mapred_map_output_compress_codec=org.apache.hadoop.io.compress.SnappyCodec\nYARN_CONF_yarn_nodemanager_resource_memory___mb=16384\nYARN_CONF_yarn_nodemanager_resource_cpu___vcores=8\nYARN_CONF_yarn_nodemanager_disk___health___checker_max___disk___utilization___per___disk___percentage=98.5\nYARN_CONF_yarn_nodemanager_remote___app___log___dir=/app-logs\nYARN_CONF_yarn_nodemanager_aux___services=mapreduce_shuffle\n\nMAPRED_CONF_mapreduce_framework_name=yarn\nMAPRED_CONF_mapred_child_java_opts=-Xmx4096m\nMAPRED_CONF_mapreduce_map_memory_mb=4096\nMAPRED_CONF_mapreduce_reduce_memory_mb=8192\nMAPRED_CONF_mapreduce_map_java_opts=-Xmx3072m\nMAPRED_CONF_mapreduce_reduce_java_opts=-Xmx6144m\nMAPRED_CONF_yarn_app_mapreduce_am_env=HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1/\nMAPRED_CONF_mapreduce_map_env=HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1/\nMAPRED_CONF_mapreduce_reduce_env=HADOOP_MAPRED_HOME=/opt/hadoop-3.2.1/\n"
+        },
+        {
+          "name": "historyserver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "namenode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nginx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodemanager",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resourcemanager",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "submit",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

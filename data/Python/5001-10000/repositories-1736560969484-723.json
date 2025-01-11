@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "timestamp": 1736560969484,
+    "page": 723,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjczMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "SpiderClub/haipproxy",
+      "stars": 5447,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.1357421875,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nenv/\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\n*.egg-info/\n.installed.cfg\n*.egg\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n.hypothesis/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# pyenv\n.python-version\n\n# celery beat schedule file\ncelerybeat-schedule\n\n# SageMath parsed files\n*.sage.py\n\n# dotenv\n.env\n\n# virtualenv\n.venv\nvenv/\nENV/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.idea/"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.03515625,
+          "content": "FROM vaeum/alpine-python3-pip3\nLABEL mantainer=\"ResolveWang <resolvewang@foxmail.com>\"\n\nENV LC_ALL C.UTF-8\nENV LANG C.UTF-8\nENV ISDOCKER 1\nRUN echo -e \"https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.7/main/\\nhttps://mirrors.tuna.tsinghua.edu.cn/alpine/v3.7/community/\" > /etc/apk/repositories\nRUN apk upgrade --no-cache \\\n  && apk add --no-cache \\\n  squid \\\n  libxml2-dev \\\n  libxml2 \\\n  libxslt-dev \\\n  libxslt \\\n  libffi-dev \\\n  python3-dev \\\n  && rm -rf /var/cache/* \\\n  && rm -rf /root/.cache/*\n#RUN apt update\n#RUN apt install squid -yq\nRUN sed -i 's/http_access deny all/http_access allow all/g' /etc/squid/squid.conf && cp /etc/squid/squid.conf /etc/squid/squid.conf.backup\n#RUN apt install python3 python3-pip -yq\n#RUN which python3|xargs -i ln -s {} /usr/bin/python\n#RUN which pip3|xargs -i ln -s {} /usr/bin/pip\nCOPY . /haipproxy\nWORKDIR /haipproxy\nRUN pip3 install -i https://pypi.douban.com/simple/ -U pip && pip3 install -i https://pypi.douban.com/simple/ -r requirements.txt \n#CMD ['python3', 'crawler_booter.py', '--usage', 'crawler', 'common']\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0478515625,
+          "content": "MIT License\n\nCopyright (c) 2017~2018 resolvewang\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.1337890625,
+          "content": "include *.in\ninclude *.ini\ninclude *.rst\ninclude *.txt\n\ninclude LICENSE\n\nglobal-exclude __pycache__ *.py[cod]\nglobal-exclude *.so *.dylib"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.255859375,
+          "content": "# 高可用IP代理池\n[README](README_EN.md)　｜　[中文文档](README.md)\n\n本项目所采集的IP资源都来自互联网，愿景是为大型爬虫项目提供一个**高可用低延迟的高匿IP代理池**。\n\n# 项目亮点\n- 代理来源丰富\n- 代理抓取提取精准\n- 代理校验严格合理\n- 监控完备，鲁棒性强\n- 架构灵活，便于扩展\n- 各个组件分布式部署\n\n# 快速开始\n\n注意，代码请在[release](https://github.com/SpiderClub/haipproxy/releases)列表中下载，**master**分支的代码不保证能稳定运行\n\n## 单机部署\n\n### 服务端\n- 安装Python3和Redis。有问题可以阅读[这篇文章](https://github.com/SpiderClub/weibospider/wiki/%E5%88%86%E5%B8%83%E5%BC%8F%E7%88%AC%E8%99%AB%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)的相关部分。\n- 根据Redis的实际配置修改项目配置文件[config/settings.py](config/settings.py)中的`REDIS_HOST`、`REDIS_PASSWORD`等参数。\n- 安装[scrapy-splash](https://github.com/scrapy-plugins/scrapy-splash)，并修改配置文件[config/settings.py](config/settings.py)中的`SPLASH_URL`\n- 安装项目相关依赖\n  > pip install -r requirements.txt\n- 启动*scrapy worker*，包括代理IP采集器和校验器\n  > python crawler_booter.py --usage crawler\n\n  > python crawler_booter.py --usage validator\n- 启动*调度器*，包括代理IP定时调度和校验\n  > python scheduler_booter.py --usage crawler\n\n  > python scheduler_booter.py --usage validator\n\n### 客户端\n近日不断有同学问，如何获取该项目中可用的代理IP列表。`haipproxy`提供代理的方式并不是通过`api api`来提供，而是通过具体的客户端来提供。\n目前支持的是[Python客户端](client/py_cli.py)和语言无关的[squid二级代理](client/squid.py)\n\n#### python客户端调用示例 \n```python3\nfrom client.py_cli import ProxyFetcher\nargs = dict(host='127.0.0.1', port=6379, password='123456', db=0)\n＃　这里`zhihu`的意思是，去和`zhihu`相关的代理ip校验队列中获取ip\n＃　这么做的原因是同一个代理IP对不同网站代理效果不同\nfetcher = ProxyFetcher('zhihu', strategy='greedy', redis_args=args)\n# 获取一个可用代理\nprint(fetcher.get_proxy())\n# 获取可用代理列表\nprint(fetcher.get_proxies()) # or print(fetcher.pool)\n```\n\n更具体的示例见[examples/zhihu](examples/zhihu/zhihu_spider.py)\n\n#### squid作为二级代理\n- 安装squid，备份squid的配置文件并且启动squid，以ubuntu为例\n  > sudo apt-get install squid\n\n  > sudo sed -i 's/http_access deny all/http_access allow all/g' /etc/squid/squid.conf\n\n  > sudo cp /etc/squid/squid.conf /etc/squid/squid.conf.backup\n\n  > sudo service squid start\n- 根据操作系统修改项目配置文件[config/settings.py](config/settings.py)中的`SQUID_BIN_PATH`、`SQUID_CONF_PATH`、`SQUID_TEMPLATE_PATH`等参数\n- 启动`squid conf`的定时更新程序\n  > sudo python squid_update.py\n- 使用squid作为代理中间层请求目标网站,默认代理URL为'http://squid_host:3128',用Python请求示例如下\n  ```python3\n  import requests\n  proxies = {'https': 'http://127.0.0.1:3128'}\n  resp = requests.get('https://httpbin.org/ip', proxies=proxies)\n  print(resp.text)\n  ```\n   \n## Docker部署\n- 安装Docker\n\n- 安装*docker-compose*\n  > pip install -U docker-compose\n\n- 修改[settings.py](config/settings.py)中的`SPLASH_URL`和`REDIS_HOST`参数\n  ```python3\n  # 注意，如果您使用master分支下的代码，这步可被省略\n  SPLASH_URL = 'http://splash:8050'\n  REDIS_HOST = 'redis'\n  ```\n- 使用*docker-compose*启动各个应用组件\n  > docker-compose up\n\n这种方式会一同部署`squid`，您可以通过`squid`调用代理IP池，也可以使用客户端调用，和单机部署调用方式一样\n\n# 注意事项\n- 本项目高度依赖Redis，除了消息通信和数据存储之外，IP校验和任务定时工具也使用了Redis中的多种数据结构。\n如果需要替换Redis，请自行度量\n- 由于*GFW*的原因，某些网站需要通过科学上网才能进行访问和采集，如果用户无法访问墙外的网站，请将[rules.py](config/rules.py)\n`task_queue`为` SPIDER_GFW_TASK`和`SPIDER_AJAX_GFW_TASK`的任务`enable`属性设置为0或者启动爬虫的时候指定爬虫类型为`common`和\n`ajax`\n  > python crawler_booter.py --usage crawler common ajax\n- 相同代理IP，对于不同网站的代理效果可能大不相同。如果通用代理无法满足您的需求，您可以[为特定网站编写代理IP校验器](https://github.com/SpiderClub/haipproxy/blob/master/docs/%E9%92%88%E5%AF%B9%E7%89%B9%E5%AE%9A%E7%AB%99%E7%82%B9%E6%B7%BB%E5%8A%A0%E6%A0%A1%E9%AA%8C%E5%99%A8.md)\n\n# 工作流程\n![](static/workflow.png)\n\n# 效果测试\n以单机模式部署`haipproxy`和[测试代码](examples/zhihu/zhihu_spider.py)，以知乎为目标请求站点，实测抓取效果如下\n\n![](./static/zhihu.png)\n\n测试代码见[examples/zhihu](examples/zhihu/zhihu_spider.py)\n\n# 项目监控(可选)\n项目监控主要通过[sentry](https://sentry.io/welcome/)和[prometheus](https://prometheus.io/),通过在关键地方\n进行业务埋点对项目各个维度进行监测，以提高项目的鲁棒性\n\n项目使用[Sentry](https://sentry.io/welcome/)作`Bug Trace`工具，通过Sentry可以很容易跟踪项目健康情况\n\n![](./static/bug_trace.jpg)\n\n\n使用[Prometheus](https://prometheus.io/)+[Grafana](https://grafana.com/)做业务监控，了解项目当前状态\n\n![](./static/monitor.png)\n\n# 捐赠作者\n开源不易，如果本项目对您有用，不妨进行小额捐赠，以支持项目的持续维护\n\n![](./static/donate.jpg)\n\n# 同类项目\n本项目参考了Github上开源的各个爬虫代理的实现，感谢他们的付出，下面是笔者参考的所有项目，排名不分先后。\n\n[dungproxy](https://github.com/virjar/dungproxy)\n\n[proxyspider](https://github.com/zhangchenchen/proxyspider)\n\n[ProxyPool](https://github.com/henson/ProxyPool)\n\n[proxy_pool](https://github.com/jhao104/proxy_pool)\n\n[ProxyPool](https://github.com/WiseDoge/ProxyPool)\n\n[IPProxyTool](https://github.com/awolfly9/IPProxyTool)\n\n[IPProxyPool](https://github.com/qiyeboy/IPProxyPool)\n\n[proxy_list](https://github.com/gavin66/proxy_list)\n\n[proxy_pool](https://github.com/lujqme/proxy_pool)\n\n[ProxyPool](https://github.com/fengzhizi715/ProxyPool)\n\n[scylla](https://github.com/imWildCat/scylla)\n"
+        },
+        {
+          "name": "README_EN.md",
+          "type": "blob",
+          "size": 5.826171875,
+          "content": "# HAipproxy\n[中文文档](README.md) | [README](README_EN.md)\n\nThis project crawls proxy ip resources from the Internet.What we wish is to provide a \nanonymous ip proxy pool with **highly availability and low latency** for distributed \nspiders.\n\n# Features\n- Distributed crawlers with high performance, powered by scrapy and redis\n- Large-scale of proxy ip resources\n- HA design for both crawlers and schedulers\n- Flexible architecture with task routing\n- Support HTTP/HTTPS and Socks5 proxy\n- MIT LICENSE.Feel free to do whatever you want\n\n# Quick start\n\nPlease go to [release](https://github.com/SpiderClub/haipproxy/releases) to download the source code,\nthe master is unstable.\n\n## Standalone\n\n### Server\n- Install Python3 and Redis Server\n- Change redis args of the project *[config/settings.py](config/settings.py)* according to redis conf,such as `REDIS_HOST`,`REDIS_PASSWORD`\n- Install [scrapy-splash](https://github.com/scrapy-plugins/scrapy-splash) and change `SPLASH_URL` in *[config/settings.py](config/settings.py)*\n- Install dependencies\n  > pip install -r requirements.txt\n- Start *scrapy worker*,including ip proxy crawler and validator\n  > python crawler_booter.py --usage crawler\n\n  > python crawler_booter.py --usage validator\n- Start *task scheduler*,including crawler task scheduler and validator task scheduler\n  > python scheduler_booter.py --usage crawler\n\n  > python scheduler_booter.py --usage validator\n\n\n### Client\n`haipproxy` provides both [py client](client/py_cli.py) and [squid proxy](squid_update.py) for your spiders.Any clients about any languages are welcome!\n\n#### Python Client\n```python3\nfrom client.py_cli import ProxyFetcher\n# args are used to connect redis, if args is None, redis args in settings.py will be used\nargs = dict(host='127.0.0.1', port=6379, password='123456', db=0)\n# https is used for common proxy.If you want to crawl a customized website, you'd better \n# write a customized ip validator according to zhihu validator\nfetcher = ProxyFetcher('https', strategy='greedy', redis_args=args)\n# get one proxy ip\nprint(fetcher.get_proxy())\n# get available proxy ip list\nprint(fetcher.get_proxies()) # or print(fetcher.pool)\n```\n\n#### Using squid as proxy server\n- Install squid,copy it's conf as a backup and then start squid, take *ubuntu* for example\n   > sudo apt-get install squid\n   \n   > sudo sed -i 's/http_access deny all/http_access allow all/g' /etc/squid/squid.conf\n   \n   > sudo cp /etc/squid/squid.conf /etc/squid/squid.conf.backup\n   \n   > sudo service squid start\n- Change `SQUID_BIN_PATH`,`SQUID_CONF_PATH` and `SQUID_TEMPLATE_PATH` in *[config/settings.py](config/settings.py)* according to your OS\n- Update squid conf periodically\n  > sudo python squid_update.py\n- After a while,you can send requests with squid proxies, the proxies url is 'http://squid_host:3128', e.g.\n  ```python3\n  import requests\n  proxies = {'https': 'http://127.0.0.1:3128'}\n  resp = requests.get('https://httpbin.org/ip', proxies=proxies)\n  print(resp.text)\n  ```\n\n## Dockerize\n- Install Docker\n\n- Install docker-compose\n  > pip install -U docker-compose\n\n- Change`SPLASH_URL`and`REDIS_HOST`in [settings.py](config/settings.py)\n  ```python3\n  # notice: if you use master code, this can be ignore\n  SPLASH_URL = 'http://splash:8050'\n  REDIS_HOST = 'redis'\n  ```\n- Start all the containers using docker-compose\n  > docker-compose up\n\n- Use [py_cli](client/py_cli.py) or Squid to get available proxy ips.\n  ```python3\n  from client.py_cli import ProxyFetcher\n  args = dict(host='127.0.0.1', port=6379, password='123456', db=0)\n  fetcher = ProxyFetcher('https', strategy='greedy', length=5, redis_args=args)\n  print(fetcher.get_proxy())\n  print(fetcher.get_proxies()) # or print(fetcher.pool)\n  ```\n\nor \n\n```python3\nimport requests\nproxies = {'https': 'http://127.0.0.1:3128'}\nresp = requests.get('https://httpbin.org/ip', proxies=proxies)\nprint(resp.text)\n```\n\n# WorkFlow\n![](static/workflow.png)\n\n# Other important things\n- This project is highly dependent on redis,if you want to replace redis with another mq or database,\njust do it at your own risk\n- If there is no Great Fire Wall at your country,set`proxy_mode=0` in both [gfw_spider.py](crawler/spiders/gfw_spider.py) and [ajax_gfw_spider.py](crawler/spiders/ajax_gfw_spider.py).\nIf you don't want to crawl some websites, set `enable=0` in [rules.py](config/rules.py)\n- Becase of the Great Fire Wall in China, some proxy ip may can't be used to crawl some websites such as Google.You can extend the proxy pool by yourself in [spiders](crawler/spiders)\n- Issues and PRs are welcome\n- Just star it if it's useful to you\n\n# Test Result\nHere are test results for crawling https://zhihu.com using `haipproxy`.Source Code can be seen [here](examples/zhihu)\n\n|requests|time|cost|strategy|client|\n|-----|----|---|---------|-----|\n|0|2018/03/03 22:03|0|greedy|[py_cli](client/py_cli.py)|\n|10000|2018/03/03 11:03|1 hour|greedy|[py_cli](client/py_cli.py)|\n|20000|2018/03/04 00:08|2 hours|greedy|[py_cli](client/py_cli.py)|\n|30000|2018/03/04 01:02|3 hours|greedy|[py_cli](client/py_cli.py)|\n|40000|2018/03/04 02:15|4 hours|greedy|[py_cli](client/py_cli.py)|\n|50000|2018/03/04 03:03|5 hours|greedy|[py_cli](client/py_cli.py)|\n|60000|2018/03/04 05:18|7 hours|greedy|[py_cli](client/py_cli.py)|\n|70000|2018/03/04 07:11|9 hours|greedy|[py_cli](client/py_cli.py)|\n|80000|2018/03/04 08:43|11 hours|greedy|[py_cli](client/py_cli.py)|\n\n# Reference\nThanks to all the contributors of the following projects.\n\n[dungproxy](https://github.com/virjar/dungproxy)\n\n[proxyspider](https://github.com/zhangchenchen/proxyspider)\n\n[ProxyPool](https://github.com/henson/ProxyPool)\n\n[proxy_pool](https://github.com/jhao104/proxy_pool)\n\n[ProxyPool](https://github.com/WiseDoge/ProxyPool)\n\n[IPProxyTool](https://github.com/awolfly9/IPProxyTool)\n\n[IPProxyPool](https://github.com/qiyeboy/IPProxyPool)\n\n[proxy_list](https://github.com/gavin66/proxy_list)\n\n[proxy_pool](https://github.com/lujqme/proxy_pool)\n\n"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "theme: jekyll-theme-cayman"
+        },
+        {
+          "name": "app_booter.py",
+          "type": "blob",
+          "size": 0.3603515625,
+          "content": "\"\"\"\nThis module is used to provide web api for other languages\n\"\"\"\nimport argparse\n\nfrom haipproxy.api import app\n\n\nif __name__ == \"__main__\":\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--port\", type=int, default=5000)\n    parser.add_argument(\"--host\", default=\"127.0.0.1\")\n    args = parser.parse_args()\n    app.run(port=args.port, host=args.host)"
+        },
+        {
+          "name": "crawler_booter.py",
+          "type": "blob",
+          "size": 0.6845703125,
+          "content": "\"\"\"\nThis module is used to start multi spiders or validators from IDE or cmd.\n\nAll the startup args can be found in config/rules.py, including:\nCRAWLER_TASK_MAPS, VALIDATOR_TASK_MAPS\n\nYou can start proxy spiders using the following cmd:\npython crawler_booter.py --usage crawler\n\nIf you want to start only common spider and ajax proxy spider, run:\npython crawler_booter.py --usage crawler common ajax\n\nIf you want to start all the validators, run:\npython crawler_booter.py --usage validator\n\nIf you just want to start init and https validator, run:\npython crawler_booter.py --usage validator init https\n\"\"\"\nfrom haipproxy.scheduler import crawler_start\n\n\nif __name__ == '__main__':\n    crawler_start()\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.34765625,
+          "content": "version: \"2.0\"\nservices:\n  redis:\n    image: redis:alpine\n    ports:\n      - \"6379:6379\"\n    command: >\n      --requirepass 123456\n  splash:\n    image: scrapinghub/splash\n    ports:\n      - \"8050:8050\"\n  haipproxy:\n    build: .\n    command: sh run.sh\n    volumes:\n      - .:/haipproxy\n    ports:\n      - \"3128:3128\"\n    links:\n      - redis\n      - splash\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "haipproxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "monitor_booter.py",
+          "type": "blob",
+          "size": 0.2353515625,
+          "content": "\"\"\"\nThis module is used to start prometheus exporter.\n\nIf you have your own metrics to monitor, just custom them\nin haipproxy.monitor.exporter\n\"\"\"\nfrom haipproxy.monitor import exporter_start\n\n\nif __name__ == '__main__':\n    exporter_start()"
+        },
+        {
+          "name": "requirements-cli.txt",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "redis==2.10.6\nraven==6.8.0"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.1552734375,
+          "content": "raven==6.8.0\nredis==2.10.5\nrequests==2.13.0\nschedule==0.5.0\nTwisted==17.9.0\nFlask==1.0.2\nScrapy==1.5.0\nscrapy-splash==0.7.2\nprometheus-client==0.2.0\nclick==6.7"
+        },
+        {
+          "name": "run.sh",
+          "type": "blob",
+          "size": 0.5302734375,
+          "content": "#!/bin/bash\nnohup python crawler_booter.py --usage crawler common > crawler.log 2>&1 &\nnohup python scheduler_booter.py --usage crawler common > crawler_scheduler.log 2>&1 &\nnohup python crawler_booter.py --usage validator init > init_validator.log 2>&1 &\nnohup python crawler_booter.py --usage validator https > https_validator.log 2>&1&\nnohup python scheduler_booter.py --usage validator https > validator_scheduler.log 2>&1 &\nnohup python squid_update.py --usage https --interval 3 > squid.log 2>&1 &\nrm -rf /var/run/squid.pid\nsquid -N -d1\n"
+        },
+        {
+          "name": "scheduler_booter.py",
+          "type": "blob",
+          "size": 0.61328125,
+          "content": "\"\"\"\nThis module is used to start spider scheduler and validator scheduler.\n\nYou can start crawler scheduler using the following cmd:\npython scheduler_booter.py --usage crawler\n\nIf you want to start common scheduler only, run:\npython scheduler_booter.py --usage crawler common\n\nIf you want to start validator scheduler, run:\npython scheduler_booter.py --usage validator\n\nNotice that the scheduler doesn't schedule init queue.\nIf you want to start https validator only, run:\npython scheduler_booter.py --usage validator https\n\"\"\"\n\nfrom haipproxy.scheduler import scheduler_start\n\n\nif __name__ == '__main__':\n    scheduler_start()\n"
+        },
+        {
+          "name": "scrapy.cfg",
+          "type": "blob",
+          "size": 0.0751953125,
+          "content": "[settings]\ndefault = haipproxy.config.settings\n\n[deploy]\nproject = haipproxy\n"
+        },
+        {
+          "name": "setup.cfg",
+          "type": "blob",
+          "size": 0.5498046875,
+          "content": "[metadata]\ndescription-file = README.md\n# This includes the license file in the wheel.\nlicense_file = LICENSE\n\n[bdist_wheel]\n# This flag says to generate wheels that support both Python 2 and Python\n# 3. If your code will not run unchanged on both Python 2 and 3, you will\n# need to generate separate wheels for each Python version that you\n# support. Removing this line (or setting universal to 0) will prevent\n# bdist_wheel from trying to make a universal wheel. For more see:\n# https://packaging.python.org/tutorials/distributing-packages/#wheels\nuniversal = 1"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.3935546875,
+          "content": "from os import path as os_path\nfrom setuptools import setup\n\nimport haipproxy\n\n\nthis_directory = os_path.abspath(os_path.dirname(__file__))\n\n\ndef read_file(filename):\n    with open(os_path.join(this_directory, filename), encoding='utf-8') as f:\n        long_description = f.read()\n    return long_description\n\n\ndef read_requirements(filename):\n    return [line.strip() for line in read_file(filename).splitlines()\n            if not line.startswith('#')]\n\n\nsetup(\n    name='haipproxy',\n    python_requires='>=3.4.0',\n    version=haipproxy.__version__,\n    description=\"High aviariable proxy pool client for crawlers.\",\n    long_description=read_file('README.md'),\n    long_description_content_type=\"text/markdown\",\n    author=\"Resolvewang\",\n    author_email='resolvewang@foxmail.com',\n    url='https://github.com/SpiderClub/haipproxy',\n    packages=[\n        'haipproxy',\n        'haipproxy.client',\n        'haipproxy.config',\n        'haipproxy.utils'\n    ],\n    install_requires=read_requirements('requirements-cli.txt'),\n    include_package_data=True,\n    license=\"MIT\",\n    keywords=['proxy', 'client', 'haipproxy'],\n    classifiers=[\n        'Intended Audience :: Developers',\n        'License :: OSI Approved :: MIT License',\n        'Natural Language :: English',\n        'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.5',\n        'Programming Language :: Python :: 3.6',\n    ],\n)"
+        },
+        {
+          "name": "squid_update.py",
+          "type": "blob",
+          "size": 0.56640625,
+          "content": "\"\"\"\nThis module is used to update squid conf periodically.\n\nIf you belong to admin group, you can start the task using the following cmd:\npython squid_update.py\n\nThe default usage value is 'https' and interval value is 5 minutes,\nuse the following cmd if you want a different usage and updating interval\nsudo python squid_update.py --usage weibo --interval 6\n\nNotice that if you don't belong to admin group, you must run this script with sudo:\nsudo python squid_update.py\n\"\"\"\n\nfrom haipproxy.scheduler import squid_conf_update\n\n\nif __name__ == '__main__':\n    squid_conf_update()\n"
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

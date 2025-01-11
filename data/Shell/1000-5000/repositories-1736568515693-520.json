@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "timestamp": 1736568515693,
+    "page": 520,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUyOQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "geerlingguy/raspberry-pi-dramble",
+      "stars": 1668,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.111328125,
+          "content": ".DS_Store\n.vagrant\n*.retry\n\nconfig.yml\n\nroles/geerlingguy.*\n\nsetup/networking/inventory\nsetup/networking/vars.yml\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.41796875,
+          "content": "---\nservices: docker\n\naddons:\n  hosts:\n    - cluster.pidramble.test\n    - registry.pidramble.test\n    - kube1\n\ninstall:\n  - docker pull geerlingguy/docker-debian10-ansible:latest\n  - cp example.config.yml config.yml\n\nscript:\n  # - \"travis_wait 30 ./testing/docker/docker-playbook-test.sh\"\n  - ./testing/docker/docker-playbook-test.sh\n\nafter_failure:\n  - docker exec --tty dramble env TERM=xterm journalctl --no-pager -u kubelet\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 Jeff Geerling\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.484375,
+          "content": "DEPRECATED: Please see my [pi-cluster](https://github.com/geerlingguy/pi-cluster) project for active development.\n\n<a href=\"http://www.pidramble.com\"><img src=\"https://cdn.rawgit.com/geerlingguy/raspberry-pi-dramble/master/images/logo.svg\" width=\"100%\" height=\"73\"></a>\n\n# Raspberry Pi Dramble\n\n[![Build Status](https://travis-ci.com/geerlingguy/raspberry-pi-dramble.svg?branch=master)](https://travis-ci.com/geerlingguy/raspberry-pi-dramble)\n\nA cluster ([Bramble](http://elinux.org/Bramble)) of Raspberry Pis on which Drupal is deployed using Ansible and Kubernetes.\n\n<p align=\"center\"><img src=\"https://raw.githubusercontent.com/geerlingguy/raspberry-pi-dramble/master/images/raspberry-pi-dramble-hero-2019.jpg\" alt=\"Raspberry Pi Dramble - Hero Image\" /></p>\n\nRead the rest of this README and the official [Pi Dramble Wiki](http://www.pidramble.com/wiki) for more information about the Dramble.\n\n## Why\n\nI'm doing presentations on Ansible, and how easy it makes infrastructure configuration, even for high-performance/high-availability Drupal sites. WiFi/Internet access is spotty at most conferences, so deploying to AWS, DigitalOcean, or other live public cloud instances that require a stable Internet connection is a Bad Idea™.\n\nI'm also presenting on Kubernetes, and how easy it is to have self-healing, almost-infinitely-scalable infrastructure (managed with Ansible), and it's more fun to build with Kubernetes on bare metal... at least when the RAM on the Kubernetes master isn't all eaten up!\n\nBut really, it's just plain awesome. How many people can say they carry their entire datacenter in a travel bag, and can run it from a USB battery pack?\n\nA cluster of servers, in my hand, at the presentation. With blinking LEDs!\n\n## Official Site\n\nYou can browse more information about _geerlingguy_'s Dramble on [http://www.pidramble.com/](http://www.pidramble.com/). This website is actually running on the Rasbperry Pi Dramble cluster pictured above!\n\n## Specs\n\n  - 16+ ARMv7 CPU Cores\n  - 5.6 GHz combined compute power\n  - 4 GB RAM\n  - 128 GB microSD flash-based storage\n  - 1 Gbps private network with PoE\n\n## Getting the Pis (and other accessories)\n\nMany people have asked for a basic list of components used in constructing the Dramble, or where I found particular parts. In the Wiki, I've added pages listing the following:\n\n  - [Raspberry Pis and Accessories](http://www.pidramble.com/wiki/hardware/pis)\n  - [Other Necessities](http://www.pidramble.com/wiki/hardware/necessities)\n  - [Recommended Extras](http://www.pidramble.com/wiki/hardware/extras)\n\n## Setting up the Pis\n\nThe process for setting up all the Raspberry Pis is outlined in the Wiki:\n\n  1. [Prepare the Raspberry Pis for provisioning](http://www.pidramble.com/wiki/setup/prepare)\n  1. [Rack the Raspberry Pis](http://www.pidramble.com/wiki/setup/rack)\n  1. [Network the Raspberry Pis](http://www.pidramble.com/wiki/setup/network)\n  1. [Test the Ansible configuration](http://www.pidramble.com/wiki/setup/test-ansible)\n  1. [Provision the Raspberry Pis](http://www.pidramble.com/wiki/setup/provision)\n  1. [Deploy Drupal to the Raspberry Pis](http://www.pidramble.com/wiki/setup/deploy-drupal)\n\n> It is recommended you use the 64-bit version of Raspberry Pi OS, as some of this project's dependencies require it (and may not install on 32-bit Pi OS).\n\n#### Adding more nodes\n\nYou can add more than four nodes, if you desire; add additional hosts in the same sequence in the following files:\n\n  - `setup/networking/inventory`\n  - `setup/networking/vars.yml`\n  - `inventory`\n\nIf you need to change the IP subnet (default is `10.0.100.x`), make sure to also update `hosts.j2` to use the new subnet so hostnames resolve correctly.\n\n#### Private Docker Registry Usage\n\nThe Pi Dramble includes a built-in Docker registry that is used to host Drupal images for deployment to Kubernetes. To use the Docker registry manually (to push or pull images):\n\n  1. Edit your `/etc/hosts` file and add the line:\n\n     ```\n     10.0.100.62  registry.pidramble.test\n     ```\n\n  1. Follow the linked directions to [get Docker to use your self-signed Docker Registry cert](https://docs.docker.com/registry/insecure/#use-self-signed-certificates). For macOS, using the GUI:\n     1. Double-click on `k8s-manifests/docker-registry/certs/tls.crt` to add it to your Keychain\n     1. Select the certificate in Keychain Access, choose 'File' > 'Get Info'\n     1. Expand the 'Trust' section, and choose 'Always Trust' for \"When using this certificate:\"\n     1. Close the info dialog and enter your password to save the changes.\n     1. Restart Docker for Mac.\n  1. Tag your image for the registry and push it:\n\n     ```\n     docker tag my/image:latest registry.pidramble.test/my/image:latest\n     docker push registry.pidramble.test/my/image:latest\n     ```\n\n## Benchmarks - Testing the performance of the Dramble\n\nSee the [Pi Dramble Benchmarks](http://www.pidramble.com/wiki/benchmarks) section of the Wiki for current benchmarks and statistics.\n\n## Local testing\n\nA Vagrantfile is also included for local testing and debugging of the Kubernetes cluster and manifests using [Vagrant](https://www.vagrantup.com). See the [Vagrant README](testing/vagrant/README.md) for more details.\n\n## Drupal on a Single Pi - Drupal Pi\n\nIf you have only a single Raspberry Pi, you can use the [Drupal Pi](https://github.com/geerlingguy/drupal-pi) project to quickly get Drupal running on the single Pi.\n\n## Using older or slower Raspberry Pi models\n\nThe Raspberry Pi 2, 3, 3 B+, and 4 have quad-core processors that make certain operations four to ten times faster than single-core Pis like the A+, B+, Zero, etc. Additionally, cluster members need as much RAM as possible, and any Pi without at least 1 GB of RAM simply [can't be used as a Kubernetes master](https://kubernetes.io/docs/tasks/administer-cluster/manage-resources/memory-constraint-namespace/#before-you-begin).\n\nTherefore only the following Pi models are officially supported:\n\n  - Raspberry Pi model 4 B\n  - Raspberry Pi model 3 B+\n  - Raspberry Pi model 3 B\n  - Raspberry Pi model 2\n\n## Presentation Mode\n\nThe Raspberry Pi Dramble Kubernetes cluster can function entirely 'air-gapped' from the Internet, and this is in fact how the maintainer uses it in presentations.\n\nSee the README in the [`testing/presentation`](testing/presentation) directory for instructions for operating the cluster standalone.\n\n## Author\n\nThis project was started in 2015 by [Jeff Geerling](https://www.jeffgeerling.com/), author of [Ansible for DevOps](https://www.ansiblefordevops.com/) and [Ansible for Kubernetes](https://www.ansibleforkubernetes.com).\n"
+        },
+        {
+          "name": "ansible.cfg",
+          "type": "blob",
+          "size": 0.240234375,
+          "content": "[defaults]\nroles_path = ./roles\nnocows = 1\nforks = 10\nretry_files_enabled = False\nstdout_callback = yaml\nbin_ansible_callbacks = False\ninterpreter_python=auto_silent\n\n[ssh_connection]\npipelining = True\ncontrol_path = /tmp/ansible-ssh-%%h-%%p-%%r\n"
+        },
+        {
+          "name": "example.config.yml",
+          "type": "blob",
+          "size": 0.876953125,
+          "content": "---\n# Drupal configuration.\ndrupal_domain: cluster.pidramble.test\ndrupal_docker_image: geerlingguy/drupal:latest-arm64\n# Generate a salt with: `php -r \"echo bin2hex(random_bytes(25));\"`\ndrupal_hash_salt: ef4e7eb18bd889e2c89720e71ea98beaae5f563d8685638d6e\ndrupal_files_dir: /var/www/html/sites/default/files\ndrupal_download_if_not_present: 'true'\n\n# MySQL configuration.\nmysql_drupal_password: aaiQyjrcdvkxX6fg7UeM\nmysql_root_password: mm2vnyboVrndryde4kJR\n\n# Drupal filesystem configuration.\nnfs_mount_dir: /mnt/nfs\n\n# Security configuration.\nsecurity_sudoers_passwordless:\n  - pi\n\n# Docker configuration.\ndocker_registry_image: vsellier/docker-registry-arm:2.7.1\ndocker_registry_domain: registry.pidramble.test\ndocker_registry_ingress_host: 'kube3'\ndocker_registry_http_secret: fdb19409c851605cd6c46615888d4c0e37858121df7c\n\n# LED Configuration.\nled_enable_gpio: false\nled_enable_blinkstick: false\n"
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "inventory",
+          "type": "blob",
+          "size": 0.31640625,
+          "content": "[dramble]\nkube1 ansible_host=10.0.100.61 kubernetes_role=master\nkube2 ansible_host=10.0.100.62 kubernetes_role=node\nkube3 ansible_host=10.0.100.63 kubernetes_role=node\nkube4 ansible_host=10.0.100.64 kubernetes_role=node\n\n[dramble:vars]\nansible_ssh_user=pi\ndeploy_target=pi\nkubernetes_apiserver_advertise_address=10.0.100.61\n"
+        },
+        {
+          "name": "k8s-manifests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.yml",
+          "type": "blob",
+          "size": 1.8564453125,
+          "content": "---\n- hosts: dramble\n  become: true\n\n  vars_files:\n    - vars/main.yml\n    - config.yml\n\n  pre_tasks:\n    - import_tasks: tasks/test-setup.yml\n      when: deploy_target != 'pi'\n      tags: ['always']\n\n    - name: Ensure dependencies are installed.\n      apt:\n        name:\n          - sudo\n          - openssh-server\n        state: present\n\n    - import_tasks: tasks/cgroup-features.yml\n    - import_tasks: tasks/disable-swap.yml\n      tags: ['always']\n\n    - import_tasks: tasks/net-setup.yml\n      when:\n        - ansible_distribution_version == \"10\"\n        - deploy_target != 'docker'\n\n    - name: Set the master node IP.\n      set_fact:\n        kubernetes_master_ip: \"{{ hostvars['kube1']['ansible_host'] }}\"\n      tags: ['always']\n\n  roles:\n    - role: geerlingguy.security\n      tags: ['security']\n\n    - role: geerlingguy.swap\n      tags: ['always', 'swap']\n      when: deploy_target == 'vagrant'\n\n    - role: geerlingguy.nfs\n      tags: ['nfs']\n      when: deploy_target != 'docker'\n\n    - role: geerlingguy.pip\n      tags: ['pip', 'docker']\n\n    - role: geerlingguy.containerd\n      tags: ['containerd']\n\n    - role: geerlingguy.kubernetes\n      tags: ['kubernetes']\n\n    - role: leds-gpio\n      tags: ['leds']\n      when:\n        - led_enable_gpio | bool\n        - deploy_target == 'pi'\n\n    - role: leds-blinkstick\n      tags: ['leds']\n      when:\n        - led_enable_blinkstick | bool\n\n  tasks:\n    - include_tasks: tasks/nfs.yml\n      tags: ['nfs']\n      when: deploy_target != 'docker'\n\n    - import_tasks: tasks/k8s-registry-setup.yml\n      tags: ['kubernetes']\n\n    - import_tasks: tasks/k8s-services.yml\n      tags: ['kubernetes']\n\n    - import_tasks: tasks/k8s-config.yml\n      tags: ['kubernetes']\n\n    - import_role:\n        name: geerlingguy.k8s_manifests\n      tags: ['kubernetes', 'nfs', 'drupal', 'registry']\n      delegate_to: \"{{ groups.dramble[0] }}\"\n      run_once: true\n"
+        },
+        {
+          "name": "requirements.yml",
+          "type": "blob",
+          "size": 0.1904296875,
+          "content": "---\n- src: geerlingguy.security\n- src: geerlingguy.swap\n- src: geerlingguy.nfs\n- src: geerlingguy.pip\n- src: geerlingguy.containerd\n- src: geerlingguy.kubernetes\n- src: geerlingguy.k8s_manifests\n"
+        },
+        {
+          "name": "roles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tasks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "testing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vars",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

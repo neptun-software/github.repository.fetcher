@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "timestamp": 1736561015713,
+    "page": 776,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "euske/pdfminer",
+      "stars": 5275,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "language: python\npython:\n  - \"3.7\"\ninstall:\n  - pip install pycryptodome\nscript:\n  - make test\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "MIT License\n\nCopyright (c) 2004-2019  Yusuke Shinyama\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or\nsell copies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY\nKIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE\nWARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR\nPURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR\nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.13671875,
+          "content": "include Makefile\ninclude LICENSE\ninclude *.txt\ninclude *.py\ninclude *.md\ngraft cmaprsrc\ngraft docs\ngraft pdfminer\ngraft samples\ngraft tools\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.89453125,
+          "content": "##  Makefile (for maintenance purpose)\n##\n\nPACKAGE=pdfminer\n\nPYTHON=python -B\nTWINE=twine\nRM=rm -f\nCP=cp -f\nMKDIR=mkdir\n\nall:\n\ninstall:\n\t$(PYTHON) setup.py install --home=$(HOME)\n\nclean:\n\t-$(PYTHON) setup.py clean\n\t-$(RM) -r build dist MANIFEST pdfminer.egg-info\n\t-cd $(PACKAGE) && $(MAKE) clean\n\t-cd tools && $(MAKE) clean\n\t-cd samples && $(MAKE) clean\n\ndistclean: clean cmap_clean\n\nsdist: distclean MANIFEST.in\n\t$(PYTHON) setup.py sdist\nupload: sdist\n\t$(TWINE) check dist/*.tar.gz\n\t$(TWINE) upload dist/*.tar.gz\n\nWEBDIR=../github.io/$(PACKAGE)\npublish:\n\t$(CP) docs/*.html docs/*.png docs/*.css $(WEBDIR)\n\nCONV_CMAP=env PYTHONPATH=. $(PYTHON) tools/conv_cmap.py\nCMAPSRC=cmaprsrc\nCMAPDST=pdfminer/cmap\ncmap: $(CMAPDST)/to-unicode-Adobe-CNS1.marshal.gz $(CMAPDST)/to-unicode-Adobe-GB1.marshal.gz \\\n\t$(CMAPDST)/to-unicode-Adobe-Japan1.marshal.gz $(CMAPDST)/to-unicode-Adobe-Korea1.marshal.gz\ncmap_clean:\n\t-$(RM) -r $(CMAPDST)\n$(CMAPDST):\n\t$(MKDIR) $(CMAPDST)\n$(CMAPDST)/to-unicode-Adobe-CNS1.marshal.gz: $(CMAPDST)\n\t$(CONV_CMAP) -c B5=cp950 -c UniCNS-UTF8=utf-8 \\\n\t\t$(CMAPDST) Adobe-CNS1 $(CMAPSRC)/cid2code_Adobe_CNS1.txt\n$(CMAPDST)/to-unicode-Adobe-GB1.marshal.gz: $(CMAPDST)\n\t$(CONV_CMAP) -c GBK-EUC=cp936 -c UniGB-UTF8=utf-8 \\\n\t\t$(CMAPDST) Adobe-GB1 $(CMAPSRC)/cid2code_Adobe_GB1.txt\n$(CMAPDST)/to-unicode-Adobe-Japan1.marshal.gz: $(CMAPDST)\n\t$(CONV_CMAP) -c RKSJ=cp932 -c EUC=euc-jp -c UniJIS-UTF8=utf-8 \\\n\t\t$(CMAPDST) Adobe-Japan1 $(CMAPSRC)/cid2code_Adobe_Japan1.txt\n$(CMAPDST)/to-unicode-Adobe-Korea1.marshal.gz: $(CMAPDST)\n\t$(CONV_CMAP) -c KSC-EUC=euc-kr -c KSC-Johab=johab -c KSCms-UHC=cp949 -c UniKS-UTF8=utf-8 \\\n\t\t$(CMAPDST) Adobe-Korea1 $(CMAPSRC)/cid2code_Adobe_Korea1.txt\n\ntest: cmap\n\t$(PYTHON) -m pdfminer.arcfour\n\t$(PYTHON) -m pdfminer.ascii85\n\t$(PYTHON) -m pdfminer.lzw\n\t$(PYTHON) -m pdfminer.rijndael\n\t$(PYTHON) -m pdfminer.runlength\n\t$(PYTHON) -m pdfminer.ccitt\n\t$(PYTHON) -m pdfminer.psparser\n\tcd samples && $(MAKE) test\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.068359375,
+          "content": "# PDFMiner\n\nPDFMiner is a text extraction tool for PDF documents.\n\n[![Build Status](https://travis-ci.org/euske/pdfminer.svg?branch=master)](https://travis-ci.org/euske/pdfminer)\n[![PyPI](https://img.shields.io/pypi/v/pdfminer)](https://pypi.org/project/pdfminer/)\n\n**Warning**: **As of 2020, PDFMiner is not actively maintained**.\nThe code still works, but this project is largely dormant.\nFor the active project, check out its fork\n<a href=\"https://github.com/pdfminer/pdfminer.six\">pdfminer.six</a>.\n\n## Features:\n\n  * Pure Python (3.6 or above).\n  * Supports PDF-1.7. (well, almost)\n  * Obtains the exact location of text as well as other layout information (fonts, etc.).\n  * Performs automatic layout analysis.\n  * Can convert PDF into other formats (HTML/XML).\n  * Can extract an outline (TOC).\n  * Can extract tagged contents.\n  * Supports basic encryption (RC4 and AES).\n  * Supports various font types (Type1, TrueType, Type3, and CID).\n  * Supports CJK languages and vertical writing scripts.\n  * Has an extensible PDF parser that can be used for other purposes.\n\n\n## How to Use:\n\n  1. `> pip install pdfminer`\n  1. `> pdf2txt.py samples/simple1.pdf`\n\n\n## Command Line Syntax:\n\n### pdf2txt.py\n\npdf2txt.py extracts all the texts that are rendered programmatically.\nIt also extracts the corresponding locations, font names, font sizes,\nwriting direction (horizontal or vertical) for each text segment.  It\ndoes not recognize text in images. A password needs to be provided for\nrestricted PDF documents.\n\n    > pdf2txt.py [-P password] [-o output] [-t text|html|xml|tag]\n                 [-O output_dir] [-c encoding] [-s scale] [-R rotation]\n                 [-Y normal|loose|exact] [-p pagenos] [-m maxpages]\n                 [-S] [-C] [-n] [-A] [-V]\n                 [-M char_margin] [-L line_margin] [-W word_margin]\n                 [-F boxes_flow] [-d]\n                 input.pdf ...\n\n  * `-P password` : PDF password.\n  * `-o output` : Output file name.\n  * `-t text|html|xml|tag` : Output type. (default: automatically inferred from the output file name.)\n  * `-O output_dir` : Output directory for extracted images.\n  * `-c encoding` : Output encoding. (default: utf-8)\n  * `-s scale` : Output scale.\n  * `-R rotation` : Rotates the page in degree.\n  * `-Y normal|loose|exact` : Specifies the layout mode. (only for HTML output.)\n  * `-p pagenos` : Processes certain pages only.\n  * `-m maxpages` : Limits the number of maximum pages to process.\n  * `-S` : Strips control characters.\n  * `-C` : Disables resource caching.\n  * `-n` : Disables layout analysis.\n  * `-A` : Applies layout analysis for all texts including figures.\n  * `-V` : Automatically detects vertical writing.\n  * `-M char_margin` : Speficies the char margin.\n  * `-W word_margin` : Speficies the word margin.\n  * `-L line_margin` : Speficies the line margin.\n  * `-F boxes_flow` : Speficies the box flow ratio.\n  * `-d` : Turns on Debug output.\n\n### dumppdf.py\n\ndumppdf.py is used for debugging PDFs.\nIt dumps all the internal contents in pseudo-XML format.\n\n    > dumppdf.py [-P password] [-a] [-p pageid] [-i objid]\n                 [-o output] [-r|-b|-t] [-T] [-O directory] [-d]\n                 input.pdf ...\n\n  * `-P password` : PDF password.\n  * `-a` : Extracts all objects.\n  * `-p pageid` : Extracts a Page object.\n  * `-i objid` : Extracts a certain object.\n  * `-o output` : Output file name.\n  * `-r` : Raw mode. Dumps the raw compressed/encoded streams.\n  * `-b` : Binary mode. Dumps the uncompressed/decoded streams.\n  * `-t` : Text mode. Dumps the streams in text format.\n  * `-T` : Tagged mode. Dumps the tagged contents.\n  * `-O output_dir` : Output directory for extracted streams.\n\n## TODO\n\n  * Replace STRICT variable with something better.\n  * Improve the debugging functions.\n  * Use logging module instead of sys.stderr.\n  * Proper test cases.\n  * PEP-8 and PEP-257 conformance.\n  * Better documentation.\n  * Crypto stream filter support.\n\n\n## Related Projects\n\n  * <a href=\"http://pybrary.net/pyPdf/\">pyPdf</a>\n  * <a href=\"http://www.foolabs.com/xpdf/\">xpdf</a>\n  * <a href=\"http://pdfbox.apache.org/\">pdfbox</a>\n  * <a href=\"http://mupdf.com/\">mupdf</a>\n"
+        },
+        {
+          "name": "cmaprsrc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pdfminer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "samples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 2.212890625,
+          "content": "#!/usr/bin/env python\nfrom setuptools import setup\nfrom setuptools.command.install import install\nfrom pdfminer import __version__\n\nclass install_cmap(install):\n\n    def run(self):\n        import os.path\n        import pdfminer\n        from pdfminer.cmapdb import convert_cmap\n        outdir = os.path.join(os.path.join(self.install_lib, 'pdfminer'), 'cmap')\n        print('installing cmap: %r...' % outdir)\n        os.makedirs(outdir, exist_ok=True)\n        convert_cmap(\n            outdir, 'Adobe-CNS1',\n            {'B5':'cp950', 'UniCNS-UTF8':'utf-8'},\n            ['cmaprsrc/cid2code_Adobe_CNS1.txt'])\n        convert_cmap(\n            outdir, 'Adobe-GB1',\n            {'GBK-EUC':'cp936', 'UniGB-UTF8':'utf-8'},\n            ['cmaprsrc/cid2code_Adobe_GB1.txt'])\n        convert_cmap(\n            outdir, 'Adobe-Japan1',\n            {'RKSJ':'cp932', 'EUC':'euc-jp', 'UniJIS-UTF8':'utf-8'},\n            ['cmaprsrc/cid2code_Adobe_Japan1.txt'])\n        convert_cmap(\n            outdir, 'Adobe-Korea1',\n            {'KSC-EUC':'euc-kr', 'KSC-Johab':'johab', 'KSCms-UHC':'cp949',\n             'UniKS-UTF8':'utf-8'},\n            ['cmaprsrc/cid2code_Adobe_Korea1.txt'])\n        install.run(self)\n        return\n\nwith open('README.md') as fp:\n    long_description = fp.read()\n\nsetup(\n    cmdclass = { 'install': install_cmap },\n    name = 'pdfminer',\n    version = __version__,\n    description = 'PDF parser and analyzer',\n    long_description = long_description,\n    long_description_content_type = 'text/markdown',\n    license = 'MIT',\n    author = 'Yusuke Shinyama',\n    author_email = 'yusuke@shinyama.jp',\n    url = 'http://github.com/euske/pdfminer',\n    packages = [\n        'pdfminer',\n    ],\n    python_requires = '>=3.6',\n    install_requires = [\n        'pycryptodome',\n    ],\n    scripts = [\n        'tools/pdf2txt.py',\n        'tools/dumppdf.py',\n    ],\n    keywords = [\n        'pdf parser',\n        'pdf converter',\n        'layout analysis',\n        'text mining'\n    ],\n    classifiers = [\n        'Development Status :: 4 - Beta',\n        'Environment :: Console',\n        'Intended Audience :: Developers',\n        'Intended Audience :: Science/Research',\n        'License :: OSI Approved :: MIT License',\n        'Topic :: Text Processing',\n    ],\n)\n"
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

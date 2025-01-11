@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736568193169,
+    "page": 29,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "qw3rtman/git-fire",
+      "stars": 4359,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 - 2019 Nimit Kalra <nimit@utexas.edu>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.916015625,
+          "content": "# `git-fire` :fire:\n\n### ![Inspiration](https://i.imgur.com/3POtveC.jpg)\n\n`git-fire` is a Git plugin that **helps in the event of an emergency** by switching to the repository's root directory, adding all current files, committing, and pushing commits and all stashes to a new branch (to prevent merge conflicts).\n\n**Alias it to [`git out`](https://np.reddit.com/r/ProgrammerHumor/comments/3nc531/in_case_of_fire/cvmxnv1) or [`git going`](https://np.reddit.com/r/ProgrammerHumor/comments/3nc531/in_case_of_fire/cvmsajb) for comedic effect.**\n\n- `git config --global alias.out fire`\n- `git config --global alias.going fire`\n\n## What It Does\n\n- changes directory to root directory of the repository\n- creates new branch `fire-<current branch>-<user email>-<seconds since epoch>`\n- adds all files\n- commits with `\"Fire! Branch <new branch>\"` or custom message\n- pushes commits to remote\n- pushes all stashes to remote\n\n## Usage\n\n`git-fire <message>`\n\n`<message>` is optional. If not specified, `\"Fire! Branch fire-<current branch>-<user email>-<seconds since epoch>\"` will be used.\n\n## Installation\n\nJust copy `git-fire` to your `$PATH` and ensure it is an executable (`chmod +x git-fire`) and you're good to go. 👍\n\n`git-fire` is also available via [`npm`](https://npmjs.com/git-fire). Just run `npm install -g git-fire`, which will copy the `git-fire` binary to your `$PATH`.\n\nAlso make sure you have Git installed.\n\n## Disclaimer\n\nYour life is always more valuable than any code. You should leave the building immediately in a true emergency.\n\nCode can be re-written, but humans cannot.\n\n## Credit\n\nOriginally seen on [Hackathon Hackers Facebook](https://www.facebook.com/groups/hackathonhackers) group.\n\n[Original Reddit post](https://www.reddit.com/r/ProgrammerHumor/comments/3nc531/in_case_of_fire/)\n\n[Image source](https://instagram.com/p/8N8J8wRgPq/) | [Printable Image](http://imgur.com/IiAdxbB) | Artist: [Ákos Szokodi](https://github.com/szokodiakos)\n"
+        },
+        {
+          "name": "git-fire",
+          "type": "blob",
+          "size": 1.482421875,
+          "content": "#!/usr/bin/env sh\n\n# Setup.\nVERSION=\"0.2.3\"\n\nversion() {\n\tprintf \"git-fire version %s\\n\" \"$VERSION\"\n\n\tgit --version\n}\n\n# Helpers.\ncurrent_branch() {\n\tbasename \"$(git symbolic-ref HEAD)\"\n}\n\ncurrent_epoch() {\n\tdate +%s\n}\n\nuser_email() {\n\tgit config user.email\n}\n\nnew_branch() {\n\techo \"fire-${1:-$(current_branch)}-$(user_email)-$(current_epoch)\"\n}\n\nfire() {\n\tinitial_branch=\"$(current_branch)\"\n\n\tgit checkout -b \"$(new_branch)\"\n\n\t# cd to git root directory\n\tcd \"$(git rev-parse --show-toplevel)\"\n\n\tgit add -A\n\n\tif [ -z \"$1\" ]; then\n\t\tmessage=\"Fire! Branch $(current_branch).\"\n\telse\n\t\tmessage=\"$*\"\n\tfi\n\n\tgit commit -m \"$message\" --no-verify\n\n\tfor remote in $(git remote); do\n\t\tgit push --no-verify --set-upstream \"${remote}\" \"$(current_branch)\" || true\n\tdone\n\n  if [ \"$(git stash list)\" != '' ]; then\n\t  for sha in $(git rev-list -g stash); do\n\t\t  git push --no-verify origin \"$sha\":refs/heads/\"$(current_branch $initial_branch)\"-stash-\"$sha\"\n\t  done\n  fi\n\n\tprintf \"\\n\\nLeave building!\\n\"\n}\n\ndisplay_help() {\n\tcat <<-EOF\n\n  usage:\n    git fire [options] [COMMAND] [args]\n\n  commands:\n    git fire                        Add, commit, and push to remote in case of a fire\n    git fire <message>              Execute git fire with <message> for commit message\n\n\n  options:\n    -V, --version                   Output current version of git-fire\n    -h, --help                      Display this help information\n\nEOF\n\texit 0\n}\n\n\ncase $1 in\n\t-V|--version) version; exit 0 ;;\n\t-h|--help) display_help; exit 0 ;;\nesac\n\nfire \"$@\"\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.671875,
+          "content": "{\n  \"author\": {\n    \"name\": \"Nimit Kalra\",\n    \"email\": \"me@nimit.io\",\n    \"url\": \"http://nimit.io\"\n  },\n  \"bin\": {\n    \"git-fire\": \"git-fire\"\n  },\n  \"bugs\": {\n    \"url\": \"https://github.com/qw3rtman/git-fire/issues\"\n  },\n  \"bundleDependencies\": false,\n  \"deprecated\": false,\n  \"description\": \"Save Your Code in an Emergency\",\n  \"homepage\": \"https://github.com/qw3rtman/git-fire\",\n  \"keywords\": [\n    \"git\",\n    \"git-fire\",\n    \"git\",\n    \"fire\",\n    \"emergency\",\n    \"plugin\",\n    \"extension\"\n  ],\n  \"license\": \"MIT\",\n  \"name\": \"git-fire\",\n  \"preferGlobal\": true,\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/qw3rtman/git-fire.git\"\n  },\n  \"version\": \"0.2.3\"\n}\n"
+        }
+      ]
+    }
+  ]
+}
