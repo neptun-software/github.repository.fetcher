@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736562167719,
+    "page": 987,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "yaronn/wopr",
+      "stars": 3055,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0234375,
+          "content": "p.js\nnode_modules\np.txt\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "/server\n/test\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.533203125,
+          "content": "# WOPR\r\n\r\nWOPR is a simple markup language for creating [rich terminal reports](https://github.com/yaronn/blessed-contrib), presentations and infographics.\r\n\r\nPut [a report](https://raw.githubusercontent.com/yaronn/wopr/master/examples/sample.xml) on the web (e.g. gist) and view it via curl:\r\n\r\n`````bash\r\n$> curl -N tty.zone/\\[0-2\\]\\?auto\\&cols=$((COLUMNS))\r\n`````\r\n(If you experience firewall issues replace tty.zone with ec2-23-21-64-152.compute-1.amazonaws.com or use a [local viewer](https://github.com/yaronn/wopr#viewing-reports))\r\n\r\nCreated by Yaron Naveh ([@YaronNaveh](https://twitter.com/YaronNaveh))\r\n\r\n![](./examples/images/charts.png \"term\")\r\n![](./examples/images/map.png \"term\")\r\n\r\n##Writing your first terminal report##\r\n\r\nHere is a simple report with a bar chart:\r\n\r\n`````xml\r\n<document>\r\n  <page>\r\n    <item col=\"0\" row=\"0\" colSpan=\"5\" rowSpan=\"4\">\r\n      <bar maxHeight=\"5\" data-titles=\"A,B,C\" data-data=\"2,5,3\" />\r\n    </item>\r\n  </page>\r\n</document>\r\n`````\r\n\r\nYou have 3 options to view this report:\r\n\r\n**Option 1: POST it to the wopr online viewer**\r\n\r\n`````bash\r\n$> curl --data '<document><page><item col=\"0\" row=\"0\" colSpan=\"5\" rowSpan=\"4\"><bar maxHeight=\"5\" data-titles=\"A,B,C\" data-data=\"2,5,3\" /></item></page></document>' tty.zone\\?cols=$((COLUMNS))\r\n`````\r\n\r\nIf you experience firewall issues replace tty.zone with ec2-23-21-64-152.compute-1.amazonaws.com.\r\n\r\n**Note:** The online viewer is a reference implementation. Do not send it secret data but rather create [your own](https://github.com/yaronn/wopr/tree/master/server).\r\n\r\n**Option 2: POST it from external url**\r\n\r\nSave the report content in some url (e.g. gist) and then:\r\n\r\n`````bash\r\n$> a=$(curl -s https://gist.githubusercontent.com/yaronn/e6eec6d0e7adac63c83f/raw/50aca544d26a32aa189e790635c8679067017948/gistfile1.xml); curl --data \"$a\" tty.zone\\?cols=$((COLUMNS))\r\n`````\r\n\r\n(note you need the gist raw url)\r\n\r\nIf you experience firewall issues replace tty.zone with ec2-23-21-64-152.compute-1.amazonaws.com.\r\n\r\n**Note:** The online viewer is a reference implementation. Do not send it secret data but rather create [your own](https://github.com/yaronn/wopr/tree/master/server).\r\n\r\n\r\n**Option 3: Via the local viewer**\r\n\r\nSave the report xml to report.xml and then:\r\n\r\n`````bash\r\n$> npm install -g wopr\r\n$> wopr report.xml\r\n`````\r\n\r\nNote the local viewer does not send anything online and does not require network.\r\n\r\n![](./examples/images/charts.png \"term\")\r\n\r\n##Markup Basics#\r\n\r\n**Pages**\r\n\r\nA document is a set of pages:\r\n\r\n`````xml\r\n<document>\r\n  <page>\r\n    ...\r\n  </page>\r\n  <page>\r\n    ...\r\n  </page>\r\n</document>\r\n`````\r\n\r\n**Layout**\r\n\r\nA page is a 12x12 grid in which you can position different widgets:\r\n\r\n`````xml\r\n<document>\r\n  <page>\r\n    <item col=\"0\" row=\"0\" colSpan=\"3\" rowSpan=\"3\">\r\n      <bar maxHeight=\"5\" data-titles=\"A,B,C\" data-data=\"2,5,3\" />\r\n    </item>\r\n    <item col=\"5\" row=\"9\" colSpan=\"1\" rowSpan=\"1\">\r\n      <box content=\"some text\" />\r\n    </item>\r\n  </page>\r\n</document>\r\n`````\r\n\r\nHere, the bar widget is in the first column and row (0-based indexing) and spans three columns and rows.\r\nThe box element is in the same page but in a different position.\r\n\r\n\r\n**Widgets**\r\n\r\nThe available widgets are the ones that exist in the [blessed](https://github.com/chjj/blessed) and [blessed-contrib](https://github.com/yaronn/blessed-contrib) projects.\r\nYou can infer the xml representation of a javascript widget using a simple convention. Assume that you would instantiate some blessed widget with this javascript:\r\n\r\n`````javascript\r\nblessed.widget({ string: \"5\"\r\n               , int: 1\r\n               , intArray: [1,2,3]\r\n               , stringArray: [\"a\", \"b\", \"c\"]\r\n               , multiArray: [ [1,2,3], [4,5,6] ]\r\n               , complexArray: [ {a: 1, b: [1,2] }, {a: 3, b: [3,4]} ]\r\n               , object: { innerProp: 1, multiArray: [ [1,2], [3,4] ] }\r\n})\r\n`````\r\n\r\nThen here is how you would represent it in xml:\r\n    \r\n`````xml\r\n<widget string=\"5\" int=\"1\" intArray=\"1,2,3\" stringArray=\"a,b,c\" object-innerProp=\"1\">\r\n  <multiArray>\r\n    1,2,3\r\n    4,5,6\r\n  </multiArray>\r\n  <object-multiArray>\r\n    1,2\r\n    3,4\r\n  </object-multiArray>\r\n  <complexArray>\r\n    <m a=\"1\" b=\"1,2\" />\r\n    <m a=\"3\" b=\"3,4\" />\r\n  </complexArray>\r\n</widget>\r\n`````\r\n\r\nYou can also look at the [demo xml](https://raw.githubusercontent.com/yaronn/wopr/master/examples/sample.xml) to get more samples.\r\n\r\n![](./examples/images/map.png \"term\")\r\n\r\n##Viewing Reports##\r\n\r\n\r\nDepending on how you use a report, you have a few ways to view it. On Windows you will probably only be able to use the third option and need to [install the fonts](http://webservices20.blogspot.com/2015/04/running-terminal-dashboards-on-windows.html) for best view.\r\n\r\n**Option 1: POST it to the wopr online viewer**\r\n\r\n`````bash\r\n$> curl --data '<document><page><item col=\"0\" row=\"0\" colSpan=\"5\" rowSpan=\"4\"><bar maxHeight=\"5\" data-titles=\"A,B,C\" data-data=\"2,5,3\" /></item></page></document>' tty.zone\\?cols=$((COLUMNS))\r\n`````\r\n\r\nIf you experience firewall issues replace tty.zone with ec2-23-21-64-152.compute-1.amazonaws.com.\r\n\r\n**Option 2: POST it from external url**\r\n\r\nSave the report content in some url (e.g. gist) and then:\r\n\r\n`````bash\r\n$> a=$(curl -s https://gist.githubusercontent.com/yaronn/e6eec6d0e7adac63c83f/raw/50aca544d26a32aa189e790635c8679067017948/gistfile1.xml); curl --data \"$a\" tty.zone\\?cols=$((COLUMNS))\r\n`````\r\n\r\n(note you need the gist raw url)\r\n\r\nIf you experience firewall issues replace tty.zone with ec2-23-21-64-152.compute-1.amazonaws.com.\r\n\r\nTip: If you use a url shortener (e.g. bit.ly) add the -L flag to curl to follow redirects.\r\n\r\n**Option 3: via the local viewer**\r\n\r\nSave the report xml to report.xml and then:\r\n\r\n`````bash\r\n$> npm install -g wopr\r\n$> wopr report.xml\r\n`````\r\n\r\nNote the local viewer does not send anything online and does not require network.\r\n\r\n**Tip:** Maximize the terminal before viewing the report for best viewing experience  \r\n**Tip:** If you <kbd>CTRL+C</kbd> in the middle or rendering your cursoe might disappear. Restore it by running again and letting the render complete or with `$> echo '\\033[?25h'`\r\n\r\n**View customization**\r\nWhen using the online reports, you might need to adjust the slides size based on your font / resolution or use non-xterm terminal. tty.zone supports the following query params:\r\n\r\n`````bash\r\ncurl -N tty.zone\\?\\&cols=200\\&rows=50\\&terminal=xterm\r\n`````\r\n\r\nYou can infer them automatically from your environment:\r\n\r\n`````bash\r\ncurl -N tty.zone\\?\\&cols=$((COLUMNS))\\&rows=$((LINES-5))\\&terminal=${TERM}\r\n`````\r\n\r\nIt is best to escape all special characters (e.g. ? &) as seen in the above samples, since some shells will require this (zsh).\r\n\r\n\r\n**Pages**\r\n\r\nWhen viewing a report with the local viewer you can advance slides with the Return or Space keys.\r\nWhen using the online viewer you have 2 options:\r\n\r\n**Option 1:** Manually advance slides with Return or Space:\r\n\r\n`````bash\r\np=0; while true; do curl tty.zone/$((p++))\\?cols=$((COLUMNS)); read; done\r\n`````\r\n\r\n**Option 2:** Slides advance automatically every 5 seconds:\r\n\r\n`````bash\r\ncurl -N tty.zone/\\[0-2\\]\\?auto\\&cols=$((COLUMNS))\r\n`````\r\n\r\nWhere 0 is the index of the first slide and 2 of the last slide. Keep the brackets in the url (they are not to express optional argument) and escape them as in the above sample.\r\n\r\nTip: disable curl buffering with the -N flag\r\n\r\nYou can also view a specific slide (#4 in this case):\r\n\r\n`````bash\r\ncurl --data '<document>...</document>' tty.zone/4\\?cols=$((COLUMNS))\r\n`````\r\n\r\n##License##\r\nMIT\r\n\r\n\r\n## More Information\r\nCreated by Yaron Naveh ([twitter](http://twitter.com/YaronNaveh), [blog](http://webservices20.blogspot.com/))\r\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.58203125,
+          "content": "{\n  \"name\": \"wopr\",\n  \"version\": \"0.0.5\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/yaronn/wopr.git\"\n  },\n  \"author\": \"Yaron Naveh (yaronn01@gmail.com)\",\n  \"bin\": {\n    \"wopr\": \"./bin/presenter-cli.js\"\n  },\n  \"license\": \"ISC\",\n  \"dependencies\": {\n    \"blessed\": \"0.1.11\",\n    \"blessed-contrib\": \"2.3.1\",\n    \"xml2js\": \"^0.4.9\"\n  },\n  \"homepage\": \"https://github.com/yaronn/wopr\",\n  \"directories\": {\n    \"test\": \"test\"\n  },\n  \"devDependencies\": {},\n  \"description\": \"\"\n}\n"
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

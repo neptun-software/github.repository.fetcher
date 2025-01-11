@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736562130770,
+    "page": 934,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cer/event-sourcing-examples",
+      "stars": 3124,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.384765625,
+          "content": "*.iml\n*.ipr\n*.iws\n.DS_Store\n.cache\n.classpath\n.gradle\n.idea\n.project\n.scala_dependencies\n.settings\n.springBeans\nbin\nbuild\nbuild*.log\nclasses\ngenjs\nnode_modules\nnpm-debug.log\ntarget\nout\napp-staging\napigateway/reports\nbrowserapp/reports\nloginapp/reports\nlocal_developer_config\n\njs-frontend/node_modules\njs-frontend/build\njs-frontend/dist\njs-frontend/dist-intermediate\n\n\n\n/web/web.log\n*.log\n*.pid\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 0.5810546875,
+          "content": "Copyright 2015 Chris Richardson Consulting, Inc. All rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.7041015625,
+          "content": "# Event-Sourcing+CQRS example application\n\nThis example application is the money transfer application described in my talk [Building and deploying microservices with event sourcing, CQRS and Docker](http://plainoldobjects.com/presentations/building-and-deploying-microservices-with-event-sourcing-cqrs-and-docker/).\nThis talk describes a way of architecting highly scalable and available applications that is based on microservices, polyglot persistence,\nevent sourcing (ES) and command query responsibility segregation (CQRS).\nApplications consist of loosely coupled components that communicate using events.\nThese components can be deployed either as separate services or packaged as a monolithic application for simplified development and testing.\n\n# Built using the Eventuate platform\n\n<a href=\"http://eventuate.io\"><img src=\"http://eventuate.io/i/logo.gif\"> </a>\n\nRead the <a href=\"http://eventuate.io\">overview</a> or look at the other <a href=\"http://eventuate.io/exampleapps.html\">example applications</a>.\n\n# Big ideas\n\nThis example illustrates several important concepts:\n\n* How to decompose an application into microservices - as described below the application consists of several services.\nFor example, bank accounts are managed by one service, money transfers by another service.\n\n* Using an event-driven architecture to achieve data consistency - rather than using traditional distributed transaction to maintain database consistency this application uses an eventually consistent, event-driven approach.\n\n* Using event sourcing to implement the event-driven architecture - the domain logic consists of Domain-Driven Design (DDD) aggregates that using event sourcing.\n\n* Using Command Query Responsibility Segregation (CQRS) - update requests (HTTP POSTs and PUTs) and view requests (HTTP GETs) are handled by separate services.\n\n* How event sourcing enables deployment flexibility - the application can either be deployed as a monolith or as microservices.\n\n# About the example application\n\nThis example application provides a REST API for creating and viewing bank accounts and transferring money between them.\n\nThe following diagram shows the architecture:\n\n![Money transfer architecture](https://github.com/cer/event-sourcing-examples/wiki/i/applicationarchitecture.png)\n\nThere are the following  services:\n\n* Customers Service - REST API for creating customers\n* Accounts Service - REST API for creating accounts\n* Transactions Service - REST API for transferring money\n* Customers View Service  - subscribes to events and updates a MongoDB View, and provides an API for retrieving customers\n* Accounts View Service - subscribes to events and updates a MongoDB View, and provides an API for retrieving accounts\n\nThere is also an [API gateway](http://microservices.io/patterns/apigateway.html) service that acts as a Facade in front of the services.\n\n# About the examples\n\nThere are currently the following versions of the example application:\n\n  * java-spring - a Java and Spring Boot example\n  * scala-spring - a Scala and Spring Boot example (NOTE: this version is lagging the Java Spring and hasn't been updated in a longtime.)\n\nOther examples will be added shortly including a Scala/Play example.\n\nFor more information, please see the [wiki](../../wiki)\n\n# About the Eventuate Platform\n\nThe application is built using [Eventuate](http://eventuate.io/), which is an application platform for writing transactional microservices.\nIt provides a simple yet powerful event-driven programming model that is based on event sourcing and Command Query Responsibility Segregation (CQRS).\nEventuate solves the distributed data management problems inherent in a microservice architecture.\nIt consists of a scalable, distributed event store and client libraries for various languages and frameworks including Java, Scala, and the Spring framework.\n\nThere are two versions of Eventuate:\n\n* [Eventuate SaaS server](http://eventuate.io/usingeventuate.html) - this is a full featured event store that is hosted on AWS\n* [Eventuate Local](http://eventuate.io/usingeventuate.html) - an open-source event store that is built using MySQL and Kafka\n\nThere is also an embedded test event store, which is great for integration tests.\n\n# Building and running the microservices\n\nThis is a Gradle project.\nHowever, you do not need to install Gradle since it will be downloaded automatically.\nYou just need to have Java 8 installed.\n\nThe details of how to build and run the services depend slightly on whether you are using Eventuate SaaS or Eventuate Local.\n\n## Building and running using Eventuate SaaS\n\nFirst, must [sign up to get your credentials](https://signup.eventuate.io/) in order to get free access to the SaaS version.\n\nNext, build the application\n\n```\ncd java-spring\n./gradlew assemble\n```\n\nNext, you can launch the services using [Docker Compose](https://docs.docker.com/compose/):\n\n```\ndocker-compose up -d\n```\n\nFinally, you can open the home page, which is served up by the API Gateway: `http://$DOCKER_HOST_IP:8080`\n\nNote: `DOCKER_HOST_IP` is the IP address of the machine where Docker is running, e.g. the IP address of the VirtualBox VM.\n\n## Building and running using Eventuate Local\n\nFirst, build the application\n\n```\ncd java-spring\n./gradlew assemble -P eventuateDriver=local\n```\n\nNext, launch the services using [Docker Compose](https://docs.docker.com/compose/):\n\n```\nexport DOCKER_HOST_IP=...\ndocker-compose -f docker-compose-eventuate-local.yml up -d\n```\n\nNote: You need to set `DOCKER_HOST_IP` before running Docker Compose.\nThis must be an IP address or resolvable hostname.\nIt cannot be `localhost`.\nSee this [guide to setting `DOCKER_HOST_IP`](http://eventuate.io/docs/usingdocker.html) for more information.\n\nFinally, you can open the home page, which is served up by the API Gateway: `http://$DOCKER_HOST_IP:8080`\n"
+        },
+        {
+          "name": "_build-and-test-all.sh",
+          "type": "blob",
+          "size": 1.5234375,
+          "content": "#! /bin/bash\n\nset -e\n\nif [ -z \"$DOCKER_HOST_IP\" ] ; then\n  if [ -z \"$DOCKER_HOST\" ] ; then\n    export DOCKER_HOST_IP=`hostname`\n  else\n    echo using ${DOCKER_HOST?}\n    XX=${DOCKER_HOST%\\:*}\n    export DOCKER_HOST_IP=${XX#tcp\\:\\/\\/}\n  fi\n  echo set DOCKER_HOST_IP $DOCKER_HOST_IP\nfi\n\nDIR=\"$( cd \"$( dirname \"${BASH_SOURCE[0]}\" )\" && pwd )\"\n\nDOCKER_COMPOSE=\"docker-compose -p event-sourcing-examples\"\n\nif [ \"$1\" = \"-f\" ] ; then\n  shift;\n  DOCKER_COMPOSE=\"$DOCKER_COMPOSE -f ${1?}\"\n  shift\nfi\n\nif [ \"$1\" = \"--use-existing\" ] ; then\n  shift;\nelse\n  ${DOCKER_COMPOSE?} stop\n  ${DOCKER_COMPOSE?} rm -v --force\nfi\n\nNO_RM=false\n\nif [ \"$1\" = \"--no-rm\" ] ; then\n  NO_RM=true\n  shift\nfi\n\n${DOCKER_COMPOSE?} up -d mongodb $EXTRA_INFRASTRUCTURE_SERVICES\n\n\nif [ -z \"$SPRING_DATA_MONGODB_URI\" ] ; then\n  export SPRING_DATA_MONGODB_URI=mongodb://${DOCKER_HOST_IP?}/mydb\n  echo Set SPRING_DATA_MONGODB_URI $SPRING_DATA_MONGODB_URI\nfi\n\nexport SERVICE_HOST=$DOCKER_HOST_IP\n\n./gradlew $BUILD_AND_TEST_ALL_EXTRA_GRADLE_ARGS $* build -x :e2e-test:test\n\nif [ -z \"$EVENTUATE_LOCAL\" ] && [ -z \"$EVENTUATE_API_KEY_ID\" -o -z \"$EVENTUATE_API_KEY_SECRET\" ] ; then\n  echo You must set EVENTUATE_API_KEY_ID and  EVENTUATE_API_KEY_SECRET\n  exit -1\nfi\n\n${DOCKER_COMPOSE?} build\n\n${DOCKER_COMPOSE?} up -d\n\n$DIR/wait-for-services.sh $DOCKER_HOST_IP 8080 8081 8082 8083 8084\n\nset -e\n\n./gradlew $BUILD_AND_TEST_ALL_EXTRA_GRADLE_ARGS -a $* :e2e-test:cleanTest :e2e-test:test -P ignoreE2EFailures=false\n\nif [ $NO_RM = false ] ; then\n  ${DOCKER_COMPOSE?} stop\n  ${DOCKER_COMPOSE?} rm -v --force\nfi\n"
+        },
+        {
+          "name": "java-spring",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "js-frontend",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "prebuilt-web-client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scala-spring",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wait-for-docker-services.sh",
+          "type": "blob",
+          "size": 0.205078125,
+          "content": "while [[ true ]]; do\n\tnc -z -w 4 ${SERVICE_HOST?} 8080 && nc -z -w 4 ${SERVICE_HOST?} 8081 && nc -z -w 4 ${SERVICE_HOST?} 8082\n\tif [[ \"$?\" -eq \"0\" ]]; then\n\t\techo connected\n\t\tbreak\n\tfi\n\techo -n . \n\tsleep 1\ndone"
+        },
+        {
+          "name": "wait-for-services.sh",
+          "type": "blob",
+          "size": 0.46484375,
+          "content": "#! /bin/bash\n\ndone=false\n\nhost=$1\nshift\nports=$*\n\nwhile [[ \"$done\" = false ]]; do\n\tfor port in $ports; do\n\t\tcurl -q http://${host}:${port}/health >& /dev/null\n\t\tif [[ \"$?\" -eq \"0\" ]]; then\n\t\t\tdone=true\n\t\telse\n\t\t\tdone=false\n\t\t\tbreak\n\t\tfi\n\tdone\n\tif [[ \"$done\" = true ]]; then\n\t\techo connected\n\t\tbreak;\n  fi\n\t#curl -q http://${1?}:8080/health >& /dev/null && curl -q http://${1?}:8081/health >& /dev/null && curl -q http://${1?}:8082/health >& /dev/null\n\techo -n .\n\tsleep 1\ndone\n"
+        }
+      ]
+    }
+  ]
+}
