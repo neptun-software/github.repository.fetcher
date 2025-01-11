@@ -1,0 +1,121 @@
+{
+  "metadata": {
+    "timestamp": 1736563078520,
+    "page": 722,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kevana/ui-for-docker",
+      "stars": 5091,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0078125,
+          "content": "*\n!dist\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.08203125,
+          "content": "logs/*\n!.gitkeep\n*.esproj/*\nnode_modules\nbower_components\n.idea\ndist\ndockerui\n*.iml\n"
+        },
+        {
+          "name": ".godir",
+          "type": "blob",
+          "size": 0.0087890625,
+          "content": "dockerui\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.0810546875,
+          "content": "FROM scratch\n\nCOPY dist /\n\nVOLUME /data\n\nEXPOSE 9000\nENTRYPOINT [\"/ui-for-docker\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.107421875,
+          "content": "UI For Docker: Copyright (c) 2013-2016 Michael Crosby (crosbymichael.com), Kevan Ahlquist (kevanahlquist.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Procfile",
+          "type": "blob",
+          "size": 0.046875,
+          "content": "web: dockerui -p \":$PORT\" -e \"$DOCKER_ENDPOINT\"\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.6728515625,
+          "content": "## UI For Docker\n\n>This repo is deprecated. Development continues at Portainer: [github.com/portainer/portainer](https://github.com/portainer/portainer)\n\n\n[![Join the chat at https://gitter.im/kevana/ui-for-docker](https://badges.gitter.im/kevana/ui-for-docker.svg)](https://gitter.im/kevana/ui-for-docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n\n![Containers](/containers.png)\nUI For Docker is a web interface for the Docker Remote API.  The goal is to provide a pure client side implementation so it is effortless to connect and manage docker.\n\n![Container](/container.png)\n\n\n### Goals\n* Minimal dependencies - I really want to keep this project a pure html/js app.\n* Consistency - The web UI should be consistent with the commands found on the docker CLI.\n\n### Quickstart\n1. Run: `docker run -d -p 9000:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker`\n\n2. Open your browser to `http://<dockerd host ip>:9000`\n\n\n\nBind mounting the Unix socket into the UI For Docker container is much more secure than exposing your docker daemon over TCP. The `--privileged` flag is required for hosts using SELinux. You should still secure your UI For Docker instance behind some type of auth. Directions for using Nginx auth are [here](https://github.com/kevana/ui-for-docker/wiki/UI-for-Docker-with-Nginx-HTTP-Auth).\n\n### Specify socket to connect to Docker daemon\n\nBy default UI For Docker connects to the Docker daemon with`/var/run/docker.sock`. For this to work you need to bind mount the unix socket into the container with `-v /var/run/docker.sock:/var/run/docker.sock`.\n\nYou can use the `-H` flag to change this socket:\n\n    # Connect to a tcp socket:\n    $ docker run -d -p 9000:9000 --privileged uifd/ui-for-docker -H tcp://127.0.0.1:2375\n\n### Change address/port UI For Docker is served on\nUI For Docker listens on port 9000 by default. If you run UI For Docker inside a container then you can bind the container's internal port to any external address and port:\n\n    # Expose UI For Docker on 10.20.30.1:80\n    $ docker run -d -p 10.20.30.1:80:9000 --privileged -v /var/run/docker.sock:/var/run/docker.sock uifd/ui-for-docker\n\n### Access a Docker engine protected via TLS\n\nEnsure that you have access to the CA, the TLS certificate and the TLS key used to access your Docker engine.  \n\nThese files will need to be named `ca.pem`, `cert.pem` and `key.pem` respectively. Store them somewhere on your disk and mount a volume containing these files inside the UI container:\n\n```\n$ docker run -d -p 9000:9000 uifd/ui-for-docker -v /path/to/certs:/certs -H tcp://my-docker-host.domain:2376 -tlsverify\n```\n\nIf you want to specify different names for the CA, certificate and public key respectively you can use the `-tlscacert`, `-tlscert` and `-tlskey`:\n\n```\n$ docker run -d -p 9000:9000 uifd/ui-for-docker -v /path/to/certs:/certs -H tcp://my-docker-host.domain:2376 -tlsverify -tlscacert /certs/myCA.pem -tlscert /certs/myCert.pem -tlskey /certs/myKey.pem\n```\n\n*Note*: Replace `/path/to/certs` to the path to the certificate files on your disk.\n\n### Check the [wiki](https://github.com/kevana/ui-for-docker/wiki) for more info about using UI For Docker\n\n### Stack\n* [Angular.js](https://github.com/angular/angular.js)\n* [Bootstrap](http://getbootstrap.com/)\n* [Gritter](https://github.com/jboesch/Gritter)\n* [Spin.js](https://github.com/fgnass/spin.js/)\n* [Golang](https://golang.org/)\n* [Vis.js](http://visjs.org/)\n\n\n### Todo:\n* Full repository support\n* Search\n* Push files to a container\n* Unit tests\n\n\n### License - MIT\nThe UI For Docker code is licensed under the MIT license.\n\n\n**UI For Docker:**\nCopyright (c) 2013-2016 Michael Crosby (crosbymichael.com), Kevan Ahlquist (kevanahlquist.com)\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use, copy,\nmodify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED,\nINCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE,\nARISING FROM, OUT OF OR IN CONNECTION WITH\nTHE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.90625,
+          "content": "{\n  \"name\": \"uifordocker\",\n  \"version\": \"0.11.0\",\n  \"homepage\": \"https://github.com/kevana/ui-for-docker\",\n  \"authors\": [\n    \"Michael Crosby <crosbymichael@gmail.com>\",\n    \"Kevan Ahlquist <ahlquistkd@gmail.com>\"\n  ],\n  \"description\": \"A web interface for the Docker Remote API.\",\n  \"keywords\": [\n    \"uifordocker\",\n    \"dockerui\",\n    \"docker\",\n    \"api\"\n  ],\n  \"license\": \"MIT\",\n  \"ignore\": [\n    \"**/.*\",\n    \"node_modules\",\n    \"bower_components\",\n    \"test\",\n    \"tests\"\n  ],\n  \"dependencies\": {\n    \"Chart.js\": \"1.0.2\",\n    \"angular\": \"1.3.15\",\n    \"angular-sanitize\": \"1.3.15\",\n    \"angular-bootstrap\": \"0.12.0\",\n    \"angular-mocks\": \"1.3.15\",\n    \"angular-oboe\": \"*\",\n    \"angular-resource\": \"1.3.15\",\n    \"angular-route\": \"1.3.15\",\n    \"angular-visjs\": \"0.0.7\",\n    \"bootstrap\": \"3.3.0\",\n    \"jquery\": \"1.11.1\",\n    \"jquery.gritter\": \"1.7.4\",\n    \"spin.js\": \"1.3\"\n  },\n  \"resolutions\": {\n    \"angular\": \"1.3.15\"\n  }\n}\n"
+        },
+        {
+          "name": "container.png",
+          "type": "blob",
+          "size": 104.5458984375,
+          "content": null
+        },
+        {
+          "name": "containers.png",
+          "type": "blob",
+          "size": 87.96484375,
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gruntFile.js",
+          "type": "blob",
+          "size": 11.0478515625,
+          "content": "module.exports = function (grunt) {\n\n    grunt.loadNpmTasks('grunt-contrib-concat');\n    grunt.loadNpmTasks('grunt-contrib-jshint');\n    grunt.loadNpmTasks('grunt-contrib-uglify');\n    grunt.loadNpmTasks('grunt-contrib-clean');\n    grunt.loadNpmTasks('grunt-contrib-copy');\n    grunt.loadNpmTasks('grunt-contrib-watch');\n    grunt.loadNpmTasks('grunt-recess');\n    grunt.loadNpmTasks('grunt-karma');\n    grunt.loadNpmTasks('grunt-html2js');\n    grunt.loadNpmTasks('grunt-shell');\n    grunt.loadNpmTasks('grunt-if');\n\n    // Default task.\n    grunt.registerTask('default', ['jshint', 'build', 'karma:unit']);\n    grunt.registerTask('build', [\n        'clean:app',\n        'if:binaryNotExist',\n        'html2js',\n        'concat',\n        'clean:tmpl',\n        'recess:build',\n        'copy'\n    ]);\n    grunt.registerTask('release', [\n        'clean:app',\n        'if:binaryNotExist',\n        'html2js',\n        'uglify',\n        'clean:tmpl',\n        //'jshint',\n        //'karma:unit',\n        'concat:index',\n        'recess:min',\n        'copy'\n    ]);\n    grunt.registerTask('test-watch', ['karma:watch']);\n    grunt.registerTask('run', ['if:binaryNotExist', 'build', 'shell:buildImage', 'shell:run']);\n    grunt.registerTask('runSwarm', ['if:binaryNotExist', 'build', 'shell:buildImage', 'shell:runSwarm']);\n    grunt.registerTask('run-dev', ['if:binaryNotExist', 'shell:buildImage', 'shell:run', 'watch:build']);\n\n    // Print a timestamp (useful for when watching)\n    grunt.registerTask('timestamp', function () {\n        grunt.log.subhead(Date());\n    });\n\n    var karmaConfig = function (configFile, customOptions) {\n        var options = {configFile: configFile, keepalive: true};\n        var travisOptions = process.env.TRAVIS && {browsers: ['Firefox'], reporters: 'dots'};\n        return grunt.util._.extend(options, customOptions, travisOptions);\n    };\n\n    // Project configuration.\n    grunt.initConfig({\n        distdir: 'dist',\n        pkg: grunt.file.readJSON('package.json'),\n        remoteApiVersion: 'v1.20',\n        banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - <%= grunt.template.today(\"yyyy-mm-dd\") %>\\n' +\n        '<%= pkg.homepage ? \" * \" + pkg.homepage + \"\\\\n\" : \"\" %>' +\n        ' * Copyright (c) <%= grunt.template.today(\"yyyy\") %> <%= pkg.author %>;\\n' +\n        ' * Licensed <%= _.pluck(pkg.licenses, \"type\").join(\", \") %>\\n */\\n',\n        src: {\n            js: ['app/**/*.js', '!app/**/*.spec.js'],\n            jsTpl: ['<%= distdir %>/templates/**/*.js'],\n            jsVendor: [\n                'bower_components/jquery/dist/jquery.js',\n                'assets/js/jquery.gritter.js', // Using custom version to fix error in minified build due to \"use strict\"\n                'bower_components/bootstrap/dist/js/bootstrap.js',\n                'bower_components/spin.js/spin.js',\n                'bower_components/vis/dist/vis.js',\n                'bower_components/Chart.js/Chart.js',\n                'bower_components/oboe/dist/oboe-browser.js',\n                'assets/js/legend.js' // Not a bower package\n            ],\n            specs: ['test/**/*.spec.js'],\n            scenarios: ['test/**/*.scenario.js'],\n            html: ['index.html'],\n            tpl: ['app/components/**/*.html'],\n            css: ['assets/css/app.css'],\n            cssVendor: [\n                'bower_components/bootstrap/dist/css/bootstrap.css',\n                'bower_components/jquery.gritter/css/jquery.gritter.css',\n                'bower_components/vis/dist/vis.css'\n            ]\n        },\n        clean: {\n            all: ['<%= distdir %>/*'],\n            app: ['<%= distdir %>/*', '!<%= distdir %>/ui-for-docker'],\n            tmpl: ['<%= distdir %>/templates']\n        },\n        copy: {\n            assets: {\n                files: [\n                    {dest: '<%= distdir %>/fonts/', src: '**', expand: true, cwd: 'bower_components/bootstrap/fonts/'},\n                    {\n                        dest: '<%= distdir %>/images/',\n                        src: ['**', '!trees.jpg'],\n                        expand: true,\n                        cwd: 'bower_components/jquery.gritter/images/'\n                    },\n                    {\n                        dest: '<%= distdir %>/img',\n                        src: [\n                            'network/downArrow.png',\n                            'network/leftArrow.png',\n                            'network/upArrow.png',\n                            'network/rightArrow.png',\n                            'network/minus.png',\n                            'network/plus.png',\n                            'network/zoomExtends.png'\n                        ],\n                        expand: true,\n                        cwd: 'bower_components/vis/dist/img'\n                    },\n                    {dest: '<%= distdir %>/ico', src: '**', expand: true, cwd: 'assets/ico'}\n                ]\n            }\n        },\n        karma: {\n            unit: {options: karmaConfig('test/unit/karma.conf.js')},\n            watch: {options: karmaConfig('test/unit/karma.conf.js', {singleRun: false, autoWatch: true})}\n        },\n        html2js: {\n            app: {\n                options: {\n                    base: '.'\n                },\n                src: ['<%= src.tpl %>'],\n                dest: '<%= distdir %>/templates/app.js',\n                module: '<%= pkg.name %>.templates'\n            }\n        },\n        concat: {\n            dist: {\n                options: {\n                    banner: \"<%= banner %>\",\n                    process: true\n                },\n                src: ['<%= src.js %>', '<%= src.jsTpl %>'],\n                dest: '<%= distdir %>/<%= pkg.name %>.js'\n            },\n            vendor: {\n                src: ['<%= src.jsVendor %>'],\n                dest: '<%= distdir %>/vendor.js'\n            },\n            index: {\n                src: ['index.html'],\n                dest: '<%= distdir %>/index.html',\n                options: {\n                    process: true\n                }\n            },\n            angular: {\n                src: ['bower_components/angular/angular.js',\n                    'bower_components/angular-sanitize/angular-sanitize.js',\n                    'bower_components/angular-route/angular-route.js',\n                    'bower_components/angular-resource/angular-resource.js',\n                    'bower_components/angular-bootstrap/ui-bootstrap-tpls.js',\n                    'bower_components/angular-oboe/dist/angular-oboe.js',\n                    'bower_components/angular-visjs/angular-vis.js'],\n                dest: '<%= distdir %>/angular.js'\n            }\n        },\n        uglify: {\n            dist: {\n                options: {\n                    banner: \"<%= banner %>\"\n                },\n                src: ['<%= src.js %>', '<%= src.jsTpl %>'],\n                dest: '<%= distdir %>/<%= pkg.name %>.js'\n            },\n            vendor: {\n                options: {\n                    preserveComments: 'some' // Preserve license comments\n                },\n                src: ['<%= src.jsVendor %>'],\n                dest: '<%= distdir %>/vendor.js'\n            },\n            angular: {\n                options: {\n                    preserveComments: 'some' // Preserve license comments\n                },\n                src: ['<%= concat.angular.src %>'],\n                dest: '<%= distdir %>/angular.js'\n            }\n        },\n        recess: { // TODO: not maintained, unable to preserve license comments, switch out for something better.\n            build: {\n                files: {\n                    '<%= distdir %>/<%= pkg.name %>.css': ['<%= src.css %>'],\n                    '<%= distdir %>/vendor.css': ['<%= src.cssVendor %>']\n                },\n                options: {\n                    compile: true,\n                    noOverqualifying: false // TODO: Added because of .nav class, rename\n                }\n            },\n            min: {\n                files: {\n                    '<%= distdir %>/<%= pkg.name %>.css': ['<%= src.css %>'],\n                    '<%= distdir %>/vendor.css': ['<%= src.cssVendor %>']\n                },\n                options: {\n                    compile: true,\n                    compress: true,\n                    noOverqualifying: false // TODO: Added because of .nav class, rename\n                }\n            }\n        },\n        watch: {\n            all: {\n                files: ['<%= src.js %>', '<%= src.specs %>', '<%= src.css %>', '<%= src.tpl %>', '<%= src.html %>'],\n                tasks: ['default', 'timestamp']\n            },\n            build: {\n                files: ['<%= src.js %>', '<%= src.specs %>', '<%= src.css %>', '<%= src.tpl %>', '<%= src.html %>'],\n                tasks: ['build', 'shell:buildImage', 'shell:run', 'shell:cleanImages']\n                /*\n                 * Why don't we just use a host volume\n                 * http.FileServer uses sendFile which virtualbox hates\n                 * Tried using a host volume with -v, copying files with `docker cp`, restating container, none worked\n                 * Rebuilding image on each change was only method that worked, takes ~4s per change to update\n                 */\n            }\n        },\n        jshint: {\n            files: ['gruntFile.js', '<%= src.js %>', '<%= src.specs %>', '<%= src.scenarios %>'],\n            options: {\n                curly: true,\n                eqeqeq: true,\n                immed: true,\n                latedef: true,\n                newcap: true,\n                noarg: true,\n                sub: true,\n                boss: true,\n                eqnull: true,\n                globals: {\n                    angular: false,\n                    '$': false\n                }\n            }\n        },\n        shell: {\n            buildImage: {\n                command: 'docker build --rm -t ui-for-docker .'\n            },\n            buildBinary: {\n                command: [\n                    'docker run --rm -v $(pwd)/api:/src centurylink/golang-builder',\n                    'shasum api/ui-for-docker > ui-for-docker-checksum.txt',\n                    'mkdir -p dist',\n                    'mv api/ui-for-docker dist/'\n                ].join(' && ')\n            },\n            run: {\n                command: [\n                    'docker stop ui-for-docker',\n                    'docker rm ui-for-docker',\n                    'docker run --privileged -d -p 9000:9000 -v /tmp/ui-for-docker:/data -v /var/run/docker.sock:/var/run/docker.sock --name ui-for-docker ui-for-docker -d /data'\n                ].join(';')\n            },\n            runSwarm: {\n                command: [\n                    'docker stop ui-for-docker',\n                    'docker rm ui-for-docker',\n                    'docker run --net=host -d -v /tmp/ui-for-docker:/data --name ui-for-docker ui-for-docker -d /data -H tcp://127.0.0.1:2374'\n                ].join(';')\n            },\n            cleanImages: {\n                command: 'docker rmi $(docker images -q -f dangling=true)'\n            }\n        },\n        'if': {\n            binaryNotExist: {\n                options: {\n                    executable: 'dist/ui-for-docker'\n                },\n                ifFalse: ['shell:buildBinary']\n            }\n        }\n    });\n};\n"
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 1.158203125,
+          "content": "<!DOCTYPE html>\n<html lang=\"en\" ng-app=\"<%= pkg.name %>\">\n<head>\n    <meta charset=\"utf-8\">\n    <title>UI For Docker</title>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta name=\"description\" content=\"\">\n    <meta name=\"author\" content=\"<%= pkg.author %>\">\n\n    <link href=\"vendor.css\" rel=\"stylesheet\">\n    <link href=\"<%= pkg.name %>.css\" rel=\"stylesheet\">\n\n\n    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->\n    <!--[if lt IE 9]>\n    <script src=\"//html5shim.googlecode.com/svn/trunk/html5.js\"></script>\n    <![endif]-->\n\n    <script src=\"angular.js\"></script>\n    <script src=\"vendor.js\"></script>\n    <script src=\"<%= pkg.name %>.js\"></script>\n\n    <!-- Fav and touch icons -->\n    <link rel=\"shortcut icon\" href=\"ico/favicon.ico\">\n    <link rel=\"apple-touch-icon-precomposed\" href=\"ico/apple-touch-icon-precomposed.png\">\n</head>\n\n<body>\n\n    <div class=\"container\">\n        <div ng-include=\"template\" ng-controller=\"MastheadController\"></div>\n\n        <div id=\"view\" ng-view></div>\n\n        <div class=\"container-bottom\"></div>\n        <div ng-include=\"template\" ng-controller=\"FooterController\"></div>\n    </div>\n\n\n</body>\n</html>\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.001953125,
+          "content": "{\n  \"author\": \"Michael Crosby & Kevan Ahlquist\",\n  \"name\": \"uifordocker\",\n  \"homepage\": \"https://github.com/kevana/ui-for-docker\",\n  \"version\": \"0.11.0\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git@github.com:kevana/ui-for-docker.git\"\n  },\n  \"bugs\": {\n    \"url\": \"https://github.com/kevana/ui-for-docker/issues\"\n  },\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"https://raw.githubusercontent.com/kevana/ui-for-docker/master/LICENSE\"\n    }\n  ],\n  \"engines\": {\n    \"node\": \">= 0.8.4\"\n  },\n  \"dependencies\": {},\n  \"devDependencies\": {\n    \"bower\": \"^1.5.2\",\n    \"grunt\": \"~0.4.0\",\n    \"grunt-contrib-clean\": \"~0.4.0\",\n    \"grunt-contrib-concat\": \"~0.1.3\",\n    \"grunt-contrib-copy\": \"~0.4.0\",\n    \"grunt-contrib-jshint\": \"~0.2.0\",\n    \"grunt-contrib-uglify\": \"^0.9.2\",\n    \"grunt-contrib-watch\": \"~0.3.1\",\n    \"grunt-html2js\": \"~0.1.0\",\n    \"grunt-if\": \"^0.1.5\",\n    \"grunt-karma\": \"~0.4.4\",\n    \"grunt-recess\": \"~0.3\",\n    \"grunt-shell\": \"^1.1.2\"\n  },\n  \"scripts\": {\n    \"postinstall\": \"bower install\"\n  }\n}\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

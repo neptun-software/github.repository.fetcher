@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": 1736559609429,
+    "page": 248,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cbh123/narrator",
+      "stars": 4395,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": ".env\n/venv\n/narration\n/frames/*\n!/frames/.gitkeep"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.0908203125,
+          "content": "# David Attenborough narrates your life. \n\nhttps://twitter.com/charliebholtz/status/1724815159590293764\n\n## Want to make your own AI app?\nCheck out [Replicate](https://replicate.com). We make it easy to run machine learning models with an API.\n\n## Setup\n\nClone this repo, and setup and activate a virtualenv:\n\n```bash\npython3 -m pip install virtualenv\npython3 -m virtualenv venv\nsource venv/bin/activate\n```\n\nThen, install the dependencies:\n`pip install -r requirements.txt`\n\nMake a [Replicate](https://replicate.com), [OpenAI](https://beta.openai.com/), and [ElevenLabs](https://elevenlabs.io) account and set your tokens:\n\n```\nexport OPENAI_API_KEY=<token>\nexport ELEVENLABS_API_KEY=<eleven-token>\n```\n\nMake a new voice in Eleven and get the voice id of that voice using their [get voices](https://elevenlabs.io/docs/api-reference/voices) API, or by clicking the flask icon next to the voice in the VoiceLab tab.\n\n```\nexport ELEVENLABS_VOICE_ID=<voice-id>\n```\n\n## Run it!\n\nIn on terminal, run the webcam capture:\n```bash\npython capture.py\n```\nIn another terminal, run the narrator:\n\n```bash\npython narrator.py\n```\n\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "capture.py",
+          "type": "blob",
+          "size": 1.2939453125,
+          "content": "import cv2\nimport time\nfrom PIL import Image\nimport numpy as np\nimport os\n\n# Folder\nfolder = \"frames\"\n\n# Create the frames folder if it doesn't exist\nframes_dir = os.path.join(os.getcwd(), folder)\nos.makedirs(frames_dir, exist_ok=True)\n\n# Initialize the webcam\ncap = cv2.VideoCapture(0)\n\n# Check if the webcam is opened correctly\nif not cap.isOpened():\n    raise IOError(\"Cannot open webcam\")\n\n# Wait for the camera to initialize and adjust light levels\ntime.sleep(2)\n\nwhile True:\n    ret, frame = cap.read()\n    if ret:\n        # Convert the frame to a PIL image\n        pil_img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))\n\n        # Resize the image\n        max_size = 250\n        ratio = max_size / max(pil_img.size)\n        new_size = tuple([int(x*ratio) for x in pil_img.size])\n        resized_img = pil_img.resize(new_size, Image.LANCZOS)\n\n        # Convert the PIL image back to an OpenCV image\n        frame = cv2.cvtColor(np.array(resized_img), cv2.COLOR_RGB2BGR)\n\n        # Save the frame as an image file\n        print(\"📸 Say cheese! Saving frame.\")\n        path = f\"{folder}/frame.jpg\"\n        cv2.imwrite(path, frame)\n    else:\n        print(\"Failed to capture image\")\n\n    # Wait for 2 seconds\n    time.sleep(2)\n\n# Release the camera and close all windows\ncap.release()\ncv2.destroyAllWindows()\n"
+        },
+        {
+          "name": "frames",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "narrator.py",
+          "type": "blob",
+          "size": 2.693359375,
+          "content": "import os\nfrom openai import OpenAI\nimport base64\nimport json\nimport time\nimport simpleaudio as sa\nimport errno\nfrom elevenlabs import generate, play, set_api_key, voices\n\nclient = OpenAI()\n\nset_api_key(os.environ.get(\"ELEVENLABS_API_KEY\"))\n\ndef encode_image(image_path):\n    while True:\n        try:\n            with open(image_path, \"rb\") as image_file:\n                return base64.b64encode(image_file.read()).decode(\"utf-8\")\n        except IOError as e:\n            if e.errno != errno.EACCES:\n                # Not a \"file in use\" error, re-raise\n                raise\n            # File is being written to, wait a bit and retry\n            time.sleep(0.1)\n\n\ndef play_audio(text):\n    audio = generate(text, voice=os.environ.get(\"ELEVENLABS_VOICE_ID\"))\n\n    unique_id = base64.urlsafe_b64encode(os.urandom(30)).decode(\"utf-8\").rstrip(\"=\")\n    dir_path = os.path.join(\"narration\", unique_id)\n    os.makedirs(dir_path, exist_ok=True)\n    file_path = os.path.join(dir_path, \"audio.wav\")\n\n    with open(file_path, \"wb\") as f:\n        f.write(audio)\n\n    play(audio)\n\n\ndef generate_new_line(base64_image):\n    return [\n        {\n            \"role\": \"user\",\n            \"content\": [\n                {\"type\": \"text\", \"text\": \"Describe this image\"},\n                {\n                    \"type\": \"image_url\",\n                    \"image_url\": f\"data:image/jpeg;base64,{base64_image}\",\n                },\n            ],\n        },\n    ]\n\n\ndef analyze_image(base64_image, script):\n    response = client.chat.completions.create(\n        model=\"gpt-4-vision-preview\",\n        messages=[\n            {\n                \"role\": \"system\",\n                \"content\": \"\"\"\n                You are Sir David Attenborough. Narrate the picture of the human as if it is a nature documentary.\n                Make it snarky and funny. Don't repeat yourself. Make it short. If I do anything remotely interesting, make a big deal about it!\n                \"\"\",\n            },\n        ]\n        + script\n        + generate_new_line(base64_image),\n        max_tokens=500,\n    )\n    response_text = response.choices[0].message.content\n    return response_text\n\n\ndef main():\n    script = []\n\n    while True:\n        # path to your image\n        image_path = os.path.join(os.getcwd(), \"./frames/frame.jpg\")\n\n        # getting the base64 encoding\n        base64_image = encode_image(image_path)\n\n        # analyze posture\n        print(\"👀 David is watching...\")\n        analysis = analyze_image(base64_image, script=script)\n\n        print(\"🎙️ David says:\")\n        print(analysis)\n\n        play_audio(analysis)\n\n        script = script + [{\"role\": \"assistant\", \"content\": analysis}]\n\n        # wait for 5 seconds\n        time.sleep(5)\n\n\nif __name__ == \"__main__\":\n    main()\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.6845703125,
+          "content": "annotated-types==0.6.0\nanyio==3.7.1\nappnope==0.1.3\nasttokens==2.4.1\ncertifi==2023.7.22\ncharset-normalizer==3.3.2\ndecorator==5.1.1\ndistro==1.8.0\nelevenlabs==0.2.26\nexceptiongroup==1.1.3\nexecuting==2.0.1\nh11==0.14.0\nhttpcore==1.0.1\nhttpx==0.25.1\nidna==3.4\nipython==8.17.2\njedi==0.19.1\nmatplotlib-inline==0.1.6\nnumpy==1.26.1\nopenai==1.1.1\nopencv-python==4.8.1.78\nparso==0.8.3\npexpect==4.8.0\nPillow==10.1.0\nprompt-toolkit==3.0.41\nptyprocess==0.7.0\npure-eval==0.2.2\npydantic==2.4.2\npydantic_core==2.10.1\nPygments==2.16.1\nrequests==2.31.0\nsimpleaudio==1.0.4\nsix==1.16.0\nsniffio==1.3.0\nstack-data==0.6.3\ntqdm==4.66.1\ntraitlets==5.13.0\ntyping_extensions==4.8.0\nurllib3==2.0.7\nwcwidth==0.2.10\nwebsockets==12.0\n"
+        }
+      ]
+    }
+  ]
+}

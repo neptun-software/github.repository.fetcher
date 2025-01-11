@@ -1,0 +1,94 @@
+{
+  "metadata": {
+    "timestamp": 1736559702650,
+    "page": 387,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "instantbox/instantbox",
+      "stars": 4081,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0322265625,
+          "content": "*\n.*\n!*.py\n!api/\n!requirement.txt"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": ".DS_Store\n__pycache__/\n*.py[cod]\n*$py.class\n\nmanifest.json\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.8974609375,
+          "content": "language: minimal\nsudo: required\n\nservices:\n  - docker\n\nenv:\n  - IMAGE_NAME=instantbox/instantbox\n  \nscript:\n  - docker pull \"$IMAGE_NAME\" || true\n  - docker build --cache-from \"$IMAGE_NAME\" \n      --build-arg BUILD_DATE=\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\" \n      --build-arg VCS_REF=\"$TRAVIS_COMMIT\" \n      -t \"build/$IMAGE_NAME\" -f ./Dockerfile .\n  - docker run -d -P --name temp \"build/$IMAGE_NAME\"\n  - docker rm -f temp || true\n  \nafter_success:\n  - if [[ \"$TRAVIS_BRANCH\" == \"master\" && \"$TRAVIS_PULL_REQUEST\" == \"false\" ]]; then \n      docker login -u \"$DOCKER_USERNAME\" -p \"$DOCKER_PASSWORD_SECURE\";\n      docker tag \"build/$IMAGE_NAME\" \"$IMAGE_NAME\";\n      docker push \"$IMAGE_NAME\";\n    fi\n  - if [[ -n \"$TRAVIS_TAG\" ]]; then\n      docker login -u \"$DOCKER_USERNAME\" -p \"$DOCKER_PASSWORD_SECURE\";\n      docker tag \"build/$IMAGENAME\" \"$IMAGENAME:$TRAVIS_TAG\";\n      docker push \"$IMAGE_NAME:$TRAVIS_TAG\";\n    fi\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.876953125,
+          "content": "<p align=\"right\">En | <a href=\"./docs/CONTRIBUTING-zh_cn.md\">简</a> | <a href=\"./docs/CONTRIBUTING-zh_tw.md\">繁</a></p>\n\n# Contributing\n\n### Commit message\n\n* One change per commit\n\n  Say you have the following changes:\n\n  * a bug fix\n  * a new feature development\n\n  DO commit after each task\n\n  DO NOT bundle multiple changes in one commit\n\n* Commit message convention\n\n  This project follows AngularJS's [commit message convention](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#-git-commit-guidelines)\n\n  `<type>(<scope>): <subject>`\n\n  `type` must be one of：\n    * feat: A new feature\n    * fix: A bug fix\n    * docs: Documentation only changes\n    * style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)\n    * refactor: A code change that neither fixes a bug nor adds a feature\n    * perf: A code change that improves performance\n    * test: Adding missing or correcting existing tests\n    * chore: Changes to the build process or auxiliary tools and libraries such as documentation generation\n\n  examples:\n\n    * docs(README): add sponsor link\n\n    * style(file.py): fix syntax error\n\n    * fix(api): fix create docker container bug\n\n\n### Issue\n\n* Provide detailed environment information\n\n* Provide detailed steps to reproduce\n\n* Provide as much information as possible for the error (e.g. error message, stacktrace, etc)\n\n\n### Pull request\n\n* Keep commit history clean\n\n* Make sure python code passes pycodestyle tests\n\n* Include unit tests\n\n* Explain scope and reason for the change\n\n* All pull requests are required to be reviewed\n\n\n### Join instantbox\n\nWant to instantbox team? We'd love to have you.\n\nPlease send your request to team@instantbox.org with your information and areas of intended contribution.\n\n\n### Other questions?\n\nFeel free to join us on [telegram](https://t.me/joinchat/HtYtxRSerOwrMLg_2_wZTQ) or submit an issue.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.6865234375,
+          "content": "FROM python:3-alpine AS builder\n\nWORKDIR /usr/src/app\n\nCOPY requirement.txt ./\nRUN pip3 install -q --no-cache-dir -r requirement.txt -t ./\nCOPY . .\nADD https://raw.githubusercontent.com/instantbox/instantbox-images/master/manifest.json .\n\n\nFROM gcr.io/distroless/python3\n\nLABEL \\\n  org.label-schema.schema-version=\"1.0\" \\\n  org.label-schema.name=\"instantbox\" \\\n  org.label-schema.vcs-url=\"https://github.com/instantbox/instantbox\" \\\n  maintainer=\"Instantbox Team <team@instantbox.org>\"\n\nENV SERVERURL \"\"\n\nWORKDIR /app\nCOPY --from=builder /usr/src/app/ .\n\nEXPOSE 65501\nCMD [\"inspire.py\"]\n\nARG BUILD_DATE\nARG VCS_REF\nLABEL \\\n  org.label-schema.build-date=$BUILD_DATE \\\n  org.label-schema.vcs-ref=$VCS_REF\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2019 instantbox\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.2294921875,
+          "content": "<p align=\"right\">En | <a href=\"./docs/README-zh_cn.md\">简</a> | <a href=\"./docs/README-zh_tw.md\">繁</a></p>\n\n<div align=\"center\">\n\n![logo](https://user-images.githubusercontent.com/5880908/53614582-6ebdfc80-3ba8-11e9-819e-d96a3f7c22f0.png)\n\n# instantbox\n\nGet a clean, ready-to-go Linux box in seconds.\n\n[![Travis CI](https://badgen.net/travis/instantbox/instantbox)](https://travis-ci.com/instantbox/instantbox)\n[![Docker](https://badgen.net/badge/icon/instantbox?icon=docker&label)](https://hub.docker.com/r/instantbox/instantbox)\n![Python 3.6](https://badgen.net/badge/python/3.6/3776ab)\n![Code Style Pep8](https://badgen.net/badge/code%20style/pep8/ffd343)\n[![Chat on Telegram](https://badgen.net/badge/chat/on%20telegram/0088cc)](https://t.me/joinchat/HtYtxRSerOwrMLg_2_wZTQ)\n[![MIT](https://badgen.net/badge/license/MIT/3da639)](LICENSE)\n\n</div>\n\n\n## Introduction\n\n### What is instantbox?\n\nIt's a project that spins up temporary Linux systems with instant webshell access from any browser.\n\n\n### What can an instantbox do?\n\n1. provides a clean Linux environment for a presentation\n2. let students experience the charm of Linux at your school or your next LUG meet\n3. run with an inspiration in a clean environment\n4. manage servers from any device\n5. experiment with an open source project\n6. test software performance under resource constraints\n\nand more! ideas are endless...\n\n\n### Which Linux distributions are available?\n\nWe currently supports various versions of Ubuntu, CentOS, Arch Linux, Debian, Fedora and Alpine.\n\n\n\n## Quickstart\n\n![Demo screenshot](https://user-images.githubusercontent.com/5880908/53613565-6237a500-3ba4-11e9-9e39-8ea48cee73ee.png)\n\n\n## Deploy\n\nPrerequisite: docker [[More Information]](https://docs.docker.com/install/)\n\n```bash\nmkdir instantbox && cd $_\nbash <(curl -sSL https://raw.githubusercontent.com/instantbox/instantbox/master/init.sh)\n```\n\n\n## Questions\n\nPlease submit an issue or join the conversation on [telegram](https://t.me/joinchat/HtYtxRSerOwrMLg_2_wZTQ).\n\n\n## Donations\n\nWe are in urgent need for donations in the form of server resources. Please contact us at team@instantbox.org if you are able to help. We appreciate it!\n\n\n## Credits\n\n* [tsl0922/ttyd](https://github.com/tsl0922/ttyd) - webshell\n\n\n## License\n\n[MIT](LICENSE)\n"
+        },
+        {
+          "name": "api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.705078125,
+          "content": "version: '3'\n\nservices:\n  server:\n    image: instantbox/instantbox:latest\n    container_name: instantbox_server\n    volumes:\n      - /var/run/docker.sock:/var/run/docker.sock\n    environment:\n      - SERVERURL=\n    networks:\n      - instantbox_net\n\n  frontend:\n    image: instantbox/instantbox-frontend:latest\n    container_name: instantbox_frontend\n    links:\n      - server\n    ports:\n      - 8888:80\n    networks:\n      - instantbox_net\n\n  cron:\n    image: instantbox/cron:latest\n    container_name: instantbox_cron\n    links:\n      - frontend\n    environment:\n      - CRON_STRINGS=* * * * * wget -qO /dev/null http://frontend/api/v2/superinspire/prune\n    networks:\n      - instantbox_net\n\nnetworks:\n  instantbox_net:\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "init.sh",
+          "type": "blob",
+          "size": 1.2001953125,
+          "content": "#!/bin/sh\n#\n# Install script for instantbox\n# Home Page: https://github.com/instantbox/instantbox\n#\n# Usage:\n#  mkdir instantbox && cd $_\n#  bash <(curl -sSL https://raw.githubusercontent.com/instantbox/instantbox/master/init.sh)\"\n#  docker-compose up -d\n#\n\ncheck_cmd() {\n    command -v \"$1\" >/dev/null 2>&1\n}\n\necho \"Welcome to instantbox, please wait...\"\necho \"\"\n\nif check_cmd docker; then\n    echo \"docker is installed\"\nelse\n    echo \"docker is not installed, please try again after it's installed\"\n    exit 1\nfi\n\nif check_cmd docker-compose; then\n    echo \"docker-compose is installed\"\nelse\n    curl -sSL https://raw.githubusercontent.com/docker/compose/master/script/run/run.sh > /usr/local/bin/docker-compose\n    chmod +x /usr/local/bin/docker-compose || exit 1\nfi\n\ncurl -sSLO https://raw.githubusercontent.com/instantbox/instantbox/master/docker-compose.yml\n\necho \"Enter your IP (optional): \"\nread IP\necho \"Choose a port (default: 8888): \"\nread PORT\n\n[  -z \"$IP\" ] || sed -i -e \"s/SERVERURL=$/SERVERURL=$IP/\" docker-compose.yml\n[  -z \"$PORT\" ] || sed -i -e \"s/8888:80/$PORT:80/\" docker-compose.yml\n\necho \"You're all set! \"\necho \"Run 'docker-compose up -d' then go to http://${IP:-localhost}:${PORT:-8888} on your browser.\"\n"
+        },
+        {
+          "name": "inspire.py",
+          "type": "blob",
+          "size": 5.5439453125,
+          "content": "#!/bin/python\n\nimport re\nimport os\nimport json\nimport time\nfrom flask_cors import CORS\nfrom flask import render_template, redirect\nfrom flask import Flask, request, Response, jsonify\nfrom api.instantboxManager import InstantboxManager\n\napp = Flask(__name__)\nCORS(app, resources=r'/*')\n\ninstantboxManager = InstantboxManager()\n\nSERVERURL = os.environ.get('SERVERURL')\nif SERVERURL is None:\n    SERVERURL = ''\n\n\n@app.route('/v2/superinspire')\ndef hello():\n    return 'hello'\n\n\n@app.route('/v2/superinspire/getOSList')\ndef returnList():\n\n    response = Response(\n        json.dumps(instantboxManager.OS_LIST), mimetype='application/json')\n\n    response.headers.add('Server', 'python flask')\n    response.headers['Access-Control-Allow-Origin'] = '*'\n    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'\n    response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'\n    return response\n\n\n@app.route('/v2/superinspire/rmOS')\ndef rmOS():\n    try:\n        containerId = request.args.get('containerId')\n        timestamp = request.args.get('timestamp')\n        shareUrl = request.args.get('shareUrl')\n    except Exception:\n        response = Response(\n            json.dumps({\n                'message': 'Arguments ERROR',\n                'statusCode': 0\n            }),\n            mimetype='application/json')\n    else:\n        try:\n            isSuccess = instantboxManager.is_rm_container(containerId)\n            if not isSuccess:\n                raise Exception\n\n        except Exception:\n            response = Response(\n                json.dumps({\n                    'message': 'RM docker containers ERROR',\n                    'shareUrl': '',\n                    'statusCode': 0,\n                }),\n                mimetype='application/json')\n        else:\n            response = Response(\n                json.dumps({\n                    'message': 'SUCCESS',\n                    'statusCode': 1,\n                    'containerId': containerId,\n                }),\n                mimetype='application/json')\n\n    response.headers.add('Server', 'python flask')\n    response.headers['Access-Control-Allow-Origin'] = '*'\n    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'\n    response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'\n    return response\n\n\n@app.route('/v2/superinspire/getOS')\ndef getOS():\n    open_port = None\n\n    try:\n        os_name = request.args.get('os')\n        if not instantboxManager.is_os_available(os_name):\n            raise Exception\n    except Exception:\n        response = Response(\n            json.dumps({\n                'message': 'The image is not supported at this time ERROR',\n                'statusCode': 0\n            }),\n            mimetype='application/json')\n    else:\n        os_mem = request.args.get('mem')\n        os_cpu = request.args.get('cpu')\n        os_port = request.args.get('port')\n        os_timeout = request.args.get('timeout')\n\n        if os_mem is None:\n            os_mem = 512\n        if os_cpu is None:\n            os_cpu = 1\n        max_timeout = 3600 * 24 + time.time()\n        if os_timeout is None:\n            os_timeout = max_timeout\n        else:\n            os_timeout = min(float(os_timeout), max_timeout)\n\n        try:\n            container_name = instantboxManager.is_create_container(\n                mem=os_mem,\n                cpu=os_cpu,\n                os_name=os_name,\n                open_port=os_port,\n                os_timeout=os_timeout,\n            )\n\n            if container_name is None:\n                raise Exception\n            else:\n                ports = instantboxManager.get_container_ports(container_name)\n                if os_port is not None:\n                    open_port = ports['{}/tcp'.format(os_port)]\n\n        except Exception:\n            response = Response(\n                json.dumps({\n                    'message': 'RUN docker containers ERROR',\n                    'shareUrl': '',\n                    'statusCode': 0,\n                }),\n                mimetype='application/json')\n        else:\n            response = Response(\n                json.dumps({\n                    'message':\n                    'SUCCESS',\n                    'shareUrl':\n                    '/console/{}'.format(container_name),\n                    'openPort':\n                    open_port,\n                    'statusCode':\n                    1,\n                    'containerId':\n                    container_name,\n                }),\n                mimetype='application/json')\n\n    response.headers.add('Server', 'python flask')\n    response.headers['Access-Control-Allow-Origin'] = '*'\n    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'\n    response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'\n    return response\n\n\n@app.route('/v2/superinspire/prune')\ndef pruneTimedoutOS():\n    try:\n        instantboxManager.remove_timeout_containers()\n        response = Response(\n            json.dumps({\n                'message': 'Success',\n                'statusCode': 1\n            }),\n            mimetype='application/json')\n    except Exception:\n        response = Response(\n            json.dumps({\n                'message': 'ERROR',\n                'statusCode': 0\n            }),\n            mimetype='application/json')\n\n    response.headers.add('Server', 'python flask')\n    response.headers['Access-Control-Allow-Origin'] = '*'\n    response.headers['Access-Control-Allow-Methods'] = 'GET,POST'\n    response.headers['Access-Control-Allow-Headers'] = 'x-requested-with'\n    return response\n\n\nif __name__ == '__main__':\n\n    app.run(host='0.0.0.0', port=int(65501), debug=False)\n"
+        },
+        {
+          "name": "requirement.txt",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "flask==1.0.2\nflask_cors==3.0.6\ndocker==3.6.0\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "metadata": {
+    "timestamp": 1736559769490,
+    "page": 484,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Consensys/mythril",
+      "stars": 3913,
+      "defaultBranch": "develop",
+      "files": [
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0390625,
+          "content": "/.*\n/build\n/docker-bake.hcl\n/Dockerfile\n"
+        },
+        {
+          "name": ".drone.yml",
+          "type": "blob",
+          "size": 1.455078125,
+          "content": "kind: pipeline\nname: default\n\nplatform:\n    os: linux\n    arch: amd64\n\nsteps:\n- name: edelweiss_swc\n  image: mythx.azurecr.io/tools/edelweiss\n  environment:\n    IGNORE_FALSE_POSITIVES:\n      from_secret: IGNORE_FALSE_POSITIVES\n    IGNORE_REGRESSIONS:\n      from_secret: IGNORE_REGRESSIONS\n    AWS_DEFAULT_REGION:\n      from_secret: AWS_DEFAULT_REGION\n    AWS_ACCESS_KEY_ID:\n      from_secret: AWS_ACCESS_KEY_ID\n    AWS_SECRET_ACCESS_KEY:\n      from_secret: AWS_SECRET_ACCESS_KEY\n    MONGO_URL:\n      from_secret: MONGO_URL\n  commands:\n    # CIRCLE_* env vars is used by edelweiss cli to generate\n    # the reports storage directory structure\n    - export CIRCLE_BUILD_NUM=$DRONE_BUILD_NUMBER\n    - export CIRCLE_BUILD_URL=$DRONE_BUILD_LINK\n    - export CIRCLE_BRANCH=$DRONE_BRANCH\n    - export CIRCLE_SHA1=$DRONE_COMMIT_SHA\n    # install pip module from current dir\n    - pip3 install $(pwd)\n    # update SWC-registry\n    - cd /edelweiss\n    - git submodule update --init --recursive\n    - git submodule update --remote --recursive\n    # run edelewiss tests\n    # Temporarily stop Edelweiss drone\n    #- edelweiss-cli \n    #  -p mythril \n    #  --timeout 90 \n    #  --output-dir $(pwd) \n    #  --s3 \n    #  --dynamodb \n    #  --circle-ci CircleCI/mythril.csv \n    #  --ignore-false-positives $IGNORE_FALSE_POSITIVES \n    #  --ignore-regressions $IGNORE_REGRESSIONS\n  when:\n    branch:\n    - develop\n    - master\n    event:\n    - push\n    - tag\n\nimage_pull_secrets:\n    - DOCKER_CONFIG_JSON\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.16015625,
+          "content": "root = true\n\n[*]\nend_of_line = lf\ninsert_final_newline = true\n\n[*.py]\nindent_style = space\nindent_size = 4\ncharset = utf-8\n\n[*.jinja2]\ninsert_final_newline = false\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1171875,
+          "content": "tests/testdata/* linguist-detectable=false\nstatic/* linguist-documentation\n\n# Solidity\n*.sol linguist-language=Solidity\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 2.4228515625,
+          "content": "\n# Created by https://www.gitignore.io/api/linux,macos,python,windows\n\n### Linux ###\n*~\n\n# temporary files which can be created if a process still has a handle open of a deleted file\n.fuse_hidden*\n\n# KDE directory preferences\n.directory\n\n# Linux trash folder which might appear on any partition or disk\n.Trash-*\n\n# .nfs files are created when an open file is removed but is still being accessed\n.nfs*\n\n### macOS ###\n*.DS_Store\n.AppleDouble\n.LSOverride\n\n# Icon must end with two \\r\nIcon\n\n# Thumbnails\n._*\n\n# Files that might appear in the root of a volume\n.DocumentRevisions-V100\n.fseventsd\n.Spotlight-V100\n.TemporaryItems\n.Trashes\n.VolumeIcon.icns\n.com.apple.timemachine.donotpresent\n\n# Directories potentially created on remote AFP share\n.AppleDB\n.AppleDesktop\nNetwork Trash Folder\nTemporary Items\n.apdisk\n\n### Python ###\n# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\n*.egg-info/\n.installed.cfg\n*.egg\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\n.pytest_cache/\nnosetests.xml\ncoverage.xml\n*.cover\n.hypothesis/\n\n# Translations\n*.mo\n*.pot\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# pyenv\n.python-version\n\n# celery beat schedule file\ncelerybeat-schedule.*\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n\n### Windows ###\n# Windows thumbnail cache files\nThumbs.db\nehthumbs.db\nehthumbs_vista.db\n\n# Folder config file\nDesktop.ini\n\n# Recycle Bin used on file shares\n$RECYCLE.BIN/\n\n# Windows Installer files\n*.cab\n*.msi\n*.msm\n*.msp\n\n# Windows shortcuts\n*.lnk\n\n\n# End of https://www.gitignore.io/api/linux,macos,python,windows\n\n*.asm\n*.lock\n*.svg\nlol*\n.idea*\ncoverage_html_report/\ntests/testdata/outputs_current/\ntests/testdata/outputs_current_laser_result/\ntests/testdata/mythril_config_inputs/config.ini\n\n# VSCode\n.vscode\n"
+        },
+        {
+          "name": ".pre-commit-config.yaml",
+          "type": "blob",
+          "size": 1.3330078125,
+          "content": "# See https://pre-commit.com for more information\n# See https://pre-commit.com/hooks.html for more hooks\n# Apply to all files without commiting:\n#   pre-commit run --all-files\n# Update this file:\n#   pre-commit autoupdate\nrepos:\n-   repo: https://github.com/pre-commit/pre-commit-hooks\n    rev: v4.6.0\n    hooks:\n    -   id: check-toml\n    -   id: check-yaml\n-   repo: https://github.com/astral-sh/ruff-pre-commit\n    rev: v0.6.1\n    hooks:\n    -   id: ruff\n        args: [--fix, --show-fixes]\n-   repo: https://github.com/psf/black\n    rev: 24.8.0\n    hooks:\n    -   id: black\n-   repo: https://github.com/scop/pre-commit-shfmt\n    rev: v3.8.0-1\n    hooks:\n    -   id: shfmt\n        args: [--write, --indent, '4']\n-   repo: https://github.com/shellcheck-py/shellcheck-py\n    rev: v0.10.0.1\n    hooks:\n    -   id: shellcheck\n-   repo: https://github.com/hadolint/hadolint\n    rev: v2.12.0\n    hooks:\n    -   id: hadolint-docker\n-   repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks\n    rev: v2.14.0\n    hooks:\n    -   id: pretty-format-toml\n        args: [--autofix]\n-   repo: https://github.com/python-jsonschema/check-jsonschema\n    rev: 0.29.1\n    hooks:\n    -   id: check-circle-ci\n    -   id: check-github-workflows\n    -   id: check-dependabot\n-   repo: meta\n    hooks:\n    -   id: check-hooks-apply\n    -   id: check-useless-excludes\n"
+        },
+        {
+          "name": ".pre-commit-hooks.yaml",
+          "type": "blob",
+          "size": 0.15234375,
+          "content": "- id: mythril\n  name: Mythril\n  description: Analyze EVM bytecode with Mythril\n  entry: myth\n  args:\n    - analyze\n  language: python\n  types: [\"solidity\"]\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.4228515625,
+          "content": "# Contributing to Mythril\nHi, if you are reading this that means that you probably want to contribute to Mythril, awesome! If not, then this file might not contain much useful information for you.\n\n## Creating an issue\nIf you have found a problem with Mythril or want to propose a new feature then you can do this using GitHub issues. \nWe already created some templates to make this process easier, but if your issue/feature request does not fit within the template then feel free to deviate.\n\nIf you have a small question or aren't sure if you should create an issue for your problem/suggestion then you can always hop by on our [Discord server](https://discord.gg/FGMkcU2).\n\n# Coding\nIf you want to help out with the development of Mythril then you can take a look at our issues or [Waffle board](https://waffle.io/ConsenSys/mythril).\n\nBefore you start working on an issue please stop by on Discord to message a collaborator, this way we can assign you to the issue making sure nobody does double work. We can also provide you with support through Discord if there are any questions during the development process.\n\n## New ideas\nBefore you start working on a new idea, it's useful to create an issue on GitHub, that way we know what you want to implement and that you are working on it. Additionally, it might happen that your feature does not fit with our roadmap, in which case it would be unfortunate if you have already spent some time working on it.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 3.169921875,
+          "content": "# syntax=docker/dockerfile:1\nARG PYTHON_VERSION=3.10\nARG INSTALLED_SOLC_VERSIONS\n\n\nFROM python:${PYTHON_VERSION} AS mythril-wheels\nWORKDIR /wheels\n\n# Enable cargo sparse-registry to prevent it using large amounts of memory in\n# docker builds, and speed up builds by downloading less.\n# https://github.com/rust-lang/cargo/issues/10781#issuecomment-1163819998\nENV CARGO_UNSTABLE_SPARSE_REGISTRY=true\n\nSHELL [\"/bin/bash\", \"-euo\", \"pipefail\", \"-c\"]\nRUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y\nENV PATH=/root/.cargo/bin:$PATH\n\nRUN --mount=source=requirements.txt,target=/run/requirements.txt \\\n  pip wheel -r /run/requirements.txt\n\nCOPY . /mythril\nRUN pip wheel --no-deps /mythril\n\n\n# Solidity Compiler Version Manager. This provides cross-platform solc builds.\n# It's used by foundry to provide solc. https://github.com/alloy-rs/svm-rs\nFROM rust:slim-bookworm AS solidity-compiler-version-manager\nRUN mkdir -p /svm-rs/bin && \\\n  cargo install svm-rs --root /svm-rs\n\n\nFROM python:${PYTHON_VERSION}-slim AS myth\nARG PYTHON_VERSION\n# Space-separated version string without leading 'v' (e.g. \"0.4.21 0.4.22\")\nARG INSTALLED_SOLC_VERSIONS\n\nCOPY --from=solidity-compiler-version-manager /svm-rs/bin/* /usr/local/bin/\n\nRUN --mount=from=mythril-wheels,source=/wheels,target=/wheels \\\n  export PYTHONDONTWRITEBYTECODE=1 && pip install --no-cache-dir /wheels/*.whl\n\nRUN adduser --disabled-password mythril\nUSER mythril\nWORKDIR /home/mythril\n\n# pre-install solc versions\nRUN set -x; [ -z \"${INSTALLED_SOLC_VERSIONS}\" ] || svm install ${INSTALLED_SOLC_VERSIONS}\n\nCOPY --chown=mythril:mythril \\\n  ./mythril/support/assets/signatures.db \\\n  /home/mythril/.mythril/signatures.db\n\nCOPY --chown=root:root --chmod=755 ./docker/docker-entrypoint.sh /\nCOPY --chown=root:root --chmod=755 \\\n  ./docker/sync-svm-solc-versions-with-solcx.sh \\\n  /usr/local/bin/sync-svm-solc-versions-with-solcx\nENTRYPOINT [\"/docker-entrypoint.sh\"]\n\n\n# Basic sanity checks to make sure the build is functional\nFROM myth AS myth-smoke-test-execution\nSHELL [\"/bin/bash\", \"-euo\", \"pipefail\", \"-c\"]\nWORKDIR /smoke-test\nCOPY --chmod=755 <<\"EOT\" /smoke-test.sh\n#!/usr/bin/env bash\nset -x -euo pipefail\n\n# Check solcx knows about svm solc versions\nsvm install 0.5.0\nsync-svm-solc-versions-with-solcx\npython -c '\nimport solcx\nprint(\"\\n\".join(str(v) for v in solcx.get_installed_solc_versions()))\n' | grep -P '^0\\.5\\.0$' || {\n  echo \"solcx did not report svm-installed solc version\";\n  exit 1\n}\n\n# Show installed packages and versions\npip list\n\n# Check myth can run\nmyth version\nmyth function-to-hash 'function transfer(address _to, uint256 _value) public returns (bool success)'\nmyth analyze /solidity_examples/origin.sol -t 1 > origin.log || true\ngrep 'SWC ID: 115' origin.log || {\n  error \"Failed to detect SWC ID: 115 in origin.sol\";\n  exit 1\n}\n\n# Check that the entrypoint works\n[[ $(/docker-entrypoint.sh version) == $(myth version) ]]\n[[ $(/docker-entrypoint.sh echo hi) == hi ]]\n[[ $(/docker-entrypoint.sh bash -c \"printf '>%s<' 'foo bar'\") == \">foo bar<\" ]]\nEOT\n\nRUN --mount=source=./solidity_examples,target=/solidity_examples \\\n  /smoke-test.sh 2>&1 | tee smoke-test.log\n\n\nFROM scratch AS myth-smoke-test\nCOPY --from=myth-smoke-test-execution /smoke-test/* /\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.064453125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) since 2017 Bernhard Mueller\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 0.091796875,
+          "content": "include mythril/support/assets/*\ninclude mythril/analysis/templates/*\ninclude requirements.txt"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.5927734375,
+          "content": "# Mythril\n\n<p align=\"center\">\n\t<img src=\"/static/mythril_new.png\" height=\"320px\"/>\n</p>\n\n[![Discord](https://img.shields.io/discord/697535391594446898)](https://discord.com/channels/697535391594446898/712829485350649886)\n[![PyPI](https://badge.fury.io/py/mythril.svg)](https://pypi.python.org/pypi/mythril)\n[![Read the Docs](https://readthedocs.org/projects/mythril-classic/badge/?version=master)](https://mythril-classic.readthedocs.io/en/develop/)\n[![CircleCI](https://dl.circleci.com/status-badge/img/gh/Consensys/mythril/tree/develop.svg?style=shield&circle-token=fd6738fd235f6c2d8e10234259090e3b05190d0e)](https://dl.circleci.com/status-badge/redirect/gh/Consensys/mythril/tree/develop)\n[![Sonarcloud - Maintainability](https://sonarcloud.io/api/project_badges/measure?project=mythril&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=mythril)\n[![Pypi Installs](https://static.pepy.tech/badge/mythril)](https://pepy.tech/project/mythril)\n[![DockerHub Pulls](https://img.shields.io/docker/pulls/mythril/myth.svg)](https://cloud.docker.com/u/mythril/repository/docker/mythril/myth)\n\nMythril is a symbolic-execution-based securty analysis tool for EVM bytecode. It detects security vulnerabilities in smart contracts built for Ethereum and other EVM-compatible blockchains.\n\nWhether you want to contribute, need support, or want to learn what we have cooking for the future, you can checkout diligence-mythx channel in [ConsenSys Discord server](https://discord.gg/consensys).\n\n## Installation and setup\n\nGet it with [Docker](https://www.docker.com):\n\n```bash\n$ docker pull mythril/myth\n```\n\nInstall from Pypi (Python 3.7-3.10):\n\n```bash\n$ pip3 install mythril\n```\n\nUse it via pre-commit hook (replace `$GIT_TAG` with real tag):\n\n```YAML\n- repo: https://github.com/Consensys/mythril\n  rev: $GIT_TAG\n  hooks:\n    - id: mythril\n```\n\nAdditionally, set `args: [disassemble]` or `args: [read-storage]` to use a different command than `analyze`.\n\nSee the [docs](https://mythril-classic.readthedocs.io/en/master/installation.html) for more detailed instructions. \n\n## Usage\n\nRun:\n\n```\n$ myth analyze <solidity-file>\n```\n\nOr:\n\n```\n$ myth analyze -a <contract-address>\n```\n\nSpecify the maximum number of transactions to explore with `-t <number>`. You can also set a timeout with `--execution-timeout <seconds>`.\n\nHere is an example of running Mythril on the file `killbilly.sol` which is in the `solidity_examples` directory for `3` transactions:\n\n```\n> myth a killbilly.sol -t 3\n==== Unprotected Selfdestruct ====\nSWC ID: 106\nSeverity: High\nContract: KillBilly\nFunction name: commencekilling()\nPC address: 354\nEstimated Gas Usage: 974 - 1399\nAny sender can cause the contract to self-destruct.\nAny sender can trigger execution of the SELFDESTRUCT instruction to destroy this contract account and withdraw its balance to an arbitrary address. Review the transaction trace generated for this issue and make sure that appropriate security controls are in place to prevent unrestricted access.\n--------------------\nIn file: killbilly.sol:22\n\nselfdestruct(msg.sender)\n\n--------------------\nInitial State:\n\nAccount: [CREATOR], balance: 0x2, nonce:0, storage:{}\nAccount: [ATTACKER], balance: 0x1001, nonce:0, storage:{}\n\nTransaction Sequence:\n\nCaller: [CREATOR], calldata: , decoded_data: , value: 0x0\nCaller: [ATTACKER], function: killerize(address), txdata: 0x9fa299cc000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef, decoded_data: ('0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef',), value: 0x0\nCaller: [ATTACKER], function: activatekillability(), txdata: 0x84057065, value: 0x0\nCaller: [ATTACKER], function: commencekilling(), txdata: 0x7c11da20, value: 0x0\n\n```\n\n\nInstructions for using Mythril are found on the [docs](https://mythril-classic.readthedocs.io/en/develop/). \n\nFor support or general discussions please checkout [diligence-mythx channel](https://discord.com/channels/697535391594446898/712829485350649886) in [ConsenSys Discord server](https://discord.gg/consensys)..\n\n## Building the Documentation\nMythril's documentation is contained in the `docs` folder and is published to [Read the Docs](https://mythril-classic.readthedocs.io/en/develop/). It is based on Sphinx and can be built using the Makefile contained in the subdirectory:\n\n```\ncd docs\nmake html\n```\n\nThis will create a `build` output directory containing the HTML output. Alternatively, PDF documentation can be built with `make latexpdf`. The available output format options can be seen with `make help`.\n\n## Vulnerability Remediation\n\nVisit the [Smart Contract Vulnerability Classification Registry](https://swcregistry.io/) to find detailed information and remediation guidance for the vulnerabilities reported.\n"
+        },
+        {
+          "name": "all_tests.sh",
+          "type": "blob",
+          "size": 0.513671875,
+          "content": "#!/bin/bash\n\nset -euo pipefail\n\necho -n \"Checking Python version... \"\npython -c 'import sys\nprint(sys.version)\nassert sys.version_info[0:2] >= (3,5), \\\n\"\"\"Please make sure you are using Python 3.5 or later.\nYou ran with {}\"\"\".format(sys.version)' || exit $?\n\nrm -rf ./tests/testdata/outputs_current/\nmkdir -p ./tests/testdata/outputs_current/\nrm -rf ./tests/testdata/outputs_current_laser_result/\nmkdir -p ./tests/testdata/outputs_current_laser_result/\nmkdir -p /tmp/test-reports\npytest --junitxml=/tmp/test-reports/junit.xml\n"
+        },
+        {
+          "name": "coverage_report.sh",
+          "type": "blob",
+          "size": 0.47265625,
+          "content": "#!/bin/sh\n\npython --version\necho \"Please make sure you are using python 3.6.x\"\n\nrm -rf ./tests/testdata/outputs_current/\nmkdir -p ./tests/testdata/outputs_current/\nrm -rf ./tests/testdata/outputs_current_laser_result/\nmkdir -p ./tests/testdata/outputs_current_laser_result/\nrm -rf coverage_html_report\n\npy.test \\\n    --cov=mythril \\\n    --cov-config=tox.ini \\\n    --cov-report=html:coverage_reports/coverage_html_report \\\n    --cov-report=xml:coverage_reports/coverage_xml_report.xml\n"
+        },
+        {
+          "name": "docker-bake.hcl",
+          "type": "blob",
+          "size": 0.857421875,
+          "content": "variable \"REGISTRY\" {\n  default = \"docker.io\"\n}\n\nvariable \"VERSION\" {\n  default = \"dev\"\n}\n\nvariable \"PYTHON_VERSION\" {\n  default = \"3.10\"\n}\n\nvariable \"INSTALLED_SOLC_VERSIONS\" {\n  default = \"0.8.19\"\n}\n\nfunction \"myth-tags\" {\n  params = [NAME]\n  result = formatlist(\"${REGISTRY}/${NAME}:%s\", split(\",\", VERSION))\n}\n\ngroup \"default\" {\n  targets = [\"myth\", \"myth-smoke-test\"]\n}\n\ntarget \"_myth-base\" {\n  target = \"myth\"\n  args = {\n    PYTHON_VERSION = PYTHON_VERSION\n    INSTALLED_SOLC_VERSIONS = INSTALLED_SOLC_VERSIONS\n  }\n  platforms = [\n    \"linux/amd64\",\n    \"linux/arm64\"\n  ]\n}\n\ntarget \"myth\" {\n  inherits = [\"_myth-base\"]\n  tags = myth-tags(\"mythril/myth\")\n}\n\ntarget \"myth-dev\" {\n  inherits = [\"_myth-base\"]\n  tags = myth-tags(\"mythril/myth-dev\")\n}\n\ntarget \"myth-smoke-test\" {\n  inherits = [\"_myth-base\"]\n  target = \"myth-smoke-test\"\n  output = [\"build/docker/smoke-test\"]\n}\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker_build_and_deploy.sh",
+          "type": "blob",
+          "size": 0.798828125,
+          "content": "#!/bin/bash\n\nset -eo pipefail\n\nNAME=$1\n\nif [[ ! $NAME =~ ^mythril/myth(-dev)?$ ]]; then\n    echo \"Error: unknown image name: $NAME\" >&2\n    exit 1\nfi\n\nif [ -n \"$CIRCLE_TAG\" ]; then\n    GIT_VERSION=${CIRCLE_TAG#?}\nelse\n    GIT_VERSION=${CIRCLE_SHA1}\nfi\n\nexport DOCKER_BUILDKIT=1\ndocker buildx create --use\n\n# Build and test all versions of the image. (The result will stay in the cache,\n# so the next build should be almost instant.)\ndocker buildx bake myth-smoke-test\n\nif [ -z \"$DOCKERHUB_USERNAME\" ]; then\n    echo \"Finishing without pushing to dockerhub\"\n    exit 0\nfi\n\necho \"$DOCKERHUB_PASSWORD\" | docker login -u \"$DOCKERHUB_USERNAME\" --password-stdin\n\n# strip mythril/ from NAME, e.g. myth or myth-dev\nBAKE_TARGET=\"${NAME#mythril/}\"\n\nVERSION=\"${GIT_VERSION:?},latest\" docker buildx bake --push \"${BAKE_TARGET:?}\"\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mypy-stubs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "myth",
+          "type": "blob",
+          "size": 0.26953125,
+          "content": "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n\"\"\"mythril.py: Bug hunting on the Ethereum blockchain\n   http://www.github.com/ConsenSys/mythril\n   \"\"\"\nfrom sys import exit\n\nimport mythril.interfaces.cli\n\nif __name__ == \"__main__\":\n    mythril.interfaces.cli.main()\n    exit()\n"
+        },
+        {
+          "name": "mythril",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 0.4248046875,
+          "content": "[tool.ruff]\ntarget-version = \"py37\"\n\n[tool.ruff.lint]\nfixable = [\"ALL\"]\n# List of rules https://docs.astral.sh/ruff/rules/\nselect = [\"F\", \"I\"]\n\n[tool.ruff.lint.per-file-ignores]\n# Fine for __init__.py files:\n# * F401: Module imported but unused\n# * F403: 'from .module import *'\n# (resolvable via __all__ list,\n# see https://docs.python.org/3/tutorial/modules.html#importing-from-a-package)\n\"mythril/**/__init__.py\" = [\"F401\", \"F403\"]\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.4287109375,
+          "content": "blake2b-py>=0.2.0,<1\ncoloredlogs>=10.0\ncoincurve>=13.0.0\ncytoolz>=0.12.0\nasn1crypto>=0.22.0\nconfigparser>=3.5.0\npy_ecc>=5.0.0\neth-abi>=5.1.0\neth-hash>=0.3.1,<0.8.0\neth-utils>=2.0.0\nhexbytes<1.3.0\njinja2>=2.9\nMarkupSafe<2.2.0\nmypy-extensions==1.0.0\nnumpy\npersistent>=4.2.0\npy-flags\npy-evm==0.10.1b1\npy-solc-x<3.0.0\npy-solc\npyparsing>=2.0.2,<4\nrequests\nrlp>=3,<5\nsemantic_version\nz3-solver<=4.13.0.0,>=4.8.8.0\nmatplotlib\ncertifi>=2020.06.20\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 4.375,
+          "content": "# -*- coding: utf-8 -*-\n\"\"\"install mythril and deploy source-dist and wheel to pypi.python.org.\n\ndeps (requires up2date version):\n    *) pip install --upgrade pip wheel setuptools twine\npublish to pypi w/o having to convert Readme.md to RST:\n    1) #> python setup.py sdist bdist_wheel\n    2) #> twine upload dist/*   #<specify bdist_wheel version to upload>; #optional --repository <testpypi> or  --repository-url <testpypi-url>\n\"\"\"\nimport io\nimport os\nimport sys\n\nfrom setuptools import find_packages, setup\nfrom setuptools.command.install import install as _install\n\n# Package meta-data.\nNAME = \"mythril\"\nDESCRIPTION = \"Security analysis tool for Ethereum smart contracts\"\nURL = \"https://github.com/ConsenSys/mythril\"\nAUTHOR = \"ConsenSys Dilligence\"\nAUTHOR_MAIL = None\nREQUIRES_PYTHON = \">=3.7.0\"\nhere = os.path.abspath(os.path.dirname(__file__))\n\n\n# What packages are required for this module to be executed?\ndef get_requirements():\n    \"\"\"\n    Return requirements as list.\n    Handles cases where git links are used.\n\n    \"\"\"\n    with open(os.path.join(here, \"requirements.txt\")) as f:\n        packages = []\n        for line in f:\n            line = line.strip()\n            # let's also ignore empty lines and comments\n            if not line or line.startswith(\"#\"):\n                continue\n            if \"https://\" not in line:\n                packages.append(line)\n                continue\n\n            rest, package_name = line.split(\"#egg=\")[0], line.split(\"#egg=\")[1]\n            if \"-e\" in rest:\n                rest = rest.split(\"-e\")[1]\n            package_name = package_name + \"@\" + rest\n            packages.append(package_name)\n    return packages\n\n\nREQUIRED = get_requirements()\n\nTESTS_REQUIRE = [\"mypy==0.782\", \"pytest>=3.6.0\", \"pytest_mock\", \"pytest-cov\"]\n\n# What packages are optional?\nEXTRAS = {}\n\n# If version is set to None then it will be fetched from __version__.py\nVERSION = None\n\n\n# Import the README and use it as the long-description.\n# Note: this will only work if 'README.md' is present in your MANIFEST.in file!\ntry:\n    with io.open(os.path.join(here, \"README.md\"), encoding=\"utf-8\") as f:\n        long_description = \"\\n\" + f.read()\nexcept FileNotFoundError:\n    long_description = DESCRIPTION\n\n\n# Load the package's __version__.py module as a dictionary.\nabout = {}\nif not VERSION:\n    project_slug = NAME.lower().replace(\"-\", \"_\").replace(\" \", \"_\")\n    with open(os.path.join(here, project_slug, \"__version__.py\")) as f:\n        exec(f.read(), about)\nelse:\n    about[\"__version__\"] = VERSION\n\n\n# Package version (vX.Y.Z). It must match git tag being used for CircleCI\n# deployment; otherwise the build will failed.\nclass VerifyVersionCommand(_install):\n    \"\"\"Custom command to verify that the git tag matches our version.\"\"\"\n\n    description = \"verify that the git tag matches our version\"\n\n    def run(self):\n        \"\"\"\"\"\"\n        tag = os.getenv(\"CIRCLE_TAG\")\n\n        if tag != about[\"__version__\"]:\n            info = \"Git tag: {0} does not match the version of this app: {1}\".format(\n                tag, about[\"__version__\"]\n            )\n            sys.exit(info)\n\n\nsetup(\n    name=NAME,\n    version=about[\"__version__\"][1:],\n    description=DESCRIPTION,\n    long_description=long_description,\n    long_description_content_type=\"text/markdown\",  # requires twine and recent setuptools\n    url=URL,\n    author=AUTHOR,\n    author_mail=AUTHOR_MAIL,\n    license=\"MIT\",\n    classifiers=[\n        \"Development Status :: 3 - Alpha\",\n        \"Intended Audience :: Science/Research\",\n        \"Topic :: Software Development :: Disassemblers\",\n        \"License :: OSI Approved :: MIT License\",\n        \"Programming Language :: Python :: 3.6\",\n        \"Programming Language :: Python :: 3.7\",\n        \"Programming Language :: Python :: 3.8\",\n        \"Programming Language :: Python :: 3.9\",\n        \"Programming Language :: Python :: 3.10\",\n        \"Programming Language :: Python :: 3.11\",\n        \"Programming Language :: Python :: 3.12\",\n    ],\n    keywords=\"hacking disassembler security ethereum\",\n    packages=find_packages(exclude=[\"contrib\", \"docs\", \"tests\"]),\n    install_requires=REQUIRED,\n    tests_require=TESTS_REQUIRE,\n    python_requires=REQUIRES_PYTHON,\n    extras_require=EXTRAS,\n    package_data={\"mythril.analysis.templates\": [\"*\"], \"mythril.support.assets\": [\"*\"]},\n    include_package_data=True,\n    entry_points={\"console_scripts\": [\"myth=mythril.interfaces.cli:main\"]},\n    cmdclass={\"verify\": VerifyVersionCommand},\n)\n"
+        },
+        {
+          "name": "solidity_examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 2.7724609375,
+          "content": "[tox]\nenvlist = python3.7, python3.10, python3.12\n\n[testenv]\ndeps =\n    pytest\n    pytest-mock\npassenv = MYTHRIL_DIR,INFURA_ID\nallowlist_externals = mkdir\ncommands =\n    mkdir -p {toxinidir}/tests/testdata/outputs_current/\n    mkdir -p {toxinidir}/tests/testdata/outputs_current_laser_result/\n    py.test -v \\\n        --junitxml={toxworkdir}/output/{envname}/junit.xml \\\n        --disable-pytest-warnings \\\n        {posargs}\n\n[testenv:py37]\nbasepython = python3.7\nsetenv =\n    COVERAGE_FILE = .coverage.{envname}\ndeps =\n    mypy==0.782\n    pytest\n    pytest-mock\n    pytest-cov\n    \nallowlist_externals = mkdir\ncommands =\n    mypy --follow-imports=silent --warn-unused-ignores --ignore-missing-imports --no-strict-optional mythril\n    mkdir -p {toxinidir}/tests/testdata/outputs_current/\n    mkdir -p {toxinidir}/tests/testdata/outputs_current_laser_result/\n    py.test -v \\\n        --cov=mythril \\\n        --cov-config=tox.ini \\\n        --cov-report=xml:{toxworkdir}/output/{envname}/coverage.xml \\\n        --cov-report=html:{toxworkdir}/output/{envname}/covhtml \\\n        --junitxml={toxworkdir}/output/{envname}/junit.xml \\\n        --disable-pytest-warnings \\\n        {posargs}\n\n[testenv:py38]\nbasepython = python3.8\nsetenv =\n    COVERAGE_FILE = .coverage.{envname}\ndeps =\n    mypy==0.782\n    pytest\n    pytest-mock\n    pytest-cov\n    \npassenv = MYTHRIL_DIR,INFURA_ID\nallowlist_externals = mkdir\ncommands =\n    mypy --follow-imports=silent --warn-unused-ignores --ignore-missing-imports --no-strict-optional mythril\n    mkdir -p {toxinidir}/tests/testdata/outputs_current/\n    mkdir -p {toxinidir}/tests/testdata/outputs_current_laser_result/\n    py.test -v \\\n        --cov=mythril \\\n        --cov-config=tox.ini \\\n        --cov-report=xml:{toxworkdir}/output/{envname}/coverage.xml \\\n        --cov-report=html:{toxworkdir}/output/{envname}/covhtml \\\n        --junitxml={toxworkdir}/output/{envname}/junit.xml \\\n        --disable-pytest-warnings \\\n        {posargs}\n\n[testenv:py39]\nbasepython = python3.9\nsetenv =\n    COVERAGE_FILE = .coverage.{envname}\ndeps =\n    mypy==0.782\n    pytest\n    pytest-mock\n    pytest-cov\n    \npassenv = MYTHRIL_DIR,INFURA_ID\nallowlist_externals = mkdir\ncommands =\n    mypy --follow-imports=silent --warn-unused-ignores --ignore-missing-imports --no-strict-optional mythril\n    mkdir -p {toxinidir}/tests/testdata/outputs_current/\n    mkdir -p {toxinidir}/tests/testdata/outputs_current_laser_result/\n    py.test -v \\\n        --cov=mythril \\\n        --cov-config=tox.ini \\\n        --cov-report=xml:{toxworkdir}/output/{envname}/coverage.xml \\\n        --cov-report=html:{toxworkdir}/output/{envname}/covhtml \\\n        --junitxml={toxworkdir}/output/{envname}/junit.xml \\\n        --disable-pytest-warnings \\\n        {posargs}\n\n\n[coverage:report]\nomit =\n    *__init__.py\n    /usr/*\n    *_test.py\n    setup.py\n"
+        }
+      ]
+    }
+  ]
+}

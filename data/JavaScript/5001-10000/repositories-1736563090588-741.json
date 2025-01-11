@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736563090588,
+    "page": 741,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "alexwolfe/Buttons",
+      "stars": 5030,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0830078125,
+          "content": ".sass-cache\n.DS_Store\n*.psd\nnode_modules\nshowcase/css/showcase.css.map\nshowcase-dist\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.451171875,
+          "content": "language: node_js\nnode_js:\n- 0.10\nbefore_script:\n- npm install -g grunt-cli\n\nenv:\n  global:\n  - secure: UpriWPnu18P/BWtqzKCCSta9921Z2947bTuniQoDc/ywFrC1Kpix4BL98fT3IB/8z4B3S+vXLbe+3qSeltjX2tNtYCY0JLkS9gijXrYLp7buphkBMdMPdTmEFM66iTwy2YD71XCqrh7fViuE5uMR4MHKRq3RCBeXrsQO8YcKUig=\n  - secure: HKlIRHrUj3uTOstiY8BLWAZqpiUXOaS6DhP0IIUCJ6JLWoFGm91l9sr2mR+sRcRdQ13oMTV0rXEZQ3uMJrTpxNv5jt7/QFpwi1m62RkyUwqTWCmPgduQ9HKqPKkw4xA+UXRHqv+I2sLFCamts9OFErqPTEWMJDKEfilLOqmsrUE=\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 5.6201171875,
+          "content": "module.exports = function (grunt) {\n  /**\n  * Load Grunt Npm Modules\n  *\n  */\n  grunt.loadNpmTasks('grunt-autoprefixer');\n  grunt.loadNpmTasks('grunt-contrib-sass');\n  grunt.loadNpmTasks('grunt-contrib-clean');\n  grunt.loadNpmTasks('grunt-contrib-watch');\n  grunt.loadNpmTasks('grunt-contrib-connect');\n  grunt.loadNpmTasks('grunt-contrib-copy');\n  grunt.loadNpmTasks('grunt-contrib-cssmin');\n  grunt.loadNpmTasks('grunt-saucelabs');\n  grunt.loadNpmTasks('grunt-contrib-qunit');\n  grunt.loadNpmTasks('grunt-includes');\n\n  /**\n  * Grunt Configuration\n  *\n  */\n  grunt.initConfig({\n\n    /*\n    * Template Includes\n    *\n    */\n\n    includes: {\n      build: {\n        cwd: 'showcase/pages',\n        src: ['*.html' ],\n        dest: 'showcase/',\n        options: {\n          includePath: 'showcase/includes'\n        }\n      }\n    },\n\n\n    /*\n    * Sass Compilation\n    *\n    */\n\n    sass: {\n      all: {\n        files: {\n          'tmp/css/buttons.css': 'scss/buttons.scss',\n          'tmp/css/showcase.css': 'showcase/scss/showcase.scss'\n        }\n      }\n    },\n\n\n    /*\n    * Vendor Prefixing\n    *\n    */\n\n    autoprefixer: {\n      options: {\n        browsers: ['last 3 versions', 'safari 5', 'ie 8', 'ie 9', 'Firefox >= 20']\n      },\n      all: {\n        expand: true,\n        flatten: true,\n        src: 'tmp/css/*.css',\n        dest: 'tmp/css'\n      }\n    },\n\n\n    /*\n    * Minify files\n    *\n    */\n\n    cssmin: {\n      add_banner: {\n        options: {\n          banner: '/* Buttons */',\n          keepSpecialComments: 1\n        },\n        files: {\n          'tmp/css/buttons.min.css': ['tmp/css/buttons.css']\n        }\n      }\n    },\n\n    /*\n    * Copy files\n    *\n    */\n\n    copy: {\n      css_library: {\n        files: [{\n          expand: true,\n          cwd: 'tmp/css',\n          src: ['**/*', '!showcase.css', '!showcase.css.map'],\n          dest: 'css'\n        }]\n      },\n      css_showcase: {\n        files: [{\n          expand: true,\n          cwd: 'tmp/css',\n          src: ['**/*', '!buttons.min.css', '!buttons.css.map'],\n          dest: 'showcase/css'\n        }]\n      },\n      js_showcase: {\n        files: [{\n          expand: true,\n          cwd: 'js',\n          src: ['**/*'],\n          dest: 'showcase/js'\n        }]\n      },\n      showcase_dist: {\n        files: [{\n          expand: true,\n          cwd: 'showcase',\n          src: ['*.html', 'css/**/*', 'fonts/**/*', 'images/**/*', 'js/**/*'],\n          dest: 'showcase-dist'\n        }]\n      }\n    },\n\n\n    /*\n    * Clean tmp folders\n    *\n    */\n\n    clean: {\n      dev: {\n        src: [\"tmp\"]\n      },\n      build: {\n        src: [\"showcase-dist\"]\n      }\n    },\n\n\n    /*\n    * Launch local server\n    *\n    */\n\n    connect: {\n      livereload: {\n        options: {\n          port: 8000,\n          livereload: 35729, // change this to '0.0.0.0' to access the server from outside\n          hostname: 'localhost',\n          base: 'showcase',\n          open: true\n        }\n      },\n      sauce: {\n        options: {\n          port: 9999,\n          hostname: 'localhost',\n          base: '',\n        }\n      }\n    },\n\n\n    /*\n    * Watch for changes\n    *\n    */\n\n    watch: {\n      scripts: {\n        files: ['js/**/*.js'],\n        tasks: ['copy:main:js_showcase', 'clean:dev']\n      },\n      sass: {\n        files: ['scss/**/*.scss', 'showcase/scss/**/*.scss'],\n        tasks: ['sass', 'autoprefixer', 'copy:css_showcase', 'copy:css_library', 'clean:dev']\n      },\n      includes: {\n        files: ['showcase/includes/**/*.html', 'showcase/pages/**/*.html'],\n        tasks: ['includes']\n      },\n      livereload: {\n        options: {\n          livereload: '<%= connect.livereload.options.livereload %>'\n        },\n        files: [\n          'scss/**/*.scss',\n          'css/**/*.css',\n          'js/**/*',\n          'showcase/**/*'\n        ]\n      }\n    },\n\n\n    /*\n    * QUnit\n    *\n    */\n\n    qunit: {\n      options: {\n        urls:[\n          'http://localhost:9999/js/tests/*.html'\n        ]\n      }\n    },\n\n    /*\n    * Saucelabs\n    * Requires environment variables set e.g. export SAUCE_USERNAME=XX; export SAUCE_ACCESS_KEY=XX\n    *\n    */\n    'saucelabs-qunit': { //DO NOT CHANGE NAME\n      all: {\n        options: {\n          build: process.env.TRAVIS_JOB_ID,\n          concurrency: 3,\n          tunnelTimeout: 5,\n          urls: ['http://localhost:9999/tests/index.html'],\n          testname: 'Buttons Sauce Unit Tests',\n          browsers: [\n            {\n              browserName: 'safari',\n              version: '6',\n              platform: 'OS X 10.8'\n            },\n            {\n              browserName: 'firefox',\n              version: '25',\n              platform: 'OS X 10.6'\n            },\n            {\n              browserName: 'chrome',\n              version: '31',\n              platform: 'Windows 8.1'\n            }\n          ]\n        }\n      }\n    }\n  });\n\n\n  /**\n  * Grunt Helper Tasks\n  *\n  */\n\n  grunt.registerTask('test', 'qunit');\n  grunt.registerTask('sauceserver', 'connect:sauce');\n  grunt.registerTask('sauce', 'saucelabs-qunit');\n  var testSubtasks = ['test'];\n  if (process.env.SAUCE_ACCESS_KEY !== undefined) {\n    testSubtasks.push('sauceserver');\n    testSubtasks.push('sauce');\n  }\n  grunt.registerTask('copyMain', ['copy:css_library', 'copy:css_showcase', 'copy:js_showcase']);\n\n\n  /**\n  * Grunt Core Build Tasks\n  *\n  */\n\n  grunt.registerTask('default', ['sass', 'autoprefixer', 'cssmin', 'copyMain', 'clean:dev']);\n  grunt.registerTask('dev', ['includes', 'sass', 'autoprefixer', 'cssmin', 'copyMain', 'clean:dev', 'connect', 'watch']);\n  grunt.registerTask('dist', ['clean:build', 'includes', 'sass', 'autoprefixer', 'cssmin', 'copyMain', 'copy:showcase_dist', 'clean:dev']);\n  grunt.registerTask('tests', testSubtasks);\n};\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.568359375,
+          "content": "Buttons\n\nCopyright 2012-2016 Alex Wolfe and Rob Levin\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.61328125,
+          "content": "# Buttons 2.0\n\n[![Sauce Test Status](https://saucelabs.com/browser-matrix/unicornuirocks.svg)](https://saucelabs.com/u/unicornuirocks)\n\n[![Build Status](https://travis-ci.org/alexwolfe/Buttons.svg?branch=buttons-2)](https://travis-ci.org/alexwolfe/Buttons)\n\n# Buttons 2.0\n\nButtons is a highly customizable production ready mobile web and desktop css button library. Buttons is a free  open source project created using Sass.\n\nAuthors [Alex Wolfe](https://twitter.com/alexwolfe) and [Rob Levin](https://twitter.com/roblevintennis).\n\n## Showcase Demo\n\nView the  [showcase demo](http://unicorn-ui.com/buttons/) to see the buttons in action. The showcase provides a full list of examples along with code snippets to speed up development.\n\n[![Buttons 2.0 Showcase](https://www.dropbox.com/s/y9cbmxmih6uwrmm/buttons-showcase.png?dl=1 \"Buttons 2.0 Showcase\")](http://unicorn-ui.com/buttons/)\n\n\n\n## Setup & Installation\n\n1. Download the latest [buttons.css](http://unicorn-ui.com/buttons/showcase/css/buttons.css)\n2. Include buttons in your website:\n\n```html\n  <!-- Buttons core css -->\n  <link rel=\"stylesheet\" href=\"css/buttons.css\">\n\n  <!-- Only needed if you want support for dropdown menus -->\n  <script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js\"></script>\n  <script type=\"text/javascript\" src=\"js/buttons.js\"></script>\n\n  <!-- Only needed if you want font icons -->\n  <link href=\"//netdna.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.css\" rel=\"stylesheet\">\n```\n\n\n## Bower Installation\n1. If you're using [Bower](http://bower.io/) you can run  `bower install Buttons`\n\n## Transitioning From Buttons 1.0 to Buttons 2.0\nWe've made some major improvements to the Buttons library. In order to integrate buttons into your current project you'll need to make the following changes:\n\n1. Compass has been replaced with [autoprefixer](https://github.com/postcss/autoprefixer). Compass is not recommended but it is still supported.\n2. Button colors are now completely independent (ex. button-primary). We no longer have classes like <code>button-flat-primary</code>, so to achieve this you now simply add <code>button-flat button-primary</code>\n3. Buttons styles are now independent (ex. button-flat, button-3d, etc.). You can apply these styles and they will automatically pick up the color attached to the button (ex. button-primary button-3d).\n\n## Customize Buttons (Recommended uses Sass & Autoprefixer)\n0. Clone the Buttons repository.\n0. Make sure you have [node.js](http://nodejs.org/) installed.\n0. From the command line `cd` into the root for the Buttons directory.\n0. Run ```npm install``` or ```sudo npm install``` (depending on your system permissions).\n0. On the command line run ```grunt dev```; this will open a browser with Buttons.\n0. Locate **scss** in the root directory.\n0. You can modify the _options.scss file where you can customize colors, typography, etc.\n0. Anytime you save your changes the Buttons showcase page will live reload with your changes!\n\n## Customize Buttons with only Sass or Compass\n0. Clone the Buttons repo.\n0. Make sure you have Sass installed.\n0. Run `npm install` from your terminal.\n0. Edit the `_options.scss` with your own custom values (see example values below).\n0. Buttons now works with or without Compass, so choose one of the following examples accordingly and run from the command line in Buttons's root directory:  \n  For Sass run: `$ sass --watch --scss scss/buttons.scss:css/buttons.css`  \n  For Compass run: `$ compass watch`\n0. The `css/buttons.css` file should now be updated.\n\n## Button Options\n\nTo edit Buttons simply change values within the `_options.scss` file. After you make your edits recompile your sass file and your changes will get processed.\n\n* **$ubtn:** This prefix stands for Unicorn Button and prevents namespace collisions that could occur if you import buttons as part of your Sass build process. We kindly ask you not to use the prefix $ubtn in your project in order to avoid possible name conflicts. Thanks!\n* **$ubtn-namespace:**  Desired CSS namespace for your buttons (default .button)\n* **$ubtn-glow-namespace:** Desired CSS namespace for your glow effect (default .glow)\n* **$ubtn-colors:** List of colors in format like `(name, background, color)`.\n* **$ubtn-glow-color:** Default glow color (#2c9adb, light blue)\n* **$ubtn-shapes:** List of shapes in format like `(square 0px)`. You can use Sass maps if you're using 3.3. See `_options.scss` for details.\n* **$ubtn-sizes:** List of sizes in format like `(jumbo 1.5)`. You can use Sass maps if you're using 3.3. See `_options.scss` for details.\n* **$ubtn-bgcolor:** Default button background color (#EEE, light gray)\n* **$ubtn-height:** Default height, also used to calculate padding on the sides (32px)\n* **$ubtn-font-family:**  Default font family\n* **$ubtn-font-color:** Default font color (#666, gray)\n* **$ubtn-font-weight:** Default font weight\n* **$ubtn-font-size:** Default font size (14px). You can also specify a value of `inherit` and it will be respected.\n\n\n## Excluding Button Types\n\nBy default, Buttons will include all  button types. You can exclude types from your compilation by simply removing the corresponding *@import* statement in the buttons.scss file.\n\n```shell\n//Example import statement for 3d button.\n@import 'types/3d';\n```\nRemove this statement then recompile to create a build without 3d buttons.\n\n## Browser Support\nButtons works in all modern browsers (Firefox, Chrome, Safari, IE) and gracefully degrades all to Internet Explorer 8.\n\n\n## About Buttons\nButtons is part of the [Unicorn-UI Framework](http://unicorn-ui.com). Created by Alex Wolfe [@alexwolfe](https://twitter.com/alexwolfe) and Rob Levin [@roblevintennis ](https://twitter.com/roblevintennis).\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.376953125,
+          "content": "{\n  \"name\": \"Buttons\",\n  \"homepage\": \"https://github.com/alexwolfe/Buttons\",\n  \"authors\": [\n    \"alexwolfe\",\n    \"roblevintennis\"\n  ],\n  \"description\": \"A fully customizable CSS button library built with Sass\",\n  \"main\": \"css/buttons.css\",\n  \"keywords\": [\n    \"buttons\",\n    \"sass\",\n    \"scss\",\n    \"css\",\n    \"css buttons\",\n    \"sass buttons\"\n  ],\n  \"license\": \"Apache License v2.0\"\n}\n"
+        },
+        {
+          "name": "config.rb",
+          "type": "blob",
+          "size": 0.82421875,
+          "content": "# Require any additional compass plugins here.\n\n# Set this to the root of your project when deployed:\nhttp_path = \"/\"\ncss_dir = \"css\"\nsass_dir = \"scss\"\nimages_dir = \"images\"\njavascripts_dir = \"js\"\n\n# You can select your preferred output style here (can be overridden via the command line):\n# output_style = :expanded or :nested or :compact or :compressed\n\n# To enable relative paths to assets via compass helper functions. Uncomment:\n# relative_assets = true\n\n# To disable debugging comments that display the original location of your selectors. Uncomment:\n# line_comments = false\n\n\n# If you prefer the indented syntax, you might want to regenerate this\n# project again passing --syntax sass, or you can uncomment this:\n# preferred_syntax = :sass\n# and then run:\n# sass-convert -R --from scss --to sass scss scss && rm -rf sass && mv scss sass\n"
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "humans.txt",
+          "type": "blob",
+          "size": 0.5146484375,
+          "content": "# humanstxt.org/\n# The humans responsible & technology colophon\n\n# TEAM\n    Alexander Wolfe -- Author -- @alexwolfe\n    Rob Levin -- Author -- @roblevintennis\n\n# THANKS\n    The Sass Team\n    The Compass Team\n    The Gulp Team\n    The Grunt Team\n    The Autoprefixer Team\n    Google Prettify Team\n    Font Awesome Team.\n    jQuery Plugin Boiler Plate @addyosmani and @zenorocha\n    The Saucelabs Team.\n    The QUnit Team.\n    The Travic CI Team.\n\n# TECHNOLOGY COLOPHON\n\n    HTML5, CSS3, Sass, Autoprefixer, Compass, Gulp, Grunt\n"
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.080078125,
+          "content": "{\n  \"name\": \"Buttons\",\n  \"version\": \"2.0.0\",\n  \"description\": \"A CSS button library built with Sass\",\n  \"author\": \"Unicorn-UI <updates@unicorn-ui.com>\",\n  \"homepage\": \"http://unicorn-ui.com/\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git@github.com:alexwolfe/Buttons.git\"\n  },\n  \"contributors\": \"https://github.com/alexwolfe/Buttons/graphs/contributors\",\n  \"keywords\": [\n    \"Buttons\",\n    \"CSS Buttons\",\n    \"Sass Buttons\"\n  ],\n  \"scripts\": {\n    \"test\": \"grunt tests --verbose\"\n  },\n  \"license\": \"Apache License, Version 2.0\",\n  \"bugs\": {\n    \"url\": \"https://github.com/alexwolfe/Buttons/issues\"\n  },\n  \"devDependencies\": {\n    \"grunt-autoprefixer\": \"^0.8.1\",\n    \"grunt-contrib-clean\": \"^0.6.0\",\n    \"grunt-contrib-connect\": \"^0.8.0\",\n    \"grunt-contrib-copy\": \"^0.5.0\",\n    \"grunt-contrib-cssmin\": \"^0.10.0\",\n    \"grunt-contrib-qunit\": \"^0.5.2\",\n    \"grunt-contrib-sass\": \"^0.7.4\",\n    \"grunt-contrib-watch\": \"^0.6.1\",\n    \"grunt-includes\": \"^0.4.5\",\n    \"grunt-saucelabs\": \"^8.3.2\",\n    \"webpack\": \"^1.4.5\"\n  },\n  \"dependencies\": {\n    \"grunt\": \"^0.4.5\",\n    \"grunt-saucelabs\": \"^8.3.2\"\n  }\n}\n"
+        },
+        {
+          "name": "scss",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "showcase",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

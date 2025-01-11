@@ -1,0 +1,298 @@
+{
+  "metadata": {
+    "timestamp": 1736559680374,
+    "page": 352,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "GreaterWMS/GreaterWMS",
+      "stars": 4138,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0302734375,
+          "content": "*.vue linguist-language=python\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.14453125,
+          "content": "node_modules/\n__pycache__/\nAuthorization/\nauthorization.txt\nauthorization.json\ndb.sqlite3\n.idea/\ndelete.py\n*.xlsx\nlogs/\nbfg.jar\nerror.log\nserver.log"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.6376953125,
+          "content": "FROM --platform=linux/amd64 python:3.8.10-slim AS backend\nRUN mkdir -p /GreaterWMS/templates\n#copy requirements.txt\nADD ./requirements.txt /GreaterWMS/requirements.txt\nCOPY ./backend_start.sh /GreaterWMS/backend_start.sh\n#Configure working directory\nWORKDIR /GreaterWMS\nENV port = ${port}\n#Installation foundation dependency\n#RUN sed -i 's/deb.debian.org/mirrors.aliyun.com/g' /etc/apt/sources.list\n#RUN apt-get clean\nRUN apt-get update --fix-missing && apt-get upgrade -y\nRUN apt-get install build-essential -y\nRUN apt-get install supervisor -y\n#Configure pip3 Alibaba Source\n#RUN pip3 config set global.index-url http://mirrors.aliyun.com/pypi/simple/\n#RUN pip3 config set install.trusted-host mirrors.aliyun.com\nRUN python3 -m pip install --upgrade pip\n#Install supervisor daphne\nRUN pip3 install supervisor\nRUN pip3 install -U 'Twisted[tls,http2]'\nRUN pip3 install -r requirements.txt\nRUN pip3 install daphne\nRUN chmod +x /GreaterWMS/backend_start.sh\nCMD [\"/GreaterWMS/backend_start.sh\"]\n\nFROM --platform=linux/amd64 node:14.19.3-buster-slim AS front\nCOPY ./templates/package.json /GreaterWMS/templates/package.json\n#COPY ./templates/node_modules/ /GreaterWMS/templates/node_modules/\nCOPY ./web_start.sh /GreaterWMS/templates/web_start.sh\nENV port = ${port}\n#ENV NODE_OPTIONS=--openssl-legacy-provider\nRUN cd  /GreaterWMS/templates\nRUN npm install -g npm --force\n#RUN npm config set registry https://registry.npm.taobao.org\nRUN npm install -g yarn --force\n#RUN yarn config set registry https://registry.npm.taobao.org\nRUN npm install -g @quasar/cli --force\nRUN yarn install\nRUN chmod +x /GreaterWMS/templates/web_start.sh\nENTRYPOINT [\"/GreaterWMS/templates/web_start.sh\"]\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 11.0908203125,
+          "content": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+        },
+        {
+          "name": "README.en.md",
+          "type": "blob",
+          "size": 5.95703125,
+          "content": "<div align=\"center\">\n  <img src=\"static/img/logo.png\" alt=\"GreaterWMS logo\" width=\"200\" height=\"auto\" />\n  <h1>GreaterWMS</h1>\n  <p>Open Source Inventory Management System </p>\n\n<!-- Badges -->\n![License: APLv2](https://img.shields.io/github/license/GreaterWMS/GreaterWMS)\n![Release Version (latest Version)](https://img.shields.io/github/v/release/GreaterWMS/GreaterWMS?color=orange&include_prereleases)\n![QR Code Support](https://img.shields.io/badge/QR--Code-Support-orange.svg)\n![Docker Support](https://img.shields.io/badge/Docker-Support-orange.svg)\n![i18n Support](https://img.shields.io/badge/i18n-Support-orange.svg)\n\n![repo size](https://img.shields.io/github/repo-size/GreaterWMS/GreaterWMS)\n![GitHub commit activity](https://img.shields.io/github/commit-activity/m/GreaterWMS/GreaterWMS)\n![Contributors](https://img.shields.io/github/contributors/GreaterWMS/GreaterWMS?color=blue)\n\n![GitHub Org's stars](https://img.shields.io/github/stars/GreaterWMS?style=social)\n![GitHub Follows](https://img.shields.io/github/followers/Singosgu?style=social)\n![GitHub Forks](https://img.shields.io/github/forks/GreaterWMS/GreaterWMS?style=social)\n![GitHub Watch](https://img.shields.io/github/watchers/GreaterWMS/GreaterWMS?style=social)\n\n![Python](https://img.shields.io/badge/Python-3.8.10-yellowgreen)\n![Django](https://img.shields.io/badge/Django-4.1.2-yellowgreen)\n![Quasar Cli](https://img.shields.io/badge/Quasar/cli-1.2.1-yellowgreen)\n![Vue](https://img.shields.io/badge/Vue-2.6.0-yellowgreen)\n![NodeJS](https://img.shields.io/badge/NodeJS-14.19.3-yellowgreen)\n\n[![YouTube](https://img.shields.io/youtube/channel/subscribers/UCPW1wciGMIEh7CYOdLnsloA?color=red&label=YouTube&logo=youtube&style=for-the-badge)](https://www.youtube.com/channel/UCPW1wciGMIEh7CYOdLnsloA)\n\n</div>\n\n#### You can share your vacant warehouse space, use it for those in need, and generate income\n\n## :rocket: Link US\n<h4>\n    <a href=\"https://www.56yhz.com/\">Home Page</a>\n</h4>\n<h4>\n    <a href=\"https://production.56yhz.com/\">Demo</a>\n</h4>\n<h4>\n  <a href=\"https://www.youtube.com/channel/UCPW1wciGMIEh7CYOdLnsloA\">Video Tutorials</a>\n</h4>\n<h4>\n  <a href=\"https://github.com/GreaterWMS/GreaterwMS/issues/new?template=bug_report.md&title=[BUG]\">Report Bug</a>\n</h4>\n<h4>   \n  <a href=\"https://github.com/GreaterWMS/GreaterWMS/issues/new?template=feature_request.md&title=[FR]\">Request Feature</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/greaterwms.html\">中文文档</a>\n</h4>\n\n[//]: # (About the Project)\n## :star2: About the Project\n\nThis Inventory management system is the currently Ford Asia Pacific after-sales logistics warehousing supply chain process.\nAfter I leave Ford, I start this project in order to help some who need it. \nOneAPP Type. Support scanner PDA, mobile APP, desktop exe, website as well.\n\n[//]: # (Function)\n## :dart: Function\n\n* [x] Multiple Warehouses\n* [x] Supplier Management\n* [x] Customer Management\n* [x] Scanner PDA\n* [x] Cycle Count\n* [x] Order Management\n* [x] Stock Control\n* [x] Safety Stock Show\n* [x] API Documents\n* [x] IOS APP Support\n* [x] Android APP Support\n* [x] Electron APP Support\n* [x] Auto Update\n* [x] i18n Support\n* [x] API Documents\n\n[//]: # (Install)\n## :compass: Install\nPython install\n- [python 3.8.10](https://www.python.org/downloads/release/python-3810/)\n\nNodejs install\n- [nodejs 14.19.3](https://nodejs.org/download/release/v14.19.3/)\n\nTwisted install\n- Please google how to install Twisted , if you have some problem on install it . \n\nClone Project\n~~~shell\ngit clone https://github.com/GreaterWMS/GreaterWMS.git\n~~~\n\n### docker(Optional)\n~~~shell\ncd GreaterWMS/\ndocker-compose up -d\n# Change Baseurl\n# baseurl GreaterWMS/templates/public/statics/baseurl.txt\ndocker-compose restart\n~~~\n\n<h4>\n  <a href=\"https://www.56yhz.com/win_10.html\">Windows X64</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/centos_7.html\">Centos 7</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/ubuntu_20.html\">Ubuntu 20</a>\n</h4>\n\n[//]: # (development)\n## :hammer_and_wrench: How To Run Development Server:\n\n- Run Backend:\n~~~shell\ncd GreaterWMS\ndaphne -p 8008 greaterwms.asgi:application\nor\ndaphne -b 0.0.0.0 -p 8008 greaterwms.asgi:application # lan\n~~~\n\n- Run Frontend:\n~~~shell\ncd templates\nquasar d\n~~~\n\n- Change Request Baseurl\n~~~shell\ntemplates/public/statics/baseurl.txt\n~~~\n\n\n- API Documents\n\n~~~shell\nbaseurl + '/docs/'\n~~~\n\n### Companion Mobile APP\n\n- App Source Code\n\n~~~shell\nnpm install cordova -g\n\ncd app\nyarn install\n## Development\nquasar d -m cordova -T [android, ios]\n## Deploy\nquasar build -m [android, ios]\n~~~\n\n- You can directly use app if you don't want to build it \n\nGreaterWMS is supported by a companion mobile app which allows users access to run the business well.\nIt can scan the goods by your camera or your PDA scanner.\n\n[IOS](https://apps.apple.com/gb/app/intelligent-warehousing-gwms/id6444078526)\n\n[Android](https://production.56yhz.com/media/GWMS.apks)\n\n## Download Android installer tools\n\n!!! info \"Android\"\n    \n    App store search\n\n    Split APKs Installer \n\n## Directly download installer tools\n\n[Sai](https://po.56yhz.com/media/sai.apk)\n\n- Open Sai APP, choose GWMS.apks then install\n\n[//]: # (publish)\n## :trumpet: How To Publish Your APP:\n\n- Web Build:\n\n~~~shell\ncd templates\nquasar build\n~~~\n\n[//]: # (deploy)\n## :computer: How To Deploy Server:\n\n<h4>\n  <a href=\"https://www.56yhz.com/supervisor_process_guarded.html\">Supervisor Process Guarded</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/nginx_config.html\">Nginx Config</a>\n</h4>\n\nIf the server has SSL enabled, please use HTTPS and WSS, if SSL is not enabled, use HTTP and WS\n\nThe front-end code needs to be rebuilt after modification.\n\n## Show\n<div align=\"left\">\n    <img src=\"static/img/GreaterWMS_en.png\" alt=\"GreaterWMS home\" width=\"\" height=\"400\" />\n</div>\n<div align=\"left\">\n    <img src=\"static/img/mobile_splash.jpg\" alt=\"GreaterWMS splash\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_dn_en.jpg\" alt=\"GreaterWMS dn\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_equ_en.jpg\" alt=\"GreaterWMS goods\" width=\"200\" height=\"400\" />\n</div>\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.9560546875,
+          "content": "<div align=\"center\">\n  <img src=\"static/img/logo.png\" alt=\"GreaterWMS logo\" width=\"200\" height=\"auto\" />\n  <h1>GreaterWMS</h1>\n  <p>Open Source Inventory Management System </p>\n\n<!-- Badges -->\n![License: APLv2](https://img.shields.io/github/license/GreaterWMS/GreaterWMS)\n![Release Version (latest Version)](https://img.shields.io/github/v/release/GreaterWMS/GreaterWMS?color=orange&include_prereleases)\n![QR Code Support](https://img.shields.io/badge/QR--Code-Support-orange.svg)\n![Docker Support](https://img.shields.io/badge/Docker-Support-orange.svg)\n![i18n Support](https://img.shields.io/badge/i18n-Support-orange.svg)\n\n![repo size](https://img.shields.io/github/repo-size/GreaterWMS/GreaterWMS)\n![GitHub commit activity](https://img.shields.io/github/commit-activity/m/GreaterWMS/GreaterWMS)\n![Contributors](https://img.shields.io/github/contributors/GreaterWMS/GreaterWMS?color=blue)\n\n![GitHub Org's stars](https://img.shields.io/github/stars/GreaterWMS?style=social)\n![GitHub Follows](https://img.shields.io/github/followers/Singosgu?style=social)\n![GitHub Forks](https://img.shields.io/github/forks/GreaterWMS/GreaterWMS?style=social)\n![GitHub Watch](https://img.shields.io/github/watchers/GreaterWMS/GreaterWMS?style=social)\n\n![Python](https://img.shields.io/badge/Python-3.8.10-yellowgreen)\n![Django](https://img.shields.io/badge/Django-4.1.2-yellowgreen)\n![Quasar Cli](https://img.shields.io/badge/Quasar/cli-1.2.1-yellowgreen)\n![Vue](https://img.shields.io/badge/Vue-2.6.0-yellowgreen)\n![NodeJS](https://img.shields.io/badge/NodeJS-14.19.3-yellowgreen)\n\n[![YouTube](https://img.shields.io/youtube/channel/subscribers/UCPW1wciGMIEh7CYOdLnsloA?color=red&label=YouTube&logo=youtube&style=for-the-badge)](https://www.youtube.com/channel/UCPW1wciGMIEh7CYOdLnsloA)\n\n</div>\n\n#### You can share your vacant warehouse space, use it for those in need, and generate income\n\n## :rocket: Link US\n<h4>\n    <a href=\"https://www.56yhz.com/\">Home Page</a>\n</h4>\n<h4>\n    <a href=\"https://production.56yhz.com/\">Demo</a>\n</h4>\n<h4>\n  <a href=\"https://www.youtube.com/channel/UCPW1wciGMIEh7CYOdLnsloA\">Video Tutorials</a>\n</h4>\n<h4>\n  <a href=\"https://github.com/GreaterWMS/GreaterwMS/issues/new?template=bug_report.md&title=[BUG]\">Report Bug</a>\n</h4>\n<h4>   \n  <a href=\"https://github.com/GreaterWMS/GreaterWMS/issues/new?template=feature_request.md&title=[FR]\">Request Feature</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/greaterwms.html\">中文文档</a>\n</h4>\n\n[//]: # (About the Project)\n## :star2: About the Project\n\nThis Inventory management system is the currently Ford Asia Pacific after-sales logistics warehousing supply chain process.\nAfter I leave Ford, I start this project in order to help some who need it. \nOneAPP Type. Support scanner PDA, mobile APP, desktop exe, website as well.\n\n[//]: # (Function)\n## :dart: Function\n\n* [x] Multiple Warehouses\n* [x] Supplier Management\n* [x] Customer Management\n* [x] Scanner PDA\n* [x] Cycle Count\n* [x] Order Management\n* [x] Stock Control\n* [x] Safety Stock Show\n* [x] API Documents\n* [x] IOS APP Support\n* [x] Android APP Support\n* [x] Electron APP Support\n* [x] Auto Update\n* [x] i18n Support\n* [x] API Documents\n\n[//]: # (Install)\n## :compass: Install\nPython install\n- [python 3.8.10](https://www.python.org/downloads/release/python-3810/)\n\nNodejs install\n- [nodejs 14.19.3](https://nodejs.org/download/release/v14.19.3/)\n\nTwisted install\n- Please google how to install Twisted , if you have some problem on install it . \n\nClone Project\n~~~shell\ngit clone https://github.com/GreaterWMS/GreaterWMS.git\n~~~\n\n### docker(Optional)\n~~~shell\ncd GreaterWMS/\ndocker-compose up -d\n# Change Baseurl\n# baseurl GreaterWMS/templates/public/statics/baseurl.txt\ndocker-compose restart\n~~~\n\n<h4>\n  <a href=\"https://www.56yhz.com/win_10.html\">Windows X64</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/centos_7.html\">Centos 7</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/ubuntu_20.html\">Ubuntu 20</a>\n</h4>\n\n[//]: # (development)\n## :hammer_and_wrench: How To Run Development Server:\n\n- Run Backend:\n~~~shell\ncd GreaterWMS\ndaphne -p 8008 greaterwms.asgi:application\nor\ndaphne -b 0.0.0.0 -p 8008 greaterwms.asgi:application # lan\n~~~\n\n- Run Frontend:\n~~~shell\ncd templates\nquasar d\n~~~\n\n- Change Request Baseurl\n~~~shell\ntemplates/public/statics/baseurl.txt\n~~~\n\n- API Documents\n\n~~~shell\nbaseurl + '/docs/'\n~~~\n\n### Companion Mobile APP\n\n- App Source Code\n\n~~~shell\nnpm install cordova -g\n\ncd app\nyarn install\n## Development\nquasar d -m cordova -T [android, ios]\n## Deploy\nquasar build -m [android, ios]\n~~~\n\n- You can directly use app if you don't want to build it \n\nGreaterWMS is supported by a companion mobile app which allows users access to run the business well.\nIt can scan the goods by your camera or your PDA scanner.\n\n[IOS](https://apps.apple.com/gb/app/intelligent-warehousing-gwms/id6444078526)\n\n[Android](https://production.56yhz.com/media/GWMS.apks)\n\n## Download Android installer tools\n\n!!! info \"Android\"\n    \n    App store search\n\n    Split APKs Installer \n\n## Directly download installer tools\n\n[Sai](https://po.56yhz.com/media/sai.apk)\n\n- Open Sai APP, choose GWMS.apks then install\n\n[//]: # (publish)\n## :trumpet: How To Publish Your APP:\n\n- Web Build:\n\n~~~shell\ncd templates\nquasar build\n~~~\n\n[//]: # (deploy)\n## :computer: How To Deploy Server:\n\n<h4>\n  <a href=\"https://www.56yhz.com/supervisor_process_guarded.html\">Supervisor Process Guarded</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/nginx_config.html\">Nginx Config</a>\n</h4>\n\nIf the server has SSL enabled, please use HTTPS and WSS, if SSL is not enabled, use HTTP and WS\n\nThe front-end code needs to be rebuilt after modification.\n\n## Show\n<div align=\"left\">\n    <img src=\"static/img/GreaterWMS_en.png\" alt=\"GreaterWMS home\" width=\"\" height=\"400\" />\n</div>\n<div align=\"left\">\n    <img src=\"static/img/mobile_splash.jpg\" alt=\"GreaterWMS splash\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_dn_en.jpg\" alt=\"GreaterWMS dn\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_equ_en.jpg\" alt=\"GreaterWMS goods\" width=\"200\" height=\"400\" />\n</div>\n"
+        },
+        {
+          "name": "README.zh-CN.md",
+          "type": "blob",
+          "size": 6.021484375,
+          "content": "<div align=\"center\">\n  <img src=\"static/img/logo.png\" alt=\"GreaterWMS logo\" width=\"200\" height=\"auto\" />\n  <h1>GreaterWMS</h1>\n  <p>完全开源的仓库管理系统</p>\n\n<!-- Badges -->\n![License: APLv2](https://img.shields.io/github/license/GreaterWMS/GreaterWMS)\n![Release Version (latest Version)](https://img.shields.io/github/v/release/GreaterWMS/GreaterWMS?color=orange&include_prereleases)\n![QR Code Support](https://img.shields.io/badge/QR--Code-Support-orange.svg)\n![Docker Support](https://img.shields.io/badge/Docker-Support-orange.svg)\n![i18n Support](https://img.shields.io/badge/i18n-Support-orange.svg)\n\n![repo size](https://img.shields.io/github/repo-size/GreaterWMS/GreaterWMS)\n![GitHub commit activity](https://img.shields.io/github/commit-activity/m/GreaterWMS/GreaterWMS)\n![Contributors](https://img.shields.io/github/contributors/GreaterWMS/GreaterWMS?color=blue)\n\n![GitHub Org's stars](https://img.shields.io/github/stars/GreaterWMS?style=social)\n![GitHub Follows](https://img.shields.io/github/followers/Singosgu?style=social)\n![GitHub Forks](https://img.shields.io/github/forks/GreaterWMS/GreaterWMS?style=social)\n![GitHub Watch](https://img.shields.io/github/watchers/GreaterWMS/GreaterWMS?style=social)\n\n![Python](https://img.shields.io/badge/Python-3.8.10-yellowgreen)\n![Django](https://img.shields.io/badge/Django-4.1.2-yellowgreen)\n![Quasar Cli](https://img.shields.io/badge/Quasar/cli-1.2.1-yellowgreen)\n![Vue](https://img.shields.io/badge/Vue-2.6.0-yellowgreen)\n![NodeJS](https://img.shields.io/badge/NodeJS-14.19.3-yellowgreen)\n\n[![BiliBili](https://img.shields.io/badge/BiliBili-4987-red)](https://space.bilibili.com/407321291/channel/seriesdetail?sid=776320)\n</div>\n\n## :rocket: 找到我们\n<h4>\n    <a href=\"https://www.56yhz.com/\">官网首页</a>\n</h4>\n<h4>\n    <a href=\"https://production.56yhz.com/\">演示地址</a>\n</h4>\n<h4>\n  <a href=\"https://space.bilibili.com/407321291?spm_id_from=333.1007.0.0\">教程视频</a>\n</h4>\n<h4>\n  <a href=\"https://github.com/GreaterWMS/GreaterwMS/issues/new?template=bug_report.md&title=[BUG]\">提交一个Bug</a>\n</h4>\n<h4>   \n  <a href=\"https://github.com/GreaterWMS/GreaterWMS/issues/new?template=feature_request.md&title=[FR]\">提交一个建议</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/greaterwms.html\">英文文档</a>\n</h4>\n\nQQ技术交流群：289548524\n\n[//]: # (About the Project)\n### :star2: 关于此项目\n\n该库存管理系统是，目前福特亚太区售后物流仓储供应链流程。\n离开福特后，我开始了这个项目。 为了帮助一些有需要的人。\nOneAPP 理念。 支持扫描设备PDA、手机APP、桌面exe、网站等。\n\n[//]: # (Function)\n## :dart: 模块\n\n* [x] 多仓\n* [x] 供应商管理\n* [x] 客户管理\n* [x] 扫描设备PDA\n* [x] 盘点\n* [x] 订单管理\n* [x] 库存管理\n* [x] 安全库存\n* [x] API文档\n* [x] IOS APP支持\n* [x] Android APP支持\n* [x] Electron APP支持\n* [x] 自动更新\n* [x] i18n国际化\n\n[//]: # (Install)\n## :compass: 安装\npython安装\n- [python 3.8.10](https://www.python.org/downloads/release/python-3810/)\n\nnodejs安装\n- [nodejs 14.19.3](https://nodejs.org/download/release/v14.19.3/)\n\nTwisted安装\n- Twisted在某些情况下安装很困难，请自行百度安装方法\n\n克隆代码\n~~~shell\ngit clone https://gitee.com/Singosgu/GreaterWMS.git\n~~~\n\n### docker(可选择)\n~~~shell\ncd GreaterWMS/\ndocker-compose up -d\n# 修改请求地址\n# baseurl GreaterWMS/templates/public/statics/baseurl.txt\ndocker-compose restart\n~~~\n\n<h4>\n  <a href=\"https://www.56yhz.com/zh/win_10.html\">Windows X64</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/centos_7.html\">Centos 7</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/ubuntu_20.html\">Ubuntu 20</a>\n</h4>\n\n[//]: # (development)\n## :hammer_and_wrench: 怎么启动开发环境:\n\n- 启动后端环境:\n~~~shell\ncd GreaterWMS\ndaphne -p 8008 greaterwms.asgi:application\nor\ndaphne -b 0.0.0.0 -p 8008 greaterwms.asgi:application # 局域网\n~~~\n\n- 启动前端环境:\n~~~shell\ncd templates\nquasar d # http://localhost:8080\nor\nquasar dev # http://localhost:8080\n~~~\n\n- 请求地址修改\n~~~shell\ntemplates/public/statics/baseurl.txt\n~~~\n\n- API文档\n\n~~~shell\nbaseurl + '/docs/'\n~~~\n\n### 配套的手机APP\n\n- App源码编译\n\n~~~shell\nnpm install cordova -g\n\ncd app\nyarn install\n## 开发环境\nquasar d -m cordova -T [android, ios]\n## 构建打包\nquasar build -m [android, ios]\n~~~\n\n- 你不想编译也可以直接使用\n\n[IOS](https://apps.apple.com/cn/app/%E6%99%BA%E8%83%BD%E4%BB%93%E5%82%A8%E8%BD%AF%E4%BB%B6gwms/id6444078526)\n\n[Android](https://production.56yhz.com/media/GWMS.apks)\n\nGreaterWMS有配套的APP，支持手机扫描，和PDA扫描，配置下服务器请求地址即可\n\n## 下载apks安装工具\n\n!!! info \"Android\"\n    \n    应用商店搜索\n\n    Split APKs Installer \n\n## 或直接下载apks安装工具\n\n[Sai](https://po.56yhz.com/media/sai.apk)\n\n- 打开Sai APP，选择下载的GWMS.apks，即可完成安装\n\n[//]: # (publish)\n## :trumpet: 怎么构建你的app:\n\n- 网页版构建:\n\n~~~shell\ncd templates\nquasar build # /templates/dist/spa\n~~~\n\n[//]: # (deploy)\n## :computer: 怎么部署到服务器:\n\n<h4>\n  <a href=\"https://www.56yhz.com/zh/supervisor_process_guarded.html\">Supervisor教程</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/nginx_config.html\">Nginx配置</a>\n</h4>\n\n记得启用ssl的话，需要额外配置\n在前端代码中进行编辑\n\n## Show\n<div align=\"left\">\n    <img src=\"static/img/GreaterWMS.png\" alt=\"GreaterWMS home\" width=\"\" height=\"400\" />\n</div>\n<div align=\"left\">\n    <img src=\"static/img/mobile_splash.jpg\" alt=\"GreaterWMS splash\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_dn.jpg\" alt=\"GreaterWMS dn\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_equ.jpg\" alt=\"GreaterWMS goods\" width=\"200\" height=\"400\" />\n</div>\n\n<!-- ABOUT AUTHOR -->\n## :bowing_man: 关于作者\n\n[Elvis.Shi](https://gitee.com/GreaterWMS/GreaterWMS/wikis/%E6%88%91%E6%98%AF%E5%A6%82%E4%BD%95%E4%BB%8E%E4%B8%80%E4%B8%AA%E7%89%A9%E6%B5%81%E8%8F%9C%E9%B8%9F%EF%BC%8C%E4%B8%80%E7%9B%B4%E5%81%9A%E5%88%B0500%E5%BC%BA%E4%BA%9A%E5%A4%AA%E5%8C%BAChina%20PDC%20Manager%E7%9A%84)\n"
+        },
+        {
+          "name": "README_CN.md",
+          "type": "blob",
+          "size": 6.0224609375,
+          "content": "<div align=\"center\">\n  <img src=\"static/img/logo.png\" alt=\"GreaterWMS logo\" width=\"200\" height=\"auto\" />\n  <h1>GreaterWMS</h1>\n  <p>完全开源的仓库管理系统</p>\n\n<!-- Badges -->\n![License: APLv2](https://img.shields.io/github/license/GreaterWMS/GreaterWMS)\n![Release Version (latest Version)](https://img.shields.io/github/v/release/GreaterWMS/GreaterWMS?color=orange&include_prereleases)\n![QR Code Support](https://img.shields.io/badge/QR--Code-Support-orange.svg)\n![Docker Support](https://img.shields.io/badge/Docker-Support-orange.svg)\n![i18n Support](https://img.shields.io/badge/i18n-Support-orange.svg)\n\n![repo size](https://img.shields.io/github/repo-size/GreaterWMS/GreaterWMS)\n![GitHub commit activity](https://img.shields.io/github/commit-activity/m/GreaterWMS/GreaterWMS)\n![Contributors](https://img.shields.io/github/contributors/GreaterWMS/GreaterWMS?color=blue)\n\n![GitHub Org's stars](https://img.shields.io/github/stars/GreaterWMS?style=social)\n![GitHub Follows](https://img.shields.io/github/followers/Singosgu?style=social)\n![GitHub Forks](https://img.shields.io/github/forks/GreaterWMS/GreaterWMS?style=social)\n![GitHub Watch](https://img.shields.io/github/watchers/GreaterWMS/GreaterWMS?style=social)\n\n![Python](https://img.shields.io/badge/Python-3.8.10-yellowgreen)\n![Django](https://img.shields.io/badge/Django-4.1.2-yellowgreen)\n![Quasar Cli](https://img.shields.io/badge/Quasar/cli-1.2.1-yellowgreen)\n![Vue](https://img.shields.io/badge/Vue-2.6.0-yellowgreen)\n![NodeJS](https://img.shields.io/badge/NodeJS-14.19.3-yellowgreen)\n\n[![BiliBili](https://img.shields.io/badge/BiliBili-4987-red)](https://space.bilibili.com/407321291/channel/seriesdetail?sid=776320)\n</div>\n\n## :rocket: 找到我们\n<h4>\n    <a href=\"https://www.56yhz.com/\">官网首页</a>\n</h4>\n<h4>\n    <a href=\"https://production.56yhz.com/\">演示地址</a>\n</h4>\n<h4>\n  <a href=\"https://space.bilibili.com/407321291?spm_id_from=333.1007.0.0\">教程视频</a>\n</h4>\n<h4>\n  <a href=\"https://github.com/GreaterWMS/GreaterwMS/issues/new?template=bug_report.md&title=[BUG]\">提交一个Bug</a>\n</h4>\n<h4>   \n  <a href=\"https://github.com/GreaterWMS/GreaterWMS/issues/new?template=feature_request.md&title=[FR]\">提交一个建议</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/greaterwms.html\">英文文档</a>\n</h4>\n\nQQ技术交流群：289548524\n\n[//]: # (About the Project)\n### :star2: 关于此项目\n\n该库存管理系统是，目前福特亚太区售后物流仓储供应链流程。\n离开福特后，我开始了这个项目。 为了帮助一些有需要的人。\nOneAPP 理念。 支持扫描设备PDA、手机APP、桌面exe、网站等。\n\n[//]: # (Function)\n## :dart: 模块\n\n* [x] 多仓\n* [x] 供应商管理\n* [x] 客户管理\n* [x] 扫描设备PDA\n* [x] 盘点\n* [x] 订单管理\n* [x] 库存管理\n* [x] 安全库存\n* [x] API文档\n* [x] IOS APP支持\n* [x] Android APP支持\n* [x] Electron APP支持\n* [x] 自动更新\n* [x] i18n国际化\n\n[//]: # (Install)\n## :compass: 安装\npython安装\n- [python 3.8.10](https://www.python.org/downloads/release/python-3810/)\n\nnodejs安装\n- [nodejs 14.19.3](https://nodejs.org/download/release/v14.19.3/)\n\nTwisted安装\n- Twisted在某些情况下安装很困难，请自行百度安装方法\n\n克隆代码\n~~~shell\ngit clone https://gitee.com/Singosgu/GreaterWMS.git\n~~~\n\n### docker(可选择)\n~~~shell\ncd GreaterWMS/\ndocker-compose up -d\n# 修改请求地址\n# baseurl GreaterWMS/templates/public/statics/baseurl.txt\ndocker-compose restart\n~~~\n\n<h4>\n  <a href=\"https://www.56yhz.com/zh/win_10.html\">Windows X64</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/centos_7.html\">Centos 7</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/ubuntu_20.html\">Ubuntu 20</a>\n</h4>\n\n[//]: # (development)\n## :hammer_and_wrench: 怎么启动开发环境:\n\n- 启动后端环境:\n~~~shell\ncd GreaterWMS\ndaphne -p 8008 greaterwms.asgi:application\nor\ndaphne -b 0.0.0.0 -p 8008 greaterwms.asgi:application # 局域网\n~~~\n\n- 启动前端环境:\n~~~shell\ncd templates\nquasar d # http://localhost:8080\nor\nquasar dev # http://localhost:8080\n~~~\n\n- 请求地址修改\n\n~~~shell\ntemplates/public/statics/baseurl.txt\n~~~\n\n- API文档\n\n~~~shell\nbaseurl + '/docs/'\n~~~\n\n### 配套的手机APP\n\n- App源码编译\n\n~~~shell\nnpm install cordova -g\n\ncd app\nyarn install\n## 开发环境\nquasar d -m cordova -T [android, ios]\n## 构建打包\nquasar build -m [android, ios]\n~~~\n\n- 你不想编译也可以直接使用\n\n[IOS](https://apps.apple.com/cn/app/%E6%99%BA%E8%83%BD%E4%BB%93%E5%82%A8%E8%BD%AF%E4%BB%B6gwms/id6444078526)\n\n[Android](https://production.56yhz.com/media/GWMS.apks)\n\nGreaterWMS有配套的APP，支持手机扫描，和PDA扫描，配置下服务器请求地址即可\n\n## 下载apks安装工具\n\n!!! info \"Android\"\n    \n    应用商店搜索\n\n    Split APKs Installer \n\n## 或直接下载apks安装工具\n\n[Sai](https://po.56yhz.com/media/sai.apk)\n\n- 打开Sai APP，选择下载的GWMS.apks，即可完成安装\n\n[//]: # (publish)\n## :trumpet: 怎么构建你的app:\n\n- 网页版构建:\n\n~~~shell\ncd templates\nquasar build # /templates/dist/spa\n~~~\n\n[//]: # (deploy)\n## :computer: 怎么部署到服务器:\n\n<h4>\n  <a href=\"https://www.56yhz.com/zh/supervisor_process_guarded.html\">Supervisor教程</a>\n</h4>\n<h4>\n  <a href=\"https://www.56yhz.com/zh/nginx_config.html\">Nginx配置</a>\n</h4>\n\n记得启用ssl的话，需要额外配置\n在前端代码中进行编辑\n\n## Show\n<div align=\"left\">\n    <img src=\"static/img/GreaterWMS.png\" alt=\"GreaterWMS home\" width=\"\" height=\"400\" />\n</div>\n<div align=\"left\">\n    <img src=\"static/img/mobile_splash.jpg\" alt=\"GreaterWMS splash\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_dn.jpg\" alt=\"GreaterWMS dn\" width=\"200\" height=\"400\" />\n    <img src=\"static/img/mobile_equ.jpg\" alt=\"GreaterWMS goods\" width=\"200\" height=\"400\" />\n</div>\n\n<!-- ABOUT AUTHOR -->\n## :bowing_man: 关于作者\n\n[Elvis.Shi](https://gitee.com/GreaterWMS/GreaterWMS/wikis/%E6%88%91%E6%98%AF%E5%A6%82%E4%BD%95%E4%BB%8E%E4%B8%80%E4%B8%AA%E7%89%A9%E6%B5%81%E8%8F%9C%E9%B8%9F%EF%BC%8C%E4%B8%80%E7%9B%B4%E5%81%9A%E5%88%B0500%E5%BC%BA%E4%BA%9A%E5%A4%AA%E5%8C%BAChina%20PDC%20Manager%E7%9A%84)\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "asn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "backend_start.sh",
+          "type": "blob",
+          "size": 0.1162109375,
+          "content": "#!/bin/bash\npython3 manage.py makemigrations\npython3 manage.py migrate\nsupervisord -c /etc/supervisor/supervisord.conf\n"
+        },
+        {
+          "name": "binproperty",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "binset",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "binsize",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "capital",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "company",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "customer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cyclecount",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dashboard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.8642578125,
+          "content": "version: '3.9'\nnetworks:\n  basic:\nservices:\n  front:\n    # build:\n    #   context: ./\n    #   dockerfile: Dockerfile\n    #   target: front\n    container_name: greaterwms_front\n    image: greaterwms/greaterwms:front\n    restart: always\n    privileged: true\n    ports:\n      - '8080:8080'\n    depends_on:\n      - backend\n    volumes:\n      - ./templates:/GreaterWMS/templates:rw\n      - ./web_start.sh:/GreaterWMS/templates/web_start.sh\n    networks:\n      - basic\n  backend:\n    # build:\n    #   context: ./\n    #   dockerfile: Dockerfile\n    #   target: backend\n    container_name: greaterwms_backend\n    image: greaterwms/greaterwms:backend\n    restart: always\n    privileged: true\n    volumes:\n      - ./:/GreaterWMS/:rw\n      - ./supervisord.conf:/etc/supervisor/supervisord.conf\n    ports:\n      - '8008:8008'\n    environment:\n      PYTHONUNBUFFERED: 1\n    networks:\n      - basic\n"
+        },
+        {
+          "name": "driver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goods",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodsbrand",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodsclass",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodscolor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodsorigin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodsshape",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodsspecs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "goodsunit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "greaterwms",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "manage.py",
+          "type": "blob",
+          "size": 0.650390625,
+          "content": "#!/usr/bin/env python\n\"\"\"Django's command-line utility for administrative tasks.\"\"\"\nimport os\nimport sys\n\n\ndef main():\n    \"\"\"Run administrative tasks.\"\"\"\n    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greaterwms.settings')\n    try:\n        from django.core.management import execute_from_command_line\n    except ImportError as exc:\n        raise ImportError(\n            \"Couldn't import Django. Are you sure it's installed and \"\n            \"available on your PYTHONPATH environment variable? Did you \"\n            \"forget to activate a virtual environment?\"\n        ) from exc\n    execute_from_command_line(sys.argv)\n\n\nif __name__ == '__main__':\n    main()\n"
+        },
+        {
+          "name": "media",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nginx.conf",
+          "type": "blob",
+          "size": 2.5166015625,
+          "content": "\nuser root;\nworker_processes auto;\n\nevents {\n    worker_connections  1024;\n}\n\nhttp {\n    include         mime.types;\n    default_type    application/octet-stream;\n    sendfile        on;\n    gzip            on;\n    gzip_min_length 1k;\n    gzip_comp_level 4;\n    gzip_types      text/plain application/javascript application/x-javascript text/javascript text/xml text/css;\n    gzip_disable    \"MSIE [1-6]\\.\";\n    gzip_vary       on;\n\tproxy_redirect off;\n\tproxy_set_header Host $host;\n\tproxy_set_header  https $https;\n\tproxy_set_header X-Real-IP $remote_addr;\n\tproxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\tclient_max_body_size 75M;\n\tclient_body_buffer_size 256k;\n\tclient_header_timeout 3m;\n\tclient_body_timeout 3m;\n\tsend_timeout 3m;\n\tproxy_connect_timeout 300s;\n\tproxy_read_timeout 300s;\n\tproxy_send_timeout 300s;\n\tproxy_buffer_size 64k;\n\tproxy_buffers 4 32k;\n\tproxy_busy_buffers_size 64k;\n\tproxy_temp_file_write_size 64k;\n\tproxy_ignore_client_abort on;\n\n\tupstream GreaterWMS{\n  server 127.0.0.1:8008;\n}\n\tserver {\n\tlisten      80;\n\tserver_name {{ Domin Name }};\n\trewrite ^(.*)$ https://{{ Domin Name }}$1;\n\n\t}\n\n      server {\n\tlisten      443 ssl;\n\n    server_name  {{ Domin Name }};\n\troot /path/to/GreaterWMS;\n\tcharset utf-8;\n\tadd_header X-Frame-Options \"SAMEORIGIN\";\n\tadd_header X-XSS-Protection \"1; mode=block\";\n\tadd_header X-Content-Type-Options \"nosniff\";\n\n\tclient_max_body_size 75M;\n\n \tssl_certificate   /path/to/GreaterWMS.pem;\n \tssl_certificate_key  /path/to/GreaterWMS.key;\n \tssl_session_timeout 5m;\n \tssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;\n \tssl_protocols TLSv1 TLSv1.1 TLSv1.2;\n\tssl_prefer_server_ciphers on;\n\n    access_log off;\n\terror_log  /path/to/GreaterWMS/greaterwms-error.log error;\n\n\t location /websocket/ {\n       proxy_pass http://GreaterWMS/;\n\t\t\t proxy_read_timeout 60s;\n       proxy_set_header Host $host;\n       proxy_set_header X-Real_IP $remote_addr;\n       proxy_set_header X-Forwarded-for $remote_addr;\n       proxy_http_version 1.1;\n       proxy_set_header Upgrade $http_upgrade;\n       proxy_set_header Connection 'Upgrade';\n    }\n\n    location / {\n        #root   html;\n        #index  testssl.html index.html index.htm;\n       proxy_redirect off;\n       proxy_set_header Host $host;\n       proxy_set_header X-Real-IP $remote_addr;\n       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n       proxy_pass http://127.0.0.1:8008/;\n    }\n\t\tlocation /static/ {\n\t\t\talias /path/to/GreaterWMS/static_new/;\n\t\t}\n\tlocation /media/{\n\t\talias /path/to/GreaterWMS/media/;\n\t}\n    }\n}"
+        },
+        {
+          "name": "payment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.923828125,
+          "content": "asgihandler==0.5.9\nasgiref==3.5.2\nattrs==23.1.0\nautobahn==23.1.2\nAutomat==22.10.0\ncertifi==2022.9.24\ncffi==1.15.1\ncharset-normalizer==2.1.1\nconstantly==15.1.0\ncryptography==40.0.2\ndaphne==4.0.0\nDjango==4.1.2\ndjango-cors-headers==3.13.0\ndjango-filter==2.4.0\ndjangorestframework==3.14.0\ndjangorestframework-csv==2.1.1\ndrf-spectacular==0.26.2\ndrf-spectacular-sidecar==2023.6.1\net-xmlfile==1.1.0\nh2==4.1.0\nhpack==4.0.0\nhyperframe==6.0.1\nhyperlink==21.0.0\nidna==3.4\nincremental==22.10.0\ninflection==0.5.1\njsonschema==4.17.3\nnumpy==1.23.4\nopenpyxl==3.0.10\npandas==1.5.1\npriority==1.3.0\npyasn1==0.5.0\npyasn1-modules==0.3.0\npycparser==2.21\nPyJWT==2.8.0\npyOpenSSL==23.1.1\npyrsistent==0.19.3\npython-dateutil==2.8.2\npytz==2022.5\nPyYAML==6.0\nrequests==2.28.1\nservice-identity==21.1.0\nsix==1.16.0\nsqlparse==0.4.3\nTwisted==22.10.0\ntxaio==23.1.1\ntyping_extensions==4.6.2\ntzdata==2022.5\nunicodecsv==0.14.1\nuritemplate==4.1.1\nurllib3==1.26.12\nzope.interface==6.0\n"
+        },
+        {
+          "name": "scanner",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "staff",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "static_new",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "stock",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "supervisord.conf",
+          "type": "blob",
+          "size": 1.4619140625,
+          "content": "; supervisor config file\n\n[unix_http_server]\nfile=/var/run/supervisor.sock   ; (the path to the socket file)\nchmod=0700                       ; sockef file mode (default 0700)\n\n[supervisord]\nlogfile=/var/log/supervisor/supervisord.log ; (main log file;default $CWD/supervisord.log)\npidfile=/var/run/supervisord.pid ; (supervisord pidfile;default supervisord.pid)\nchildlogdir=/var/log/supervisor            ; ('AUTO' child log dir, default $TEMP)\nnodaemon=true\n\n; the below section must remain in the config file for RPC\n; (supervisorctl/web interface) to work, additional interfaces may be\n; added by defining them in separate rpcinterface: sections\n[rpcinterface:supervisor]\nsupervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface\n\n[supervisorctl]\nserverurl=unix:///var/run/supervisor.sock ; use a unix:// URL  for a unix socket\n\n; The [include] section can just contain the \"files\" setting.  This\n; setting can list multiple files (separated by whitespace or\n; newlines).  It can also contain wildcards.  The filenames are\n; interpreted as relative to this file.  Included files *cannot*\n; include files themselves.\n\n[program:greaterwms]\ndirectory=/GreaterWMS/\nuser=root\ncommand=daphne -b 0.0.0.0 -p 8008 greaterwms.asgi:application\nautostart=true\nautorestart=true\nstartsecs=0\nstopwaitsecs=0\nstdout_logfile=/GreaterWMS/greaterwms_server_access.log\nstderr_logfile=/GreaterWMS/greaterwms_server_err.log\nredirect_stderr=true\n[include]\nfiles = /etc/supervisor/conf.d/*.conf\n"
+        },
+        {
+          "name": "supplier",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "throttle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uploadfile",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "userlogin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "userprofile",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "userregister",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "warehouse",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web_start.sh",
+          "type": "blob",
+          "size": 0.078125,
+          "content": "#!/bin/bash\ncd /GreaterWMS/templates\nyarn install --force\nquasar build\nquasar d\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": 1736559921470,
+    "page": 686,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "openai/glide-text2im",
+      "stars": 3569,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0341796875,
+          "content": "__pycache__/\n*.egg-info/\n.DS_Store\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.037109375,
+          "content": "MIT License\n\nCopyright (c) 2021 OpenAI\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.4501953125,
+          "content": "# GLIDE\n\nThis is the official codebase for running the small, filtered-data GLIDE model from [GLIDE: Towards Photorealistic Image Generation and Editing with Text-Guided Diffusion Models](https://arxiv.org/abs/2112.10741).\n\nFor details on the pre-trained models in this repository, see the [Model Card](model-card.md).\n\n# Usage\n\nTo install this package, clone this repository and then run:\n\n```\npip install -e .\n```\n\nFor detailed usage examples, see the [notebooks](notebooks) directory.\n\n * The [text2im](notebooks/text2im.ipynb) [![][colab]][colab-text2im] notebook shows how to use GLIDE (filtered) with classifier-free guidance to produce images conditioned on text prompts. \n * The [inpaint](notebooks/inpaint.ipynb) [![][colab]][colab-inpaint] notebook shows how to use GLIDE (filtered) to fill in a masked region of an image, conditioned on a text prompt. \n * The [clip_guided](notebooks/clip_guided.ipynb) [![][colab]][colab-guided] notebook shows how to use GLIDE (filtered) + a filtered noise-aware CLIP model to produce images conditioned on text prompts. \n\n[colab]: <https://colab.research.google.com/assets/colab-badge.svg>\n[colab-text2im]: <https://colab.research.google.com/github/openai/glide-text2im/blob/main/notebooks/text2im.ipynb>\n[colab-inpaint]: <https://colab.research.google.com/github/openai/glide-text2im/blob/main/notebooks/inpaint.ipynb>\n[colab-guided]: <https://colab.research.google.com/github/openai/glide-text2im/blob/main/notebooks/clip_guided.ipynb>\n"
+        },
+        {
+          "name": "glide_text2im",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "model-card.md",
+          "type": "blob",
+          "size": 3.4501953125,
+          "content": "# Overview\n\nThis card describes the diffusion model GLIDE (filtered) and noised CLIP model described in the paper [GLIDE: Towards\nPhotorealistic Image Generation and Editing with Text-Guided Diffusion Models](https://arxiv.org/abs/2112.10741)\n\n# Datasets\n\nGLIDE (filtered) was trained on a filtered version of a dataset comprised of several hundred million text-image pairs\ncollected from the internet. We constructed a set of filters intended to remove all images of people, violent objects, and some\nand hate symbols (see Appendix F of the paper for details). The size of the dataset after filtering was approximately\n67M text-image pairs.\n\nOur noised CLIP model which was trained on the dataset described above, augmented with a filtered version of the dataset used\nto train the [original CLIP models](https://github.com/openai/clip). The total size of this augmented dataset is approximately 137M pairs.\n\n# Performance\n\nQualitatively, we find that the generated images from GLIDE (filtered) often look semi-realistic, but the small size of the model hinders\nits ability to bind attributes to objects and perform compositional tasks. Because the dataset used to train GLIDE\n(filtered) has been preprocessed to remove images of people, this also limits its world knowledge, especially in regard\nto concepts that involve people.\nFinally, due to the dataset used to train GLIDE (filtered), the model has reduced capabilities to compose multiple objects in complex ways compared to models of a similar size trained on our internal dataset.\n\nWe do not directly measure quantitative metrics for GLIDE (filtered). In particular, most of the evaluations we report for our other models are biased against GLIDE (filtered), since they use prompts that often require generations of people. Evaluating people-free models remains an open area of research.\n\n# Intended Use\n\nWe release these models to help advance research in generative modeling. Due to the limitations and biases of GLIDE (filtered), we do not currently recommend it for commercial use.\n\nFunctionally, these models are intended to be able to perform the following tasks for research purposes:\n * Generate images from natural language prompts\n * Iteratively edit and refine images using inpainting\n\nThese models are explicitly not intended to generate images of people or other subjects we filtered for (see Appendix F of the paper for details).\n\n# Limitations\n\nDespite the dataset filtering applied before training, GLIDE (filtered) continues to exhibit biases that extend beyond those found in images of people.\nWe explore some of these biases in our paper. For example:\n\n  * It produces different outputs when asked to generate toys for boys and toys for girls.\n  * It gravitates toward generating images of churches when asked to generate \"a religious place\",\n    and this bias is amplified by classifier-free guidance.\n  * It may have a greater propensity for generating hate symbols other than swastikas and confederate flags. Our filter\n    for hate symbols focused specifically on these two cases, as we found few relevant images of hate symbols in our\n    dataset. However, we also found that the model has diminished capabilities across a wider set of symbols.\n\nGLIDE (filtered) can fail to produce realistic outputs for complex prompts or for prompts that involve concepts that are\nnot well-represented in its training data. While the data for the model was filtered to remove certain types of images,\nthe data still exhibits biases toward Western-centric concepts.\n"
+        },
+        {
+          "name": "notebooks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 0.595703125,
+          "content": "from setuptools import setup\n\nsetup(\n    name=\"glide-text2im\",\n    packages=[\n        \"glide_text2im\",\n        \"glide_text2im.clip\",\n        \"glide_text2im.tokenizer\",\n    ],\n    package_data={\n        \"glide_text2im.tokenizer\": [\n            \"bpe_simple_vocab_16e6.txt.gz\",\n            \"encoder.json.gz\",\n            \"vocab.bpe.gz\",\n        ],\n        \"glide_text2im.clip\": [\"config.yaml\"],\n    },\n    install_requires=[\n        \"Pillow\",\n        \"attrs\",\n        \"torch\",\n        \"filelock\",\n        \"requests\",\n        \"tqdm\",\n        \"ftfy\",\n        \"regex\",\n        \"numpy\",\n    ],\n    author=\"OpenAI\",\n)\n"
+        }
+      ]
+    }
+  ]
+}

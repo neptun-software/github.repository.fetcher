@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp": 1736559921073,
+    "page": 685,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ricklamers/gpt-code-ui",
+      "stars": 3570,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".devcontainer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".env.azure-example",
+          "type": "blob",
+          "size": 0.392578125,
+          "content": "OPENAI_API_KEY=XXXX\nOPENAI_API_TYPE=azure\nOPENAI_API_BASE=https://your-resource-name.openai.azure.com\nOPENAI_API_VERSION=2023-03-15-preview\n# OPENAI_EXTRA_HEADERS={\"key\": \"value\"}\nAZURE_OPENAI_DEPLOYMENTS=[{\"displayName\": \"GPT-3.5\", \"name\": \"your-gpt-3.5-deployment\"}, {\"displayName\": \"GPT-4\", \"name\": \"your-gpt-4-deployment\"}]\n# OPENAI_API_LOGLEVEL=debug\nAPI_PORT=5010\nWEB_PORT=8080\nSNAKEMQ_PORT=8765\n"
+        },
+        {
+          "name": ".env.example",
+          "type": "blob",
+          "size": 0.34375,
+          "content": "OPENAI_API_KEY=sk-XXXX\nOPENAI_API_TYPE=open_ai\nOPENAI_API_BASE=https://api.openai.com/v1\nOPENAI_API_VERSION=2023-03-15-preview\n# OPENAI_EXTRA_HEADERS={\"key\": \"value\"}\nOPENAI_MODELS=[{\"displayName\": \"GPT-3.5\", \"name\": \"gpt-3.5-turbo\"}, {\"displayName\": \"GPT-4\", \"name\": \"gpt-4\"}]\n# OPENAI_API_LOGLEVEL=debug\nAPI_PORT=5010\nWEB_PORT=8080\nSNAKEMQ_PORT=8765\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.17578125,
+          "content": "# Secrets\n.env\n.dev.env\n\n# Program related\nprocess_pids/\nkernel_connection_file.json\n\n# Python stuff\n*.egg-info/\nvenv\n.venv\n__pycache__/\n\n# IDE\n.vscode/\n\n# Logs\n*.log\n\ndist/\nbuild/"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2023 Rick Lamers\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.1865234375,
+          "content": ".PHONY: all compile_frontend bundle_pypi upload_pypi increment_version release check_env_var\n\nall: check_env_var build upload_pypi\n\nbuild: check_env_var compile_frontend bundle_pypi\n\nincrement_version:\n\t@VERSION=$$(grep -e \"^\\s*version='[^']*'\" setup.py | cut -d \"'\" -f 2) && \\\n\tMAJOR=$$(echo $$VERSION | cut -d. -f1) && \\\n\tMINOR=$$(echo $$VERSION | cut -d. -f2) && \\\n\tPATCH=$$(echo $$VERSION | cut -d. -f3) && \\\n\tNEW_PATCH=$$((PATCH + 1)) && \\\n\tNEW_VERSION=\"$$MAJOR.$$MINOR.$$NEW_PATCH\" && \\\n\tsed -i.bak \"s/version='[^']*'/version='$$NEW_VERSION'/\" setup.py && \\\n\trm setup.py.bak && \\\n\techo \"Updated version to $$NEW_VERSION\"\n\n\nrelease:\n\tbash scripts/create_release.sh\n\ncompile_frontend:\n\tcd frontend && \\\n\tnpm install && \\\n\tVITE_APP_VERSION=$$(grep -e \"^\\s*version='[^']*'\" ../setup.py | cut -d \"'\" -f 2) npm run build && \\\n\tfind ../gpt_code_ui/webapp/static -mindepth 1 ! -name '.gitignore' -delete && \\\n\trsync -av dist/ ../gpt_code_ui/webapp/static\n\nbundle_pypi:\n\trm -rf dist build && \\\n\tpython3 setup.py sdist bdist_wheel\n\nupload_pypi:\n\ttwine upload dist/*\n\ncheck_env_var:\nifeq ($(VITE_WEB_ADDRESS),)\n\t@echo \"VITE_WEB_ADDRESS not set, proceeding...\"\nelse\n\t$(error \"VITE_WEB_ADDRESS is set, aborting...\")\nendif\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.529296875,
+          "content": "<img src=\"https://github.com/ricklamers/gpt-code-ui/assets/1309307/9ad4061d-2e26-4407-9431-109b650fb022\" alt=\"GPT-Code logo\" width=240 />\n\nAn open source implementation of OpenAI's ChatGPT [Code interpreter](https://openai.com/blog/chatgpt-plugins#code-interpreter).\n\nSimply ask the OpenAI model to do something and it will generate & execute the code for you.\n\nRead the [blog post](https://ricklamers.io/posts/gpt-code) to find out more.\n\n## Community\nJudah Cooper offered to start & curate a Discord community. Join [here](https://discord.gg/ZmTQwpkYu6).\n\n## Installation\n\nOpen a terminal and run:\n\n```\npip install gpt-code-ui\ngptcode\n```\n\nIn order to make basic dependencies available it's recommended to run the following `pip` install\nin the Python environment that is used in the shell where you run `gptcode`:\n\n```sh\npip install \"numpy>=1.24,<1.25\" \"dateparser>=1.1,<1.2\" \"pandas>=1.5,<1.6\" \"geopandas>=0.13,<0.14\" \"tabulate>=0.9.0<1.0\" \"PyPDF2>=3.0,<3.1\" \"pdfminer>=20191125,<20191200\" \"pdfplumber>=0.9,<0.10\" \"matplotlib>=3.7,<3.8\"\n```\n\n## User interface\n<img src=\"https://github.com/ricklamers/gpt-code-ui/assets/1309307/c29c504a-a7ed-4ae0-9360-d7224bc3e3d6\" alt=\"GPT-Code logo\" width=\"100%\" />\n \n## Features\n- File upload\n- File download\n- Context awareness (it can refer to your previous messages)\n- Generate code\n- Run code (Python kernel)\n- Model switching (GPT-3.5 and GPT-4)\n\n## Misc.\n### Using .env for OpenAI key\nYou can put a .env in the working directory to load the `OPENAI_API_KEY` environment variable.\n\n### Configurables\nSet the `API_PORT`, `WEB_PORT`, `SNAKEMQ_PORT` variables to override the defaults.\n\nSet `OPENAI_BASE_URL` to change the OpenAI API endpoint that's being used (note this environment variable includes the protocol `https://...`).\n\nYou can use the `.env.example` in the repository (make sure you `git clone` the repo to get the file first).\n\nFor Azure OpenAI Services, there are also other configurable variables like deployment name. See `.env.azure-example` for more information.\nNote that model selection on the UI is currently not supported for Azure OpenAI Services.\n\n```\ncp .env.example .env\nvim .env\ngptcode\n```\n\n### Docker\n[localagi](https://github.com/localagi) took the effort of bundling the Python package in a Docker container. Check it out here: [gpt-code-ui-docker](https://github.com/localagi/gpt-code-ui-docker).\n\n## Contributing\nPlease do and have a look at the [contributions guide](.github/CONTRIBUTING.md)! This should be a community initiative. I'll try my best to be responsive.\n\n\nThank you for your interest in this project!"
+        },
+        {
+          "name": "frontend",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gpt_code_ui",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "notes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 0.9443359375,
+          "content": "from setuptools import setup, find_packages\nfrom os import path\n\nthis_directory = path.abspath(path.dirname(__file__))\nwith open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:\n    long_description = f.read()\n\nsetup(\n    name='gpt_code_ui',\n    version='0.42.40',\n    description=\"An Open Source version of ChatGPT Code Interpreter\",\n    long_description=long_description,\n    long_description_content_type='text/markdown',  # This field specifies the format of the `long_description`.\n    packages=find_packages(),\n    package_data={'gpt_code_ui.webapp': ['static/*', 'static/assets/*']},\n    install_requires=[\n        'ipykernel>=6,<7',\n        'snakemq>=1,<2',\n        'requests>=2,<3',\n        'Flask>=2,<3',\n        'flask-cors>=3,<4',\n        'python-dotenv>=0.18,<2',\n        'pandas>=1.3,<2',\n        'openai>=0.25,<1',\n    ],\n    entry_points={\n        'console_scripts': [\n            'gptcode = gpt_code_ui.main:main',\n        ],\n    },\n)\n"
+        },
+        {
+          "name": "workspace",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

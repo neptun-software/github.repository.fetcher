@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736559604400,
+    "page": 242,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wkentaro/gdown",
+      "stars": 4409,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0546875,
+          "content": "tests/data/folder-page-sample.html -linguist-detectable\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "*.py[cdo]\nbuild/\ndist/\n*.egg-info\n"
+        },
+        {
+          "name": ".readme",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0322265625,
+          "content": "Copyright (c) 2015 Kentaro Wada.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.5419921875,
+          "content": "all:\n\t@echo '## Make commands ##'\n\t@echo\n\t@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ \"^[#.]\") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | xargs\n\nlint:\n\tmypy --package gdown\n\truff format --check\n\truff check\n\nformat:\n\truff format\n\truff check --fix\n\ntest:\n\tpython -m pytest -n auto -v tests\n\nclean:\n\trm -rf build dist *.egg-info\n\nbuild: clean\n\tpython -m build --sdist --wheel\n\nupload: build\n\tpython -m twine upload dist/gdown-*\n\npublish: build upload\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.185546875,
+          "content": "<div align=\"center\">\n  <h1>gdown</h1>\n  <p><b>Google Drive Public File Downloader when Curl/Wget Fails</b></p>\n  <img src=\"https://github.com/wkentaro/gdown/raw/main/.readme/cli.png\" width=\"80%\">\n  <img src=\"https://github.com/wkentaro/gdown/raw/main/.readme/python.png\" width=\"80%\">\n  <br>\n  <br>\n</div>\n\n\n*Gdown* downloads a public file/folder from Google Drive.\n\n*Gdown* provides what curl/wget doesn't for Google Drive:\n- **Skip the security notice** allowing you to download large files (curl/wget fails);\n- **Recursive download** of files in a folder (maximum 50 files per folder);\n- **Specify download file format** for Google Slides/Sheet/Docs like PDF/XML/CSV.\n\n\n## Installation\n\n<a href=\"https://pypi.org/project/gdown\"><img src=\"https://img.shields.io/pypi/pyversions/gdown.svg\"></a>\n<a href=\"https://pypi.python.org/pypi/gdown\"><img src=\"https://img.shields.io/pypi/v/gdown.svg\"></a>\n\n```bash\npip install gdown\n\n# to upgrade\npip install --upgrade gdown\n```\n\n\n## Usage\n\n### via Command Line\n\n```bash\n$ gdown --help\nusage: gdown [-h] [-V] [-O OUTPUT] [-q] [--fuzzy] [--id] [--proxy PROXY]\n             [--speed SPEED] [--no-cookies] [--no-check-certificate]\n             [--continue] [--folder] [--remaining-ok]\n             url_or_id\n...\n\n$ # a large file (~500MB)\n$ gdown https://drive.google.com/uc?id=1l_5RK28JRL19wpT22B-DY9We3TVXnnQQ\n$ md5sum fcn8s_from_caffe.npz\n256c2a8235c1c65e62e48d3284fbd384\n\n$ # same as the above but with the file ID\n$ gdown 1l_5RK28JRL19wpT22B-DY9We3TVXnnQQ\n\n$ # a small file\n$ gdown https://drive.google.com/uc?id=0B9P1L--7Wd2vU3VUVlFnbTgtS2c\n$ cat spam.txt\nspam\n\n$ # download with fuzzy extraction of a file ID\n$ gdown --fuzzy 'https://drive.google.com/file/d/0B9P1L--7Wd2vU3VUVlFnbTgtS2c/view?usp=sharing&resourcekey=0-WWs_XOSctfaY_0-sJBKRSQ'\n$ cat spam.txt\nspam\n\n$ # --fuzzy option also works with Microsoft Powerpoint files\n$ gdown --fuzzy \"https://docs.google.com/presentation/d/15umvZKlsJ3094HNg5S4vJsIhxcFlyTeK/edit?usp=sharing&ouid=117512221203072002113&rtpof=true&sd=true\"\n\n$ # a folder\n$ gdown https://drive.google.com/drive/folders/15uNXeRBIhVvZJIhL4yTw4IsStMhUaaxl -O /tmp/folder --folder\n\n$ # as an alternative to curl/wget\n$ gdown https://httpbin.org/ip -O ip.json\n$ cat ip.json\n{\n  \"origin\": \"126.169.213.247\"\n}\n\n$ # write stdout and pipe to extract\n$ gdown https://github.com/wkentaro/gdown/archive/refs/tags/v4.0.0.tar.gz -O - --quiet | tar zxvf -\n$ ls gdown-4.0.0/\ngdown  github2pypi  LICENSE  MANIFEST.in  pyproject.toml  README.md  setup.cfg  setup.py  tests\n```\n\n### via Python\n\n```python\nimport gdown\n\n# a file\nurl = \"https://drive.google.com/uc?id=1l_5RK28JRL19wpT22B-DY9We3TVXnnQQ\"\noutput = \"fcn8s_from_caffe.npz\"\ngdown.download(url, output)\n\n# same as the above, but with the file ID\nid = \"0B9P1L--7Wd2vNm9zMTJWOGxobkU\"\ngdown.download(id=id, output=output)\n\n# same as the above, and you can copy-and-paste a URL from Google Drive with fuzzy=True\nurl = \"https://drive.google.com/file/d/0B9P1L--7Wd2vNm9zMTJWOGxobkU/view?usp=sharing\"\ngdown.download(url=url, output=output, fuzzy=True)\n\n# Cached download with identity check via MD5 (or SHA1, SHA256, etc).\n# Pass postprocess function e.g., extracting compressed file.\nmd5 = \"md5:fa837a88f0c40c513d975104edf3da17\"\ngdown.cached_download(url, output, hash=hash, postprocess=gdown.extractall)\n\n# a folder\nurl = \"https://drive.google.com/drive/folders/15uNXeRBIhVvZJIhL4yTw4IsStMhUaaxl\"\ngdown.download_folder(url)\n\n# same as the above, but with the folder ID\nid = \"15uNXeRBIhVvZJIhL4yTw4IsStMhUaaxl\"\ngdown.download_folder(id=id)\n```\n\n\n## FAQ\n\n### I get a 'Permission Denied' error.\n\nHave you made sure you set the file permission to 'Anyone with Link'?\n\n### I set the permission 'Anyone with Link', but I still can't download.\n\nGoogle restricts access to a file when the download is concentrated.\nIf you can still access to the file from your browser, downloading cookies file might\nhelp. Follow this step: 1) download cookies.txt using browser extensions like\n([Get cookies.txt LOCALLY](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc));\n2) mv the `cookies.txt` to `~/.cache/gdown/cookies.txt`; 3) run download again.\nIf you're using `gdown>=5.0.0`, it should be able to use the cookies same as your browser.\n\n\n## License\n\nMIT\n"
+        },
+        {
+          "name": "gdown",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 2.2060546875,
+          "content": "[build-system]\nrequires = [\"hatchling>=1.20.0\", \"hatch-vcs\", \"hatch-fancy-pypi-readme\"]\nbuild-backend = \"hatchling.build\"\n\n[project]\nname = \"gdown\"\ndescription = \"Google Drive Public File/Folder Downloader\"\nlicense = { text = \"MIT\" }\nrequires-python = \">=3.8\"\nauthors = [\n  { name = \"Kentaro Wada\", email = \"www.kentaro.wada@gmail.com\" },\n]\nkeywords = [\n  \"google-drive\",\n  \"download\",\n  \"wget\",\n  \"curl\",\n]\nclassifiers = [\n  \"Development Status :: 5 - Production/Stable\",\n  \"Environment :: Console\",\n  \"Intended Audience :: Developers\",\n  \"License :: OSI Approved :: MIT License\",\n  \"Operating System :: OS Independent\",\n  \"Programming Language :: Python\",\n  \"Programming Language :: Python :: 3 :: Only\",\n  \"Programming Language :: Python :: 3.8\",\n  \"Programming Language :: Python :: 3.9\",\n  \"Programming Language :: Python :: 3.10\",\n  \"Programming Language :: Python :: 3.11\",\n  \"Programming Language :: Python :: 3.12\",\n  \"Topic :: Software Development :: Libraries :: Python Modules\",\n]\ndependencies = [\n  \"filelock\",\n  \"requests[socks]\",\n  \"tqdm\",\n  \"beautifulsoup4\",\n]\ndynamic = [\"readme\", \"version\"]\n\n[project.optional-dependencies]\ntest = [\n  \"build\",\n  \"mypy\",\n  \"pytest\",\n  \"pytest-xdist\",\n  \"ruff\",\n  \"twine\",\n  \"types-requests\",\n  \"types-setuptools\",\n]\n\n[project.urls]\nHomepage = \"https://github.com/wkentaro/gdown\"\n\n[tool.hatch.metadata.hooks.fancy-pypi-readme]\ncontent-type = \"text/markdown\"\nfragments = [\n  { path = \"README.md\" },\n]\n\n[tool.hatch.version]\nsource = \"vcs\"\n\n[project.scripts]\ngdown = \"gdown.__main__:main\"\n\n[tool.mypy]\nignore_missing_imports = true\n\n[tool.ruff]\nexclude = [\n  \".conda\",\n  \".git\",\n  \"src\",\n]\n\nline-length = 88\nindent-width = 4\n\n[tool.ruff.lint]\n# Enable Pyflakes (`F`), pycodestyle (`E`), isort (`I`).\nselect = [\"E\", \"F\", \"I\"]\nignore = []\n\n# Allow fix for all enabled rules (when `--fix`) is provided.\nfixable = [\"ALL\"]\nunfixable = []\n\n[tool.ruff.format]\n# Like Black, use double quotes for strings.\nquote-style = \"double\"\n\n# Like Black, indent with spaces, rather than tabs.\nindent-style = \"space\"\n\n# Like Black, respect magic trailing commas.\nskip-magic-trailing-comma = false\n\n# Like Black, automatically detect the appropriate line ending.\nline-ending = \"auto\"\n\n[tool.ruff.lint.isort]\nforce-single-line = true\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

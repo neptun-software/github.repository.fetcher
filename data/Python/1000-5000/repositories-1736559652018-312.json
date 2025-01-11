@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "timestamp": 1736559652018,
+    "page": 312,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "openai/plugins-quickstart",
+      "stars": 4242,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.7568359375,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\npip-wheel-metadata/\nshare/python-wheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.nox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n*.py,cover\n.hypothesis/\n.pytest_cache/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\ndb.sqlite3-journal\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# IPython\nprofile_default/\nipython_config.py\n\n# pyenv\n.python-version\n\n# pipenv\n#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.\n#   However, in case of collaboration, if having platform-specific dependencies or dependencies\n#   having no cross-platform support, pipenv may install dependencies that don't work, or not\n#   install all needed dependencies.\n#Pipfile.lock\n\n# PEP 582; used by e.g. github.com/David-OConnor/pyflow\n__pypackages__/\n\n# Celery stuff\ncelerybeat-schedule\ncelerybeat.pid\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.dmypy.json\ndmypy.json\n\n# Pyre type checker\n.pyre/\n"
+        },
+        {
+          "name": ".well-known",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2023 OpenAI\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.2587890625,
+          "content": "# ChatGPT plugins quickstart\n\nGet a TODO list ChatGPT plugin up and running in under 5 minutes using Python. This plugin is designed to work in conjunction with the [ChatGPT plugins documentation](https://platform.openai.com/docs/plugins). Plugins have been superseded by GPTs, learn more about [creating a GPT with actions](https://platform.openai.com/docs/actions/introduction).\n\n## Setup locally\n\nTo install the required packages for this plugin, run the following command:\n\n```bash\npip install -r requirements.txt\n```\n\nTo run the plugin, enter the following command:\n\n```bash\npython main.py\n```\n\nOnce the local server is running:\n\n1. Navigate to https://chat.openai.com. \n2. In the Model drop down, select \"Plugins\" (note, if you don't see it there, you don't have access yet).\n3. Select \"Plugin store\"\n4. Select \"Develop your own plugin\"\n5. Enter in `localhost:5003` since this is the URL the server is running on locally, then select \"Find manifest file\".\n\nThe plugin should now be installed and enabled! You can start with a question like \"What is on my todo list\" and then try adding something to it as well! \n\n## Getting help\n\nIf you run into issues or have questions building a plugin, please join our [Developer community forum](https://community.openai.com/c/chat-plugins/20).\n"
+        },
+        {
+          "name": "logo.png",
+          "type": "blob",
+          "size": 1.23828125,
+          "content": null
+        },
+        {
+          "name": "main.py",
+          "type": "blob",
+          "size": 1.669921875,
+          "content": "import json\n\nimport quart\nimport quart_cors\nfrom quart import request\n\napp = quart_cors.cors(quart.Quart(__name__), allow_origin=\"https://chat.openai.com\")\n\n# Keep track of todo's. Does not persist if Python session is restarted.\n_TODOS = {}\n\n@app.post(\"/todos/<string:username>\")\nasync def add_todo(username):\n    request = await quart.request.get_json(force=True)\n    if username not in _TODOS:\n        _TODOS[username] = []\n    _TODOS[username].append(request[\"todo\"])\n    return quart.Response(response='OK', status=200)\n\n@app.get(\"/todos/<string:username>\")\nasync def get_todos(username):\n    return quart.Response(response=json.dumps(_TODOS.get(username, [])), status=200)\n\n@app.delete(\"/todos/<string:username>\")\nasync def delete_todo(username):\n    request = await quart.request.get_json(force=True)\n    todo_idx = request[\"todo_idx\"]\n    # fail silently, it's a simple plugin\n    if 0 <= todo_idx < len(_TODOS[username]):\n        _TODOS[username].pop(todo_idx)\n    return quart.Response(response='OK', status=200)\n\n@app.get(\"/logo.png\")\nasync def plugin_logo():\n    filename = 'logo.png'\n    return await quart.send_file(filename, mimetype='image/png')\n\n@app.get(\"/.well-known/ai-plugin.json\")\nasync def plugin_manifest():\n    host = request.headers['Host']\n    with open(\"./.well-known/ai-plugin.json\") as f:\n        text = f.read()\n        return quart.Response(text, mimetype=\"text/json\")\n\n@app.get(\"/openapi.yaml\")\nasync def openapi_spec():\n    host = request.headers['Host']\n    with open(\"openapi.yaml\") as f:\n        text = f.read()\n        return quart.Response(text, mimetype=\"text/yaml\")\n\ndef main():\n    app.run(debug=True, host=\"0.0.0.0\", port=5003)\n\nif __name__ == \"__main__\":\n    main()\n"
+        },
+        {
+          "name": "openapi.yaml",
+          "type": "blob",
+          "size": 2.2822265625,
+          "content": "openapi: 3.0.1\ninfo:\n  title: TODO Plugin\n  description: A plugin that allows the user to create and manage a TODO list using ChatGPT. If you do not know the user's username, ask them first before making queries to the plugin. Otherwise, use the username \"global\".\n  version: 'v1'\nservers:\n  - url: http://localhost:5003\npaths:\n  /todos/{username}:\n    get:\n      operationId: getTodos\n      summary: Get the list of todos\n      parameters:\n      - in: path\n        name: username\n        schema:\n            type: string\n        required: true\n        description: The name of the user.\n      responses:\n        \"200\":\n          description: OK\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schemas/getTodosResponse'\n    post:\n      operationId: addTodo\n      summary: Add a todo to the list\n      parameters:\n      - in: path\n        name: username\n        schema:\n            type: string\n        required: true\n        description: The name of the user.\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/addTodoRequest'\n      responses:\n        \"200\":\n          description: OK\n    delete:\n      operationId: deleteTodo\n      summary: Delete a todo from the list\n      parameters:\n      - in: path\n        name: username\n        schema:\n            type: string\n        required: true\n        description: The name of the user.\n      requestBody:\n        required: true\n        content:\n          application/json:\n            schema:\n              $ref: '#/components/schemas/deleteTodoRequest'\n      responses:\n        \"200\":\n          description: OK\n\ncomponents:\n  schemas:\n    getTodosResponse:\n      type: object\n      properties:\n        todos:\n          type: array\n          items:\n            type: string\n          description: The list of todos.\n    addTodoRequest:\n      type: object\n      required:\n      - todo\n      properties:\n        todo:\n          type: string\n          description: The todo to add to the list.\n          required: true\n    deleteTodoRequest:\n      type: object\n      required:\n      - todo_idx\n      properties:\n        todo_idx:\n          type: integer\n          description: The index of the todo to delete.\n          required: true"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "quart\nquart-cors"
+        }
+      ]
+    }
+  ]
+}

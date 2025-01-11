@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "timestamp": 1736559573699,
+    "page": 191,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "realpython/discover-flask",
+      "stars": 4523,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "*.pyc\nvenv\n.DS_Store\nblog\n*.db\ncoverage\ntag.py"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.162109375,
+          "content": "language: python\npython:\n  - \"2.7\"\n# command to install dependencies\ninstall: \"pip install -r requirements.txt\"\n# command to run tests\nscript: \"python manage.py test\""
+        },
+        {
+          "name": "Procfile",
+          "type": "blob",
+          "size": 0.0205078125,
+          "content": "web: gunicorn run:app"
+        },
+        {
+          "name": "config.py",
+          "type": "blob",
+          "size": 0.470703125,
+          "content": "import os\n\n\n# default config\nclass BaseConfig(object):\n    DEBUG = False\n    # shortened for readability\n    SECRET_KEY = '\\xbf\\xb0\\x11\\xb1\\xcd\\xf9\\xba\\x8bp\\x0c...'\n    SQLALCHEMY_DATABASE_URI = os.environ['DATABASE_URL']\n\n\nclass TestConfig(BaseConfig):\n    DEBUG = True\n    TESTING = True\n    WTF_CSRF_ENABLED = False\n    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'\n\n\nclass DevelopmentConfig(BaseConfig):\n    DEBUG = True\n\n\nclass ProductionConfig(BaseConfig):\n    DEBUG = False\n"
+        },
+        {
+          "name": "db_create.py",
+          "type": "blob",
+          "size": 0.4384765625,
+          "content": "from project import db\n# from models import BlogPost\n\n# create the database and the db table\ndb.create_all()\n\n# insert data\n# db.session.add(BlogPost(\"Good\", \"I\\'m good.\"))\n# db.session.add(BlogPost(\"Well\", \"I\\'m well.\"))\n# db.session.add(BlogPost(\"Excellent\", \"I\\'m excellent.\"))\n# db.session.add(BlogPost(\"Okay\", \"I\\'m okay.\"))\n# db.session.add(BlogPost(\"postgres\", \"we setup a local postgres instance\"))\n\n# commit the changes\ndb.session.commit()\n"
+        },
+        {
+          "name": "db_create_users.py",
+          "type": "blob",
+          "size": 0.291015625,
+          "content": "from project import db\nfrom project.models import User\n\n# insert data\ndb.session.add(User(\"michael\", \"michael@realpython.com\", \"i'll-never-tell\"))\ndb.session.add(User(\"admin\", \"ad@min.com\", \"admin\"))\ndb.session.add(User(\"mike\", \"mike@herman.com\", \"tell\"))\n\n# commit the changes\ndb.session.commit()\n"
+        },
+        {
+          "name": "manage.py",
+          "type": "blob",
+          "size": 1.029296875,
+          "content": "import unittest\nimport os\nimport coverage\n\nfrom flask.ext.script import Manager\nfrom flask.ext.migrate import Migrate, MigrateCommand\n\nfrom project import app, db\n\n\napp.config.from_object(os.environ['APP_SETTINGS'])\n\nmigrate = Migrate(app, db)\nmanager = Manager(app)\n\nmanager.add_command('db', MigrateCommand)\n\n\n@manager.command\ndef test():\n    \"\"\"Runs the unit tests without coverage.\"\"\"\n    tests = unittest.TestLoader().discover('tests')\n    unittest.TextTestRunner(verbosity=2).run(tests)\n\n\n@manager.command\ndef cov():\n    \"\"\"Runs the unit tests with coverage.\"\"\"\n    cov = coverage.coverage(\n        branch=True,\n        include='project/*'\n    )\n    cov.start()\n    tests = unittest.TestLoader().discover('tests')\n    unittest.TextTestRunner(verbosity=2).run(tests)\n    cov.stop()\n    cov.save()\n    print 'Coverage Summary:'\n    cov.report()\n    basedir = os.path.abspath(os.path.dirname(__file__))\n    covdir = os.path.join(basedir, 'coverage')\n    cov.html_report(directory=covdir)\n    cov.erase()\n\n\nif __name__ == '__main__':\n    manager.run()\n"
+        },
+        {
+          "name": "migrations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "project",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 6.1416015625,
+          "content": "# Discover Flask\n\nFull Stack Web Development with Flask.\n\n**http://discoverflask.com**\n\n[![Build Status](https://travis-ci.org/realpython/discover-flask.svg?branch=master)](https://travis-ci.org/realpython/discover-flask)\n\n[Flask](http://flask.pocoo.org/) is a micro web framework powered by Python. Its API is fairly small, making it easy to learn and simple to use. But don't let this fool you, as it's powerful enough to support enterprise-level applications handling large amounts of traffic. You can start small with an app contained entirely in one file, then slowly scale up to multiple files and folders in a well-structured manner as your site becomes more and more complex.\n\n![real_python_logo](https://raw.githubusercontent.com/realpython/about/master/rp_small.png)\n\n> Please note: This is a tutorial series, which is still in progress. The source code is not meant to be used until the end of the series.\n\n## Support\n\nPlease help us keep this free, open source project going. Purchase the [Real Python](https://realpython.com/) course. Provide gratitude through [Gratipay](https://gratipay.com/mjhea0/). Star this repo. Tweet about it. Anything helps. Thank you!\n\n<a href=\"https://gratipay.com/mjhea0/\">\n  <img alt=\"Support via Gratipay\" src=\"https://cdn.rawgit.com/gratipay/gratipay-badge/2.1.3/dist/gratipay.png\"/>\n</a>\n\n## Contents\n\n\n| Part |      Title                | Git Tag |\n|------|---------------------------|---------|\n| 1    | [Setting Up a Static Site](http://youtu.be/WfpFUmV1d0w) ([blog post](http://www.realpython.com/blog/python/introduction-to-flask-part-1-setting-up-a-static-site)) | [part1](https://github.com/realpython/discover-flask/tree/part1) |\n| 2    | [Creating a login page](http://youtu.be/bLA6eBGN-_0) ([blog post](http://www.realpython.com/blog/python/introduction-to-flask-part-2-creating-a-login-page)) | [part2](https://github.com/realpython/discover-flask/tree/part2) |\n| 3    | [User Authentication](http://youtu.be/BnBjhmspw4c) | [part3](https://github.com/realpython/discover-flask/tree/part3) |\n| 4    | [Template Inheritance](http://youtu.be/hNzruwVPtCE) | [part4](https://github.com/realpython/discover-flask/tree/part4) |\n| 5    | [Databases](http://youtu.be/_vrAjAHhUsA) | [part5](https://github.com/realpython/discover-flask/tree/part5) |\n| 6    | [List Comprehensions](http://youtu.be/WqmqNC8Teeo) | N/A |\n| 7    | [Unit Tests](http://youtu.be/1aHNs1aEATg) | [part7](https://github.com/realpython/discover-flask/tree/part7) |\n| 8    | [Deploying to Heroku](http://youtu.be/L9uD74nHvFY) | [part8](https://github.com/realpython/discover-flask/tree/part8) |\n| 9    | [SQLAlchemy](https://www.youtube.com/watch?v=kuyrL6krkwA) | [part9](https://github.com/realpython/discover-flask/tree/part9) |\n| 10   | [Configuration](https://www.youtube.com/watch?v=4Eww3wVZK2I) | [part10](https://github.com/realpython/discover-flask/tree/part10) |\n| 11   | [Secret Key](http://youtu.be/tqu9y4iqKVI) | [part11](https://github.com/realpython/discover-flask/tree/part11) |\n| 12   | [Heroku Configuration Settings](http://youtu.be/Y-ONxFkAUJc) | [part12](https://github.com/realpython/discover-flask/tree/part12) |\n| 13   | [Heroku Postgres Setup](https://www.youtube.com/watch?v=FD0p-opdyoE) | [part13](https://github.com/realpython/discover-flask/tree/part13) |\n| 14   | [Local PostgreSQL Setup](https://www.youtube.com/watch?v=Up3p20rgWCw) | [part14](https://github.com/realpython/discover-flask/tree/part14) |\n| 15   | [Managing Database Migrations](http://youtu.be/YJibNSI-iaE) | [part15](https://github.com/realpython/discover-flask/tree/part15) |\n| 16   | [Database Downgrades with Flask-Migrate/Alembic](http://youtu.be/5UT1binVuYc) | [part16](https://github.com/realpython/discover-flask/tree/part16) |\n| 17   | [Virtualenvwrapper](http://youtu.be/thHNYVrY0lU) | [part17](https://github.com/realpython/discover-flask/tree/part17) |\n| 18   | [Password Hashing](http://youtu.be/LTJH5Mdgn4w) | [part18](https://github.com/realpython/discover-flask/tree/part18) |\n| 19   | [Blueprints](http://youtu.be/AeI_rBeZmwg) | [part19](https://github.com/realpython/discover-flask/tree/part19) |\n| 20   | [Blueprints Redux](http://youtu.be/TwNp1UagE9U) | [part20](https://github.com/realpython/discover-flask/tree/part20) |\n| 21   | [User Authentication (part 2)](http://youtu.be/_pzMDIi5BuI) | [part21](https://github.com/realpython/discover-flask/tree/part21) |\n| 22   | [Unit Testing with Flask-Testing](http://youtu.be/WDh_VQ41kYI) | [part22](https://github.com/realpython/discover-flask/tree/part22) |\n| 23   | [Session Management with Flask-Login](http://youtu.be/rJGMOOSnHL0) | [part23](https://github.com/realpython/discover-flask/tree/part23) |\n| 24   | [Testing User Login and Logout](https://www.youtube.com/watch?v=v0fp1O7zCUY) | [part24](https://github.com/realpython/discover-flask/tree/part24) |\n| 25   | [User Registration (functionality and unit tests)](http://youtu.be/kt4PEa5tsVw) | [part25](https://github.com/realpython/discover-flask/tree/part25) |\n| 26   | [Finalize Messaging System](http://youtu.be/WnT188ePHg4) | [part26](https://github.com/realpython/discover-flask/tree/part26) |\n| 27   | [Test Coverage with coverage.py](http://youtu.be/7Aqcn0-uAr0) | [part27](https://github.com/realpython/discover-flask/tree/part27) |\n| 28   | [Flask Testing!](http://youtu.be/YO2k80aDJj8) | [part28](https://github.com/realpython/discover-flask/tree/part28) |\n| 29   | [Flask Testing (increase test coverage)](http://youtu.be/ASNNTb6o3pU) | [part29](https://github.com/realpython/discover-flask/tree/part29) |\n| 30   | [Continuous Integration](http://youtu.be/qAe6v_6SMA8) | [part30](https://github.com/realpython/discover-flask/tree/part30) |\n\n\n**You can view the entire video playlist [here](http://www.youtube.com/watch?v=WfpFUmV1d0w&list=PLLjmbh6XPGK4ISY747FUHXEl9lBxre4mM&feature=share).**\n\n## Links\n\n- Nice Vagrant [Instance](https://github.com/apolloclark/discover-flask-vagrant) for Discover Flask, for use with [PyJenkinsCI](https://github.com/apolloclark/py-jenkins-ci) - a test Jenkins Continuous Integration (CI) for Python projects, compatible with Mac OSX and Ubuntu systems. (Thanks, [Apollo](https://github.com/apolloclark)!)\n- Awesome project, based on the series -> [HomeCenter](https://github.com/Thustra/HomeCenter)\n\n\n\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.3525390625,
+          "content": "Flask==0.10.1\nFlask-Bcrypt==0.6.0\nFlask-Login==0.2.11\nFlask-Migrate==1.2.0\nFlask-SQLAlchemy==1.0\nFlask-Script==2.0.5\nFlask-Testing==0.4.2\nFlask-WTF==0.10.2\nJinja2==2.7.3\nMako==1.0.0\nMarkupSafe==0.23\nSQLAlchemy==0.9.4\nWTForms==2.0.1\nWerkzeug==0.9.6\nalembic==0.6.6\ncoverage==4.0a1\ngunicorn==19.0.0\nitsdangerous==0.24\npsycopg2==2.5.3\npy-bcrypt==0.4\nwsgiref==0.1.2\n"
+        },
+        {
+          "name": "run.py",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": "from project import app\n\n\nif __name__ == '__main__':\n    app.run()\n"
+        },
+        {
+          "name": "sql.py",
+          "type": "blob",
+          "size": 0.6533203125,
+          "content": "# sql.py - Create a SQLite3 table and populate it with data\n\n\nimport sqlite3\n\n# create a new database if the database doesn't already exist\nwith sqlite3.connect('sample.db') as connection:\n\n    # get a cursor object used to execute SQL commands\n    c = connection.cursor()\n\n    # create the table\n    c.execute('CREATE TABLE posts(title TEXT, description TEXT)')\n\n    # insert dummy data into the table\n    c.execute('INSERT INTO posts VALUES(\"Good\", \"I\\'m good.\")')\n    c.execute('INSERT INTO posts VALUES(\"Well\", \"I\\'m well.\")')\n    c.execute('INSERT INTO posts VALUES(\"Excellent\", \"I\\'m excellent.\")')\n    c.execute('INSERT INTO posts VALUES(\"Okay\", \"I\\'m okay.\")')\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

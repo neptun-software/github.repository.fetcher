@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "timestamp": 1736559555949,
+    "page": 164,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "miguelgrinberg/microblog",
+      "stars": 4585,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".flaskenv",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "FLASK_APP=microblog.py\nFLASK_DEBUG=1\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "* text=auto\n*.sh text eol=lf\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3349609375,
+          "content": "*.py[cod]\n\n# C extensions\n*.so\n\n# Packages\n*.egg\n*.egg-info\ndist\nbuild\neggs\nparts\nbin\nvar\nsdist\ndevelop-eggs\n.installed.cfg\nlib\nlib64\n__pycache__\n\n# Installer logs\npip-log.txt\n\n# Unit test / coverage reports\n.coverage\n.tox\nnosetests.xml\n\n# Translations\n*.mo\n\n# Mr Developer\n.mr.developer.cfg\n.project\n.pydevproject\n\nvenv\napp.db\nmicroblog.log*\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.3271484375,
+          "content": "FROM python:slim\n\nCOPY requirements.txt requirements.txt\nRUN pip install -r requirements.txt\nRUN pip install gunicorn pymysql cryptography\n\nCOPY app app\nCOPY migrations migrations\nCOPY microblog.py config.py boot.sh ./\nRUN chmod a+x boot.sh\n\nENV FLASK_APP microblog.py\nRUN flask translate compile\n\nEXPOSE 5000\nENTRYPOINT [\"./boot.sh\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0576171875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2017 Miguel Grinberg\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n"
+        },
+        {
+          "name": "Procfile",
+          "type": "blob",
+          "size": 0.1025390625,
+          "content": "web: flask db upgrade; flask translate compile; gunicorn microblog:app\nworker: rq worker microblog-tasks\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.6064453125,
+          "content": "# Welcome to Microblog!\n\nThis is an example application featured in my [Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world). See the tutorial for instructions on how to work with it.\n\nThe version of the application featured in this repository corresponds to the 2024 edition of the Flask Mega-Tutorial. You can find the 2018 and 2021 versions of the code [here](https://github.com/miguelgrinberg/microblog-2018). And if for any strange reason you are interested in the original code, dating back to 2012, that is [here](https://github.com/miguelgrinberg/microblog-2012).\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 0.19921875,
+          "content": "Vagrant.configure(\"2\") do |config|\n  config.vm.box = \"ubuntu/jammy64\"\n  config.vm.network \"private_network\", ip: \"192.168.56.10\"\n  config.vm.provider \"virtualbox\" do |vb|\n    vb.memory = \"2048\"\n  end\nend\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "babel.cfg",
+          "type": "blob",
+          "size": 0.05078125,
+          "content": "[python: app/**.py]\n[jinja2: app/templates/**.html]\n"
+        },
+        {
+          "name": "boot.sh",
+          "type": "blob",
+          "size": 0.287109375,
+          "content": "#!/bin/bash\n# this script is used to boot a Docker container\nwhile true; do\n    flask db upgrade\n    if [[ \"$?\" == \"0\" ]]; then\n        break\n    fi\n    echo Deploy command failed, retrying in 5 secs...\n    sleep 5\ndone\nexec gunicorn -b :5000 --access-logfile - --error-logfile - microblog:app\n"
+        },
+        {
+          "name": "config.py",
+          "type": "blob",
+          "size": 0.96875,
+          "content": "import os\nfrom dotenv import load_dotenv\n\nbasedir = os.path.abspath(os.path.dirname(__file__))\nload_dotenv(os.path.join(basedir, '.env'))\n\n\nclass Config:\n    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'\n    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').replace(\n        'postgres://', 'postgresql://') or \\\n        'sqlite:///' + os.path.join(basedir, 'app.db')\n    LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')\n    MAIL_SERVER = os.environ.get('MAIL_SERVER')\n    MAIL_PORT = int(os.environ.get('MAIL_PORT') or 25)\n    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None\n    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')\n    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')\n    ADMINS = ['your-email@example.com']\n    LANGUAGES = ['en', 'es']\n    MS_TRANSLATOR_KEY = os.environ.get('MS_TRANSLATOR_KEY')\n    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL')\n    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'\n    POSTS_PER_PAGE = 25\n"
+        },
+        {
+          "name": "deployment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "microblog.py",
+          "type": "blob",
+          "size": 0.3603515625,
+          "content": "import sqlalchemy as sa\nimport sqlalchemy.orm as so\nfrom app import create_app, db\nfrom app.models import User, Post, Message, Notification, Task\n\napp = create_app()\n\n\n@app.shell_context_processor\ndef make_shell_context():\n    return {'sa': sa, 'so': so, 'db': db, 'User': User, 'Post': Post,\n            'Message': Message, 'Notification': Notification, 'Task': Task}\n"
+        },
+        {
+          "name": "migrations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.931640625,
+          "content": "aiosmtpd==1.4.4.post2\nalembic==1.12.1\natpublic==4.0\nattrs==23.1.0\nBabel==2.13.1\nblinker==1.7.0\ncertifi==2023.11.17\ncharset-normalizer==3.3.2\nclick==8.1.7\ndefusedxml==0.7.1\ndnspython==2.4.2\nelastic-transport==8.10.0\nelasticsearch==8.11.0\nemail-validator==2.1.0.post1\nFlask==3.0.0\nflask-babel==4.0.0\nFlask-HTTPAuth==4.8.0\nFlask-Login==0.6.3\nFlask-Mail==0.9.1\nFlask-Migrate==4.0.5\nFlask-Moment==1.0.5\nFlask-SQLAlchemy==3.1.1\nFlask-WTF==1.2.1\ngreenlet==3.0.1\ngunicorn==21.2.0\nhttpie==3.2.2\nidna==3.4\nitsdangerous==2.1.2\nJinja2==3.1.2\nlangdetect==1.0.9\nMako==1.3.0\nmarkdown-it-py==3.0.0\nMarkupSafe==2.1.3\nmdurl==0.1.2\nmultidict==6.0.4\npackaging==23.2\npsycopg2-binary==2.9.9\nPygments==2.17.1\nPyJWT==2.8.0\nPySocks==1.7.1\npython-dotenv==1.0.0\npytz==2023.3.post1\nredis==5.0.1\nrequests==2.31.0\nrequests-toolbelt==1.0.0\nrich==13.7.0\nrq==1.15.1\nsetuptools==68.2.2\nsix==1.16.0\nSQLAlchemy==2.0.23\ntyping_extensions==4.8.0\nurllib3==2.1.0\nWerkzeug==3.0.1\nWTForms==3.1.1\n"
+        },
+        {
+          "name": "tests.py",
+          "type": "blob",
+          "size": 3.8349609375,
+          "content": "#!/usr/bin/env python\nfrom datetime import datetime, timezone, timedelta\nimport unittest\nfrom app import create_app, db\nfrom app.models import User, Post\nfrom config import Config\n\n\nclass TestConfig(Config):\n    TESTING = True\n    SQLALCHEMY_DATABASE_URI = 'sqlite://'\n    ELASTICSEARCH_URL = None\n\n\nclass UserModelCase(unittest.TestCase):\n    def setUp(self):\n        self.app = create_app(TestConfig)\n        self.app_context = self.app.app_context()\n        self.app_context.push()\n        db.create_all()\n\n    def tearDown(self):\n        db.session.remove()\n        db.drop_all()\n        self.app_context.pop()\n\n    def test_password_hashing(self):\n        u = User(username='susan', email='susan@example.com')\n        u.set_password('cat')\n        self.assertFalse(u.check_password('dog'))\n        self.assertTrue(u.check_password('cat'))\n\n    def test_avatar(self):\n        u = User(username='john', email='john@example.com')\n        self.assertEqual(u.avatar(128), ('https://www.gravatar.com/avatar/'\n                                         'd4c74594d841139328695756648b6bd6'\n                                         '?d=identicon&s=128'))\n\n    def test_follow(self):\n        u1 = User(username='john', email='john@example.com')\n        u2 = User(username='susan', email='susan@example.com')\n        db.session.add(u1)\n        db.session.add(u2)\n        db.session.commit()\n        following = db.session.scalars(u1.following.select()).all()\n        followers = db.session.scalars(u2.followers.select()).all()\n        self.assertEqual(following, [])\n        self.assertEqual(followers, [])\n\n        u1.follow(u2)\n        db.session.commit()\n        self.assertTrue(u1.is_following(u2))\n        self.assertEqual(u1.following_count(), 1)\n        self.assertEqual(u2.followers_count(), 1)\n        u1_following = db.session.scalars(u1.following.select()).all()\n        u2_followers = db.session.scalars(u2.followers.select()).all()\n        self.assertEqual(u1_following[0].username, 'susan')\n        self.assertEqual(u2_followers[0].username, 'john')\n\n        u1.unfollow(u2)\n        db.session.commit()\n        self.assertFalse(u1.is_following(u2))\n        self.assertEqual(u1.following_count(), 0)\n        self.assertEqual(u2.followers_count(), 0)\n\n    def test_follow_posts(self):\n        # create four users\n        u1 = User(username='john', email='john@example.com')\n        u2 = User(username='susan', email='susan@example.com')\n        u3 = User(username='mary', email='mary@example.com')\n        u4 = User(username='david', email='david@example.com')\n        db.session.add_all([u1, u2, u3, u4])\n\n        # create four posts\n        now = datetime.now(timezone.utc)\n        p1 = Post(body=\"post from john\", author=u1,\n                  timestamp=now + timedelta(seconds=1))\n        p2 = Post(body=\"post from susan\", author=u2,\n                  timestamp=now + timedelta(seconds=4))\n        p3 = Post(body=\"post from mary\", author=u3,\n                  timestamp=now + timedelta(seconds=3))\n        p4 = Post(body=\"post from david\", author=u4,\n                  timestamp=now + timedelta(seconds=2))\n        db.session.add_all([p1, p2, p3, p4])\n        db.session.commit()\n\n        # setup the followers\n        u1.follow(u2)  # john follows susan\n        u1.follow(u4)  # john follows david\n        u2.follow(u3)  # susan follows mary\n        u3.follow(u4)  # mary follows david\n        db.session.commit()\n\n        # check the following posts of each user\n        f1 = db.session.scalars(u1.following_posts()).all()\n        f2 = db.session.scalars(u2.following_posts()).all()\n        f3 = db.session.scalars(u3.following_posts()).all()\n        f4 = db.session.scalars(u4.following_posts()).all()\n        self.assertEqual(f1, [p2, p4, p1])\n        self.assertEqual(f2, [p2, p3])\n        self.assertEqual(f3, [p3, p4])\n        self.assertEqual(f4, [p4])\n\n\nif __name__ == '__main__':\n    unittest.main(verbosity=2)\n"
+        }
+      ]
+    }
+  ]
+}
