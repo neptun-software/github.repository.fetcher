@@ -9,8 +9,11 @@ import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const CHUNK_SIZE = 10; // Number of repositories per file
+
+// Using more than one risks data loss, because fileContents are not fetched, if the root is too large, and there is not way, to check this in the query (you can only check total like so size:<10240).
+const CHUNK_SIZE = 1; // Number of repositories per file.
 const DATA_DIR = "data";
+const LOG_FILE = join(DATA_DIR, "error.log");
 
 if (!GITHUB_TOKEN) {
   throw new Error("Missing required environment variables (GITHUB_TOKEN).");
@@ -44,6 +47,22 @@ type ChunkMetadata = {
   completionStatus: 'RATE_LIMITED' | 'COMPLETED' | 'ERROR' | 'IN_PROGRESS';
   error?: string;
 };
+
+async function logError(message: string, error?: any) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n${error ? `Error: ${JSON.stringify(error, null, 2)}\n` : ''}\n`;
+
+  await mkdir(DATA_DIR, { recursive: true });
+
+  const logFile = Bun.file(LOG_FILE);
+  const writer = logFile.writer();
+  writer.write(logMessage);
+  writer.flush();
+  writer.end();
+
+  console.error(message);
+  if (error) console.error(error);
+}
 
 async function getLatestChunk(): Promise<ChunkMetadata | null> {
   try {
@@ -90,6 +109,40 @@ async function saveChunk(repositories: Repositories, metadata: ChunkMetadata) {
 - Size: ${(Bun.file(filePath).size / 1024).toFixed(2)} KB`);
 }
 
+async function fetchRepositoryData(nameWithOwner: string, withBlobContents: boolean = true) {
+  const [owner, name] = nameWithOwner.split('/');
+  const { repository }: { repository: Repository } = await graphqlWithAuth(`
+    query getRepoFiles($owner: String!, $name: String!) {
+      repository(owner: $owner, name: $name) {
+        defaultBranchRef {
+          name
+          target {
+            ... on Commit {
+              tree {
+                entries {
+                  name
+                  type
+                  object {
+                    ... on Blob {
+                      byteSize
+                      ${withBlobContents ? 'text' : ''}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `, {
+    owner,
+    name
+  });
+
+  return repository;
+}
+
 async function fetchTopRepositories() {
   let currentChunk: Repositories = [];
   let hasNextPage = true;
@@ -131,25 +184,6 @@ async function fetchTopRepositories() {
               ... on Repository {
                 nameWithOwner
                 stargazerCount
-                defaultBranchRef {
-                  name
-                  target {
-                    ... on Commit {
-                      tree {
-                        entries {
-                          name
-                          type
-                          object {
-                            ... on Blob {
-                              byteSize
-                              text
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
               }
             }
             pageInfo {
@@ -181,9 +215,26 @@ async function fetchTopRepositories() {
         if (!repo || !('nameWithOwner' in repo)) continue;
 
         let repoData: Files = [];
+        let fetchedRepo;
 
-        if (repo.defaultBranchRef?.target && 'tree' in repo.defaultBranchRef.target) {
-          const tree = repo.defaultBranchRef.target.tree;
+        try {
+          // First try with blob contents
+          fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, true);
+          console.log(`✅ Successfully fetched ${repo.nameWithOwner} with blob contents`);
+        } catch (error) {
+          await logError(`Failed to fetch ${repo.nameWithOwner} with blob contents, retrying without...`, error);
+          try {
+            // Retry without blob contents
+            fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, false);
+            console.log(`✅ Successfully fetched ${repo.nameWithOwner} without blob contents`);
+          } catch (retryError) {
+            await logError(`Failed to fetch ${repo.nameWithOwner} even without blob contents:`, retryError);
+            continue;
+          }
+        }
+
+        if (fetchedRepo.defaultBranchRef?.target && 'tree' in fetchedRepo.defaultBranchRef.target) {
+          const tree = fetchedRepo.defaultBranchRef.target.tree;
           if (tree?.entries) {
             repoData = tree.entries.map(entry => ({
               name: entry.name,
@@ -202,21 +253,21 @@ async function fetchTopRepositories() {
         currentChunk.push({
           nameWithOwner: repo.nameWithOwner,
           stars: repo.stargazerCount,
-          defaultBranch: repo.defaultBranchRef?.name || 'unknown',
+          defaultBranch: fetchedRepo.defaultBranchRef?.name || 'unknown',
           files: repoData
         });
 
         // Keep existing console logging for visibility
         console.log(`\n📦 Repository: ${repo.nameWithOwner}`);
         console.log(`⭐ Stars: ${repo.stargazerCount.toLocaleString()}`);
-        console.log(`🌿 Default branch: ${repo.defaultBranchRef?.name}`);
+        console.log(`🌿 Default branch: ${fetchedRepo.defaultBranchRef?.name}`);
 
-        if (!repo.defaultBranchRef?.target || !('tree' in repo.defaultBranchRef.target)) {
+        if (!fetchedRepo.defaultBranchRef?.target || !('tree' in fetchedRepo.defaultBranchRef.target)) {
           console.log('❌ No files found in root');
           continue;
         }
 
-        const tree = repo.defaultBranchRef.target.tree;
+        const tree = fetchedRepo.defaultBranchRef.target.tree;
         if (!tree?.entries) {
           console.log('❌ No files found in root');
           continue;
@@ -291,7 +342,7 @@ async function fetchTopRepositories() {
     }
 
   } catch (error) {
-    console.error('❌ Error fetching repositories:', error);
+    await logError(`Error fetching repositories:`, error);
     // Save error state in metadata
     const metadata: ChunkMetadata = {
       timestamp: Date.now(),
@@ -308,8 +359,8 @@ async function fetchTopRepositories() {
   }
 }
 
-process.on('uncaughtException', (error) => {
-  console.error('💥 Uncaught Exception:', error);
+process.on('uncaughtException', async (error) => {
+  await logError('💥 Uncaught Exception:', error);
 });
 
 fetchTopRepositories();
