@@ -69,6 +69,36 @@ const STAR_RANGES: StarRange[] = [
   { min: 100001, max: 1000000, label: '100001-plus' },
 ];
 
+type GlobalMetadata = {
+  timestamp: number;
+  currentLanguage: string | null;
+  currentStarRange: string | null;
+  completedSegments: Array<{
+    language: string;
+    starRange: string;
+    completionStatus: ChunkMetadata['completionStatus'];
+  }>;
+};
+
+async function loadGlobalMetadata(): Promise<GlobalMetadata> {
+  const globalMetadataPath = join(DATA_DIR, 'global-metadata.json');
+  try {
+    return JSON.parse(await readFile(globalMetadataPath, 'utf-8'));
+  } catch (error) {
+    return {
+      timestamp: Date.now(),
+      currentLanguage: null,
+      currentStarRange: null,
+      completedSegments: []
+    };
+  }
+}
+
+async function saveGlobalMetadata(metadata: GlobalMetadata) {
+  const globalMetadataPath = join(DATA_DIR, 'global-metadata.json');
+  await writeFile(globalMetadataPath, JSON.stringify(metadata, null, 2));
+}
+
 async function logError(message: string, error?: any) {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] ${message}\n${error ? `Error: ${JSON.stringify(error, null, 2)}\n` : ''}\n`;
@@ -502,7 +532,7 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
     if (lastMetadata.completionStatus === 'RATE_LIMITED' || lastMetadata.completionStatus === 'IN_PROGRESS') {
       hasNextPage = lastMetadata.hasNextPage;
       cursor = lastMetadata.endCursor;
-      page = lastMetadata.page;
+      page = lastMetadata.page + 1;
       console.log(`\n📂 Loaded existing metadata for ${language}/${starRange.label}, continuing from:`, {
         page,
         cursor,
@@ -568,6 +598,8 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
               completionStatus: 'IN_PROGRESS'
             };
             await saveChunk(currentChunk, metadata, dir);
+            // Save segment metadata after each chunk
+            await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
             currentChunk = [];
             page++;
           }
@@ -632,13 +664,60 @@ async function main() {
     const languages = await fetchLanguagesWithPopularRepos();
     console.log(`Found ${languages.length} languages with popular repositories`);
 
+    const globalMetadata = await loadGlobalMetadata();
+    let startFromLanguage = globalMetadata.currentLanguage;
+    let startFromRange = globalMetadata.currentStarRange;
+    let shouldSkip = startFromLanguage !== null;
+
     for (const language of languages) {
+      // Skip until we reach the language we were processing
+      if (shouldSkip && language.name !== startFromLanguage) {
+        continue;
+      }
+      shouldSkip = false;
+
       console.log(`\n📚 Processing ${language.name} (${language.repositoryCount} repositories)`);
 
       for (const starRange of STAR_RANGES) {
+        // Skip ranges we've already completed
+        const isCompleted = globalMetadata.completedSegments.some(
+          seg => seg.language === language.name &&
+            seg.starRange === starRange.label &&
+            seg.completionStatus === 'COMPLETED'
+        );
+        if (isCompleted) {
+          console.log(`⏩ Skipping completed segment ${language.name}/${starRange.label}`);
+          continue;
+        }
+
+        // Skip until we reach the range we were processing
+        if (startFromLanguage === language.name && startFromRange && starRange.label !== startFromRange) {
+          continue;
+        }
+        startFromRange = null;
+
         console.log(`\n⭐ Processing ${language.name} repositories with ${starRange.label} stars`);
+
+        // Update current position
+        globalMetadata.currentLanguage = language.name;
+        globalMetadata.currentStarRange = starRange.label;
+        await saveGlobalMetadata(globalMetadata);
+
         await processLanguageAndStarRange(language.name, starRange);
+
+        // Mark segment as completed
+        globalMetadata.completedSegments.push({
+          language: language.name,
+          starRange: starRange.label,
+          completionStatus: 'COMPLETED'
+        });
+        await saveGlobalMetadata(globalMetadata);
       }
+
+      // Clear current language when done with all its ranges
+      globalMetadata.currentLanguage = null;
+      globalMetadata.currentStarRange = null;
+      await saveGlobalMetadata(globalMetadata);
     }
 
     console.log('\n✅ Completed processing all languages and star ranges');
