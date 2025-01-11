@@ -5,7 +5,7 @@ import type {
   TreeEntry,
   Repository
 } from "@octokit/graphql-schema";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
@@ -49,6 +49,26 @@ type ChunkMetadata = {
   error?: string;
 };
 
+type StarRange = {
+  min: number;
+  max: number;
+  label: string;
+};
+
+type Language = {
+  name: string;
+  repositoryCount: number;
+};
+
+const STAR_RANGES: StarRange[] = [
+  { min: 1000, max: 5000, label: '1000-5000' },
+  { min: 5001, max: 10000, label: '5001-10000' },
+  { min: 10001, max: 25000, label: '10001-25000' },
+  { min: 25001, max: 50000, label: '25001-50000' },
+  { min: 50001, max: 100000, label: '50001-100000' },
+  { min: 100001, max: 1000000, label: '100001-plus' },
+];
+
 async function logError(message: string, error?: any) {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] ${message}\n${error ? `Error: ${JSON.stringify(error, null, 2)}\n` : ''}\n`;
@@ -84,30 +104,11 @@ async function getLatestChunk(): Promise<ChunkMetadata | null> {
   return null;
 }
 
-async function saveChunk(repositories: Repositories, metadata: ChunkMetadata) {
-  await mkdir(DATA_DIR, { recursive: true });
-
+async function saveChunk(repositories: Repositories, metadata: ChunkMetadata, dir: string = DATA_DIR) {
   const filename = `repositories-${metadata.timestamp}-${metadata.page}.json`;
-  const filePath = join(DATA_DIR, filename);
-
-  const output = {
-    metadata: {
-      ...metadata,
-      completionStatus: metadata.completionStatus || 'IN_PROGRESS'
-    },
-    repositories,
-  };
-
-  await Bun.write(filePath, JSON.stringify(output, null, 2));
-  await Bun.write(join(DATA_DIR, 'metadata.json'), JSON.stringify(metadata, null, 2));
-
-  console.log(`
-📝 Chunk saved:
-- Path: ${filePath}
-- Page: ${metadata.page}
-- Status: ${metadata.completionStatus}
-- Repositories: ${repositories.length}
-- Size: ${(Bun.file(filePath).size / 1024).toFixed(2)} KB`);
+  const path = join(dir, filename);
+  await writeFile(path, JSON.stringify({ metadata, repositories }, null, 2));
+  console.log(`✅ Saved ${repositories.length} repositories to ${path}`);
 }
 
 function isIpAllowlistError(error: any): boolean {
@@ -296,13 +297,8 @@ async function fetchTopRepositories() {
             repoData = tree.entries.map(entry => ({
               name: entry.name,
               type: entry.type,
-              size: entry.object && 'byteSize' in entry.object ?
-                Number((entry.object.byteSize / 1024).toFixed(2)) : undefined,
-              content: entry.object && 'byteSize' in entry.object &&
-                entry.object.byteSize < 1024 * 1024 &&
-                'text' in entry.object &&
-                entry.object.text ?
-                entry.object.text : null
+              size: entry.object && 'byteSize' in entry.object ? entry.object.byteSize / 1024 : undefined,
+              content: entry.object && 'text' in entry.object ? entry.object.text : null
             }));
           }
         }
@@ -412,8 +408,248 @@ async function fetchTopRepositories() {
   }
 }
 
+async function fetchLanguagesWithPopularRepos(): Promise<Language[]> {
+  const result: {
+    search: {
+      repositories: Array<{
+        primaryLanguage?: {
+          name: string;
+        } | null;
+      } | null>;
+    };
+  } = await graphqlWithAuth(`
+    query getLanguages {
+      search(
+        query: "stars:>1000 sort:stars-desc"
+        type: REPOSITORY
+        first: 100
+      ) {
+        repositories: nodes {
+          ... on Repository {
+            primaryLanguage {
+              name
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  const languages = new Map<string, number>();
+
+  for (const repo of result.search.repositories) {
+    if (repo?.primaryLanguage?.name) {
+      const count = languages.get(repo.primaryLanguage.name) || 0;
+      languages.set(repo.primaryLanguage.name, count + 1);
+    }
+  }
+
+  return Array.from(languages.entries())
+    .map(([name, count]) => ({ name, repositoryCount: count }))
+    .sort((a, b) => b.repositoryCount - a.repositoryCount)
+    .filter(lang => lang.name !== null);
+}
+
+async function fetchRepositoriesForLanguageAndStars(
+  language: string,
+  starRange: StarRange,
+  cursor: string | null = null
+): Promise<{ search: SearchResultItemConnection; rateLimit: RateLimit }> {
+  return graphqlWithAuth(`
+    query getReposByLanguageAndStars($cursor: String) {
+      search(
+        query: "language:${language} stars:${starRange.min}..${starRange.max} sort:stars-desc"
+        type: REPOSITORY
+        first: 10
+        after: $cursor
+      ) {
+        nodes {
+          ... on Repository {
+            nameWithOwner
+            stargazerCount
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+      rateLimit {
+        remaining
+        limit
+        cost
+        resetAt
+      }
+    }
+  `, {
+    cursor
+  });
+}
+
+async function processLanguageAndStarRange(language: string, starRange: StarRange) {
+  const dir = join(DATA_DIR, language, starRange.label);
+  await mkdir(dir, { recursive: true });
+
+  let currentChunk: Repositories = [];
+  let hasNextPage = true;
+  let cursor: string | null = null;
+  let page = 1;
+
+  // Try to load existing metadata for this language/range
+  const metadataPath = join(dir, 'metadata.json');
+  try {
+    const lastMetadata = JSON.parse(await readFile(metadataPath, 'utf-8')) as ChunkMetadata;
+    if (lastMetadata.completionStatus === 'RATE_LIMITED' || lastMetadata.completionStatus === 'IN_PROGRESS') {
+      hasNextPage = lastMetadata.hasNextPage;
+      cursor = lastMetadata.endCursor;
+      page = lastMetadata.page;
+      console.log(`\n📂 Loaded existing metadata for ${language}/${starRange.label}, continuing from:`, {
+        page,
+        cursor,
+        previousStatus: lastMetadata.completionStatus
+      });
+    }
+  } catch (error) {
+    // No existing metadata or invalid file - start fresh
+    console.log(`\n📂 Starting fresh for ${language}/${starRange.label}`);
+  }
+
+  try {
+    while (hasNextPage) {
+      const { search, rateLimit } = await fetchRepositoriesForLanguageAndStars(language, starRange, cursor);
+
+      hasNextPage = search.pageInfo.hasNextPage;
+      cursor = search.pageInfo.endCursor ?? null;
+
+      console.log(`\n=== GitHub API Rate Limit (${language}/${starRange.label}) ===`);
+      console.log(`Remaining: ${rateLimit.remaining}/${rateLimit.limit}`);
+      console.log(`Cost of this query: ${rateLimit.cost}`);
+      console.log(`Resets at: ${new Date(rateLimit.resetAt).toLocaleString()}`);
+      console.log('===========================\n');
+
+      if (!search.nodes) continue;
+
+      for (const repo of search.nodes) {
+        if (!repo || !('nameWithOwner' in repo)) continue;
+
+        try {
+          const fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, true);
+          if (fetchedRepo.defaultBranchRef?.name === 'unknown') {
+            console.log(`⚠️ Limited access to ${repo.nameWithOwner} due to IP restrictions - skipping`);
+            continue;
+          }
+
+          const entries = fetchedRepo.defaultBranchRef?.target &&
+            'tree' in fetchedRepo.defaultBranchRef.target ?
+            fetchedRepo.defaultBranchRef.target.tree?.entries : undefined;
+          if (!entries) continue;
+
+          currentChunk.push({
+            nameWithOwner: repo.nameWithOwner,
+            stars: repo.stargazerCount,
+            defaultBranch: fetchedRepo.defaultBranchRef?.name || 'main',
+            files: entries.map((entry: TreeEntry) => {
+              const obj = entry.object;
+              return {
+                name: entry.name,
+                type: entry.type,
+                size: obj && 'byteSize' in obj ? obj.byteSize / 1024 : undefined,
+                content: obj && 'text' in obj ? obj.text : null
+              };
+            })
+          });
+
+          if (currentChunk.length >= CHUNK_SIZE) {
+            const metadata: ChunkMetadata = {
+              timestamp: Date.now(),
+              page,
+              hasNextPage,
+              endCursor: cursor,
+              completionStatus: 'IN_PROGRESS'
+            };
+            await saveChunk(currentChunk, metadata, dir);
+            currentChunk = [];
+            page++;
+          }
+        } catch (error) {
+          await logError(`Failed to process ${repo.nameWithOwner}:`, error);
+          continue;
+        }
+      }
+
+      if (rateLimit.remaining < rateLimit.cost) {
+        console.log(`⚠️ Rate limit nearly exhausted for ${language}/${starRange.label}, stopping pagination`);
+        const metadata: ChunkMetadata = {
+          timestamp: Date.now(),
+          page,
+          hasNextPage: true,
+          endCursor: cursor,
+          completionStatus: 'RATE_LIMITED'
+        };
+        if (currentChunk.length > 0) {
+          await saveChunk(currentChunk, metadata, dir);
+        }
+        // Save overall metadata
+        await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        return;
+      }
+    }
+
+    // Save any remaining repositories in the last chunk
+    if (currentChunk.length > 0) {
+      const metadata: ChunkMetadata = {
+        timestamp: Date.now(),
+        page,
+        hasNextPage,
+        endCursor: cursor,
+        completionStatus: hasNextPage ? 'IN_PROGRESS' : 'COMPLETED'
+      };
+      await saveChunk(currentChunk, metadata, dir);
+      await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+    }
+
+  } catch (error) {
+    await logError(`Error processing ${language}/${starRange.label}:`, error);
+    const metadata: ChunkMetadata = {
+      timestamp: Date.now(),
+      page,
+      hasNextPage: true,
+      endCursor: cursor,
+      completionStatus: 'ERROR',
+      error: error instanceof Error ? error.message : String(error)
+    };
+    if (currentChunk.length > 0) {
+      await saveChunk(currentChunk, metadata, dir);
+    }
+    await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+    throw error;
+  }
+}
+
+async function main() {
+  try {
+    console.log('🔍 Fetching languages with popular repositories...');
+    const languages = await fetchLanguagesWithPopularRepos();
+    console.log(`Found ${languages.length} languages with popular repositories`);
+
+    for (const language of languages) {
+      console.log(`\n📚 Processing ${language.name} (${language.repositoryCount} repositories)`);
+
+      for (const starRange of STAR_RANGES) {
+        console.log(`\n⭐ Processing ${language.name} repositories with ${starRange.label} stars`);
+        await processLanguageAndStarRange(language.name, starRange);
+      }
+    }
+
+    console.log('\n✅ Completed processing all languages and star ranges');
+  } catch (error) {
+    console.error('❌ Fatal error:', error);
+    process.exit(1);
+  }
+}
+
+main();
+
 process.on('uncaughtException', async (error) => {
   await logError('💥 Uncaught Exception:', error);
 });
-
-fetchTopRepositories();
