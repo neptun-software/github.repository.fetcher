@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "timestamp": 1736568480188,
+    "page": 458,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ1OQ==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wnlen/clash-for-linux",
+      "stars": 1796,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".env",
+          "type": "blob",
+          "size": 0.09375,
+          "content": "# Clash 订阅地址\nexport CLASH_URL='更改为你的clash订阅地址'\nexport CLASH_SECRET=''\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.0341796875,
+          "content": "[TOC]\n\n# 项目介绍\n\n此项目是通过使用开源项目[clash](https://github.com/Dreamacro/clash)作为核心程序，再结合脚本实现简单的代理功能。\n\n主要是为了解决我们在服务器上下载GitHub等一些国外资源速度慢的问题。\n\n<br>\n\n# 使用须知\n\n- 运行本项目建议使用root用户，或者使用 sudo 提权。\n- 使用过程中如遇到问题，请优先查已有的 [issues](https://github.com/wanhebin/clash-for-linux/issues)。\n- 在进行issues提交前，请替换提交内容中是敏感信息（例如：订阅地址）。\n- 本项目是基于 [clash](https://github.com/Dreamacro/clash) 、[yacd](https://github.com/haishanh/yacd) 进行的配置整合，关于clash、yacd的详细配置请去原项目查看。\n- 此项目不提供任何订阅信息，请自行准备Clash订阅地址。\n- 运行前请手动更改`.env`文件中的`CLASH_URL`变量值，否则无法正常运行。\n- 当前在RHEL系列和Debian系列Linux系统中测试过，其他系列可能需要适当修改脚本。\n- 支持 x86_64/aarch64 平台\n\n> **注意**：当你在使用此项目时，遇到任何无法独自解决的问题请优先前往 [Issues](https://github.com/wanhebin/clash-for-linux/issues) 寻找解决方法。由于空闲时间有限，后续将不再对Issues中 “已经解答”、“已有解决方案” 的问题进行重复性的回答。\n\n<br>\n\n# 使用教程\n\n## 下载项目\n\n下载项目\n\n```bash\n$ git clone https://github.com/wanhebin/clash-for-linux.git\n```\n\n进入到项目目录，编辑`.env`文件，修改变量`CLASH_URL`的值。\n\n```bash\n$ cd clash-for-linux\n$ vim .env\n```\n\n> **注意：** `.env` 文件中的变量 `CLASH_SECRET` 为自定义 Clash Secret，值为空时，脚本将自动生成随机字符串。\n\n<br>\n\n## 启动程序\n\n直接运行脚本文件`start.sh`\n\n- 进入项目目录\n\n```bash\n$ cd clash-for-linux\n```\n\n- 运行启动脚本\n\n```bash\n$ sudo bash start.sh\n\n正在检测订阅地址...\nClash订阅地址可访问！                                      [  OK  ]\n\n正在下载Clash配置文件...\n配置文件config.yaml下载成功！                              [  OK  ]\n\n正在启动Clash服务...\n服务启动成功！                                             [  OK  ]\n\nClash Dashboard 访问地址：http://<ip>:9090/ui\nSecret：xxxxxxxxxxxxx\n\n请执行以下命令加载环境变量: source /etc/profile.d/clash.sh\n\n请执行以下命令开启系统代理: proxy_on\n\n若要临时关闭系统代理，请执行: proxy_off\n\n```\n\n```bash\n$ source /etc/profile.d/clash.sh\n$ proxy_on\n```\n\n- 检查服务端口\n\n```bash\n$ netstat -tln | grep -E '9090|789.'\ntcp        0      0 127.0.0.1:9090          0.0.0.0:*               LISTEN     \ntcp6       0      0 :::7890                 :::*                    LISTEN     \ntcp6       0      0 :::7891                 :::*                    LISTEN     \ntcp6       0      0 :::7892                 :::*                    LISTEN\n```\n\n- 检查环境变量\n\n```bash\n$ env | grep -E 'http_proxy|https_proxy'\nhttp_proxy=http://127.0.0.1:7890\nhttps_proxy=http://127.0.0.1:7890\n```\n\n以上步鄹如果正常，说明服务clash程序启动成功，现在就可以体验高速下载github资源了。\n\n<br>\n\n## 重启程序\n\n如果需要对Clash配置进行修改，请修改 `conf/config.yaml` 文件。然后运行 `restart.sh` 脚本进行重启。\n\n> **注意：**\n> 重启脚本 `restart.sh` 不会更新订阅信息。\n\n<br>\n\n## 停止程序\n\n- 进入项目目录\n\n```bash\n$ cd clash-for-linux\n```\n\n- 关闭服务\n\n```bash\n$ sudo bash shutdown.sh\n\n服务关闭成功，请执行以下命令关闭系统代理：proxy_off\n\n```\n\n```bash\n$ proxy_off\n```\n\n然后检查程序端口、进程以及环境变量`http_proxy|https_proxy`，若都没则说明服务正常关闭。\n\n\n<br>\n\n## Clash Dashboard\n\n- 访问 Clash Dashboard\n\n通过浏览器访问 `start.sh` 执行成功后输出的地址，例如：http://192.168.0.1:9090/ui\n\n- 登录管理界面\n\n在`API Base URL`一栏中输入：http://\\<ip\\>:9090 ，在`Secret(optional)`一栏中输入启动成功后输出的Secret。\n\n点击Add并选择刚刚输入的管理界面地址，之后便可在浏览器上进行一些配置。\n\n- 更多教程\n\n此 Clash Dashboard 使用的是[yacd](https://github.com/haishanh/yacd)项目，详细使用方法请移步到yacd上查询。\n\n\n<br>\n\n# 常见问题\n\n1. 部分Linux系统默认的 shell `/bin/sh` 被更改为 `dash`，运行脚本会出现报错（报错内容一般会有 `-en [ OK ]`）。建议使用 `bash xxx.sh` 运行脚本。\n\n2. 部分用户在UI界面找不到代理节点，基本上是因为厂商提供的clash配置文件是经过base64编码的，且配置文件格式不符合clash配置标准。\n\n   目前此项目已集成自动识别和转换clash配置文件的功能。如果依然无法使用，则需要通过自建或者第三方平台（不推荐，有泄露风险）对订阅地址转换。\n   \n3. 程序日志中出现`error: unsupported rule type RULE-SET`报错，解决方法查看官方[WIKI](https://github.com/Dreamacro/clash/wiki/FAQ#error-unsupported-rule-type-rule-set)\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dashboard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "logs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "restart.sh",
+          "type": "blob",
+          "size": 2.130859375,
+          "content": "#!/bin/bash\n\n# 自定义action函数，实现通用action功能\nsuccess() {\n  echo -en \"\\\\033[60G[\\\\033[1;32m  OK  \\\\033[0;39m]\\r\"\n  return 0\n}\n\nfailure() {\n  local rc=$?\n  echo -en \"\\\\033[60G[\\\\033[1;31mFAILED\\\\033[0;39m]\\r\"\n  [ -x /bin/plymouth ] && /bin/plymouth --details\n  return $rc\n}\n\naction() {\n  local STRING rc\n\n  STRING=$1\n  echo -n \"$STRING \"\n  shift\n  \"$@\" && success $\"$STRING\" || failure $\"$STRING\"\n  rc=$?\n  echo\n  return $rc\n}\n\n# 函数，判断命令是否正常执行\nif_success() {\n  local ReturnStatus=$3\n  if [ $ReturnStatus -eq 0 ]; then\n          action \"$1\" /bin/true\n  else\n          action \"$2\" /bin/false\n          exit 1\n  fi\n}\n\n# 定义路劲变量\nServer_Dir=$(cd $(dirname \"${BASH_SOURCE[0]}\") && pwd)\nConf_Dir=\"$Server_Dir/conf\"\nLog_Dir=\"$Server_Dir/logs\"\n\n## 关闭clash服务\nText1=\"服务关闭成功！\"\nText2=\"服务关闭失败！\"\n# 查询并关闭程序进程\nPID_NUM=`ps -ef | grep [c]lash-linux-a | wc -l`\nPID=`ps -ef | grep [c]lash-linux-a | awk '{print $2}'`\nif [ $PID_NUM -ne 0 ]; then\n\tkill -9 $PID\n  ReturnStatus=$?\n\t# ps -ef | grep [c]lash-linux-a | awk '{print $2}' | xargs kill -9\nfi\nif_success $Text1 $Text2 $ReturnStatus\n\nsleep 3\n\n## 获取CPU架构\nif /bin/arch &>/dev/null; then\n\tCpuArch=`/bin/arch`\nelif /usr/bin/arch &>/dev/null; then\n\tCpuArch=`/usr/bin/arch`\nelif /bin/uname -m &>/dev/null; then\n\tCpuArch=`/bin/uname -m`\nelse\n\techo -e \"\\033[31m\\n[ERROR] Failed to obtain CPU architecture！\\033[0m\"\n\texit 1\nfi\n\n## 重启启动clash服务\nText5=\"服务启动成功！\"\nText6=\"服务启动失败！\"\nif [[ $CpuArch =~ \"x86_64\" ]]; then\n\tnohup $Server_Dir/bin/clash-linux-amd64 -d $Conf_Dir &> $Log_Dir/clash.log &\n\tReturnStatus=$?\n\tif_success $Text5 $Text6 $ReturnStatus\nelif [[ $CpuArch =~ \"aarch64\" ||  $CpuArch =~ \"arm64\" ]]; then\n\tnohup $Server_Dir/bin/clash-linux-arm64 -d $Conf_Dir &> $Log_Dir/clash.log &\n\tReturnStatus=$?\n\tif_success $Text5 $Text6 $ReturnStatus\nelif [[ $CpuArch =~ \"armv7\" ]]; then\n\tnohup $Server_Dir/bin/clash-linux-armv7 -d $Conf_Dir &> $Log_Dir/clash.log &\n\tReturnStatus=$?\n\tif_success $Text5 $Text6 $ReturnStatus\nelse\n\techo -e \"\\033[31m\\n[ERROR] Unsupported CPU Architecture！\\033[0m\"\n\texit 1\nfi\n\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shutdown.sh",
+          "type": "blob",
+          "size": 0.3759765625,
+          "content": "#!/bin/bash\n\n# 关闭clash服务\nPID_NUM=`ps -ef | grep [c]lash-linux-a | wc -l`\nPID=`ps -ef | grep [c]lash-linux-a | awk '{print $2}'`\nif [ $PID_NUM -ne 0 ]; then\n\tkill -9 $PID\n\t# ps -ef | grep [c]lash-linux-a | awk '{print $2}' | xargs kill -9\nfi\n\n# 清除环境变量\n> /etc/profile.d/clash.sh\n\necho -e \"\\n服务关闭成功，请执行以下命令关闭系统代理：proxy_off\\n\"\n"
+        },
+        {
+          "name": "start.sh",
+          "type": "blob",
+          "size": 5.8408203125,
+          "content": "#!/bin/bash\n\n# 加载系统函数库(Only for RHEL Linux)\n# [ -f /etc/init.d/functions ] && source /etc/init.d/functions\n\n#################### 脚本初始化任务 ####################\n\n# 获取脚本工作目录绝对路径\nexport Server_Dir=$(cd $(dirname \"${BASH_SOURCE[0]}\") && pwd)\n\n# 加载.env变量文件\nsource $Server_Dir/.env\n\n# 给二进制启动程序、脚本等添加可执行权限\nchmod +x $Server_Dir/bin/*\nchmod +x $Server_Dir/scripts/*\nchmod +x $Server_Dir/tools/subconverter/subconverter\n\n\n\n#################### 变量设置 ####################\n\nConf_Dir=\"$Server_Dir/conf\"\nTemp_Dir=\"$Server_Dir/temp\"\nLog_Dir=\"$Server_Dir/logs\"\n\n# 将 CLASH_URL 变量的值赋给 URL 变量，并检查 CLASH_URL 是否为空\nURL=${CLASH_URL:?Error: CLASH_URL variable is not set or empty}\n\n# 获取 CLASH_SECRET 值，如果不存在则生成一个随机数\nSecret=${CLASH_SECRET:-$(openssl rand -hex 32)}\n\n\n\n#################### 函数定义 ####################\n\n# 自定义action函数，实现通用action功能\nsuccess() {\n\techo -en \"\\\\033[60G[\\\\033[1;32m  OK  \\\\033[0;39m]\\r\"\n\treturn 0\n}\n\nfailure() {\n\tlocal rc=$?\n\techo -en \"\\\\033[60G[\\\\033[1;31mFAILED\\\\033[0;39m]\\r\"\n\t[ -x /bin/plymouth ] && /bin/plymouth --details\n\treturn $rc\n}\n\naction() {\n\tlocal STRING rc\n\n\tSTRING=$1\n\techo -n \"$STRING \"\n\tshift\n\t\"$@\" && success $\"$STRING\" || failure $\"$STRING\"\n\trc=$?\n\techo\n\treturn $rc\n}\n\n# 判断命令是否正常执行 函数\nif_success() {\n\tlocal ReturnStatus=$3\n\tif [ $ReturnStatus -eq 0 ]; then\n\t\taction \"$1\" /bin/true\n\telse\n\t\taction \"$2\" /bin/false\n\t\texit 1\n\tfi\n}\n\n\n\n#################### 任务执行 ####################\n\n## 获取CPU架构信息\n# Source the script to get CPU architecture\nsource $Server_Dir/scripts/get_cpu_arch.sh\n\n# Check if we obtained CPU architecture\nif [[ -z \"$CpuArch\" ]]; then\n\techo \"Failed to obtain CPU architecture\"\n\texit 1\nfi\n\n\n## 临时取消环境变量\nunset http_proxy\nunset https_proxy\nunset no_proxy\nunset HTTP_PROXY\nunset HTTPS_PROXY\nunset NO_PROXY\n\n\n## Clash 订阅地址检测及配置文件下载\n# 检查url是否有效\necho -e '\\n正在检测订阅地址...'\nText1=\"Clash订阅地址可访问！\"\nText2=\"Clash订阅地址不可访问！\"\n#curl -o /dev/null -s -m 10 --connect-timeout 10 -w %{http_code} $URL | grep '[23][0-9][0-9]' &>/dev/null\ncurl -o /dev/null -L -k -sS --retry 5 -m 10 --connect-timeout 10 -w \"%{http_code}\" $URL | grep -E '^[23][0-9]{2}$' &>/dev/null\nReturnStatus=$?\nif_success $Text1 $Text2 $ReturnStatus\n\n# 拉取更新config.yml文件\necho -e '\\n正在下载Clash配置文件...'\nText3=\"配置文件config.yaml下载成功！\"\nText4=\"配置文件config.yaml下载失败，退出启动！\"\n\n# 尝试使用curl进行下载\ncurl -L -k -sS --retry 5 -m 10 -o $Temp_Dir/clash.yaml $URL\nReturnStatus=$?\nif [ $ReturnStatus -ne 0 ]; then\n\t# 如果使用curl下载失败，尝试使用wget进行下载\n\tfor i in {1..10}\n\tdo\n\t\twget -q --no-check-certificate -O $Temp_Dir/clash.yaml $URL\n\t\tReturnStatus=$?\n\t\tif [ $ReturnStatus -eq 0 ]; then\n\t\t\tbreak\n\t\telse\n\t\t\tcontinue\n\t\tfi\n\tdone\nfi\nif_success $Text3 $Text4 $ReturnStatus\n\n# 重命名clash配置文件\n\\cp -a $Temp_Dir/clash.yaml $Temp_Dir/clash_config.yaml\n\n\n## 判断订阅内容是否符合clash配置文件标准，尝试转换（当前不支持对 x86_64 以外的CPU架构服务器进行clash配置文件检测和转换，此功能将在后续添加）\nif [[ $CpuArch =~ \"x86_64\" || $CpuArch =~ \"amd64\"  ]]; then\n\techo -e '\\n判断订阅内容是否符合clash配置文件标准:'\n\tbash $Server_Dir/scripts/clash_profile_conversion.sh\n\tsleep 3\nfi\n\n\n## Clash 配置文件重新格式化及配置\n# 取出代理相关配置 \n#sed -n '/^proxies:/,$p' $Temp_Dir/clash.yaml > $Temp_Dir/proxy.txt\nsed -n '/^proxies:/,$p' $Temp_Dir/clash_config.yaml > $Temp_Dir/proxy.txt\n\n# 合并形成新的config.yaml\ncat $Temp_Dir/templete_config.yaml > $Temp_Dir/config.yaml\ncat $Temp_Dir/proxy.txt >> $Temp_Dir/config.yaml\n\\cp $Temp_Dir/config.yaml $Conf_Dir/\n\n# Configure Clash Dashboard\nWork_Dir=$(cd $(dirname $0); pwd)\nDashboard_Dir=\"${Work_Dir}/dashboard/public\"\nsed -ri \"s@^# external-ui:.*@external-ui: ${Dashboard_Dir}@g\" $Conf_Dir/config.yaml\nsed -r -i '/^secret: /s@(secret: ).*@\\1'${Secret}'@g' $Conf_Dir/config.yaml\n\n\n## 启动Clash服务\necho -e '\\n正在启动Clash服务...'\nText5=\"服务启动成功！\"\nText6=\"服务启动失败！\"\nif [[ $CpuArch =~ \"x86_64\" || $CpuArch =~ \"amd64\"  ]]; then\n\tnohup $Server_Dir/bin/clash-linux-amd64 -d $Conf_Dir &> $Log_Dir/clash.log &\n\tReturnStatus=$?\n\tif_success $Text5 $Text6 $ReturnStatus\nelif [[ $CpuArch =~ \"aarch64\" ||  $CpuArch =~ \"arm64\" ]]; then\n\tnohup $Server_Dir/bin/clash-linux-arm64 -d $Conf_Dir &> $Log_Dir/clash.log &\n\tReturnStatus=$?\n\tif_success $Text5 $Text6 $ReturnStatus\nelif [[ $CpuArch =~ \"armv7\" ]]; then\n\tnohup $Server_Dir/bin/clash-linux-armv7 -d $Conf_Dir &> $Log_Dir/clash.log &\n\tReturnStatus=$?\n\tif_success $Text5 $Text6 $ReturnStatus\nelse\n\techo -e \"\\033[31m\\n[ERROR] Unsupported CPU Architecture！\\033[0m\"\n\texit 1\nfi\n\n# Output Dashboard access address and Secret\necho ''\necho -e \"Clash Dashboard 访问地址: http://<ip>:9090/ui\"\necho -e \"Secret: ${Secret}\"\necho ''\n\n# 添加环境变量(root权限)\ncat>/etc/profile.d/clash.sh<<EOF\n# 开启系统代理\nfunction proxy_on() {\n\texport http_proxy=http://127.0.0.1:7890\n\texport https_proxy=http://127.0.0.1:7890\n\texport no_proxy=127.0.0.1,localhost\n    \texport HTTP_PROXY=http://127.0.0.1:7890\n    \texport HTTPS_PROXY=http://127.0.0.1:7890\n \texport NO_PROXY=127.0.0.1,localhost\n\techo -e \"\\033[32m[√] 已开启代理\\033[0m\"\n}\n\n# 关闭系统代理\nfunction proxy_off(){\n\tunset http_proxy\n\tunset https_proxy\n\tunset no_proxy\n  \tunset HTTP_PROXY\n\tunset HTTPS_PROXY\n\tunset NO_PROXY\n\techo -e \"\\033[31m[×] 已关闭代理\\033[0m\"\n}\nEOF\n\necho -e \"请执行以下命令加载环境变量: source /etc/profile.d/clash.sh\\n\"\necho -e \"请执行以下命令开启系统代理: proxy_on\\n\"\necho -e \"若要临时关闭系统代理，请执行: proxy_off\\n\"\n"
+        },
+        {
+          "name": "temp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
