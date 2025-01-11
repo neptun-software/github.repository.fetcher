@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736563404785,
+    "page": 417,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bailicangdu/vue2-happyfri",
+      "stars": 10503,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".babelrc",
+          "type": "blob",
+          "size": 0.09375,
+          "content": "{\n  \"presets\": [\"es2015\", \"stage-2\"],\n  \"plugins\": [\"transform-runtime\"],\n  \"comments\": false\n}\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.1435546875,
+          "content": "root = true\n\n[*]\ncharset = utf-8\nindent_style = space\nindent_size = 2\nend_of_line = lf\ninsert_final_newline = true\ntrim_trailing_whitespace = true\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.06640625,
+          "content": ".DS_Store\nnode_modules/\ndist/\nnpm-debug.log\npackage-lock.json\n.idea\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2017 cangdu \n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.2685546875,
+          "content": "# 说明\n\n>  非常简单的一个vue2 + vuex的项目，整个流程一目了然，麻雀虽小，五脏俱全，适合作为入门练习。\n\n>  如果对您有帮助，您可以点右上角 \"Star\" 支持一下 谢谢！ ^_^\n\n>  或者您可以 \"follow\" 一下，我会不断开源更多的有趣的项目\n\n>  如有问题请直接在 Issues 中提，或者您发现问题并有非常好的解决方案，欢迎 PR 👍\n\n>  开发环境 macOS 10.12.3 Chrome 56 nodejs 6.10.0\n\n>  这个项目主要用于 vue2 + vuex 的入门练习，另外推荐一个 vue2 比较复杂的大型项目，覆盖了vuejs大部分的知识点。目前项目已经完成。[地址在这里](https://github.com/bailicangdu/vue2-elm)\n\n\n## 项目运行（nodejs 6.0+）\n``` bash\n# 克隆到本地\ngit clone https://github.com/bailicangdu/vue2-happyfri.git\n\n# 进入文件夹\ncd vue2-happyfri\n\n# 安装依赖\nnpm install 或 yarn(推荐)\n\n# 开启本地服务器localhost:8088\nnpm run dev\n\n# 发布环境\nnpm run build\n```\n\n\n\n# 效果演示\n\n[demo地址](https://cangdu.org/happyfri/)（请用chrome手机模式预览）\n\n### 移动端扫描下方二维码\n\n<img src='https://github.com/bailicangdu/vue2-happyfri/blob/master/src/images/demo.png' width=\"200\" height=\"200\" />\n\n\n## 路由配置\n```js\nimport App from '../App'\n\nexport default [{\n    path: '/',\n    component: App,\n    children: [{\n        path: '',\n        component: r => require.ensure([], () => r(require('../page/home')), 'home')\n    }, {\n        path: '/item',\n        component: r => require.ensure([], () => r(require('../page/item')), 'item')\n    }, {\n        path: '/score',\n        component: r => require.ensure([], () => r(require('../page/score')), 'score')\n    }]\n}]\n\n```\n\n\n\n## 配置actions\n```js\nimport ajax from '../config/ajax'\n\nexport default {\n\taddNum({ commit, state }, id) {\n\t\t//点击下一题，记录答案id，判断是否是最后一题，如果不是则跳转下一题\n\t\tcommit('REMBER_ANSWER', id);\n\t\tif (state.itemNum < state.itemDetail.length) {\n\t\t\tcommit('ADD_ITEMNUM', 1);\n\t\t}\n\t},\n\t//初始化信息\n\tinitializeData({ commit }) {\n\t\tcommit('INITIALIZE_DATA');\n\t}\n}\n\n```\n\n\n## mutations\n```js\nconst ADD_ITEMNUM = 'ADD_ITEMNUM'\nconst REMBER_ANSWER = 'REMBER_ANSWER'\nconst REMBER_TIME = 'REMBER_TIME'\nconst INITIALIZE_DATA = 'INITIALIZE_DATA'\nexport default {\n\t//点击进入下一题\n\t[ADD_ITEMNUM](state, payload) {\n\t\tstate.itemNum += payload.num;\n\t},\n\t//记录答案\n\t[REMBER_ANSWER](state, payload) {\n\t\tstate.answerid[state.itemNum] = payload.id;\n\t},\n\t/*\n\t记录做题时间\n\t */\n\t[REMBER_TIME](state) {\n\t\tstate.timer = setInterval(() => {\n\t\t\tstate.allTime++;\n\t\t}, 1000)\n\t},\n\t/*\n\t初始化信息，\n\t */\n\t[INITIALIZE_DATA](state) {\n\t\tstate.itemNum = 1;\n\t\tstate.allTime = 0;\n\t},\n}\n```\n\n## 创建store\n```js\nimport Vue from 'vue'\nimport Vuex from 'vuex'\nimport mutations from './mutations'\nimport actions from './action'\n\n\nVue.use(Vuex)\n\nconst state = {\n\tlevel: '第一周',\n\titemNum: 1,\n\tallTime: 0,\n\ttimer: '',\n\titemDetail: [],\n\tanswerid: {}\n}\n\nexport default new Vuex.Store({\n\tstate,\n\tactions,\n\tmutations\n})\n```\n\n\n## 创建vue实例\n```js\nimport Vue from 'vue'\nimport VueRouter from 'vue-router'\nimport routes from './router/router'\nimport store from './store/'\n\nVue.use(VueRouter)\nconst router = new VueRouter({\n\troutes\n})\n\nnew Vue({\n\trouter,\n\tstore,\n}).$mount('#app')\n```\n"
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "happyfri",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 0.587890625,
+          "content": "<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, minimal-ui\">\n    <meta name=\"screen-orientation\" content=\"portrait\"/>\n    <meta name=\"apple-mobile-web-app-capable\" content=\"yes\">\n    <meta name=\"format-detection\" content=\"telephone=no\">\n    <meta name=\"full-screen\" content=\"yes\">\n    <meta name=\"x5-fullscreen\" content=\"true\">\n    <title>vue2-happyfri</title>\n  </head>\n  <body>\n    <div id=\"app\">\n    \t<router-view></router-view>\n    </div>\n  </body>\n</html>\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.55078125,
+          "content": "{\n  \"name\": \"happyfri\",\n  \"version\": \"1.0.2\",\n  \"description\": \"vue2-happyfri\",\n  \"author\": \"cangdu <1264889788@qq.com>\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"node build/dev-server.js\",\n    \"build\": \"node build/build.js\"\n  },\n  \"dependencies\": {\n    \"vue\": \"^2.1.0\",\n    \"vue-router\": \"^2.1.1\",\n    \"vuex\": \"^2.0.0\"\n  },\n  \"devDependencies\": {\n    \"autoprefixer\": \"^6.4.0\",\n    \"autoprefixer-loader\": \"^3.2.0\",\n    \"babel-core\": \"^6.0.0\",\n    \"babel-loader\": \"^6.0.0\",\n    \"babel-plugin-transform-runtime\": \"^6.0.0\",\n    \"babel-preset-es2015\": \"^6.0.0\",\n    \"babel-preset-stage-2\": \"^6.0.0\",\n    \"babel-register\": \"^6.0.0\",\n    \"babel-runtime\": \"^6.23.0\",\n    \"chalk\": \"^1.1.3\",\n    \"connect-history-api-fallback\": \"^1.1.0\",\n    \"css-loader\": \"^0.25.0\",\n    \"eventsource-polyfill\": \"^0.9.6\",\n    \"express\": \"^4.15.3\",\n    \"extract-text-webpack-plugin\": \"^1.0.1\",\n    \"file-loader\": \"^0.9.0\",\n    \"function-bind\": \"^1.0.2\",\n    \"html-webpack-plugin\": \"^2.8.1\",\n    \"http-proxy-middleware\": \"^0.17.2\",\n    \"json-loader\": \"^0.5.4\",\n    \"less\": \"^3.9.0\",\n    \"less-loader\": \"^2.2.3\",\n    \"opn\": \"^4.0.2\",\n    \"ora\": \"^0.3.0\",\n    \"semver\": \"^5.3.0\",\n    \"shelljs\": \"^0.7.4\",\n    \"style-loader\": \"^0.13.1\",\n    \"url-loader\": \"^1.1.2\",\n    \"vue-loader\": \"^10.0.0\",\n    \"vue-style-loader\": \"^1.0.0\",\n    \"vue-template-compiler\": \"^2.1.0\",\n    \"webpack\": \"^1.13.2\",\n    \"webpack-dev-middleware\": \"^1.8.3\",\n    \"webpack-dev-server\": \"^3.1.14\",\n    \"webpack-hot-middleware\": \"^2.12.2\",\n    \"webpack-merge\": \"^0.14.1\"\n  },\n  \"engines\": {\n    \"node\": \">= 4.0.0\",\n    \"npm\": \">= 3.0.0\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

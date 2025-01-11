@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "timestamp": 1736563383984,
+    "page": 390,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "karpathy/convnetjs",
+      "stars": 10917,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0517578125,
+          "content": "The MIT License\n\nCopyright (c) 2014 Andrej Karpathy\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 5.8212890625,
+          "content": "\n# ConvNetJS\n\nConvNetJS is a Javascript implementation of Neural networks, together with nice browser-based demos. It currently supports:\n\n- Common **Neural Network modules** (fully connected layers, non-linearities)\n- Classification (SVM/Softmax) and Regression (L2) **cost functions**\n- Ability to specify and train **Convolutional Networks** that process images\n- An experimental **Reinforcement Learning** module, based on Deep Q Learning\n\nFor much more information, see the main page at [convnetjs.com](http://convnetjs.com)\n\n**Note**: I am not actively maintaining ConvNetJS anymore because I simply don't have time. I think the npm repo might not work at this point.\n\n## Online Demos\n- [Convolutional Neural Network on MNIST digits](http://cs.stanford.edu/~karpathy/convnetjs/demo/mnist.html)\n- [Convolutional Neural Network on CIFAR-10](http://cs.stanford.edu/~karpathy/convnetjs/demo/cifar10.html)\n- [Toy 2D data](http://cs.stanford.edu/~karpathy/convnetjs/demo/classify2d.html)\n- [Toy 1D regression](http://cs.stanford.edu/~karpathy/convnetjs/demo/regression.html)\n- [Training an Autoencoder on MNIST digits](http://cs.stanford.edu/~karpathy/convnetjs/demo/autoencoder.html)\n- [Deep Q Learning Reinforcement Learning demo](http://cs.stanford.edu/people/karpathy/convnetjs/demo/rldemo.html)\n- [Image Regression (\"Painting\")](http://cs.stanford.edu/~karpathy/convnetjs/demo/image_regression.html)\n- [Comparison of SGD/Adagrad/Adadelta on MNIST](http://cs.stanford.edu/people/karpathy/convnetjs/demo/trainers.html)\n\n## Example Code\n\nHere's a minimum example of defining a **2-layer neural network** and training\nit on a single data point:\n\n```javascript\n// species a 2-layer neural network with one hidden layer of 20 neurons\nvar layer_defs = [];\n// input layer declares size of input. here: 2-D data\n// ConvNetJS works on 3-Dimensional volumes (sx, sy, depth), but if you're not dealing with images\n// then the first two dimensions (sx, sy) will always be kept at size 1\nlayer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:2});\n// declare 20 neurons, followed by ReLU (rectified linear unit non-linearity)\nlayer_defs.push({type:'fc', num_neurons:20, activation:'relu'}); \n// declare the linear classifier on top of the previous hidden layer\nlayer_defs.push({type:'softmax', num_classes:10});\n\nvar net = new convnetjs.Net();\nnet.makeLayers(layer_defs);\n\n// forward a random data point through the network\nvar x = new convnetjs.Vol([0.3, -0.5]);\nvar prob = net.forward(x); \n\n// prob is a Vol. Vols have a field .w that stores the raw data, and .dw that stores gradients\nconsole.log('probability that x is class 0: ' + prob.w[0]); // prints 0.50101\n\nvar trainer = new convnetjs.SGDTrainer(net, {learning_rate:0.01, l2_decay:0.001});\ntrainer.train(x, 0); // train the network, specifying that x is class zero\n\nvar prob2 = net.forward(x);\nconsole.log('probability that x is class 0: ' + prob2.w[0]);\n// now prints 0.50374, slightly higher than previous 0.50101: the networks\n// weights have been adjusted by the Trainer to give a higher probability to\n// the class we trained the network with (zero)\n```\n\nand here is a small **Convolutional Neural Network** if you wish to predict on images:\n\n```javascript\nvar layer_defs = [];\nlayer_defs.push({type:'input', out_sx:32, out_sy:32, out_depth:3}); // declare size of input\n// output Vol is of size 32x32x3 here\nlayer_defs.push({type:'conv', sx:5, filters:16, stride:1, pad:2, activation:'relu'});\n// the layer will perform convolution with 16 kernels, each of size 5x5.\n// the input will be padded with 2 pixels on all sides to make the output Vol of the same size\n// output Vol will thus be 32x32x16 at this point\nlayer_defs.push({type:'pool', sx:2, stride:2});\n// output Vol is of size 16x16x16 here\nlayer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});\n// output Vol is of size 16x16x20 here\nlayer_defs.push({type:'pool', sx:2, stride:2});\n// output Vol is of size 8x8x20 here\nlayer_defs.push({type:'conv', sx:5, filters:20, stride:1, pad:2, activation:'relu'});\n// output Vol is of size 8x8x20 here\nlayer_defs.push({type:'pool', sx:2, stride:2});\n// output Vol is of size 4x4x20 here\nlayer_defs.push({type:'softmax', num_classes:10});\n// output Vol is of size 1x1x10 here\n\nnet = new convnetjs.Net();\nnet.makeLayers(layer_defs);\n\n// helpful utility for converting images into Vols is included\nvar x = convnetjs.img_to_vol(document.getElementById('some_image'))\nvar output_probabilities_vol = net.forward(x)\n```\n\n## Getting Started\nA [Getting Started](http://cs.stanford.edu/people/karpathy/convnetjs/started.html) tutorial is available on main page.\n\nThe full [Documentation](http://cs.stanford.edu/people/karpathy/convnetjs/docs.html) can also be found there.\n\nSee the **releases** page for this project to get the minified, compiled library, and a direct link to is also available below for convenience (but please host your own copy)\n\n- [convnet.js](http://cs.stanford.edu/people/karpathy/convnetjs/build/convnet.js)\n- [convnet-min.js](http://cs.stanford.edu/people/karpathy/convnetjs/build/convnet-min.js)\n\n## Compiling the library from src/ to build/\nIf you would like to add features to the library, you will have to change the code in `src/` and then compile the library into the `build/` directory. The compilation script simply concatenates files in `src/` and then minifies the result.\n\nThe compilation is done using an ant task: it compiles `build/convnet.js` by concatenating the source files in `src/` and then minifies the result into `build/convnet-min.js`. Make sure you have **ant** installed (on Ubuntu you can simply *sudo apt-get install* it), then cd into `compile/` directory and run:\n\n    $ ant -lib yuicompressor-2.4.8.jar -f build.xml\n\nThe output files will be in `build/`\n## Use in Node\nThe library is also available on *node.js*:\n\n1. Install it: `$ npm install convnetjs`\n2. Use it: `var convnetjs = require(\"convnetjs\");`\n\n## License\nMIT\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.599609375,
+          "content": "{\n  \"name\": \"convnetjs\",\n  \"version\": \"0.0.0\",\n  \"authors\": [\n    \"Andrej Karpathy <andrej.karpathy@gmail.com>\"\n  ],\n  \"description\": \"Deep Learning in Javascript. Train Convolutional Neural Networks (or ordinary ones) in your browser.\",\n  \"main\": \"build/convnet.js\",\n  \"moduleType\": [\n    \"amd\",\n    \"es6\",\n    \"globals\",\n    \"node\",\n    \"yui\"\n  ],\n  \"keywords\": [\n    \"machine\",\n    \"learning\",\n    \"AI\",\n    \"convnet\"\n  ],\n  \"license\": \"MIT\",\n  \"homepage\": \"http://cs.stanford.edu/people/karpathy/convnetjs/\",\n  \"ignore\": [\n    \"**/.*\",\n    \"node_modules\",\n    \"bower_components\",\n    \"test\",\n    \"tests\"\n  ]\n}\n"
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "compile",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

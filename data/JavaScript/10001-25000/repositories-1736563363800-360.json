@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": 1736563363800,
+    "page": 360,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dimsemenov/Magnific-Popup",
+      "stars": 11393,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.24609375,
+          "content": "Gemfile.lock\ntest/dest\n*.gem\npkg/\n*.swp\n*~\n_site/\n.bundle/\n.DS_Store\nbbin/\nsftp-config*\n_site\n.htaccess\nprivate-*\n__article/\nnode_modules\n_production\nall.min.css\n*.sublime-*\nwebsite/dist/\n*.idea\n/.idea\n.node-version\n.sass-cache/\npackage-lock.json\n*.map"
+        },
+        {
+          "name": ".jshintrc",
+          "type": "blob",
+          "size": 0.2822265625,
+          "content": "{\n  \"curly\": false,\n  \"eqeqeq\": true,\n  \"immed\": true,\n  \"latedef\": true,\n  \"newcap\": true,\n  \"noarg\": true,\n  \"sub\": true,\n  \"undef\": false,\n  \"unused\": true,\n  \"boss\": true,\n  \"eqnull\": true,\n  \"browser\": true,\n\n  \"predef\": [\n    \"define\",\n    \"module\",\n    \"mfp\"\n  ],\n  \"jquery\": true\n}"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0830078125,
+          "content": "language: node_js\n\nnode_js:\n  - \"0.10\"\n\nbefore_install:\n  - npm install grunt-cli -g\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 5.7529296875,
+          "content": "/**\n * \n * Run 'grunt' to generate JS and CSS in folder 'dist' and site in folder '_site'\n * *\n * Run 'grunt watch' to automatically regenerate '_site' when you change files in 'src' or in 'website'\n * \n */\n\nvar sass = require('dart-sass');\n\nmodule.exports = function(grunt) {\n\n  'use strict';\n\n  var jekyllConfig = \"isLocal : false \\r\\n\"+\n\"permalink: /:title/ \\r\\n\"+\n\"exclude: ['.json', '.rvmrc', '.rbenv-version', 'README.md', 'Rakefile', 'changelog.md', 'compiler.jar', 'private', 'magnific-popup.sublime-project', 'magnific-popup.sublime-workspace', '.htaccess'] \\r\\n\"+\n\"auto: true \\r\\n\"+\n\"mfpversion: <%= pkg.version %> \\r\\n\"+\n\"pygments: true \\r\\n\";\n\n  // Project configuration.\n  grunt.initConfig({\n    // Metadata.\n    pkg: grunt.file.readJSON('magnific-popup.jquery.json'),\n\n    banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +\n      '<%= grunt.template.today(\"yyyy-mm-dd\") %>\\n' +\n      '<%= pkg.homepage ? \"* \" + pkg.homepage + \"\\\\n\" : \"\" %>' +\n      '* Copyright (c) <%= grunt.template.today(\"yyyy\") %> <%= pkg.author.name %>; */\\n',\n\n    // Task configuration.\n    clean: {\n      files: ['dist']\n    },\n    \n    sass: {     \n      options: {\n        implementation: sass,\n        sourceMap: true\n      },       \n      dist: {                      \n        files: {      \n          'dist/magnific-popup.css': 'src/css/main.scss'\n        }\n      }\n    },\n\n    jshint: {\n      all: [\n        'Gruntfile.js',\n        'src/js/*.js'\n      ],\n      options: {\n        jshintrc: '.jshintrc'\n      }\n    },\n\n    mfpbuild: {\n      all: {\n        src: [\n          'inline',\n          'ajax',\n          'image',\n          'zoom',\n          'iframe',\n          'gallery',\n          'retina',\n        ],\n        basePath: 'src/js/',\n        dest: 'dist/jquery.magnific-popup.js',\n        banner: '<%= banner %>'\n      }\n    },\n    jekyll: {\n      dev: {\n        options: {\n          src: 'website',\n          dest: '_site',\n          url: 'local',\n          raw: jekyllConfig + \"url: local\"\n        }\n      },\n      production: {\n        options: {\n          src: 'website',\n          dest: '_production',\n          url: 'production',\n          raw: jekyllConfig + \"url: production\"\n        }\n        \n      }\n    },\n\n    copy: {\n      main: {\n        files: [\n          {expand:true, src: ['dist/**'], dest: 'website/'}\n        ]\n      },\n      dev: {\n        files: [\n          {expand:true, src: ['dist/**'], dest: '_site/'}\n        ]\n      }\n    },\n\n    uglify: {\n      my_target: {\n        files: {\n          'dist/jquery.magnific-popup.min.js': ['dist/jquery.magnific-popup.js']\n        },\n        preserveComments: 'some'\n      },\n      options: {\n        preserveComments: 'some'\n      }\n    },\n\n    watch: { // for development run 'grunt watch'\n      jekyll: {\n        files: ['website/**'],\n        tasks: ['jekyll:dev', 'copy:dev']\n      },\n      files: ['src/**'],\n      tasks: [ 'sass', 'mfpbuild', 'copy:dev', 'uglify']\n    },\n\n    cssmin: {\n      compress: {\n        files: {\n          \"website/site-assets/all.min.css\": [\"website/site-assets/site.css\", \"website/dist/magnific-popup.css\"]\n        }\n      }\n    }\n\n  });\n\n\n  // Makes Magnific Popup JS file.\n  // grunt mfpbuild --mfp-exclude=ajax,image\n  grunt.task.registerMultiTask('mfpbuild', 'Makes Magnific Popup JS file.', function() {\n\n    var files = this.data.src,\n        includes = grunt.option('mfp-exclude'),\n        basePath = this.data.basePath,\n        newContents = this.data.banner + \";(function (factory) { \\n\" +\n            \"if (typeof define === 'function' && define.amd) { \\n\" +\n            \" // AMD. Register as an anonymous module. \\n\" + \n            \" define(['jquery'], factory); \\n\" + \n            \" } else if (typeof exports === 'object') { \\n\" +\n            \" // Node/CommonJS \\n\" +\n            \" factory(require('jquery')); \\n\" +\n            \" } else { \\n\" +\n            \" // Browser globals \\n\" +\n            \" factory(window.jQuery || window.Zepto); \\n\" +\n            \" } \\n\" +\n            \" }(function($) { \\n\";\n\n    if(includes) {\n      includes = includes.split(/[\\s,]+/); // 'a,b,c' => ['a','b','c']\n      var removeA = function (arr) {\n          var what, a = arguments, L = a.length, ax;\n          while (L > 1 && arr.length) {\n              what = a[--L];\n              while ((ax= arr.indexOf(what)) !== -1) {\n                  arr.splice(ax, 1);\n              }\n          }\n          return arr;\n      };\n\n      includes.forEach(function( name ) {\n        if(name) {\n           \n           grunt.log.writeln( 'removed \"'+name +'\"' );\n           files = removeA(files, name);\n         }\n      });\n    }\n    \n    files.unshift('core');\n\n    grunt.log.writeln( 'Your build is made of:'+files );\n\n    files.forEach(function( name ) {\n      // Wrap each module with a pience of code to be able to exlude it, stolen for modernizr.com\n      newContents += \"\\n/*>>\"+name+\"*/\\n\"; \n      newContents += grunt.file.read( basePath + name + '.js' ) + '\\n';\n      newContents += \"\\n/*>>\"+name+\"*/\\n\"; \n    });\n    newContents+= \" _checkInstance(); }));\";\n\n    grunt.file.write( this.data.dest, newContents );\n  });\n\n\n\n\n\n  // These plugins provide necessary tasks.\n  grunt.loadNpmTasks('grunt-contrib-clean');\n  grunt.loadNpmTasks('grunt-contrib-concat');\n  grunt.loadNpmTasks('grunt-contrib-uglify');\n  grunt.loadNpmTasks('grunt-contrib-jshint');\n  grunt.loadNpmTasks('grunt-contrib-watch');\n  grunt.loadNpmTasks('grunt-sass');\n  grunt.loadNpmTasks('grunt-contrib-copy');\n  grunt.loadNpmTasks('grunt-jekyll');\n  grunt.loadNpmTasks('grunt-contrib-cssmin');\n\n  // Default task.\n  grunt.registerTask('default', ['sass', 'mfpbuild', 'uglify', 'copy', 'jekyll:dev']);\n\n  grunt.registerTask('production', ['sass', 'mfpbuild', 'uglify', 'copy', 'cssmin', 'jekyll:production']);\n  grunt.registerTask('nosite', ['sass', 'mfpbuild', 'uglify']);\n  grunt.registerTask('hint', ['jshint']);\n\n};\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0830078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014-2024 Dmytro Semenov, http://dimsemenov.com\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.4521484375,
+          "content": "**Important note** This jQuery plugin is deprecated, only critical or security bug fixes will be released in future. Use native `<dialog>` element if you need a basic dialog/modal/popup, or my <a href=\"https://photoswipe.com\">PhotoSwipe</a> library if you need an advanced image gallery. Feel free to email me if you need assistance.\n\n[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct.svg)](https://savelife.in.ua/en/)\n\n# Magnific Popup Repository\n\n[![Build Status](https://travis-ci.org/dimsemenov/Magnific-Popup.png)](https://travis-ci.org/dimsemenov/Magnific-Popup) \n\nFast, light and responsive lightbox plugin, for jQuery and Zepto.js.\n\n- [Documentation and getting started guide](http://dimsemenov.com/plugins/magnific-popup/documentation.html).\n- [Examples and plugin home page](http://dimsemenov.com/plugins/magnific-popup/).\n- More examples in [CodePen collection](http://codepen.io/collection/nLcqo).\n\nOptionally, install via Bower `bower install magnific-popup` or npm: `npm install magnific-popup`.\n[Ruby gem](https://rubygems.org/gems/magnific-popup-rails): `gem install magnific-popup-rails`.\n\n## Extensions\n\n- WordPress plugin - [under development](http://dimsemenov.com/plugins/magnific-popup/wordpress.html).\n- [Drupal module](https://drupal.org/project/magnific_popup).\n- [Concrete5 add-on](https://github.com/cdowdy/concrete5-Magnific-Popup).\n- [Redaxo add-on](http://www.redaxo.org/de/download/addons/?addon_id=1131).\n- [Contao extension](https://github.com/fritzmg/contao-magnific-popup).\n\nIf you created an extension for some CMS, email me and I'll add it to this list.\n\n## Location of stuff\n\n- Generated popup JS and CSS files are in folder [dist/](https://github.com/dimsemenov/Magnific-Popup/tree/master/dist). (Online build tool is on [documentation page](http://dimsemenov.com/plugins/magnific-popup/documentation.html)).\n- Source files are in folder [src/](https://github.com/dimsemenov/Magnific-Popup/tree/master/src). They include [Sass CSS file](https://github.com/dimsemenov/Magnific-Popup/blob/master/src/css/main.scss) and js parts (edit them if you wish to submit commit). \n- Website (examples & documentation) is in folder [website/](https://github.com/dimsemenov/Magnific-Popup/tree/master/website).\n- Documentation page itself is in [website/documentation.md](https://github.com/dimsemenov/Magnific-Popup/blob/master/website/documentation.md) (contributions to it are very welcome).\n\n\n\n## Using Magnific Popup?\n\nIf you used Magnific Popup in some interesting way, or on site of popular brand, I'd be very grateful if you <a href='mailto:diiiimaaaa@gmail.com?subject=\"Site that uses Magnific Popup\"'>email me</a> a link to it.\n\n\n## Build \n\nTo compile Magnific Popup by yourself, first of make sure that you have [Node.js](http://nodejs.org/), [Grunt.js](https://github.com/cowboy/grunt), [Ruby](http://www.ruby-lang.org/) and [Jekyll](https://github.com/mojombo/jekyll/) installed, then:\n\n1) Copy repository\n\n\tgit clone https://github.com/dimsemenov/Magnific-Popup.git\n\n2) Go inside Magnific Popup folder that you fetched and install Node dependencies\n\n\tcd Magnific-Popup && npm install\n\n3) Now simply run `grunt` to generate JS and CSS in folder `dist` and site in folder `_site/`.\n\n\tgrunt\n\nOptionally:\n\n- Run `grunt watch` to automatically rebuild script when you change files in `src/` or in `website/`.\n- If you don't have and don't want to install Jekyll, run `grunt nosite` to just build JS and CSS files related to popup in `dist/`.\n\n\n\n## [Changelog](https://github.com/dimsemenov/Magnific-Popup/releases)\n\n## License\n\nScript is MIT licensed and free and will always be kept this way. But has a small restriction from me - please do not create public WordPress plugin based on it(or at least contact me before creating it), because I will make it and it'll be open source too ([want to get notified?](http://dimsemenov.com/subscribe.html)).\n\nCreated by [@dimsemenov](http://twitter.com/dimsemenov) & [contributors](https://github.com/dimsemenov/Magnific-Popup/contributors).\n\n[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/dimsemenov/magnific-popup/trend.png)](https://bitdeli.com/free \"Bitdeli Badge\")\n\n## Bugs & contributing\n\nPlease report bugs via GitHub and ask general questions through [Stack Overflow](http://stackoverflow.com/questions/tagged/magnific-popup). Feel free to submit commit [pull-request](https://github.com/dimsemenov/Magnific-Popup/pulls), even the tiniest contributions to the script or to the documentation are very welcome.\n\n\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.2451171875,
+          "content": "{\n  \"name\": \"magnific-popup\",\n  \"main\": [\n    \"dist/jquery.magnific-popup.js\",\n    \"dist/magnific-popup.css\"\n  ],\n  \"dependencies\": {\n    \"jquery\": \">=1.8.0\"\n  },\n  \"ignore\": [\n    \"node_modules/\",\n    \"components/\",\n    \"website/\",\n    \"libs/\"\n  ]\n}\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.1904296875,
+          "content": "{\n    \"name\": \"dimsemenov/magnific-popup\",\n    \"description\": \"Light and responsive lightbox script with focus on performance.\",\n    \"homepage\": \"http://dimsemenov.com/plugins/magnific-popup/\"\n}\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "magnific-popup.jquery.json",
+          "type": "blob",
+          "size": 1.1591796875,
+          "content": "{\n  \"name\": \"magnific-popup\",\n  \"title\": \"Magnific Popup\",\n  \"description\": \"Fast, light, mobile-friendly and responsive lightbox and modal dialog plugin. Open inline HTML, ajax loaded content, image, form, iframe (YouTube video, Vimeo, Google Maps), photo gallery. Animation effects added with CSS3 transitions. For jQuery or Zepto.\",\n  \"version\": \"1.2.0\",\n  \"homepage\": \"http://dimsemenov.com/plugins/magnific-popup/\",\n  \"demo\": \"http://dimsemenov.com/plugins/magnific-popup/\",\n  \"docs\": \"http://dimsemenov.com/plugins/magnific-popup/documentation.html\",\n  \"author\": {\n    \"name\": \"Dmytro Semenov\",\n    \"email\": \"diiiimaaaa@gmail.com\",\n    \"url\": \"http://dimsemenov.com\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/dimsemenov/Magnific-Popup.git\"\n  },\n  \"bugs\": \"https://github.com/dimsemenov/Magnific-Popup/issues\",\n  \"dependencies\": {\n    \"jquery\": \">=1.8.0\"\n  },\n  \"keywords\": [\"lightbox\",\"popup\",\"modal\",\"window\",\"dialog\",\"ui\",\"gallery\",\"slideshow\",\"video\",\"image\",\"ajax\",\"html5\",\"animation\",\"jquery\",\"photo\",\"responsive\",\"mobile\"],\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"http://www.opensource.org/licenses/mit-license.php\"\n    }\n  ]\n}"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.4765625,
+          "content": "{\n  \"name\": \"magnific-popup\",\n  \"version\": \"1.2.0\",\n  \"title\": \"Magnific Popup\",\n  \"description\": \"Lightbox and modal dialog plugin. Can display inline HTML, iframes (YouTube video, Vimeo, Google Maps), or an image gallery. Animation effects are added with CSS3 transitions. For jQuery or Zepto.\",\n  \"keywords\": [\n    \"ecosystem:jquery\",\n    \"jquery-plugin\",\n    \"zepto\",\n    \"lightbox\",\n    \"popup\",\n    \"modal\",\n    \"window\",\n    \"dialog\",\n    \"gallery\",\n    \"jquery\",\n    \"photo\",\n    \"responsive\",\n    \"mobile\"\n  ],\n  \"author\": {\n    \"name\": \"Dmytro Semenov\",\n    \"email\": \"diiiimaaaa@gmail.com\",\n    \"web\": \"http://dimsemenov.com\"\n  },\n  \"license\": \"MIT\",\n  \"bugs\": {\n    \"url\": \"https://github.com/dimsemenov/Magnific-Popup/issues\"\n  },\n  \"main\": \"dist/jquery.magnific-popup.js\",\n  \"style\": \"dist/magnific-popup.css\",\n  \"homepage\": \"http://dimsemenov.com/plugins/magnific-popup/\",\n  \"engines\": {\n    \"node\": \">= 0.8.0\"\n  },\n  \"scripts\": {\n    \"test\": \"grunt jshint\",\n    \"prod\": \"grunt production\"\n  },\n  \"devDependencies\": {\n    \"dart-sass\": \"^1.25.0\",\n    \"grunt\": \"~1.6.1\",\n    \"grunt-contrib-clean\": \"~2.0.1\",\n    \"grunt-contrib-concat\": \"^2.1.0\",\n    \"grunt-contrib-copy\": \"~1.0.0\",\n    \"grunt-contrib-cssmin\": \"^5.0.0\",\n    \"grunt-contrib-jshint\": \"~3.2.0\",\n    \"grunt-contrib-uglify\": \"~5.2.2\",\n    \"grunt-contrib-watch\": \"~1.1.0\",\n    \"grunt-jekyll\": \"~1.0.1\",\n    \"grunt-sass\": \"~3.1.0\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/dimsemenov/Magnific-Popup.git\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "website",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
