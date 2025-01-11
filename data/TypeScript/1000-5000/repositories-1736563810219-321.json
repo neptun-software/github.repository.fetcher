@@ -1,0 +1,139 @@
+{
+  "metadata": {
+    "timestamp": 1736563810219,
+    "page": 321,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nextauthjs/next-auth-example",
+      "stars": 3783,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".env.local.example",
+          "type": "blob",
+          "size": 0.462890625,
+          "content": "AUTH_SECRET= # `npx auth secret` or `openssl rand -hex 32`\n\nAUTH_AUTH0_ID=\nAUTH_AUTH0_SECRET=\nAUTH_AUTH0_ISSUER=\n\nAUTH_FACEBOOK_ID=\nAUTH_FACEBOOK_SECRET=\n\nAUTH_GITHUB_ID=\nAUTH_GITHUB_SECRET=\n\nAUTH_GOOGLE_ID=\nAUTH_GOOGLE_SECRET=\n\nAUTH_TWITTER_ID=\nAUTH_TWITTER_SECRET=\n\n# THIRD_PARTY_API_EXAMPLE_BACKEND= # Read more at https://authjs.dev/guides/integrating-third-party-backends\n\n# AUTH_TRUST_HOST=1 # Read more at https://authjs.dev/getting-started/deployment#auth_trust_host"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.185546875,
+          "content": ".DS_Store\n\nnode_modules/\nlogs\n*.log\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\nlerna-debug.log*\n.yarn-integrity\n.npm\n\n.eslintcache\n\n*.tsbuildinfo\nnext-env.d.ts\n\n.next\n.vercel\n.env*.local"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.7451171875,
+          "content": "# syntax=docker/dockerfile:1\nFROM node:20-alpine AS base\n\n# Install dependencies only when needed\nFROM base AS deps\n# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.\nRUN apk add --no-cache libc6-compat\nWORKDIR /app\n\n# Install dependencies\nCOPY package.json pnpm-lock.yaml* ./\nRUN corepack enable pnpm && pnpm i --frozen-lockfile\n\n# Rebuild the source code only when needed\nFROM base AS builder\nWORKDIR /app\nCOPY --from=deps /app/node_modules ./node_modules\nCOPY . .\n\n# Next.js collects completely anonymous telemetry data about general usage.\n# Learn more here: https://nextjs.org/telemetry\n# Uncomment the following line in case you want to disable telemetry during the build.\n# ENV NEXT_TELEMETRY_DISABLED 1\n\nRUN corepack enable pnpm && pnpm build\n\n# Production image, copy all the files and run next\nFROM base AS runner\nWORKDIR /app\n\nENV NODE_ENV production\n# Uncomment the following line in case you want to disable telemetry during runtime.\n# ENV NEXT_TELEMETRY_DISABLED 1\n\nRUN addgroup --system --gid 1001 nodejs\nRUN adduser --system --uid 1001 nextjs\n\nCOPY --from=builder /app/public ./public\n\n# Set the correct permission for prerender cache\nRUN mkdir .next\nRUN chown nextjs:nodejs .next\n\n# Automatically leverage output traces to reduce image size\n# https://nextjs.org/docs/advanced-features/output-file-tracing\nCOPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./\nCOPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static\n\nUSER nextjs\n\nEXPOSE 3000\n\nENV PORT 3000\nENV HOSTNAME \"0.0.0.0\"\n\n# server.js is created by next build from the standalone output\n# https://nextjs.org/docs/pages/api-reference/next-config-js/output\nCMD [\"node\", \"server.js\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.7333984375,
+          "content": "ISC License\n\nCopyright (c) 2022-2024, Balázs Orbán\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.2314453125,
+          "content": "> The example repository is maintained from a [monorepo](https://github.com/nextauthjs/next-auth/tree/main/apps/examples/nextjs). Pull Requests should be opened against [`nextauthjs/next-auth`](https://github.com/nextauthjs/next-auth).\n\n<p align=\"center\">\n   <br/>\n   <a href=\"https://authjs.dev\" target=\"_blank\"><img width=\"150px\" src=\"https://authjs.dev/img/logo-sm.png\" /></a>\n   <h3 align=\"center\">NextAuth.js Example App</h3>\n   <p align=\"center\">\n   Open Source. Full Stack. Own Your Data.\n   </p>\n   <p align=\"center\" style=\"align: center;\">\n      <a href=\"https://npm.im/next-auth\">\n        <img alt=\"npm\" src=\"https://img.shields.io/npm/v/next-auth?color=green&label=next-auth\">\n      </a>\n      <a href=\"https://bundlephobia.com/result?p=next-auth-example\">\n        <img src=\"https://img.shields.io/bundlephobia/minzip/next-auth?label=next-auth\" alt=\"Bundle Size\"/>\n      </a>\n      <a href=\"https://www.npmtrends.com/next-auth\">\n        <img src=\"https://img.shields.io/npm/dm/next-auth?label=next-auth%20downloads\" alt=\"Downloads\" />\n      </a>\n      <a href=\"https://npm.im/next-auth\">\n        <img src=\"https://img.shields.io/badge/npm-TypeScript-blue\" alt=\"TypeScript\" />\n      </a>\n   </p>\n</p>\n\n## Overview\n\nNextAuth.js is a complete open source authentication solution.\n\nThis is an example application that shows how `next-auth` is applied to a basic Next.js app.\n\nThe deployed version can be found at [`next-auth-example.vercel.app`](https://next-auth-example.vercel.app)\n\n### About NextAuth.js\n\nNextAuth.js is an easy to implement, full-stack (client/server) open source authentication library originally designed for [Next.js](https://nextjs.org) and [Serverless](https://vercel.com). Our goal is to [support even more frameworks](https://github.com/nextauthjs/next-auth/issues/2294) in the future.\n\nGo to [next-auth.js.org](https://authjs.dev) for more information and documentation.\n\n> _NextAuth.js is not officially associated with Vercel or Next.js._\n\n## Getting Started\n\n### 1. Clone the repository and install dependencies\n\n```\ngit clone https://github.com/nextauthjs/next-auth-example.git\ncd next-auth-example\npnpm install\n```\n\n### 2. Configure your local environment\n\nCopy the .env.local.example file in this directory to .env.local (which will be ignored by Git):\n\n```\ncp .env.local.example .env.local\n```\n\nAdd details for one or more providers (e.g. Google, Twitter, GitHub, Email, etc).\n\n#### Database\n\nA database is needed to persist user accounts and to support email sign in. However, you can still use NextAuth.js for authentication without a database by using OAuth for authentication. If you do not specify a database, [JSON Web Tokens](https://jwt.io/introduction) will be enabled by default.\n\nYou **can** skip configuring a database and come back to it later if you want.\n\nFor more information about setting up a database, please check out the following links:\n\n- Docs: [authjs.dev/reference/core/adapters](https://authjs.dev/reference/core/adapters)\n\n### 3. Configure Authentication Providers\n\n1. Review and update options in `auth.ts` as needed.\n\n2. When setting up OAuth, in the developer admin page for each of your OAuth services, you should configure the callback URL to use a callback path of `{server}/api/auth/callback/{provider}`.\n\ne.g. For Google OAuth you would use: `http://localhost:3000/api/auth/callback/google`\n\nA list of configured providers and their callback URLs is available from the endpoint `api/auth/providers`. You can find more information at https://authjs.dev/getting-started/providers/oauth-tutorial\n\n1. You can also choose to specify an SMTP server for passwordless sign in via email.\n\n### 4. Start the application\n\nTo run your site locally, use:\n\n```\npnpm run dev\n```\n\nTo run it in production mode, use:\n\n```\npnpm run build\npnpm run start\n```\n\n### 5. Preparing for Production\n\nFollow the [Deployment documentation](https://authjs.dev/getting-started/deployment)\n\n## Acknowledgements\n\n<a href=\"https://vercel.com?utm_source=nextauthjs&utm_campaign=oss\">\n<img width=\"170px\" src=\"https://raw.githubusercontent.com/nextauthjs/next-auth/main/docs/public/img/etc/powered-by-vercel.svg\" alt=\"Powered By Vercel\" />\n</a>\n<p align=\"left\">Thanks to Vercel sponsoring this project by allowing it to be deployed for free for the entire NextAuth.js Team</p>\n\n## License\n\nISC\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "auth.ts",
+          "type": "blob",
+          "size": 3.9619140625,
+          "content": "import NextAuth from \"next-auth\"\nimport \"next-auth/jwt\"\n\nimport Apple from \"next-auth/providers/apple\"\n// import Atlassian from \"next-auth/providers/atlassian\"\nimport Auth0 from \"next-auth/providers/auth0\"\nimport AzureB2C from \"next-auth/providers/azure-ad-b2c\"\nimport BankIDNorway from \"next-auth/providers/bankid-no\"\nimport BoxyHQSAML from \"next-auth/providers/boxyhq-saml\"\nimport Cognito from \"next-auth/providers/cognito\"\nimport Coinbase from \"next-auth/providers/coinbase\"\nimport Discord from \"next-auth/providers/discord\"\nimport Dropbox from \"next-auth/providers/dropbox\"\nimport Facebook from \"next-auth/providers/facebook\"\nimport GitHub from \"next-auth/providers/github\"\nimport GitLab from \"next-auth/providers/gitlab\"\nimport Google from \"next-auth/providers/google\"\nimport Hubspot from \"next-auth/providers/hubspot\"\nimport Keycloak from \"next-auth/providers/keycloak\"\nimport LinkedIn from \"next-auth/providers/linkedin\"\nimport MicrosoftEntraId from \"next-auth/providers/microsoft-entra-id\"\nimport Netlify from \"next-auth/providers/netlify\"\nimport Okta from \"next-auth/providers/okta\"\nimport Passage from \"next-auth/providers/passage\"\nimport Passkey from \"next-auth/providers/passkey\"\nimport Pinterest from \"next-auth/providers/pinterest\"\nimport Reddit from \"next-auth/providers/reddit\"\nimport Slack from \"next-auth/providers/slack\"\nimport Salesforce from \"next-auth/providers/salesforce\"\nimport Spotify from \"next-auth/providers/spotify\"\nimport Twitch from \"next-auth/providers/twitch\"\nimport Twitter from \"next-auth/providers/twitter\"\nimport Vipps from \"next-auth/providers/vipps\"\nimport WorkOS from \"next-auth/providers/workos\"\nimport Zoom from \"next-auth/providers/zoom\"\nimport { createStorage } from \"unstorage\"\nimport memoryDriver from \"unstorage/drivers/memory\"\nimport vercelKVDriver from \"unstorage/drivers/vercel-kv\"\nimport { UnstorageAdapter } from \"@auth/unstorage-adapter\"\n\nconst storage = createStorage({\n  driver: process.env.VERCEL\n    ? vercelKVDriver({\n        url: process.env.AUTH_KV_REST_API_URL,\n        token: process.env.AUTH_KV_REST_API_TOKEN,\n        env: false,\n      })\n    : memoryDriver(),\n})\n\nexport const { handlers, auth, signIn, signOut } = NextAuth({\n  debug: !!process.env.AUTH_DEBUG,\n  theme: { logo: \"https://authjs.dev/img/logo-sm.png\" },\n  adapter: UnstorageAdapter(storage),\n  providers: [\n    Apple,\n    // Atlassian,\n    Auth0,\n    AzureB2C,\n    BankIDNorway,\n    BoxyHQSAML({\n      clientId: \"dummy\",\n      clientSecret: \"dummy\",\n      issuer: process.env.AUTH_BOXYHQ_SAML_ISSUER,\n    }),\n    Cognito,\n    Coinbase,\n    Discord,\n    Dropbox,\n    Facebook,\n    GitHub,\n    GitLab,\n    Google,\n    Hubspot,\n    Keycloak({ name: \"Keycloak (bob/bob)\" }),\n    LinkedIn,\n    MicrosoftEntraId,\n    Netlify,\n    Okta,\n    Passkey({\n      formFields: {\n        email: {\n          label: \"Username\",\n          required: true,\n          autocomplete: \"username webauthn\",\n        },\n      },\n    }),\n    Passage,\n    Pinterest,\n    Reddit,\n    Salesforce,\n    Slack,\n    Spotify,\n    Twitch,\n    Twitter,\n    Vipps({\n      issuer: \"https://apitest.vipps.no/access-management-1.0/access/\",\n    }),\n    WorkOS({ connection: process.env.AUTH_WORKOS_CONNECTION! }),\n    Zoom,\n  ],\n  basePath: \"/auth\",\n  session: { strategy: \"jwt\" },\n  callbacks: {\n    authorized({ request, auth }) {\n      const { pathname } = request.nextUrl\n      if (pathname === \"/middleware-example\") return !!auth\n      return true\n    },\n    jwt({ token, trigger, session, account }) {\n      if (trigger === \"update\") token.name = session.user.name\n      if (account?.provider === \"keycloak\") {\n        return { ...token, accessToken: account.access_token }\n      }\n      return token\n    },\n    async session({ session, token }) {\n      if (token?.accessToken) session.accessToken = token.accessToken\n\n      return session\n    },\n  },\n  experimental: { enableWebAuthn: true },\n})\n\ndeclare module \"next-auth\" {\n  interface Session {\n    accessToken?: string\n  }\n}\n\ndeclare module \"next-auth/jwt\" {\n  interface JWT {\n    accessToken?: string\n  }\n}\n"
+        },
+        {
+          "name": "components.json",
+          "type": "blob",
+          "size": 0.31640625,
+          "content": "{\n  \"$schema\": \"https://ui.shadcn.com/schema.json\",\n  \"style\": \"default\",\n  \"rsc\": true,\n  \"tsx\": true,\n  \"tailwind\": {\n    \"config\": \"tailwind.config.js\",\n    \"css\": \"app/globals.css\",\n    \"baseColor\": \"slate\",\n    \"cssVariables\": true\n  },\n  \"aliases\": {\n    \"components\": \"@/components\",\n    \"utils\": \"@/lib/utils\"\n  }\n}\n"
+        },
+        {
+          "name": "components",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.3408203125,
+          "content": "services:\n  authjs-docker-test:\n    build: .\n    environment:\n      - TEST_KEYCLOAK_USERNAME\n      - TEST_KEYCLOAK_PASSWORD\n      - AUTH_KEYCLOAK_ID\n      - AUTH_KEYCLOAK_SECRET\n      - AUTH_KEYCLOAK_ISSUER\n      - AUTH_SECRET=\"MohY0/2zSQw/psWEnejC2ka3Al0oifvY4YjOkUaFfnI=\"\n      - AUTH_URL=http://localhost:3000/auth\n    ports:\n      - \"3000:3000\"\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "middleware.ts",
+          "type": "blob",
+          "size": 0.3740234375,
+          "content": "export { auth as middleware } from \"auth\"\n\n// Or like this if you need to do something here.\n// export default auth((req) => {\n//   console.log(req.auth) //  { session: { user: { ... } } }\n// })\n\n// Read more: https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher\nexport const config = {\n  matcher: [\"/((?!api|_next/static|_next/image|favicon.ico).*)\"],\n}\n"
+        },
+        {
+          "name": "next-env.d.ts",
+          "type": "blob",
+          "size": 0.1962890625,
+          "content": "/// <reference types=\"next\" />\n/// <reference types=\"next/image-types/global\" />\n\n// NOTE: This file should not be edited\n// see https://nextjs.org/docs/basic-features/typescript for more information.\n"
+        },
+        {
+          "name": "next.config.js",
+          "type": "blob",
+          "size": 0.083984375,
+          "content": "/** @type {import(\"next\").NextConfig} */\nmodule.exports = {\n  output: \"standalone\",\n}\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.4921875,
+          "content": "{\n  \"private\": true,\n  \"description\": \"An example project for NextAuth.js with Next.js\",\n  \"repository\": \"https://github.com/nextauthjs/next-auth-example.git\",\n  \"bugs\": {\n    \"url\": \"https://github.com/nextauthjs/next-auth/issues\"\n  },\n  \"homepage\": \"https://next-auth-example.vercel.app\",\n  \"scripts\": {\n    \"dev\": \"next\",\n    \"build\": \"next build\",\n    \"start\": \"next start\"\n  },\n  \"author\": \"Iain Collins <me@iaincollins.com>\",\n  \"contributors\": [\n    \"Balázs Orbán <info@balazsorban.com>\",\n    \"Nico Domino <yo@ndo.dev>\",\n    \"Lluis Agusti <hi@llu.lu>\",\n    \"Thang Huu Vu <hi@thvu.dev>\"\n  ],\n  \"dependencies\": {\n    \"@auth/unstorage-adapter\": \"^2.0.0\",\n    \"@radix-ui/react-avatar\": \"^1.0.3\",\n    \"@radix-ui/react-collapsible\": \"^1.0.3\",\n    \"@radix-ui/react-dropdown-menu\": \"^2.0.5\",\n    \"@radix-ui/react-navigation-menu\": \"^1.1.3\",\n    \"@radix-ui/react-slot\": \"^1.0.2\",\n    \"@simplewebauthn/server\": \"^9.0.3\",\n    \"@vercel/kv\": \"^1.0.1\",\n    \"class-variance-authority\": \"^0.7.0\",\n    \"clsx\": \"^2.0.0\",\n    \"lucide-react\": \"^0.274.0\",\n    \"next\": \"latest\",\n    \"next-auth\": \"beta\",\n    \"react\": \"^18.2.0\",\n    \"react-dom\": \"^18.2.0\",\n    \"tailwind-merge\": \"^1.14.0\",\n    \"tailwindcss-animate\": \"^1.0.7\",\n    \"unstorage\": \"^1.10.1\"\n  },\n  \"devDependencies\": {\n    \"@types/node\": \"^20.12.8\",\n    \"@types/react\": \"^18.2.23\",\n    \"@types/react-dom\": \"^18.2.8\",\n    \"autoprefixer\": \"^10.4.15\",\n    \"postcss\": \"^8.4.29\",\n    \"tailwindcss\": \"^3.3.3\",\n    \"typescript\": \"^5.2.2\"\n  },\n  \"engines\": {\n    \"node\": \">=20.0.0\"\n  }\n}\n"
+        },
+        {
+          "name": "postcss.config.js",
+          "type": "blob",
+          "size": 0.080078125,
+          "content": "module.exports = {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n}\n"
+        },
+        {
+          "name": "public",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tailwind.config.js",
+          "type": "blob",
+          "size": 2.0771484375,
+          "content": "/** @type {import('tailwindcss').Config} */\nmodule.exports = {\n  darkMode: \"selector\",\n  content: [\n    \"./pages/**/*.{ts,tsx}\",\n    \"./components/**/*.{ts,tsx}\",\n    \"./app/**/*.{ts,tsx}\",\n    \"./src/**/*.{ts,tsx}\",\n  ],\n  theme: {\n    container: {\n      center: true,\n      padding: \"2rem\",\n      screens: {\n        \"2xl\": \"1400px\",\n      },\n    },\n    extend: {\n      colors: {\n        border: \"hsl(var(--border))\",\n        input: \"hsl(var(--input))\",\n        ring: \"hsl(var(--ring))\",\n        background: \"hsl(var(--background))\",\n        foreground: \"hsl(var(--foreground))\",\n        primary: {\n          DEFAULT: \"hsl(var(--primary))\",\n          foreground: \"hsl(var(--primary-foreground))\",\n        },\n        secondary: {\n          DEFAULT: \"hsl(var(--secondary))\",\n          foreground: \"hsl(var(--secondary-foreground))\",\n        },\n        destructive: {\n          DEFAULT: \"hsl(var(--destructive))\",\n          foreground: \"hsl(var(--destructive-foreground))\",\n        },\n        muted: {\n          DEFAULT: \"hsl(var(--muted))\",\n          foreground: \"hsl(var(--muted-foreground))\",\n        },\n        accent: {\n          DEFAULT: \"hsl(var(--accent))\",\n          foreground: \"hsl(var(--accent-foreground))\",\n        },\n        popover: {\n          DEFAULT: \"hsl(var(--popover))\",\n          foreground: \"hsl(var(--popover-foreground))\",\n        },\n        card: {\n          DEFAULT: \"hsl(var(--card))\",\n          foreground: \"hsl(var(--card-foreground))\",\n        },\n      },\n      borderRadius: {\n        lg: \"var(--radius)\",\n        md: \"calc(var(--radius) - 2px)\",\n        sm: \"calc(var(--radius) - 4px)\",\n      },\n      keyframes: {\n        \"accordion-down\": {\n          from: { height: 0 },\n          to: { height: \"var(--radix-accordion-content-height)\" },\n        },\n        \"accordion-up\": {\n          from: { height: \"var(--radix-accordion-content-height)\" },\n          to: { height: 0 },\n        },\n      },\n      animation: {\n        \"accordion-down\": \"accordion-down 0.2s ease-out\",\n        \"accordion-up\": \"accordion-up 0.2s ease-out\",\n      },\n    },\n  },\n  plugins: [require(\"tailwindcss-animate\")],\n}\n"
+        },
+        {
+          "name": "test-docker.sh",
+          "type": "blob",
+          "size": 0.689453125,
+          "content": "#!/usr/bin/env bash\n\n# Easier to read `docker compose up` output\n# export BUILDKIT_PROGRESS=plain\n\nargs=(\"-f\" \"docker-compose.yml\")\nif [[ -z \"${CI}\" ]]; then\n  args+=(\"--env-file\" \".env\")\nfi\nargs+=(\"up\" \"--detach\" \"--build\")\n\necho \"Running: docker compose ${args[*]}\"\n\nif ! docker compose \"${args[@]}\"; then\n  echo \"Failed to start container\"\n  exit 1\nfi\n\necho \"waiting 10 seconds for container to start...\"\nsleep 10\n\n# Used to control which env vars to load in the playwright process\nexport TEST_DOCKER=1\n\n# Always stop container, but exit with 1 when tests are failing\nif playwright test -c ../../../packages/utils/playwright.config.ts; then\n  docker compose down\nelse\n  docker compose down && exit 1\nfi\n"
+        },
+        {
+          "name": "tsconfig.json",
+          "type": "blob",
+          "size": 0.6875,
+          "content": "{\n  \"compilerOptions\": {\n    \"target\": \"es5\",\n    \"lib\": [\"dom\", \"dom.iterable\", \"esnext\"],\n    \"allowJs\": true,\n    \"skipLibCheck\": true,\n    \"strict\": true,\n    \"forceConsistentCasingInFileNames\": true,\n    \"noEmit\": true,\n    \"esModuleInterop\": true,\n    \"module\": \"esnext\",\n    \"moduleResolution\": \"node\",\n    \"resolveJsonModule\": true,\n    \"isolatedModules\": true,\n    \"jsx\": \"preserve\",\n    \"incremental\": true,\n    \"plugins\": [\n      {\n        \"name\": \"next\"\n      }\n    ],\n    \"paths\": {\n      \"@/*\": [\"./*\"],\n      \"auth\": [\"./auth\"]\n    }\n  },\n  \"include\": [\n    \"process.d.ts\",\n    \"next-env.d.ts\",\n    \"**/*.ts\",\n    \"**/*.tsx\",\n    \".next/types/**/*.ts\"\n  ],\n  \"exclude\": [\"node_modules\"]\n}\n"
+        }
+      ]
+    }
+  ]
+}
