@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736567775392,
+    "page": 359,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "fogleman/nes",
+      "stars": 5483,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0068359375,
+          "content": "/roms\n\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.03515625,
+          "content": "Copyright (C) 2015 Michael Fogleman\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.71484375,
+          "content": "### Summary\n\nThis is an NES emulator written in Go.\n\n### Screenshots\n\n![Screenshots](http://i.imgur.com/vD3FXVh.png)\n\n### Title Screens\n\nhttp://www.michaelfogleman.com/static/nes/\n\n### Dependencies\n\n    github.com/go-gl/gl/v2.1/gl\n    github.com/go-gl/glfw/v3.1/glfw\n    github.com/gordonklaus/portaudio\n\nThe portaudio-go dependency requires PortAudio on your system:\n\n> To build portaudio-go, you must first have the PortAudio development headers\n> and libraries installed. Some systems provide a package for this; e.g., on\n> Ubuntu you would want to run apt-get install portaudio19-dev. On other systems\n> you might have to install from source.\n\nOn Mac, you can use homebrew:\n\n    brew install portaudio\n\n### Installation\n\nThe `go get` command will automatically fetch the dependencies listed above,\ncompile the binary and place it in your `$GOPATH/bin` directory.\n\n    go get github.com/fogleman/nes\n\n### Usage\n\n    nes [rom_file|rom_directory]\n\n1. If no arguments are specified, the program will look for rom files in\nthe current working directory.\n\n2. If a directory is specified, the program will look for rom files in that\ndirectory.\n\n3. If a file is specified, the program will run that rom.\n\nFor 1 & 2, the program will display a menu screen to select which rom to play.\nThe thumbnails are downloaded from an online database keyed by the md5 sum of\nthe rom file.\n\n![Menu Screenshot](http://i.imgur.com/pwetBLv.png)\n\n### Controls\n\nJoysticks are supported, although the button mapping is currently hard-coded.\nKeyboard controls are indicated below.\n\n| Nintendo              | Emulator    |\n| --------------------- | ----------- |\n| Up, Down, Left, Right | Arrow Keys  |\n| Start                 | Enter       |\n| Select                | Right Shift |\n| A                     | Z           |\n| B                     | X           |\n| A (Turbo)             | A           |\n| B (Turbo)             | S           |\n| Reset                 | R           |\n\n### Mappers\n\nThe following mappers have been implemented:\n\n* NROM (0)\n* MMC1 (1)\n* UNROM (2)\n* CNROM (3)\n* MMC3 (4)\n* AOROM (7)\n\nThese mappers cover about 85% of all NES games. I hope to implement more\nmappers soon. To see what games should work, consult this list:\n\n[NES Mapper List](http://tuxnes.sourceforge.net/nesmapper.txt)\n\n### Known Issues\n\n* there are some minor issues with PPU timing, but most games work OK anyway\n* the APU emulation isn't quite perfect, but not far off\n\n### Documentation\n\nInterested in writing your own emulator? Curious about the NES internals? Here\nare some good resources:\n\n* [NES Documentation (PDF)](http://nesdev.com/NESDoc.pdf)\n* [NES Reference Guide (Wiki)](http://wiki.nesdev.com/w/index.php/NES_reference_guide)\n* [6502 CPU Reference](http://www.obelisk.me.uk/6502/reference.html)\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.23046875,
+          "content": "module github.com/fogleman/nes\n\ngo 1.14\n\nrequire (\n\tgithub.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7\n\tgithub.com/go-gl/glfw v0.0.0-20200420212212-258d9bec320e\n\tgithub.com/gordonklaus/portaudio v0.0.0-20180817120803-00e7307ccd93\n)\n"
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 0.7568359375,
+          "content": "package main\n\nimport (\n\t\"io/ioutil\"\n\t\"log\"\n\t\"os\"\n\t\"path\"\n\t\"strings\"\n\n\t\"github.com/fogleman/nes/ui\"\n)\n\nfunc main() {\n\tlog.SetFlags(0)\n\tpaths := getPaths()\n\tif len(paths) == 0 {\n\t\tlog.Fatalln(\"no rom files specified or found\")\n\t}\n\tui.Run(paths)\n}\n\nfunc getPaths() []string {\n\tvar arg string\n\targs := os.Args[1:]\n\tif len(args) == 1 {\n\t\targ = args[0]\n\t} else {\n\t\targ, _ = os.Getwd()\n\t}\n\tinfo, err := os.Stat(arg)\n\tif err != nil {\n\t\treturn nil\n\t}\n\tif info.IsDir() {\n\t\tinfos, err := ioutil.ReadDir(arg)\n\t\tif err != nil {\n\t\t\treturn nil\n\t\t}\n\t\tvar result []string\n\t\tfor _, info := range infos {\n\t\t\tname := info.Name()\n\t\t\tif !strings.HasSuffix(name, \".nes\") {\n\t\t\t\tcontinue\n\t\t\t}\n\t\t\tresult = append(result, path.Join(arg, name))\n\t\t}\n\t\treturn result\n\t} else {\n\t\treturn []string{arg}\n\t}\n}\n"
+        },
+        {
+          "name": "nes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ui",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "util",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "timestamp": 1736567719273,
+    "page": 305,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "elves/elvish",
+      "stars": 5798,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".cirrus.yml",
+          "type": "blob",
+          "size": 4.3759765625,
+          "content": "test_arm_task:\n  env:\n    ELVISH_TEST_TIME_SCALE: \"20\"\n    TEST_FLAG: -race\n  name: Test on Linux ARM64\n  arm_container:\n    # The Alpine image has segmentation faults when running test -race, so\n    # use Debian instead.\n    image: golang:1.23-bookworm\n  go_version_script: go version\n  test_script: go test $TEST_FLAG ./...\n\ntest_bsd_task:\n  env:\n    ELVISH_TEST_TIME_SCALE: \"20\"\n    TEST_FLAG: -race\n    GO_VERSION: \"1.23.0\"\n    PATH: /usr/local/go/bin:$PATH\n  matrix:\n    - name: Test on FreeBSD\n      freebsd_instance:\n        # Find latest version on https://www.freebsd.org/releases/\n        image_family: freebsd-14-0\n      setup_script:\n        # go test -race is not compatible with ASLR, which has been enabled by\n        # default since FreeBSD 13\n        # (https://wiki.freebsd.org/AddressSpaceLayoutRandomization). LLVM\n        # issue: https://github.com/llvm/llvm-project/issues/53256\n        #\n        # There's also a Go bug where using go test -race with ASLR fails\n        # to run the tests and still reports tests as passing:\n        # https://github.com/golang/go/issues/65425\n        sysctl kern.elf64.aslr.enable=0\n    # NetBSD and FreeBSD images are from\n    # https://github.com/anarazel/pg-vm-images\n    - name: Test on NetBSD\n      compute_engine_instance:\n        image_project: pg-ci-images\n        image: family/pg-ci-netbsd-vanilla\n        platform: netbsd\n    - name: Test on OpenBSD\n      compute_engine_instance:\n        image_project: pg-ci-images\n        image: family/pg-ci-openbsd-vanilla\n        platform: openbsd\n      env:\n        TEST_FLAG:\n  go_toolchain_cache:\n    fingerprint_key: $CIRRUS_OS-$GO_VERSION\n    folder: /usr/local/go\n    populate_script: |\n      curl -L -o go.tar.gz https://go.dev/dl/go$GO_VERSION.$CIRRUS_OS-amd64.tar.gz\n      mkdir -p /usr/local\n      tar -C /usr/local -xzf go.tar.gz\n  go_version_script: go version\n  test_script: go test $TEST_FLAG ./...\n\nbuild_binaries_task:\n  name: Build binaries\n  only_if: $CIRRUS_BRANCH == 'master'\n  alias: binaries\n  env:\n    CGO_ENABLED: \"0\"\n  container:\n    # Keep the Go version part in sync with\n    # https://github.com/elves/up/blob/master/Dockerfile\n    image: golang:1.23.0-alpine\n  go_modules_cache:\n    fingerprint_script: cat go.sum\n    folder: ~/go/pkg/mod\n  go_build_cache:\n    folder: ~/.cache/go-build\n  # Git is not required for building the binaries, but we need to include for Go\n  # to include VCS information in the binary. Also install coreutils to get a\n  # touch command that supports specifying the timezone.\n  setup_script: apk add zip git coreutils\n  # _bin is in .gitignore, so Git won't consider the repo dirty. This will\n  # impact the binary, which encodes VCS information.\n  build_binaries_script: |\n    go run ./cmd/elvish ./tools/buildall.elv -name elvish-HEAD -variant official ./cmd/elvish _bin/\n  binaries_artifacts:\n    path: _bin/**\n  binary_checksums_artifacts:\n    path: _bin/*/*.sha256sum\n\ncheck_binary_checksums_task:\n  name: Check binary checksums ($HOST)\n  only_if: $CIRRUS_BRANCH == 'master'\n  container:\n    image: alpine:latest\n  depends_on: binaries\n  matrix:\n    - env:\n        HOST: cdg\n    - env:\n        HOST: hkg\n  setup_script: apk add git curl\n  # Enable auto cancellation - if there is another push, only the task to\n  # compare the website against the newer commit should continue.\n  auto_cancellation: \"true\"\n  wait_website_update_script: |\n    ts=$(git show -s --format=%ct HEAD)\n    wait=10\n    while true; do\n      if website_ts=$(curl -sSf https://$HOST.elv.sh/commit-ts.txt); then\n        if test \"$website_ts\" -ge \"$ts\"; then\n          echo \"website ($website_ts) >= CI ($ts)\"\n          exit 0\n        else\n          echo \"website ($website_ts) < CI ($ts)\"\n        fi\n      else\n        echo \"website has no commit-ts.txt yet\"\n      fi\n      sleep $wait\n      test $wait -lt 96 && wait=`echo \"$wait * 2\" | bc`\n    done\n  check_binary_checksums_script: |\n    curl -o checksums.zip https://api.cirrus-ci.com/v1/artifact/build/$CIRRUS_BUILD_ID/binaries/binary_checksums.zip\n    unzip checksums.zip\n    cd _bin\n\n    ret=0\n    for f in */elvish-HEAD.sha256sum */elvish-HEAD.exe.sha256sum; do\n      website_sum=$(curl -sS https://$HOST.dl.elv.sh/$f | awk '{print $1}')\n      ci_sum=$(cat $f | awk '{print $1}')\n      if test \"$website_sum\" = \"$ci_sum\"; then\n        echo \"$f: website == CI ($ci_sum)\"\n      else\n        echo \"$f: website ($website_sum) != CI ($ci_sum)\"\n        ret=1\n      fi\n    done\n    exit $ret\n"
+        },
+        {
+          "name": ".codecov.yml",
+          "type": "blob",
+          "size": 0.6943359375,
+          "content": "coverage:\n  status:\n    project:\n      default:\n        threshold: 0.1%\n    patch: off\ncomment: false\n# The following patterns are also consumed by a hacky sed script in\n# tools/prune-cover.sh, which does not support globs.\nignore:\n  # Exclude test helpers.\n  - \"pkg/cli/clitest\"\n  - \"pkg/cli/histutil/test_db.go\"\n  - \"pkg/eval/evaltest\"\n  - \"pkg/eval/vals/tester.go\"\n  - \"pkg/prog/progtest\"\n  - \"pkg/store/storetest\"\n  - \"pkg/must\"\n  # Exclude commands for manual testing.\n  - \"pkg/cli/examples\"\n  - \"pkg/md/mdrun\"\n  # Exclude files generated by stringer.\n  - \"pkg/getopt/zstring.go\"\n  - \"pkg/md/zstring.go\"\n  - \"pkg/parse/zstring.go\"\n  # Exclude the copied diff and rpc packages.\n  - \"pkg/diff\"\n  - \"pkg/rpc\"\n"
+        },
+        {
+          "name": ".codespellrc",
+          "type": "blob",
+          "size": 0.1572265625,
+          "content": "[codespell]\nignore-words-list = ro,upto,nd,doas,fo,shouldbe,iterm,lates,testof\nskip = ./.git,./vscode/node_modules,./vscode/dist,./website/_dst,./website/*.html\n"
+        },
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.00390625,
+          "content": "/_*\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "*.go filter=goimports\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3125,
+          "content": "# Compiled Object files, Static and Dynamic libs (Shared Objects)\n*.o\n*.a\n*.so\n\n# Folders\n_obj\n_test\n\n# Architecture specific extensions/prefixes\n*.[568vq]\n[568vq].out\n\n*.cgo1.go\n*.cgo2.c\n_cgo_defun.c\n_cgo_gotypes.go\n_cgo_export.*\n\n_testmain.go\n\n*.exe\n\n# Nix\n/result\n# Project specific\ncover\n/_*\n/elvish\n/branding/*.png\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "0.22.0-release-notes.md",
+          "type": "blob",
+          "size": 0.884765625,
+          "content": "# Notable new features\n\n-   Pressing `Ctrl-Alt-V` in the REPL now enters a mode where the name of the\n    next key pressed will be inserted into the buffer.\n\n-   The `epm` module no longer depends on Unix commands like `mkdir` and is now\n    compatible with a stock Windows installation. It still depends on commands\n    needed for downloading packages (typically `git` or `rsync`).\n\n# Notable bugfixes\n\n-   The `lower` glob modifier (as in `echo *[lower]`) now correctly matches\n    lower-case letters. It used to match digits by mistake.\n\n# Deprecations\n\n# Breaking changes\n\n-   If you are upgrading from a version older than 0.14.0, make sure that you\n    close all Elvish processes running the old version before starting any new\n    ones.\n\n    This is because the logic for determining how to connect to daemon has\n    changed and is no longer backward compatible with versions older than\n    0.14.0.\n"
+        },
+        {
+          "name": "CODE_OF_CONDUCT.md",
+          "type": "blob",
+          "size": 0.7216796875,
+          "content": "The Elvish community follows the\n[Go community code of conduct](https://go.dev/conduct).\n\nThe short version:\n\n-   Treat everyone with respect and kindness.\n\n-   Be thoughtful in how you communicate.\n\n-   Don't be destructive or inflammatory.\n\n-   If you encounter an issue, please contact xiaq via Telegram, Matrix or\n    Discord DM or email (xiaqqaix@gmail.com). (We don't have a team of stewards\n    or a committee of representatives (yet).)\n\nConsistent with the Go community code of conduct, the following specific points\napply:\n\n-   Respect how other people choose to use Elvish and their system in general.\n\n    Elvish is opinionated software, but that doesn't mean the use cases Elvish\n    chooses not to support are inherently bad.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.2470703125,
+          "content": "FROM golang:1.22-alpine3.19 as builder\nRUN apk add --no-cache --virtual build-deps make git\n# Build Elvish\nCOPY . /go/src/src.elv.sh\nRUN make -C /go/src/src.elv.sh get\n\nFROM alpine:3.19\nCOPY --from=builder /go/bin/elvish /bin/elvish\nCMD [\"/bin/elvish\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.26953125,
+          "content": "Copyright (c) Elvish developers and contributors. All rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\nRedistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.103515625,
+          "content": "ELVISH_MAKE_BIN ?= $(or $(GOBIN),$(shell go env GOPATH)/bin)/elvish$(shell go env GOEXE)\nELVISH_MAKE_BIN := $(subst \\,/,$(ELVISH_MAKE_BIN))\nELVISH_MAKE_PKG ?= ./cmd/elvish\n\ndefault: test most-checks get\n\n# This target emulates the behavior of \"go install ./cmd/elvish\", except that\n# the build output and the main package to build can be overridden with\n# environment variables.\nget:\n\tmkdir -p $(shell dirname $(ELVISH_MAKE_BIN))\n\tgo build -o $(ELVISH_MAKE_BIN) $(ELVISH_MAKE_PKG)\n\n# Run formatters on Go and Markdown files.\nfmt:\n\tfind . -name '*.go' | xargs goimports -w\n\tfind . -name '*.go' | xargs gofmt -s -w\n\tfind . -name '*.md' | xargs go run src.elv.sh/cmd/elvmdfmt -w -width 80\n\n# Run unit tests, with race detection if the platform supports it.\ntest:\n\tgo test $(shell ./tools/run-race.elv) ./...\n\tcd website; go test $(shell ./tools/run-race.elv) ./...\n\n# Generate a basic test coverage report, and open it in the browser. The report\n# is an approximation of https://app.codecov.io/gh/elves/elvish/.\ncover:\n\tmkdir -p _cover/unit _cover/e2e\n\t# Generate coverage from unit tests. We could generate text profiles\n\t# directly with -coverprofile, but there's no support for merging multiple\n\t# text profiles. So we generate binary profiles instead.\n\tgo test -coverpkg=./pkg/... ./pkg/... -test.gocoverdir $$PWD/_cover/unit\n\t# Generate coverage from E2E tests, using -count to skip the cache.\n\tenv GOCOVERDIR=$$PWD/_cover/e2e go test -count 1 ./e2e\n\t# Merge and convert binary profiles to a single text profile.\n\tgo tool covdata textfmt -i _cover/unit,_cover/e2e -o _cover/merged.txt\n\t./tools/prune-cover.sh .codecov.yml < _cover/merged.txt > _cover/pruned.txt\n\tgo tool cover -html _cover/pruned.txt\n\tgo tool cover -func _cover/pruned.txt | tail -1 | awk '{ print \"Overall coverage:\", $$NF }'\n\n# All the checks except check-gen.sh, which is not always convenient to run as\n# it requires a clean working tree.\nmost-checks:\n\t./tools/check-fmt-go.sh\n\t./tools/check-fmt-md.sh\n\t./tools/check-disallowed.sh\n\tcodespell\n\tgo vet ./...\n\tstaticcheck ./...\n\nall-checks: most-checks\n\t./tools/check-gen.sh\n\n.PHONY: default get fmt test cover most-checks all-checks\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.498046875,
+          "content": "# Elvish\n\n[![CI status](https://github.com/elves/elvish/workflows/CI/badge.svg)](https://github.com/elves/elvish/actions?query=workflow%3ACI)\n[![FreeBSD & gccgo test status](https://img.shields.io/cirrus/github/elves/elvish?logo=Cirrus%20CI&label=CI2)](https://cirrus-ci.com/github/elves/elvish/master)\n[![Test Coverage](https://img.shields.io/codecov/c/github/elves/elvish/master.svg?logo=Codecov&label=coverage)](https://app.codecov.io/gh/elves/elvish/tree/master)\n[![Go Reference](https://pkg.go.dev/badge/src.elv.sh@master.svg)](https://pkg.go.dev/src.elv.sh@master)\n[![Packaging status](https://repology.org/badge/tiny-repos/elvish.svg)](https://repology.org/project/elvish/versions)\n\n[![Forum](https://img.shields.io/badge/forum-bbs.elv.sh-5b5.svg?logo=discourse)](https://bbs.elv.sh)\n[![Twitter](https://img.shields.io/badge/twitter-@ElvishShell-blue.svg?logo=x)](https://twitter.com/ElvishShell)\n\n[![Telegram Group](https://img.shields.io/badge/telegram-Elvish-blue.svg?logo=telegram&logoColor=white)](https://t.me/+Pv5ZYgTXD-YaKwcP)\n[![Discord server](https://img.shields.io/badge/discord-Elvish-blue.svg?logo=discord&logoColor=white)](https://discord.gg/jrmuzRBU8D)\n[![#users:elv.sh](https://img.shields.io/badge/matrix-%23users:elv.sh-blue.svg?logo=matrix)](https://matrix.to/#/#users:elv.sh)\n[![#elvish on libera.chat](https://img.shields.io/badge/libera.chat-%23elvish-blue.svg?logo=liberadotchat&logoColor=white)](https://web.libera.chat/#elvish)\n[![Gitter](https://img.shields.io/badge/gitter-elves%2Felvish-blue.svg?logo=gitter)](https://gitter.im/elves/elvish)\n\n(Chat rooms are all bridged together thanks to [Matrix](https://matrix.org).)\n\nElvish is:\n\n-   A powerful scripting language.\n\n-   A shell with useful interactive features built-in.\n\n-   A statically linked binary for Linux, BSDs, macOS or Windows.\n\nElvish is pre-1.0. This means that breaking changes will still happen from time\nto time, but it's stable enough for both scripting and interactive use.\n\n## Documentation\n\n[![User docs](https://img.shields.io/badge/User_Docs-37a779?style=for-the-badge)](https://elv.sh)\n\nUser docs are hosted on Elvish's website, [elv.sh](https://elv.sh). This\nincludes [how to install Elvish](https://elv.sh/get/),\n[tutorials](https://elv.sh/learn/), [reference pages](https://elv.sh/ref/), and\n[news](https://elv.sh/blog/).\n\n[![Development docs](https://img.shields.io/badge/Development_Docs-blue?style=for-the-badge)](./docs)\n\nDevelopment docs are in [./docs](./docs).\n\n[![Awesome Elvish](https://img.shields.io/badge/Awesome_Elvish-orange?style=for-the-badge)](https://github.com/elves/awesome-elvish)\n\nAwesome Elvish packages and tools that support Elvish.\n\n## License\n\nAll source files use the BSD 2-clause license (see [LICENSE](LICENSE)), except\nfor the following:\n\n-   Files in [pkg/diff](pkg/diff) and [pkg/rpc](pkg/rpc) are released under the\n    BSD 3-clause license, since they are derived from\n    [Go's source code](https://github.com/golang/go). See\n    [pkg/diff/LICENSE](pkg/diff/LICENSE) and [pkg/rpc/LICENSE](pkg/rpc/LICENSE).\n\n-   Files in [pkg/persistent](pkg/persistent) and its subdirectories are\n    released under EPL 1.0, since they are partially derived from\n    [Clojure's source code](https://github.com/clojure/clojure). See\n    [pkg/persistent/LICENSE](pkg/persistent/LICENSE).\n\n-   Files in [pkg/md/spec](pkg/md/spec) are released under the Creative Commons\n    CC-BY-SA 4.0 license, since they are derived from\n    [the CommonMark spec](https://github.com/commonmark/commonmark-spec). See\n    [pkg/md/spec/LICENSE](pkg/md/spec/LICENSE).\n"
+        },
+        {
+          "name": "branding",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "e2e",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "flake.lock",
+          "type": "blob",
+          "size": 1.984375,
+          "content": "{\n  \"nodes\": {\n    \"flake-utils\": {\n      \"inputs\": {\n        \"systems\": \"systems\"\n      },\n      \"locked\": {\n        \"lastModified\": 1694529238,\n        \"narHash\": \"sha256-zsNZZGTGnMOf9YpHKJqMSsa0dXbfmxeoJ7xHlrt+xmY=\",\n        \"owner\": \"numtide\",\n        \"repo\": \"flake-utils\",\n        \"rev\": \"ff7b65b44d01cf9ba6a71320833626af21126384\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"numtide\",\n        \"repo\": \"flake-utils\",\n        \"type\": \"github\"\n      }\n    },\n    \"gomod2nix\": {\n      \"inputs\": {\n        \"flake-utils\": \"flake-utils\",\n        \"nixpkgs\": [\n          \"nixpkgs\"\n        ]\n      },\n      \"locked\": {\n        \"lastModified\": 1716202913,\n        \"narHash\": \"sha256-zjPNXI4DWBOrPsrK8u/XTsm5Q36quONQvz0jhAKHEeg=\",\n        \"owner\": \"nix-community\",\n        \"repo\": \"gomod2nix\",\n        \"rev\": \"4702caff8e201f4c98fe3583637a930d253447c8\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"nix-community\",\n        \"repo\": \"gomod2nix\",\n        \"type\": \"github\"\n      }\n    },\n    \"nixpkgs\": {\n      \"locked\": {\n        \"lastModified\": 1735669367,\n        \"narHash\": \"sha256-tfYRbFhMOnYaM4ippqqid3BaLOXoFNdImrfBfCp4zn0=\",\n        \"owner\": \"NixOS\",\n        \"repo\": \"nixpkgs\",\n        \"rev\": \"edf04b75c13c2ac0e54df5ec5c543e300f76f1c9\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"NixOS\",\n        \"ref\": \"nixos-24.11\",\n        \"repo\": \"nixpkgs\",\n        \"type\": \"github\"\n      }\n    },\n    \"root\": {\n      \"inputs\": {\n        \"gomod2nix\": \"gomod2nix\",\n        \"nixpkgs\": \"nixpkgs\"\n      }\n    },\n    \"systems\": {\n      \"locked\": {\n        \"lastModified\": 1681028828,\n        \"narHash\": \"sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=\",\n        \"owner\": \"nix-systems\",\n        \"repo\": \"default\",\n        \"rev\": \"da67096a3b9bf56a91d16901293e51ba5b49a27e\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"nix-systems\",\n        \"repo\": \"default\",\n        \"type\": \"github\"\n      }\n    }\n  },\n  \"root\": \"root\",\n  \"version\": 7\n}\n"
+        },
+        {
+          "name": "flake.nix",
+          "type": "blob",
+          "size": 1.78515625,
+          "content": "{\n  description = \"elvish\";\n\n  inputs = {\n    nixpkgs.url = \"github:NixOS/nixpkgs/nixos-24.11\";\n    gomod2nix = {\n      url = \"github:nix-community/gomod2nix\";\n      inputs.nixpkgs.follows = \"nixpkgs\";\n    };\n  };\n\n  outputs = { self, nixpkgs, gomod2nix }:\n    let\n      allSystems = [\n        \"x86_64-linux\" # 64-bit Intel/AMD Linux\n        \"aarch64-linux\" # 64-bit ARM Linux\n        \"x86_64-darwin\" # 64-bit Intel macOS\n        \"aarch64-darwin\" # 64-bit ARM macOS\n      ];\n      forAllSystems = f: nixpkgs.lib.genAttrs allSystems (system: f {\n        inherit system;\n        pkgs = import nixpkgs { inherit system; };\n      });\n    in\n    {\n      packages = forAllSystems ({ system, pkgs, ... }:\n        let\n          buildGoApplication = gomod2nix.legacyPackages.${system}.buildGoApplication;\n        in\n        rec {\n          default = elvish;\n\n          elvish = buildGoApplication {\n            name = \"elvish\";\n            src = ./.;\n            go = pkgs.go_1_22;\n            pwd = ./.;\n            subPackages = [ \"cmd/elvish\" ];\n            CGO_ENABLED = 0;\n            flags = [\n              \"-trimpath\"\n            ];\n            ldflags = [\n              \"-s\"\n              \"-w\"\n              \"-extldflags -static\"\n            ];\n          };\n        });\n\n      # \"nix develop\" provides a shell containing development tools.\n      #\n      # \"nix develop --command gomod2nix\" should be run to update gomod2nix.toml\n      # after updating Go module dependencies.\n      devShell = forAllSystems ({ system, pkgs }:\n        pkgs.mkShell {\n          buildInputs = with pkgs; [\n            go_1_22\n            gomod2nix.legacyPackages.${system}.gomod2nix\n            gopls\n          ];\n        });\n\n      overlays.default = final: prev: {\n        elvish = self.packages.${final.stdenv.system}.elvish;\n      };\n    };\n}\n\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.2861328125,
+          "content": "module src.elv.sh\n\nrequire (\n\tgithub.com/creack/pty v1.1.21\n\tgithub.com/google/go-cmp v0.6.0\n\tgithub.com/mattn/go-isatty v0.0.20\n\tgithub.com/sourcegraph/jsonrpc2 v0.2.0\n\tgo.etcd.io/bbolt v1.3.10\n\tgolang.org/x/sync v0.8.0\n\tgolang.org/x/sys v0.24.0\n\tpkg.nimblebun.works/go-lsp v1.1.0\n)\n\ngo 1.22\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 2.1875,
+          "content": "github.com/creack/pty v1.1.21 h1:1/QdRyBaHHJP61QkWMXlOIBfsgdDeeKfK8SYVUWJKf0=\ngithub.com/creack/pty v1.1.21/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=\ngithub.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=\ngithub.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=\ngithub.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=\ngithub.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=\ngithub.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=\ngithub.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/sourcegraph/jsonrpc2 v0.2.0 h1:KjN/dC4fP6aN9030MZCJs9WQbTOjWHhrtKVpzzSrr/U=\ngithub.com/sourcegraph/jsonrpc2 v0.2.0/go.mod h1:ZafdZgk/axhT1cvZAPOhw+95nz2I/Ra5qMlU4gTRwIo=\ngithub.com/stretchr/testify v1.8.1 h1:w7B6lhMri9wdJUVmEZPGGhZzrYTPvgJArz7wNPgYKsk=\ngithub.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=\ngo.etcd.io/bbolt v1.3.10 h1:+BqfJTcCzTItrop8mq/lbzL8wSGtj94UO/3U31shqG0=\ngo.etcd.io/bbolt v1.3.10/go.mod h1:bK3UQLPJZly7IlNmV7uVHJDxfe5aK9Ll93e/74Y9oEQ=\ngolang.org/x/sync v0.8.0 h1:3NFvSEYkUoMifnESzZl15y791HH1qU2xm6eCJU5ZPXQ=\ngolang.org/x/sync v0.8.0/go.mod h1:Czt+wKu1gCyEFDUtn0jG5QVvpJ6rzVqr5aXyt9drQfk=\ngolang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/sys v0.24.0 h1:Twjiwq9dn6R1fQcyiK+wQyHWfaz/BJB+YIpzU/Cv3Xg=\ngolang.org/x/sys v0.24.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\npkg.nimblebun.works/go-lsp v1.1.0 h1:TH5ro4p2vlDtELK4LoVeKs4TsKm6aW1f5WP8jHm/9m4=\npkg.nimblebun.works/go-lsp v1.1.0/go.mod h1:Suh759Ki+DjU0zwf0xkl1H6Ln1C6/+GtYyNofbtfcug=\n"
+        },
+        {
+          "name": "gomod2nix.toml",
+          "type": "blob",
+          "size": 1.8095703125,
+          "content": "schema = 3\n\n[mod]\n  [mod.\"github.com/BurntSushi/toml\"]\n    version = \"v1.4.0\"\n    hash = \"sha256-3cr8hfVA4th/AfveHDxigmj8Eiiae0ZBnxAgy+7RYO4=\"\n  [mod.\"github.com/creack/pty\"]\n    version = \"v1.1.23\"\n    hash = \"sha256-42k7lObS5h99pPoicb6tkRlBvVvSPqsy+aC87PWq2o4=\"\n  [mod.\"github.com/davecgh/go-spew\"]\n    version = \"v1.1.1\"\n    hash = \"sha256-nhzSUrE1fCkN0+RL04N4h8jWmRFPPPWbCuDc7Ss0akI=\"\n  [mod.\"github.com/google/go-cmp\"]\n    version = \"v0.6.0\"\n    hash = \"sha256-qgra5jze4iPGP0JSTVeY5qV5AvEnEu39LYAuUCIkMtg=\"\n  [mod.\"github.com/gorilla/websocket\"]\n    version = \"v1.4.1\"\n    hash = \"sha256-+yo/0+zSqf2/dPZyp/9so21r7cfMx1yhxmmOzy2wwQ4=\"\n  [mod.\"github.com/mattn/go-isatty\"]\n    version = \"v0.0.20\"\n    hash = \"sha256-qhw9hWtU5wnyFyuMbKx+7RB8ckQaFQ8D+8GKPkN3HHQ=\"\n  [mod.\"github.com/pmezard/go-difflib\"]\n    version = \"v1.0.0\"\n    hash = \"sha256-/FtmHnaGjdvEIKAJtrUfEhV7EVo5A/eYrtdnUkuxLDA=\"\n  [mod.\"github.com/sourcegraph/jsonrpc2\"]\n    version = \"v0.2.0\"\n    hash = \"sha256-UPJQN/TSg9CjRj0239EV9dbZTwe7grOCf8lFWMkqo8U=\"\n  [mod.\"github.com/stretchr/testify\"]\n    version = \"v1.8.1\"\n    hash = \"sha256-3e0vOJLgCMAan+GfaGN8RGZdarh5iCavM6flf6YMNPk=\"\n  [mod.\"go.etcd.io/bbolt\"]\n    version = \"v1.3.10\"\n    hash = \"sha256-uEnz6jmmgT+hlwdZ8ns5NCJSbZcB4i123FF2cn2CbQA=\"\n  [mod.\"go.etcd.io/gofail\"]\n    version = \"v0.1.0\"\n    hash = \"sha256-y7524CIGBFYMnqwSv6uzCN726sXqMx3Pupw9z7NBBsU=\"\n  [mod.\"golang.org/x/sync\"]\n    version = \"v0.8.0\"\n    hash = \"sha256-usvF0z7gq1vsX58p4orX+8WHlv52pdXgaueXlwj2Wss=\"\n  [mod.\"golang.org/x/sys\"]\n    version = \"v0.24.0\"\n    hash = \"sha256-P0fsA+qy9taYHWPTtCs5XmrJ1i8tWfvkno+PNuc2elw=\"\n  [mod.\"gopkg.in/yaml.v3\"]\n    version = \"v3.0.1\"\n    hash = \"sha256-FqL9TKYJ0XkNwJFnq9j0VvJ5ZUU1RvH/52h/f5bkYAU=\"\n  [mod.\"pkg.nimblebun.works/go-lsp\"]\n    version = \"v1.1.0\"\n    hash = \"sha256-mJS7tsR4bPOIcHpvIsdKHQvZxpgFRm3hBSMVBMFcDZI=\"\n"
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "website",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

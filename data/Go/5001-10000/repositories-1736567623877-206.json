@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "timestamp": 1736567623877,
+    "page": 206,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "google/gops",
+      "stars": 6790,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "gops\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4443359375,
+          "content": "Copyright (c) 2016 The Go Authors. All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n   * Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n   * Redistributions in binary form must reproduce the above\ncopyright notice, this list of conditions and the following disclaimer\nin the documentation and/or other materials provided with the\ndistribution.\n   * Neither the name of Google Inc. nor the names of its\ncontributors may be used to endorse or promote products derived from\nthis software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nOWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.2568359375,
+          "content": "# gops\n\n[![GitHub Action Status](https://github.com/google/gops/workflows/Tests/badge.svg)](https://github.com/google/gops/actions?query=workflow%3ATests)\n[![GoDoc](https://godoc.org/github.com/google/gops?status.svg)](https://godoc.org/github.com/google/gops)\n\ngops is a command to list and diagnose Go processes currently running on your system.\n\n```sh\n$ gops\n983   980    uplink-soecks  go1.9   /usr/local/bin/uplink-soecks\n52697 52695  gops           go1.10  /Users/jbd/bin/gops\n4132  4130   foops        * go1.9   /Users/jbd/bin/foops\n51130 51128  gocode         go1.9.2 /Users/jbd/bin/gocode\n```\n\n## Installation\n\nTo install the latest version of gops:\n\n```sh\n$ go get github.com/google/gops\n```\n\nor\n\n```sh\n$ go install github.com/google/gops@latest\n```\n\nTo install a specific gops version, for example v0.3.19:\n\n```sh\n$ go install github.com/google/gops@v0.3.19\n```\n\n## Diagnostics\n\nFor processes that start the diagnostics agent, gops can report\nadditional information such as the current stack trace, Go version, memory\nstats, etc.\n\nIn order to start the diagnostics agent, see the [hello example](https://github.com/google/gops/blob/master/examples/hello/main.go).\n\n``` go\npackage main\n\nimport (\n\t\"log\"\n\t\"time\"\n\n\t\"github.com/google/gops/agent\"\n)\n\nfunc main() {\n\tif err := agent.Listen(agent.Options{}); err != nil {\n\t\tlog.Fatal(err)\n\t}\n\ttime.Sleep(time.Hour)\n}\n```\n\nOtherwise, you could set `GOPS_CONFIG_DIR` environment variables to assign your config dir.\nDefault, gops will use the current user's home directory(AppData on windows).\n\n### Manual\n\nIt is possible to use gops tool both in local and remote mode.\n\nLocal mode requires that you start the target binary as the same user that runs gops binary.\nTo use gops in a remote mode you need to know target's agent address.\n\nIn Local mode use process's PID as a target; in Remote mode target is a `host:port` combination.\n\n#### Listing all processes running locally\n\nTo print all go processes, run `gops` without arguments:\n\n```sh\n$ gops\n983   980    uplink-soecks  go1.9   /usr/local/bin/uplink-soecks\n52697 52695  gops           go1.10  /Users/jbd/bin/gops\n4132  4130   foops        * go1.9   /Users/jbd/bin/foops\n51130 51128  gocode         go1.9.2 /Users/jbd/bin/gocode\n```\n\nThe output displays:\n* PID\n* PPID\n* Name of the program\n* Go version used to build the program\n* Location of the associated program\n\nNote that processes running the agent are marked with `*` next to the PID (e.g. `4132*`).\n\n#### $ gops \\<pid\\> [duration]\n\nTo report more information about a process, run `gops` followed by a PID:\n\n```sh\n$ gops <pid>\nparent PID:\t5985\nthreads:\t27\nmemory usage:\t0.199%\ncpu usage:\t0.139%\nusername:\tjbd\ncmd+args:\t/Applications/Splice.app/Contents/Resources/Splice Helper.app/Contents/MacOS/Splice Helper -pid 5985\nlocal/remote:\t127.0.0.1:56765 <-> :0 (LISTEN)\nlocal/remote:\t127.0.0.1:56765 <-> 127.0.0.1:50955 (ESTABLISHED)\nlocal/remote:\t100.76.175.164:52353 <-> 54.241.191.232:443 (ESTABLISHED)\n```\n\nIf an optional duration is specified in the format as expected by\n[`time.ParseDuration`](https://golang.org/pkg/time/#ParseDuration), the CPU\nusage for the given time period is reported in addition:\n\n```sh\n$ gops <pid> 2s\nparent PID:\t5985\nthreads:\t27\nmemory usage:\t0.199%\ncpu usage:\t0.139%\ncpu usage (2s):\t0.271%\nusername:\tjbd\ncmd+args:\t/Applications/Splice.app/Contents/Resources/Splice Helper.app/Contents/MacOS/Splice Helper -pid 5985\nlocal/remote:\t127.0.0.1:56765 <-> :0 (LISTEN)\nlocal/remote:\t127.0.0.1:56765 <-> 127.0.0.1:50955 (ESTABLISHED)\nlocal/remote:\t100.76.175.164:52353 <-> 54.241.191.232:443 (ESTABLISHED)\n```\n\n#### $ gops tree\n\nTo display a process tree with all the running Go processes, run the following command:\n\n```sh\n$ gops tree\n\n...\n├── 1\n│   └── 13962 [gocode] {go1.9}\n├── 557\n│   └── 635 [com.docker.supervisor] {go1.9.2}\n│       └── 638 [com.docker.driver.amd64-linux] {go1.9.2}\n└── 13744\n    └── 67243 [gops] {go1.10}\n```\n\n#### $ gops stack (\\<pid\\>|\\<addr\\>)\n\nIn order to print the current stack trace from a target program, run the following command:\n\n\n```sh\n$ gops stack (<pid>|<addr>)\ngops stack 85709\ngoroutine 8 [running]:\nruntime/pprof.writeGoroutineStacks(0x13c7bc0, 0xc42000e008, 0xc420ec8520, 0xc420ec8520)\n\t/Users/jbd/go/src/runtime/pprof/pprof.go:603 +0x79\nruntime/pprof.writeGoroutine(0x13c7bc0, 0xc42000e008, 0x2, 0xc428f1c048, 0xc420ec8608)\n\t/Users/jbd/go/src/runtime/pprof/pprof.go:592 +0x44\nruntime/pprof.(*Profile).WriteTo(0x13eeda0, 0x13c7bc0, 0xc42000e008, 0x2, 0xc42000e008, 0x0)\n\t/Users/jbd/go/src/runtime/pprof/pprof.go:302 +0x3b5\ngithub.com/google/gops/agent.handle(0x13cd560, 0xc42000e008, 0xc420186000, 0x1, 0x1, 0x0, 0x0)\n\t/Users/jbd/src/github.com/google/gops/agent/agent.go:150 +0x1b3\ngithub.com/google/gops/agent.listen()\n\t/Users/jbd/src/github.com/google/gops/agent/agent.go:113 +0x2b2\ncreated by github.com/google/gops/agent.Listen\n\t/Users/jbd/src/github.com/google/gops/agent/agent.go:94 +0x480\n# ...\n```\n\n#### $ gops memstats (\\<pid\\>|\\<addr\\>)\n\nTo print the current memory stats, run the following command:\n\n```sh\n$ gops memstats (<pid>|<addr>)\n```\n\n#### $ gops gc (\\<pid\\>|\\<addr\\>)\n\nIf you want to force run garbage collection on the target program, run `gc`.\nIt will block until the GC is completed.\n\n#### $ gops setgc (\\<pid\\>|\\<addr\\>) <perc>\n\nSets the garbage collection target to a certain percentage.\nThe following command sets it to 10%:\n\n``` sh\n$ gops setgc (<pid>|<addr>) 10\n```\nThe following command turns off the garbage collector:\n\n```sh\n$ gops setgc (<pid>|<addr>) off\n```\n\n#### $ gops version (\\<pid\\>|\\<addr\\>)\n\ngops reports the Go version the target program is built with, if you run the following:\n\n```sh\n$ gops version (<pid>|<addr>)\ndevel +6a3c6c0 Sat Jan 14 05:57:07 2017 +0000\n```\n\n#### $ gops stats (\\<pid\\>|\\<addr\\>)\n\nTo print the runtime statistics such as number of goroutines and `GOMAXPROCS`.\n\n#### Profiling\n\n\n##### Pprof\n\ngops supports CPU and heap pprof profiles. After reading either heap or CPU profile,\nit shells out to the `go tool pprof` and let you interactively examine the profiles.\n\nTo enter the CPU profile, run:\n\n```sh\n$ gops pprof-cpu (<pid>|<addr>)\n```\n\nTo enter the heap profile, run:\n\n```sh\n$ gops pprof-heap (<pid>|<addr>)\n```\n\n##### Execution trace\n\ngops allows you to start the runtime tracer for 5 seconds and examine the results.\n\n```sh\n$ gops trace (<pid>|<addr>)\n```\n"
+        },
+        {
+          "name": "agent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd.go",
+          "type": "blob",
+          "size": 0.1689453125,
+          "content": "// Copyright 2017 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\npackage main\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.701171875,
+          "content": "module github.com/google/gops\n\ngo 1.18\n\nrequire (\n\tgithub.com/shirou/gopsutil/v3 v3.24.5\n\tgithub.com/spf13/cobra v1.8.1\n\tgithub.com/xlab/treeprint v1.2.0\n\tgolang.org/x/sys v0.29.0\n\trsc.io/goversion v1.2.0\n)\n\nrequire (\n\tgithub.com/go-ole/go-ole v1.2.6 // indirect\n\tgithub.com/inconshreveable/mousetrap v1.1.0 // indirect\n\tgithub.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect\n\tgithub.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect\n\tgithub.com/shoenig/go-m1cpu v0.1.6 // indirect\n\tgithub.com/spf13/pflag v1.0.5 // indirect\n\tgithub.com/tklauser/go-sysconf v0.3.12 // indirect\n\tgithub.com/tklauser/numcpus v0.6.1 // indirect\n\tgithub.com/yusufpapurcu/wmi v1.2.4 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 4.296875,
+          "content": "github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=\ngithub.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/go-ole/go-ole v1.2.6 h1:/Fpf6oFPoeFik9ty7siob0G6Ke8QvQEuVcuChpwXzpY=\ngithub.com/go-ole/go-ole v1.2.6/go.mod h1:pprOEPIfldk/42T2oK7lQ4v4JSDwmV0As9GaiUsvbm0=\ngithub.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=\ngithub.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=\ngithub.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=\ngithub.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=\ngithub.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 h1:6E+4a0GO5zZEnZ81pIr0yLvtUWk2if982qA3F3QD6H4=\ngithub.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0/go.mod h1:zJYVVT2jmtg6P3p1VtQj7WsuWi/y4VnjVBn7F8KPB3I=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c h1:ncq/mPwQF4JjgDlrVEn3C11VoGHZN7m8qihwgMEtzYw=\ngithub.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=\ngithub.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=\ngithub.com/shirou/gopsutil/v3 v3.24.5 h1:i0t8kL+kQTvpAYToeuiVk3TgDeKOFioZO3Ztz/iZ9pI=\ngithub.com/shirou/gopsutil/v3 v3.24.5/go.mod h1:bsoOS1aStSs9ErQ1WWfxllSeS1K5D+U30r2NfcubMVk=\ngithub.com/shoenig/go-m1cpu v0.1.6 h1:nxdKQNcEB6vzgA2E2bvzKIYRuNj7XNJ4S/aRSwKzFtM=\ngithub.com/shoenig/go-m1cpu v0.1.6/go.mod h1:1JJMcUBvfNwpq05QDQVAnx3gUHr9IYF7GNg9SUEw2VQ=\ngithub.com/shoenig/test v0.6.4 h1:kVTaSd7WLz5WZ2IaoM0RSzRsUD+m8wRR+5qvntpn4LU=\ngithub.com/spf13/cobra v1.8.1 h1:e5/vxKd/rZsfSJMUX1agtjeTDf+qv1/JdBF8gg5k9ZM=\ngithub.com/spf13/cobra v1.8.1/go.mod h1:wHxEcudfqmLYa8iTfL+OuZPbBZkmvliBWKIezN3kD9Y=\ngithub.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=\ngithub.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=\ngithub.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=\ngithub.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=\ngithub.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=\ngithub.com/tklauser/go-sysconf v0.3.12 h1:0QaGUFOdQaIVdPgfITYzaTegZvdCjmYO52cSFAEVmqU=\ngithub.com/tklauser/go-sysconf v0.3.12/go.mod h1:Ho14jnntGE1fpdOqQEEaiKRpvIavV0hSfmBq8nJbHYI=\ngithub.com/tklauser/numcpus v0.6.1 h1:ng9scYS7az0Bk4OZLvrNXNSAO2Pxr1XXRAPyjhIx+Fk=\ngithub.com/tklauser/numcpus v0.6.1/go.mod h1:1XfjsgE2zo8GVw7POkMbHENHzVg3GzmoZ9fESEdAacY=\ngithub.com/xlab/treeprint v1.2.0 h1:HzHnuAF1plUN2zGlAFHbSQP2qJ0ZAD3XF5XD7OesXRQ=\ngithub.com/xlab/treeprint v1.2.0/go.mod h1:gj5Gd3gPdKtR1ikdDK6fnFLdmIS0X30kTTuNd/WEJu0=\ngithub.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=\ngithub.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=\ngolang.org/x/sys v0.0.0-20190916202348-b4ddaad3f8a3/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\ngolang.org/x/sys v0.0.0-20201204225414-ed752295db88/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\ngolang.org/x/sys v0.8.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/sys v0.11.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/sys v0.29.0 h1:TPYlXGxvx1MGTn2GiZDhnjPA9wZzZeGKHHmKhHYvgaU=\ngolang.org/x/sys v0.29.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=\ngolang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\nrsc.io/goversion v1.2.0 h1:SPn+NLTiAG7w30IRK/DKp1BjvpWabYgxlLp/+kx5J8w=\nrsc.io/goversion v1.2.0/go.mod h1:Eih9y/uIBS3ulggl7KNJ09xGSLcuNaLgmvvqa07sgfo=\n"
+        },
+        {
+          "name": "goprocess",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "internal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 0.96484375,
+          "content": "// Copyright 2016 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\n// Program gops is a tool to list currently running Go processes.\npackage main\n\nimport (\n\t\"log\"\n\t\"os\"\n\t\"strconv\"\n\n\t\"github.com/google/gops/internal/cmd\"\n)\n\nfunc main() {\n\tvar root = cmd.NewRoot()\n\troot.AddCommand(cmd.ProcessCommand())\n\troot.AddCommand(cmd.TreeCommand())\n\troot.AddCommand(cmd.AgentCommands()...)\n\n\t// Legacy support for `gops <pid>` command.\n\t//\n\t// When the second argument is provided as int as opposed to a sub-command\n\t// (like proc, version, etc), gops command effectively shortcuts that\n\t// to `gops process <pid>`.\n\tif len(os.Args) > 1 {\n\t\t// See second argument appears to be a pid rather than a subcommand\n\t\t_, err := strconv.Atoi(os.Args[1])\n\t\tif err == nil {\n\t\t\tcmd.ProcessInfo(os.Args[1:]) // shift off the command name\n\t\t\treturn\n\t\t}\n\t}\n\n\tif err := root.Execute(); err != nil {\n\t\tlog.Fatal(err)\n\t}\n}\n"
+        },
+        {
+          "name": "main_test.go",
+          "type": "blob",
+          "size": 0.1689453125,
+          "content": "// Copyright 2017 The Go Authors. All rights reserved.\n// Use of this source code is governed by a BSD-style\n// license that can be found in the LICENSE file.\n\npackage main\n"
+        },
+        {
+          "name": "signal",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

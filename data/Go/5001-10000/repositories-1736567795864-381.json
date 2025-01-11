@@ -1,0 +1,177 @@
+{
+  "metadata": {
+    "timestamp": 1736567795864,
+    "page": 381,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "google/battery-historian",
+      "stars": 5318,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.5595703125,
+          "content": "Copyright 2016 Google Inc. All rights reserved.\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.580078125,
+          "content": "# Battery Historian\n\nBattery Historian is a tool to inspect battery related information and events on an Android device running Android 5.0 Lollipop (API level 21) and later, while the device was not plugged in. It allows application developers to visualize system and application level events on a timeline with panning and zooming functionality, easily see various aggregated statistics since the device was last fully charged, and select an application and inspect the metrics that impact battery specific to the chosen application. It also allows an A/B comparison of two bugreports, highlighting differences in key battery related metrics.\n\n## Getting Started\n\n#### Using Docker\n\nInstall [Docker](<https://docs.docker.com/engine/installation/>).\n\nRun the Battery Historian image. Choose a port number and replace `<port>` with\nthat number in the commands below:\n\n```\ndocker -- run -p <port>:9999 gcr.io/android-battery-historian/stable:3.0 --port 9999\n```\n\nFor Linux and Mac OS X:\n\n* That's it, you're done! Historian will be available at\n  `http://localhost:<port>`.\n\nFor Windows:\n\n* You may have to [enable Virtualization in your\n  BIOS](<http://www.itworld.com/article/2981515/virtualization/virtualbox-diagnose-and-fix-vt-xamd-v-hardware-acceleration-errors.html>).\n\n* Once you start Docker, it should tell you the IP address of the machine it is\nusing. If, for example, the IP address is 123.456.78.90, Historian will be\navailable at `http://123.456.78.90:<port>`.\n\nFor more information about the port forwarding, see the [Docker\ndocumentation](<https://docs.docker.com/engine/reference/run/#/expose-incoming-ports>).\n\n#### Building from source code\n\nMake sure you have at least Golang version 1.8.1:\n\n* Follow the instructions available at <http://golang.org/doc/install> for downloading and installing the Go compilers, tools, and libraries.\n* Create a workspace directory according to the instructions at\n  <http://golang.org/doc/code.html#Organization>.\n* Ensure that `GOPATH` and `GOBIN` environment variables are appropriately set and added to your `$PATH`\n  environment variable. `$GOBIN should be set to $GOPATH/bin`.\n  * For Windows, you may set environment variables through the \"Environment Variables\" button on the\n  \"Advanced\" tab of the \"System\" control panel. Some versions of Windows provide this control panel\n  through the \"Advanced System Settings\" option inside the \"System\" control panel.\n  * For Linux and Mac OS X, you can add the following lines to your ~/.bashrc or\n    ~/.profile files (assuming your workspace is $HOME/work):\n\n      ```\n      export GOPATH=$HOME/work\n      export GOBIN=$GOPATH/bin\n      export PATH=$PATH:$GOBIN\n      ```\n\nNext, install Git from <https://git-scm.com/downloads> if it's not already installed.\n\nNext, make sure Python 2.7 (NOT Python 3!) is installed. See <https://python.org/downloads>\nif it isn't, and ensure that python is added to your `$PATH` environment variable.\n\nNext, install Java from <http://www.oracle.com/technetwork/java/javase/downloads/index.html>.\n\nNext, download the Battery Historian code and its dependencies:\n\n```\n$ go get -d -u github.com/google/battery-historian/...\n```\n\nFinally, run Battery Historian!\n\n```\n$ cd $GOPATH/src/github.com/google/battery-historian\n\n# Compile Javascript files using the Closure compiler\n$ go run setup.go\n\n# Run Historian on your machine (make sure $PATH contains $GOBIN)\n$ go run cmd/battery-historian/battery-historian.go [--port <default:9999>]\n```\n\nRemember, you must always run battery-historian from inside the `$GOPATH/src/github.com/google/battery-historian` directory:\n\n```\ncd $GOPATH/src/github.com/google/battery-historian\ngo run cmd/battery-historian/battery-historian.go [--port <default:9999>]\n```\n\n\n#### How to take a bug report\n\nTo take a bug report from your Android device, you will need to enable USB debugging under `Settings > System > Developer Options`. On Android 4.2 and higher, the Developer options screen is hidden by default. You can enable this by following the instructions [here](<http://developer.android.com/tools/help/adb.html#Enabling>).\n\nTo obtain a bug report from your development device running Android 7.0 and\nhigher:\n\n```\n$ adb bugreport bugreport.zip\n```\n\nFor devices 6.0 and lower:\n\n```\n$ adb bugreport > bugreport.txt\n```\n\n### Start analyzing!\n\nYou are all set now. Run `historian` and visit <http://localhost:9999> and\nupload the `bugreport.txt` file to start analyzing.\n\n## Screenshots\n\n##### Timeline:\n\n![Timeline](/screenshots/timeline.png \"Timeline Visualization\")\n\n##### System stats:\n\n![System](/screenshots/system.png \"Aggregated System statistics since the device was last fully charged\")\n\n##### App stats:\n\n![App](/screenshots/app.png \"Application specific statistics\")\n\n## Advanced\n\nTo reset aggregated battery stats and history:\n\n```\nadb shell dumpsys batterystats --reset\n```\n\n##### Wakelock analysis\n\nBy default, Android does not record timestamps for application-specific\nuserspace wakelock transitions even though aggregate statistics are maintained\non a running basis. If you want Historian to display detailed information about\neach individual wakelock on the timeline, you should enable full wakelock\nreporting using the following command before starting your experiment:\n\n```\nadb shell dumpsys batterystats --enable full-wake-history\n```\n\nNote that by enabling full wakelock reporting the battery history log overflows\nin a few hours. Use this option for short test runs (3-4 hrs).\n\n##### Kernel trace analysis\n\nTo generate a trace file which logs kernel wakeup source and kernel wakelock\nactivities:\n\nFirst, connect the device to the desktop/laptop and enable kernel trace logging:\n\n```\n$ adb root\n$ adb shell\n\n# Set the events to trace.\n$ echo \"power:wakeup_source_activate\" >> /d/tracing/set_event\n$ echo \"power:wakeup_source_deactivate\" >> /d/tracing/set_event\n\n# The default trace size for most devices is 1MB, which is relatively low and might cause the logs to overflow.\n# 8MB to 10MB should be a decent size for 5-6 hours of logging.\n\n$ echo 8192 > /d/tracing/buffer_size_kb\n\n$ echo 1 > /d/tracing/tracing_on\n```\n\nThen, use the device for intended test case.\n\nFinally, extract the logs:\n\n```\n$ echo 0 > /d/tracing/tracing_on\n$ adb pull /d/tracing/trace <some path>\n\n# Take a bug report at this time.\n$ adb bugreport > bugreport.txt\n```\n\nNote:\n\nHistorian plots and relates events in real time (PST or UTC), whereas kernel\ntrace files logs events in jiffies (seconds since boot time). In order to relate\nthese events there is a script which approximates the jiffies to utc time. The\nscript reads the UTC times logged in the dmesg when the system suspends and\nresumes. The scope of the script is limited to the amount of timestamps present\nin the dmesg. Since the script uses the dmesg log when the system suspends,\nthere are different scripts for each device, with the only difference being\nthe device-specific dmesg log it tries to find. These scripts have been\nintegrated into the Battery Historian tool itself.\n\n##### Power monitor analysis\n\nLines in power monitor files should have one of the following formats, and the\nformat should be consistent throughout the entire file:\n\n```\n<timestamp in epoch seconds, with a fractional component> <amps> <optional_volts>\n```\n\nOR\n\n```\n<timestamp in epoch milliseconds> <milliamps> <optional_millivolts>\n```\n\nEntries from the power monitor file will be overlaid on top of the timeline\nplot.\n\nTo ensure the power monitor and bug report timelines are somewhat aligned,\nplease reset the batterystats before running any power monitor logging:\n\n```\nadb shell dumpsys batterystats --reset\n```\n\nAnd take a bug report soon after stopping power monitor logging.\n\nIf using a Monsoon:\n\nDownload the AOSP Monsoon Python script from <https://android.googlesource.com/platform/cts/+/master/tools/utils/monsoon.py>\n\n```\n# Run the script.\n$ monsoon.py --serialno 2294 --hz 1 --samples 100000 -timestamp | tee monsoon.out\n\n# ...let device run a while...\n\n$ stop monsoon.py\n```\n\n##### Modifying the proto files\n\nIf you want to modify the proto files (pb/\\*/\\*.proto), first download the\nadditional tools necessary:\n\nInstall the standard C++ implementation of protocol buffers from <https://github.com/google/protobuf/blob/master/src/README.md>\n\nDownload the Go proto compiler:\n\n```\n$ go get -u github.com/golang/protobuf/protoc-gen-go\n```\n\nThe compiler plugin, protoc-gen-go, will be installed in $GOBIN, which must be\nin your $PATH for the protocol compiler, protoc, to find it.\n\nMake your changes to the proto files.\n\nFinally, regenerate the compiled Go proto output files using `regen_proto.sh`.\n\n##### Other command line tools\n\n```\n# System stats\n$ go run cmd/checkin-parse/local_checkin_parse.go --input=bugreport.txt\n\n# Timeline analysis\n$ go run cmd/history-parse/local_history_parse.go --summary=totalTime --input=bugreport.txt\n\n# Diff two bug reports\n$ go run cmd/checkin-delta/local_checkin_delta.go --input=bugreport_1.txt,bugreport_2.txt\n```\n\n\n## Support\n\n- G+ Community (Discussion Thread: Battery Historian): https://plus.google.com/b/108967384991768947849/communities/114791428968349268860\n\nIf you've found an error in this project, please file an issue:\n<https://github.com/google/battery-historian/issues>\n\n## License\n\nCopyright 2016 Google, Inc.\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n  <http://www.apache.org/licenses/LICENSE-2.0>\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS, WITHOUT\nWARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the\nLicense for the specific language governing permissions and limitations under\nthe License.\n"
+        },
+        {
+          "name": "activity",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "aggregated",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "analyzer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "broadcasts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bugreportutils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "checkindelta",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "checkinparse",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "checkinutil",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "csv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dmesg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "historianutils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kernel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packageutils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "parseutils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "powermonitor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presenter",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "regen_proto.sh",
+          "type": "blob",
+          "size": 1.0712890625,
+          "content": "#!/bin/bash\n\n#\n# Copyright 2015 Google Inc. All Rights Reserved.\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n#\n\n# To regenerate the compiled Go files if the protos are modified.\ncd $GOPATH/src\nprotoc --go_out=. github.com/google/battery-historian/pb/batterystats_proto/*.proto\nprotoc --go_out=. github.com/google/battery-historian/pb/build_proto/*.proto\nprotoc --go_out=. github.com/google/battery-historian/pb/metrics_proto/*.proto\nprotoc --go_out=. github.com/google/battery-historian/pb/session_proto/*.proto\nprotoc --go_out=. github.com/google/battery-historian/pb/usagestats_proto/*.proto\n"
+        },
+        {
+          "name": "screenshots",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup.go",
+          "type": "blob",
+          "size": 6.0712890625,
+          "content": "// Copyright 2016 Google Inc. All Rights Reserved.\n//\n// Licensed under the Apache License, Version 2.0 (the \"License\");\n// you may not use this file except in compliance with the License.\n// You may obtain a copy of the License at\n//\n//      http://www.apache.org/licenses/LICENSE-2.0\n//\n// Unless required by applicable law or agreed to in writing, software\n// distributed under the License is distributed on an \"AS IS\" BASIS,\n// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n// See the License for the specific language governing permissions and\n// limitations under the License.\n\n// Setup downloads needed Closure files and generates optimized JS files.\npackage main\n\nimport (\n\t\"bytes\"\n\t\"flag\"\n\t\"fmt\"\n\t\"io\"\n\t\"io/ioutil\"\n\t\"net/http\"\n\t\"os\"\n\t\"path\"\n\t\"path/filepath\"\n\t\"runtime\"\n\n\t\"github.com/google/battery-historian/bugreportutils\"\n\t\"github.com/google/battery-historian/historianutils\"\n)\n\nconst (\n\tclosureCompilerVersion = \"20170409\"\n\tclosureCompilerZip     = \"compiler-\" + closureCompilerVersion + \".zip\"\n\tclosureCompilerJar     = \"closure-compiler-v\" + closureCompilerVersion + \".jar\"\n\tclosureCompilerURL     = \"http://dl.google.com/closure-compiler/\" + closureCompilerZip\n\n\tthirdPartyDir = \"third_party\"\n\tcompiledDir   = \"compiled\"\n)\n\nvar rebuild = flag.Bool(\"rebuild\", false, \"Whether or not clear all setup files and start from scratch.\")\n\n// runCommand runs the given command and only prints the output or error if they're not empty.\nfunc runCommand(name string, args ...string) {\n\tout, err := historianutils.RunCommand(name, args...)\n\tif err != nil {\n\t\tfmt.Println(err)\n\t}\n\tif out != \"\" {\n\t\tfmt.Println(out)\n\t}\n}\n\n// saveFile saves the given contents to the path. relPath must point directly to the file to write to.\nfunc saveFile(relPath string, contents []byte) error {\n\tf, err := os.Create(relPath)\n\tif err != nil {\n\t\treturn err\n\t}\n\tdefer f.Close()\n\t_, err = io.Copy(f, bytes.NewReader(contents))\n\treturn err\n}\n\nfunc deletePath(path string) error {\n\tif _, err := os.Stat(path); os.IsNotExist(err) {\n\t\t// Path doesn't exist. Nothing to delete.\n\t\treturn nil\n\t}\n\tif runtime.GOOS == \"windows\" {\n\t\t// os.RemoveAll won't remove read-only files (eg. .git files) on Windows.\n\t\t// Modify the permissions path to be writable on Windows.\n\t\tfilepath.Walk(path, func(p string, info os.FileInfo, err error) error {\n\t\t\tif err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\treturn os.Chmod(p, 0777)\n\t\t})\n\t}\n\treturn os.RemoveAll(path)\n}\n\nfunc main() {\n\tflag.Parse()\n\n\tif *rebuild {\n\t\tfmt.Println(\"\\nClearing files...\")\n\t\tif err := deletePath(thirdPartyDir); err != nil {\n\t\t\tfmt.Printf(\"Failed to delete %s directory: %v\\n\", thirdPartyDir, err)\n\t\t\treturn\n\t\t}\n\t\tif err := deletePath(compiledDir); err != nil {\n\t\t\tfmt.Printf(\"Failed to delete %s directory: %v\\n\", compiledDir, err)\n\t\t\treturn\n\t\t}\n\t}\n\n\tos.Mkdir(thirdPartyDir, 0777)\n\tos.Mkdir(compiledDir, 0777)\n\n\twd, err := os.Getwd()\n\tif err != nil {\n\t\tfmt.Printf(\"Unable to get working directory: %v\\n\", err)\n\t\treturn\n\t}\n\tclosureLibraryDir := path.Join(wd, thirdPartyDir, \"closure-library\")\n\tclosureCompilerDir := path.Join(wd, thirdPartyDir, \"closure-compiler\")\n\taxisDir := path.Join(thirdPartyDir, \"flot-axislabels\")\n\n\tif _, err := os.Stat(closureLibraryDir); os.IsNotExist(err) {\n\t\tfmt.Println(\"\\nDownloading Closure library...\")\n\t\trunCommand(\"git\", \"clone\", \"https://github.com/google/closure-library\", closureLibraryDir)\n\t}\n\n\t_, errD := os.Stat(closureCompilerDir)\n\t_, errF := os.Stat(path.Join(closureCompilerDir, closureCompilerZip))\n\tif os.IsNotExist(errD) || os.IsNotExist(errF) {\n\t\tfmt.Println(\"\\nDownloading Closure compiler...\")\n\t\t// Current compiler, if any, is not current. Remove old files.\n\t\tif err := deletePath(closureCompilerDir); err != nil {\n\t\t\tfmt.Printf(\"Failed to clear compiler directory: %v\\n\", err)\n\t\t}\n\t\t// Download desired file.\n\t\tos.Mkdir(closureCompilerDir, 0777)\n\n\t\tresp, err := http.Get(closureCompilerURL)\n\t\tif err != nil {\n\t\t\tfmt.Printf(\"Failed to download Closure compiler: %v\\n\", err)\n\t\t\tfmt.Printf(\"\\nIf this persists, please manually download the compiler from %s into the %s directory, unzip it into the %s diretory, and rerun this script.\\n\\n\", closureCompilerURL, closureCompilerDir, closureCompilerDir)\n\t\t\treturn\n\t\t}\n\t\tdefer resp.Body.Close()\n\n\t\tcontents, err := ioutil.ReadAll(resp.Body)\n\t\tif err != nil {\n\t\t\tfmt.Printf(\"Couldn't get zip contents: %v\\n\", err)\n\t\t\treturn\n\t\t}\n\n\t\tif err := saveFile(path.Join(closureCompilerDir, closureCompilerZip), contents); err != nil {\n\t\t\tfmt.Printf(\"Couldn't save Closure zip file: %v\\n\", err)\n\t\t\treturn\n\t\t}\n\n\t\tfiles, err := bugreportutils.Contents(\"\", contents)\n\t\tif err != nil {\n\t\t\tfmt.Printf(\"Couldn't get Closure zip contents: %v\\n\", err)\n\t\t\treturn\n\t\t}\n\t\tfor n, c := range files {\n\t\t\tname := n[1:]\n\t\t\tif err := saveFile(path.Join(closureCompilerDir, name), c); err != nil {\n\t\t\t\tfmt.Printf(\"Couldn't save Closure content file: %v\\n\", err)\n\t\t\t\treturn\n\t\t\t}\n\t\t}\n\t}\n\n\tif _, err := os.Stat(axisDir); os.IsNotExist(err) {\n\t\tfmt.Println(\"\\nDownloading 3rd-party JS files...\")\n\t\trunCommand(\"git\", \"clone\", \"https://github.com/markrcote/flot-axislabels.git\", axisDir)\n\t}\n\n\tfmt.Println(\"\\nGenerating JS runfiles...\")\n\tout, err := historianutils.RunCommand(\"python\",\n\t\tpath.Join(closureLibraryDir, \"closure/bin/build/depswriter.py\"),\n\t\tfmt.Sprintf(`--root=%s`, path.Join(closureLibraryDir, \"closure\", \"goog\")),\n\t\t`--root_with_prefix=js ../../../../js`)\n\tif err != nil {\n\t\tfmt.Printf(\"Couldn't generate runfile: %v\\n\", err)\n\t\treturn\n\t}\n\tif err = saveFile(path.Join(wd, compiledDir, \"historian_deps-runfiles.js\"), []byte(out)); err != nil {\n\t\tfmt.Printf(\"Couldn't save runfiles file: %v\\n\", err)\n\t\treturn\n\t}\n\n\tfmt.Println(\"\\nGenerating optimized JS runfiles...\")\n\trunCommand(\"java\", \"-jar\",\n\t\tpath.Join(closureCompilerDir, closureCompilerJar),\n\t\t\"--closure_entry_point\", \"historian.upload\",\n\t\t\"--js\", \"js/*.js\",\n\t\t\"--js\", path.Join(closureLibraryDir, \"closure/goog/base.js\"),\n\t\t\"--js\", path.Join(closureLibraryDir, \"closure/goog/**/*.js\"),\n\t\t\"--only_closure_dependencies\",\n\t\t\"--generate_exports\",\n\t\t\"--js_output_file\", path.Join(wd, compiledDir, \"historian-optimized.js\"),\n\t\t\"--output_manifest\", path.Join(wd, compiledDir, \"manifest.MF\"),\n\t\t\"--compilation_level\", \"SIMPLE_OPTIMIZATIONS\",\n\t)\n}\n"
+        },
+        {
+          "name": "sliceparse",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wakeupreason",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wearable",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

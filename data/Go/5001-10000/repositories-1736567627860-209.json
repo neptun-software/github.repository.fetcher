@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "timestamp": 1736567627860,
+    "page": 209,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "liamg/traitor",
+      "stars": 6781,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0146484375,
+          "content": "/traitor\n.idea\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2021 Liam Galvin\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.2841796875,
+          "content": "\n\n.PHONY: build\nbuild:\n\tCGO_ENABLED=0 go build ./cmd/traitor\n\n.PHONY: pack\npack:\n\tgo run ./cmd/pack\n\n.PHONY: install\ninstall:\n\tCGO_ENABLED=0 go install -ldflags \"-X github.com/liamg/traitor/version.Version=`git describe --tags`\" ./cmd/traitor\n\n.PHONY: test\ntest:\n\tgo test ./... -race -cover\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.41015625,
+          "content": "# Traitor\n\nAutomatically exploit low-hanging fruit to pop a root shell. Linux privilege escalation made easy!\n\nTraitor packages up a bunch of methods to exploit local misconfigurations and vulnerabilities in order to pop a root shell:\n\n- Nearly all of [GTFOBins](https://gtfobins.github.io/)\n- Writeable docker.sock\n- CVE-2022-0847 (Dirty pipe)\n- CVE-2021-4034 (pwnkit)\n- CVE-2021-3560\n\n![Demo](demo.gif)\n\nIt'll exploit most sudo privileges listed in GTFOBins to pop a root shell, as well as exploiting issues like a writable `docker.sock`, or the recent dirty pipe (CVE-2022-0847). More routes to root will be added over time too.\n\n## Usage\n\nRun with no arguments to find potential vulnerabilities/misconfigurations which could allow privilege escalation. Add the `-p` flag if the current user password is known. The password will be requested if it's needed to analyse sudo permissions etc.\n\n```bash\ntraitor -p\n```\n\nRun with the `-a`/`--any` flag to find potential vulnerabilities, attempting to exploit each, stopping if a root shell is gained. Again, add the `-p` flag if the current user password is known.\n\n```bash\ntraitor -a -p\n```\n\nRun with the `-e`/`--exploit` flag to attempt to exploit a specific vulnerability and gain a root shell.\n\n```bash\ntraitor -p -e docker:writable-socket\n```\n\n## Supported Platforms\n\nTraitor will run on all Unix-like systems, though certain exploits will only function on certain systems.\n\n## Getting Traitor\n\nGrab a binary from the [releases page](https://github.com/liamg/traitor/releases), or use go:\n\n```\nCGO_ENABLED=0 go get -u github.com/liamg/traitor/cmd/traitor\n```\n\nFor go1.18:\n\n```\nCGO_ENABLED=0 go install github.com/liamg/traitor/cmd/traitor@latest\n```\n\nIf the machine you're attempting privesc on cannot reach GitHub to download the binary, and you have no way to upload the binary to the machine over SCP/FTP etc., then you can try base64 encoding the binary on your machine, and echoing the base64 encoded string to `| base64 -d > /tmp/traitor` on the target machine, remembering to `chmod +x` it once it arrives.\n\n## In The News\n- 20/06/21: [Console 58](https://console.substack.com/p/console-58) - Awesome newsletter featuring tools and beta releases for developers.\n- 28/04/21: [Intigriti Bug Bytes #120](https://blog.intigriti.com/2021/04/28/bug-bytes-120-macos-pwned-homebrew-rce-the-worlds-shortest-backdoor/) - Recommended tools\n- 09/03/21: [Hacker News thread](https://news.ycombinator.com/item?id=26224719)\n"
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demo.gif",
+          "type": "blob",
+          "size": 55.166015625,
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.4921875,
+          "content": "module github.com/liamg/traitor\n\ngo 1.18\n\nrequire (\n\tgithub.com/creack/pty v1.1.18\n\tgithub.com/google/uuid v1.3.0\n\tgithub.com/hashicorp/go-version v1.5.0\n\tgithub.com/liamg/tml v0.6.0\n\tgithub.com/spf13/cobra v1.5.0\n\tgolang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e\n\tgolang.org/x/sys v0.0.0-20220615213510-4f61da869c0c\n)\n\nrequire (\n\tgithub.com/inconshreveable/mousetrap v1.0.0 // indirect\n\tgithub.com/spf13/pflag v1.0.5 // indirect\n\tgolang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 2.8203125,
+          "content": "github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=\ngithub.com/creack/pty v1.1.18 h1:n56/Zwd5o6whRC5PMGretI4IdRLlmBXYNjScPaBgsbY=\ngithub.com/creack/pty v1.1.18/go.mod h1:MOBLtS5ELjhRRrroQr9kyvTxUAFNvYEK993ew/Vr4O4=\ngithub.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/google/uuid v1.3.0 h1:t6JiXgmwXMjEs8VusXIJk2BXHsn+wx8BZdTaoZ5fu7I=\ngithub.com/google/uuid v1.3.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=\ngithub.com/hashicorp/go-version v1.5.0 h1:O293SZ2Eg+AAYijkVK3jR786Am1bhDEh2GHT0tIVE5E=\ngithub.com/hashicorp/go-version v1.5.0/go.mod h1:fltr4n8CU8Ke44wwGCBoEymUuxUHl09ZGVZPK5anwXA=\ngithub.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=\ngithub.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=\ngithub.com/liamg/tml v0.6.0 h1:yOC/Q9p9Io3J11U9LdYVIwpRTnTE1GPMNFLrygkmE2Y=\ngithub.com/liamg/tml v0.6.0/go.mod h1:0h4EAV/zBOsqI91EWONedjRpO8O0itjGJVd+wG5eC+E=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=\ngithub.com/spf13/cobra v1.5.0 h1:X+jTBEBqF0bHN+9cSMgmfuvv2VHJ9ezmFNf9Y/XstYU=\ngithub.com/spf13/cobra v1.5.0/go.mod h1:dWXEIy2H428czQCjInthrTRUg7yKbok+2Qi/yBIJoUM=\ngithub.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=\ngithub.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=\ngithub.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=\ngithub.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=\ngithub.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=\ngolang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e h1:T8NU3HyQ8ClP4SEE+KbFlg6n0NhuTsN4MyznaarGsZM=\ngolang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e/go.mod h1:IxCIyHEi3zRg3s0A5j5BB6A9Jmi73HwBIUl50j+osU4=\ngolang.org/x/sys v0.0.0-20220615213510-4f61da869c0c h1:aFV+BgZ4svzjfabn8ERpuB4JI4N6/rdy1iusx77G3oU=\ngolang.org/x/sys v0.0.0-20220615213510-4f61da869c0c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/term v0.0.0-20220526004731-065cf7ba2467 h1:CBpWXWQpIRjzmkkA+M7q9Fqnwd2mZr3AFqexg8YTfoM=\ngolang.org/x/term v0.0.0-20220526004731-065cf7ba2467/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=\n"
+        },
+        {
+          "name": "internal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "polkit.png",
+          "type": "blob",
+          "size": 74.98046875,
+          "content": null
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "timestamp": 1736567826808,
+    "page": 411,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "progrium/darwinkit",
+      "stars": 5088,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.4892578125,
+          "content": ".DS_Store\n/_local\n/generate/symbols.zip\n/generate/symbols\n/macos/_examples/form/form\n/macos/_examples/largetype/largetype\n/macos/_examples/layout/layout\n/macos/_examples/menu/menu\n/macos/_examples/notification/notification\n/macos/_examples/opengl/opengl-example\n/macos/_examples/pomodoro/pomodoro\n/macos/_examples/subclass/subclass\n/macos/_examples/tabview/tabview\n/macos/_examples/webshot/webshot\n/macos/_examples/webview/webview\n/macos/_examples/widgets/widgets\n/macos/_examples/workspace/workspace\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0439453125,
+          "content": "MIT License\n\nCopyright (c) 2020 Jeff Lindsay\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.6015625,
+          "content": ".PHONY: generate test clobber example examples\n\nGOEXE ?= go\nEXAMPLES := $(wildcard macos/_examples/*)\n\nexport CGO_LDFLAGS=\"-Wl,-no_warn_duplicate_libraries\"\n\ngenerate:\n\t$(GOEXE) generate ./...\n\ntest:\n\t$(GOEXE) test ./...\n\nclobber:\n\t$(GOEXE) run ./generate/tools/clobbergen.go ./macos\n\nexample:\n\t$(GOEXE) run ./macos/_examples/helloworld/main.go\n\nexamples: _local/bin\n\t@for dir in $(EXAMPLES); do \\\n\t\t$(GOEXE) build -o ./_local/bin/$$(basename $$dir) ./$$dir; \\\n\tdone\n\n_local/bin:\n\tmkdir -p _local/bin\n\ngenerate/symbols.zip:\n\tcd generate && wget https://github.com/mactypes/symbolsdb/releases/download/1.1/symbols.zip"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.20703125,
+          "content": "<img alt=\"DarwinKit Logo\" src=\"https://github.com/progrium/darwinkit/raw/main/darwinkit.png\" style=\"height:125px;\" />\n\nNative Apple APIs for Golang!\n\n\n\n\n[![GoDoc](https://godoc.org/github.com/progrium/darwinkit?status.svg)](https://pkg.go.dev/github.com/progrium/darwinkit@main)\n[![Go Report Card](https://goreportcard.com/badge/github.com/progrium/darwinkit)](https://goreportcard.com/report/github.com/progrium/darwinkit)\n<a href=\"https://twitter.com/progrium\" title=\"@progrium on Twitter\"><img src=\"https://img.shields.io/badge/twitter-@progrium-55acee.svg\" alt=\"@progrium on Twitter\"></a>\n<a href=\"https://github.com/progrium/darwinkit/discussions\" title=\"Project Forum\"><img src=\"https://img.shields.io/badge/community-forum-ff69b4.svg\" alt=\"Project Forum\"></a>\n<a href=\"https://github.com/sponsors/darwinkitdev\" title=\"Sponsor Project\"><img src=\"https://img.shields.io/static/v1?label=sponsor&message=%E2%9D%A4&logo=GitHub\" alt=\"Sponsor Project\" /></a>\n\n> [!IMPORTANT]\n> July 11, 2024: **MacDriver is now DarwinKit!** You can also now get high-quality example starter apps when you [support the project as a sponsor](https://github.com/sponsors/darwinkitdev).\n\n------\n\n![ScanDrop Demo](https://github.com/progrium/darwinkit/assets/1813419/e66e4ca1-af6b-4952-9e53-f10ab436993f)\n![SnowScape Demo](https://github.com/progrium/darwinkit/assets/1813419/3b04b849-4292-41c5-8563-7735ff46c745)\n![MenuSpacer Demo](https://github.com/progrium/darwinkit/assets/1813419/ed86724d-f1fc-42e4-b9c9-0112fffd86fc)\n![ClipTrail Demo](https://github.com/progrium/darwinkit/assets/1813419/c018851d-5af7-4cf6-8e21-213c28752438)\n\n\nDarwinKit lets you work with [supported Apple frameworks](https://pkg.go.dev/github.com/progrium/darwinkit/macos@main#section-directories) and build native applications using Go. With XCode and Go 1.18+ installed, you can write this program in a `main.go` file:\n\n```go\npackage main\n\nimport (\n\t\"github.com/progrium/darwinkit/objc\"\n\t\"github.com/progrium/darwinkit/macos\"\n\t\"github.com/progrium/darwinkit/macos/appkit\"\n\t\"github.com/progrium/darwinkit/macos/foundation\"\n\t\"github.com/progrium/darwinkit/macos/webkit\"\n)\n\nfunc main() {\n\t// runs macOS application event loop with a callback on success\n\tmacos.RunApp(func(app appkit.Application, delegate *appkit.ApplicationDelegate) {\n\t\tapp.SetActivationPolicy(appkit.ApplicationActivationPolicyRegular)\n\t\tapp.ActivateIgnoringOtherApps(true)\n\n\t\turl := foundation.URL_URLWithString(\"https://github.com/sponsors/darwinkitdev\")\n\t\treq := foundation.NewURLRequestWithURL(url)\n\t\tframe := foundation.Rect{Size: foundation.Size{1440, 900}}\n\n\t\tconfig := webkit.NewWebViewConfiguration()\n\t\twv := webkit.NewWebViewWithFrameConfiguration(frame, config)\n\t\twv.LoadRequest(req)\n\n\t\tw := appkit.NewWindowWithContentRectStyleMaskBackingDefer(frame,\n\t\t\tappkit.ClosableWindowMask|appkit.TitledWindowMask,\n\t\t\tappkit.BackingStoreBuffered, false)\n\t\tobjc.Retain(&w)\n\t\tw.SetContentView(wv)\n\t\tw.MakeKeyAndOrderFront(w)\n\t\tw.Center()\n\n\t\tdelegate.SetApplicationShouldTerminateAfterLastWindowClosed(func(appkit.Application) bool {\n\t\t\treturn true\n\t\t})\n\t})\n}\n\n```\n\nThen in this directory run:\n\n```\ngo mod init helloworld\ngo get github.com/progrium/darwinkit@main\ngo run main.go\n```\n\nThis may take a moment the first time, but once the window pops up you just made a macOS program without using XCode or Objective-C. Run `go build` to get an executable. \n\nAlthough currently outside the scope of this project, if you wanted you could put this executable [into an Application bundle](https://stackoverflow.com/a/3251285). You could even add [entitlements](https://developer.apple.com/documentation/bundleresources/entitlements?language=objc), then [sign and notarize](https://developer.apple.com/support/code-signing/) this bundle or executable to let others run it. It could theoretically even be put on the App Store. It could *theoretically* be put on an iOS, tvOS, or watchOS device, though you would have to use different platform specific frameworks.\n\n### Caveats\n\n* You still need to know or learn how Apple frameworks work, so you'll have to use Apple documentation and understand how to translate Objective-C example code to the equivalent Go with DarwinKit.\n* Your programs link against the actual Apple frameworks using [cgo](https://pkg.go.dev/cmd/cgo), so XCode needs to be installed for the framework headers.\n* You will be using two memory management systems. Framework objects are managed by [Objective-C memory management](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/MemoryMgmt.html#//apple_ref/doc/uid/10000011-SW1), so be sure to read our docs on [memory management](docs/memorymanagement.md) with DarwinKit.\n* Exceptions in frameworks will segfault, giving you both an Objective-C stacktrace and a Go panic stacktrace. You will be debugging a hybrid Go and Objective-C program.\n* Goroutines that interact with GUI objects need to [dispatch](https://pkg.go.dev/github.com/progrium/darwinkit@main/dispatch) operations on the main thread otherwise it will segfault.\n\nThis is all tenable for simple programs, but these are the reasons we don't *recommend* large/complex programs using DarwinKit.\n\n## Examples\n\nThere are basic usage examples [here in this repo](./macos/_examples), but there are higher-quality full utilities you can use as examples or starter templates [when you sponsor](https://github.com/sponsors/darwinkitdev).\n\n![LargeType Demo](https://github.com/progrium/darwinkit/assets/1813419/b54a8015-dfef-40ce-bc56-f75cb8455306)\n![ScanDrop Demo](https://github.com/progrium/darwinkit/assets/1813419/e66e4ca1-af6b-4952-9e53-f10ab436993f)\n![SnowScape Demo](https://github.com/progrium/darwinkit/assets/1813419/3b04b849-4292-41c5-8563-7735ff46c745)\n![LiveTemp Demo](https://github.com/progrium/darwinkit/assets/1813419/c57cd196-3ff6-4068-bd0a-05b9283d199d)\n![MenuSpacer Demo](https://github.com/progrium/darwinkit/assets/1813419/ed86724d-f1fc-42e4-b9c9-0112fffd86fc)\n![ClipTrail Demo](https://github.com/progrium/darwinkit/assets/1813419/c018851d-5af7-4cf6-8e21-213c28752438)\n![FocusTimer Demo](https://github.com/progrium/darwinkit/assets/1813419/9e14fe2f-88a9-4b89-9f9c-a305fb103d4c)\n\n\n## How it works\n\n<details>\n<summary>Brief background on Objective-C</summary>\n\t\nEver since acquiring NeXT Computer in the 90s, Apple has used [NeXTSTEP](https://en.wikipedia.org/wiki/NeXTSTEP) as the basis of their software stack, which is written in Objective-C. Unlike most systems languages with object orientation, Objective-C implements OOP as a runtime library. In fact, Objective-C is just C with the weird OOP specific syntax rewritten into C calls to [libobjc](https://developer.apple.com/documentation/objectivec/objective-c_runtime?language=objc), which is a normal C library implementing an object runtime. This runtime could be used to bring OOP to any language that can make calls to C code. It also lets you interact with objects and classes registered by other libraries, such as the Apple frameworks. \n\n</details>\n\nAt the heart of DarwinKit is a package wrapping the Objective-C runtime using [cgo](https://pkg.go.dev/cmd/cgo) and [libffi](https://github.com/libffi/libffi). This is actually all you need to interact with Objective-C objects and classes, it'll just look like this:\n\n```go\napp := objc.Call[objc.Object](objc.GetClass(\"NSApplication\"), objc.Sel(\"sharedApplication\"))\nobjc.Call[objc.Void](app, objc.Sel(\"run\"))\n```\n\nSo we wrap these calls in a [Go API](docs/bindings.md) that lets us write code like this:\n\n```go\napp := appkit.Application_SharedApplication()\napp.Run()\n```\n\nThese bindings are great, but we need to define them for every API we want to use. Presently,\nApple has around 200 frameworks of nearly 5000 classes with 77k combined methods and properties. Not to \nmention all the constants, functions, structs, unions, and enums we need to work with those objects.\n\nSo DarwinKit generates its bindings. This is the hard part. Making sure the generation pipeline accurately produces usable bindings for all possible symbols is quite an arduous, iterative, manual process. Then since we're moving symbols that lived in a single namespace into Go packages, we have to manually decouple dependencies between them enough to avoid circular imports. If you want to help add frameworks, read our documentation on [generation](docs/generation.md).\n\nObjects are passed around as typed pointer values in Objective-C. When we receive an object from a method\ncall in Go, the `objc` package receives it as a raw pointer, which it first puts into an `unsafe.Pointer`. The\nbindings for a class define a struct type that embeds an `objc.Object` struct, which contains a single\nfield to hold the `unsafe.Pointer`. So unless working with a primitive type, you're working with an `unsafe.Pointer` wrapped in an `objc.Object` wrapped in a struct type that has the methods for the class of the object of the pointer. Be sure to read our documentation on [memory management](docs/memorymanagement.md).\n\nIf you have questions, feel free to ask in the [discussion forums](https://github.com/progrium/darwinkit/discussions).\n\n## Thanks\n\nThis project was inspired by and originally based on packages written by [Mikkel Krautz](https://github.com/mkrautz). The latest version is based on packages written by [Dong Liu](https://github.com/hsiafan).\n\n## Notice\n\nThis project is not affiliated or supported by Apple.\n\n## License\n\nMIT\n"
+        },
+        {
+          "name": "darwinkit.png",
+          "type": "blob",
+          "size": 10.263671875,
+          "content": null
+        },
+        {
+          "name": "dispatch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "generate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.0830078125,
+          "content": "module github.com/progrium/darwinkit\n\ngo 1.18\n\nrequire github.com/go-test/deep v1.1.0"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 0.1611328125,
+          "content": "github.com/go-test/deep v1.1.0 h1:WOcxcdHcvdgThNXjw0t76K42FXTU7HpNQWHpA2HHNlg=\ngithub.com/go-test/deep v1.1.0/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=\n"
+        },
+        {
+          "name": "helper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "internal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kernel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "macos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "objc",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "timestamp": 1736567649978,
+    "page": 231,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jpbruinsslot/slack-term",
+      "stars": 6451,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "bin/\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.1376953125,
+          "content": "Contributing\n============\n\nPurpose\n-------\n\nFirst and foremost, slack-term is a personal project. With this project I\nnever set out to create a \"better\" slack version than the official slack\nclient. And as such, my intention for the project is not to create a feature\ncomplete alternative to the official slack client. It's cool that people \nwant to use slack-term as an alternative, but I started this project because\nI wanted to be able to send and receive slack messages from the terminal to\nslack.\n\nIssues\n------\n\nWhen posting issues please mention the following:\n\n* Which version of slack-term you're using\n* Method of installation (binary, go, or make)\n\nFeature requests\n----------------\n\nWhen creating an issue that is a feature request, I will label it as such,\nhowever this doesn't mean that it is an approved feature request. I will\nleave it open for discussion and decide whether it is feasible and/or\ndesirable.\n\nPull requests\n-------------\n\nBefore creating a solution, please create an issue that is open for discussion\nfirst. This is to avoid dissappointment, for all the work you might have\ndone, that might not get merged or needs to be refactored.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.634765625,
+          "content": "FROM golang:alpine as builder\n\nENV PATH /go/bin:/usr/local/go/bin:$PATH\nENV GOPATH /go\n\nRUN\tapk add --no-cache \\\n\tca-certificates\n\nCOPY . /go/src/github.com/erroneousboat/slack-term\n\nRUN set -x \\\n\t&& apk add --no-cache --virtual .build-deps \\\n\t\tgit \\\n\t\tgcc \\\n\t\tlibc-dev \\\n\t\tlibgcc \\\n\t\tmake \\\n\t&& cd /go/src/github.com/erroneousboat/slack-term \\\n\t&& make build \\\n\t&& mv ./bin/slack-term /usr/bin/slack-term \\\n\t&& apk del .build-deps \\\n\t&& rm -rf /go\n\nFROM alpine:latest\n\nENV USER root\n\nCOPY --from=builder /usr/bin/slack-term /usr/bin/slack-term\nCOPY --from=builder /etc/ssl/certs/ /etc/ssl/certs\n\nENTRYPOINT stty cols 25 && slack-term -config config\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0498046875,
+          "content": "MIT License\n\nCopyright (c) 2016 J.P.H. Bruins Slot\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.8935546875,
+          "content": "default: test\n\n# -timeout \ttimout in seconds\n#  -v\t\tverbose output\ntest:\n\t@ echo \"+ $@\"\n\t@ go test -timeout=5s -v\n\ndev: build\n\t@ ./bin/slack-term -debug\n\n# `CGO_ENABLED=0`\n# Because of dynamically linked libraries, this will statically compile the\n# app with all libraries built in. You won't be able to cross-compile if CGO\n# is enabled. This is because Go binary is looking for libraries on the\n# operating system it’s running in. We compiled our app, but it still is\n# dynamically linked to the libraries it needs to run\n# (i.e., all the C libraries it binds to). When using a minimal docker image\n# the operating system doesn't have these libraries.\n#\n# `GOOS=linux`\n# We're setting the OS to linux (in case someone builds the binary on Mac or\n# Windows)\n#\n# `-mod=vendor`\n# This ensures that the build process will use the modules in the vendor\n# folder.\n#\n# `-a`\n# Force rebuilding of package, all import will be rebuilt with cgo disabled,\n# which means all the imports will be rebuilt with cgo disabled.\n#\n# `-installsuffix cgo`\n# A suffix to use in the name of the package installation directory\n#\n# `-o`\n# Output\n#\n# `./bin/slack-term`\n# Placement of the binary\n#\n# `.`\n# Location of the source files\nbuild:\n\t@ echo \"+ $@\"\n\t@ CGO_ENABLED=0 go build -mod=vendor -a -installsuffix cgo -o ./bin/slack-term .\n\n# Cross-compile\n# http://dave.cheney.net/2015/08/22/cross-compilation-with-go-1-5\nbuild-linux:\n\t@ echo \"+ $@\"\n\t@ GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -a -installsuffix cgo -o ./bin/slack-term-linux-amd64 .\n\nbuild-mac:\n\t@ echo \"+ $@\"\n\t@ GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 go build -mod=vendor -a -installsuffix cgo -o ./bin/slack-term-darwin-amd64 .\n\nrun: build\n\t@ echo \"+ $@\"\n\t@ ./bin/slack-term\n\ninstall:\n\t@ echo \"+ $@\"\n\t@ go install .\n\nmodules:\n\t@ echo \"+ $@\"\n\t@ go mod tidy\n\t@ go mod vendor\n\nbuild-all: build build-linux build-mac\n\n.PHONY: default test build build-linux build-mac run install\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.0361328125,
+          "content": "slack-term\n==========\n\nA [Slack](https://slack.com) client for your terminal.\n\n![Screenshot](/screenshot.png?raw=true)\n\nInstallation\n------------\n\n#### Binary installation\n\n[Download](https://github.com/erroneousboat/slack-term/releases) a\ncompatible binary for your system. For convenience, place `slack-term` in a\ndirectory where you can access it from the command line. Usually this is\n`/usr/local/bin`.\n\n```bash\n$ mv slack-term /usr/local/bin\n```\n\n#### Via Go\n\nIf you want, you can also get `slack-term` via Go:\n\n```bash\n$ go get -u github.com/erroneousboat/slack-term\n$ cd $GOPATH/src/github.com/erroneousboat/slack-term\n$ go install .\n```\n\n#### Via docker\n\nYou can also run it with docker, make sure you have a valid config file\non your host system.\n\n```bash\ndocker run -it -v [config-file]:/config erroneousboat/slack-term\n```\n\nSetup\n-----\n\n1. Get a slack token, click [here](https://github.com/erroneousboat/slack-term/wiki#running-slack-term-without-legacy-tokens)\n\n2. Running `slack-term` for the first time, will create a default config file at\n   `~/.config/slack-term/config`.\n\n```bash\n$ slack-term\n```\n\n3. Update the config file and update your `slack_token` For more configuration\n   options of the `config` file, see the [wiki](https://github.com/erroneousboat/slack-term/wiki).\n\n```javascript\n{\n    \"slack_token\": \"yourslacktokenhere\"\n}\n```\n\nUsage\n-----\n\nWhen everything is setup correctly you can run `slack-term` with the following\ncommand:\n\n```bash\n$ slack-term\n```\n\nDefault Key Mapping\n-------------------\n\nBelow are the default key-mappings for `slack-term`, you can change them\nin your `config` file.\n\n| mode    | key       | action                     |\n|---------|-----------|----------------------------|\n| command | `i`       | insert mode                |\n| command | `/`       | search mode                |\n| command | `k`       | move channel cursor up     |\n| command | `j`       | move channel cursor down   |\n| command | `g`       | move channel cursor top    |\n| command | `G`       | move channel cursor bottom |\n| command | `K`       | thread up                  |\n| command | `J`       | thread down                |\n| command | `G`       | move channel cursor bottom |\n| command | `pg-up`   | scroll chat pane up        |\n| command | `ctrl-b`  | scroll chat pane up        |\n| command | `ctrl-u`  | scroll chat pane up        |\n| command | `pg-down` | scroll chat pane down      |\n| command | `ctrl-f`  | scroll chat pane down      |\n| command | `ctrl-d`  | scroll chat pane down      |\n| command | `n`       | next search match          |\n| command | `N`       | previous search match      |\n| command | `,`       | jump to next notification  |\n| command | `q`       | quit                       |\n| command | `f1`      | help                       |\n| insert  | `left`    | move input cursor left     |\n| insert  | `right`   | move input cursor right    |\n| insert  | `enter`   | send message               |\n| insert  | `esc`     | command mode               |\n| search  | `esc`     | command mode               |\n| search  | `enter`   | command mode               |\n"
+        },
+        {
+          "name": "components",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "context",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.80078125,
+          "content": "module github.com/erroneousboat/slack-term\n\ngo 1.12\n\nrequire (\n\tgithub.com/0xAX/notificator v0.0.0-20171022182052-88d57ee9043b\n\tgithub.com/OpenPeeDeeP/xdg v0.2.0\n\tgithub.com/erroneousboat/termui v0.0.0-20170923115141-80f245cdfa04\n\tgithub.com/gorilla/websocket v1.4.2 // indirect\n\tgithub.com/kr/pretty v0.1.0 // indirect\n\tgithub.com/lithammer/fuzzysearch v1.1.0\n\tgithub.com/maruel/panicparse v1.1.1 // indirect\n\tgithub.com/mattn/go-runewidth v0.0.7\n\tgithub.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect\n\tgithub.com/nsf/termbox-go v0.0.0-20191229070316-58d4fcbce2a7\n\tgithub.com/pkg/errors v0.9.1 // indirect\n\tgithub.com/slack-go/slack v0.6.3\n\tgithub.com/stretchr/testify v1.4.0 // indirect\n\tgopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect\n\tgopkg.in/yaml.v2 v2.2.4 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 4.6904296875,
+          "content": "github.com/0xAX/notificator v0.0.0-20171022182052-88d57ee9043b h1:Sn+u6zpXFyfm2X7ruh+z6SJiUVyFg8YElh6HIOhrRCA=\ngithub.com/0xAX/notificator v0.0.0-20171022182052-88d57ee9043b/go.mod h1:NtXa9WwQsukMHZpjNakTTz0LArxvGYdPA9CjIcUSZ6s=\ngithub.com/OpenPeeDeeP/xdg v0.2.0 h1:xr89rnllbkRkM7SV9Y++FJ8TGkbdkhhBQm5kOkGT7AE=\ngithub.com/OpenPeeDeeP/xdg v0.2.0/go.mod h1:tMoSueLQlMf0TCldjrJLNIjAc5qAOIcHt5REi88/Ygo=\ngithub.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/erroneousboat/termui v0.0.0-20170923115141-80f245cdfa04 h1:DaFwoQC0Neeb2y2CVFxDPrS1BeyWAkKc4VVBDTZ0N98=\ngithub.com/erroneousboat/termui v0.0.0-20170923115141-80f245cdfa04/go.mod h1:UPpsbgDrqmUayOFOkCGD7+xrBIml/1dA0dsqTRnZqac=\ngithub.com/go-test/deep v1.0.4 h1:u2CU3YKy9I2pmu9pX0eq50wCgjfGIt539SqR7FbHiho=\ngithub.com/go-test/deep v1.0.4/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=\ngithub.com/gorilla/websocket v1.2.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=\ngithub.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0Ufc=\ngithub.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=\ngithub.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=\ngithub.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=\ngithub.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=\ngithub.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=\ngithub.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=\ngithub.com/lithammer/fuzzysearch v1.1.0 h1:go9v8tLCrNTTlH42OAaq4eHFe81TDHEnlrMEb6R4f+A=\ngithub.com/lithammer/fuzzysearch v1.1.0/go.mod h1:Bqx4wo8lTOFcJr3ckpY6HA9lEIOO0H5HrkJ5CsN56HQ=\ngithub.com/maruel/panicparse v1.1.1 h1:k62YPcEoLncEEpjMt92GtG5ugb8WL/510Ys3/h5IkRc=\ngithub.com/maruel/panicparse v1.1.1/go.mod h1:nty42YY5QByNC5MM7q/nj938VbgPU7avs45z6NClpxI=\ngithub.com/mattn/go-runewidth v0.0.7 h1:Ei8KR0497xHyKJPAv59M1dkC+rOZCMBJ+t3fZ+twI54=\ngithub.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=\ngithub.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 h1:DpOJ2HYzCv8LZP15IdmG+YdwD2luVPHITV96TkirNBM=\ngithub.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7/go.mod h1:ZXFpozHsX6DPmq2I0TCekCxypsnAUbP2oI0UX1GXzOo=\ngithub.com/nlopes/slack v0.6.0 h1:jt0jxVQGhssx1Ib7naAOZEZcGdtIhTzkP0nopK0AsRA=\ngithub.com/nlopes/slack v0.6.0/go.mod h1:JzQ9m3PMAqcpeCam7UaHSuBuupz7CmpjehYMayT6YOk=\ngithub.com/nsf/termbox-go v0.0.0-20191229070316-58d4fcbce2a7 h1:OkWEy7aQeQTbgdrcGi9bifx+Y6bMM7ae7y42hDFaBvA=\ngithub.com/nsf/termbox-go v0.0.0-20191229070316-58d4fcbce2a7/go.mod h1:IuKpRQcYE1Tfu+oAQqaLisqDeXgjyyltCfsaoYN18NQ=\ngithub.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=\ngithub.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=\ngithub.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/slack-go/slack v0.6.3 h1:qU037g8gQ71EuH6S9zYKnvYrEUj0fLFH4HFekFqBoRU=\ngithub.com/slack-go/slack v0.6.3/go.mod h1:HE4RwNe7YpOg/F0vqo5PwXH3Hki31TplTvKRW9dGGaw=\ngithub.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=\ngithub.com/stretchr/objx v0.1.1 h1:2vfRuCMp5sSVIDSqO8oNnWJq7mPa6KVP3iPIwFBuy8A=\ngithub.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=\ngithub.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=\ngithub.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=\ngithub.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=\ngolang.org/x/text v0.3.2 h1:tW2bmiBqwgJj/UpqtC8EpXEZVYOwU0yG4iWbprSVAcs=\ngolang.org/x/text v0.3.2/go.mod h1:bEr9sfX3Q8Zfm5fL9x+3itogRgK3+ptLWKqgva+5dAk=\ngolang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 h1:YR8cESwS4TdDjEe65xsg0ogRM/Nc3DYOhEAlW+xobZo=\ngopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=\ngopkg.in/yaml.v2 v2.2.4 h1:/eiJrUcujPVeJ3xlSWaiNi3uSVmDGBK1pDHUHAnao1I=\ngopkg.in/yaml.v2 v2.2.4/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=\n"
+        },
+        {
+          "name": "handlers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 1.7744140625,
+          "content": "package main\n\nimport (\n\t\"flag\"\n\t\"fmt\"\n\t\"log\"\n\t\"os\"\n\n\t\"github.com/OpenPeeDeeP/xdg\"\n\t\"github.com/erroneousboat/termui\"\n\ttermbox \"github.com/nsf/termbox-go\"\n\n\t\"github.com/erroneousboat/slack-term/context\"\n\t\"github.com/erroneousboat/slack-term/handlers\"\n)\n\nconst (\n\tVERSION = \"master\"\n\tUSAGE   = `NAME:\n    slack-term - slack client for your terminal\n\nUSAGE:\n    slack-term -config [path-to-config]\n\nVERSION:\n    %s\n\nWEBSITE:\n    https://github.com/erroneousboat/slack-term\n\nGLOBAL OPTIONS:\n   -config [path-to-config-file]\n   -token [slack-token]\n   -debug\n   -help, -h\n`\n)\n\nvar (\n\tflgConfig string\n\tflgToken  string\n\tflgDebug  bool\n\tflgUsage  bool\n)\n\nfunc init() {\n\n\t// Find the default config file\n\tconfigFile := xdg.New(\"slack-term\", \"\").QueryConfig(\"config\")\n\n\t// Parse flags\n\tflag.StringVar(\n\t\t&flgConfig,\n\t\t\"config\",\n\t\tconfigFile,\n\t\t\"location of config file\",\n\t)\n\n\tflag.StringVar(\n\t\t&flgToken,\n\t\t\"token\",\n\t\t\"\",\n\t\t\"the slack token\",\n\t)\n\n\tflag.BoolVar(\n\t\t&flgDebug,\n\t\t\"debug\",\n\t\tfalse,\n\t\t\"turn on debugging\",\n\t)\n\n\tflag.Usage = func() {\n\t\tfmt.Printf(USAGE, VERSION)\n\t}\n\n\tflag.Parse()\n}\n\nfunc main() {\n\t// Start terminal user interface\n\terr := termui.Init()\n\tif err != nil {\n\t\tlog.Fatal(err)\n\t}\n\tdefer termui.Close()\n\n\t// Create custom event stream for termui because\n\t// termui's one has data race conditions with its\n\t// event handling. We're circumventing it here until\n\t// it has been fixed.\n\tcustomEvtStream := &termui.EvtStream{\n\t\tHandlers: make(map[string]func(termui.Event)),\n\t}\n\ttermui.DefaultEvtStream = customEvtStream\n\n\t// Create context\n\tusage := fmt.Sprintf(USAGE, VERSION)\n\tctx, err := context.CreateAppContext(\n\t\tflgConfig, flgToken, flgDebug, VERSION, usage,\n\t)\n\tif err != nil {\n\t\ttermbox.Close()\n\t\tlog.Println(err)\n\t\tos.Exit(0)\n\t}\n\n\t// Initialize handlers\n\thandlers.Initialize(ctx)\n\n\ttermui.Loop()\n}\n"
+        },
+        {
+          "name": "screenshot.png",
+          "type": "blob",
+          "size": 32.4921875,
+          "content": null
+        },
+        {
+          "name": "service",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "views",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
