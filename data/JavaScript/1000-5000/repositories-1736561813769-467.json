@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736561813769,
+    "page": 467,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gxtrobot/bustag",
+      "stars": 3849,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ". gitattributes",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "*.js linguist-vendored\n"
+        },
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0556640625,
+          "content": ".git\n.venv\n__pycache__\n*.pyc\n*.pyo\n*.pyd\n.Python\nenv\ndata"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.427734375,
+          "content": "*.py[cod]\n\n# C extensions\n*.so\n\n# Packages\n*.egg\n*.egg-info\ndist\nbuild\neggs\nparts\nbin\nvar\nsdist\ndevelop-eggs\n.installed.cfg\nlib\nlib64\n__pycache__\n\n# Installer logs\npip-log.txt\n\n# Unit test / coverage reports\n.coverage\n.tox\nnosetests.xml\n.pytest_cache\n\n# Translations\n*.mo\n\n# Mr Developer\n.mr.developer.cfg\n.project\n.pydevproject\n\n# temp file\n.DS_Store\n*.pkl\n\n# venv\n.venv/\n\n# Cookiecutter\noutput/\n\n# vscode\n.vscode\n\n# notebooks\nnotebooks/"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.1533203125,
+          "content": "FROM python:3.7.4-slim as base\n\n# Create app directory\nWORKDIR /app\n\n# Install app dependencies\nCOPY ./docker/sources.list .\n\nRUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv ./sources.list /etc/apt/\n\nRUN apt-get -o Acquire::Check-Valid-Until=false update \\\n    && apt-get install \\\n    --no-install-recommends --yes \\\n    build-essential libpq-dev cron git \\\n    python3-dev --yes\n\nFROM base as build\n\nCOPY requirements.txt .\n\nRUN mkdir /install\n\nRUN pip download --destination-directory /install -r /app/requirements.txt -i https://pypi.douban.com/simple\n\nFROM python:3.7.4-slim  as release\n\nCOPY ./docker/sources.list .\n\nRUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv ./sources.list /etc/apt/\n\nRUN apt-get update && apt-get -y install cron git\n\nWORKDIR /app\n\nCOPY --from=build /install /install\n\nCOPY requirements.txt .\n\nRUN pip install --no-index --find-links=/install -r requirements.txt\n\nRUN mkdir /app/docker\n\nCOPY docker/entry.sh /app/docker/\n\nRUN touch /var/log/bustag.log\n\nRUN rm -rf /install &&  rm -rf /root/.cache/pip\n\nRUN chmod 755 /app/docker/*.sh\n\nEXPOSE 8000\n\nLABEL maintainer=\"gxtrobot <gxtrobot@gmail.com>\"\n\nCMD [\"/app/docker/entry.sh\"]"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2019 gxtrobot\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.3681640625,
+          "content": "PYTHON3=python3\n\njavbus:\n\t$(PYTHON3) -m bustag.main download\n\nrecommend:\n\t$(PYTHON3) -m bustag.main recommend\n\nbuild:\n\tdocker build -t  bustag-app-dev .\n\t\nrun:\n\tdocker run --rm -d -v `pwd`/data:/app/data -p 8080:8080 bustag-app-dev \n\nserver:\n\t$(PYTHON3) bustag/app/index.py\n\npublish:\n\tdocker tag bustag-app-dev gxtrobot/bustag-app:latest\n\tdocker push gxtrobot/bustag-app:latest"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.6474609375,
+          "content": "# 基于机器学习的老司机车牌自动推荐系统\n<img src=\"./bustag/app/static/images/logo.png\" width=\"300\">\n\n**Bustag** 是一个基于我开发的 python 异步爬虫框架开发[aspider](https://github.com/gxtrobot/aspider)的自动车牌推荐系统, 系统原理为定时爬取最新车牌信息, 然后可以对车牌进行打标(标示是否喜欢), 打标车牌到一定数量可以进行训练并生成模型, 以后就可以基于此模型自动对下载的车牌进行预测是否喜欢, 可以过滤掉大量不喜欢的车牌, 节约时间\n\n### Python in Action 学习视频发布\n[https://github.com/gxtrobot/pyinaction](https://github.com/gxtrobot/pyinaction)\n\n为提高解决问题效率 ,建了个qq群\n\n**QQ群: 941894005**\n\n注意, 该群仅讨论**python学习, 爬虫开发, aspider 框架学习开发, Bustag系统bug, 运行问题**等, 请勿讨论无关主题\n\n**免责声明:\n本软件仅用于技术学习使用，禁止用于商业用途，使用本软件所造成的的后果由使用者承担！\n如果你觉得这个软件不错, 可以请我喝杯冰阔落 ^_^.**\n\n<p align=\"center\">\n<img src=\"./bustag/app/static/images/alipay.jpg\" width=\"200\">\n<img src=\"./bustag/app/static/images/wechat_pay.jpg\" width=\"200\">\n</p>\n\n# 紧急提示\n\n\n# windows, mac 绿色版下载地址\n  链接: https://pan.baidu.com/s/1pqarq7fOXjsbad0WN4Uaaw 提取码: budu\n\n  压缩包密码: gxtrobot\n\n# docker 版本同步更新\n运行 ```docker pull gxtrobot/bustag-app:latest``` 后重新启动项目即可\n\n# 使用须知\n只需在data目录下创建[config.ini](https://raw.githubusercontent.com/gxtrobot/bustag/master/data/config.ini), 然后启动系统, 访问localhost:8000\n\n### 使用视频 \n\n链接: https://pan.baidu.com/s/1pqarq7fOXjsbad0WN4Uaaw 提取码: budu\n\n在视频目录下\n\n- 群晖docker安装bustag 视频发布(2019-10-16)\n- bustag最新使用视频发布(2019-10-15)  \n- linux/mac docker版本安装 \n- win10 docker版本安装\n\n## 更新\n\n### release 0.2.1(2019-10-12)\n- 修复几个bug\n- 增加系统启动错误信息打印, 方便排查\n\n该版本主要是为了更好发现错误, 如果能正常运行的可以不更新\n\n### release 0.2.0(2019-10-7)\n- 一些bug修复, 如数据解析不全等\n- 多处页面优化(封面图点击放大, 页面跳转等等)\n- 启动检查config.ini, 没有自动退出\n- 手动本地文件管理, 增加手动添加番号及本地路径功能\n- 增加今日更新, 推荐数量\n- 手动上传番号, 直接打标为喜欢\n- 添加logo\n- 增加打标数据库导入功能\n\n#### 注意事项\n- **v0.2.0 版本有数据库结构变化, 所以和老版本数据库不兼容, 建议新建一个目录运行新版, 如需要愿数据库打标数据, 可以通过数据页面, 导入数据库完成打标数据导入**\n\n### 2019-9-6 0.1.1版发布\n  - 修复部分bug\n  - 增加windows(只在win10下测试过)), mac 绿色版, 解压直接使用,\n\n\n## 系统功能\n\n- 自动抓取最新车牌信息, 抓取频率可以自定义\n- 系统启动后自动开启一次下载, 然后安装设置抓取频率下载\n- 车牌打标功能\n- 模型训练, 基于当前所有打标数据训练模型\n- 有了模型后, 自动预测判断是否喜欢\n- 手动上传番号, 本地文件管理\n- 数据库打标数据导入\n- Docker 镜像一键运行, 省去新手配置项目的麻烦\n- 项目访问地址: localhost:8000\n\n## 系统截图(隐藏了左边封面图片)\n\n- 推荐页面\n  ![](./docs/recommend.png)\n\n- 打标页面\n  ![](./docs/tagit.png)\n\n- 本地文件页面\n  ![](./docs/local.png)\n\n- 本地番号, 链接上传页面\n  ![](./docs/local_upload.png)\n\n- 模型页面\n  ![](./docs/model.png)\n\n- 数据页面\n  ![](./docs/data.png)\n\n## 如何运行项目\n\n  ###  windows , mac绿色版如何使用\n  下载zip包后解压缩到任意目录, 然后在目录下的data目录里, 创建文件[config.ini](https://raw.githubusercontent.com/gxtrobot/bustag/master/data/config.ini)\n    - windows 版: 执行(双击)bustag.exe\n    - mac 版: 执行(双击)bustag\n    - 浏览器访问: localhost:8000, 访问成功说明运行正常, 如果访问不成功, 可以看bustag程序窗口有无报错\n\n  ### 本地源代码安装\n  懂 python 开发的可以 clone 本项目, 建立一个虚拟环境并按照 requirements.txt 的 python 包后, 在项目根目录下\n  直接运行\n\n```\npython bustag/app/index.py\n\n或者安装了gunicorn\ngunicorn bustag.app.index:app --bind='0.0.0.0:8000'\n```\n\n ### 使用 docker 运行(推荐)\n\n  1. 建立一个目录, 如 bustag, 然后在该目录下建一个子目录 data, data 目录用于保存配置文件以及下载数据的数据库\n  2. 在 data 下需要建立一个文件, [config.ini](https://raw.githubusercontent.com/gxtrobot/bustag/master/data/config.ini), 该文件用于设置爬取的初始地址, 以及每次下载的最大数量\n  3. 运行命令\n\n  ```\n  linux, mac\n    docker run --rm -d -e TZ=Asia/Shanghai -e PYTHONUNBUFFERED=1 -v $(pwd)/data:/app/data -p 8000:8000 gxtrobot/bustag-app\n\n    windows powershell\n    docker run --rm -d -e TZ=Asia/Shanghai -e PYTHONUNBUFFERED=1 -v ${PWD}/data:/app/data -p 8000:8000 gxtrobot/bustag-app\n\n\n注: -e TZ=Asia/Shanghai , 指的是docker container的时区设置, 如果需要其他时区可自行设置, 如果不设置默认为UTC时区\n    -e PYTHONUNBUFFERED=1 , 指的是显示所有log输出, 如果不设置, 那只能看到debug 的错误log日志\n  ```\n\n## 如何使用项目\n\n### 请按照以下顺序\n\n1. 到打标页面进行打标, 达到一定数量(喜欢+不喜欢), 比如 300\n2. 到其他页面训练模型\n3. 坐等系统自动推荐\n4. 在推荐页面进行确认(确认过的数据转为打标数据)\n5. 积累更多打标数据, 再次训练模型, 打标数据越多模型效果越好\n\n### data 目录文件说明\n\n```\n|____bus.db\n|____config.ini\n|____crontab.txt\n|____model\n| |____ label_binarizer.pkl\n| |____model.pkl\n```\n\n- config.ini, (系统配置文件, 必须, 系统启动时候需要此文件, [参考文件](./data/config.ini))\n  - root_path: 制定bus网站主页地址, 爬虫起始地址, 由于地址可能变化, 确保本机能够访问该地址, 如果需要代理才能访问, 必须开启全局代理, 系统本身无代理设置\n  - count: 每次下载总数, 建议不要太多, 500以下比较好\n  - interval: 每次下载间隔时间, 单位为秒, 建议不要低于1800秒\n\n- bus.db (数据库文件, 可选, 但是可以放一个[现成的库, 有 2000 条数据, 方便直接开始打标, 不需要等下载](./data/bus.db))\n- crontab.txt (定时下载配置文件, 可选, [参考例子](./docker/crontab.txt))\n- model 目录(系统训练生成的模型)\n\n## 其他问题\n\n1. 改变自动下载的频率\n   修改config.ini的interval 参数即可, 单位是秒, 比如修改为一小时更新一次为 `interval=3600`\n\n2. 改变下载初始 url\n   因为该 url 会经常改变, 所有系统的 config.ini -> download -> root_path 定义了初始 url, 可以根据需要改变\n\n3. 是否可以使用代理\n   目前系统还没加入代理功能, 不过可以在 docker 设置代理访问\n\n4. 下载数量多少合适\n   鉴于爬虫的稳定性, 不建议每次下载太多, 也可能会给 bus 服务器带来压力, 如果需要, 初次使用可以加大到 1000, 这样可以下载多点初始数据用于打标, 后面可以改为 300\n\n5. 模型效果如何\n   经过一些测试, 最终使用了 KNN 模型, 效果的话谈不上非常好, 在准确率上还可以, 不过召回率相对低一些, 也就是说推荐的准确率相对高点, 但是会漏掉一些喜欢的数据.\n   所以, 鉴于定期对推荐数据进行确认, 经过确认后, 推荐数据转为打标数据, 然后重新训练,打标数据越多效果越好\n\n6. 要多少打标数据才能训练模型\n   建议至少达到 300 打标数据(包括喜欢, 不喜欢), 如何尝试训练模型, 并查看模型效果值, 如不满意可以增加训练数据并重新训练\n\n7. 模型用了什么数据训练\n   模型目前主要使用了各种标签数据, 比如影片分类, 女优名等等, 目前没有使用到标题\n\n8. 如何改变服务器运行端口\n   服务器默认为 8000 端口, 如果需要改变, 可以修改启动 docker 容器命令, 比如 8000\n\n```\n修改为8000端口, 注意:后面的8000不要变, 然后可以通过localhost:8000访问\n\ndocker run --rm -d -v $(pwd)/data:/app/data -p 8000:8000 gxtrobot/bustag-app\n```\n\n9. 如何备份数据库\n   系统使用的数据库保存在 data 目录下的 bus.db, 如果有需要可以将此文件拷贝一份作为备份, 比如在打标测试模型时, 如果不想使用当前打标数据, 可以将数据库恢复到原来的版本\n   该数据库为 sqlite 格式, 可以直接使用软件打开, 比如 [DB Browser for Sqlite](https://sqlitebrowser.org/), 该软件支持多平台\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bustag",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 2.13671875,
+          "content": "aiohttp==3.5.4\nalabaster==0.7.12\naltgraph==0.16.1\nappdirs==1.4.3\nappnope==0.1.0\nAPScheduler==3.6.1\naspider==0.1.2\nastroid==2.2.5\nasync-timeout==3.0.1\natomicwrites==1.3.0\nattrs==19.1.0\nautopep8==1.4.4\nBabel==2.7.0\nbackcall==0.1.0\nbeautifulsoup4==4.8.0\nbleach==3.1.0\nbottle==0.12.17\nbs4==0.0.1\ncategory-encoders==2.0.0\ncertifi==2019.6.16\nchardet==3.0.4\nClick==7.0\ncoverage==4.5.4\ncssselect==1.0.3\ndecorator==4.4.0\ndefusedxml==0.6.0\ndocopt==0.6.2\ndocutils==0.15.2\nentrypoints==0.3\nfake-useragent==0.1.11\ngitdb==0.6.4\nGitPython==0.3.6\ngunicorn==19.9.0\nidna==2.8\nimagesize==1.1.0\nimportlib-metadata==0.19\nipykernel==5.1.1\nipython-genutils==0.2.0\nipywidgets==7.5.1\nisort==4.3.21\njedi==0.14.1\nJinja2==2.10.1\njoblib==0.13.2\njsonschema==3.0.2\njupyter-client==5.3.1\njupyter-console==6.0.0\njupyter-core==4.5.0\nlazy-object-proxy==1.4.1\nlxml==4.4.0\nmacholib==1.11\nMarkupSafe==1.1.1\nmccabe==0.6.1\nmistune==0.8.4\nmore-itertools==7.2.0\nmultidict==4.5.2\nnbconvert==5.5.0\nnbformat==4.4.0\nnumpy==1.17.1\npackaging==19.1\npandas==0.25.0\npandocfilters==1.4.2\nparse==1.12.0\nparso==0.5.1\nPaste==3.1.1\npatsy==0.5.1\npeewee==3.9.6\npexpect==4.7.0\npickleshare==0.7.5\npluggy==0.12.0\nprometheus-client==0.7.1\nprompt-toolkit==2.0.9\nptyprocess==0.6.0\npy==1.8.0\npycodestyle==2.5.0\npyee==6.0.0\nPygments==2.4.2\npylint==2.3.1\npyparsing==2.4.2\npypi-publisher==0.0.4\npyppeteer==0.0.25\npyquery==1.4.0\npyrsistent==0.15.4\npytest==5.0.1\npython-dateutil==2.8.0\npytz==2019.2\npyzmq==18.0.2\nqtconsole==4.5.2\nrequests==2.22.0\nrequests-html==0.10.0\nscikit-learn==0.21.3\nscipy==1.3.0\nSend2Trash==1.5.0\nsix==1.12.0\nsklearn==0.0\nsmmap==0.9.0\nsnowballstemmer==1.9.0\nsoupsieve==1.9.2\nSphinx==2.1.2\nsphinx-rtd-theme==0.4.3\nsphinxcontrib-applehelp==1.0.1\nsphinxcontrib-devhelp==1.0.1\nsphinxcontrib-htmlhelp==1.0.2\nsphinxcontrib-jsmath==1.0.1\nsphinxcontrib-qthelp==1.0.2\nsphinxcontrib-serializinghtml==1.1.3\nstatsmodels==0.10.1\nterminado==0.8.2\ntestpath==0.4.2\ntqdm==4.32.2\ntraitlets==4.3.2\ntyped-ast==1.4.0\ntzlocal==2.0.0\nurllib3==1.25.3\nw3lib==1.20.0\nwcwidth==0.1.7\nwebencodings==0.5.1\nwebsockets==8.0.2\nwidgetsnbextension==3.5.1\nwrapt==1.11.2\nyarg==0.1.9\nyarl==1.3.0\nzipp==0.5.2\n-e git+https://github.com/gxtrobot/bustag.git@v0.2.1#egg=bustag\n"
+        },
+        {
+          "name": "setup.py",
+          "type": "blob",
+          "size": 1.2294921875,
+          "content": "import io\nimport os\nimport re\n\nfrom setuptools import find_packages\nfrom setuptools import setup\nfrom bustag import __version__\n\n\ndef read(filename):\n    filename = os.path.join(os.path.dirname(__file__), filename)\n    text_type = type(u\"\")\n    with io.open(filename, mode=\"r\", encoding='utf-8') as fd:\n        return re.sub(text_type(r':[a-z]+:`~?(.*?)`'), text_type(r'``\\1``'), fd.read())\n\n\nsetup(\n    name=\"bustag\",\n    version=__version__,\n    url=\"https://github.com/gxtrobot/bustag\",\n    license='MIT',\n\n    author=\"gxtrobot\",\n    author_email=\"gxtrobot@gmail.com\",\n\n    description=\"a tag and recommend system for old bus driver\",\n    long_description=read(\"README.md\"),\n\n    packages=find_packages(exclude=('tests',)),\n\n    install_requires=[],\n\n    classifiers=[\n        'Development Status :: 2 - Pre-Alpha',\n        'License :: OSI Approved :: MIT License',\n        'Programming Language :: Python',\n        'Programming Language :: Python :: 2',\n        'Programming Language :: Python :: 2.7',\n        'Programming Language :: Python :: 3',\n        'Programming Language :: Python :: 3.4',\n        'Programming Language :: Python :: 3.5',\n        'Programming Language :: Python :: 3.6',\n        'Programming Language :: Python :: 3.7',\n    ],\n)\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 0.08984375,
+          "content": "[tox]\nenvlist = py27,py34,py35,py36,py37\n\n[testenv]\ncommands = py.test bustag\ndeps = pytest\n"
+        }
+      ]
+    }
+  ]
+}

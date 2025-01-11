@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736562039803,
+    "page": 792,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "evanw/glfx.js",
+      "stars": 3308,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.125,
+          "content": ".DS_Store\n*.pyc\n/glfx.js\n/www/glfx.js/glfx.js\n/www/glfx.js/index.html\n/www/glfx.js/demo/index.html\n/www/glfx.js/docs/index.html\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0341796875,
+          "content": "Copyright (C) 2011 by Evan Wallace\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.6337890625,
+          "content": "# glfx.js\nAdjust photos in your browser in realtime with glfx.js, an image effects library powered by WebGL. It uses your graphics card for image effects that would be impossible to apply in real-time with JavaScript alone.\n\nThere are two caveats to glfx.js. First, WebGL is a new technology that is only available in the latest browsers and it will be quite a while before the majority of users have it. Second, due to the same origin policy, JavaScript is only allowed to read images that originate from the same domain as the script reading them, so you may have to host the images you modify.\n\n[Live Demo](https://evanw.github.io/glfx.js/demo/)\n"
+        },
+        {
+          "name": "build.py",
+          "type": "blob",
+          "size": 2.0224609375,
+          "content": "#!/usr/bin/python\n\nmodule = 'fx'\ninput_path = 'src/'\noutput_path = 'glfx.js'\n\nimport re, os, sys, time, tempfile\n\nheader = '''/*\n * glfx.js\n * https://evanw.github.io/glfx.js/\n *\n * Copyright 2011 Evan Wallace\n * Released under the MIT license\n */\n'''\n\ndef sources():\n    return [os.path.join(base, f) for base, folders, files in \\\n        os.walk(input_path) for f in files if f.endswith('.js')]\n\ndef compile(sources):\n    return '\\n'.join('// %s\\n%s' % (path, open(path).read()) for path in sources)\n\ndef compress_glsl(text):\n    def compress(match):\n        text = match.group(0)\n        if '  ' in text: # assume all strings with two consecutive spaces are glsl\n            text = re.sub('/\\*.*?\\*/', '', text) # remove all comments\n            text = re.sub(' +', ' ', text) # replace consecutive spaces with one space\n            text = re.sub(r' ?(\\+|\\-|\\*|/|,|=|{|}|;|\\(|\\)|<|>|!|\\'|\\\") ?', r'\\1', text) # tighten spaces around some tokens\n        return text\n\n    text = re.sub(r\"('([^'\\\\]|\\\\(.|\\n))*'|\\\"([^\\\"\\\\]|\\\\(.|\\n))*\\\")\", compress, text) # replace all strings\n    return text\n\ndef build():\n    data = 'var %s = (function() {\\nvar exports = {};\\n\\n' % module + compile(sources()) + '\\nreturn exports;\\n})();\\n'\n    if 'release' in sys.argv:\n        f1, temp1_path = tempfile.mkstemp()\n        f2, temp2_path = tempfile.mkstemp()\n        os.write(f1, data)\n        os.close(f1)\n        os.close(f2)\n        os.system('closure --js %s --js_output_file %s' % (temp1_path, temp2_path))\n        os.remove(temp1_path)\n        data = open(temp2_path).read()\n        os.remove(temp2_path)\n        data = compress_glsl(data)\n    data = header + data\n    open(output_path, 'w').write(data)\n    print('built %s (%u lines)' % (output_path, len(data.split('\\n'))))\n\ndef stat():\n    return [os.stat(file).st_mtime for file in sources()]\n\ndef monitor():\n    a = stat()\n    while True:\n        time.sleep(0.5)\n        b = stat()\n        if a != b:\n            a = b\n            build()\n\nif __name__ == '__main__':\n    build()\n    if 'debug' in sys.argv:\n        monitor()\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "www",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

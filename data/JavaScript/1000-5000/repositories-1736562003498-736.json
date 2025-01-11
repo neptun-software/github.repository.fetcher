@@ -1,0 +1,109 @@
+{
+  "metadata": {
+    "timestamp": 1736562003498,
+    "page": 736,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "arfct/itty-bitty",
+      "stars": 3410,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".firebaserc",
+          "type": "blob",
+          "size": 0.0869140625,
+          "content": "{\n  \"projects\": {\n    \"staging\": \"itty-bitty-app\",\n    \"default\": \"itty-bitty-app\"\n  }\n}\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.064453125,
+          "content": "# Auto detect text files and perform LF normalization\n* text=auto\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "*.cache\n*.log\n*.DS_Store\npackage-lock.json\nnode_modules\n# Local Netlify folder\n.netlify\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0244140625,
+          "content": "© 2018 Nicholas Jitkoff\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.3779296875,
+          "content": "# itty.bitty\n\nitty.bitty takes html (or other data), compresses it into a URL fragment, and provides a link that can be shared. When it is opened, it inflates that data on the receiver’s side.\n\nLearn more at: [about.bitty.site](http://about.bitty.site)\n\nHow it works: [how.bitty.site](http://how.bitty.site)\n\nFor more info: [wiki.bitty.site](https://github.com/alcor/itty-bitty/wiki/)\n"
+        },
+        {
+          "name": "build-v2.js",
+          "type": "blob",
+          "size": 0.6904296875,
+          "content": "#! node\n\nconst { execSync } = require(\"child_process\");\nconst fs = require('fs');\n\nfunction embedInlines(src, dest) {\n  try {\n    let data = fs.readFileSync(src, 'utf8');\n    data = data.replace(/src=\"\\/?(.*)\" inline>/g, (g, h) => {\n      return `>`  + execSync(`terser ${h}`)\n    })\n    data = data.replace(/<link rel=\"stylesheet\" href=\"\\/?(.*)\" inline>/g, (g, h) => {\n      console.log(h);\n      return `<style>${execSync(`uglifycss ${h}`)}</style>` \n    })\n    console.log(data);  \n    fs.writeFileSync(dest,data)\n  } catch (err) {\n    console.error(err);\n  }\n}\n\nprocess.chdir(\"docs\");\nembedInlines('index.html', 'index.min.html')\n\nprocess.chdir(\"render\");\nembedInlines('recipe.html', 'recipe.min.html')\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples.md",
+          "type": "blob",
+          "size": 0.5556640625,
+          "content": "python3 recipe.py 'https://cooking.nytimes.com/recipes/1018528-beef-bourguignon?ds_c=71700000052595478&gclsrc=aw.ds&gclid=CjwKCAiA_omPBhBBEiwAcg7smQNAgql0GZI6jHNtk_ApTTjTSN7ePEn8Iq7H2ivxIVKM-aw3zlobwhoCnUQQAvD_BwE' | brotli | openssl enc -aes-256-cbc  | base64 |  xargs -0 printf \"http://localhost/#/data:application/ld+json;archive=brotli;cipher=aes;brot64,%s\\n\" | xargs open\n\n\n\n# Encrypt STDIN and provide a password(prompt)\necho \"message\" | openssl enc -aes-256-cbc -a\n\n# Decrypt STDIN and provide a password(prompt)\necho \"encrypted\" | openssl enc -aes-256-cbc -a -d"
+        },
+        {
+          "name": "firebase.json",
+          "type": "blob",
+          "size": 0.373046875,
+          "content": "{\n  \"hosting\": {\n    \"public\": \"docs\",\n    \"ignore\": [\n      \"**.md\",\n      \"**.sh\",\n      \"**/.*\",\n      \"**/.git/**\",\n      \"**/node_modules/**\",\n      \"firebase.json\",\n      \"LICENSE\",\n      \"samples/**\",\n      \"src/**\"\n    ],\n    \"cleanUrls\": true,\n    \"trailingSlash\": false,\n    \"rewrites\": [\n      {\n        \"source\": \"/**/\",\n        \"function\": \"index\"\n      }\n    ]\n  }\n}\n\n"
+        },
+        {
+          "name": "functions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "netlify.toml",
+          "type": "blob",
+          "size": 0.3681640625,
+          "content": "[functions]\n  external_node_modules = [\n    \"sharp\"\n  ]\n  directory = \"functions/\"\n\n[[edge_functions]]\n  path = \"/*\"\n  function = \"metadata\"\n\n[[redirects]]\n  from = \"/*\"\n  to = \"/index.html\"\n  status = 200\n\n[[headers]]\n  for = \"/render/*\"\n  [headers.values]\n  Access-Control-Allow-Origin = \"*\"\n\n[[headers]]\n  for = \"/js/*\"\n  [headers.values]\n  Access-Control-Allow-Origin = \"*\""
+        },
+        {
+          "name": "netlify",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.1337890625,
+          "content": "{\n  \"dependencies\": {\n    \"brotli-wasm\": \"^1.1.0\",\n    \"sharp\": \"^0.31.3\"\n  },\n  \"devDependencies\": {\n    \"netlify-cli\": \"^11.5.1\"\n  }\n}\n"
+        },
+        {
+          "name": "recipe.py",
+          "type": "blob",
+          "size": 0.5185546875,
+          "content": "from recipe_scrapers import scrape_me\nimport json\nimport sys\n\n# give the url as a string, it can be url from any site listed below\nscraper = scrape_me(sys.argv[1])\n\nrecipe = {\n  'name': scraper.title(),\n  'totalTime': \"PT\" + str(scraper.total_time()) + \"M\",\n  'recipeYield': scraper.yields(),\n  'recipeIngredient': scraper.ingredients(),\n  'recipeInstructions': scraper.instructions(),\n  'image': [scraper.image()],\n  'host': scraper.host(),\n  'nutrition': scraper.nutrients()\n}\n\njson_string = json.dumps(recipe)\nprint(json_string)"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

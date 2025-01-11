@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "timestamp": 1736562074193,
+    "page": 846,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "chjj/ttystudio",
+      "stars": 3233,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "node_modules/\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.0419921875,
+          "content": ".git*\ntest/\nimg/\nnode_modules/\n*.gif\n*.png\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.072265625,
+          "content": "Copyright (c) 2015, Christopher Jeffrey\nhttps://github.com/chjj/ttystudio\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.6904296875,
+          "content": "# ttystudio\n\n__A terminal-to-gif recorder minus the headaches.__\n\n![ttystudio](https://raw.githubusercontent.com/chjj/ttystudio/master/img/example.gif)\n\nRecord your terminal and compile it to a GIF or APNG without any external\ndependencies, bash scripts, gif concatenation, etc.\n\nInstall with: `$ npm install ttystudio`. (Add `-g` for global install).\n\n\n## Usage\n\n``` bash\n$ ttystudio output.gif --log\n  $ vim\n    hello world\n    :q!\n  $ ^Q # stop recording with ctrl-q\ninitializing writer\nwriting image\nwriting head\nwriting frame 0 - 132 left\nwriting frame 1 - 131 left\nwriting frame 2 - 130 left\n...\nwriting frame 131 - 1 left\nwriting eof\nwrote image to /home/chjj/output.gif\n$ chromium output.gif\n# or if you wrote to output.png (an APNG)\n$ firefox output.png\n```\n\n## The Difference\n\nttystudio differs from other terminal recorders in that:\n\n1. It has its own built-in gif and apng writer, no imagemagick required. The\n   writer now has built-in frame offset optimization.\n2. It has a font parser to render the font during image writing so no terminal\n   playback is required when writing the image (this also means __no GUI is\n   required at all__ - you can record on a remote machine via ssh).\n3. No concatenation of hundreds of gif files required. ttystudio automatically\n   writes out to one gif or apng.\n4. No glitchy frames due to imperfect GUI recording of the playback or gif\n   concatenation.\n5. ttystudio will record frames even if nothing is being updated on the screen.\n\nThis project has ended up making use of years of work I've done writing\nterminal libraries (my personal obsession). Once all the pieces were there,\nthis project became possible. It also sprang out of a need to find a\nterminal-to-gif recorder that actually worked.\n\n<sup>(NOTE: The above .gif was recorded with ttystudio - _nested_ ttystudio\ninstances cause a slight glitch where the cursor is not visible. Not to matter\nin most cases).</sup>\n\n\n## More Usage\n\n``` bash\n$ ttystudio output.gif --log # record and compile\n$ ttystudio frames.json --log # record\n$ ttystudio frames.json output.gif --range=0-50 # compile\n```\n\n\n### Use a frames.json file\n\n``` bash\n$ ttystudio --record frames.json --interval=100 # grab each frame on a 100ms interval\n  $ vim\n    hello world\n    :q!\n  $ ^Q # stop recording with ctrl-q\n$ ttystudio --compile frames.json output.gif --log\nparsing json\ninitializing writer\nwriting image\nwriting head\nwriting frame 0 - 132 left\nwriting frame 1 - 131 left\nwriting frame 2 - 130 left\n...\nwriting frame 131 - 1 left\nwriting eof\nwrote image to /home/chjj/output.gif\n$ chromium output.gif\n# or if you wrote to output.png (an APNG)\n$ firefox output.png\n```\n\n\n## How it works\n\n1. `$ ttystudio --record frames.json`:\n   [blessed][blessed]+[term.js][term.js]+[pty.js][pty.js] will spawn a\n   pseudo-terminal to let you record until you press ^Q.\n2. `$ ttystudio --compile frames.json output.gif`: ttystudio will parse each set of\n   frames into a bitmap, keeping in mind the foreground color and character in\n   each cell.\n3. It will use its parsed font (terminus-u14n/b by default) to render pixels\n   for each characters in the image.\n4. It will write out each frame to a .gif or .png file of your choice.\n\nIt's that simple. No bash script to run. No gifs to concatenate. No external\ndependencies required (i.e. ffmpeg or imagemagick) - ttystudio does it all on\nits own, in 99% javascript (aside from pty.js which is a node c++ binding to\nspawn terminals).\n\n\n## Options and Examples\n\nCompiling to APNG:\n\n``` bash\n$ ttystudio frames.json output.png --log\n```\n\nAccidentally recorded something you don't want in your image? The `range`\noption can help:\n\n``` bash\n# compile only frames 5 to 130\n$ ttystudio frames.json output.gif --log --range=5-130\n```\n\nThe `delay` option sets the delay between frames in the final image:\n\n``` bash\n# 100ms between output frames\n$ ttystudio frames.json output.png --log --delay=100\n```\n\nThe `--no-palette/--rgba` option can be used to avoid use a global palette\n(color type 3) when compiling APNGs (this is known to cause high memory usage\nwhen building the palette since it has to parse every frame beforehand).\nInstead, it will use color type 6 (RGBA). This will make the APNG larger, but\ndoes not risk OOMing the process. OOMing the process is unlikely to happen, but\nif it does, this option is here. Use `pngcrush` afterwards to optimize.\n\n``` bash\n$ ttystudio frames.json output.png --log --rgba\n```\n\nPiping:\n\n``` bash\n$ ttystudio frames.json - | feh -\n```\n\nReplaying frames in the terminal:\n\n``` bash\n$ ttystudio --play frames.json\n```\n\nAdding a border:\n\n``` bash\n# explanation of arguments:\n$ ttystudio output.gif --log --border=[width],[r],[g],[b],[a]\n# add a red border:\n$ ttystudio output.gif --log --border=10,255,0,0,255\n# white border:\n$ ttystudio output.gif --log --border=10,255\n$ ttystudio output.gif --log --border=10,255,255,255\n$ ttystudio output.gif --log --border=10\n```\n\nStart in screenshot mode. This allows you to take multiple screenshot whenever\n`C-p` is pressed. ttystudio will write them all to separate images.\n\n``` bash\n$ ttystudio o.gif --screenshot --screenshot-key C-p\n```\n\n\n### Full Options List\n\n- `-l, --log`\n  - Log status to stderr (now default).\n\n- `-q, --quiet`\n  - Do not log status to stderr.\n\n- `-f, --font [font-file]`\n  - Choose a BDF font in ttystudio's JSON format.\n\n- `-b, --font-bold [font-file]`\n  - Choose a bold BDF font in ttystudio's JSON format.\n\n- `-d, --delay [delay-ms]`\n  - Specify frame delay in ms (default: 100).\n\n- `-i, --interval [interval-ms]`\n  - Specify frame snapshot interval in ms (default: 100).\n\n- `-k, --key [quit-key]`\n  - Choose a key combination to quit recording (default: C-q).\n\n- `-n, --num-plays [num-plays]`\n  - Specify a number of plays for the animation (default: 0 - infinite).\n\n- `-r, --range [frame-range]`\n  - Choose a range of frames to compile. e.g. 5-200.\n\n- `-x, --ratio [pixel-cell-ratio]`\n  - Choose pixel to cell ratio. This option is useless right now since it is\n    overwritten by the font (default: 8x14).\n\n- `-t, --term [term-name]`\n  - Choose the terminal name for terminfo.\n\n- `--palette`\n  - Use a global palette for APNGs instead of RGBA.\n\n- `--no-palette, --rgba, --lct`\n  - Use RGBA for APNGs instead of a global palette. This will also avoid\n    building a global palette for GIFs and only use a local color table for\n    each frame.\n\n- `--border [width,r,g,b,a]`\n  - Add a border around the animation using the specified parameters.\n\n- `play, --play`\n  - Replay a frames file in the terminal.\n\n- `record, --record`\n  - Explicitly choose to record (not very useful).\n\n- `compile, --compile`\n  - Explicitly choose to compile (not very useful).\n\n- `screenshot, --screenshot`\n  - Start ttystudio in screenshot mode. It will take a screenshot on `C-p`\n    unless specified otherwise by `--screenshot-key`.\n\n- `--screenshot-key`\n  - Set the screenshot key when in screenshot mode. Default is `C-p`.\n\n- `--version`\n  - Display ttystudio version.\n\n- `-h, --help`\n  - Display help information.\n\n\n## Choosing a new font for your terminal recording\n\nSince ttystudio does not record a GUI, it needs to know which font you want to\nuse (it has no real idea of the font your terminal is using). ttystudio uses\nterminus (ter-u14n/b) by default, but you can change this.\n\nYour font __must__ be in [BDF][bdf] format. Once you have your font ready,\nplace it in the `fonts/` directory in ttystudio and run `$ make`.\nttystudio+pxxl.js will convert the `.bdf` font to a glyph bitmap format in a\njson file, which is what ttystudio uses.\n\n``` bash\n$ cp ~/ter-u12n.bdf ~/ttystudio/fonts/\n$ cp ~/ter-u12b.bdf ~/ttystudio/fonts/\n$ cd ~/ttystudio/fonts\n$ make\n...\n$ ttystudio output.gif --log \\\n  --font ~/ttystudio/fonts/ter-u12n.json \\\n  --font-bold ~/ttystudio/fonts/ter-u12b.json\n```\n\n\n## OSX\n\n[pty.js][pty.js] seems to currently be causing sporadic [input lag][lag] on\nOSX. This is being investigated.\n\n\n## Notes\n\nA special thanks to the folks who developed [pxxl.js][pxxl.js] - a BDF font\nparser. Without them, it would not have been possible to render a reasonable\nlooking font to the output gif/png.\n\n\n## Todo\n\n- More fonts and font formats supported.\n- Antialiased fonts.\n- Emit frames as events in writers.\n\n\n## Contribution and License Agreement\n\nIf you contribute code to this project, you are implicitly allowing your code\nto be distributed under the MIT license. You are also implicitly verifying that\nall code is your original work. `</legalese>`\n\n\n## License\n\nCopyright (c) 2015, Christopher Jeffrey. (MIT License)\n\nSee LICENSE for more info.\n\n[blessed]: https://github.com/chjj/blessed\n[term.js]: https://github.com/chjj/term.js\n[pty.js]: https://github.com/chjj/pty.js\n[pxxl.js]: https://github.com/remcoder/Pxxl.js\n[tng]: https://github.com/chjj/tng\n[bdf]: https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format\n[lag]: https://github.com/chjj/pty.js/issues/118\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fonts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "img",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.js",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "module.exports = require('./lib/ttystudio');\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "man",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.7998046875,
+          "content": "{\n  \"name\": \"ttystudio\",\n  \"description\": \"A terminal-to-gif recorder minus the headaches.\",\n  \"author\": \"Christopher Jeffrey\",\n  \"version\": \"0.0.16\",\n  \"license\": \"MIT\",\n  \"main\": \"./index.js\",\n  \"bin\": {\n    \"ttystudio\": \"./bin/ttystudio\"\n  },\n  \"scripts\": {\n    \"start\": \"./bin/ttystudio ~/ttystudio-test.gif\"\n  },\n  \"man\": \"./man/ttystudio.1\",\n  \"preferGlobal\": true,\n  \"repository\": \"git://github.com/chjj/ttystudio.git\",\n  \"homepage\": \"https://github.com/chjj/ttystudio\",\n  \"bugs\": { \"url\": \"http://github.com/chjj/ttystudio/issues\" },\n  \"license\": \"MIT\",\n  \"keywords\": [\"terminal\", \"tty\", \"record\", \"recorder\", \"gif\", \"png\", \"apng\"],\n  \"tags\": [\"terminal\", \"tty\", \"record\", \"recorder\", \"gif\", \"png\", \"apng\"],\n  \"dependencies\": {\n    \"blessed\": \">=0.1.80\",\n    \"term.js\": \">=0.0.7\",\n    \"pty.js\": \">=0.3.0\"\n  }\n}\n"
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "timestamp": 1736561831042,
+    "page": 491,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "talebook/talebook",
+      "stars": 3813,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.048828125,
+          "content": ".git\napp/.env\napp/dist\napp/.nuxt\napp/node_modules\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.060546875,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nenv/\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib64/\nparts/\nsdist/\nvar/\n*.egg-info/\n.installed.cfg\n*.egg\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*,cover\n.hypothesis/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nwebserver/settings_manual.py\nwebserver/settings_auto.py\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# IPython Notebook\n.ipynb_checkpoints\n\n# pyenv\n.python-version\n\n# celery beat schedule file\ncelerybeat-schedule\n\n# dotenv\n.env\n\n# virtualenv\nvenv/\nENV/\n\n# Spyder project settings\n.spyderproject\n\n# Rope project settings\n.ropeproject\n/.idea/\n"
+        },
+        {
+          "name": ".style.yapf",
+          "type": "blob",
+          "size": 0.458984375,
+          "content": "[style]\ncolumn_limit=127\nbased_on_style=google\n\n[flake8]\nignore =\n    ;W503 line break before binary operator\n    W503,\n    ;E203 whitespace before ':'\n    E203,\n    ; whitespace after ':'\n    ;E241,\n    ;multiple imports on one line\n    E401,\n    ;bare 'except'\n    E722,\n    C901,\n    E402,\n\n\n; exclude file\nexclude =\n    .tox,\n    .git,\n    __pycache__,\n    build,\n    dist,\n    *.pyc,\n    *.egg-info,\n    .cache,\n    .eggs\n\nmax-complexity = 10\nmax-line-length = 127\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 4.271484375,
+          "content": "\n# ----------------------------------------\n# 第一阶段，拉取 node 基础镜像并安装依赖，执行构建\nFROM node:16-alpine AS builder\nARG BUILD_COUNTRY=\"\"\n\nWORKDIR /build\nRUN if [ \"x${BUILD_COUNTRY}\" = \"xCN\" ]; then \\\n    echo \"using repo mirrors for ${BUILD_COUNTRY}\"; \\\n    npm config set registry http://mirrors.tencent.com/npm/; \\\n    fi\n\nCOPY app/package.json app/package-lock.json* ./\nRUN npm install\n\n# spa build mode will clear ssr build data, run it first\nCOPY app/ /build/\nRUN mkdir -p /app-ssr/ /app-static/\nRUN npm run build\nRUN ls -al\nRUN cp -r .nuxt node_modules package* /app-ssr/\nRUN npm run build-spa\nRUN cp -r dist nuxt.config.js package* /app-static/\n\n\n# ----------------------------------------\n# 第二阶段，构建环境\nFROM talebook/calibre-docker AS server\nARG BUILD_COUNTRY=\"\"\n\n# Set mirrors in china\nRUN if [ \"x${BUILD_COUNTRY}\" = \"xCN\" ]; then \\\n    echo \"using repo mirrors for ${BUILD_COUNTRY}\"; \\\n    sed 's@deb.debian.org/debian@mirrors.aliyun.com/debian@' -i /etc/apt/sources.list; \\\n    pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/; \\\n    fi\n\n# install envsubst gosu procps\nRUN apt-get update -y && \\\n    apt-get install -y gettext gosu procps vim && \\\n    apt-get clean && \\\n    rm -rf /var/lib/apt/lists/*\n\n# Create a talebook user and change the Nginx startup user\nRUN useradd -u 911 -U -d /var/www/talebook -s /bin/false talebook && \\\n    usermod -G users talebook && \\\n    groupmod -g 911 talebook && \\\n    sed -i \"s/user www-data;/user talebook;/g\" /etc/nginx/nginx.conf\n\n# install python packages\nCOPY requirements.txt /tmp/\nRUN pip install -r /tmp/requirements.txt && \\\n    rm -rf /root/.cache\n\n\n# ----------------------------------------\n# 测试阶段\nFROM server AS test\nRUN pip install flake8 pytest\nCOPY webserver/ /var/www/talebook/webserver/\nCOPY tests/ /var/www/talebook/tests/\nCMD [\"pytest\", \"/var/www/talebook/tests\"]\n\n\n# ----------------------------------------\n# 生产环境\nFROM server AS production\nARG GIT_VERSION=\"\"\n\nLABEL Author=\"Rex <talebook@foxmail.com>\"\nLABEL Thanks=\"oldiy <oldiy2018@gmail.com>\"\n\n# set default language\nENV TZ=Asia/Shanghai\nENV LANG=C.UTF-8\nENV PUID=1000\nENV PGID=1000\n\n# prepare dirs\nRUN mkdir -p /data/log/nginx/ && \\\n    mkdir -p /data/books/library  && \\\n    mkdir -p /data/books/extract  && \\\n    mkdir -p /data/books/upload  && \\\n    mkdir -p /data/books/imports  && \\\n    mkdir -p /data/books/convert  && \\\n    mkdir -p /data/books/progress  && \\\n    mkdir -p /data/books/settings && \\\n    mkdir -p /data/books/logo && \\\n    mkdir -p /data/books/ssl && \\\n    mkdir -p /var/www/talebook/ && \\\n    chmod a+w -R /data/log /data/books /var/www\n\nCOPY server.py /var/www/talebook/\nCOPY docker/ /var/www/talebook/docker/\nCOPY webserver/ /var/www/talebook/webserver/\nCOPY conf/nginx/ssl.* /data/books/ssl/\nCOPY conf/nginx/talebook.conf /etc/nginx/conf.d/\nCOPY conf/supervisor/talebook.conf /etc/supervisor/conf.d/\nCOPY --from=builder /app-static/ /var/www/talebook/app/\nCOPY --from=builder /app-static/dist/logo/ /data/books/logo/\n\nRUN rm -f /etc/nginx/sites-enabled/default /var/www/html -rf && \\\n    cd /var/www/talebook/ && \\\n    echo \"VERSION = \\\"$GIT_VERSION\\\"\" > webserver/version.py && \\\n    echo 'settings = {}' > /data/books/settings/auto.py && \\\n    chmod a+w /data/books/settings/auto.py && \\\n    calibredb add --library-path=/data/books/library/ -r docker/book/ && \\\n    python3 server.py --syncdb  && \\\n    python3 server.py --update-config  && \\\n    rm -f webserver/*.pyc && \\\n    rm -rf app/src && \\\n    rm -rf app/dist/logo && \\\n    ln -s /data/books/logo app/dist/logo && \\\n    mkdir -p /prebuilt/ && \\\n    mv /data/* /prebuilt/ && \\\n    chmod +x /var/www/talebook/docker/start.sh\n\nEXPOSE 80 443\n\nVOLUME [\"/data\"]\n\nCMD [\"/var/www/talebook/docker/start.sh\"]\n\n\n# ----------------------------------------\n# 生产环境（server side render版)\nFROM production AS production-ssr\n\n# intall nodejs for nuxtjs server side render\nRUN apt-get update -y && \\\n    curl -fsSL https://deb.nodesource.com/setup_16.x | bash - && \\\n    apt-get install -y nodejs && \\\n    apt-get clean && \\\n    rm -rf /var/lib/apt/lists/*\n\n# copy ssr config\nCOPY conf/nginx/server-side-render.conf /etc/nginx/conf.d/talebook.conf\nCOPY conf/supervisor/server-side-render.conf /etc/supervisor/conf.d/talebook.conf\nCOPY --from=builder /app-ssr/ /var/www/talebook/app/\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.2822265625,
+          "content": "BSD 2-Clause License\n\nCopyright (c) 2022, Rex\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.3466796875,
+          "content": ".PHONY: all build push test\n\nVER := $(shell git branch --show-current)\nIMAGE := talebook/talebook:$(VER)\nREPO1 := talebook/talebook:latest\nREPO2 := talebook/calibre-webserver:latest\nTAG1 := talebook/talebook:server-side-render\nTAG2 := talebook/talebook:server-side-render-$(VER)\n\nall: build up\n\nbuild: test\n\tdocker build --no-cache=false --build-arg BUILD_COUNTRY=CN --build-arg GIT_VERSION=$(VER) \\\n\t\t-f Dockerfile -t $(IMAGE) -t $(REPO1) --target production -t $(REPO2) .\n\tdocker build --no-cache=false --build-arg BUILD_COUNTRY=CN --build-arg GIT_VERSION=$(VER) \\\n\t\t-f Dockerfile -t $(TAG1) -t $(TAG2) --target production-ssr .\n\npush:\n\tdocker push $(IMAGE)\n\tdocker push $(REPO1)\n\tdocker push $(REPO2)\n\ntest: lint\n\trm -f unittest.log\n\tdocker build --build-arg BUILD_COUNTRY=CN -t talebook/test --target test -f Dockerfile .\n\tdocker run --rm --name=talebook-docker-test -v \"$$PWD\":\"$$PWD\" -w \"$$PWD\" talebook/test pytest --log-file=unittest.log --log-level=INFO tests\n\nlint:\n\tflake8 webserver --count --select=E9,F63,F7,F82 --show-source --statistics\n\tflake8 webserver --count --statistics --config .style.yapf\n\npytest: lint\n\tpytest tests\n\ntestv:\n\tcoverage run -m unittest\n\tcoverage report --include \"*talebook*\"\n\ntestvv: testv\n\tcoverage html -d \".htmlcov\" --include \"*talebook*\"\n\tcd \".htmlcov\" && python3 -m http.server 7777\n\nup:\n\tdocker compose up\n\ndown:\n\tdocker compose stop\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.0517578125,
+          "content": "[![GitHub License](https://img.shields.io/github/license/talebook/talebook?style=flat-square)](https://github.com/talebook/talebook/blob/master/LICENSE)\n[![GitHub commit activity](https://img.shields.io/github/commit-activity/w/talebook/talebook?logo=github&style=flat-square&label=commits)]()\n[![Tests](https://github.com/talebook/talebook/actions/workflows/ci.yml/badge.svg)](https://github.com/talebook/talebook/actions/workflows/ci.yml)\n[![Docker Build](https://github.com/talebook/talebook/actions/workflows/build.yml/badge.svg)](https://github.com/talebook/talebook/actions/workflows/build.yml)\n[![Docker Pulls](https://img.shields.io/docker/pulls/talebook/talebook.svg)](https://hub.docker.com/r/talebook/talebook)\n\n\n# Tale Book: My Calibre WebServer\n\nA better online books library management website built on Calibre + Vue\n\n## 简单好用的个人图书管理系统\n\n**友情提醒：中国境内网站，个人是不允许进行在线出版的，维护公开的书籍网站是违法违规的行为！建议仅作为个人使用！**\n\n这是一个基于Calibre的简单的个人图书管理系统，支持**在线阅读**。主要特点是：\n* 美观的界面：由于Calibre自带的网页太丑太难用，于是基于Vue，独立编写了新的界面，支持PC访问和手机浏览；\n* 支持多用户：为了网友们更方便使用，开发了多用户功能，支持~~豆瓣~~（已废弃）、QQ、微博、Github等社交网站的登录；\n* 支持在线阅读：借助[epub.js](https://github.com/intity/epubreader-js) 库，支持了网页在线阅读电子书（章评功能开发中）；\n* 支持批量扫描导入书籍；\n* 支持邮件推送：可方便推送到Kindle；\n* 支持OPDS：可使用[KyBooks](http://kybook-reader.com/)等APP方便地读书；\n* 支持一键安装，网页版初始化配置，轻松启动网站；\n* 优化大书库时文件存放路径，可以按字母分类、或者文件名保持中文；\n* 支持快捷更新书籍信息：支持从百度百科、豆瓣搜索并导入书籍基础信息；\n* 支持私人模式：需要输入访问码，才能进入网站，便于小圈子分享网站；\n\n本项目曾用名：calibre-webserver\n\n\n## Docker ![Docker Pulls](https://img.shields.io/docker/pulls/talebook/talebook.svg)\n\n部署比较简单，建议采用docker，镜像地址：[dockerhub](https://hub.docker.com/r/talebook/talebook)\n\n推荐使用`docker-compose`，下载仓库中的配置文件[docker-compose.yml](docker-compose.yml)，然后执行命令启动即可。\n若希望修改挂载的目录或端口，请修改docker-compose.yml文件。\n\n```\nwget https://raw.githubusercontent.com/talebook/talebook/master/docker-compose.yml\ndocker-compose -f docker-compose.yml  up -d\n```\n\n\n如果使用原生docker，那么执行命令：\n\n`docker run -d --name talebook -p <本机端口>:80 -v <本机data目录>:/data talebook/talebook`\n\n\n例如\n\n`docker run -d --name talebook -p 8080:80 -v /tmp/demo:/data talebook/talebook`\n\n\n\n## 常见问题 \n\n常见问题请参阅[使用指南](document/README.zh_CN.md)，无法解决的话，提个ISSUEE，[进Q群交流](https://qm.qq.com/q/5lSfpJGsBq)\n\n手动安装请参考[开发者指南](document/Development.zh_CN.md)\n\nNAS安装指南：请参考网友们的帖子：[帖子1](https://post.smzdm.com/p/a992p6e0/)，[帖子2](https://post.smzdm.com/p/a3d7ox0k/), [帖子3](https://odcn.top/2019/02/26/2734/)\n\n**如果觉得本项目很棒，欢迎前往[爱发电](https://afdian.net/@talebook)，赞助作者，持续优化，为爱充电！**\n\n**再次声明！本项目没有维护任何公开的书库站点，例如 joyeuse, wenyuange 等网站均属于网友搭建的，相关问题请不要咨询我，爱莫能助！**\n\n\n## 贡献者\n[![](https://contrib.rocks/image?repo=talebook/talebook)](https://github.com/talebook/talebook/graphs/contributors)\n\n\n## 演示\n\n[Demo站点（密码 admin/demodemo ）](http://demo.talebook.org)\n\n[视频简介（感谢@Pan06da的制作）](https://player.bilibili.com/player.html?aid=482258810&bvid=BV1AT411S7c3&cid=1018595245&page=1)\n\n\n项目演示截图如下：\n![](document/screenshot.png)\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.45703125,
+          "content": "version: \"2.4\"\n\nservices:\n\n  # main service\n  talebook:\n    restart: always\n    image: talebook/talebook\n    volumes:\n      - /tmp/demo:/data\n    ports:\n      - \"8080:80\"\n      - \"8443:443\"\n    environment:\n      - PUID=1000\n      - PGID=1000\n      - TZ=Asia/Shanghai\n    depends_on:\n      - douban-rs-api\n\n  # optional, for meta plugins\n  # please set \"http://douban-rs-api\" in settings\n  douban-rs-api:\n    restart: always\n    image: ghcr.io/cxfksword/douban-api-rs\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "document",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "features.md",
+          "type": "blob",
+          "size": 2.21875,
+          "content": "v3.x的特性列表\n* 安装指引页面\n  - [x] 判断是否首次安装\n  - [x] 引导填写必要信息\n  - [x] 生成本地配置并保存\n  - [ ] 安装界面允许配置更多选项（中文套装？）\n\n* 私人图书馆模式（需密码进入）\n  -  [x] 一个欢迎页面\n  -  [ ] 允许配置提示文字\n  -  [x] 输入访问密码\n  -  [x] 提交后生成私密cookie记住信息\n  -  [x] 并在所有接口中都要校验这个cookie\n  -  [ ] CSRF防刷\n  -  [ ] 支持图形验证码（低优先级）\n\n* 本地用户注册功能\n  -  [x] 一个用户注册页面\n  -  [x] 邮箱注册\n  -  [x] 注册确认\n  -  [x] 修改密码\n  -  [x] 重置密码\n  -  [ ] 关联社交网络账号\n\n* 书籍管理能力\n  -  [x] 支持批量书籍导入（TODO：选定服务器目录、扫描存量书库文件哈希）\n  -  [ ] 支持书架\n  -  [ ] 支持更多元数据插件（amazon.cn） #33\n  -  [ ] 考虑默认集成douban-rs-api ?\n  -  [ ] 批量更新元数据（需要有个表格确认页？） #67 \n\n\n* 后台管理页面\n  -  [x] 新设计一个配置管理页面\n  -  [x] 对社交登录管理(开启哪些登录方式/对应的APIKEY)\n  -  [x] 是否允许本地用户注册\n  -  [x] 管理用户列表\n  -  [x] 权限管理(管理员/上传/浏览/下载)\n  -  [x] 网站功能设置（SMTP/豆瓣API等）\n  -  [x] 主页定制（网站名称、外链、公告）\n\n* 细粒度权限（用户级别）\n  -  [x] 在登录页面时检查用户级别的权限\n\n* 支持OPDS\n  -  [x] 将claibre官网库中的opds功能移植回来\n  -  [ ] 继续优化静读天下的处理\n\n* 新的社交登录方式\n  -  [x] 支持微信登录\n\n* 站点美化\n  -  [ ] 404页面\n  -  [ ] 5xx页面\n  -  [x] 星星的样式太大太丑\n  -  [ ] 支持语言选项（Englist）\n  -  [x] 启动时强制生成新的index.html（解决标题不一致问题）\n  -  [ ] 优化kindle推送时的大小限制 #82\n  -  [ ] 搜索时自动补全（模糊匹配书籍） #38\n\n* 技术优化\n  -  [x] vueJS重构\n  -  [x] 动静态分离\n  -  [ ] 书籍下载支持CDN（防盗链）\n  -  [ ] 异常邮件告警\n  -  [x] 增加单元测试覆盖率\n  -  [ ] 自动集成：接入Tarvis CI\n  -  [ ] 自动化测试：接入coverall.io\n  -  [ ] SQLITE数据库性能问题 #123\n\n"
+        },
+        {
+          "name": "kubernetes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.xml",
+          "type": "blob",
+          "size": 0.0302734375,
+          "content": "[tool.black]\nline-length = 120\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.1884765625,
+          "content": "jinja2==3.1.4\nsocial-auth-core==4.5.1\nsocial-auth-app-tornado==1.0.0\nsocial-auth-storage-sqlalchemy==1.1.0\ntornado==6.4.2\nbs4\nchardet\n\n# build-in support for MYSQL\npymysql\npytest==7.4.4\nflake8\n"
+        },
+        {
+          "name": "server.py",
+          "type": "blob",
+          "size": 0.216796875,
+          "content": "#!/usr/bin/env python3\n\n\"\"\"\nThis is the standard runscript for all of calibre's tools.\nDo not modify it unless you know what you are doing.\n\"\"\"\n\nimport os\nimport sys\n\nimport webserver.main\n\nsys.exit(webserver.main.main())\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webserver",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

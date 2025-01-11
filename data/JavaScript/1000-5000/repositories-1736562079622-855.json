@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "timestamp": 1736562079622,
+    "page": 855,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mikeric/rivets",
+      "stars": 3224,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": ".DS_Store\n*.swp\nnode_modules/**/*\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 6.9873046875,
+          "content": "# 0.9.6\n\n**No changes (version bump due to error in publishing 0.9.5)**\n\n# 0.9.5\n\n### Changes\n\n- Use global object `$` (jQuery or jQuery alternative) if available, fixing [#646](https://github.com/mikeric/rivets/issues/646)\n\n# 0.9.4\n\n### Changes\n\n- Updated sightglass to `v0.2.6`, fixing [#572](https://github.com/mikeric/rivets/issues/572)\n\n# 0.9.2\n\n### Changes\n\n- Fix issue when resetting a model [#644](https://github.com/mikeric/rivets/issues/644)\n- Fix publish function in two-way formatters [#649](https://github.com/mikeric/rivets/issues/649)\n- Fix array binding [#650](https://github.com/mikeric/rivets/issues/650)\n- Fix observers on prototype functions [#572](https://github.com/mikeric/rivets/issues/572)\n\n# 0.9.1\n\n### Changes\n\n- Fix bug in expression with multiple strings [#620](https://github.com/mikeric/rivets/issues/620)\n\n# 0.9.0\n\n### Changes\n\n- Fix binders which received 0 instead of undefined when HTML attributes were empty [#567](https://github.com/mikeric/rivets/issues/567)\n- Now functions are not executed by Rivets in expressions. To call the function you need to use the `call` formatter. See documentation [here](http://rivetsjs.com/docs/guide/#functions-call) [#571](https://github.com/mikeric/rivets/issues/571)\n- Support for nested rv-each with an index for each iteration. Index names can be configured, see documentation [here](http://rivetsjs.com/docs/guide/#usage-configuring) [#551](https://github.com/mikeric/rivets/issues/551)\n- Support for pipes in quoted arguments [#432](https://github.com/mikeric/rivets/issues/432)\n- Support for constant string in component HTML attributes [#478](https://github.com/mikeric/rivets/issues/478)\n- Fix rebind bug when a templated used nested `rv-if` binders [#611](https://github.com/mikeric/rivets/issues/611)\n\n### Upgrading from 0.8\n- Since 0.9 Rivets will not execute functions by default. This will allow passing arguments to function with the `call` formatter.\n\n    - Calling function in 0.8\n    ```\n    { item.myFunction }\n    ```\n    - Calling function in 0.9\n    ```\n    { item.myFunction | call}\n    ```\n    - Calling function in 0.9 with arguments\n    ```\n    { item.myFunction | call myArgument 'argument as string'}\n    ```\n\n    - You can force function executions to have your application work in `0.9` without using the `call` formatter. This is done with the configuration\n    ```\n    rivets.configure({\n        // Since rivets 0.9 functions are not automatically executed in expressions. If you need backward compatibilty, set this parameter to true\n        executeFunctions: true\n    });\n    ```\n\n- Using multiple indexes in nested `rv-each`. Since `0.9` rivets allows to have a specific index variable for each iteration.\n    ```\n    <ul>\n      <li rv-each-todo=\"todos\">\n        <ul>\n          <li rv-each-item=\"todo.items\">\n            <span>item #{ %item% } in todo #{ %todo%}</span>\n            <!-- Here the index will be the same as %item% -->\n          </li>\n        </ul>\n      </li>\n    <ul>\n    ```\n    The `index` is still available for compatibility reasons but you must be aware that it will only represent the last iteration.\n\n# 0.8\n\n### Changes\n\n- More refined and useful components API. Some documentation is available [here](http://rivetsjs.com/docs/guide/#components).\n\n# 0.7\n\n### Changes\n\n- Support for data-bound keypaths are formatter arguments.\n\n    ```\n    { item.price | lte user.balance }\n    ```\n\n- Support for primitives in binding declarations. This includes strings, numbers, booleans, null and undefined.\n\n    ```\n    { item.updated | date 'MMM DD, YYY' }\n    ```\n\n- Primitives are also supported as the binding target.\n\n    ```\n    { 'i18n.errors.' | append error | translate }\n    ```\n\n- Support for multiple binder arguments (wildcard matches). See [#383](https://github.com/mikeric/rivets/pull/383).\n\n- The `Observer` class has been abstracted out into a new lib as a dependency. See [Sightglass](https://github.com/mikeric/sightglass).\n\n- The built-in `value` binder now listens on the `input` event instead of `change`, so updates will propogate immediately instead of on blur.\n\n- There is no more `rivets.config` object. All of the previous configuration options are defined on the module directly.\n\n- If a template includes `<script>` elements, they will now be ignored when the template is parsed.\n\n### Upgrading from 0.6\n\n- Make sure you include the sightglass lib in your project. Just include `sightglass.js` before `rivets.js`. Alternatively you can just include `rivets.bundled.min.js` once (contains both libraries).\n\n- If you have defined any custom adapters, they will need to be updated from the old property names to the new property names.\n\n    - `adapter.subscribe` is now `adapter.observe`.\n    - `adapter.unsubscribe` is now `adapter.unobserve`.\n    - `adapter.read` is now `adapter.get`.\n    - `adapter.publish` is now `adapter.set`.\n\n- Change all of your existing formatter arguments to be wrapped in quotes. This is because arguments are evaluated as keypaths by default (unless they are wrapped in quotes).\n\n    - For example, if you were previously doing the following:\n\n        ```html\n        <p>{ item.enabled | switch green red }</p>\n        ```\n\n        You will need to change it to:\n\n        ```html\n        <p>{ item.enabled | switch 'green' 'red' }</p>\n        ```\n\n    - Note that if your keypath argument was a number, `true`, `false`, `null` or `undefined`, then you can leave them without quotes, but they will be passed to the formatter as the actual primitive value instead of a string.\n\n- If you ever set properties directly on the `rivets.config` object, you will need to change those to the `rivets` object itself.\n\n    - For example, if you were previously doing the following:\n\n        ```javascript\n        rivets.config.templateDelimiters = ['{{', '}}']\n        ```\n\n        You will need to change it to:\n\n        ```javascript\n        rivets.templateDelimiters = ['{{', '}}']\n        ```\n\n    - Note that if you were only using `rivets.configure({})` then no changes are needed (`rivets.configure` functions the same as before).\n\n# 0.6\n\n### Changes\n\n- Support for multiple adapters through interfaces.\n- Ships with a built-in `.` adapter using ES5 natives (getters and setters).\n- Support for nested keypaths (`user.address:zip`).\n\n### Upgrading from 0.5\n\n- All dependencies now stem from the target object, not the view's scope object. Make sure to change all dependency keypaths so that they stem from the object that points to the computed property / function.\n- The `prefix` configuration is now an absolute prefix (you need to include \"data\" in the prefix if you want to use data attributes). Defaults to `rv`. Make sure to change all existing attribute names to `rv-[binder]` or update your `prefix` configuration option.\n\n### Caveats\n\n- The built-in adapter observes array mutations (push, pop, unshift, etc.) but not changes made to indexes on the array directly (`array[3] = 'world'` for example).\n- The built-in adapter cannot subscribe to an array's `length` property. Currently you need to use a formatter to access the array's `length` property (`list.items | length`).\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.03515625,
+          "content": "Copyright (c) 2011 Michael Richards\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.212890625,
+          "content": "# Rivets.js\n\nRivets.js is a lightweight data binding and templating system that facilitates building data-driven views. It is agnostic about every aspect of a front-end MV(C|VM|P) stack, making it easy to introduce it into your current workflow or to use it as part of your own custom front-end stack comprised of other libraries.\n\n## Usage\n\n```html\n<section id=\"auction\">\n  <h3>{ auction.product.name }</h3>\n  <p>Current bid: { auction.currentBid | money }</p>\n\n  <aside rv-if=\"auction.timeLeft | lt 120\">\n    Hurry up! There is { auction.timeLeft | time } left.\n  </aside>\n</section>\n```\n\n```javascript\nrivets.bind($('#auction'), {auction: auction})\n```\n\n## Getting Started and Documentation\n\nDocumentation is available on the [homepage](http://rivetsjs.com). Learn by reading the [Guide](http://rivetsjs.com/docs/guide/) and refer to the [Binder Reference](http://rivetsjs.com/docs/reference/) to see what binders are available to you out-of-the-box.\n\n## Building and Testing\n\nFirst install any development dependencies.\n\n```\n$ npm install\n```\n\n#### Building\n\nRivets.js uses [gulp](http://gulpjs.com/) as its build tool. Run the following task to compile + minify the source into `dist/`.\n\n```\n$ gulp build\n```\n\n#### Testing\n\nRivets.js uses [mocha](http://visionmedia.github.io/mocha/) as its testing framework, alongside [should](https://github.com/visionmedia/should.js/) for expectations and [sinon](http://sinonjs.org/) for spies, stubs and mocks. Run the following to run the full test suite.\n\n```\n$ npm test\n```\n\n## Contributing\n\n#### Bug Reporting\n\n1. Ensure the bug can be reproduced on the latest master.\n2. Open an issue on GitHub and include an isolated [JSFiddle](http://jsfiddle.net/) demonstration of the bug. The more information you provide, the easier it will be to validate and fix.\n\n#### Pull Requests\n\n1. Fork the repository and create a topic branch.\n3. Make sure not to commit any changes under `dist/` as they will surely cause conflicts for others later. Files under `dist/` are only committed when a new build is released.\n4. Include tests that cover any changes or additions that you've made.\n5. Push your topic branch to your fork and submit a pull request. Include details about the changes as well as a reference to related issue(s).\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.4150390625,
+          "content": "{\n  \"name\": \"rivets\",\n  \"description\": \"Declarative data binding + templating solution.\",\n  \"homepage\": \"http://rivetsjs.com\",\n  \"version\": \"0.9.6\",\n  \"main\": \"dist/rivets.js\",\n  \"license\": \"MIT\",\n  \"authors\": [\n    \"Michael Richards\"\n  ],\n  \"keywords\": [\n    \"data binding\",\n    \"templating\"\n  ],\n  \"ignore\": [\n    \"node_modules\",\n    \"bower_components\",\n    \"spec\"\n  ],\n  \"dependencies\": {\n    \"sightglass\": \"~0.2.4\"\n  }\n}\n"
+        },
+        {
+          "name": "component.json",
+          "type": "blob",
+          "size": 0.33984375,
+          "content": "{\n  \"name\": \"rivets\",\n  \"description\": \"Declarative data binding + templating solution.\",\n  \"repo\": \"mikeric/rivets\",\n  \"version\": \"0.9.6\",\n  \"keywords\": [\n    \"data binding\",\n    \"templating\"\n  ],\n  \"license\": \"MIT\",\n  \"scripts\": [\n    \"dist/rivets.js\"\n  ],\n  \"main\": \"dist/rivets.js\",\n  \"dependencies\": {\n    \"mikeric/sightglass\": \"~0.2.4\"\n  }\n}\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc.sh",
+          "type": "blob",
+          "size": 1.3896484375,
+          "content": "#!/usr/bin/env bash\nset -e\nSTATUS=$(git status --porcelain 2>/dev/null)\nBRANCH_NAME=$(git symbolic-ref HEAD 2>/dev/null)\nBRANCH_NAME=${BRANCH_NAME##refs/heads/}\n\nif [ -n \"$STATUS\" ]\nthen\n        echo \"Dirty working tree; commit your changes then run me again.\" >&2\n        exit 1\nfi\n\nif [ -z \"$MAIN_BRANCH\"  ]; then\n        MAIN_BRANCH=\"master\"\nfi\n\nif [ \"$BRANCH_NAME\" != $MAIN_BRANCH ] \nthen\n        echo \"Refusing to update documentation from non-main branch:\" >&2\n        echo \"expect branch $BRANCH_NAME == $MAIN_BRANCH\" >&2\n        echo \"If you want to view your rendered documentation run: \" >&2\n        echo \"\" >&2\n        echo \"    harp server docs \" >&2\n        echo \"\" >&2\n        exit 1\nfi\n\n# The docs should include the version when they build. At current it's just in\n# the commit message.\nexport RIVETS_VERSION=$( \\\n        grep 'version' package.json | \\\n        awk -F'[\"]' '{print $4}' \\\n)\n\n\ngit checkout gh-pages 2>/dev/null 1>/dev/null\ngit checkout $MAIN_BRANCH -- docs 2>/dev/null\nrm -rf _harp\nmv docs _harp\nharp compile _harp .\n\ngit add -A 2>/dev/null 1>/dev/null\n\nset +e\ngit commit -a -m \"Generate documentation for v$RIVETS_VERSION\" 2>/dev/null 1>/dev/null\n\nif [ $? -eq 0 ]\nthen\n        echo \"documentation updated, publish via:\" >&2\n        echo \"    git push origin gh-pages:gh-pages\" >&2\nelse\n        echo \"No changes to publish\" >&2\nfi\nset -e\n\ngit checkout $MAIN_BRANCH 2>/dev/null 1>/dev/null\n\n\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gulpfile.js",
+          "type": "blob",
+          "size": 1.7041015625,
+          "content": "pkg    = require('./package.json')\nargv   = require('minimist')(process.argv.slice(2))\n\ngulp   = require('gulp')\nutil   = require('gulp-util')\ncoffee = require('gulp-coffee')\nheader = require('gulp-header')\nconcat = require('gulp-concat')\nuglify = require('gulp-uglify')\nbump   = require('gulp-bump')\nmocha  = require('gulp-mocha-phantomjs')\n\nsource = [\n  'src/rivets.coffee',\n  'src/util.coffee',\n  'src/parsers.coffee',\n  'src/observer.coffee',\n  'src/view.coffee',\n  'src/bindings.coffee',\n  'src/binders.coffee',\n  'src/formatters.coffee',\n  'src/adapter.coffee',\n  'src/export.coffee'\n]\n\nmanifests = [\n  './package.json',\n  './bower.json',\n  './component.json'\n]\n\nbanner = function(bundled) {\n  return [\n    '// Rivets.js' + (bundled ? ' + Sightglass.js' : ''),\n    '// version: ' + pkg.version,\n    '// author: ' + pkg.author,\n    '// license: ' + pkg.licenses[0].type\n  ].join('\\n') + '\\n'\n}\n\ngulp.task('build', function() {\n  rivets = gulp.src(source)\n    .pipe(concat('rivets.js'))\n    .pipe(coffee().on('error', util.log))\n    .pipe(header(banner()))\n    .pipe(gulp.dest('dist'))\n\n  rivetsMin = rivets.pipe(concat('rivets.min.js'))\n    .pipe(uglify())\n    .pipe(header(banner()))\n    .pipe(gulp.dest('dist'))\n\n  rivets.on('end', function() {\n    sightglass = 'node_modules/sightglass/index.js'\n    rivets = 'dist/rivets.js'\n\n    gulp.src([sightglass, rivets])\n      .pipe(uglify())\n      .pipe(concat('rivets.bundled.min.js'))\n      .pipe(header(banner(true)))\n      .pipe(gulp.dest('dist'))\n  })\n})\n\ngulp.task('spec', function() {\n  gulp.src('spec/runner.html')\n    .pipe(mocha({reporter: 'dot'}))\n})\n\ngulp.task('bump', function() {\n  gulp.src(manifests)\n    .pipe(bump({type: argv.t, version: argv.v}))\n    .pipe(gulp.dest('./'))\n})\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.9814453125,
+          "content": "{\n  \"name\": \"rivets\",\n  \"description\": \"Declarative data binding + templating solution.\",\n  \"version\": \"0.9.6\",\n  \"author\": \"Michael Richards\",\n  \"url\": \"http://rivetsjs.com\",\n  \"main\": \"./dist/rivets.js\",\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"https://github.com/mikeric/rivets/blob/master/LICENSE\"\n    }\n  ],\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/mikeric/rivets.git\"\n  },\n  \"dependencies\": {\n    \"sightglass\": \"~0.2.4\"\n  },\n  \"scripts\": {\n    \"test\": \"gulp spec\",\n    \"build\": \"gulp build\",\n    \"bump\": \"gulp bump\",\n    \"upgrade\": \"npm run build && npm test && npm run bump && npm run build\"\n  },\n  \"devDependencies\": {\n    \"mocha\": \"~1.20.1\",\n    \"should\": \"~4.0.4\",\n    \"sinon\": \"~1.10.2\",\n    \"minimist\": \"~1.1.0\",\n    \"gulp\": \"~3.8.7\",\n    \"gulp-util\": \"~2.2.14\",\n    \"gulp-coffee\": \"~1.4.3\",\n    \"gulp-header\": \"~1.0.2\",\n    \"gulp-concat\": \"~2.2.0\",\n    \"gulp-uglify\": \"~0.3.0\",\n    \"gulp-bump\": \"~0.1.11\",\n    \"gulp-mocha-phantomjs\": \"~0.2.0\"\n  }\n}\n"
+        },
+        {
+          "name": "spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

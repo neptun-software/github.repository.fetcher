@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736562001246,
+    "page": 732,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "anthonyshort/deku",
+      "stars": 3413,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".babelrc",
+          "type": "blob",
+          "size": 1.0283203125,
+          "content": "{\n  \"presets\": [\"stage-2\"],\n  \"sourceMaps\": true,\n  \"plugins\": [\n    [\"transform-react-jsx\", {\"pragma\": \"h\"}],\n    \"transform-es2015-template-literals\",\n    \"transform-es2015-literals\",\n    \"transform-es2015-function-name\",\n    \"transform-es2015-arrow-functions\",\n    \"transform-es2015-block-scoped-functions\",\n    \"transform-es2015-classes\",\n    \"transform-es2015-object-super\",\n    \"transform-es2015-shorthand-properties\",\n    \"transform-es2015-duplicate-keys\",\n    \"transform-es2015-computed-properties\",\n    \"transform-es2015-for-of\",\n    \"transform-es2015-sticky-regex\",\n    \"transform-es2015-unicode-regex\",\n    \"check-es2015-constants\",\n    \"transform-es2015-spread\",\n    \"transform-es2015-parameters\",\n    \"transform-es2015-destructuring\",\n    \"transform-es2015-block-scoping\",\n    \"transform-es2015-typeof-symbol\",\n    [\"transform-regenerator\", { \"async\": false, \"asyncGenerators\": false }],\n  ],\n  \"env\": {\n    \"commonjs\": {\n      \"plugins\": [\n        [\"transform-es2015-modules-commonjs\", { \"loose\": true }]\n      ]\n    },\n    \"es\": {}\n  }\n}\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0537109375,
+          "content": "node_modules\n.DS_Store\n_book\ndist\nlib\nes\nnpm-debug.log\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": ".babelrc\ntest\nsrc\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2333984375,
+          "content": "language: node_js\nnode_js:\n  - \"5\"\nscript:\n  - npm run test:lint\n  - npm run test:headless\naddons:\n  apt:\n    packages:\n      - xvfb\ninstall:\n  - export DISPLAY=':99.0'\n  - Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &\n  - npm install\n"
+        },
+        {
+          "name": ".zuul.yml",
+          "type": "blob",
+          "size": 0.3642578125,
+          "content": "ui: tape\nconcurrency: 5\nbrowsers:\n  - name: chrome\n    version: latest\n  - name: firefox\n    version: latest\n  - name: iphone\n    version: latest\n  - name: ipad\n    version: latest\n  - name: android\n    version: latest\n  - name: ie\n    version: 10..latest\n  - name: microsoftedge\n    version: latest\n  - name: safari\n    version: latest\nbrowserify:\n  - transform: babelify\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.677734375,
+          "content": "# Deku\n\n[![version](https://img.shields.io/travis/dekujs/deku.svg?style=flat-square)](https://travis-ci.org/dekujs/deku)\n[![version](https://img.shields.io/npm/v/deku.svg?style=flat-square)](https://www.npmjs.com/package/deku)\n[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square)](https://github.com/feross/standard)\n[![npm downloads](https://img.shields.io/npm/dm/deku.svg?style=flat-square)](https://www.npmjs.com/package/deku)\n[![discord](https://img.shields.io/badge/Discord-Join%20Chat%20→-738BD7.svg?style=flat-square)](https://discord.gg/0gNkyCAVkDYsBaFe)\n\nDeku is a library for rendering interfaces using pure functions and virtual DOM.\n\nInstead of using classes and local state, Deku just uses functions and pushes the responsibility of all state management and side-effects onto tools like [Redux](http://redux.js.org/). It also aims to support only modern browsers to keep things simple.\n\nIt can be used in place of libraries like React and works well with Redux and other libraries in the React ecosystem.\n\nDeku consists of 5 modules packaged together for convenience:\n\n* `element`: Create virtual elements.\n* `diff`: Compute the difference between two virtual elements. You can use this if you're creating a custom renderer.\n* `dom`: Create DOM elements from virtual elements and update them using the result of a diff. You'll only use this directly if you're building your own app creator.\n* `string`: Render a HTML string from virtual elements.\n* `createApp`: Kickstart an app for the browser.\n\n### Installation\n\n```\nnpm install --save deku\n```\n\nWe support the latest two versions of each browser. This means we only support IE10+.\n\n[![Sauce Test Status](https://saucelabs.com/browser-matrix/deku.svg)](https://saucelabs.com/u/deku)\n\n### Example\n\n```js\n/** @jsx element */\nimport {element, createApp} from 'deku'\nimport {createStore} from 'redux'\nimport reducer from './reducer'\n\n// Dispatch an action when the button is clicked\nlet log = dispatch => event => {\n  dispatch({\n    type: 'CLICKED'\n  })\n}\n\n// Define a state-less component\nlet MyButton = {\n  render: ({ props, children, dispatch }) => {\n    return <button onClick={log(dispatch)}>{children}</button>\n  }\n}\n\n// Create a Redux store to handle all UI actions and side-effects\nlet store = createStore(reducer)\n\n// Create an app that can turn vnodes into real DOM elements\nlet render = createApp(document.body, store.dispatch)\n\n// Update the page and add redux state to the context\nrender(\n  <MyButton>Hello World!</MyButton>,\n  store.getState()\n)\n```\n\n### Documentation\n\nYou can [read the documentation online](http://anthonyshort.me/deku/).\n\n### License\n\nThe MIT License (MIT) Copyright (c) 2015 Anthony Short\n"
+        },
+        {
+          "name": "book.json",
+          "type": "blob",
+          "size": 0.3369140625,
+          "content": "{\n  \"gitbook\": \"2.x.x\",\n  \"structure\": {\n    \"summary\": \"docs/README.md\"\n  },\n  \"plugins\": [\"edit-link\", \"prism\", \"-highlight\"],\n  \"pluginsConfig\": {\n    \"edit-link\": {\n      \"base\": \"https://github.com/anthonyshort/deku/tree/master\",\n      \"label\": \"Edit\"\n    },\n    \"github\": {\n      \"url\": \"https://github.com/anthonyshort/deku/\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 3.8056640625,
+          "content": "{\n  \"name\": \"deku\",\n  \"version\": \"2.0.0-rc16\",\n  \"license\": \"MIT\",\n  \"repository\": \"dekujs/deku\",\n  \"description\": \"Render interfaces using pure functions and virtual DOM\",\n  \"main\": \"lib/index.js\",\n  \"jsnext:main\": \"es/index.js\",\n  \"scripts\": {\n    \"clean\": \"rimraf lib _book\",\n    \"build\": \"npm run build:commonjs && npm run build:es\",\n    \"build:commonjs\": \"cross-env BABEL_ENV=commonjs babel src --out-dir lib\",\n    \"build:es\": \"cross-env BABEL_ENV=es babel src --out-dir es\",\n    \"test\": \"cross-env BABEL_ENV=commonjs hihat test/index.js -- --debug -t babelify -p tap-dev-tool\",\n    \"test:headless\": \"cross-env BABEL_ENV=commonjs browserify test/index.js -t babelify | tape-run\",\n    \"test:browsers\": \"cross-env BABEL_ENV=commonjs zuul -- ./test/index.js\",\n    \"test:lint\": \"standard src/**/*.js test/**/*.js | snazzy\",\n    \"docs:install\": \"gitbook install\",\n    \"docs:build\": \"npm run docs:install && gitbook build\",\n    \"docs:serve\": \"npm run docs:install && gitbook serve\",\n    \"docs:deploy\": \"npm run docs:build && gh-pages -d _book\",\n    \"prepublish\": \"npm run clean && npm run build\",\n    \"preversion\": \"npm run clean && npm run test:lint\",\n    \"version\": \"npm run build\",\n    \"postversion\": \"git push && git push --tags && npm run clean\",\n    \"standalone\": \"browserify src/index.js -s deku -t babelify -o dist/deku.js\",\n    \"example:basic\": \"budo examples/basic/index.js -- -t babelify\"\n  },\n  \"devDependencies\": {\n    \"babel-cli\": \"6.3.17\",\n    \"babel-plugin-check-es2015-constants\": \"^6.7.2\",\n    \"babel-plugin-transform-es2015-arrow-functions\": \"^6.5.2\",\n    \"babel-plugin-transform-es2015-block-scoped-functions\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-block-scoping\": \"^6.7.1\",\n    \"babel-plugin-transform-es2015-classes\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-computed-properties\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-destructuring\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-duplicate-keys\": \"^6.6.4\",\n    \"babel-plugin-transform-es2015-for-of\": \"^6.6.0\",\n    \"babel-plugin-transform-es2015-function-name\": \"^6.5.0\",\n    \"babel-plugin-transform-es2015-literals\": \"^6.5.0\",\n    \"babel-plugin-transform-es2015-modules-commonjs\": \"^6.7.4\",\n    \"babel-plugin-transform-es2015-object-super\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-parameters\": \"^6.7.0\",\n    \"babel-plugin-transform-es2015-shorthand-properties\": \"^6.5.0\",\n    \"babel-plugin-transform-es2015-spread\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-sticky-regex\": \"^6.5.0\",\n    \"babel-plugin-transform-es2015-template-literals\": \"^6.6.5\",\n    \"babel-plugin-transform-es2015-typeof-symbol\": \"^6.6.0\",\n    \"babel-plugin-transform-es2015-unicode-regex\": \"^6.5.0\",\n    \"babel-plugin-transform-react-jsx\": \"6.1.18\",\n    \"babel-plugin-transform-regenerator\": \"^6.6.5\",\n    \"babel-polyfill\": \"6.1.19\",\n    \"babel-preset-stage-2\": \"6.1.18\",\n    \"babelify\": \"7.2.0\",\n    \"browserify\": \"13.0.0\",\n    \"browserify-hmr\": \"^0.3.1\",\n    \"budo\": \"7.1.0\",\n    \"cross-env\": \"^1.0.7\",\n    \"gh-pages\": \"0.8.0\",\n    \"gitbook\": \"2.6.6\",\n    \"hihat\": \"2.6.4\",\n    \"is-dom\": \"1.0.5\",\n    \"rimraf\": \"2.5.0\",\n    \"snazzy\": \"2.0.1\",\n    \"standard\": \"5.4.1\",\n    \"tap-dev-tool\": \"1.3.0\",\n    \"tape\": \"4.2.2\",\n    \"tape-run\": \"2.1.0\",\n    \"trigger-event\": \"1.0.0\",\n    \"zuul\": \"3.9.0\"\n  },\n  \"dependencies\": {\n    \"@f/create-element\": \"1.0.0\",\n    \"@f/empty-element\": \"^1.0.0\",\n    \"@f/foreach\": \"1.2.2\",\n    \"@f/is-function\": \"1.1.1\",\n    \"@f/is-null\": \"1.0.0\",\n    \"@f/is-number\": \"1.1.1\",\n    \"@f/is-string\": \"1.1.1\",\n    \"@f/is-undefined\": \"1.1.1\",\n    \"@f/is-valid-attr\": \"1.0.0\",\n    \"@f/noop\": \"1.2.0\",\n    \"@f/reduce-array\": \"^0.2.1\",\n    \"@f/set-attribute\": \"1.0.1\",\n    \"@f/to-array\": \"1.1.1\",\n    \"dift\": \"0.1.12\",\n    \"index-of\": \"0.2.0\",\n    \"setify\": \"1.0.3\",\n    \"union-type\": \"0.1.6\"\n  },\n  \"keywords\": [\n    \"deku\",\n    \"functional\",\n    \"react\",\n    \"virtual\",\n    \"dom\",\n    \"elm\",\n    \"redux\"\n  ]\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

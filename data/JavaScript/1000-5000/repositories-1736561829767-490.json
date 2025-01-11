@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "timestamp": 1736561829767,
+    "page": 490,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "blakeembrey/code-problems",
+      "stars": 3813,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.3603515625,
+          "content": "# EditorConfig helps developers define and maintain consistent\n# coding styles between different editors and IDEs\n# editorconfig.org\n\nroot = true\n\n[*]\nindent_style = space\nindent_size = 2\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.md]\ntrim_trailing_whitespace = false\n\n[Makefile]\nindent_style = tab\nindent_size = 4\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0390625,
+          "content": ".DS_Store\n.idea\nnode_modules\n*.o\nvendor\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0908203125,
+          "content": "[submodule \"tests/cpp/gtest\"]\n\tpath = tests/cpp/gtest\n\turl = git@github.com:tclamb/gtest.git\n"
+        },
+        {
+          "name": ".jshintignore",
+          "type": "blob",
+          "size": 0.0419921875,
+          "content": "solutions/javascript/shortest-fizz-buzz.js\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.0478515625,
+          "content": "# Contributing\n\n## Structure\n\n### Adding a new problem\n\nTo add a new problem to the repo, no solution needs to be present. Just add a folder to the problems directory with a readme detailing the complete problem and expected result.\n\n### Adding a new solution\n\nTo add a new solution to the repo, add the solution to the correct language directory in the solutions directory. Make the solution file name match the problem. If a solution already exists, but your solution is distinctly different to the current solution, place both solutions in a directory named after the problem. The file names should then accurately represent the type of solution used in each solution. If you must use multiple files for your solution, create a solution directory and another directory for your solution assets.\n\n## Style Guide\n\nIn lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality.\n\nPlease lint and test your code with any means available - currently JavaScript has tests and linting via Mocha and JSHint.\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0771484375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Blake Embrey (hello@blakeembrey.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.390625,
+          "content": "SHELL     := /bin/sh\nTEST_DIR  := tests\nGTEST_DIR := $(TEST_DIR)/cpp/gtest\n\n\n# C++11 tests\nCPP_TESTS   := stack-machine.cpp once.cpp stack.cpp queue.cpp spiral.cpp\nCPP_SOURCES := $(addprefix $(TEST_DIR)/cpp/, $(CPP_TESTS))\n\n\n# OS specific settings\nUNAME_S = $(shell uname -s)\nifeq ($(UNAME_S),Darwin)\n\tCXXFLAGS += -std=c++11 -stdlib=libc++\n\tLDFLAGS  += -lc++\n\tCXX := clang++\nelse ifeq ($(UNAME_S),Linux)\n\tCXXFLAGS += --std=c++11 -g\n\tCXX := g++\nendif\n\n\n# Languages\ndefault:\n\t@echo \"Usage: make <language>\"\n\t@echo \"Available languages: cpp, js\"\n\n\n# Not recommended\n.IGNORE: cpp js\nall: .IGNORE\n\n\n# C++ build rules\nOTHER_SOURCES       := $(TEST_DIR)/cpp/common.cpp\nFUSED_GTEST_SOURCES := $(GTEST_DIR)/gtest-all.cc $(GTEST_DIR)/gtest_main.cc\nCXXFLAGS += -DGTEST_HAS_PTHREAD=0 -DGTEST_HAS_TR1_TUPLE=0 -g\nCPP_OBJECTS := $(CPP_SOURCES:.cpp=.o)\nFUSED_GTEST_OBJECTS := $(FUSED_GTEST_SOURCES:.cc=.o)\nOTHER_OBJECTS := $(OTHER_SOURCES:.cpp=.o)\ncpp: hasGTest $(FUSED_GTEST_OBJECTS) $(CPP_OBJECTS) $(OTHER_OBJECTS)\n\t@$(CXX) $(LDFLAGS) \\\n\t\t$(CPP_OBJECTS) $(FUSED_GTEST_OBJECTS) $(OTHER_OBJECTS)\\\n\t\t-o cpp\n\t@./cpp\n\t@rm -rf cpp\nhasGTest:\n\t@if [ ! -f $(GTEST_DIR)/gtest.h ]; then \\\n\t\tgit submodule update --init -f $(GTEST_DIR); \\\n\tfi\n.cpp.o:\n\t@$(CXX) $(CXXFLAGS) -c $< -o $@\n.cc.o:\n\t@$(CXX) $(CXXFLAGS) -c $< -o $@\n\n\n# JS build rules\njs:\n\t@npm install 2> /dev/null\n\t@npm test\n\n\n# Cleanup\nclean:\n\t@rm -f $(CPP_OBJECTS) $(FUSED_GTEST_OBJECTS)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.240234375,
+          "content": "# Code Problems\n\n> Looking for a new job? Take Triplebyte's [quiz](https://triplebyte.com/a/QW7kzKo/d) and have top tech companies pitch you!\n\nThis is an incomplete repo full of code problems used prior to or during an interview. I hope these problems will be useful for you to practice and review. If you have practiced on or designed an interesting problem, we'd love to see it! Open a PR or issue with your suggestions or optimizations.\n\n## Problems\n\nView [all problems](./problems), or start here:\n\n**Sorting Algorithms**\n\n* [Quick Sort](https://github.com/blakeembrey/code-problems/tree/master/problems/quick-sort)\n* [Bubble Sort](https://github.com/blakeembrey/code-problems/tree/master/problems/bubble-sort)\n* [Merge Sort](https://github.com/blakeembrey/code-problems/tree/master/problems/merge-sort)\n* [Selection Sort](https://github.com/blakeembrey/code-problems/tree/master/problems/selection-sort)\n* [Insertion Sort](https://github.com/blakeembrey/code-problems/tree/master/problems/insertion-sort)\n\n**Data Structures**\n\n* [Stack](https://github.com/blakeembrey/code-problems/tree/master/problems/stack)\n* [Queue](https://github.com/blakeembrey/code-problems/tree/master/problems/queue)\n* [Linked List](https://github.com/blakeembrey/code-problems/tree/master/problems/linked-list)\n* [Binary Search Tree Check](https://github.com/blakeembrey/code-problems/tree/master/problems/binary-search-tree-check) *Not an implementation, checks for a valid implementation*\n\n**DOM Problems**\n\n* [Get Elements By Class Name](https://github.com/blakeembrey/code-problems/tree/master/problems/get-elements-by-class-name)\n\n**Shortest Code Problems**\n\n* [Shortest Fizz Buzz](https://github.com/blakeembrey/code-problems/tree/master/problems/shortest-fizz-buzz)\n\n## Tests\n\n```sh\nnpm install # Installs `mocha` and any other dependencies needed to run\nnpm test    # Runs the testing scripts\n```\n\n## Contributing\n\nIf you have a problem or solution that's not currently not included, please open an issue or pull request! If you're including new content, please make sure you have permission to publish the content you are adding. Under no circumstance should you copy problems online without a visible license or attribution, or from coding interview websites such as [Codility](https://codility.com/).\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.060546875,
+          "content": "{\n    \"require\": {\n        \"phpunit/phpunit\": \"5.5.*\"\n    }\n}\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.5869140625,
+          "content": "{\n  \"name\": \"code-problems\",\n  \"private\": true,\n  \"description\": \"Repository full of code problems and common solutions\",\n  \"devDependencies\": {\n    \"chai\": \"^3.5.0\",\n    \"mocha\": \"^3.2.0\"\n  },\n  \"scripts\": {\n    \"test\": \"mocha tests/javascript\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/blakeembrey/code-problems.git\"\n  },\n  \"keywords\": [\n    \"code\",\n    \"problems\",\n    \"interview\",\n    \"programming\"\n  ],\n  \"author\": \"Blake Embrey\",\n  \"license\": \"MIT\",\n  \"readmeFilename\": \"README.md\",\n  \"bugs\": {\n    \"url\": \"https://github.com/blakeembrey/code-problems/issues\"\n  }\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.1787109375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<testsuites > \n  <testsuite name=\"code-problom test suites\">\n    <directory suffix=\"Test.php\">tests/php</directory>\n  </testsuite>\n</testsuites>"
+        },
+        {
+          "name": "problems",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solutions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
