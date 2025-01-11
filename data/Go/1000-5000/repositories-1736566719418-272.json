@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "timestamp": 1736566719418,
+    "page": 272,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gravityblast/fresh",
+      "stars": 3798,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.28515625,
+          "content": "# Compiled Object files, Static and Dynamic libs (Shared Objects)\n\n.DS_Store\ntmp\n/fresh\n/runner.conf.dev\n\n*.o\n*.a\n*.so\n\n# Folders\n_obj\n_test\n\n# Architecture specific extensions/prefixes\n*.[568vq]\n[568vq].out\n\n*.cgo1.go\n*.cgo2.c\n_cgo_defun.c\n_cgo_gotypes.go\n_cgo_export.*\n\n_testmain.go\n\n*.exe\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.07421875,
+          "content": "language: go\n\ngo:\n  - 1.4.2\n  - 1.5.1\n  - tip\n\nscript:\n  - go test -v ./...\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0791015625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Andrea Franz (http://gravityblast.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.2978515625,
+          "content": "# Fresh\n\n[![Join the chat at https://gitter.im/pilu/fresh](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/pilu/fresh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n[![Build Status](https://travis-ci.org/pilu/fresh.svg?branch=master)](https://travis-ci.org/pilu/fresh)\n\nFresh is a command line tool that builds and (re)starts your web application everytime you save a Go or template file.\n\nIf the web framework you are using supports the Fresh runner, it will show build errors on your browser.\n\nIt currently works with [Traffic](https://github.com/pilu/traffic), [Martini](https://github.com/codegangsta/martini) and [gocraft/web](https://github.com/gocraft/web).\n\n## Installation\n\n    go install github.com/gravityblast/fresh@latest\n\n## Usage\n\n    cd /path/to/myapp\n\nStart fresh:\n\n    fresh\n\nFresh will watch for file events, and every time you create/modify/delete a file it will build and restart the application.\nIf `go build` returns an error, it will log it in the tmp folder.\n\n[Traffic](https://github.com/pilu/traffic) already has a middleware that shows the content of that file if it is present. This middleware is automatically added if you run a Traffic web app in dev mode with Fresh.\nCheck the `_examples` folder if you want to use it with Martini or Gocraft Web.\n\n`fresh` uses `./runner.conf` for configuration by default, but you may specify an alternative config filepath using `-c`:\n\n    fresh -c other_runner.conf\n\nHere is a sample config file with the default settings:\n\n    root:              .\n    tmp_path:          ./tmp\n    build_name:        runner-build\n    build_log:         runner-build-errors.log\n    valid_ext:         .go, .tpl, .tmpl, .html\n    no_rebuild_ext:    .tpl, .tmpl, .html\n    ignored:           assets, tmp\n    build_delay:       600\n    colors:            1\n    log_color_main:    cyan\n    log_color_build:   yellow\n    log_color_runner:  green\n    log_color_watcher: magenta\n    log_color_app:\n\n\n## Author\n\n* [Andrea Franz](http://gravityblast.com)\n\n## More\n\n* [Mailing List](https://groups.google.com/d/forum/golang-fresh)\n\n## Contributing\n\n1. Fork it\n2. Create your feature branch (`git checkout -b my-new-feature`)\n3. Commit your changes (`git commit -am 'Add some feature'`)\n4. Push to the branch (`git push origin my-new-feature`)\n5. Create new Pull Request\n\n"
+        },
+        {
+          "name": "_examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 1.173828125,
+          "content": "/*\nFresh is a command line tool that builds and (re)starts your web application everytime you save a go or template file.\n\nIf the web framework you are using supports the Fresh runner, it will show build errors on your browser.\n\nIt currently works with Traffic (https://github.com/pilu/traffic), Martini (https://github.com/codegangsta/martini) and gocraft/web (https://github.com/gocraft/web).\n\nFresh will watch for file events, and every time you create/modifiy/delete a file it will build and restart the application.\nIf `go build` returns an error, it will logs it in the tmp folder.\n\nTraffic (https://github.com/pilu/traffic) already has a middleware that shows the content of that file if it is present. This middleware is automatically added if you run a Traffic web app in dev mode with Fresh.\n*/\npackage main\n\nimport (\n\t\"flag\"\n\t\"fmt\"\n\t\"github.com/pilu/fresh/runner\"\n\t\"os\"\n)\n\nfunc main() {\n\tconfigPath := flag.String(\"c\", \"\", \"config file path\")\n\tflag.Parse()\n\n\tif *configPath != \"\" {\n\t\tif _, err := os.Stat(*configPath); err != nil {\n\t\t\tfmt.Printf(\"Can't find config file `%s`\\n\", *configPath)\n\t\t\tos.Exit(1)\n\t\t} else {\n\t\t\tos.Setenv(\"RUNNER_CONFIG_PATH\", *configPath)\n\t\t}\n\t}\n\n\trunner.Start()\n}\n"
+        },
+        {
+          "name": "runner.conf.sample",
+          "type": "blob",
+          "size": 0.384765625,
+          "content": "root:              .\ntmp_path:          ./tmp\nbuild_name:        runner-build\nbuild_log:         runner-build-errors.log\nvalid_ext:         .go, .tpl, .tmpl, .html\nno_rebuild_ext:    .tpl, .tmpl, .html\nignored:           assets, tmp\nbuild_delay:       600\ncolors:            1\nlog_color_main:    cyan\nlog_color_build:   yellow\nlog_color_runner:  green\nlog_color_watcher: magenta\nlog_color_app:\n"
+        },
+        {
+          "name": "runner",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "timestamp": 1736566215883,
+    "page": 227,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cinder/Cinder",
+      "stars": 5361,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.083984375,
+          "content": "# Xcode\n*.pbxproj -crlf -merge\n\n# Visual Studio\n*.vcproj -crlf -diff\n*.sln -crlf -diff"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.333984375,
+          "content": "# Mac OS X cruft\n*.pbxuser\n*.mode1v3\n*.mode2v3\n*.user\nproject.xcworkspace\nxcuserdata/\n*.xccheckout\n.DS_Store\n\nbuild/\nlib/libcinder*.a\nlib/msw/x86/cinder*.lib\nlib/msw/x64/cinder*.lib\nlib/msw/x86/cinder*.idb\nlib/msw/x64/cinder*.idb\nlib/msw/x86/cinder*.pdb\nlib/msw/x64/cinder*.pdb\nlib/winrt/x86/cinder*.lib\nlib/winrt/x64/cinder*.lib\n\n# Windows cruft\n*.suo\n*.ncb\n*.sdf\n*.VC.opendb\n*.VC.db\n*.opensdf\nDebug/\nRelease/\nDebug_ANGLE/\nRelease_ANGLE/\nDebug_Shared/\nRelease_Shared/\nipch/\n**/vc2013/enc_temp_folder/**\n.vs/\n\n# doxygen generated files\ndocs/html\ndocs/xml\ndocs/doxygen/cinder.tag\ndocs/*/node_modules\n*.pyc\n\n# Android cruft\n*.swp\n.idea\nlib/android/android-19/armeabi-v7a/libcinder*.a\nlib/android/android-19/armeabi/libcinder*.a\nlib/android/android-19/mips/libcinder*.a\nlib/android/android-19/x86/libcinder*.a\nlib/android/android-21/arm64-v8a/libcinder*.a\nlib/android/android-21/armeabi-v7a/libcinder*.a\nlib/android/android-21/armeabi/libcinder*.a\nlib/android/android-21/mips/libcinder*.a\nlib/android/android-21/mips64/libcinder*.a\nlib/android/android-21/x86/libcinder*.a\nlib/android/android-21/x86_64/libcinder*.a\n\n*.iml\nlocal.properties\nproguard-rules.pro\n.gradle/\njniLibs/\n\n# cmake generated files\ncinderConfig.cmake\n\n# CinderBlocks\nblocks/\n!blocks/[__AppTemplates,Box2D,Cairo,FMOD,LocationManager,MotionManager,OSC,QuickTime,TUIO]\n\n#ImGui stored settings\nimgui.ini\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.251953125,
+          "content": "[submodule \"tools/TinderBox-Mac\"]\n\tpath = tools/TinderBox-Mac\n\turl = https://github.com/cinder/TinderBox-Mac.git\n\tbranch = 0.9.3\n[submodule \"tools/TinderBox-Win\"]\n\tpath = tools/TinderBox-Win\n\turl = https://github.com/cinder/TinderBox-Win.git\n\tbranch = 0.9.3\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.119140625,
+          "content": "cmake_minimum_required( VERSION 3.10 FATAL_ERROR )\nset( CMAKE_VERBOSE_MAKEFILE ON )\n\n# Configure the Android toolchain before the project start\nif( CINDER_TARGET )\n\tstring( TOLOWER \"${CINDER_TARGET}\" CINDER_TARGET_LOWER )\n\tif( \"android\" STREQUAL \"${CINDER_TARGET_LOWER}\" )\n\t    include( \"${CMAKE_CURRENT_SOURCE_DIR}/proj/cmake/modules/cinderAndroidToolchain.cmake\" )\n    endif()\nendif()\n\n# Project start\nproject( cinder )\n\noption( CINDER_BUILD_TESTS \"Build unit tests.\" OFF )\noption( CINDER_BUILD_ALL_SAMPLES \"Build all samples.\" OFF )\nset( CINDER_BUILD_SAMPLE \"\" CACHE STRING \"Build a specific sample by specifying its path relative to the samples directory (ex. '_opengl/Cube').\" )\n\nset( CINDER_PATH      \"${CMAKE_CURRENT_SOURCE_DIR}\" )\nset( CINDER_CMAKE_DIR \"${CMAKE_CURRENT_SOURCE_DIR}/proj/cmake\" )\n\ninclude( ${CINDER_CMAKE_DIR}/configure.cmake )\ninclude( ${CINDER_CMAKE_DIR}/libcinder_configure.cmake )\ninclude( ${CINDER_CMAKE_DIR}/libcinder_source_files.cmake )\n\nset( CINDER_SKIP_SAMPLES \"\" )\n\nif( CINDER_LINUX )\n\tinclude( \"${CINDER_CMAKE_DIR}/platform_linux.cmake\" )\nelseif( CINDER_MAC )\n\tinclude( \"${CINDER_CMAKE_DIR}/platform_macosx.cmake\" )\nelseif( CINDER_ANDROID )\n\tinclude( \"${CINDER_CMAKE_DIR}/platform_android.cmake\" )\nelseif( CINDER_MSW )\n\tinclude( \"${CINDER_CMAKE_DIR}/platform_msw.cmake\" )\nelse()\n\tmessage( FATAL_ERROR \"no target defined for system: '${CMAKE_SYSTEM_NAME}.'\" )\nendif()\n\ninclude( ${CINDER_CMAKE_DIR}/libcinder_target.cmake )\n\nif( CINDER_BUILD_ALL_SAMPLES )\n\tinclude( ${CINDER_CMAKE_DIR}/modules/findCMakeDirs.cmake )\n\n\tset( allSamples \"\" )\n\tfindCMakeDirs( allSamples \"${CINDER_PATH}/samples\" \"${CINDER_SKIP_SAMPLES}\" )\n\n\tforeach( sampleDir ${allSamples} )\n\t\tci_log_v( \"adding sample: ${sampleDir}\" )\n\t\tadd_subdirectory( ${sampleDir} )\n\tendforeach()\nelseif( CINDER_BUILD_SAMPLE )\n\tforeach( sampleDir ${CINDER_BUILD_SAMPLE} )\n\t\tci_log_v( \"adding sample: ${sampleDir}\" )\n\t\tadd_subdirectory( ${CINDER_PATH}/samples/${sampleDir}/proj/cmake )\n\tendforeach()\nendif()\n\nif( CINDER_BUILD_TESTS )\n\tenable_testing()\n\tadd_subdirectory( ${CINDER_PATH}/test/unit/proj/cmake )\n\tadd_custom_target( check COMMAND ${CMAKE_CTEST_COMMAND} --verbose )\nendif()\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 7.8515625,
+          "content": "# Contributing\n\nWe welcome contibutions in the form of pull requests, issues, or code reviews. Here are some quick guidelines to help ensure we can make use of your effort.\n\n### Reporting Issues\n\nIf you stumble upon a bug or something seems odd, please file an issue in the [issue tracker][issues].\n\n### Submitting Pull Requests\n\nFork, then clone the repo:\n\n```\ngit clone --recursive git@github.com:your-username/cinder/Cinder.git\n```\n\nPush to your fork and [submit a pull request][pr]. When describing your pull request, it is best to explain the problem you are solving or feature you are adding, some reasoning behind it, and how the code can be verified. If your modifications affect multiple platforms, please make a note of which platforms and OS versions you have tested on and which ones still need to be tested. If your contribution has already been discussed in an issue or forum post, linking to that may be a sufficient explanation.\n\nSome things to facilitate acceptance of your pull request:\n\n* Provide a way to test the changes. Examples can be within a sample, the [test](test) folder, a gist, or by explaining how a reviewer can make some edits locally to test.  \n* Keep the changes as concise as possible. It is best if a pull request addresses a single issue.\n* Follow our style guide as described below.\n* Write clear and concise commit messages.\n* For sample / test code, try to keep binary data to a minimum. For test assets, the folder [samples/data](samples/data) contains some assets you can possibly make use of, or adding new assets there means they can be used by future samples. App icons should also be referenced from this folder, reducing our overall binary weight and also making it easy to update in the future.\n\nIn general, we review pull requests first that best adhere to these suggestions.\n\n### Style Guide\n\nPlease make sure your code conforms to the following general guidelines. If something is unclear or undocumented, the rule of thumb is to try to make the source code easy to read, concise, and match the code around it.\n\n#### Naming\n\n* Use camelCase; classes begin with upper case and variables with lower case.\n* Member variables begin with an 'm' prefix (`mVariable`).\n* Static variables begin with an 's' prefix (`sInstance`).\n* enum types are all upper case with underscore separators\n  * ex. `enum Types { TYPE_1, TYPE_2, TYPE_UNKNOWN }`.\n\n#### Spacing and Line Breaks\n\n* Use tabs for indentation, with a tab stop value of 4.\n* Anything inside a namespace starts with no indentation.\n* Place spaces between braces, braces and arguments, etc.\n* Place a space between `!` and variables to negate them\n  *  ex. `if( ! mEnabled ) { ...`\n* Brackets for class methods and functions begin on a new line. Brackets for everything else (class declarations, if / for / while loops, etc. ) begin on the same line following a space.\n* The contents of an `if`, `for`, or `while` statement should always be on a new line. This not only makes it easier to read but also prevents some ambiguities that come up in some debugging situations, where you can't tell if you've jumped into the body of the statement or not. \n* `else` statements should be placed on a new line for vertical readability.\n\n#### Types\n\n* Adhere to const correctness wherever possible. See [this][const_correctness_1] and [this][const_correctness_2] for explanation.\n* For small, built-in types (ex. int, float, double, size_t) pass by value\n* For larger types (ex. STL containers, really anything other than built-in types or similar), pass in by const &.\n* If a parameter is expected to be modified by a method, it should be a pointer (not reference) so it is clear at the call site. An exception is when you are using private utility methods.\n\n#### Class inheritance\n\n* When an object doesn't have clear copy semantics (ex. a system resource or `gl::Texture`, inherit from `ci::Noncopyable` so it is obvious that the object cannot be copied.\n* When overriding a virtual method in a subclass, do not use the `virtual` keyword a second time, instead use `override`, which has the added benefit of the compiler checking that the override took place.\n* Unless it is templated or performance critical code, place method implementations in the .cpp to try to keep the header more concise. The exception to this rule is simple getters\n  *  ex. `getWidth() const   { return mWidth; }`.\n\n#### Comments\n\n* Place comments in the header files (in the form of doxygen for public or protected interfaces) and leave the implementations as concise as possible.\n* If there is something you think is not obvious in an implementation, then comments can help clarify, but in general it is nice to let the code do the explaining.\n* We generate reference documentation using doxygen, so you are encouraged to give descriptions to as much of the public interface as possible in order to fill out the reference documentation.\n* To make it easier to distinguish the end of a namespace, place a comment after the namespace's closing bracket\n  *  ex. `} // namespace ci::gl`\n\n#### Example: Class Declaration\n\n```cpp\n#pragma once\n\n#inclue \"cinder/includes/first.h\"\n\n#include <system/includes/next>\n\nnamespace cinder {\n\n//! \\brief Description of class SomeClass\n//!\n//! More detailed information about SomeClass (optional)\nclass SomeClass {\n  public: // two leading spaces for access specifiers\n  \t//! description of what you are constructing and any arguments passed in\n  \tSomeClass( int var1 = 0, int var2 = 0 );\n\n  \t//! Place spaces in between braces and arguments.\n  \tvoid someMethod( int argA, const Rectf &bounds );\n\n  \t//! Inline simple methods by keeping the implementation on the same line as the declaration.\n  \tvoid \tsetVar1( int var )\t\t{ mVar1 = var; }\n  \t//! Try to align the interface so it is easier to read.\n  \tvoid \tsetVar2( int var )\t\t{ mVar2 = var; }\n\n  \t//! Getters are usually declared as const.\n  \tint \tgetVar1() const \t\t{ return mVar1; }\n\n  private:\n  \tvoid \tdoSomething( int arg );\n  \t\n    int mVar1, mVar2;\n};\n\t\n} // namespace cinder\n\n```\n\n#### Example: Class Implementation\n\n```cpp\n\n#include \"cinder/SomeClass.h\"\n\nusing namespace std;\n\nnamespace cinder {\n\nSomeClass::SomeClass( int var1, int var2 )\n\t: mVar1( var1 ), mVar2( var2 )\n{\n\tif( var1 == var2 ) {\n\t\tsomeMethod( var1, Rectf::zero() );\n\t}\n\telse {\n\t\t...\n\t\t...\n\t}\n}\n\nvoid SomeClass::someMethod( int argA, const Rectf &bounds )\n{\n\tfor( int i = 0; i < argA; i++ ) {\n\t\tdoSomething( argA + 2 );\n\t}\n}\n\n} // namespace cinder\n\n```\n\n#### Notes on shared_ptr usage\n\nWe use `shared_ptr`s a lot. Usually they are in the form of a typedef'ed `ObjectRef` to save the user a bit of typing (the `Ref` suffix is short for 'reference counted object'):\n\n```cpp\ntypedef shared_ptr<class Object>\tObjectRef;\n```\n\nHere are a couple rules of thumb regarding how to pass around these `shared_ptr` objects:\n\nPass in by const &:\n\n```cpp\nvoid setObject( const ObjectRef &object );\n```\n\nHowever, return by value:\n\n```cpp\nObjectRef getObject() const;\n```\n\nThis is to avoid some nasty bugs that can be caused when the actual object returned is a subclass of `Object` and the method unwittingly returns a reference to an already destroyed temporary.\n\n\n#### Error Handling\n\nAvoid silent failures. In general, we use exceptions for cases that an application can recover from, such as when image decoding or glsl compilation fails. For situations that a user cannot possibly recover from, it is better to use assertions and the handy `CI_ASSERT` macro. However, as is the case many times, there are no rules set in stone for choosing one technique over the other, or choosing a different way to handle an error altogether (such as logging). When in doubt, post your code for peer review.\n\nExceptions in core cinder code should all inherit from `ci::Exception`.\n\n[pr]: https://github.com/cinder/Cinder/pulls\n[issues]: https://github.com/cinder/Cinder/issues\n[const_correctness_1]:http://www.cprogramming.com/tutorial/const_correctness.html\n[const_correctness_2]:http://www.parashift.com/c++-faq/const-correctness.html\n"
+        },
+        {
+          "name": "COPYING",
+          "type": "blob",
+          "size": 1.3251953125,
+          "content": "Copyright (c) 2010, The Cinder Project\n\nThis code is intended to be used with the Cinder C++ library, http://libcinder.org\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that\nthe following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this list of conditions and\nthe following disclaimer.\n* Redistributions in binary form must reproduce the above copyright notice, this list of conditions and\nthe following disclaimer in the documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED\nWARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A\nPARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED\nTO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\nHOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.07421875,
+          "content": "### Cinder 0.9.3dev: [libcinder.org](http://libcinder.org)\n\n<p align=\"center\">\n  <img src=\"https://libcinder.org/docs/_assets/images/cinder_logo.svg\" alt=\"Cinder Logo\" width=\"256\" height=\"auto\"/>\n</p>\n\n**Cinder is a peer-reviewed, free, open source C++ library for creative coding.**\n\nPlease note that Cinder depends on a few submodules. The simplest way to clone it is:<br />\n```\ngit clone --recursive https://github.com/cinder/Cinder.git\n```\n\nYou might also prefer one of our [pre-packaged downloads](https://libcinder.org/download).\n\nCinder [guides](https://libcinder.org/docs/branch/master/guides/index.html) and [reference documentation](https://libcinder.org/docs/branch/master/reference/index.html) are available on the website.\n\nCinder supports macOS, Windows, Linux, and iOS. It requires Xcode 11.3.1 or later for development on the Mac, and Visual C++ 2019 or later on Windows.\n\nCinder is released under the [Modified BSD License](COPYING). Please visit [our website](https://libcinder.org) for more information.\n\nAlso be sure to check out the [User Forum](http://discourse.libcinder.org).\n"
+        },
+        {
+          "name": "blocks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "samples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

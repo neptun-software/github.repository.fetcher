@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "timestamp": 1736566629528,
+    "page": 187,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "go-mysql-org/go-mysql-elasticsearch",
+      "stars": 4129,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0029296875,
+          "content": "bin"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.9990234375,
+          "content": "language: go\n\ngo:\n  - \"1.12\"\n  \nservices:\n  - elasticsearch\n\naddons:\n  apt:\n    sources:\n      - mysql-5.7-trusty\n    packages:\n      - mysql-server\n      - mysql-client\n\nbefore_install:\n  - sudo mysql -e \"use mysql; update user set authentication_string=PASSWORD('') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;\"\n  - sudo mysql_upgrade\n\n  # stop mysql and use row-based format binlog\n  - \"sudo service mysql stop || true\"\n  - \"echo '[mysqld]'            | sudo tee /etc/mysql/conf.d/replication.cnf\"\n  - \"echo 'server-id=1'         | sudo tee -a /etc/mysql/conf.d/replication.cnf\"\n  - \"echo 'log-bin=mysql-bin'   | sudo tee -a /etc/mysql/conf.d/replication.cnf\"\n  - \"echo 'binlog-format = row' | sudo tee -a /etc/mysql/conf.d/replication.cnf\"\n\n  # Start mysql (avoid errors to have logs)\n  - \"sudo service mysql start || true\"\n  - \"sudo tail -1000 /var/log/syslog\"\n\n  - mysql -e \"CREATE DATABASE IF NOT EXISTS test;\" -uroot\n\nscript:\n  - go test --race ./...\n\nenv:\n  - GO111MODULE=on\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.4443359375,
+          "content": "FROM golang:alpine\n\nMAINTAINER siddontang\n\nRUN apk add --no-cache tini mariadb-client\n\nADD . /go/src/github.com/siddontang/go-mysql-elasticsearch\n\nRUN apk add --no-cache mariadb-client\nRUN cd /go/src/github.com/siddontang/go-mysql-elasticsearch/ && \\\n    go build -o bin/go-mysql-elasticsearch ./cmd/go-mysql-elasticsearch && \\\n    cp -f ./bin/go-mysql-elasticsearch /go/bin/go-mysql-elasticsearch\n\nENTRYPOINT [\"/sbin/tini\",\"--\",\"go-mysql-elasticsearch\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 siddontang\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.2490234375,
+          "content": "all: build\n\nbuild: build-elasticsearch\n\nbuild-elasticsearch:\n\tGO111MODULE=on go build -o bin/go-mysql-elasticsearch ./cmd/go-mysql-elasticsearch\n\ntest:\n\tGO111MODULE=on go test -timeout 1m --race ./...\n\nclean:\n\tGO111MODULE=on go clean -i ./...\n\t@rm -rf bin"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.228515625,
+          "content": "go-mysql-elasticsearch is a service syncing your MySQL data into Elasticsearch automatically.\n\nIt uses `mysqldump` to fetch the origin data at first, then syncs data incrementally with binlog.\n\n## Call for Committer/Maintainer\nSorry that I have no enough time to maintain this project wholly, if you like this project and want to help me improve it continuously, please contact me through email (siddontang@gmail.com).\n\nRequirement: In the email, you should list somethings(including but not limited to below) to make me believe we can work together.\n\nYour GitHub ID\nThe contributions to go-mysql-elasticsearch before, including PRs or Issues.\nThe reason why you can improve go-mysql-elasticsearch.\n\n## Install\n\n+ Install Go (1.9+) and set your [GOPATH](https://golang.org/doc/code.html#GOPATH)\n+ `go get github.com/siddontang/go-mysql-elasticsearch`, it will print some messages in console, skip it. :-)\n+ cd `$GOPATH/src/github.com/siddontang/go-mysql-elasticsearch`\n+ `make`\n\n## How to use?\n\n+ Create table in MySQL.\n+ Create the associated Elasticsearch index, document type and mappings if possible, if not, Elasticsearch will create these automatically.\n+ Config base, see the example config [river.toml](./etc/river.toml).\n+ Set MySQL source in config file, see [Source](#source) below.\n+ Customize MySQL and Elasticsearch mapping rule in config file, see [Rule](#rule) below.\n+ Start `./bin/go-mysql-elasticsearch -config=./etc/river.toml` and enjoy it.\n\n## Notice\n\n+ MySQL supported version < 8.0\n+ ES supported version < 6.0\n+ binlog format must be **row**.\n+ binlog row image must be **full** for MySQL, you may lost some field data if you update PK data in MySQL with minimal or noblob binlog row image. MariaDB only supports full row image.\n+ Can not alter table format at runtime.\n+ MySQL table which will be synced should have a PK(primary key), multi columns PK is allowed now, e,g, if the PKs is (a, b), we will use \"a:b\" as the key. The PK data will be used as \"id\" in Elasticsearch. And you can also config the id's constituent part with other column.\n+ You should create the associated mappings in Elasticsearch first, I don't think using the default mapping is a wise decision, you must know how to search accurately.\n+ `mysqldump` must exist in the same node with go-mysql-elasticsearch, if not, go-mysql-elasticsearch will try to sync binlog only.\n+ Don't change too many rows at same time in one SQL.\n\n## Source\n\nIn go-mysql-elasticsearch, you must decide which tables you want to sync into elasticsearch in the source config.\n\nThe format in config file is below:\n\n```\n[[source]]\nschema = \"test\"\ntables = [\"t1\", t2]\n\n[[source]]\nschema = \"test_1\"\ntables = [\"t3\", t4]\n```\n\n`schema` is the database name, and `tables` includes the table need to be synced.\n\nIf you want to sync **all table in database**, you can use **asterisk(\\*)**.  \n```\n[[source]]\nschema = \"test\"\ntables = [\"*\"]\n\n# When using an asterisk, it is not allowed to sync multiple tables\n# tables = [\"*\", \"table\"]\n```\n\n## Rule\n\nBy default, go-mysql-elasticsearch will use MySQL table name as the Elasticserach's index and type name, use MySQL table field name as the Elasticserach's field name.  \ne.g, if a table named blog, the default index and type in Elasticserach are both named blog, if the table field named title,\nthe default field name is also named title.\n\nNotice: go-mysql-elasticsearch will use the lower-case name for the ES index and type. E.g, if your table named BLOG, the ES index and type are both named blog.\n\nRule can let you change this name mapping. Rule format in config file is below:\n\n```\n[[rule]]\nschema = \"test\"\ntable = \"t1\"\nindex = \"t\"\ntype = \"t\"\nparent = \"parent_id\"\nid = [\"id\"]\n\n    [rule.field]\n    mysql = \"title\"\n    elastic = \"my_title\"\n```\n\nIn the example above, we will use a new index and type both named \"t\" instead of default \"t1\", and use \"my_title\" instead of field name \"title\".\n\n## Rule field types\n\nIn order to map a mysql column on different elasticsearch types you can define the field type as follows:\n\n```\n[[rule]]\nschema = \"test\"\ntable = \"t1\"\nindex = \"t\"\ntype = \"t\"\n\n    [rule.field]\n    // This will map column title to elastic search my_title\n    title=\"my_title\"\n\n    // This will map column title to elastic search my_title and use array type\n    title=\"my_title,list\"\n\n    // This will map column title to elastic search title and use array type\n    title=\",list\"\n\n    // If the created_time field type is \"int\", and you want to convert it to \"date\" type in es, you can do it as below\n    created_time=\",date\"\n```\n\nModifier \"list\" will translates a mysql string field like \"a,b,c\" on an elastic array type '{\"a\", \"b\", \"c\"}' this is specially useful if you need to use those fields on filtering on elasticsearch.\n\n## Wildcard table\n\ngo-mysql-elasticsearch only allows you determind which table to be synced, but sometimes, if you split a big table into multi sub tables, like 1024, table_0000, table_0001, ... table_1023, it is very hard to write rules for every table.\n\ngo-mysql-elasticserach supports using wildcard table, e.g:\n\n```\n[[source]]\nschema = \"test\"\ntables = [\"test_river_[0-9]{4}\"]\n\n[[rule]]\nschema = \"test\"\ntable = \"test_river_[0-9]{4}\"\nindex = \"river\"\ntype = \"river\"\n```\n\n\"test_river_[0-9]{4}\" is a wildcard table definition, which represents \"test_river_0000\" to \"test_river_9999\", at the same time, the table in the rule must be same as it.\n\nAt the above example, if you have 1024 sub tables, all tables will be synced into Elasticsearch with index \"river\" and type \"river\".\n\n## Parent-Child Relationship\n\nOne-to-many join ( [parent-child relationship](https://www.elastic.co/guide/en/elasticsearch/guide/current/parent-child.html) in Elasticsearch ) is supported. Simply specify the field name for `parent` property.\n\n```\n[[rule]]\nschema = \"test\"\ntable = \"t1\"\nindex = \"t\"\ntype = \"t\"\nparent = \"parent_id\"\n```\n\nNote: you should [setup relationship](https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-parent-field.html) with creating the mapping manually.\n\n## Filter fields\n\nYou can use `filter` to sync specified fields, like:\n\n```\n[[rule]]\nschema = \"test\"\ntable = \"tfilter\"\nindex = \"test\"\ntype = \"tfilter\"\n\n# Only sync following columns\nfilter = [\"id\", \"name\"]\n```\n\nIn the above example, we will only sync MySQL table tfiler's columns `id` and `name` to Elasticsearch. \n\n## Ignore table without a primary key\nWhen you sync table without a primary key, you can see below error message.\n```\nschema.table must have a PK for a column\n```\nYou can ignore these tables in the configuration like:\n```\n# Ignore table without a primary key\nskip_no_pk_table = true\n```\n\n## Elasticsearch Pipeline\nYou can use [Ingest Node Pipeline](https://www.elastic.co/guide/en/elasticsearch/reference/current/ingest.html) to pre-process documents before indexing, like JSON string decode, merge fileds and more.\n\n```\n[[rule]]\nschema = \"test\"\ntable = \"t1\"\nindex = \"t\"\ntype = \"_doc\"\n\n# pipeline id\npipeline = \"my-pipeline-id\"\n```\nNode: you should [create pipeline](https://www.elastic.co/guide/en/elasticsearch/reference/current/put-pipeline-api.html) manually and Elasticsearch >= 5.0.\n\n## Why not other rivers?\n\nAlthough there are some other MySQL rivers for Elasticsearch, like [elasticsearch-river-jdbc](https://github.com/jprante/elasticsearch-river-jdbc), [elasticsearch-river-mysql](https://github.com/scharron/elasticsearch-river-mysql), I still want to build a new one with Go, why?\n\n+ Customization, I want to decide which table to be synced, the associated index and type name, or even the field name in Elasticsearch.\n+ Incremental update with binlog, and can resume from the last sync position when the service starts again.\n+ A common sync framework not only for Elasticsearch but also for others, like memcached, redis, etc...\n+ Wildcard tables support, we have many sub tables like table_0000 - table_1023, but want use a unique Elasticsearch index and type.\n\n## Todo\n\n+ MySQL 8\n+ ES 6\n+ Statistic.\n\n## Donate\n\nIf you like the project and want to buy me a cola, you can through: \n\n|PayPal|微信|\n|------|---|\n|[![](https://www.paypalobjects.com/webstatic/paypalme/images/pp_logo_small.png)](https://paypal.me/siddontang)|[![](https://github.com/siddontang/blog/blob/master/donate/weixin.png)|\n\n## Feedback\n\ngo-mysql-elasticsearch is still in development, and we will try to use it in production later. Any feedback is very welcome.\n\nEmail: siddontang@gmail.com\n"
+        },
+        {
+          "name": "clear_vendor.sh",
+          "type": "blob",
+          "size": 0.4150390625,
+          "content": "find vendor \\( -type f -or -type l \\)  -not -name \"*.go\" -not -name \"LICENSE\" -not -name \"*.s\" -not -name \"PATENTS\" -not -name \"*.h\" -not -name \"*.c\" | xargs -I {} rm {}\n# delete all test files\nfind vendor -type f -name \"*_generated.go\" | xargs -I {} rm {}\nfind vendor -type f -name \"*_test.go\" | xargs -I {} rm {}\nfind vendor -type d -name \"_vendor\" | xargs -I {} rm -rf {}\nfind vendor -type d -empty | xargs -I {} rm -rf {}"
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "elastic",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "etc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.455078125,
+          "content": "module github.com/siddontang/go-mysql-elasticsearch\n\ngo 1.12\n\nrequire (\n\tgithub.com/BurntSushi/toml v0.3.1\n\tgithub.com/juju/errors v0.0.0-20190207033735-e65537c515d7\n\tgithub.com/pingcap/check v0.0.0-20190102082844-67f458068fc8\n\tgithub.com/prometheus/client_golang v0.9.3\n\tgithub.com/siddontang/go v0.0.0-20180604090527-bdc77568d726\n\tgithub.com/siddontang/go-log v0.0.0-20190221022429-1e957dd83bed\n\tgithub.com/siddontang/go-mysql v0.0.0-20190524062908-de6c3a84bcbe\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 1.8427734375,
+          "content": "github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=\ngithub.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=\ngithub.com/juju/errors v0.0.0-20190207033735-e65537c515d7 h1:dMIPRDg6gi7CUp0Kj2+HxqJ5kTr1iAdzsXYIrLCNSmU=\ngithub.com/juju/errors v0.0.0-20190207033735-e65537c515d7/go.mod h1:W54LbzXuIE0boCoNJfwqpmkKJ1O4TCTZMetAt6jGk7Q=\ngithub.com/pingcap/errors v0.11.0 h1:DCJQB8jrHbQ1VVlMFIrbj2ApScNNotVmkSNplu2yUt4=\ngithub.com/pingcap/errors v0.11.0/go.mod h1:Oi8TUi2kEtXXLMJk9l1cGmz20kV3TaQ0usTwv5KuLY8=\ngithub.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=\ngithub.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=\ngithub.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 h1:pntxY8Ary0t43dCZ5dqY4YTJCObLY1kIXl0uzMv+7DE=\ngithub.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24/go.mod h1:M+9NzErvs504Cn4c5DxATwIqPbtswREoFCre64PpcG4=\ngithub.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 h1:xT+JlYxNGqyT+XcU8iUrN18JYed2TvG9yN5ULG2jATM=\ngithub.com/siddontang/go v0.0.0-20180604090527-bdc77568d726/go.mod h1:3yhqj7WBBfRhbBlzyOC3gUxftwsU0u8gqevxwIHQpMw=\ngithub.com/siddontang/go-log v0.0.0-20180807004314-8d05993dda07 h1:oI+RNwuC9jF2g2lP0u0cVEEZrc/AYBCuFdvwrLWM/6Q=\ngithub.com/siddontang/go-log v0.0.0-20180807004314-8d05993dda07/go.mod h1:yFdBgwXP24JziuRl2NMUahT7nGLNOKi1SIiFxMttVD4=\ngithub.com/siddontang/go-mysql v0.0.0-20190123011128-88e9cd7f6643 h1:yzg8+Cip1iDhy6GGS1zKflqOybgRc4xp82eYwQrP+DU=\ngithub.com/siddontang/go-mysql v0.0.0-20190123011128-88e9cd7f6643/go.mod h1:/b8ZcWjAShCcHp2dWpjb1vTlNyiG03UeHEQr2jteOpI=\ngithub.com/siddontang/go-mysql v0.0.0-20190303113352-670f74e8daf5 h1:5Nr7spTeY+ziXzqk/9p+GLnvH4rIjp9BX+aRaYDbR44=\ngithub.com/siddontang/go-mysql v0.0.0-20190303113352-670f74e8daf5/go.mod h1:/b8ZcWjAShCcHp2dWpjb1vTlNyiG03UeHEQr2jteOpI=\n"
+        },
+        {
+          "name": "river",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "timestamp": 1736566655408,
+    "page": 207,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mpolden/echoip",
+      "stars": 4053,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "Dockerfile\nDockerfile.geoip"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.04296875,
+          "content": "/data/\n/custom.html\n/vendor/\n.vscode/\n/bin/\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.357421875,
+          "content": "# Build\nFROM golang:1.15-buster AS build\nWORKDIR /go/src/github.com/mpolden/echoip\nCOPY . .\n\n# Must build without cgo because libc is unavailable in runtime image\nENV GO111MODULE=on CGO_ENABLED=0\nRUN make\n\n# Run\nFROM scratch\nEXPOSE 8080\n\nCOPY --from=build /go/bin/echoip /opt/echoip/\nCOPY html /opt/echoip/html\n\nWORKDIR /opt/echoip\nENTRYPOINT [\"/opt/echoip/echoip\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.490234375,
+          "content": "Copyright (c) 2012-2020, Martin Polden\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n    * Redistributions of source code must retain the above copyright\n      notice, this list of conditions and the following disclaimer.\n    * Redistributions in binary form must reproduce the above copyright\n      notice, this list of conditions and the following disclaimer in the\n      documentation and/or other materials provided with the distribution.\n    * Neither the name of the copyright holder nor the\n      names of its contributors may be used to endorse or promote products\n      derived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.5126953125,
+          "content": "DOCKER ?= docker\nDOCKER_IMAGE ?= mpolden/echoip\nOS := $(shell uname)\nifeq ($(OS),Linux)\n\tTAR_OPTS := --wildcards\nendif\nXGOARCH := amd64\nXGOOS := linux\nXBIN := $(XGOOS)_$(XGOARCH)/echoip\n\nall: lint test install\n\ntest:\n\tgo test ./...\n\nvet:\n\tgo vet ./...\n\ncheck-fmt:\n\tbash -c \"diff --line-format='%L' <(echo -n) <(gofmt -d -s .)\"\n\nlint: check-fmt vet\n\ninstall:\n\tgo install ./...\n\ndatabases := GeoLite2-City GeoLite2-Country GeoLite2-ASN\n\n$(databases):\nifndef GEOIP_LICENSE_KEY\n\t$(error GEOIP_LICENSE_KEY must be set. Please see https://blog.maxmind.com/2019/12/18/significant-changes-to-accessing-and-using-geolite2-databases/)\nendif\n\tmkdir -p data\n\t@curl -fsSL -m 30 \"https://download.maxmind.com/app/geoip_download?edition_id=$@&license_key=$(GEOIP_LICENSE_KEY)&suffix=tar.gz\" | tar $(TAR_OPTS) --strip-components=1 -C $(CURDIR)/data -xzf - '*.mmdb'\n\ttest ! -f data/GeoLite2-City.mmdb || mv data/GeoLite2-City.mmdb data/city.mmdb\n\ttest ! -f data/GeoLite2-Country.mmdb || mv data/GeoLite2-Country.mmdb data/country.mmdb\n\ttest ! -f data/GeoLite2-ASN.mmdb || mv data/GeoLite2-ASN.mmdb data/asn.mmdb\n\ngeoip-download: $(databases)\n\n# Create an environment to build multiarch containers (https://github.com/docker/buildx/)\ndocker-multiarch-builder:\n\tDOCKER_BUILDKIT=1 $(DOCKER) build -o . git://github.com/docker/buildx\n\tmkdir -p ~/.docker/cli-plugins\n\tmv buildx ~/.docker/cli-plugins/docker-buildx\n\t$(DOCKER) buildx create --name multiarch-builder --node multiarch-builder --driver docker-container --use\n\t$(DOCKER) run --rm --privileged multiarch/qemu-user-static --reset -p yes\n\ndocker-build:\n\t$(DOCKER) build -t $(DOCKER_IMAGE) .\n\ndocker-login:\n\t@echo \"$(DOCKER_PASSWORD)\" | $(DOCKER) login -u \"$(DOCKER_USERNAME)\" --password-stdin\n\ndocker-test:\n\t$(eval CONTAINER=$(shell $(DOCKER) run --rm --detach --publish-all $(DOCKER_IMAGE)))\n\t$(eval DOCKER_PORT=$(shell $(DOCKER) port $(CONTAINER) | cut -d \":\" -f 2))\n\tcurl -fsS -m 5 localhost:$(DOCKER_PORT) > /dev/null; $(DOCKER) stop $(CONTAINER)\n\ndocker-push: docker-test docker-login\n\t$(DOCKER) push $(DOCKER_IMAGE)\n\ndocker-pushx: docker-multiarch-builder docker-test docker-login\n\t$(DOCKER) buildx build --platform linux/amd64,linux/arm64,linux/arm/v7 -t $(DOCKER_IMAGE) --push .\n\nxinstall:\n\tenv GOOS=$(XGOOS) GOARCH=$(XGOARCH) go install ./...\n\npublish:\nifndef DEST_PATH\n\t$(error DEST_PATH must be set when publishing)\nendif\n\trsync -a $(GOPATH)/bin/$(XBIN) $(DEST_PATH)/$(XBIN)\n\t@sha256sum $(GOPATH)/bin/$(XBIN)\n\nrun:\n\tgo run cmd/echoip/main.go -a data/asn.mmdb -c data/city.mmdb -f data/country.mmdb -H x-forwarded-for -r -s -p\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.130859375,
+          "content": "# echoip\n\n![Build Status](https://github.com/mpolden/echoip/workflows/ci/badge.svg)\n\nA simple service for looking up your IP address. This is the code that powers\nhttps://ifconfig.co.\n\n## Usage\n\nJust the business, please:\n\n```\n$ curl ifconfig.co\n127.0.0.1\n\n$ http ifconfig.co\n127.0.0.1\n\n$ wget -qO- ifconfig.co\n127.0.0.1\n\n$ fetch -qo- https://ifconfig.co\n127.0.0.1\n\n$ bat -print=b ifconfig.co/ip\n127.0.0.1\n```\n\nCountry and city lookup:\n\n```\n$ curl ifconfig.co/country\nElbonia\n\n$ curl ifconfig.co/country-iso\nEB\n\n$ curl ifconfig.co/city\nBornyasherk\n\n$ curl ifconfig.co/asn\nAS59795\n\n$ curl ifconfig.co/asn-org\nHosting4Real\n```\n\nAs JSON:\n\n```\n$ curl -H 'Accept: application/json' ifconfig.co  # or curl ifconfig.co/json\n{\n  \"city\": \"Bornyasherk\",\n  \"country\": \"Elbonia\",\n  \"country_iso\": \"EB\",\n  \"ip\": \"127.0.0.1\",\n  \"ip_decimal\": 2130706433,\n  \"asn\": \"AS59795\",\n  \"asn_org\": \"Hosting4Real\"\n}\n```\n\nPort testing:\n\n```\n$ curl ifconfig.co/port/80\n{\n  \"ip\": \"127.0.0.1\",\n  \"port\": 80,\n  \"reachable\": false\n}\n```\n\nPass the appropriate flag (usually `-4` and `-6`) to your client to switch\nbetween IPv4 and IPv6 lookup.\n\n## Features\n\n* Easy to remember domain name\n* Fast\n* Supports IPv6\n* Supports HTTPS\n* Supports common command-line clients (e.g. `curl`, `httpie`, `ht`, `wget` and `fetch`)\n* JSON output\n* ASN, country and city lookup using the MaxMind GeoIP database\n* Port testing\n* All endpoints (except `/port`) can return information about a custom IP address specified via `?ip=` query parameter\n* Open source under the [BSD 3-Clause license](https://opensource.org/licenses/BSD-3-Clause)\n\n## Why?\n\n* To scratch an itch\n* An excuse to use Go for something\n* Faster than ifconfig.me and has IPv6 support\n\n## Building\n\nCompiling requires the [Golang compiler](https://golang.org/) to be installed.\nThis package can be installed with:\n\n`go install github.com/mpolden/echoip/...@latest`\n\nFor more information on building a Go project, see the [official Go\ndocumentation](https://golang.org/doc/code.html).\n\n## Docker image\n\nA Docker image is available on [Docker\nHub](https://hub.docker.com/r/mpolden/echoip), which can be downloaded with:\n\n`docker pull mpolden/echoip`\n\n## [GeoIP](https://www.maxmind.com/en/geoip2-databases)/[GeoLite](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?) Database (MaxMind)\nTo utilise MaxMind [GeoIP](https://www.maxmind.com/en/geoip2-databases)/[GeoLite](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data?) database to enhance the information provided to end users, you can download the relevant **binary** databases (`.mmdb` format) directly from MaxMind using the above links.\n\n**Please Note**: This has only been tested using the free, GeoLite database.\n\n### Usage\n\n```\n$ echoip -h\nUsage of echoip:\n  -C int\n    \tSize of response cache. Set to 0 to disable\n  -H value\n    \tHeader to trust for remote IP, if present (e.g. X-Real-IP)\n  -a string\n    \tPath to GeoIP ASN database\n  -c string\n    \tPath to GeoIP city database\n  -f string\n    \tPath to GeoIP country database\n  -l string\n    \tListening address (default \":8080\")\n  -p\tEnable port lookup\n  -r\tPerform reverse hostname lookups\n  -t string\n    \tPath to template directory (default \"html\")\n```\n"
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.158203125,
+          "content": "module github.com/mpolden/echoip\n\ngo 1.13\n\nrequire (\n\tgithub.com/oschwald/geoip2-golang v1.5.0\n\tgolang.org/x/sys v0.0.0-20210223212115-eede4237b368 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 1.859375,
+          "content": "github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=\ngithub.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/oschwald/geoip2-golang v1.5.0 h1:igg2yQIrrcRccB1ytFXqBfOHCjXWIoMv85lVJ1ONZzw=\ngithub.com/oschwald/geoip2-golang v1.5.0/go.mod h1:xdvYt5xQzB8ORWFqPnqMwZpCpgNagttWdoZLlJQzg7s=\ngithub.com/oschwald/maxminddb-golang v1.8.0 h1:Uh/DSnGoxsyp/KYbY1AuP0tYEwfs0sCph9p/UMXK/Hk=\ngithub.com/oschwald/maxminddb-golang v1.8.0/go.mod h1:RXZtst0N6+FY/3qCNmZMBApR19cdQj43/NM9VkrNAis=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=\ngithub.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=\ngithub.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=\ngithub.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=\ngolang.org/x/sys v0.0.0-20191224085550-c709ea063b76 h1:Dho5nD6R3PcW2SH1or8vS0dszDaXRxIw55lBX7XiE5g=\ngolang.org/x/sys v0.0.0-20191224085550-c709ea063b76/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\ngolang.org/x/sys v0.0.0-20210223212115-eede4237b368 h1:fDE3p0qf2V1co1vfj3/o87Ps8Hq6QTGNxJ5Xe7xSp80=\ngolang.org/x/sys v0.0.0-20210223212115-eede4237b368/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c h1:dUUwHk2QECo/6vqA44rthZ8ie2QXMNeKRTHCNY2nXvo=\ngopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        },
+        {
+          "name": "html",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "http",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "iputil",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "useragent",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

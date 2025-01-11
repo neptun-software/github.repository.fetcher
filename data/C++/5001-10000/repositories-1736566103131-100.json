@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "timestamp": 1736566103131,
+    "page": 100,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ipkn/crow",
+      "stars": 7526,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2666015625,
+          "content": "# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n\n# Compiled Dynamic libraries\n*.so\n*.dylib\n*.dll\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n*.lib\n\n# Executables\n*.exe\n*.out\n*.app\n\nexample\nunittest\n\n*.swp\n*.gcov\n\n*.gcda\n*.gcno\n\nbuild\n\n.directory\ncrow_all.h\n\n# conan.io\nbuild/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.958984375,
+          "content": "language: cpp\n\nsudo: false\ncache: ccache\n\nnotifications:\n  irc: \"chat.freenode.net##crow\"\n\ncompiler:\n  - gcc\n\nenv:\n  matrix:\n    - COMPILER=g++-4.8 CCOMPILER=gcc-4.8 PUSH_COVERAGE=ON\n    - COMPILER=g++-4.9 CCOMPILER=gcc-4.9\n    - COMPILER=g++-5 CCOMPILER=gcc-5\n    - COMPILER=clang++-3.6 CCOMPILER=clang-3.6\n\naddons:\n  apt:\n    sources:\n      - ubuntu-toolchain-r-test\n      - boost-latest\n      - llvm-toolchain-precise\n      - llvm-toolchain-precise-3.6\n    packages:\n      - g++-4.8\n      - g++-4.9\n      - g++-5\n      - clang-3.6\n      - libboost1.55-all-dev\n      - python-pip\n\ninstall:\n  - if [ \"$PUSH_COVERAGE\" == \"ON\" ]; then pip install --user git+git://github.com/eddyxu/cpp-coveralls.git; fi\n\nbefore_script:\n  - export CXX=$COMPILER CC=$CCOMPILER\n  - mkdir build\n  - cd build\n  - cmake --version\n  - cmake ..\n\nscript: make -j2 && ctest -j2\n\nafter_success:\n  - cd ..\n  - if [ \"$PUSH_COVERAGE\" == \"ON\" ]; then coveralls --gcov gcov-4.8 -i include --gcov-options '\\-lp'; fi\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.193359375,
+          "content": "cmake_minimum_required(VERSION 2.8)\nproject (crow_all)\n\nif(EXISTS \"${CMAKE_BINARY_DIR}/conanbuildinfo.cmake\")\ninclude(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)\nconan_basic_setup()\nendif()\n\nset(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} \"${CMAKE_SOURCE_DIR}/cmake/\")\n\nfind_package(Tcmalloc)\nfind_package(Threads)\nfind_package(OpenSSL)\n\nif(OPENSSL_FOUND)\n\tinclude_directories(${OPENSSL_INCLUDE_DIR})\nendif()\n\nfind_program(CCACHE_FOUND ccache)\nif(CCACHE_FOUND)\n  message(\"Found ccache ${CCACHE_FOUND}\")\n  message(\"Using ccache to speed up compilation\")\n  set(ENV{CCACHE_CPP2} \"yes\")\n  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)\n  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)\nendif(CCACHE_FOUND)\n\nif (NOT CMAKE_BUILD_TYPE)\n\tmessage(STATUS \"No build type selected, default to Release\")\n\tset(CMAKE_BUILD_TYPE \"Release\")\nendif()\n\nif (MSVC)\n\tset(Boost_USE_STATIC_LIBS \"On\")\n\tfind_package( Boost 1.52 COMPONENTS system thread regex REQUIRED )\nelse()\n\tset(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -std=c++1y -pedantic -Wextra\")\n\tfind_package( Boost 1.52 COMPONENTS system thread REQUIRED )\nendif()\n\ninclude_directories( ${Boost_INCLUDE_DIR} )\n\nset(PROJECT_INCLUDE_DIR\n    ${PROJECT_SOURCE_DIR}/include\n)\n\ninclude_directories(\"${PROJECT_INCLUDE_DIR}\")\ninclude_directories(\"${PROJECT_SOURCE_DIR}\")\n\n#add_subdirectory(src)\nadd_subdirectory(examples)\n\nif (MSVC)\nelse()\n\tadd_subdirectory(tests)\n\n\tenable_testing()\n\tadd_test(NAME crow_test COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/unittest)\n\tadd_test(NAME template_test COMMAND ${CMAKE_CURRENT_BINARY_DIR}/tests/template/test.py WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/tests/template)\n\n\tfile(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amalgamate)\n\n\tadd_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/amalgamate/crow_all.h\n\t\tCOMMAND python ${PROJECT_SOURCE_DIR}/amalgamate/merge_all.py ${PROJECT_SOURCE_DIR}/include\n\t\tCOMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/amalgamate/crow_all.h ${PROJECT_SOURCE_DIR}/amalgamate\n\t\tWORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/amalgamate\n\t\tDEPENDS ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/crow/*.h\n\t)\n\n\tadd_custom_target(amalgamation ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/amalgamate/crow_all.h)\nendif()\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4375,
+          "content": "Copyright (c) 2014, ipkn\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\n* Neither the name of the author nor the names of its\n  contributors may be used to endorse or promote products derived from\n  this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.3291015625,
+          "content": "# IMPORTANT NOTICE\n\nNOT MAINTAINED ANYMORE.\n\nWorking fork is here: [CrowCpp/Crow](https://github.com/CrowCpp/Crow)\n\n  \n\n![Crow logo](http://i.imgur.com/wqivvjK.jpg)\n\nCrow is C++ microframework for web. (inspired by Python Flask)\n\n[![Travis Build](https://travis-ci.org/ipkn/crow.svg?branch=master)](https://travis-ci.org/ipkn/crow)\n[![Coverage Status](https://coveralls.io/repos/ipkn/crow/badge.svg?branch=master)](https://coveralls.io/r/ipkn/crow?branch=master)\n\n```c++\n#include \"crow.h\"\n\nint main()\n{\n    crow::SimpleApp app;\n\n    CROW_ROUTE(app, \"/\")([](){\n        return \"Hello world\";\n    });\n\n    app.port(18080).multithreaded().run();\n}\n```\n\n## Features\n\n - Easy routing\n   - Similiar to Flask\n   - Type-safe Handlers (see Example)\n - Very Fast\n   - ![Benchmark Result in one chart](https://docs.google.com/spreadsheets/d/1KidO9XpuwCRZ2p_JRDJj2aep61H8Sh_KDOhApizv4LE/pubchart?oid=2041467789&format=image)\n   - More data on [crow-benchmark](https://github.com/ipkn/crow-benchmark)\n - Fast built-in JSON parser (crow::json)\n   - You can also use [json11](https://github.com/dropbox/json11) or [rapidjson](https://github.com/miloyip/rapidjson) for better speed or readability\n - [Mustache](http://mustache.github.io/) based templating library (crow::mustache)\n - Header only\n - Provide an amalgamated header file [`crow_all.h`](https://github.com/ipkn/crow/releases/download/v0.1/crow_all.h) with every features ([Download from here](https://github.com/ipkn/crow/releases/download/v0.1/crow_all.h))\n - Middleware support\n - Websocket support\n\n## Still in development\n - ~~Built-in ORM~~\n   - Check [sqlpp11](https://github.com/rbock/sqlpp11) if you want one.\n\n## Examples\n\n#### JSON Response\n```c++\nCROW_ROUTE(app, \"/json\")\n([]{\n    crow::json::wvalue x;\n    x[\"message\"] = \"Hello, World!\";\n    return x;\n});\n```\n\n#### Arguments\n```c++\nCROW_ROUTE(app,\"/hello/<int>\")\n([](int count){\n    if (count > 100)\n        return crow::response(400);\n    std::ostringstream os;\n    os << count << \" bottles of beer!\";\n    return crow::response(os.str());\n});\n```\nHandler arguments type check at compile time\n```c++\n// Compile error with message \"Handler type is mismatched with URL paramters\"\nCROW_ROUTE(app,\"/another/<int>\")\n([](int a, int b){\n    return crow::response(500);\n});\n```\n\n#### Handling JSON Requests\n```c++\nCROW_ROUTE(app, \"/add_json\")\n.methods(\"POST\"_method)\n([](const crow::request& req){\n    auto x = crow::json::load(req.body);\n    if (!x)\n        return crow::response(400);\n    int sum = x[\"a\"].i()+x[\"b\"].i();\n    std::ostringstream os;\n    os << sum;\n    return crow::response{os.str()};\n});\n```\n\n## How to Build\n\nIf you just want to use crow, copy amalgamate/crow_all.h and include it.\n\n### Requirements\n\n - C++ compiler with good C++11 support (tested with g++>=4.8)\n - boost library\n - CMake for build examples\n - Linking with tcmalloc/jemalloc is recommended for speed.\n\n - Now supporting VS2013 with limited functionality (only run-time check for url is available.)\n\n### Building (Tests, Examples)\n\nOut-of-source build with CMake is recommended.\n\n```\nmkdir build\ncd build\ncmake ..\nmake\n```\n\nYou can run tests with following commands:\n```\nctest\n```\n\n\n### Installing missing dependencies\n\n#### Ubuntu\n    sudo apt-get install build-essential libtcmalloc-minimal4 && sudo ln -s /usr/lib/libtcmalloc_minimal.so.4 /usr/lib/libtcmalloc_minimal.so\n\n#### OSX\n    brew install boost google-perftools\n\n### Attributions\n\nCrow uses the following libraries.\n\n    http-parser\n\n    https://github.com/nodejs/http-parser\n\n    http_parser.c is based on src/http/ngx_http_parse.c from NGINX copyright\n    Igor Sysoev.\n\n    Additional changes are licensed under the same terms as NGINX and\n    copyright Joyent, Inc. and other Node contributors. All rights reserved.\n\n    Permission is hereby granted, free of charge, to any person obtaining a copy\n    of this software and associated documentation files (the \"Software\"), to\n    deal in the Software without restriction, including without limitation the\n    rights to use, copy, modify, merge, publish, distribute, sublicense, and/or\n    sell copies of the Software, and to permit persons to whom the Software is\n    furnished to do so, subject to the following conditions:\n\n    The above copyright notice and this permission notice shall be included in\n    all copies or substantial portions of the Software.\n\n    THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\n    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\n    IN THE SOFTWARE. \n\n\n    qs_parse\n\n    https://github.com/bartgrantham/qs_parse\n\n    Copyright (c) 2010 Bart Grantham\n    Permission is hereby granted, free of charge, to any person obtaining a copy\n    of this software and associated documentation files (the \"Software\"), to deal\n    in the Software without restriction, including without limitation the rights\n    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n    copies of the Software, and to permit persons to whom the Software is\n    furnished to do so, subject to the following conditions:\n    The above copyright notice and this permission notice shall be included in\n    all copies or substantial portions of the Software.\n\n\n    TinySHA1\n\n    https://github.com/mohaps/TinySHA1\n\n    TinySHA1 - a header only implementation of the SHA1 algorithm. Based on the implementation in boost::uuid::details\n\n    Copyright (c) 2012-22 SAURAV MOHAPATRA mohaps@gmail.com\n    Permission to use, copy, modify, and distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.\n    THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n"
+        },
+        {
+          "name": "amalgamate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conanfile.py",
+          "type": "blob",
+          "size": 0.869140625,
+          "content": "from conans import ConanFile, CMake\n\n\nclass CrowConan(ConanFile):\n    name = \"Crow\"\n    version = \"0.1\"\n    url = \"https://github.com/ipkn/crow\"\n    license = \"MIT; see https://github.com/ipkn/crow/blob/master/LICENSE\"\n    generators = \"cmake\"\n    settings = \"os\", \"compiler\", \"build_type\", \"arch\"\n\n    requires = ((\"Boost/1.60.0@lasote/stable\"),\n                (\"OpenSSL/1.0.2i@lasote/stable\"))\n\n    # No exports necessary\n\n    def source(self):\n        # this will create a hello subfolder, take it into account\n        self.run(\"git clone https://github.com/ipkn/crow.git\")\n\n    def build(self):\n        cmake = CMake(self.settings)\n        self.run('cmake %s/crow %s' % (self.conanfile_directory, cmake.command_line))\n        self.run(\"cmake --build . %s\" % cmake.build_config)\n        self.run(\"make\")\n\n    def package(self):\n        self.copy(\"*.h\", dst=\"include\", src=\"amalgamate\")\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

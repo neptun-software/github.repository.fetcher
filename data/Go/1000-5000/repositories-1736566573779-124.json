@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "timestamp": 1736566573779,
+    "page": 124,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "esimov/pigo",
+      "stars": 4437,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0390625,
+          "content": "examples/** linguist-documentation=false"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.15234375,
+          "content": "*.bmp\n*.png\n*.jpg\n*.jpeg\n*.json\npigo\nbuild\npackages\nwasm/lib.wasm\nwasm/js/wasm_exec.js\n!/testdata/*.png\n!/testdata/*.jpg\n!/examples/**/*.png\nexamples/*/*.so"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2018 Endre Simo\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.1494140625,
+          "content": "all:\n\t@./build.sh\nclean:\n\t@rm -f pigo\ninstall: all\n\t@cp pigo /usr/local/bin\nuninstall:\n\t@rm -f /usr/local/bin/pigo\npackage:\n\t@NOCOPY=1 ./build.sh package"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 11.2392578125,
+          "content": "<h1 align=\"center\"><img alt=\"pigo-logo\" src=\"https://user-images.githubusercontent.com/883386/55795932-8787cf00-5ad1-11e9-8c3e-8211ba9427d8.png\" height=240/></h1>\r\n\r\n[![CI](https://github.com/esimov/pigo/actions/workflows/ci.yml/badge.svg)](https://github.com/esimov/pigo/actions/workflows/ci.yml)\r\n[![Go Report Card](https://goreportcard.com/badge/github.com/esimov/pigo)](https://goreportcard.com/report/github.com/esimov/pigo)\r\n[![go.dev reference](https://img.shields.io/badge/pkg.go.dev-reference-007d9c?logo=go)](https://pkg.go.dev/github.com/esimov/pigo/core)\r\n[![license](https://img.shields.io/github/license/esimov/pigo)](./LICENSE)\r\n[![release](https://img.shields.io/badge/release-v1.4.6-blue.svg)](https://github.com/esimov/pigo/releases/tag/v1.4.6)\r\n[![pigo](https://snapcraft.io/pigo/badge.svg)](https://snapcraft.io/pigo)\r\n\r\nPigo is a pure Go face detection, pupil/eyes localization and facial landmark points detection library based on the **[Pixel Intensity Comparison-based Object detection](https://arxiv.org/pdf/1305.4537.pdf)** paper.\r\n\r\n| Rectangle face marker | Circle face marker\r\n|:--:|:--:\r\n| ![rectangle](https://user-images.githubusercontent.com/883386/40916662-2fbbae1a-6809-11e8-8afd-d4ed40c7d4e9.png) | ![circle](https://user-images.githubusercontent.com/883386/40916683-447088a8-6809-11e8-942f-3112c10bede3.png) |\r\n\r\n### Motivation\r\nThe reason why Pigo has been developed is because almost all of the currently existing solutions for face detection in the Go ecosystem are purely bindings to some C/C++ libraries like `OpenCV` or `dlib`, but calling a C program through `cgo` introduces huge latencies and implies a significant trade-off in terms of performance. Also, in many cases installing OpenCV on various platforms is cumbersome.\r\n\r\n**The Pigo library does not require any additional modules or third party applications to be installed**, although you might need to install Python and OpenCV if you wish to run the library in a real time desktop application. Head over to this [subtopic](#real-time-face-detection-running-as-a-shared-object) for more details.\r\n\r\n### Key features\r\n- [x] Does not require OpenCV or any 3rd party modules to be installed\r\n- [x] High processing speed\r\n- [x] There is no need for image preprocessing prior to detection\r\n- [x] There is no need for the computation of integral images, image pyramid, HOG pyramid or any other similar data structure\r\n- [x] The face detection is based on pixel intensity comparison encoded in the binary file tree structure\r\n- [x] Fast detection of in-plane rotated faces\r\n- [x] The library can detect even faces with eyeglasses\r\n- [x] [Pupils/eyes localization](#pupils--eyes-localization)\r\n- [x] [Facial landmark points detection](#facial-landmark-points-detection)\r\n- [x] **[Webassembly support 🎉](#wasm-webassembly-support-)**\r\n\r\n### Todo\r\n- [ ] Object detection and description\r\n\r\n**The library can also detect in plane rotated faces.** For this reason a new `-angle` parameter has been included into the command line utility. The command below will generate the following result (see the table below for all the supported options).\r\n\r\n```bash\r\n$ pigo -in input.jpg -out output.jpg -cf cascade/facefinder -angle=0.8 -iou=0.01\r\n```\r\n\r\n| Input file | Output file\r\n|:--:|:--:\r\n| ![input](https://user-images.githubusercontent.com/883386/50761018-015db180-1272-11e9-93d9-d3693cae9d66.jpg) | ![output](https://user-images.githubusercontent.com/883386/50761024-03277500-1272-11e9-9c20-2568b87a2344.png) |\r\n\r\n\r\nNote: In case of in plane rotated faces the angle value should be adapted to the provided image.\r\n\r\n### Pupils / eyes localization\r\nStarting from **v1.2.0** Pigo offers pupils/eyes localization capabilities. The implementation is based on [Eye pupil localization with an ensemble of randomized trees](https://www.sciencedirect.com/science/article/abs/pii/S0031320313003294).\r\n\r\nCheck out this example for a realtime demo: https://github.com/esimov/pigo/tree/master/examples/puploc\r\n\r\n![puploc](https://user-images.githubusercontent.com/883386/62784340-f5b3c100-bac6-11e9-865e-a2b4b9520b08.png)\r\n\r\n### Facial landmark points detection\r\n**v1.3.0** marks a new milestone in the library evolution, Pigo being able to detect facial landmark points. The implementation is based on [Fast Localization of Facial Landmark Points](https://arxiv.org/pdf/1403.6888.pdf).\r\n\r\nCheck out this example for a realtime demo: https://github.com/esimov/pigo/tree/master/examples/facial_landmark\r\n\r\n![flp_example](https://user-images.githubusercontent.com/883386/66802771-3b0cc880-ef26-11e9-9ee3-7e9e981ef3f7.png)\r\n\r\n## Install\r\nInstall Go, set your `GOPATH`, and make sure `$GOPATH/bin` is on your `PATH`.\r\n\r\n```bash\r\n$ go install github.com/esimov/pigo/cmd/pigo@latest\r\n```\r\n\r\n### Binary releases\r\nIn case you do not have installed or do not wish to install Go, you can obtain the binary file from the [releases](https://github.com/esimov/pigo/releases) folder.\r\n\r\nThe library can be accessed as a snapcraft function too.\r\n\r\n<a href=\"https://snapcraft.io/pigo\"><img src=\"https://raw.githubusercontent.com/snapcore/snap-store-badges/master/EN/%5BEN%5D-snap-store-white-uneditable.png\" alt=\"snapcraft pigo\"></a>\r\n\r\n## API\r\nBelow is a minimal example of using the face detection API.\r\n\r\nFirst, you need to load and parse the binary classifier, then convert the image to grayscale mode,\r\nand finally run the cascade function which returns a slice containing the row, column, scale and the detection score.\r\n\r\n```Go\r\ncascadeFile, err := ioutil.ReadFile(\"/path/to/cascade/file\")\r\nif err != nil {\r\n\tlog.Fatalf(\"Error reading the cascade file: %v\", err)\r\n}\r\n\r\nsrc, err := pigo.GetImage(\"/path/to/image\")\r\nif err != nil {\r\n\tlog.Fatalf(\"Cannot open the image file: %v\", err)\r\n}\r\n\r\npixels := pigo.RgbToGrayscale(src)\r\ncols, rows := src.Bounds().Max.X, src.Bounds().Max.Y\r\n\r\ncParams := pigo.CascadeParams{\r\n\tMinSize:     20,\r\n\tMaxSize:     1000,\r\n\tShiftFactor: 0.1,\r\n\tScaleFactor: 1.1,\r\n\r\n\tImageParams: pigo.ImageParams{\r\n\t\tPixels: pixels,\r\n\t\tRows:   rows,\r\n\t\tCols:   cols,\r\n\t\tDim:    cols,\r\n\t},\r\n}\r\n\r\npigo := pigo.NewPigo()\r\n// Unpack the binary file. This will return the number of cascade trees,\r\n// the tree depth, the threshold and the prediction from tree's leaf nodes.\r\nclassifier, err := pigo.Unpack(cascadeFile)\r\nif err != nil {\r\n\tlog.Fatalf(\"Error reading the cascade file: %s\", err)\r\n}\r\n\r\nangle := 0.0 // cascade rotation angle. 0.0 is 0 radians and 1.0 is 2*pi radians\r\n\r\n// Run the classifier over the obtained leaf nodes and return the detection results.\r\n// The result contains quadruplets representing the row, column, scale and detection score.\r\ndets := classifier.RunCascade(cParams, angle)\r\n\r\n// Calculate the intersection over union (IoU) of two clusters.\r\ndets = classifier.ClusterDetections(dets, 0.2)\r\n```\r\n\r\n**A note about imports**: in order to decode the generated image you have to import `image/jpeg` or `image/png` (depending on the provided image type) as in the following example, otherwise you will get a `\"Image: Unknown format\"` error.\r\n\r\n```Go\r\nimport (\r\n    _ \"image/jpeg\"\r\n    pigo \"github.com/esimov/pigo/core\"\r\n)\r\n```\r\n\r\n## Usage\r\nA command line utility is bundled into the library.\r\n\r\n```bash\r\n$ pigo -in input.jpg -out out.jpg -cf cascade/facefinder\r\n```\r\n\r\n### Supported flags:\r\n\r\n```bash\r\n$ pigo --help\r\n\r\n┌─┐┬┌─┐┌─┐\r\n├─┘││ ┬│ │\r\n┴  ┴└─┘└─┘\r\n\r\nGo (Golang) Face detection library.\r\n    Version: 1.4.2\r\n\r\n  -angle float\r\n    \t0.0 is 0 radians and 1.0 is 2*pi radians\r\n  -cf string\r\n    \tCascade binary file\r\n  -flpc string\r\n    \tFacial landmark points cascade directory\r\n  -in string\r\n    \tSource image (default \"-\")\r\n  -iou float\r\n    \tIntersection over union (IoU) threshold (default 0.2)\r\n  -json string\r\n    \tOutput the detection points into a json file\r\n  -mark\r\n    \tMark detected eyes (default true)\r\n  -marker string\r\n    \tDetection marker: rect|circle|ellipse (default \"rect\")\r\n  -max int\r\n    \tMaximum size of face (default 1000)\r\n  -min int\r\n    \tMinimum size of face (default 20)\r\n  -out string\r\n    \tDestination image (default \"-\")\r\n  -plc string\r\n    \tPupils/eyes localization cascade file\r\n  -scale float\r\n    \tScale detection window by percentage (default 1.1)\r\n  -shift float\r\n    \tShift detection window by percentage (default 0.1)\r\n```\r\n\r\n**Important notice:** In case you also wish to run the pupil/eyes localization, then you need to use the `plc` flag and provide a valid path to the pupil localization cascade file. The same applies for facial landmark points detection, only that this time the parameter accepted by the `flpc` flag is a directory pointing to the facial landmark points cascade files found under `cascades/lps`.\r\n\r\n### CLI command examples\r\nYou can also use the `stdin` and `stdout` pipe commands:\r\n\r\n```bash\r\n$ cat input/source.jpg | pigo > -in - -out - >out.jpg -cf=/path/to/cascade\r\n```\r\n\r\n`in` and `out` default to `-` so you can also use:\r\n```bash\r\n$ cat input/source.jpg | pigo >out.jpg -cf=/path/to/cascade\r\n$ pigo -out out.jpg < input/source.jpg -cf=/path/to/cascade\r\n```\r\nUsing the `empty` string as value for the `-out` flag will skip the image generation part. This, combined with the `-json` flag will encode the detection results into the specified json file. You can also use the pipe `-` value combined with the `-json` flag to output the detection coordinates to the standard (`stdout`) output.\r\n\r\n## Real time face detection (running as a shared object)\r\n\r\nIf you wish to test the library's real time face detection capabilities, the `examples` folder contains a few demos written in Python.\r\n\r\n**But why Python you might ask?** Because the Go ecosystem is (still) missing a cross platform and system independent library for accessing the webcam. \r\n\r\nIn the Python program we access the webcam and transfer the pixel data as a byte array through `cgo` as a **shared object** to the Go program where the core face detection is happening. But as you can imagine this operation is not cost effective, resulting in lower frame rates than the library is capable of. \r\n\r\n## WASM (Webassembly) support 🎉\r\n**Important note: In order to run the Webassembly demos at least Go 1.13 is required!**\r\n\r\nStarting from version **v1.4.0** the library has been ported to [**WASM**](http://webassembly.org/). This proves the library's real time face detection capabilities, constantly producing **~60 FPS**. \r\n\r\n### WASM demo\r\nTo run the `wasm` demo select the `wasm` folder and type `make`.\r\n\r\nFor more details check the subpage description: https://github.com/esimov/pigo/tree/master/wasm.\r\n\r\n**For more awesome WASM demos using the Pigo library check this repo: https://github.com/esimov/pigo-wasm-demos**.\r\n\r\n## Benchmark results\r\nBelow are the benchmark results obtained running Pigo against [GoCV](https://github.com/hybridgroup/gocv) using the same conditions.\r\n\r\n```\r\n    BenchmarkGoCV-4   \t       3\t 414122553 ns/op\t     704 B/op\t       1 allocs/op\r\n    BenchmarkPIGO-4   \t      10\t 173664832 ns/op\t       0 B/op\t       0 allocs/op\r\n    PASS\r\n    ok  \tgithub.com/esimov/gocv-test\t4.530s\r\n```\r\nThe code used for the above test can be found under the following link: https://github.com/esimov/pigo-gocv-benchmark\r\n\r\n## Author\r\n* Endre Simo ([@simo_endre](https://twitter.com/simo_endre))\r\n\r\n## License\r\nCopyright © 2019 Endre Simo\r\n\r\nThis software is distributed under the MIT license. See the [LICENSE](https://github.com/esimov/pigo/blob/master/LICENSE) file for the full license text.\r\n"
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 1.40625,
+          "content": "#!/bin/bash\nset -e\n\nVERSION=\"1.4.6\"\nPROTECTED_MODE=\"no\"\n\nexport GO15VENDOREXPERIMENT=1\n\ncd $(dirname \"${BASH_SOURCE[0]}\")\nOD=\"$(pwd)\"\nWD=$OD\n\npackage() {\n\techo Packaging $1 Binary\n\tbdir=pigo-${VERSION}-$2-$3\n\trm -rf packages/$bdir && mkdir -p packages/$bdir\n\tGOOS=$2 GOARCH=$3 ./build.sh\n\tif [ \"$2\" == \"windows\" ]; then\n\t\tmv pigo packages/$bdir/pigo.exe\n\telse\n\t\tmv pigo packages/$bdir\n\tfi\n\tcp README.md packages/$bdir\n\tcd packages\n\tif [ \"$2\" == \"linux\" ]; then\n\t\ttar -zcf $bdir.tar.gz $bdir\n\telse\n\t\tzip -r -q $bdir.zip $bdir\n\tfi\n\trm -rf $bdir\n\tcd ..\n}\n\nif [ \"$1\" == \"package\" ]; then\n\trm -rf packages/\n\tpackage \"Windows\" \"windows\" \"amd64\"\n\tpackage \"Mac\" \"darwin\" \"amd64\"\n\tpackage \"Linux\" \"linux\" \"amd64\"\n\tpackage \"FreeBSD\" \"freebsd\" \"amd64\"\n\texit\nfi\n\n# temp directory for storing isolated environment.\nTMP=\"$(mktemp -d -t sdb.XXXX)\"\nrmtemp() {\n\trm -rf \"$TMP\"\n}\ntrap rmtemp EXIT\n\nif [ \"$NOCOPY\" != \"1\" ]; then\n\t# copy all files to an isolated directory.\n\tWD=\"$TMP/src/github.com/esimov/pigo\"\n\texport GOPATH=\"$TMP\"\n\tfor file in `find . -type f`; do\n\t\t# TODO: use .gitignore to ignore, or possibly just use git to determine the file list.\n\t\tif [[ \"$file\" != \".\" && \"$file\" != ./.git* && \"$file\" != ./pigo ]]; then\n\t\t\tmkdir -p \"$WD/$(dirname \"${file}\")\"\n\t\t\tcp -P \"$file\" \"$WD/$(dirname \"${file}\")\"\n\t\tfi\n\tdone\n\tcd $WD\nfi\n\n# build and store objects into original directory.\ngo build -ldflags \"-X main.Version=$VERSION\" -o \"$OD/pigo\" cmd/pigo/*.go"
+        },
+        {
+          "name": "cascade",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.3896484375,
+          "content": "module github.com/esimov/pigo\n\ngo 1.22\n\nrequire (\n\tgithub.com/disintegration/imaging v1.6.2\n\tgithub.com/fogleman/gg v1.3.0\n\tgolang.org/x/term v0.0.0-20191110171634-ad39bd3f0407\n)\n\nrequire (\n\tgithub.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect\n\tgolang.org/x/image v0.0.0-20200927104501-e162460cd6b5 // indirect\n\tgolang.org/x/sys v0.0.0-20201107080550-4d91cf3a1aaf // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 1.462890625,
+          "content": "github.com/disintegration/imaging v1.6.2 h1:w1LecBlG2Lnp8B3jk5zSuNqd7b4DXhcjwek1ei82L+c=\ngithub.com/disintegration/imaging v1.6.2/go.mod h1:44/5580QXChDfwIclfc/PCwrr44amcmDAg8hxG0Ewe4=\ngithub.com/fogleman/gg v1.3.0 h1:/7zJX8F6AaYQc57WQCyN9cAIz+4bCJGO9B+dyW29am8=\ngithub.com/fogleman/gg v1.3.0/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=\ngithub.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 h1:DACJavvAHhabrF08vX0COfcOBJRhZ8lUbR+ZWIs0Y5g=\ngithub.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=\ngolang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=\ngolang.org/x/image v0.0.0-20200927104501-e162460cd6b5 h1:QelT11PB4FXiDEXucrfNckHoFxwt8USGY1ajP1ZF5lM=\ngolang.org/x/image v0.0.0-20200927104501-e162460cd6b5/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=\ngolang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\ngolang.org/x/sys v0.0.0-20201107080550-4d91cf3a1aaf h1:kt3wY1Lu5MJAnKTfoMR52Cu4gwvna4VTzNOiT8tY73s=\ngolang.org/x/sys v0.0.0-20201107080550-4d91cf3a1aaf/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=\ngolang.org/x/term v0.0.0-20191110171634-ad39bd3f0407 h1:5zh5atpUEdIc478E/ebrIaHLKcfVvG6dL/fGv7BcMoM=\ngolang.org/x/term v0.0.0-20191110171634-ad39bd3f0407/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=\ngolang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=\n"
+        },
+        {
+          "name": "snapcraft.yaml",
+          "type": "blob",
+          "size": 0.9345703125,
+          "content": "name: pigo\nversion: '1.4.5'\nsummary: Pure Go face detection library\ndescription: |\n  Key features:\n   - Does not require OpenCV or any 3rd party modules to be installed\n   - High processing speed\n   - There is no need for image preprocessing prior detection\n   - There is no need for the computation of integral images, image pyramid, HOG pyramid or any other similar data structure\n   - The face detection is based on pixel intensity comparison encoded in the binary file tree structure\n   - Fast detection of in-plane rotated faces\n   - Pupils/eyes detection\n   - Facial landmark points detection\n   - WASM (Webassembly) support\ngrade: stable\nconfinement: strict\nbase: core18\nparts:\n  pigo:\n    plugin: nil\n    source: .\n    build-snaps: [go]\n    override-build: |\n      export GOBIN=$SNAPCRAFT_PART_INSTALL/bin\n      export GO111MODULE=on\n      export CGO_ENABLED=0\n      go build cmd/pigo/main.go\n\n    filesets:\n      exclude-wasm-files:\n        - -wasm"
+        },
+        {
+          "name": "testdata",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wasm",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

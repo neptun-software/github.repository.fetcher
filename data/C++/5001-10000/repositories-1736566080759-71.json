@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736566080759,
+    "page": 71,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "progschj/ThreadPool",
+      "stars": 8059,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "COPYING",
+          "type": "blob",
+          "size": 0.8603515625,
+          "content": "Copyright (c) 2012 Jakob Progsch, Václav Zeman\n\nThis software is provided 'as-is', without any express or implied\nwarranty. In no event will the authors be held liable for any damages\narising from the use of this software.\n\nPermission is granted to anyone to use this software for any purpose,\nincluding commercial applications, and to alter it and redistribute it\nfreely, subject to the following restrictions:\n\n   1. The origin of this software must not be misrepresented; you must not\n   claim that you wrote the original software. If you use this software\n   in a product, an acknowledgment in the product documentation would be\n   appreciated but is not required.\n\n   2. Altered source versions must be plainly marked as such, and must not be\n   misrepresented as being the original software.\n\n   3. This notice may not be removed or altered from any source\n   distribution.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.3115234375,
+          "content": "ThreadPool\n==========\n\nA simple C++11 Thread Pool implementation.\n\nBasic usage:\n```c++\n// create thread pool with 4 worker threads\nThreadPool pool(4);\n\n// enqueue and store future\nauto result = pool.enqueue([](int answer) { return answer; }, 42);\n\n// get result from future\nstd::cout << result.get() << std::endl;\n\n```\n"
+        },
+        {
+          "name": "ThreadPool.h",
+          "type": "blob",
+          "size": 2.55078125,
+          "content": "#ifndef THREAD_POOL_H\n#define THREAD_POOL_H\n\n#include <vector>\n#include <queue>\n#include <memory>\n#include <thread>\n#include <mutex>\n#include <condition_variable>\n#include <future>\n#include <functional>\n#include <stdexcept>\n\nclass ThreadPool {\npublic:\n    ThreadPool(size_t);\n    template<class F, class... Args>\n    auto enqueue(F&& f, Args&&... args) \n        -> std::future<typename std::result_of<F(Args...)>::type>;\n    ~ThreadPool();\nprivate:\n    // need to keep track of threads so we can join them\n    std::vector< std::thread > workers;\n    // the task queue\n    std::queue< std::function<void()> > tasks;\n    \n    // synchronization\n    std::mutex queue_mutex;\n    std::condition_variable condition;\n    bool stop;\n};\n \n// the constructor just launches some amount of workers\ninline ThreadPool::ThreadPool(size_t threads)\n    :   stop(false)\n{\n    for(size_t i = 0;i<threads;++i)\n        workers.emplace_back(\n            [this]\n            {\n                for(;;)\n                {\n                    std::function<void()> task;\n\n                    {\n                        std::unique_lock<std::mutex> lock(this->queue_mutex);\n                        this->condition.wait(lock,\n                            [this]{ return this->stop || !this->tasks.empty(); });\n                        if(this->stop && this->tasks.empty())\n                            return;\n                        task = std::move(this->tasks.front());\n                        this->tasks.pop();\n                    }\n\n                    task();\n                }\n            }\n        );\n}\n\n// add new work item to the pool\ntemplate<class F, class... Args>\nauto ThreadPool::enqueue(F&& f, Args&&... args) \n    -> std::future<typename std::result_of<F(Args...)>::type>\n{\n    using return_type = typename std::result_of<F(Args...)>::type;\n\n    auto task = std::make_shared< std::packaged_task<return_type()> >(\n            std::bind(std::forward<F>(f), std::forward<Args>(args)...)\n        );\n        \n    std::future<return_type> res = task->get_future();\n    {\n        std::unique_lock<std::mutex> lock(queue_mutex);\n\n        // don't allow enqueueing after stopping the pool\n        if(stop)\n            throw std::runtime_error(\"enqueue on stopped ThreadPool\");\n\n        tasks.emplace([task](){ (*task)(); });\n    }\n    condition.notify_one();\n    return res;\n}\n\n// the destructor joins all threads\ninline ThreadPool::~ThreadPool()\n{\n    {\n        std::unique_lock<std::mutex> lock(queue_mutex);\n        stop = true;\n    }\n    condition.notify_all();\n    for(std::thread &worker: workers)\n        worker.join();\n}\n\n#endif\n"
+        },
+        {
+          "name": "example.cpp",
+          "type": "blob",
+          "size": 0.6181640625,
+          "content": "#include <iostream>\n#include <vector>\n#include <chrono>\n\n#include \"ThreadPool.h\"\n\nint main()\n{\n    \n    ThreadPool pool(4);\n    std::vector< std::future<int> > results;\n\n    for(int i = 0; i < 8; ++i) {\n        results.emplace_back(\n            pool.enqueue([i] {\n                std::cout << \"hello \" << i << std::endl;\n                std::this_thread::sleep_for(std::chrono::seconds(1));\n                std::cout << \"world \" << i << std::endl;\n                return i*i;\n            })\n        );\n    }\n\n    for(auto && result: results)\n        std::cout << result.get() << ' ';\n    std::cout << std::endl;\n    \n    return 0;\n}\n"
+        }
+      ]
+    }
+  ]
+}

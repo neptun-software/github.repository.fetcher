@@ -1,0 +1,116 @@
+{
+  "metadata": {
+    "timestamp": 1736566091270,
+    "page": 85,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "linyacool/WebServer",
+      "stars": 7845,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".clang-format",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "Language: Cpp\nBasedOnStyle: Google"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.287109375,
+          "content": "# Prerequisites\n*.d\n\n# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Compiled Dynamic libraries\n*.so\n*.dylib\n*.dll\n\n# Fortran module files\n*.mod\n*.smod\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n*.lib\n\n# Executables\n*.exe\n*.out\n*.app\n\n# Otheres\ncore\n.vscode\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1826171875,
+          "content": "language: cpp\nsudo: required\ndist: trusty\ncompiler:\n  - g++\nos:\n  - linux\ninstall:\n  - sudo apt-get install cmake\nenv:\n  - BUILD_TYPE=debug\n  - BUILD_TYPE=release\nscript:\n  - ./build.sh\n\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 0.5263671875,
+          "content": "cmake_minimum_required(VERSION 2.8)\n\nproject(WebServer CXX)\n\nif(NOT CMAKE_BUILD_TYPE)\n    set(CMAKE_BUILD_TYPE \"Debug\")\nendif()\n\nset(CXX_FLAGS\n    -g\n    -Wall\n    -std=c++11\n    -D_PTHREADS\n    -Wno-unused-parameter\n)\n\n\nset(CMAKE_CXX_COMPILER \"g++\")\nset(CMAKE_CXX_FLAGS_DEBUG \"-O0\")\nset(CMAKE_CXX_FLAGS_RELEASE \"-O0\")\n\nstring(REPLACE \";\" \" \" CMAKE_CXX_FLAGS \"${CXX_FLAGS}\")\n\n\nstring(TOUPPER ${CMAKE_BUILD_TYPE} BUILD_TYPE)\nmessage(STATUS \"CXX_FLAGS = \" ${CMAKE_CXX_FLAGS} \" \" ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})\n\nadd_subdirectory(WebServer)"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2018 林亚\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.6572265625,
+          "content": "# A C++ High Performance Web Server\r\n\r\n[![Build Status](https://travis-ci.org/linyacool/WebServer.svg?branch=master)](https://travis-ci.org/linyacool/WebServer)\r\n[![license](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/MIT)\r\n\r\n  \r\n## Introduction  \r\n\r\n本项目为C++11编写的Web服务器，解析了get、head请求，可处理静态资源，支持HTTP长连接，支持管线化请求，并实现了异步日志，记录服务器运行状态。  \r\n\r\n\r\n\r\n| Part Ⅰ | Part Ⅱ | Part Ⅲ | Part Ⅳ | Part Ⅴ | Part Ⅵ |\r\n| :--------: | :---------: | :---------: | :---------: | :---------: | :---------: |\r\n| [并发模型](https://github.com/linyacool/WebServer/blob/master/并发模型.md)|[连接的维护](https://github.com/linyacool/WebServer/blob/master/连接的维护.md)|[版本历史](https://github.com/linyacool/WebServer/blob/master/%E7%89%88%E6%9C%AC%E5%8E%86%E5%8F%B2.md) | [测试及改进](https://github.com/linyacool/WebServer/blob/master/测试及改进.md) | [项目目的](https://github.com/linyacool/WebServer/blob/master/%E9%A1%B9%E7%9B%AE%E7%9B%AE%E7%9A%84.md) | [面试问题](https://github.com/linyacool/WebServer/blob/master/%E9%9D%A2%E8%AF%95%E9%97%AE%E9%A2%98.md)\r\n\r\n## Envoirment  \r\n* OS: Ubuntu 14.04\r\n* Complier: g++ 4.8\r\n\r\n## Build\r\n\r\n\t./build.sh\r\n\r\n## Usage\r\n\r\n\t./WebServer [-t thread_numbers] [-p port] [-l log_file_path(should begin with '/')]\r\n\r\n## Technical points\r\n* 使用Epoll边沿触发的IO多路复用技术，非阻塞IO，使用Reactor模式\r\n* 使用多线程充分利用多核CPU，并使用线程池避免线程频繁创建销毁的开销\r\n* 使用基于小根堆的定时器关闭超时请求\r\n* 主线程只负责accept请求，并以Round Robin的方式分发给其它IO线程(兼计算线程)，锁的争用只会出现在主线程和某一特定线程中\r\n* 使用eventfd实现了线程的异步唤醒\r\n* 使用双缓冲区技术实现了简单的异步日志系统\r\n* 为减少内存泄漏的可能，使用智能指针等RAII机制\r\n* 使用状态机解析了HTTP请求,支持管线化\r\n* 支持优雅关闭连接\r\n \r\n## Model\r\n\r\n并发模型为Reactor+非阻塞IO+线程池，新连接Round Robin分配，详细介绍请参考[并发模型](https://github.com/linyacool/WebServer/blob/master/并发模型.md)\r\n![并发模型](https://github.com/linyacool/WebServer/blob/master/datum/model.png)\r\n\r\n## 代码统计\r\n\r\n![cloc](https://github.com/linyacool/WebServer/blob/master/datum/cloc.png)\r\n\r\n\r\n## Others\r\n除了项目基本的代码，进服务器进行压测时，对开源测试工具Webbench增加了Keep-Alive选项和测试功能: 改写后的[Webbench](https://github.com/linyacool/WebBench)\r\n\r\n"
+        },
+        {
+          "name": "WebBench",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "WebServer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.2646484375,
+          "content": "#!/bin/sh\n\nset -x\n\nSOURCE_DIR=`pwd`\nBUILD_DIR=${BUILD_DIR:-../build}\nBUILD_TYPE=${BUILD_TYPE:-Debug}\n\nmkdir -p $BUILD_DIR/$BUILD_TYPE \\\n    && cd $BUILD_DIR/$BUILD_TYPE \\\n    && cmake \\\n            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \\\n            $SOURCE_DIR \\\n    && make $*"
+        },
+        {
+          "name": "datum",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "old_version",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "并发模型.md",
+          "type": "blob",
+          "size": 5.9453125,
+          "content": "# 并发模型\r\n\r\n程序使用Reactor模型，并使用多线程提高并发度。为避免线程频繁创建和销毁带来的开销，使用线程池，在程序的开始创建固定数量的线程。使用epoll作为IO多路复用的实现方式。\r\n\r\n## 线程\r\n一般而言，多线程服务器中的线程可分为以下几类：  \r\n\r\n* IO线程(负责网络IO)\r\n* 计算线程(负责复杂计算)\r\n* 第三方库所用线程\r\n\r\n本程序中的Log线程属于第三种，其它线程属于IO线程，因为Web静态服务器计算量较小，所以没有分配计算线程，减少跨线程分配的开销，让IO线程兼顾计算任务。除Log线程外，每个线程一个事件循环，遵循One loop per thread。\r\n\r\n## 并发模型\r\n本程序使用的并发模型如下图所示：\r\n\r\n![并发模型](https://github.com/linyacool/WebServer/blob/master/datum/model.png)\r\n\r\nMainReactor只有一个，负责响应client的连接请求，并建立连接，它使用一个NIO Selector。在建立连接后用Round Robin的方式分配给某个SubReactor,因为涉及到跨线程任务分配，需要加锁，这里的锁由某个特定线程中的loop创建，只会被该线程和主线程竞争。\r\n\r\nSubReactor可以有一个或者多个，每个subReactor都会在一个独立线程中运行，并且维护一个独立的NIO Selector。\r\n\r\n当主线程把新连接分配给了某个SubReactor，该线程此时可能正阻塞在多路选择器(epoll)的等待中，怎么得知新连接的到来呢？这里使用了eventfd进行异步唤醒，线程会从epoll_wait中醒来，得到活跃事件，进行处理。\r\n\r\n我学习了muduo库中的runInLoop和queueInLoop的设计方法，这两个方法主要用来执行用户的某个回调函数，queueInLoop是跨进程调用的精髓所在，具有极大的灵活性，我们只需要绑定好回调函数就可以了，我仿照muduo实现了这一点。\r\n\r\n## epoll工作模式\r\nepoll的触发模式在这里我选择了ET模式，muduo使用的是LT，这两者IO处理上有很大的不同。ET模式要比LE复杂许多，它对用户提出了更高的要求，即每次读，必须读到不能再读(出现EAGAIN)，每次写，写到不能再写(出现EAGAIN)。而LT则简单的多，可以选择也这样做，也可以为编程方便，比如每次只read一次(muduo就是这样做的，这样可以减少系统调用次数)。\r\n\r\n## 定时器\r\n\r\n每个SubReactor持有一个定时器，用于处理超时请求和长时间不活跃的连接。muduo中介绍了时间轮的实现和用stl里set的实现，这里我的实现直接使用了stl里的priority_queue，底层是小根堆，并采用惰性删除的方式，时间的到来不会唤醒线程，而是每次循环的最后进行检查，如果超时了再删，因为这里对超时的要求并不会很高，如果此时线程忙，那么检查时间队列的间隔也会短，如果不忙，也给了超时请求更长的等待时间。\r\n\r\n## 核心结构\r\n\r\n程序中的每一个类和结构体当然都必不可少，其中能体现并发模型和整体架构的，我认为是有两个：\r\n\r\n* Channel类：Channel是Reactor结构中的“事件”，它自始至终都属于一个EventLoop，负责一个文件描述符的IO事件，在Channel类中保存这IO事件的类型以及对应的回调函数，当IO事件发生时，最终会调用到Channel类中的回调函数。因此，程序中所有带有读写时间的对象都会和一个Channel关联，包括loop中的eventfd，listenfd，HttpData等。\r\n* EventLoop：One loop per thread意味着每个线程只能有一个EventLoop对象，EventLoop即是时间循环，每次从poller里拿活跃事件，并给到Channel里分发处理。EventLoop中的loop函数会在最底层(Thread)中被真正调用，开始无限的循环，直到某一轮的检查到退出状态后从底层一层一层的退出。\r\n\r\n## Log\r\nLog的实现了学习了muduo，Log的实现分为前端和后端，前端往后端写，后端往磁盘写。为什么要这样区分前端和后端呢？因为只要涉及到IO，无论是网络IO还是磁盘IO，肯定是慢的，慢就会影响其它操作，必须让它快才行。  \r\n\r\n这里的Log前端是前面所述的IO线程，负责产生log，后端是Log线程，设计了多个缓冲区，负责收集前端产生的log，集中往磁盘写。这样，Log写到后端是没有障碍的，把慢的动作交给后端去做好了。\r\n\r\n后端主要是由多个缓冲区构成的，集满了或者时间到了就向文件写一次。采用了muduo介绍了“双缓冲区”的思想，实际采用4个多的缓冲区(为什么说多呢？为什么4个可能不够用啊，要有备无患)。4个缓冲区分两组，每组的两个一个主要的，另一个防止第一个写满了没地方写，写满或者时间到了就和另外两个交换**指针**，然后把满的往文件里写。\r\n\r\n与Log相关的类包括FileUtil、LogFile、AsyncLogging、LogStream、Logging。\r\n其中前4个类每一个类都含有一个append函数，Log的设计也是主要围绕这个**append**函数展开的。\r\n\r\n* FileUtil是最底层的文件类，封装了Log文件的打开、写入并在类析构的时候关闭文件，底层使用了标准IO，该append函数直接向文件写。\r\n* LogFile进一步封装了FileUtil，并设置了一个循环次数，每过这么多次就flush一次。\r\n* AsyncLogging是核心，它负责启动一个log线程，专门用来将log写入LogFile，应用了“双缓冲技术”，其实有4个以上的缓冲区，但思想是一样的。AsyncLogging负责(定时到或被填满时)将缓冲区中的数据写入LogFile中。\r\n* LogStream主要用来格式化输出，重载了<<运算符，同时也有自己的一块缓冲区，这里缓冲区的存在是为了缓存一行，把多个<<的结果连成一块。\r\n* Logging是对外接口，Logging类内涵一个LogStream对象，主要是为了每次打log的时候在log之前和之后加上固定的格式化的信息，比如打log的行、文件名等信息。"
+        },
+        {
+          "name": "测试及改进.md",
+          "type": "blob",
+          "size": 3.744140625,
+          "content": "# 测试及改进\r\n\r\n## 测试环境\r\n* OS：Ubuntu 14.04\r\n* 内存：8G\r\n* CPU：I7-4720HQ\r\n\r\n## 测试方法\r\n* 理想的测试环境是两台计算机，带宽无限，现在的网卡虽然都是千兆网卡，但是普通家用的网线都是5类双绞线，最高100Mbps,在linux下用ethtool可以看到网卡的速度被限制为100Mbsp，无法更改为更高的，经测试很容易跑满带宽，因此退而选择本地环境。\r\n* 使用工具Webbench，开启1000客户端进程，时间为60s\r\n* 分别测试短连接和长连接的情况\r\n* 关闭所有的输出及Log\r\n* 为避免磁盘IO对测试结果的影响，测试响应为内存中的\"Hello World\"字符加上必要的HTTP头\r\n* 我的最终版本中很多方面借鉴了muduo的思路，muduo中也提供了一个简单的HTTP echo测试，因此我将与muduo进行一个小小的对比，我修改了muduo测试的代码，使其echo相同的内容，关闭muduo的所有输出及Log\r\n* 线程池开启4线程\r\n* 因为发送的内容很少，为避免发送可能的延迟，关闭Nagle算法\r\n\r\n\r\n## 测试结果及分析\r\n测试截图放在最后  \r\n\r\n| 服务器 | 短连接QPS | 长连接QPS | \r\n| - | :-: | -: | \r\n| WebServer | 126798| 335338 | \r\n| Muduo | 88430 | 358302 | \r\n\r\n* 首先很明显的一点是长链接能处理的请求数是短连接的三四倍，因为没有了连接建立和断开的开销，不需要频繁accept和shutdown\\close等系统调用，也不需要频繁建立和销毁对应的结构体。\r\n* 我的服务器在最后的版本中，没有改进输入输出Buffer，用了效率低下的string，muduo用的是设计良好的vector<char>，我将在后续改进这一点。这也造成了在长连接的情况下，我的server逊于muduo。虽说边沿触发效率高一点，但是还是比不过在Buffer上性能的优化的。\r\n* 短链接的情况下，我的服务器要超过Muduo很多。原因在于：Muduo采用水平触发方式(Linux下用epoll)，并且做法是每次Acceptor只accept一次就返回，面对突然的并发量，必然会因为频繁的epoll_wait耽误大量的时间，而我的做法是用while包裹accept，一直accept到不能再accept。当然，如果同时连接的请求很少，陈硕在书中也提到过，假如一次只有一个连接，那么我的方式就会多一次accpet才能跳出循环，但是这样的代价似乎微不足道啊，换来的效率却高了不少。\r\n* 空闲时，Server几乎不占CPU，短连接时，各线程的CPU负载比较均衡，长连接时，主线程负载0，线程池的线程负载接近100%，因为没有新的连接需要处理。各种情况均正常。\r\n* 没有严格的考证，测试时发现，HTTP的header解析的结果用map比用unordered_map快，网上的博客里有很多人做了测试，我在做实验的时候大致也发现了。主要是因为数据量太小，一个HTTP请求头才几个头部字段，建立unordered_map的成本要比map高，数据量小，复杂度根本体现不出来。\r\n\r\n\r\n\r\n## 测试结果截图\r\n* WebServer短连接测试  \r\n![shortWeb](https://github.com/linyacool/WebServer/blob/master/datum/WebServer.png)\r\n* muduo短连接测试  \r\n![shortMuduo](https://github.com/linyacool/WebServer/blob/master/datum/muduo.png)\r\n* WebServer长连接测试  \r\n![keepWeb](https://github.com/linyacool/WebServer/blob/master/datum/WebServerk.png)\r\n* muduo长连接测试  \r\n![keepMuduo](https://github.com/linyacool/WebServer/blob/master/datum/muduok.png)\r\n* WebServer空闲负载  \r\n![idle](https://github.com/linyacool/WebServer/blob/master/datum/idle.png)\r\n* WebServer短连接CPU负载  \r\n![short](https://github.com/linyacool/WebServer/blob/master/datum/close.png)\r\n* WebServer长连接CPU负载  \r\n![keep](https://github.com/linyacool/WebServer/blob/master/datum/keepalive.png)\r\n\r\n"
+        },
+        {
+          "name": "版本历史.md",
+          "type": "blob",
+          "size": 3.6396484375,
+          "content": "# 版本历史\n从0.1最初形成到一点一点改进到0.6，到最终看了muduo，痛下决心重写，最终的版本完全从头再来了，但有了前面的经验，写起来顺畅了不少，但花了比之前所有加起来还要长的时间\n## 0.1\n\n第一版是看了很多Github上别人写的服务器，以及博客上的一些总结，结合自己的理解写出来的。模型结构如下：\n\n* 使用了epoll边沿触发+EPOLLONESHOT+非阻塞IO\n* 使用了一个固定线程数的线程池\n* 实现了一个任务队列，由条件变量触发通知新任务的到来\n* 实现了一个小根堆的定时器及时剔除超时请求，使用了STL的优先队列来管理定时器\n* 解析了HTTP的get、post请求，支持长短连接\n* mime设计为单例模式\n* 线程的工作分配为：\n    * 主线程负责等待epoll中的事件，并把到来的事件放进任务队列，在每次循环的结束剔除超时请求和被置为删除的时间结点\n    * 工作线程阻塞在条件变量的等待中，新任务到来后，某一工作线程会被唤醒，执行具体的IO操作和计算任务，如果需要继续监听，会添加到epoll中  \n\n* 锁的使用有两处：\n    * 第一处是任务队列的添加和取操作，都需要加锁，并配合条件变量，跨越了多个线程。\n    * 第二处是定时器结点的添加和删除，需要加锁，主线程和工作线程都要操作定时器队列。\n\n\n\n第一版的服务器已经相对较完整了，该有的功能都已经具备了\n\n## 0.2\n\n在第一版的基础上，优化了代码结构，自己设计了RAII锁机制，使锁能够自动释放，并修复了一些小的bug\n\n## 0.3\n\n* 几乎全部的裸指针被智能指针替代\n* 利用weak_ptr解决时间结点和HTTP类互指的问题\n* 任务队列的任务结构从函数指针+参数指针转换为C++11的function  \n\n这一版还是花了不少时间的，毕竟对象的生命周期不由自己控制了\n\n## 0.4\n\n这个时候买了陈硕的《Linux多线程服务端编程》书，看了一部分，从前面几章获得启发\n* 为不提供拷贝构造和赋值运算符的类添加了noncopyable基类\n* 重写了RAII机制的锁，学习muduo中的做法\n* 重写了单例模式，将双重加锁改为更简单而安全的pthread_once()\n\n## 0.5\n\n* 修复了一些bug，稍微调整了类的结构\n* 封装了条件变量\n\n## 0.6\n\n* 仿照muduo，写了4个缓冲区的异步Log日志，没有区分优先级，其它基本都具备了\n\n## WebServer(重构)\n\n不知道该给自己的服务器取什么名字好，随便叫个吧……最后一版被我改的面目全非，也是下了很大的决心。之前的版本无非修修补补，算是自我检讨的过程，但是闭门造车并不可取，于是我把陈硕的《Linux多线程服务端编程》看完了，书上虽然贴了部分源码，但我看的还是朦朦胧胧，很多地方不明白，花了几天时间把源码看了，不懂的地方再回过来看书，总算是弄明白了。看了大牛的代码，再看自己的……哎我重写总行了吧\n\n顺便吐槽一下自己，之前在知乎上看到陈硕一直推销自己的书，我还觉得这人好功利，后来被师兄推荐，看了一下目录，觉得可以参考一下就买了。没想到书就一点一点这么看完了……还看了好几遍，源码也是看了好几遍……\n\n当然，这不是最终篇，可改进的地方还有很多，绝对不敢说看了几本书就敢说自己写的东西比大牛写的好，我还会继续改进自己的server的\n\n最后版本的东西没有在这里介绍，写在了模型结构里，这里只想写一下自己的心路历程，记录一下小白成长之路～"
+        },
+        {
+          "name": "连接的维护.md",
+          "type": "blob",
+          "size": 3.1962890625,
+          "content": "# 连接维护(针对非阻塞IO)\r\n\r\n### 建立连接\r\n\r\n* 建立连接的过程  \r\n连接的建立比较简单，server端通过socket()，bind()，listen()，并使用epoll ET模式监听listenfd的读请求，当TCP连接完成3次握手后，会触发listenfd的读事件，应用程序调用accept()，会检查已完成的连接队列，如果队列里有连接，就返回这个连接，出错或连接为空时返回-1。此时，已经可以进行正常的读写操作了。 当然，因为是ET模式，accept()要一直循环到就绪连接为空。\r\n* 分析  \r\n之所以说建立连接的过程比较简单，是因为数据的通信已经由操作系统帮我们完成了，这里的通信是指3次握手的过程，这个过程不需要应用程序参与，当应用程序感知到连接时，此时该连接已经完成了3次握手的过程，accept就好了。另一个原因是一般情况下，连接的建立都是client发起的，server端被动建立连接就好了，也不会出现同时建立的情况。\r\n* 限制  \r\n假设server只监听一个端口，一个连接就是一个四元组(原ip，原port，对端ip, 对端port)，那么理论上可以建立2^48个连接，可是，fd可没有这么多(操作系统限制、用户进程限制)。当连接满了，如果空等而不连接，那么就绪队列也满了后，会导致新连接无法建立。这里的做法我参考了muduo，准备一个空的文件描述符，accept()后直接close()，这样对端不会收到RST，至少可以知道服务器正在运行。\r\n\r\n### 关闭连接\r\n\r\n相对于连接的建立，关闭连接则复杂的多，远不是一个close()那么简单，关闭连接要优雅。\r\n\r\n##### 什么时候关闭连接？\r\n通常server和client都可以主动发Fin来关闭连接  \r\n\r\n* 对于client(非Keep-Alive)，发送完请求后就可以shutdown()写端，然后收到server发来的应答，最后close掉连接。也可以不shutdown()写，等读完直接close。对于Keep-Alive的情况，就要看client的心情了，收到消息后可以断，也可以不断，server应该保证不主动断开。\r\n\r\n* 对于server端，毫无疑问应该谨慎处理以上所有情况。具体说来:\r\n> * 出现各种关于连接的错误时，可以直接close()掉\r\n> * 短连接超时的请求，可以close()，也可以不关\r\n> * 长连接对方长时间没有请求(如果没有保活机制)，可以close()，也可以不关\r\n> * client发出Fin，server会收到0字节，通常不能判断client是close了还是shutdown，这时server应当把消息发完，然后才可以close()，如果对方调用的是close，会收到RST，server能感知到，就可以立即close了\r\n> * 短连接正常结束，server可以close，也可以不close，大多数的实现是不close的(对HTTP1.1而言)\r\n\r\n\r\n##### EPOLLIN触发但是read()返回0的情况\r\n\r\n这种情况通常有两个原因:\r\n> * 对端已经关闭了连接，这时再写该fd会出错，此时应该关闭连接\r\n> * 对端只是shutdown()了写端，告诉server我已经写完了，但是还可以接收信息。server应该在写完所有的信息后再关闭连接。更优雅的做法是透明的传递这个行为，即server顺着关闭读端，然后发完数据后关闭。\r\n"
+        },
+        {
+          "name": "遇到的困难.md",
+          "type": "blob",
+          "size": 1.5595703125,
+          "content": "# 遇到的困难\n\n## 1. 如何设计各个线程个任务\n其实我觉的实现上的困难都不算真正的困难吧，毕竟都能写出来，无非是解决bug花的时间的长短。  \n我遇到的最大的问题是不太理解One loop per thread这句话吧，翻译出来不就是每个线程一个循环，我最开始写的也是一个线程一个循环啊，muduo的实现和我的有什么区别呢？还有怎么设计才能减少竞态？\n\n带着这些问题我看了《Linux多线程服务端编程》，并看完了muduo的源码，这些问题自然而然就解决了\n\n\n## 2. 异步Log几秒钟才写一次磁盘，要是coredump了，这段时间内产生的log我去哪找啊？\n\n其实这个问题非常简单了，也没花多少时间去解决，但我觉的非常好玩。coredump了自然会保存在core文件里了，无非就是把它找出来的问题了，在这里记录一下。\n\n当然这里不管coredump的原因是什么，我只想看丢失的log。所以模拟的话在某个地方abort()就行\n\n多线程调试嘛，先看线程信息，info thread，找到我的异步打印线程，切换进去看bt调用栈，正常是阻塞在条件变量是wait条件中的，frame切换到threadFunc(这个函数是我的异步log里面的循环的函数名)，剩下的就是print啦～不过，我的Buffer是用智能指针shared_ptr包裹的，直接->不行，gdb不识别，优化完.get()不让用，可能被inline掉了，只能直接从shared_ptr源码中找到_M_ptr成员来打印。\n\n![gdb](https://github.com/linyacool/WebServer/blob/master/datum/gdb.png)"
+        },
+        {
+          "name": "项目目的.md",
+          "type": "blob",
+          "size": 1.19140625,
+          "content": "# 项目目的\r\n---\r\n### 最初的想法\r\n本项目是我在三星电子(中国)研发中心实习期间利用晚上和周末的时间完成的，实习期间我负责4K分辨率双鱼眼摄像头视频拼接的算法设计与实现，我希望能把其中的图像拼接部分的成果通过Web的方式展示出来，但因为涉及保密协议，不得不放弃这一想法。\r\n\r\n### Web服务器能够很好的贯穿所学的知识\r\n但是，Web服务器能够很好的贯穿之前所学的知识，之前看过的《C++ Primer》、《Effevtive C++》、《STL源码剖析》、《深度探索C++对象模型》、《TCP\\IP详解卷1》、APUE、UNP，还包括了《后台开发核心技术与应用实践》等书，涵盖了  \r\n  \r\n* TCP、HTTP协议\r\n* 多进程多线程\r\n* IO\r\n* 锁\r\n* 通信\r\n* C++语法\r\n* 编程规范\r\n* Linux环境下各种工具的使用\r\n* 版本控制Git\r\n* Makefile和CMakeLists文件的编写\r\n* 自动化构建工具Travis CI的使用\r\n  \r\n最终的版本在很多方面学习了muduo网络库，在看完陈硕的《Linux多线程服务端编程》后，对照着书把muduo的源码读了几遍，并重构了自己的服务器，最终的很多想法借鉴了muduo的思想。\r\n"
+        }
+      ]
+    }
+  ]
+}

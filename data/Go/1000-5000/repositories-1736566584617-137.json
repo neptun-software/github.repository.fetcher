@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736566584617,
+    "page": 137,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ilanyu/ReverseProxy",
+      "stars": 4396,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.3984375,
+          "content": "# ReverseProxy\nReverseProxy in golang\n\n## Use:\n\n\t./ReverseProxy_[OS]_[ARCH] -h\n\t\n\tUsage of ReverseProxy_[OS]_[ARCH]:\n\t  -l string\n\t        listen on ip:port (default \"0.0.0.0:8888\")\n\t  -r string\n\t        reverse proxy addr (default \"http://idea.lanyus.com:80\")\n\n\n\t./ReverseProxy_windows_amd64.exe -l \"0.0.0.0:8081\" -r \"https://www.baidu.com\"\n\n\tListening on 0.0.0.0:8081, forwarding to https://www.baidu.com\n\n"
+        },
+        {
+          "name": "cmd.go",
+          "type": "blob",
+          "size": 0.36328125,
+          "content": "package main\n\nimport \"flag\"\n\ntype Cmd struct {\n\tbind string\n\tremote string\n\tip string\n}\n\nfunc parseCmd() Cmd {\n\tvar cmd Cmd\n\tflag.StringVar(&cmd.bind, \"l\", \"0.0.0.0:8888\", \"listen on ip:port\")\n\tflag.StringVar(&cmd.remote, \"r\", \"http://idea.lanyus.com:80\", \"reverse proxy addr\")\n\tflag.StringVar(&cmd.ip, \"ip\", \"\", \"reverse proxy addr server ip\")\n\tflag.Parse()\n\treturn cmd\n}"
+        },
+        {
+          "name": "handle.go",
+          "type": "blob",
+          "size": 1.20703125,
+          "content": "package main\n\nimport (\n\t\"net/http\"\n\t\"net/url\"\n\t\"net/http/httputil\"\n\t\"log\"\n\t\"net\"\n\t\"time\"\n\t\"context\"\n\t\"github.com/bogdanovich/dns_resolver\"\n\t\"strings\"\n)\n\ntype handle struct {\n\treverseProxy string\n}\n\nfunc (this *handle) ServeHTTP(w http.ResponseWriter, r *http.Request) {\n\tlog.Println(r.RemoteAddr + \" \" + r.Method + \" \" + r.URL.String() + \" \" + r.Proto + \" \" + r.UserAgent())\n\tremote, err := url.Parse(this.reverseProxy)\n\tif err != nil {\n\t\tlog.Fatalln(err)\n\t}\n\tdialer := &net.Dialer{\n\t\tTimeout:   30 * time.Second,\n\t\tKeepAlive: 30 * time.Second,\n\t\tDualStack: true,\n\t}\n\thttp.DefaultTransport.(*http.Transport).DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {\n\t\tremote := strings.Split(addr, \":\")\n\t\tif cmd.ip == \"\" {\n\t\t\tresolver := dns_resolver.New([]string{\"114.114.114.114\", \"114.114.115.115\", \"119.29.29.29\", \"223.5.5.5\", \"8.8.8.8\", \"208.67.222.222\", \"208.67.220.220\"})\n\t\t\tresolver.RetryTimes = 5\n\t\t\tip, err := resolver.LookupHost(remote[0])\n\t\t\tif err != nil {\n\t\t\t\tlog.Println(err)\n\t\t\t}\n\t\t\tcmd.ip = ip[0].String()\n\t\t}\n\t\taddr = cmd.ip + \":\" + remote[1]\n\t\treturn dialer.DialContext(ctx, network, addr)\n\t}\n\tproxy := httputil.NewSingleHostReverseProxy(remote)\n\tr.Host = remote.Host\n\tproxy.ServeHTTP(w, r)\n}\n"
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 0.521484375,
+          "content": "package main\n\nimport (\n\t\"net/http\"\n\t\"log\"\n)\n\nvar cmd Cmd\nvar srv http.Server\n\nfunc StartServer(bind string, remote string)  {\n\tlog.Printf(\"Listening on %s, forwarding to %s\", bind, remote)\n\th := &handle{reverseProxy: remote}\n\tsrv.Addr = bind\n\tsrv.Handler = h\n\t//go func() {\n\t\tif err := srv.ListenAndServe(); err != nil {\n\t\t\tlog.Fatalln(\"ListenAndServe: \", err)\n\t\t}\n\t//}()\n}\n\nfunc StopServer()  {\n\tif err := srv.Shutdown(nil) ; err != nil {\n\t\tlog.Println(err)\n\t}\n}\n\nfunc main() {\n\tcmd = parseCmd()\n\tStartServer(cmd.bind, cmd.remote)\n}\n"
+        }
+      ]
+    }
+  ]
+}

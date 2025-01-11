@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "timestamp": 1736566244923,
+    "page": 260,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ssloy/tinyraytracer",
+      "stars": 5076,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "# Ignore content built with CMake\nbuild/\n\n"
+        },
+        {
+          "name": ".gitpod.yml",
+          "type": "blob",
+          "size": 0.201171875,
+          "content": "image:\n  file: Dockerfile\ntasks:\n- command: >\n    mkdir --parents build &&\n    cd build &&\n    cmake .. &&\n    make &&\n    ./tinyraytracer &&\n    pnmtopng out.ppm > out.png &&\n    open out.png &&\n    cd ..\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 0.505859375,
+          "content": "cmake_minimum_required (VERSION 2.8)\nproject(tinyraytracer)\n\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nfind_package(OpenMP)\nif(OPENMP_FOUND)\n  set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}\")\n  set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}\")\n  set(CMAKE_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}\")\nendif()\n\nif(NOT CMAKE_BUILD_TYPE)\n  set(CMAKE_BUILD_TYPE Release)\nendif()\n\nfile(GLOB SOURCES *.h *.cpp)\nadd_executable(${PROJECT_NAME} ${SOURCES})\n\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.109375,
+          "content": "FROM gitpod/workspace-full\n\nUSER root\n# add your tools here\nRUN apt-get update && apt-get install -y \\\n  netpbm\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 1.5078125,
+          "content": "# Understandable RayTracing in 256 lines of bare C++\n\nThis repository is a support code for my computer graphics lectures. It is not meant to be the ultimate rendering code or even physically realistic. It is meant to be **simple**. This project is distributed under the [DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE](https://en.wikipedia.org/wiki/WTFPL).\n\n**Check [the wiki](https://github.com/ssloy/tinyraytracer/wiki) that accompanies the source code. The second raytracing chapter is available [in the tinykaboom repository](https://github.com/ssloy/tinykaboom/wiki). If you are looking for a software rasterizer, check the [other part of the lectures](https://github.com/ssloy/tinyrenderer/wiki).**\n\nIn my lectures I tend to avoid third party libraries as long as it is reasonable, because it forces to understand what is happening under the hood. So, the raytracing 256 lines of plain C++ give us this result:\n![](https://raw.githubusercontent.com/ssloy/tinyraytracer/master/out.jpg)\n\n## compilation\n```sh\ngit clone https://github.com/ssloy/tinyraytracer.git\ncd tinyraytracer\nmkdir build\ncd build\ncmake ..\nmake\n```\n\nYou can open the project in Gitpod, a free online dev evironment for GitHub:\n\n[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/ssloy/tinyraytracer)\n\nOn open, the editor will compile & run the program as well as open the resulting image in the editor's preview.\nJust change the code in the editor and rerun the script (use the terminal's history) to see updated images.\n"
+        },
+        {
+          "name": "anaglyph.jpg",
+          "type": "blob",
+          "size": 931.4130859375,
+          "content": null
+        },
+        {
+          "name": "out.jpg",
+          "type": "blob",
+          "size": 104.34375,
+          "content": null
+        },
+        {
+          "name": "tinyraytracer.cpp",
+          "type": "blob",
+          "size": 6.0732421875,
+          "content": "#include <tuple>\n#include <vector>\n#include <fstream>\n#include <algorithm>\n#include <cmath>\n\nstruct vec3 {\n    float x=0, y=0, z=0;\n          float& operator[](const int i)       { return i==0 ? x : (1==i ? y : z); }\n    const float& operator[](const int i) const { return i==0 ? x : (1==i ? y : z); }\n    vec3  operator*(const float v) const { return {x*v, y*v, z*v};       }\n    float operator*(const vec3& v) const { return x*v.x + y*v.y + z*v.z; }\n    vec3  operator+(const vec3& v) const { return {x+v.x, y+v.y, z+v.z}; }\n    vec3  operator-(const vec3& v) const { return {x-v.x, y-v.y, z-v.z}; }\n    vec3  operator-()              const { return {-x, -y, -z};          }\n    float norm() const { return std::sqrt(x*x+y*y+z*z); }\n    vec3 normalized() const { return (*this)*(1.f/norm()); }\n};\n\nvec3 cross(const vec3 v1, const vec3 v2) {\n    return { v1.y*v2.z - v1.z*v2.y, v1.z*v2.x - v1.x*v2.z, v1.x*v2.y - v1.y*v2.x };\n}\n\nstruct Material {\n    float refractive_index = 1;\n    float albedo[4] = {2,0,0,0};\n    vec3 diffuse_color = {0,0,0};\n    float specular_exponent = 0;\n};\n\nstruct Sphere {\n    vec3 center;\n    float radius;\n    Material material;\n};\n\nconstexpr Material      ivory = {1.0, {0.9,  0.5, 0.1, 0.0}, {0.4, 0.4, 0.3},   50.};\nconstexpr Material      glass = {1.5, {0.0,  0.9, 0.1, 0.8}, {0.6, 0.7, 0.8},  125.};\nconstexpr Material red_rubber = {1.0, {1.4,  0.3, 0.0, 0.0}, {0.3, 0.1, 0.1},   10.};\nconstexpr Material     mirror = {1.0, {0.0, 16.0, 0.8, 0.0}, {1.0, 1.0, 1.0}, 1425.};\n\nconstexpr Sphere spheres[] = {\n    {{-3,    0,   -16}, 2,      ivory},\n    {{-1.0, -1.5, -12}, 2,      glass},\n    {{ 1.5, -0.5, -18}, 3, red_rubber},\n    {{ 7,    5,   -18}, 4,     mirror}\n};\n\nconstexpr vec3 lights[] = {\n    {-20, 20,  20},\n    { 30, 50, -25},\n    { 30, 20,  30}\n};\n\nvec3 reflect(const vec3 &I, const vec3 &N) {\n    return I - N*2.f*(I*N);\n}\n\nvec3 refract(const vec3 &I, const vec3 &N, const float eta_t, const float eta_i=1.f) { // Snell's law\n    float cosi = - std::max(-1.f, std::min(1.f, I*N));\n    if (cosi<0) return refract(I, -N, eta_i, eta_t); // if the ray comes from the inside the object, swap the air and the media\n    float eta = eta_i / eta_t;\n    float k = 1 - eta*eta*(1 - cosi*cosi);\n    return k<0 ? vec3{1,0,0} : I*eta + N*(eta*cosi - std::sqrt(k)); // k<0 = total reflection, no ray to refract. I refract it anyways, this has no physical meaning\n}\n\nstd::tuple<bool,float> ray_sphere_intersect(const vec3 &orig, const vec3 &dir, const Sphere &s) { // ret value is a pair [intersection found, distance]\n    vec3 L = s.center - orig;\n    float tca = L*dir;\n    float d2 = L*L - tca*tca;\n    if (d2 > s.radius*s.radius) return {false, 0};\n    float thc = std::sqrt(s.radius*s.radius - d2);\n    float t0 = tca-thc, t1 = tca+thc;\n    if (t0>.001) return {true, t0};  // offset the original point by .001 to avoid occlusion by the object itself\n    if (t1>.001) return {true, t1};\n    return {false, 0};\n}\n\nstd::tuple<bool,vec3,vec3,Material> scene_intersect(const vec3 &orig, const vec3 &dir) {\n    vec3 pt, N;\n    Material material;\n\n    float nearest_dist = 1e10;\n    if (std::abs(dir.y)>.001) { // intersect the ray with the checkerboard, avoid division by zero\n        float d = -(orig.y+4)/dir.y; // the checkerboard plane has equation y = -4\n        vec3 p = orig + dir*d;\n        if (d>.001 && d<nearest_dist && std::abs(p.x)<10 && p.z<-10 && p.z>-30) {\n            nearest_dist = d;\n            pt = p;\n            N = {0,1,0};\n            material.diffuse_color = (int(.5*pt.x+1000) + int(.5*pt.z)) & 1 ? vec3{.3, .3, .3} : vec3{.3, .2, .1};\n        }\n    }\n\n    for (const Sphere &s : spheres) { // intersect the ray with all spheres\n        auto [intersection, d] = ray_sphere_intersect(orig, dir, s);\n        if (!intersection || d > nearest_dist) continue;\n        nearest_dist = d;\n        pt = orig + dir*nearest_dist;\n        N = (pt - s.center).normalized();\n        material = s.material;\n    }\n    return { nearest_dist<1000, pt, N, material };\n}\n\nvec3 cast_ray(const vec3 &orig, const vec3 &dir, const int depth=0) {\n    auto [hit, point, N, material] = scene_intersect(orig, dir);\n    if (depth>4 || !hit)\n        return {0.2, 0.7, 0.8}; // background color\n\n    vec3 reflect_dir = reflect(dir, N).normalized();\n    vec3 refract_dir = refract(dir, N, material.refractive_index).normalized();\n    vec3 reflect_color = cast_ray(point, reflect_dir, depth + 1);\n    vec3 refract_color = cast_ray(point, refract_dir, depth + 1);\n\n    float diffuse_light_intensity = 0, specular_light_intensity = 0;\n    for (const vec3 &light : lights) { // checking if the point lies in the shadow of the light\n        vec3 light_dir = (light - point).normalized();\n        auto [hit, shadow_pt, trashnrm, trashmat] = scene_intersect(point, light_dir);\n        if (hit && (shadow_pt-point).norm() < (light-point).norm()) continue;\n        diffuse_light_intensity  += std::max(0.f, light_dir*N);\n        specular_light_intensity += std::pow(std::max(0.f, -reflect(-light_dir, N)*dir), material.specular_exponent);\n    }\n    return material.diffuse_color * diffuse_light_intensity * material.albedo[0] + vec3{1., 1., 1.}*specular_light_intensity * material.albedo[1] + reflect_color*material.albedo[2] + refract_color*material.albedo[3];\n}\n\nint main() {\n    constexpr int   width  = 1024;\n    constexpr int   height = 768;\n    constexpr float fov    = 1.05; // 60 degrees field of view in radians\n    std::vector<vec3> framebuffer(width*height);\n#pragma omp parallel for\n    for (int pix = 0; pix<width*height; pix++) { // actual rendering loop\n        float dir_x =  (pix%width + 0.5) -  width/2.;\n        float dir_y = -(pix/width + 0.5) + height/2.; // this flips the image at the same time\n        float dir_z = -height/(2.*tan(fov/2.));\n        framebuffer[pix] = cast_ray(vec3{0,0,0}, vec3{dir_x, dir_y, dir_z}.normalized());\n    }\n\n    std::ofstream ofs(\"./out.ppm\", std::ios::binary);\n    ofs << \"P6\\n\" << width << \" \" << height << \"\\n255\\n\";\n    for (vec3 &color : framebuffer) {\n        float max = std::max(1.f, std::max(color[0], std::max(color[1], color[2])));\n        for (int chan : {0,1,2})\n            ofs << (char)(255 *  color[chan]/max);\n    }\n    return 0;\n}\n\n"
+        },
+        {
+          "name": "trace.png",
+          "type": "blob",
+          "size": 40.0576171875,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

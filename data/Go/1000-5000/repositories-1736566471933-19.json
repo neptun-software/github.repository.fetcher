@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "timestamp": 1736566471933,
+    "page": 19,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "facebookarchive/grace",
+      "stars": 4900,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.3095703125,
+          "content": "language: go\n\ngo:\n  - 1.7\n\nbefore_install:\n  - go get -v github.com/golang/lint/golint\n\ninstall:\n  - go install -race -v std\n  - go get -race -t -v ./...\n  - go install -race -v ./...\n\nscript:\n  - go vet ./...\n  - $HOME/gopath/bin/golint .\n  - go test -cpu=2 -race -v ./...\n  - go test -cpu=2 -covermode=atomic ./...\n"
+        },
+        {
+          "name": "gracedemo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gracehttp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gracenet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "license",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "MIT License\n\nCopyright (c) 2013-present, Facebook, Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 2.0244140625,
+          "content": "grace [![Build Status](https://secure.travis-ci.org/facebookgo/grace.png)](https://travis-ci.org/facebookgo/grace)\n=====\n\nPackage grace provides a library that makes it easy to build socket\nbased servers that can be gracefully terminated & restarted (that is,\nwithout dropping any connections).\n\nIt provides a convenient API for HTTP servers including support for TLS,\nespecially if you need to listen on multiple ports (for example a secondary\ninternal only admin server).  Additionally it is implemented using the same API\nas systemd providing [socket\nactivation](http://0pointer.de/blog/projects/socket-activation.html)\ncompatibility to also provide lazy activation of the server.\n\n\nUsage\n-----\n\nDemo HTTP Server with graceful termination and restart:\nhttps://github.com/facebookgo/grace/blob/master/gracedemo/demo.go\n\n1. Install the demo application\n\n        go get github.com/facebookgo/grace/gracedemo\n\n1. Start it in the first terminal\n\n        gracedemo\n\n   This will output something like:\n\n        2013/03/25 19:07:33 Serving [::]:48567, [::]:48568, [::]:48569 with pid 14642.\n\n1. In a second terminal start a slow HTTP request\n\n        curl 'http://localhost:48567/sleep/?duration=20s'\n\n1. In a third terminal trigger a graceful server restart (using the pid from your output):\n\n        kill -USR2 14642\n\n1. Trigger another shorter request that finishes before the earlier request:\n\n        curl 'http://localhost:48567/sleep/?duration=0s'\n\n\nIf done quickly enough, this shows the second quick request will be served by\nthe new process (as indicated by the PID) while the slow first request will be\nserved by the first server. It shows how the active connection was gracefully\nserved before the server was shutdown. It is also showing that at one point\nboth the new as well as the old server was running at the same time.\n\n\nDocumentation\n-------------\n\n`http.Server` graceful termination and restart:\nhttps://godoc.org/github.com/facebookgo/grace/gracehttp\n\n`net.Listener` graceful termination and restart:\nhttps://godoc.org/github.com/facebookgo/grace/gracenet\n"
+        }
+      ]
+    }
+  ]
+}

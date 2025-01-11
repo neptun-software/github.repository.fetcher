@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736566522399,
+    "page": 66,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jesseduffield/horcrux",
+      "stars": 4674,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".goreleaser.yml",
+          "type": "blob",
+          "size": 1.310546875,
+          "content": "# This is an example goreleaser.yaml file with some sane defaults.\n# Make sure to check the documentation at http://goreleaser.com\nbuilds:\n  - env:\n      - CGO_ENABLED=0\n    goos:\n      - freebsd\n      - windows\n      - darwin\n      - linux\n    goarch:\n      - amd64\n      - arm\n      - arm64\n      - 386\n    # Default is `-s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}`.\n\narchives:\n  - replacements:\n      darwin: Darwin\n      linux: Linux\n      windows: Windows\n      386: 32-bit\n      amd64: x86_64\n    format_overrides:\n      - goos: windows\n        format: zip\n# checksum:\n#   name_template: 'checksums.txt'\n# snapshot:\n#   name_template: '{{ .Tag }}-next'\nchangelog:\n  sort: asc\n  filters:\n    exclude:\n      - '^docs:'\n      - '^test:'\n      - '^bump'\nbrews:\n  -\n    # Repository to push the tap to.\n    tap:\n      owner: jesseduffield\n      name: homebrew-horcrux\n\n    # Your app's homepage.\n    # Default is empty.\n    homepage: 'https://github.com/jesseduffield/horcrux/'\n\n    # Your app's description.\n    # Default is empty.\n    description: 'A program for splitting your files into encrypted fragments'\n\n    # # Packages your package depends on.\n    # dependencies:\n    #   - git\n    #   - zsh\n    # # Packages that conflict with your package.\n    # conflicts:\n    #   - svn\n    #   - bash\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.044921875,
+          "content": "MIT License\n\nCopyright (c) 2020 Jesse Duffield\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.7060546875,
+          "content": "# horcrux\n\nSplit your file into encrypted horcruxes so that you don't need to remember a passcode\n\n![](https://i.imgur.com/TijN4YP.png)\n\n\n## How it works\n\n`horcrux` has two commands, `split` and `bind`.\n\n### Splitting\n\nIf I have a file called `diary.txt` in my current directory I can call \n```\nhorcrux split diary.txt\n```\nand it will prompt me for how many horcruxes I want, and how many will be needed to resurrect the original file. For example I might want 5 horcruxes with the ability to resurrect the file if I have any 3. The horcrux files will be created like so:\n```\ndiary_1_of_5.horcrux\ndiary_2_of_5.horcrux\n...\n```\nNow you just need to disperse the horcruxes around the house on various USBs or online locations and hope you can recall where they all are!\n\n### Binding\n\nTo bind the horcruxes back into the original file just call\n```\nhorcrux bind\n```\nin the directory containing the horcruxes (or pass the directory as an argument).\n\n## Installation\n\nvia homebrew:\n```\nbrew install jesseduffield/horcrux/horcrux\n```\n\nvia [scoop](https://scoop.sh/):\n```\nscoop bucket add extras; scoop install horcrux\n```\n\nvia [binary release](https://github.com/jesseduffield/horcrux/releases)\n\nExample to install the latest release on Linux to `/usr/local/bin` (needs [jq](https://stedolan.github.io/jq/)):\n\n```bash\ncurl https://api.github.com/repos/jesseduffield/horcrux/releases/latest | \\\njq '.assets[] | select(.browser_download_url | endswith(\"_Linux_x86_64.tar.gz\")) | .browser_download_url' | \\\nxargs curl -Lo /tmp/horcrux.tar.gz && \\\ntar xfz /tmp/horcrux.tar.gz -C /tmp && \\\nrm /tmp/horcrux.tar.gz && \\\nsudo mv /tmp/horcrux /usr/local/bin/horcrux\n```\n\n## Who this is for:\n* People who need to encrypt a big sensitive file like a diary and don't expect to remember any passwords years from now (but who paradoxically will be capable of remembering where they've hidden their horcruxes)\n* People who want to transmit files across multiple channels to substantially reduce the ability for an attacker to intercept\n* People named Tom Riddle\n\n## FAQ\nQ) This isn't really in line with how horcruxes work in the harry potter universe!\n\nA) It's pretty close! You can't allow any one horcrux to be used to resurrect the original file (and why would you that would be useless) but you can allow two horcruxes to do it (so only off by one). Checkmate HP fans.\n\nQ) How does this work?\n\nA) This uses the [Shamir Secret Sharing Scheme](https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing) to break an encryption key into parts that can be recombined to create the original key, but only requiring a certain threshold to do so. I've adapted Hashicorp's implementation from their [vault repo](https://github.com/hashicorp/vault)\n\nQ) How is the key generated\n\nA) Using the Go stdlib's crypto/rand `Read` function\n\n## You can help!\n\nI don't have much time to work on Horcrux but I'm happy to review PRs. One issue you may want to tackle is https://github.com/jesseduffield/horcrux/issues/4 which relates to data integrity.\n\n## Alternatives\n\n* [ssss](http://point-at-infinity.org/ssss/). Works for keys but (as far as I know) not files themselves.\n* [horcrux](https://github.com/kndyry/horcrux). Looks like somebody beat me to both the name and concept, however this repo doesn't support thresholds of horcruxes\n* [Haystack](https://github.com/henrysdev/Haystack). Implements another file sharding and reassembly algorithm inspired by SSSS, but requires a password for reassembly and does not support thresholds of horcruxes.\n\n## Plugs\n\nAlso check out my other projects:\n* [My hilarious blog](https://jesseduffield.com/)\n* [The _OK?_ Programming Language](https://github.com/jesseduffield/ok)\n* [Lazygit](https://github.com/jesseduffield/lazygit)\n* [Lazydocker](https://github.com/jesseduffield/lazydocker)\n"
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": "module github.com/jesseduffield/horcrux\n\ngo 1.14\n"
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 1.4375,
+          "content": "package main\n\nimport (\n\t\"log\"\n\t\"os\"\n\n\t\"github.com/jesseduffield/horcrux/pkg/commands\"\n)\n\nfunc main() {\n\t// I'd use `flaggy` but I like the idea of this repo having no dependencies\n\t// Unfortunately that means I'm awkwardly making use of the standard flag package\n\tif len(os.Args) < 2 {\n\t\tusage()\n\t}\n\n\tif os.Args[1] == \"bind\" {\n\t\tvar dir string\n\t\tif len(os.Args) == 2 {\n\t\t\tdir = \".\"\n\t\t} else {\n\t\t\tdir = os.Args[2]\n\t\t}\n\t\tpaths, err := commands.GetHorcruxPathsInDir(dir)\n\t\tif err != nil {\n\t\t\tlog.Fatal(err)\n\t\t}\n\t\toverwrite := false\n\t\tfor {\n\t\t\tif err := commands.Bind(paths, \"\", overwrite); err != nil {\n\t\t\t\tif err != os.ErrExist {\n\t\t\t\t\tlog.Fatal(err)\n\t\t\t\t}\n\t\t\t\toverwriteResponse := commands.Prompt(\"A file already exists at destination. Overwrite? (Y/N):\")\n\t\t\t\tif overwriteResponse == \"Y\" || overwriteResponse == \"y\" || overwriteResponse == \"yes\" {\n\t\t\t\t\toverwrite = true\n\t\t\t\t} else {\n\t\t\t\t\tlog.Fatal(\"You have chosen not to overwrite the file. Cancelling.\")\n\t\t\t\t}\n\t\t\t} else {\n\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\n\t\treturn\n\t}\n\n\tif os.Args[len(os.Args)-2] == \"split\" {\n\t\tif len(os.Args) == 2 {\n\t\t\tusage()\n\t\t}\n\t\tpath := os.Args[len(os.Args)-1]\n\t\tif err := commands.SplitWithPrompt(path); err != nil {\n\t\t\tlog.Fatal(err)\n\t\t}\n\t\treturn\n\t}\n\n\tusage()\n}\n\nfunc usage() {\n\tlog.Fatal(\"usage: `horcrux bind [<directory>]` | `horcrux [-t] [-n] split <filename>`\\n-n: number of horcruxes to make\\n-t: number of horcruxes required to resurrect the original file\\nexample: horcrux -t 3 -n 5 split diary.txt\")\n}\n"
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

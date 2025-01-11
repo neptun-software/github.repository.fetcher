@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "timestamp": 1736566126108,
+    "page": 129,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bblanchon/ArduinoJson",
+      "stars": 6800,
+      "defaultBranch": "7.x",
+      "files": [
+        {
+          "name": ".clang-format",
+          "type": "blob",
+          "size": 0.3408203125,
+          "content": "# http://clang.llvm.org/docs/ClangFormatStyleOptions.html\n\nBasedOnStyle: Google\nStandard: c++11\nAllowShortFunctionsOnASingleLine: Empty\nIncludeBlocks: Preserve\nIndentPPDirectives: AfterHash\nDerivePointerAlignment: false\n\n# Always break after if to get accurate coverage\nAllowShortIfStatementsOnASingleLine: false\nAllowShortLoopsOnASingleLine: false\n"
+        },
+        {
+          "name": ".devcontainer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "* text=auto\n*.sh text eol=lf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2626953125,
+          "content": ".DS_Store\n/.idea\n/build\n/bin\n/lib\n/sftp-config.json\n.tags\n.tags_sorted_by_file\n/extras/fuzzing/*_fuzzer\n/extras/fuzzing/*_fuzzer.options\n/extras/fuzzing/*_fuzzer_seed_corpus.zip\n.vs/\n/out/\n\n# Used by CI for Particle\n/src/*.ino\n/project.properties\n\n# Used by IDF\n/dist/\n"
+        },
+        {
+          "name": ".mbedignore",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": ".devcontainer/\n.github/\nexamples/\nextras/\n"
+        },
+        {
+          "name": ".prettierignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "*.md\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ArduinoJson.h",
+          "type": "blob",
+          "size": 0.1259765625,
+          "content": "// ArduinoJson - https://arduinojson.org\n// Copyright © 2014-2024, Benoit BLANCHON\n// MIT License\n\n#include \"src/ArduinoJson.h\"\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 8.572265625,
+          "content": "ArduinoJson: change log\r\n=======================\r\n\r\nv7.3.0 (2024-12-29)\r\n------\r\n\r\n* Fix support for NUL characters in `deserializeJson()`\r\n* Make `ElementProxy` and `MemberProxy` non-copyable\r\n* Change string copy policy: only string literal are stored by pointer\r\n* `JsonString` is now stored by copy, unless specified otherwise\r\n* Replace undocumented `JsonString::Ownership` with `bool`\r\n* Rename undocumented `JsonString::isLinked()` to `isStatic()`\r\n* Move public facing SFINAEs to template declarations\r\n\r\n> ### BREAKING CHANGES\r\n>\r\n> In previous versions, `MemberProxy` (the class returned by `operator[]`) could lead to dangling pointers when used with a temporary string.\r\n> To prevent this issue, `MemberProxy` and `ElementProxy` are now non-copyable.\r\n>\r\n> Your code is likely to be affected if you use `auto` to store the result of `operator[]`. For example, the following line won't compile anymore:\r\n>\r\n> ```cpp\r\n> auto value = doc[\"key\"];\r\n> ```\r\n>\r\n> To fix the issue, you must append either `.as<T>()` or `.to<T>()`, depending on the situation.\r\n>\r\n> For example, if you are extracting values from a JSON document, you should update like this:\r\n>\r\n> ```diff\r\n> - auto config = doc[\"config\"];\r\n> + auto config = doc[\"config\"].as<JsonObject>();\r\n> const char* name = config[\"name\"];\r\n> ```\r\n>\r\n> However, if you are building a JSON document, you should update like this:\r\n>\r\n> ```diff\r\n> - auto config = doc[\"config\"];\r\n> + auto config = doc[\"config\"].to<JsonObject>();\r\n> config[\"name\"] = \"ArduinoJson\";\r\n> ```\r\n\r\nv7.2.1 (2024-11-15)\r\n------\r\n\r\n* Forbid `deserializeJson(JsonArray|JsonObject, ...)` (issue #2135)\r\n* Fix VLA support in `JsonDocument::set()`\r\n* Fix `operator[](variant)` ignoring NUL characters\r\n\r\nv7.2.0 (2024-09-18)\r\n------\r\n\r\n* Store object members with two slots: one for the key and one for the value\r\n* Store 64-bit numbers (`double` and `long long`) in an additional slot\r\n* Reduce the slot size (see table below)\r\n* Improve message when user forgets third arg of `serializeJson()` et al.\r\n* Set `ARDUINOJSON_USE_DOUBLE` to `0` by default on 8-bit architectures\r\n* Deprecate `containsKey()` in favor of `doc[\"key\"].is<T>()`\r\n* Add support for escape sequence `\\'` (issue #2124)\r\n\r\n| Architecture | before   | after    |\r\n|--------------|----------|----------|\r\n| 8-bit        | 8 bytes  | 6 bytes  |\r\n| 32-bit       | 16 bytes | 8 bytes  |\r\n| 64-bit       | 24 bytes | 16 bytes |\r\n\r\n> ### BREAKING CHANGES\r\n>\r\n> After being on the death row for years, the `containsKey()` method has finally been deprecated.\r\n> You should replace `doc.containsKey(\"key\")` with `doc[\"key\"].is<T>()`, which not only checks that the key exists but also that the value is of the expected type.\r\n>\r\n> ```cpp\r\n> // Before\r\n> if (doc.containsKey(\"value\")) {\r\n>   int value = doc[\"value\"];\r\n>   // ...\r\n> }\r\n>\r\n> // After\r\n> if (doc[\"value\"].is<int>()) {\r\n>   int value = doc[\"value\"];\r\n>   // ...\r\n> }\r\n> ```\r\n\r\nv7.1.0 (2024-06-27)\r\n------\r\n\r\n* Add `ARDUINOJSON_STRING_LENGTH_SIZE` to the namespace name\r\n* Add support for MsgPack binary (PR #2078 by @Sanae6)\r\n* Add support for MsgPack extension\r\n* Make string support even more generic (PR #2084 by @d-a-v)\r\n* Optimize `deserializeMsgPack()`\r\n* Allow using a `JsonVariant` as a key or index (issue #2080)\r\n  Note: works only for reading, not for writing\r\n* Support `ElementProxy` and `MemberProxy` in `JsonDocument`'s constructor\r\n* Don't add partial objects when allocation fails (issue #2081)\r\n* Read MsgPack's 64-bit integers even if `ARDUINOJSON_USE_LONG_LONG` is `0`\r\n  (they are set to `null` if they don't fit in a `long`)\r\n\r\nv7.0.4 (2024-03-12)\r\n------\r\n\r\n* Make `JSON_STRING_SIZE(N)` return `N+1` to fix third-party code (issue #2054)\r\n\r\nv7.0.3 (2024-02-05)\r\n------\r\n\r\n* Improve error messages when using `char` or `char*` (issue #2043)\r\n* Reduce stack consumption (issue #2046)\r\n* Fix compatibility with GCC 4.8 (issue #2045)\r\n\r\nv7.0.2 (2024-01-19)\r\n------\r\n\r\n* Fix assertion `poolIndex < count_` after `JsonDocument::clear()` (issue #2034)\r\n\r\nv7.0.1 (2024-01-10)\r\n------\r\n\r\n* Fix \"no matching function\" with `JsonObjectConst::operator[]` (issue #2019)\r\n* Remove unused files in the PlatformIO package\r\n* Fix `volatile bool` serialized as `1` or `0` instead of `true` or `false` (issue #2029)\r\n\r\nv7.0.0 (2024-01-03)\r\n------\r\n\r\n* Remove `BasicJsonDocument`\r\n* Remove `StaticJsonDocument`\r\n* Add abstract `Allocator` class\r\n* Merge `DynamicJsonDocument` with `JsonDocument`\r\n* Remove `JSON_ARRAY_SIZE()`, `JSON_OBJECT_SIZE()`, and `JSON_STRING_SIZE()`\r\n* Remove `ARDUINOJSON_ENABLE_STRING_DEDUPLICATION` (string deduplication cannot be disabled anymore)\r\n* Remove `JsonDocument::capacity()`\r\n* Store the strings in the heap\r\n* Reference-count shared strings\r\n* Always store `serialized(\"string\")` by copy (#1915)\r\n* Remove the zero-copy mode of `deserializeJson()` and `deserializeMsgPack()`\r\n* Fix double lookup in `to<JsonVariant>()`\r\n* Fix double call to `size()` in `serializeMsgPack()`\r\n* Include `ARDUINOJSON_SLOT_OFFSET_SIZE` in the namespace name\r\n* Remove `JsonVariant::shallowCopy()`\r\n* `JsonDocument`'s capacity grows as needed, no need to pass it to the constructor anymore\r\n* `JsonDocument`'s allocator is not monotonic anymore, removed values get recycled\r\n* Show a link to the documentation when user passes an unsupported input type\r\n* Remove `JsonDocument::memoryUsage()`\r\n* Remove `JsonDocument::garbageCollect()`\r\n* Add `deserializeJson(JsonVariant, ...)` and `deserializeMsgPack(JsonVariant, ...)` (#1226)\r\n* Call `shrinkToFit()` in `deserializeJson()` and `deserializeMsgPack()`\r\n* `serializeJson()` and `serializeMsgPack()` replace the content of `std::string` and `String` instead of appending to it\r\n* Replace `add()` with `add<T>()` (`add(T)` is still supported)\r\n* Remove `createNestedArray()` and `createNestedObject()` (use `to<JsonArray>()` and `to<JsonObject>()` instead)\r\n\r\n> ### BREAKING CHANGES\r\n>\r\n> As every major release, ArduinoJson 7 introduces several breaking changes.\r\n> I added some stubs so that most existing programs should compile, but I highty recommend you upgrade your code.\r\n>\r\n> #### `JsonDocument`\r\n> \r\n> In ArduinoJson 6, you could allocate the memory pool on the stack (with `StaticJsonDocument`) or in the heap (with `DynamicJsonDocument`).  \r\n> In ArduinoJson 7, the memory pool is always allocated in the heap, so `StaticJsonDocument` and `DynamicJsonDocument` have been merged into `JsonDocument`.\r\n>\r\n> In ArduinoJson 6, `JsonDocument` had a fixed capacity; in ArduinoJson 7, it has an elastic capacity that grows as needed.\r\n> Therefore, you don't need to specify the capacity anymore, so the macros `JSON_ARRAY_SIZE()`, `JSON_OBJECT_SIZE()`, and `JSON_STRING_SIZE()` have been removed.\r\n>\r\n> ```c++\r\n> // ArduinoJson 6\r\n> StaticJsonDocument<256> doc;\r\n> // or\r\n> DynamicJsonDocument doc(256);\r\n> \r\n> // ArduinoJson 7\r\n> JsonDocument doc;\r\n> ```\r\n>\r\n> In ArduinoJson 7, `JsonDocument` reuses released memory, so `garbageCollect()` has been removed.  \r\n> `shrinkToFit()` is still available and releases the over-allocated memory.\r\n>\r\n> Due to a change in the implementation, it's not possible to store a pointer to a variant from another `JsonDocument`, so `shallowCopy()` has been removed.\r\n> \r\n> In ArduinoJson 6, the meaning of `memoryUsage()` was clear: it returned the number of bytes used in the memory pool.  \r\n> In ArduinoJson 7, the meaning of `memoryUsage()` would be ambiguous, so it has been removed.\r\n>\r\n> #### Custom allocators\r\n>\r\n> In ArduinoJson 6, you could specify a custom allocator class as a template parameter of `BasicJsonDocument`.  \r\n> In ArduinoJson 7, you must inherit from `ArduinoJson::Allocator` and pass a pointer to an instance of your class to the constructor of `JsonDocument`.\r\n>\r\n> ```c++\r\n> // ArduinoJson 6\r\n> class MyAllocator {\r\n>   // ...\r\n> };\r\n> BasicJsonDocument<MyAllocator> doc(256);\r\n>\r\n> // ArduinoJson 7\r\n> class MyAllocator : public ArduinoJson::Allocator {\r\n>   // ...\r\n> };\r\n> MyAllocator myAllocator;\r\n> JsonDocument doc(&myAllocator);\r\n> ```\r\n>\r\n> #### `createNestedArray()` and `createNestedObject()`\r\n>\r\n> In ArduinoJson 6, you could create a nested array or object with `createNestedArray()` and `createNestedObject()`.  \r\n> In ArduinoJson 7, you must use `add<T>()` or `to<T>()` instead.\r\n>\r\n> For example, to create `[[],{}]`, you would write:\r\n>\r\n> ```c++\r\n> // ArduinoJson 6\r\n> arr.createNestedArray();\r\n> arr.createNestedObject();\r\n>\r\n> // ArduinoJson 7\r\n> arr.add<JsonArray>();\r\n> arr.add<JsonObject>();\r\n> ```\r\n>\r\n> And to create `{\"array\":[],\"object\":{}}`, you would write:\r\n>\r\n> ```c++\r\n> // ArduinoJson 6\r\n> obj.createNestedArray(\"array\");\r\n> obj.createNestedObject(\"object\");\r\n>\r\n> // ArduinoJson 7\r\n> obj[\"array\"].to<JsonArray>();\r\n> obj[\"object\"].to<JsonObject>();\r\n> ```\r\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 0.548828125,
+          "content": "# ArduinoJson - https://arduinojson.org\n# Copyright © 2014-2024, Benoit BLANCHON\n# MIT License\n\ncmake_minimum_required(VERSION 3.15)\n\nif(ESP_PLATFORM)\n\t# Build ArduinoJson as an ESP-IDF component\n\tidf_component_register(INCLUDE_DIRS src)\n\treturn()\nendif()\n\nproject(ArduinoJson VERSION 7.3.0)\n\nif(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)\n\tinclude(CTest)\nendif()\n\nadd_subdirectory(src)\n\nif(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)\n\tinclude(extras/CompileOptions.cmake)\n\tadd_subdirectory(extras/tests)\n\tadd_subdirectory(extras/fuzzing)\nendif()\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.2587890625,
+          "content": "# Contribution to ArduinoJson\n\nFirst, thank you for taking the time to contribute to this project.\n\nYou can submit changes via GitHub Pull Requests.\n\nPlease:\n\n1. Update the test suite for any change of behavior\n2. Use clang-format in \"file\" mode to format the code\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.0908203125,
+          "content": "The MIT License (MIT)\n---------------------\n\nCopyright © 2014-2024, Benoit BLANCHON\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 10.1142578125,
+          "content": "<p align=\"center\">\r\n  <a href=\"https://arduinojson.org/\"><img alt=\"ArduinoJson\" src=\"https://arduinojson.org/images/logo.svg\" width=\"200\" /></a>\r\n</p>\r\n\r\n---\r\n\r\n[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/bblanchon/ArduinoJson/ci.yml?branch=7.x&logo=github)](https://github.com/bblanchon/ArduinoJson/actions?query=workflow%3A%22Continuous+Integration%22+branch%3A7.x)\r\n[![Continuous Integration](https://ci.appveyor.com/api/projects/status/m7s53wav1l0abssg/branch/7.x?svg=true)](https://ci.appveyor.com/project/bblanchon/arduinojson/branch/7.x)\r\n[![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/arduinojson.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:arduinojson)\r\n[![Coveralls branch](https://img.shields.io/coveralls/github/bblanchon/ArduinoJson/7.x?logo=coveralls)](https://coveralls.io/github/bblanchon/ArduinoJson?branch=7.x)  \r\n[![GitHub stars](https://img.shields.io/github/stars/bblanchon/ArduinoJson?style=flat&logo=github&color=orange)](https://github.com/bblanchon/ArduinoJson/stargazers)\r\n[![GitHub Sponsors](https://img.shields.io/github/sponsors/bblanchon?logo=github&color=orange)](https://github.com/sponsors/bblanchon)\r\n\r\nArduinoJson is a C++ JSON library for Arduino and IoT (Internet Of Things).\r\n\r\n## Features\r\n\r\n* [JSON deserialization](https://arduinojson.org/v7/api/json/deserializejson/)\r\n    * [Optionally decodes UTF-16 escape sequences to UTF-8](https://arduinojson.org/v7/api/config/decode_unicode/)\r\n    * [Optionally supports comments in the input](https://arduinojson.org/v7/api/config/enable_comments/)\r\n    * [Optionally filters the input to keep only desired values](https://arduinojson.org/v7/api/json/deserializejson/#filtering)\r\n    * Supports single quotes as a string delimiter\r\n    * Compatible with [NDJSON](http://ndjson.org/) and [JSON Lines](https://jsonlines.org/)\r\n* [JSON serialization](https://arduinojson.org/v7/api/json/serializejson/)\r\n    * [Can write to a buffer or a stream](https://arduinojson.org/v7/api/json/serializejson/)\r\n    * [Optionally indents the document (prettified JSON)](https://arduinojson.org/v7/api/json/serializejsonpretty/)\r\n* [MessagePack serialization](https://arduinojson.org/v7/api/msgpack/serializemsgpack/)\r\n* [MessagePack deserialization](https://arduinojson.org/v7/api/msgpack/deserializemsgpack/)\r\n* Efficient\r\n    * [Twice smaller than the \"official\" Arduino_JSON library](https://arduinojson.org/2019/11/19/arduinojson-vs-arduino_json/)\r\n    * [Almost 10% faster than the \"official\" Arduino_JSON library](https://arduinojson.org/2019/11/19/arduinojson-vs-arduino_json/)\r\n    * [Consumes roughly 10% less RAM than the \"official\" Arduino_JSON library](https://arduinojson.org/2019/11/19/arduinojson-vs-arduino_json/)\r\n    * [Deduplicates strings](https://arduinojson.org/news/2020/08/01/version-6-16-0/)\r\n* Versatile\r\n    * Supports [custom allocators (to use external RAM chip, for example)](https://arduinojson.org/v7/how-to/use-external-ram-on-esp32/)\r\n    * Supports [`String`](https://arduinojson.org/v7/api/config/enable_arduino_string/), [`std::string`](https://arduinojson.org/v7/api/config/enable_std_string/), and [`std::string_view`](https://arduinojson.org/v7/api/config/enable_string_view/)\r\n    * Supports [`Stream`](https://arduinojson.org/v7/api/config/enable_arduino_stream/) and [`std::istream`/`std::ostream`](https://arduinojson.org/v7/api/config/enable_std_stream/)\r\n    * Supports [Flash strings](https://arduinojson.org/v7/api/config/enable_progmem/)\r\n    * Supports [custom readers](https://arduinojson.org/v7/api/json/deserializejson/#custom-reader) and [custom writers](https://arduinojson.org/v7/api/json/serializejson/#custom-writer)\r\n    * Supports [custom converters](https://arduinojson.org/news/2021/05/04/version-6-18-0/)\r\n* Portable\r\n    * Usable on any C++ project (not limited to Arduino)\r\n    * Compatible with C++11, C++14 and C++17\r\n    * Support for C++98/C++03 available on [ArduinoJson 6.20.x](https://github.com/bblanchon/ArduinoJson/tree/6.20.x)\r\n    * Zero warnings with `-Wall -Wextra -pedantic` and `/W4`\r\n    * [Header-only library](https://en.wikipedia.org/wiki/Header-only)\r\n    * Works with virtually any board\r\n        * Arduino boards: [Uno](https://amzn.to/38aL2ik), [Due](https://amzn.to/36YkWi2), [Micro](https://amzn.to/35WkdwG), [Nano](https://amzn.to/2QTvwRX), [Mega](https://amzn.to/36XWhuf), [Yun](https://amzn.to/30odURc), [Leonardo](https://amzn.to/36XWjlR)...\r\n        * Espressif chips: [ESP8266](https://amzn.to/36YluV8), [ESP32](https://amzn.to/2G4pRCB)\r\n        * Lolin (WeMos) boards: [D1 mini](https://amzn.to/2QUpz7q), [D1 Mini Pro](https://amzn.to/36UsGSs)...\r\n        * Teensy boards: [4.0](https://amzn.to/30ljXGq), [3.2](https://amzn.to/2FT0EuC), [2.0](https://amzn.to/2QXUMXj)\r\n        * Particle boards: [Argon](https://amzn.to/2FQHa9X), [Boron](https://amzn.to/36WgLUd), [Electron](https://amzn.to/30vEc4k), [Photon](https://amzn.to/387F9Cd)...\r\n        * Texas Instruments boards: [MSP430](https://amzn.to/30nJWgg)...\r\n        * Soft cores: [Nios II](https://en.wikipedia.org/wiki/Nios_II)...\r\n    * Tested on all major development environments\r\n        * [Arduino IDE](https://www.arduino.cc/en/Main/Software)\r\n        * [Atmel Studio](http://www.atmel.com/microsite/atmel-studio/)\r\n        * [Atollic TrueSTUDIO](https://atollic.com/truestudio/)\r\n        * [Energia](http://energia.nu/)\r\n        * [IAR Embedded Workbench](https://www.iar.com/iar-embedded-workbench/)\r\n        * [Keil uVision](http://www.keil.com/)\r\n        * [MPLAB X IDE](http://www.microchip.com/mplab/mplab-x-ide)\r\n        * [Particle](https://www.particle.io/)\r\n        * [PlatformIO](http://platformio.org/)\r\n        * [Sloeber plugin for Eclipse](https://eclipse.baeyens.it/)\r\n        * [Visual Micro](http://www.visualmicro.com/)\r\n        * [Visual Studio](https://www.visualstudio.com/)\r\n    * [Even works with online compilers like wandbox.org](https://wandbox.org/permlink/RlZSKy17DjJ6HcdN)\r\n    * [CMake friendly](https://arduinojson.org/v7/how-to/use-arduinojson-with-cmake/)\r\n* Well designed\r\n    * [Elegant API](http://arduinojson.org/v7/example/)\r\n    * [Thread-safe](https://en.wikipedia.org/wiki/Thread_safety)\r\n    * Self-contained (no external dependency)\r\n    * `const` friendly\r\n    * [`for` friendly](https://arduinojson.org/v7/api/jsonobject/begin_end/)\r\n    * [TMP friendly](https://en.wikipedia.org/wiki/Template_metaprogramming)\r\n    * Handles [integer overflows](https://arduinojson.org/v7/api/jsonvariant/as/#integer-overflows)\r\n* Well tested\r\n    * [Unit test coverage close to 100%](https://coveralls.io/github/bblanchon/ArduinoJson?branch=7.x)\r\n    * Continuously tested on\r\n        * [Visual Studio 2017, 2019, 2022](https://ci.appveyor.com/project/bblanchon/arduinojson/branch/7.x)\r\n        * [GCC 4.8, 5, 6, 7, 8, 9, 10, 11, 12](https://github.com/bblanchon/ArduinoJson/actions?query=workflow%3A%22Continuous+Integration%22)\r\n        * [Clang 3.9, 4.0, 5.0, 6.0, 7, 8, 9, 10, 11, 12, 13, 14, 15](https://github.com/bblanchon/ArduinoJson/actions?query=workflow%3A%22Continuous+Integration%22)\r\n    * [Continuously fuzzed with Google OSS Fuzz](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:arduinojson)\r\n    * Passes all default checks of [clang-tidy](https://releases.llvm.org/10.0.0/tools/clang/tools/extra/docs/clang-tidy/)\r\n* Well documented\r\n    * [Tutorials](https://arduinojson.org/v7/doc/deserialization/)\r\n    * [Examples](https://arduinojson.org/v7/example/)\r\n    * [How-tos](https://arduinojson.org/v7/example/)\r\n    * [FAQ](https://arduinojson.org/v7/faq/)\r\n    * [Troubleshooter](https://arduinojson.org/v7/troubleshooter/)\r\n    * [Book](https://arduinojson.org/book/)\r\n    * [Changelog](CHANGELOG.md)\r\n* Vibrant user community\r\n    * Most popular of all Arduino libraries on [GitHub](https://github.com/search?o=desc&q=arduino+library&s=stars&type=Repositories)\r\n    * [Used in hundreds of projects](https://www.hackster.io/search?i=projects&q=arduinojson)\r\n    * [Responsive support](https://github.com/bblanchon/ArduinoJson/issues?q=is%3Aissue+is%3Aclosed)\r\n\r\n## Quickstart\r\n\r\n### Deserialization\r\n\r\nHere is a program that parses a JSON document with ArduinoJson.\r\n\r\n```c++\r\nconst char* json = \"{\\\"sensor\\\":\\\"gps\\\",\\\"time\\\":1351824120,\\\"data\\\":[48.756080,2.302038]}\";\r\n\r\nJsonDocument doc;\r\ndeserializeJson(doc, json);\r\n\r\nconst char* sensor = doc[\"sensor\"];\r\nlong time          = doc[\"time\"];\r\ndouble latitude    = doc[\"data\"][0];\r\ndouble longitude   = doc[\"data\"][1];\r\n```\r\n\r\nSee the [tutorial on arduinojson.org](https://arduinojson.org/v7/doc/deserialization/)\r\n\r\n### Serialization\r\n\r\nHere is a program that generates a JSON document with ArduinoJson:\r\n\r\n```c++\r\nJsonDocument doc;\r\n\r\ndoc[\"sensor\"] = \"gps\";\r\ndoc[\"time\"]   = 1351824120;\r\ndoc[\"data\"][0] = 48.756080;\r\ndoc[\"data\"][1] = 2.302038;\r\n\r\nserializeJson(doc, Serial);\r\n// This prints:\r\n// {\"sensor\":\"gps\",\"time\":1351824120,\"data\":[48.756080,2.302038]}\r\n```\r\n\r\nSee the [tutorial on arduinojson.org](https://arduinojson.org/v7/doc/serialization/)\r\n\r\n## Sponsors\r\n\r\nArduinoJson is thankful to its sponsors. Please give them a visit; they deserve it!\r\n\r\n<p>\r\n  <a href=\"https://www.programmingelectronics.com/\" rel=\"sponsored\">\r\n    <img src=\"https://arduinojson.org/images/2021/10/programmingeleactronicsacademy.png\" alt=\"Programming Electronics Academy\" width=\"200\">\r\n  </a>\r\n</p>\r\n<p>\r\n  <a href=\"https://github.com/1technophile\" rel=\"sponsored\">\r\n    <img alt=\"1technophile\" src=\"https://avatars.githubusercontent.com/u/12672732?s=40&v=4\">\r\n  </a>\r\n  <a href=\"https://github.com/LArkema\" rel=\"sponsored\">\r\n    <img alt=\"LArkema\" src=\"https://avatars.githubusercontent.com/u/38381313?s=40&v=4\">\r\n  </a>\r\n</p>\r\n\r\nIf you run a commercial project that embeds ArduinoJson, think about [sponsoring the library's development](https://github.com/sponsors/bblanchon): it ensures the code that your products rely on stays actively maintained. It can also give your project some exposure to the makers' community.\r\n\r\nIf you are an individual user and want to support the development (or give a sign of appreciation), consider purchasing the book [Mastering ArduinoJson](https://arduinojson.org/book/)&nbsp;❤, or simply [cast a star](https://github.com/bblanchon/ArduinoJson/stargazers)&nbsp;⭐.\r\n"
+        },
+        {
+          "name": "SUPPORT.md",
+          "type": "blob",
+          "size": 0.8505859375,
+          "content": "# ArduinoJson Support\n\nFirst off, thank you very much for using ArduinoJson.\n\nWe'll be very happy to help you, but first please read the following.\n\n## Before asking for help\n\n1. Read the [FAQ](https://arduinojson.org/faq/?utm_source=github&utm_medium=support)\n2. Search in the [API Reference](https://arduinojson.org/api/?utm_source=github&utm_medium=support)\n\nIf you did not find the answer, please create a [new issue on GitHub](https://github.com/bblanchon/ArduinoJson/issues/new).\n\nIt is OK to add a comment to a currently opened issue, but please avoid adding comments to a closed issue.\n\n## Before hitting the Submit button\n\nPlease provide all the relevant information:\n\n* Good title\n* Short description of the problem\n* Target platform\n* Compiler model and version\n* [MVCE](https://stackoverflow.com/help/mcve)\n* Compiler output\n\nGood questions get fast answers!\n"
+        },
+        {
+          "name": "appveyor.yml",
+          "type": "blob",
+          "size": 1.26171875,
+          "content": "version: 7.3.0.{build}\nenvironment:\n  matrix:\n    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022\n      CMAKE_GENERATOR: Visual Studio 17 2022\n    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019\n      CMAKE_GENERATOR: Visual Studio 16 2019\n    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017\n      CMAKE_GENERATOR: Visual Studio 15 2017\n    - CMAKE_GENERATOR: Ninja\n      MINGW32: i686-6.3.0-posix-dwarf-rt_v5-rev1 # MinGW-w64 6.3.0 i686\n    - CMAKE_GENERATOR: Ninja\n      MINGW64: x86_64-6.3.0-posix-seh-rt_v5-rev1 # MinGW-w64 6.3.0 x86_64\n    - CMAKE_GENERATOR: Ninja\n      MINGW64: x86_64-7.3.0-posix-seh-rt_v5-rev0 # MinGW-w64 7.3.0 x86_64\n    - CMAKE_GENERATOR: Ninja\n      MINGW64: x86_64-8.1.0-posix-seh-rt_v6-rev0 # MinGW-w64 8.1.0 x86_64\nconfiguration: Debug\nbefore_build:\n  - set PATH=%PATH:C:\\Program Files\\Git\\usr\\bin;=% # Workaround for CMake not wanting sh.exe on PATH for MinGW\n  - if defined MINGW set PATH=C:\\%MINGW%\\bin;%PATH%\n  - if defined MINGW32 set PATH=C:\\mingw-w64\\%MINGW32%\\mingw32\\bin;%PATH%\n  - if defined MINGW64 set PATH=C:\\mingw-w64\\%MINGW64%\\mingw64\\bin;%PATH%\n  - cmake -DCMAKE_BUILD_TYPE=%CONFIGURATION% -G \"%CMAKE_GENERATOR%\" .\nbuild_script:\n  - cmake --build . --config %CONFIGURATION%\ntest_script:\n  - ctest -C %CONFIGURATION% --output-on-failure .\n"
+        },
+        {
+          "name": "component.mk",
+          "type": "blob",
+          "size": 0.0322265625,
+          "content": "COMPONENT_ADD_INCLUDEDIRS := src\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extras",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "idf_component.yml",
+          "type": "blob",
+          "size": 0.3623046875,
+          "content": "version: \"7.3.0\"\ndescription: >-\n  A simple and efficient JSON library for embedded C++.\n  ★ 6785 stars on GitHub!\n  Supports serialization, deserialization, MessagePack, streams, filtering, and more.\n  Fully tested and documented.\nurl: https://arduinojson.org/\nfiles:\n  exclude:\n    - \"**/.vs/**/*\"\n    - \".devcontainer/**/*\"\n    - \"examples/**/*\"\n    - \"extras/**/*\"\n"
+        },
+        {
+          "name": "keywords.txt",
+          "type": "blob",
+          "size": 0.7275390625,
+          "content": "# Free functions\ndeserializeJson\tKEYWORD2\ndeserializeMsgPack\tKEYWORD2\nserialized\tKEYWORD2\nserializeJson\tKEYWORD2\nserializeJsonPretty\tKEYWORD2\nserializeMsgPack\tKEYWORD2\nmeasureJson\tKEYWORD2\nmeasureJsonPretty\tKEYWORD2\nmeasureMsgPack\tKEYWORD2\n\n# Methods\nadd\tKEYWORD2\nas\tKEYWORD2\nget\tKEYWORD2\nset\tKEYWORD2\nto\tKEYWORD2\n\n# Type names\nDeserializationError\tKEYWORD1\tDATA_TYPE\nJsonDocument\tKEYWORD1\tDATA_TYPE\nJsonArray\tKEYWORD1\tDATA_TYPE\nJsonArrayConst\tKEYWORD1\tDATA_TYPE\nJsonDocument\tKEYWORD1\tDATA_TYPE\nJsonFloat\tKEYWORD1\tDATA_TYPE\nJsonInteger\tKEYWORD1\tDATA_TYPE\nJsonObject\tKEYWORD1\tDATA_TYPE\nJsonObjectConst\tKEYWORD1\tDATA_TYPE\nJsonString\tKEYWORD1\tDATA_TYPE\nJsonUInt\tKEYWORD1\tDATA_TYPE\nJsonVariant\tKEYWORD1\tDATA_TYPE\nJsonVariantConst\tKEYWORD1\tDATA_TYPE\n"
+        },
+        {
+          "name": "library.json",
+          "type": "blob",
+          "size": 0.73046875,
+          "content": "{\n  \"name\": \"ArduinoJson\",\n  \"keywords\": \"json, rest, http, web\",\n  \"description\": \"A simple and efficient JSON library for embedded C++. ⭐ 6785 stars on GitHub! Supports serialization, deserialization, MessagePack, streams, filtering, and more. Fully tested and documented.\",\n  \"homepage\": \"https://arduinojson.org/?utm_source=meta&utm_medium=library.json\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/bblanchon/ArduinoJson.git\"\n  },\n  \"version\": \"7.3.0\",\n  \"authors\": {\n    \"name\": \"Benoit Blanchon\",\n    \"url\": \"https://blog.benoitblanchon.fr\"\n  },\n  \"export\": {\n    \"include\": [\"src\", \"examples\", \"LICENSE.txt\", \"ArduinoJson.h\"]\n  },\n  \"frameworks\": \"*\",\n  \"platforms\": \"*\",\n  \"build\": {\n    \"libArchive\": false\n  }\n}\n"
+        },
+        {
+          "name": "library.properties",
+          "type": "blob",
+          "size": 0.5146484375,
+          "content": "name=ArduinoJson\nversion=7.3.0\nauthor=Benoit Blanchon <blog.benoitblanchon.fr>\nmaintainer=Benoit Blanchon <blog.benoitblanchon.fr>\nsentence=A simple and efficient JSON library for embedded C++.\nparagraph=⭐ 6785 stars on GitHub! Supports serialization, deserialization, MessagePack, streams, filtering, and more. Fully tested and documented.\ncategory=Data Processing\nurl=https://arduinojson.org/?utm_source=meta&utm_medium=library.properties\narchitectures=*\nrepository=https://github.com/bblanchon/ArduinoJson.git\nlicense=MIT\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

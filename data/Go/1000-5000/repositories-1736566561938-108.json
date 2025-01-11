@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "timestamp": 1736566561938,
+    "page": 108,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "huichen/wukong",
+      "stars": 4497,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "# Ignore all swp files\n*.swo\n*.swp\n*~\n\n# Ignore weibo data file\ntestdata/weibo_data.txt\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.1328125,
+          "content": "悟空全文搜索引擎\n======\n\n* [高效索引和搜索](/docs/benchmarking.md)（1M条微博500M数据28秒索引完，1.65毫秒搜索响应时间，19K搜索QPS）\n* 支持中文分词（使用[sego分词包](https://github.com/huichen/sego)并发分词，速度27MB/秒）\n* 支持计算关键词在文本中的[紧邻距离](/docs/token_proximity.md)（token proximity）\n* 支持计算[BM25相关度](/docs/bm25.md)\n* 支持[自定义评分字段和评分规则](/docs/custom_scoring_criteria.md)\n* 支持[在线添加、删除索引](/docs/realtime_indexing.md)\n* 支持[持久存储](/docs/persistent_storage.md)\n* 可实现[分布式索引和搜索](/docs/distributed_indexing_and_search.md)\n* 采用对商业应用友好的[Apache License v2](/license.txt)发布\n\n[微博搜索demo](http://vhaa7.fmt.tifan.net:8080/)\n\n# 安装/更新\n\n```\ngo get -u -v github.com/huichen/wukong\n```\n\n需要Go版本至少1.1.1\n\n# 使用\n\n先看一个例子（来自[examples/simplest_example.go](/examples/simplest_example.go)）\n```go\npackage main\n\nimport (\n\t\"github.com/huichen/wukong/engine\"\n\t\"github.com/huichen/wukong/types\"\n\t\"log\"\n)\n\nvar (\n\t// searcher是协程安全的\n\tsearcher = engine.Engine{}\n)\n\nfunc main() {\n\t// 初始化\n\tsearcher.Init(types.EngineInitOptions{\n\t\tSegmenterDictionaries: \"github.com/huichen/wukong/data/dictionary.txt\"})\n\tdefer searcher.Close()\n\n\t// 将文档加入索引，docId 从1开始\n\tsearcher.IndexDocument(1, types.DocumentIndexData{Content: \"此次百度收购将成中国互联网最大并购\"}, false)\n\tsearcher.IndexDocument(2, types.DocumentIndexData{Content: \"百度宣布拟全资收购91无线业务\"}, false)\n\tsearcher.IndexDocument(3, types.DocumentIndexData{Content: \"百度是中国最大的搜索引擎\"}, false)\n\n\t// 等待索引刷新完毕\n\tsearcher.FlushIndex()\n\n\t// 搜索输出格式见types.SearchResponse结构体\n\tlog.Print(searcher.Search(types.SearchRequest{Text:\"百度中国\"}))\n}\n```\n\n是不是很简单！\n\n然后看看一个[入门教程](/docs/codelab.md)，教你用不到200行Go代码实现一个微博搜索网站。\n\n# 其它\n\n* [为什么要有悟空引擎](/docs/why_wukong.md)\n* [联系方式](/docs/feedback.md)\n"
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "engine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.888671875,
+          "content": "module github.com/huichen/wukong\n\ngo 1.16\n\nrequire (\n\tgithub.com/boltdb/bolt v1.3.1\n\tgithub.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 // indirect\n\tgithub.com/cznic/internal v0.0.0-20181122101858-3279554c546e // indirect\n\tgithub.com/cznic/kv v0.0.0-20181122101858-e9cdcade440e\n\tgithub.com/cznic/lldb v1.1.0 // indirect\n\tgithub.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect\n\tgithub.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 // indirect\n\tgithub.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 // indirect\n\tgithub.com/edsrzf/mmap-go v1.0.0 // indirect\n\tgithub.com/golang/snappy v0.0.4 // indirect\n\tgithub.com/huichen/murmur v0.0.0-20130808212358-e0489551cf51\n\tgithub.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76\n\tgithub.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect\n\tgolang.org/x/sys v0.0.0-20210823070655-63515b42dcdf // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 3.3115234375,
+          "content": "github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d h1:ir/IFJU5xbja5UaBEQLjcvn7aAU01nqU/NUyOBEU+ew=\ngithub.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d/go.mod h1:PRWNwWq0yifz6XDPZu48aSld8BWwBfr2JKB2bGWiEd4=\ngithub.com/adamzy/sego v0.0.0-20151004184924-5eab9a44f8e8/go.mod h1:KQxo+Xesl2wLJ3yJcX443KaoWzXpbPzU1GNRyE8kNEY=\ngithub.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=\ngithub.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=\ngithub.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87 h1:94XgeeTZ+3Xi9zsdgBjP1Byx/wywCImjF8FzQ7OaKdU=\ngithub.com/cznic/fileutil v0.0.0-20181122101858-4d67cfea8c87/go.mod h1:8S58EK26zhXSxzv7NQFpnliaOQsmDUxvoQO3rt154Vg=\ngithub.com/cznic/internal v0.0.0-20181122101858-3279554c546e h1:58AcyflCe84EONph4gkyo3eDOEQcW5HIPfQBrD76W68=\ngithub.com/cznic/internal v0.0.0-20181122101858-3279554c546e/go.mod h1:olo7eAdKwJdXxb55TKGLiJ6xt1H0/tiiRCWKVLmtjY4=\ngithub.com/cznic/kv v0.0.0-20181122101858-e9cdcade440e h1:8ji4rZgRKWMQUJlPNEzfzCkX7yFAZFR829Mrh7PXxLA=\ngithub.com/cznic/kv v0.0.0-20181122101858-e9cdcade440e/go.mod h1:J9vPsG5aOQu5A836WgCTIb9xkiB9w1birknxIQmyWXY=\ngithub.com/cznic/lldb v1.1.0 h1:AIA+ham6TSJ+XkMe8imQ/g8KPzMUVWAwqUQQdtuMsHs=\ngithub.com/cznic/lldb v1.1.0/go.mod h1:FIZVUmYUVhPwRiPzL8nD/mpFcJ/G7SSXjjXYG4uRI3A=\ngithub.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 h1:iwZdTE0PVqJCos1vaoKsclOGD3ADKpshg3SRtYBbwso=\ngithub.com/cznic/mathutil v0.0.0-20181122101859-297441e03548/go.mod h1:e6NPNENfs9mPDVNRekM7lKScauxd5kXTr1Mfyig6TDM=\ngithub.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8 h1:LpMLYGyy67BoAFGda1NeOBQwqlv7nUXpm+rIVHGxZZ4=\ngithub.com/cznic/sortutil v0.0.0-20181122101858-f5f958428db8/go.mod h1:q2w6Bg5jeox1B+QkJ6Wp/+Vn0G/bo3f1uY7Fn3vivIQ=\ngithub.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1 h1:ytLS5Cgkxq6jObotJ+a13nsejdqzLFPliDf8CQ8OkAA=\ngithub.com/cznic/zappy v0.0.0-20181122101859-ca47d358d4b1/go.mod h1:Y1SNZ4dRUOKXshKUbwUapqNncRrho4mkjQebgEHZLj8=\ngithub.com/edsrzf/mmap-go v1.0.0 h1:CEBF7HpRnUCSJgGUb5h1Gm7e3VkmVDrR8lvWVLtrOFw=\ngithub.com/edsrzf/mmap-go v1.0.0/go.mod h1:YO35OhQPt3KJa3ryjFM5Bs14WD66h8eGKpfaBNrHW5M=\ngithub.com/golang/snappy v0.0.4 h1:yAGX7huGHXlcLOEtBnF4w7FQwA26wojNCwOYAEhLjQM=\ngithub.com/golang/snappy v0.0.4/go.mod h1:/XxbfmMg8lxefKM7IXC3fBNl/7bRcc72aCRzEWrmP2Q=\ngithub.com/huichen/murmur v0.0.0-20130808212358-e0489551cf51 h1:86ZSBmeBzG7dWW2rx9imn5pVKgqe7YjWzZ9qhn4Z+9A=\ngithub.com/huichen/murmur v0.0.0-20130808212358-e0489551cf51/go.mod h1:UKrDR4kaPWAPk8cJGrHoTgyI8OmHPNDjUxx/aOK4ySU=\ngithub.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76 h1:qNQ2+1IQT9Mor/vfEHePOQSbiapLoNI7sQmpxM7l1Ew=\ngithub.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76/go.mod h1:Fymg8+khR/cKSuIwqRxy/jmZg7PIPLk7CauXzrbcMUM=\ngithub.com/issue9/assert v1.4.1 h1:gUtOpMTeaE4JTe9kACma5foOHBvVt1p5XTFrULDwdXI=\ngithub.com/issue9/assert v1.4.1/go.mod h1:Yktk83hAVl1SPSYtd9kjhBizuiBIqUQyj+D5SE2yjVY=\ngithub.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 h1:OdAsTTz6OkFY5QxjkYwrChwuRruF69c169dPK26NUlk=\ngithub.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=\ngolang.org/x/sys v0.0.0-20210823070655-63515b42dcdf h1:2ucpDCmfkl8Bd/FsLtiD653Wf96cW37s+iGx93zsu4k=\ngolang.org/x/sys v0.0.0-20210823070655-63515b42dcdf/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\n"
+        },
+        {
+          "name": "license.txt",
+          "type": "blob",
+          "size": 0.5361328125,
+          "content": "Copyright 2013 Hui Chen\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n    http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "storage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "testdata",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "types",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wukong.go",
+          "type": "blob",
+          "size": 0.13671875,
+          "content": "package wukong\n\nimport (\n\t_ \"github.com/boltdb/bolt\"\n\t_ \"github.com/cznic/kv\"\n\t_ \"github.com/huichen/murmur\"\n\t_ \"github.com/huichen/sego\"\n)\n"
+        }
+      ]
+    }
+  ]
+}

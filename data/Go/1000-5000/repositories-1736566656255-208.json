@@ -1,0 +1,215 @@
+{
+  "metadata": {
+    "timestamp": 1736566656255,
+    "page": 208,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "davyxu/cellnet",
+      "stars": 4046,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1171875,
+          "content": "*.exe\ndebug.test\ncodec/gogopb/test/protoc\ncodec/gogopb/test/protoc-gen-gogofaster\ncodec/gogopb/test/protoc-gen-msg\n.idea"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.478515625,
+          "content": "language: go\n\ngit:\n  depth: 3\n  quiet: true\n\ninstall:\n  - go get -u -v github.com/davyxu/golog\n  - go get -u -v github.com/davyxu/goobjfmt\n  - go get -u -v github.com/davyxu/protoplus/proto\n  - go get -u -v github.com/gorilla/websocket\n  - go get -u -v github.com/go-sql-driver/mysql\n  - go get -u -v github.com/mediocregopher/radix.v2\n\ngo:\n  - 1.11.x\n\nscript:\n  - go test -v -test.run TestEchoTCP github.com/davyxu/cellnet/tests\n\nafter_success:\n  - bash <(curl -s https://codecov.io/bash)\n"
+        },
+        {
+          "name": "CHANGES.md",
+          "type": "blob",
+          "size": 1.9716796875,
+          "content": "# V4版本(v4分支)\n## 版本特性\n\n- 将逻辑层与传输层之间的部分抽象为Processor\n\n- 添加UDP/HTTP协议支持\n\n- Peer及Session使用接口查询方式使用模块接口\n\n- 鼓励直接使用回调+Golang的类型分支高效处理消息\n\n- 新增proc.SyncReceiver，让Peer可以同步接收消息\n\n## 变化及修改\n\n- 现在使用NewPeer统一按类型创建Peer\n\n- msglog现在不再是一个Processor，而只是函数库\n\n- Codec接口的对象参数变为interface{}，以前是[]byte\n\n- Codec接口现在需要实现MimeType\n\n- RegisterMessage现在由proc包的MessageDispatcher对象提供，可选支持\n\n# V3版本(v3分支)\n## 版本特性\n\n- 全面使用Handler处理封包接收,发送, 解析, 日志, RPC等结构\n\n- 新增编码器扩展, 支持混合编码器\n\n- 新增socket的各种属性设置, 超时处理等\n\n- 新的计时器api\n\n- 新增WebSocket支持\n\n- 底层采用性能更高的纯二进制协议进行错误及rpc消息传输\n\n\n## 变化及修改\n\n- 底层去除Protobuf协议依赖(依然支持Protobuf)\n\n- 大幅降低底层内存分配, GC降低后, benchmark IOPS提升\n\n- 现在使用cellnet.RegisterMessage注册消息, 回调参数统一为*Event\n\n- 去除RPC包装, 解包封包的重复代码. 封包变小\n\n- 编码解码过程放到线程中处理, 提升性能\n\n\n# V2版本(v2分支)\n\n## 版本特性\n\n- 实现单线程逻辑时, 全局只有1个EventQueue. 而不是一个Peer一个Queue\n\n- EventDispatcher处理回调\n\n- 处理DB, Timer等不依赖Dispatcher(Peer)逻辑时, 在Post时, Dispatcher可以指定nil, 通过data的函数得到异步返回\n\n- 去掉MongoDB支持\n\n\n## 变化及修改\n\n- 去掉V1中的EventPipe\n\n- V1中的EventQueue被拆成EventDispatcher及新的EventQueue\n\n- 新的EventQueue实现了EventPipe的一部分功能\n\n- 调整EventQueue的Post命名及DelayPost的参数\n\n- 去掉PeerEvent支持\n\n- socket.RegisterEventMessage改为socket.RegisterMessage\n\n- 例子/测试用例使用sample文件夹命名\n\n# V1版本(v1分支)"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0615234375,
+          "content": "The MIT License\n\nCopyright (C) 2017 davyxu <sunicdavy@qq.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n "
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.99609375,
+          "content": "![cellnetlogo](doc/logo.png)\n\n [![Build Status][3]][4]  [![MIT licensed][11]][12] [![GoDoc][1]][2]\n\n[1]: https://godoc.org/github.com/davyxu/cellnet?status.svg\n[2]: https://godoc.org/github.com/davyxu/cellnet\n[3]: https://travis-ci.org/davyxu/cellnet.svg?branch=master\n[4]: https://travis-ci.org/davyxu/cellnet\n[11]: https://img.shields.io/badge/license-MIT-blue.svg\n[12]: LICENSE\n\ncellnet是一个组件化、高扩展性、高性能的开源服务器网络库\n\n# 使用领域\n\ncellnet经过多个版本的迭代，无论是作为初学者学习的范例，还是作为私用、商用项目的基础构建乃至核心技术层已经在业内广受了解及使用。\n\n主要使用领域：\n\n- 游戏服务器\n\n  方便定制私有协议，快速构建逻辑服务器、网关服务器、服务器间互联互通、对接第三方SDK、转换编码协议等\n\n- ARM设备\n\n  设备间网络通讯\n\n- 证券软件\n\n  内部RPC\n\n# 特性 (Features)\n\n## 传输协议支持\n- TCP\n\n    TCP连接器的重连，侦听器的优雅重启。\n\n- UDP\n\n    纯UDP裸包收发\n\n- HTTP(测试中)\n\n    侦听器的优雅重启, 支持json及form的收发及封装。编写游戏服务器时，不再需要使用第三方HTTP服务器对接SDK。\n\n    注: 如需要对接大规模网页, 请使用第三方专业网络库,如(https://github.com/gin-gonic/gin), cellnet的http支持主要目的在用统一的地址及peer管理\n\n- WebSocket\n\n    采用(github.com/gorilla/websocket)实现\n\n## 编码(Codec)\n\n* cellnet内建支持以下数据编码:\n    - Google Protobuf (https://github.com/google/protobuf)\n\n    - json\n        适合与第三方服务器通信\n\n    - 二进制协议(https://github.com/davyxu/goobjfmt)\n\n       内存流直接序列化, 适用于服务器内网传输\n\n    - ProtoPlus(https://github.com/davyxu/protoplus)\n\n       增加并优化过的Protobuf的编码格式\n\n    可以通过codec包自行添加新的编码格式\n\n* 支持混合编码收发\n\n    无需改动代码，只需调整消息注册方式，即可达成运行期同时收发不同编码的封包\n\n    - 与其他语言编写的服务器使用protobuf\n\n    - 与web服务器使用json通信\n    \n    - 与Unity3D(C#)使用ProtoPlus(github.com/davyxu/protoplus)协议通信\n\n    优点：\n\n    - 享受不同通信协议格式的优点，避免缺点。如Protobuf适合服务器间的传输，封包小，适应面广。\n\n    - 私有的二进制协议方便加密和客户端处理，低GC和实现复杂度。\n\n## 队列实现各种单线程/多线程，异步/同步业务处理模型\n\n  使用队列消息处理结构，方便实现以下效果：\n\n* 单线程异步逻辑，适用于MMORPG复杂交互，免加锁处理共享数据。\n\n* 多线程同步逻辑，适用于机器人逻辑，每个机器人使用独立的goroutine收发处理，机器人间互不干扰。\n\n* 多线程并发逻辑，适用于网关，消息转发，HTTP服务器，每条消息处理都会在完全并发下。\n\n## 远程过程调用（RPC）\n\n* 支持同步RPC，适用于后台服务器向其他服务器请求数据后再顺处理事务。\n\n* 支持异步RPC，适用于单线程服务器逻辑。\n\n## 消息日志\n* 可以方便的通过日志查看收发消息的每一个字段消息\n\n![cellnetlogo](doc/chatlogger.png)\n\n# 获取+编译\n\n编译和使用cellnet，请下载Go1.10以上版本\n\n```\n  go get -u -v github.com/davyxu/cellnet\n\n  go get -u -v github.com/davyxu/golog\n\n  go get -u -v github.com/davyxu/goobjfmt\n\n  go get -u -v github.com/davyxu/protoplus\n```\n\n# 第三方库\n\ncellnet 使用Protobuf时，需要使用附带的pb插件生成一个绑定代码，下面的链接可以处理这个问题\n[Google Protobuf 编码安装](https://github.com/davyxu/cellnet/blob/master/doc/pbcodec.md)\n\n[WebSocket实现](https://github.com/gorilla/websocket)\n\n# 架构\n\ncellnet架构层次由如下图所示：\n\n![architecture](doc/architecture.png)\n\ncellnet对Processor和Peer进行高度抽象，用户可以从这两个层面横向扩展以满足不同的网络封装需求\n\n红色框内的部分为cellnet实现部分\n\n# 消息处理流程\n\ncellnet的消息收发处理流程如下图所示：\n\n![procflow](doc/procflow.png)\n\n本图对应的接口为cellnet/processor.go\n\n\n# 样例\n```golang\n\nconst peerAddress = \"127.0.0.1:17701\"\n\n// 服务器逻辑\nfunc server() {\n\n    // 创建服务器的事件队列，所有的消息，事件都会被投入这个队列处理\n\tqueue := cellnet.NewEventQueue()\n\n    // 创建一个服务器的接受器(Acceptor)，接受客户端的连接\n\tpeerIns := peer.NewGenericPeer(\"tcp.Acceptor\", \"server\", peerAddress, queue)\n\n    // 将接受器Peer与tcp.ltv的处理器绑定，并设置事件处理回调\n    // tcp.ltv处理器负责处理消息收发，使用私有的封包格式以及日志，RPC等处理\n\tproc.BindProcessorHandler(peerIns, \"tcp.ltv\", func(ev cellnet.Event) {\n\n        // 处理Peer收到的各种事件\n\t\tswitch msg := ev.Message().(type) {\n\t\tcase *cellnet.SessionAccepted: // 接受一个连接\n\t\t\tfmt.Println(\"server accepted\")\n\t\tcase *TestEchoACK: // 收到连接发送的消息\n\n\t\t\tfmt.Printf(\"server recv %+v\\n\", msg)\n\n            // 发送回应消息\n\t\t\tev.Session().Send(&TestEchoACK{\n\t\t\t\tMsg:   msg.Msg,\n\t\t\t\tValue: msg.Value,\n\t\t\t})\n\n\t\tcase *cellnet.SessionClosed: // 会话连接断开\n\t\t\tfmt.Println(\"session closed: \", ev.Session().ID())\n\t\t}\n\n\t})\n\n    // 启动Peer，服务器开始侦听\n\tpeerIns.Start()\n\n    // 开启事件队列，开始处理事件，此函数不阻塞\n\tqueue.StartLoop()\n}\n\n// 模拟客户端逻辑\nfunc client() {\n\n    // 例子专用的完成标记\n\tdone := make(chan struct{})\n\n    // 创建客户端的事件处理队列\n\tqueue := cellnet.NewEventQueue()\n\n    // 创建客户端的连接器\n\tpeerIns := peer.NewGenericPeer(\"tcp.Connector\", \"client\", peerAddress, queue)\n\n    // 将客户端连接器Peer与tcp.ltv处理器绑定，并设置接收事件回调\n\tproc.BindProcessorHandler(peerIns, \"tcp.ltv\", func(ev cellnet.Event) {\n\n\t\tswitch msg := ev.Message().(type) {\n\t\tcase *cellnet.SessionConnected: // 已经连接上\n\t\t\tfmt.Println(\"client connected\")\n\t\t\tev.Session().Send(&TestEchoACK{\n\t\t\t\tMsg:   \"hello\",\n\t\t\t\tValue: 1234,\n\t\t\t})\n\t\tcase *TestEchoACK: //收到服务器发送的消息\n\n\t\t\tfmt.Printf(\"client recv %+v\\n\", msg)\n\n\t\t\t// 完成操作\n\t\t\tdone <- struct{}{}\n\n\t\tcase *cellnet.SessionClosed:\n\t\t\tfmt.Println(\"client closed\")\n\t\t}\n\t})\n\n    // 开启客户端Peer\n\tpeerIns.Start()\n\n    // 开启客户端队列处理\n\tqueue.StartLoop()\n\n\t// 等待客户端收到消息\n\t<-done\n}\n\n```\n\n# 目录功能\n\n[目录及功能一览](https://github.com/davyxu/cellnet/blob/master/doc/dirstruct.md)\n\n# 运行聊天例子\n\n## 运行 服务器\n\n```bash\ncd examples/chat/server\n\ngo run main.go\n```\n\n## 运行 客户端\n\n```bash\ncd examples/chat/client\n\ngo run main.go\n```\n\n随后, 在命令行中输入hello后打回车, 就可以看到服务器返回\n\n```\n\nsid1 say: hello\n\n```\n\n# 基本概念及使用说明\n\n理解下面链接中的概念，可以迅速使用cellnet做基本的网络通讯及消息处理\n\n* [队列](https://github.com/davyxu/cellnet/blob/master/doc/queue.md)\n\n* [端(Peer)](https://github.com/davyxu/cellnet/blob/master/doc/peer.md)\n\n* [收发处理消息](https://github.com/davyxu/cellnet/blob/master/doc/procmsg.md)\n\n\n# 扩展及定制\n\n若cellnet内建的Peer, Codec及Processor流程不能满足你的需求，可以阅读下面链接内容，添加并扩展cellnet功能\n\n* [定制封包编码(Codec)](https://github.com/davyxu/cellnet/blob/master/doc/customcodec.md)\n\n    封包编码可以是JSON，Protobuf等\n\n* [定制端(Peer)](https://github.com/davyxu/cellnet/blob/master/doc/custompeer.md)\n\n    新增Redis连接器，与cellnet自带的TCP/UDP的Peer都不同。\n\n* [定制处理器(Processor)](https://github.com/davyxu/cellnet/blob/master/doc/customproc.md)\n\n    需要在收发包时有统一的处理行为\n\n# FAQ\n\n[常见问题及回答](https://github.com/davyxu/cellnet/blob/master/doc/faq.md)\n\n这里应该有你想知道的答案\n\n\n# 贡献者\n\n按贡献时间排序，越靠前表示越新的贡献\n\nsuperikw(https://github.com/superikw), 在v3中测试出一个websocket接口并发发送问题，wss支持，修复会话管理。\n\nbruce.hu(https://github.com/hxdhero), 在v3中测试出一个竞态冲突的bug\n\nM4tou(https://github.com/mutousay), 在v3中协助解决RPC异步超时回调处理\n\nchuan.li(https://github.com/blade-226), 在v3中提供一个没有在io线程编码的bug\n\nChris Lonng(https://github.com/lonnng), 在v3中提供一个最大封包约束造成服务器间连接断开的bug\n\nIronsDu(https://github.com/IronsDu), 在v2中大幅度性能优化\n\nviwii(viwii@sina.cn), 在v2中，提供一个可能造成死锁的bug\n\n# 版本历史\n2018.5  v4版本 [详细请查看](https://github.com/davyxu/cellnet/blob/v4/CHANGES.md)\n\n2017.8  v3版本 [详细请查看](https://github.com/davyxu/cellnet/blob/v3/CHANGES.md)\n\n2017.1  v2版本 [详细请查看](https://github.com/davyxu/cellnet/blob/v2/CHANGES.md)\n\n2015.8\tv1版本\n\n\n# 备注\n\n感觉不错请star, 谢谢!\n\n知乎: http://www.zhihu.com/people/sunicdavy\n\n提交bug及特性: https://github.com/davyxu/cellnet/issues\n"
+        },
+        {
+          "name": "benchmark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "codec.go",
+          "type": "blob",
+          "size": 0.32421875,
+          "content": "package cellnet\n\n// 编码包\ntype Codec interface {\n\t// 将数据转换为字节数组\n\tEncode(msgObj interface{}, ctx ContextSet) (data interface{}, err error)\n\n\t// 将字节数组转换为数据\n\tDecode(data interface{}, msgObj interface{}) error\n\n\t// 编码器的名字\n\tName() string\n\n\t// 兼容http类型\n\tMimeType() string\n}\n"
+        },
+        {
+          "name": "codec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "err.go",
+          "type": "blob",
+          "size": 0.3798828125,
+          "content": "package cellnet\n\nimport \"fmt\"\n\ntype Error struct {\n\ts       string\n\tcontext interface{}\n}\n\nfunc (self *Error) Error() string {\n\n\tif self.context == nil {\n\t\treturn self.s\n\t}\n\n\treturn fmt.Sprintf(\"%s, '%v'\", self.s, self.context)\n}\n\nfunc NewError(s string) error {\n\n\treturn &Error{s: s}\n}\n\nfunc NewErrorContext(s string, context interface{}) error {\n\treturn &Error{s: s, context: context}\n}\n"
+        },
+        {
+          "name": "event.go",
+          "type": "blob",
+          "size": 0.7431640625,
+          "content": "package cellnet\n\n// 接收到消息\ntype RecvMsgEvent struct {\n\tSes Session\n\tMsg interface{}\n}\n\nfunc (self *RecvMsgEvent) Session() Session {\n\treturn self.Ses\n}\n\nfunc (self *RecvMsgEvent) Message() interface{} {\n\treturn self.Msg\n}\n\nfunc (self *RecvMsgEvent) Send(msg interface{}) {\n\tself.Ses.Send(msg)\n}\n\n// 兼容relay和rpc的回消息接口\nfunc (self *RecvMsgEvent) Reply(msg interface{}) {\n\tself.Ses.Send(msg)\n}\n\n// 会话开始发送数据事件\ntype SendMsgEvent struct {\n\tSes Session\n\tMsg interface{} // 用户需要发送的消息\n}\n\nfunc (self *SendMsgEvent) Message() interface{} {\n\treturn self.Msg\n}\n\nfunc (self *SendMsgEvent) Session() Session {\n\treturn self.Ses\n}\n\n// rpc, relay, 普通消息\ntype ReplyEvent interface {\n\tReply(msg interface{})\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.2978515625,
+          "content": "module github.com/davyxu/cellnet\n\ngo 1.12\n\nrequire (\n\tgithub.com/davyxu/golog v0.1.0\n\tgithub.com/davyxu/goobjfmt v0.1.0\n\tgithub.com/davyxu/protoplus v0.1.0\n\tgithub.com/go-sql-driver/mysql v1.4.1\n\tgithub.com/gorilla/websocket v1.4.1\n\tgithub.com/mediocregopher/radix.v2 v0.0.0-20181115013041-b67df6e626f9\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 1.2509765625,
+          "content": "github.com/davyxu/golog v0.1.0 h1:SsV3m2x37sCzFaQzq5OHc5S+PE2VMiL7XUx34JCa7mo=\ngithub.com/davyxu/golog v0.1.0/go.mod h1:YwChkFY5dCYt77yuPlWjcR6KlWqVJNbz3WkwC/8WgQk=\ngithub.com/davyxu/goobjfmt v0.1.0 h1:/Kz4X/UL4Jf5xOaQhP5DxzNtcwsfJqsz6ceoePeHBgA=\ngithub.com/davyxu/goobjfmt v0.1.0/go.mod h1:KKrytCtCXny2sEg3ojQfJ4NThhBP8hKw/qM9vhDwgog=\ngithub.com/davyxu/protoplus v0.1.0 h1:iKk94nwYZdEK8r1r4GZDkW7JnmLJTPYQSVUvBLBxsb8=\ngithub.com/davyxu/protoplus v0.1.0/go.mod h1:WzmNYPvYsyks3G81jCJ/vGY2ljs49qFMfCmXGwvxFLA=\ngithub.com/go-sql-driver/mysql v1.4.1 h1:g24URVg0OFbNUTx9qqY1IRZ9D9z3iPyi5zKhQZpNwpA=\ngithub.com/go-sql-driver/mysql v1.4.1/go.mod h1:zAC/RDZ24gD3HViQzih4MyKcchzm+sOG5ZlKdlhCg5w=\ngithub.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=\ngithub.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=\ngithub.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=\ngithub.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=\ngithub.com/mediocregopher/radix.v2 v0.0.0-20181115013041-b67df6e626f9 h1:ViNuGS149jgnttqhc6XQNPwdupEMBXqCx9wtlW7P3sA=\ngithub.com/mediocregopher/radix.v2 v0.0.0-20181115013041-b67df6e626f9/go.mod h1:fLRUbhbSd5Px2yKUaGYYPltlyxi1guJz1vCmo1RQL50=\n"
+        },
+        {
+          "name": "meta.go",
+          "type": "blob",
+          "size": 5.0498046875,
+          "content": "package cellnet\n\nimport (\n\t\"fmt\"\n\t\"path\"\n\t\"reflect\"\n\t\"regexp\"\n\t\"strings\"\n\t\"sync\"\n)\n\ntype context struct {\n\tname string\n\tdata interface{}\n}\n\n// 消息元信息\ntype MessageMeta struct {\n\tCodec Codec        // 消息用到的编码\n\tType  reflect.Type // 消息类型, 注册时使用指针类型\n\n\tID int // 消息ID (二进制协议中使用)\n\n\tctxListGuard sync.RWMutex\n\tctxList      []*context\n}\n\nfunc (self *MessageMeta) TypeName() string {\n\n\tif self == nil {\n\t\treturn \"\"\n\t}\n\n\treturn self.Type.Name()\n}\n\nfunc (self *MessageMeta) FullName() string {\n\n\tif self == nil {\n\t\treturn \"\"\n\t}\n\n\tvar sb strings.Builder\n\tsb.WriteString(path.Base(self.Type.PkgPath()))\n\tsb.WriteString(\".\")\n\tsb.WriteString(self.Type.Name())\n\n\treturn sb.String()\n}\n\n// 创建meta类型的实例\nfunc (self *MessageMeta) NewType() interface{} {\n\tif self.Type == nil {\n\t\treturn nil\n\t}\n\n\treturn reflect.New(self.Type).Interface()\n}\n\n// 为meta对应的名字绑定上下文\nfunc (self *MessageMeta) SetContext(name string, data interface{}) *MessageMeta {\n\n\tself.ctxListGuard.Lock()\n\tdefer self.ctxListGuard.Unlock()\n\n\tfor _, ctx := range self.ctxList {\n\n\t\tif ctx.name == name {\n\t\t\tctx.data = data\n\t\t\treturn self\n\t\t}\n\t}\n\n\tself.ctxList = append(self.ctxList, &context{\n\t\tname: name,\n\t\tdata: data,\n\t})\n\n\treturn self\n}\n\n// 获取meta对应的名字绑定上下文\nfunc (self *MessageMeta) GetContext(key string) (interface{}, bool) {\n\n\tself.ctxListGuard.RLock()\n\tdefer self.ctxListGuard.RUnlock()\n\n\tfor _, ctx := range self.ctxList {\n\n\t\tif ctx.name == key {\n\t\t\treturn ctx.data, true\n\t\t}\n\t}\n\n\treturn nil, false\n}\n\n// 按字符串格式取context\nfunc (self *MessageMeta) GetContextAsString(key, defaultValue string) string {\n\n\tif v, ok := self.GetContext(key); ok {\n\n\t\tif str, ok := v.(string); ok {\n\t\t\treturn str\n\t\t}\n\t}\n\n\treturn defaultValue\n}\n\n// 按字符串格式取context\nfunc (self *MessageMeta) GetContextAsInt(name string, defaultValue int) int {\n\n\tif v, ok := self.GetContext(name); ok {\n\n\t\tif intV, ok := v.(int); ok {\n\t\t\treturn intV\n\t\t}\n\t}\n\n\treturn defaultValue\n}\n\nvar (\n\t// 消息元信息与消息名称，消息ID和消息类型的关联关系\n\tmetaByFullName = map[string]*MessageMeta{}\n\tmetaByID       = map[int]*MessageMeta{}\n\tmetaByType     = map[reflect.Type]*MessageMeta{}\n)\n\n/*\nhttp消息\nMethod URL -> Meta\nType -> Meta\n\n非http消息\nID -> Meta\nType -> Meta\n\n*/\n\n// 注册消息元信息\nfunc RegisterMessageMeta(meta *MessageMeta) *MessageMeta {\n\n\t// 注册时, 统一为非指针类型\n\tif meta.Type.Kind() == reflect.Ptr {\n\t\tmeta.Type = meta.Type.Elem()\n\t}\n\n\tif _, ok := metaByType[meta.Type]; ok {\n\t\tpanic(fmt.Sprintf(\"Duplicate message meta register by type: %d name: %s\", meta.ID, meta.Type.Name()))\n\t} else {\n\t\tmetaByType[meta.Type] = meta\n\t}\n\n\tif _, ok := metaByFullName[meta.FullName()]; ok {\n\t\tpanic(fmt.Sprintf(\"Duplicate message meta register by fullname: %s\", meta.FullName()))\n\t} else {\n\t\tmetaByFullName[meta.FullName()] = meta\n\t}\n\n\tif meta.ID == 0 {\n\t\tpanic(\"message meta require 'ID' field: \" + meta.TypeName())\n\t}\n\n\tif prev, ok := metaByID[meta.ID]; ok {\n\t\tpanic(fmt.Sprintf(\"Duplicate message meta register by id: %d type: %s, pre type: %s\", meta.ID, meta.TypeName(), prev.TypeName()))\n\t} else {\n\t\tmetaByID[meta.ID] = meta\n\t}\n\n\treturn meta\n}\n\n// 根据名字查找消息元信息\nfunc MessageMetaByFullName(name string) *MessageMeta {\n\tif v, ok := metaByFullName[name]; ok {\n\t\treturn v\n\t}\n\n\treturn nil\n}\n\nfunc MessageMetaVisit(nameRule string, callback func(meta *MessageMeta) bool) error {\n\texp, err := regexp.Compile(nameRule)\n\tif err != nil {\n\t\treturn err\n\t}\n\n\tfor name, meta := range metaByFullName {\n\t\tif exp.MatchString(name) {\n\n\t\t\tif !callback(meta) {\n\t\t\t\treturn nil\n\t\t\t}\n\n\t\t}\n\t}\n\n\treturn nil\n}\n\n// 根据类型查找消息元信息\nfunc MessageMetaByType(t reflect.Type) *MessageMeta {\n\n\tif t == nil {\n\t\treturn nil\n\t}\n\n\tif t.Kind() == reflect.Ptr {\n\t\tt = t.Elem()\n\t}\n\n\tif v, ok := metaByType[t]; ok {\n\t\treturn v\n\t}\n\n\treturn nil\n}\n\n// 根据消息对象获得消息元信息\nfunc MessageMetaByMsg(msg interface{}) *MessageMeta {\n\n\tif msg == nil {\n\t\treturn nil\n\t}\n\n\treturn MessageMetaByType(reflect.TypeOf(msg))\n}\n\n// 根据id查找消息元信息\nfunc MessageMetaByID(id int) *MessageMeta {\n\tif v, ok := metaByID[id]; ok {\n\t\treturn v\n\t}\n\n\treturn nil\n}\n\n// 消息名（没有包，纯类型名）\nfunc MessageToName(msg interface{}) string {\n\n\tif msg == nil {\n\t\treturn \"\"\n\t}\n\n\tmeta := MessageMetaByMsg(msg)\n\tif meta == nil {\n\t\treturn \"\"\n\t}\n\n\treturn meta.TypeName()\n}\n\nfunc MessageToID(msg interface{}) int {\n\n\tif msg == nil {\n\t\treturn 0\n\t}\n\n\tmeta := MessageMetaByMsg(msg)\n\tif meta == nil {\n\t\treturn 0\n\t}\n\n\treturn int(meta.ID)\n}\n\nfunc MessageSize(msg interface{}) int {\n\n\tif msg == nil {\n\t\treturn 0\n\t}\n\n\t// 获取消息元信息\n\tmeta := MessageMetaByType(reflect.TypeOf(msg))\n\tif meta == nil {\n\t\treturn 0\n\t}\n\n\t// 将消息编码为字节数组\n\traw, err := meta.Codec.Encode(msg, nil)\n\n\tif err != nil {\n\t\treturn 0\n\t}\n\n\treturn len(raw.([]byte))\n}\n\nfunc MessageToString(msg interface{}) string {\n\n\tif msg == nil {\n\t\treturn \"\"\n\t}\n\n\tif stringer, ok := msg.(interface {\n\t\tString() string\n\t}); ok {\n\t\treturn stringer.String()\n\t}\n\n\treturn fmt.Sprintf(\"%+v\", msg)\n}\n"
+        },
+        {
+          "name": "msglog",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "peer.go",
+          "type": "blob",
+          "size": 1.529296875,
+          "content": "package cellnet\n\n// 端, 可通过接口查询获得更多接口支持,如PeerProperty,ContextSet, SessionAccessor\ntype Peer interface {\n\t// 开启端，传入地址\n\tStart() Peer\n\n\t// 停止通讯端\n\tStop()\n\n\t// Peer的类型(protocol.type)，例如tcp.Connector/udp.Acceptor\n\tTypeName() string\n}\n\n// Peer基础属性\ntype PeerProperty interface {\n\tName() string\n\n\tAddress() string\n\n\tQueue() EventQueue\n\n\t// 设置名称（可选）\n\tSetName(v string)\n\n\t// 设置Peer地址\n\tSetAddress(v string)\n\n\t// 设置Peer挂接队列（可选）\n\tSetQueue(v EventQueue)\n}\n\n// 基本的通用Peer\ntype GenericPeer interface {\n\tPeer\n\tPeerProperty\n}\n\n// 设置和获取自定义属性\ntype ContextSet interface {\n\t// 为对象设置一个自定义属性\n\tSetContext(key interface{}, v interface{})\n\n\t// 从对象上根据key获取一个自定义属性\n\tGetContext(key interface{}) (interface{}, bool)\n\n\t// 给定一个值指针, 自动根据值的类型GetContext后设置到值\n\tFetchContext(key, valuePtr interface{}) bool\n}\n\n// 会话访问\ntype SessionAccessor interface {\n\n\t// 获取一个连接\n\tGetSession(int64) Session\n\n\t// 遍历连接\n\tVisitSession(func(Session) bool)\n\n\t// 连接数量\n\tSessionCount() int\n\n\t// 关闭所有连接\n\tCloseAllSession()\n}\n\n// 检查Peer是否正常工作\ntype PeerReadyChecker interface {\n\tIsReady() bool\n}\n\n// 开启IO层异常捕获,在生产版本对外端口应该打开此设置\ntype PeerCaptureIOPanic interface {\n\t// 开启IO层异常捕获\n\tEnableCaptureIOPanic(v bool)\n\n\t// 获取当前异常捕获值\n\tCaptureIOPanic() bool\n}\n"
+        },
+        {
+          "name": "peer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "peer_db.go",
+          "type": "blob",
+          "size": 0.6962890625,
+          "content": "package cellnet\n\nimport \"time\"\n\ntype RedisPoolOperator interface {\n\t// 获取\n\tOperate(callback func(rawClient interface{}) interface{}) interface{}\n}\n\ntype RedisConnector interface {\n\tGenericPeer\n\n\t// 设置密码\n\tSetPassword(v string)\n\n\t// 设置连接数\n\tSetConnectionCount(v int)\n\n\t// 设置库索引\n\tSetDBIndex(v int)\n}\n\ntype MySQLOperator interface {\n\tOperate(callback func(rawClient interface{}) interface{}) interface{}\n}\n\ntype MySQLConnector interface {\n\tGenericPeer\n\n\t// 设置密码\n\tSetPassword(v string)\n\n\t// 设置连接数\n\tSetConnectionCount(v int)\n\n\t// 设置自动重连间隔， 0为默认值，关闭自动重连\n\tSetReconnectDuration(v time.Duration)\n\n\tReconnectDuration() time.Duration\n}\n"
+        },
+        {
+          "name": "peer_http.go",
+          "type": "blob",
+          "size": 0.9482421875,
+          "content": "package cellnet\n\nimport (\n\t\"html/template\"\n\t\"net/http\"\n)\n\ntype HTTPAcceptor interface {\n\tGenericPeer\n\n\t// 设置http文件服务虚拟地址和文件系统根目录\n\tSetFileServe(dir string, root string)\n\n\t// 设置模板文件地址\n\tSetTemplateDir(dir string)\n\n\t// 设置http模板的分隔符，解决默认{{ }}冲突问题\n\tSetTemplateDelims(delimsLeft, delimsRight string)\n\n\t// 设置模板的扩展名，默认: .tpl .html\n\tSetTemplateExtensions(exts []string)\n\n\t// 设置模板函数入口\n\tSetTemplateFunc(f []template.FuncMap)\n}\n\ntype HTTPRequest struct {\n\tREQMsg       interface{} // 请求消息, 指针\n\tACKMsg       interface{} // 回应消息, 指针\n\tREQCodecName string      // 可为空, 默认为json格式\n\tACKCodecName string      // 可为空, 默认为json格式\n}\n\n// HTTP连接器接口\ntype HTTPConnector interface {\n\tGenericPeer\n\tRequest(method, path string, param *HTTPRequest) error\n}\n\ntype HTTPSession interface {\n\tRequest() *http.Request\n}\n"
+        },
+        {
+          "name": "peer_tcp.go",
+          "type": "blob",
+          "size": 0.9404296875,
+          "content": "package cellnet\n\nimport \"time\"\n\n// TCP\ntype TCPSocketOption interface {\n\t// 收发缓冲大小，默认-1\n\tSetSocketBuffer(readBufferSize, writeBufferSize int, noDelay bool)\n\n\t// 设置最大的封包大小\n\tSetMaxPacketSize(maxSize int)\n\n\t// 设置读写超时，默认0，不超时\n\tSetSocketDeadline(read, write time.Duration)\n}\n\n// TCP接受器，具备会话访问\ntype TCPAcceptor interface {\n\tGenericPeer\n\n\t// 访问会话\n\tSessionAccessor\n\n\tTCPSocketOption\n\n\t// 查看当前侦听端口，使用host:0 作为Address时，socket底层自动分配侦听端口\n\tPort() int\n}\n\n// TCP连接器\ntype TCPConnector interface {\n\tGenericPeer\n\n\tTCPSocketOption\n\n\t// 设置重连时间\n\tSetReconnectDuration(time.Duration)\n\n\t// 获取重连时间\n\tReconnectDuration() time.Duration\n\n\t// 默认会话\n\tSession() Session\n\n\t// 设置会话管理器 实现peer.SessionManager接口\n\tSetSessionManager(raw interface{})\n\n\t// 查看当前连接使用的端口\n\tPort() int\n}\n"
+        },
+        {
+          "name": "peer_udp.go",
+          "type": "blob",
+          "size": 0.29296875,
+          "content": "package cellnet\n\nimport \"time\"\n\n// UDP连接器\ntype UDPConnector interface {\n\tGenericPeer\n\n\t// 默认会话\n\tSession() Session\n}\n\n// UDP接受器\ntype UDPAcceptor interface {\n\n\t// 底层使用TTL做session生命期管理，超时时间越短，内存占用越低\n\tSetSessionTTL(dur time.Duration)\n}\n"
+        },
+        {
+          "name": "peer_ws.go",
+          "type": "blob",
+          "size": 0.7119140625,
+          "content": "package cellnet\n\nimport \"time\"\n\n// Websocket接受器，具备会话访问\ntype WSAcceptor interface {\n\tGenericPeer\n\n\t// 访问会话\n\tSessionAccessor\n\n\tSetHttps(certfile, keyfile string)\n\n\t// 设置升级器\n\tSetUpgrader(upgrader interface{})\n\n\t// 查看当前侦听端口，使用host:0 作为Address时，socket底层自动分配侦听端口\n\tPort() int\n}\n\n// Websocket连接器\ntype WSConnector interface {\n\tGenericPeer\n\n\t// 设置重连时间\n\tSetReconnectDuration(time.Duration)\n\n\t// 获取重连时间\n\tReconnectDuration() time.Duration\n\n\t// 默认会话\n\tSession() Session\n\n\t// 设置会话管理器 实现peer.SessionManager接口\n\tSetSessionManager(raw interface{})\n\n\t// 查看当前连接使用的端口\n\tPort() int\n}\n"
+        },
+        {
+          "name": "pipe.go",
+          "type": "blob",
+          "size": 1.1240234375,
+          "content": "package cellnet\n\nimport (\n\t\"sync\"\n)\n\n// 不限制大小，添加不发生阻塞，接收阻塞等待\ntype Pipe struct {\n\tlist      []interface{}\n\tlistGuard sync.Mutex\n\tlistCond  *sync.Cond\n}\n\n// 添加时不会发送阻塞\nfunc (self *Pipe) Add(msg interface{}) {\n\tself.listGuard.Lock()\n\tself.list = append(self.list, msg)\n\tself.listGuard.Unlock()\n\n\tself.listCond.Signal()\n}\n\nfunc (self *Pipe) Count() int {\n\tself.listGuard.Lock()\n\tdefer self.listGuard.Unlock()\n\treturn len(self.list)\n}\n\nfunc (self *Pipe) Reset() {\n\tself.listGuard.Lock()\n\tself.list = self.list[0:0]\n\tself.listGuard.Unlock()\n}\n\n// 如果没有数据，发生阻塞\nfunc (self *Pipe) Pick(retList *[]interface{}) (exit bool) {\n\n\tself.listGuard.Lock()\n\n\tfor len(self.list) == 0 {\n\t\tself.listCond.Wait()\n\t}\n\n// \tself.listGuard.Unlock()\n\n// \tself.listGuard.Lock()\n\n\t// 复制出队列\n\n\tfor _, data := range self.list {\n\n\t\tif data == nil {\n\t\t\texit = true\n\t\t\tbreak\n\t\t} else {\n\t\t\t*retList = append(*retList, data)\n\t\t}\n\t}\n\n\tself.list = self.list[0:0]\n\tself.listGuard.Unlock()\n\n\treturn\n}\n\nfunc NewPipe() *Pipe {\n\tself := &Pipe{}\n\tself.listCond = sync.NewCond(&self.listGuard)\n\n\treturn self\n}\n"
+        },
+        {
+          "name": "proc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "processor.go",
+          "type": "blob",
+          "size": 0.685546875,
+          "content": "package cellnet\n\n// 事件\ntype Event interface {\n\n\t// 事件对应的会话\n\tSession() Session\n\n\t// 事件携带的消息\n\tMessage() interface{}\n}\n\n// 消息收发器\ntype MessageTransmitter interface {\n\n\t// 接收消息\n\tOnRecvMessage(ses Session) (msg interface{}, err error)\n\n\t// 发送消息\n\tOnSendMessage(ses Session, msg interface{}) error\n}\n\n// 处理钩子(参数输入, 返回输出, 不给MessageProccessor处理时，可以将Event设置为nil)\ntype EventHooker interface {\n\n\t// 入站(接收)的事件处理\n\tOnInboundEvent(input Event) (output Event)\n\n\t// 出站(发送)的事件处理\n\tOnOutboundEvent(input Event) (output Event)\n}\n\n// 用户端处理\ntype EventCallback func(ev Event)\n"
+        },
+        {
+          "name": "protoc-gen-msg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "queue.go",
+          "type": "blob",
+          "size": 2.6171875,
+          "content": "package cellnet\n\nimport (\n\t\"fmt\"\n\t\"log\"\n\t\"runtime/debug\"\n\t\"sync\"\n\t\"time\"\n)\n\n// 事件队列\ntype EventQueue interface {\n\t// 事件队列开始工作\n\tStartLoop() EventQueue\n\n\t// 停止事件队列\n\tStopLoop() EventQueue\n\n\t// 等待退出\n\tWait()\n\n\t// 投递事件, 通过队列到达消费者端\n\tPost(callback func())\n\n\t// 是否捕获异常\n\tEnableCapturePanic(v bool)\n\n\t// 获取事件数量\n\tCount() int\n}\n\ntype CapturePanicNotifyFunc func(interface{}, EventQueue)\n\ntype eventQueue struct {\n\t*Pipe\n\n\tendSignal sync.WaitGroup\n\n\tcapturePanic bool\n\n\tonPanic CapturePanicNotifyFunc\n}\n\n// 启动崩溃捕获\nfunc (self *eventQueue) EnableCapturePanic(v bool) {\n\tself.capturePanic = v\n}\n\n// 设置捕获崩溃通知\nfunc (self *eventQueue) SetCapturePanicNotify(callback CapturePanicNotifyFunc) {\n\tself.onPanic = callback\n}\n\n// 派发事件处理回调到队列中\nfunc (self *eventQueue) Post(callback func()) {\n\n\tif callback == nil {\n\t\treturn\n\t}\n\n\tself.Add(callback)\n}\n\n// 保护调用用户函数\nfunc (self *eventQueue) protectedCall(callback func()) {\n\n\tif self.capturePanic {\n\t\tdefer func() {\n\n\t\t\tif err := recover(); err != nil {\n\t\t\t\tself.onPanic(err, self)\n\t\t\t}\n\n\t\t}()\n\t}\n\n\tcallback()\n}\n\n// 开启事件循环\nfunc (self *eventQueue) StartLoop() EventQueue {\n\n\tself.endSignal.Add(1)\n\n\tgo func() {\n\n\t\tvar writeList []interface{}\n\n\t\tfor {\n\t\t\twriteList = writeList[0:0]\n\t\t\texit := self.Pick(&writeList)\n\n\t\t\t// 遍历要发送的数据\n\t\t\tfor _, msg := range writeList {\n\t\t\t\tswitch t := msg.(type) {\n\t\t\t\tcase func():\n\t\t\t\t\tself.protectedCall(t)\n\t\t\t\tcase nil:\n\t\t\t\t\tbreak\n\t\t\t\tdefault:\n\t\t\t\t\tlog.Printf(\"unexpected type %T\", t)\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tif exit {\n\t\t\t\tbreak\n\t\t\t}\n\t\t}\n\n\t\tself.endSignal.Done()\n\t}()\n\n\treturn self\n}\n\n// 停止事件循环\nfunc (self *eventQueue) StopLoop() EventQueue {\n\tself.Add(nil)\n\treturn self\n}\n\n// 等待退出消息\nfunc (self *eventQueue) Wait() {\n\tself.endSignal.Wait()\n}\n\n// 创建默认长度的队列\nfunc NewEventQueue() EventQueue {\n\n\treturn &eventQueue{\n\t\tPipe: NewPipe(),\n\n\t\t// 默认的崩溃捕获打印\n\t\tonPanic: func(raw interface{}, queue EventQueue) {\n\n\t\t\tfmt.Printf(\"%s: %v \\n%s\\n\", time.Now().Format(\"2006-01-02 15:04:05\"), raw, string(debug.Stack()))\n\t\t\tdebug.PrintStack()\n\t\t},\n\t}\n}\n\n// 在会话对应的Peer上的事件队列中执行callback，如果没有队列，则马上执行\nfunc SessionQueuedCall(ses Session, callback func()) {\n\tif ses == nil {\n\t\treturn\n\t}\n\tq := ses.Peer().(interface {\n\t\tQueue() EventQueue\n\t}).Queue()\n\n\tQueuedCall(q, callback)\n}\n\n// 有队列时队列调用，无队列时直接调用\nfunc QueuedCall(queue EventQueue, callback func()) {\n\tif queue == nil {\n\t\tcallback()\n\t} else {\n\t\tqueue.Post(callback)\n\t}\n}\n"
+        },
+        {
+          "name": "relay",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rpc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "session.go",
+          "type": "blob",
+          "size": 0.7275390625,
+          "content": "package cellnet\n\n// 长连接\ntype Session interface {\n\n\t// 获得原始的Socket连接\n\tRaw() interface{}\n\n\t// 获得Session归属的Peer\n\tPeer() Peer\n\n\t// 发送消息，消息需要以指针格式传入\n\tSend(msg interface{})\n\n\t// 断开\n\tClose()\n\n\t// 标示ID\n\tID() int64\n}\n\n// 直接发送数据时，将*RawPacket作为Send参数\ntype RawPacket struct {\n\tMsgData []byte\n\tMsgID   int\n}\n\nfunc (self *RawPacket) Message() interface{} {\n\n\t// 获取消息元信息\n\tmeta := MessageMetaByID(self.MsgID)\n\n\t// 消息没有注册\n\tif meta == nil {\n\t\treturn struct{}{}\n\t}\n\n\t// 创建消息\n\tmsg := meta.NewType()\n\n\t// 从字节数组转换为消息\n\terr := meta.Codec.Decode(self.MsgData, msg)\n\tif err != nil {\n\t\treturn struct{}{}\n\t}\n\n\treturn msg\n}\n"
+        },
+        {
+          "name": "sysmsg.go",
+          "type": "blob",
+          "size": 1.5537109375,
+          "content": "package cellnet\n\nimport \"fmt\"\n\ntype SessionInit struct {\n}\n\ntype SessionAccepted struct {\n}\n\ntype SessionConnected struct {\n}\n\ntype SessionConnectError struct {\n}\n\ntype CloseReason int32\n\nconst (\n\tCloseReason_IO     CloseReason = iota // 普通IO断开\n\tCloseReason_Manual                    // 关闭前，调用过Session.Close\n)\n\nfunc (self CloseReason) String() string {\n\tswitch self {\n\tcase CloseReason_IO:\n\t\treturn \"IO\"\n\tcase CloseReason_Manual:\n\t\treturn \"Manual\"\n\t}\n\n\treturn \"Unknown\"\n}\n\ntype SessionClosed struct {\n\tReason CloseReason // 断开原因\n}\n\n// udp通知关闭,内部使用\ntype SessionCloseNotify struct {\n}\n\nfunc (self *SessionInit) String() string         { return fmt.Sprintf(\"%+v\", *self) }\nfunc (self *SessionAccepted) String() string     { return fmt.Sprintf(\"%+v\", *self) }\nfunc (self *SessionConnected) String() string    { return fmt.Sprintf(\"%+v\", *self) }\nfunc (self *SessionConnectError) String() string { return fmt.Sprintf(\"%+v\", *self) }\nfunc (self *SessionClosed) String() string       { return fmt.Sprintf(\"%+v\", *self) }\nfunc (self *SessionCloseNotify) String() string  { return fmt.Sprintf(\"%+v\", *self) }\n\n// 标记系统消息\nfunc (self *SessionInit) SystemMessage()         {}\nfunc (self *SessionAccepted) SystemMessage()     {}\nfunc (self *SessionConnected) SystemMessage()    {}\nfunc (self *SessionConnectError) SystemMessage() {}\nfunc (self *SessionClosed) SystemMessage()       {}\nfunc (self *SessionCloseNotify) SystemMessage()  {}\n\n// 使用类型断言判断是否为系统消息\ntype SystemMessageIdentifier interface {\n\tSystemMessage()\n}\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "timer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "util",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

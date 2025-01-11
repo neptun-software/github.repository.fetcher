@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "timestamp": 1736566609039,
+    "page": 163,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "afex/hystrix-go",
+      "stars": 4266,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0087890625,
+          "content": ".vagrant\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1611328125,
+          "content": "sudo: false\nlanguage: go\nscript:\n  - cd hystrix\n  - go test -race\ngo:\n  - 1.7.x\n  - 1.8.x\n  - 1.9.x\n  - 1.10.x\n  - tip\nenv:\n  global:\n    - GORACE=\"halt_on_error=1\"\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 keith\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.404296875,
+          "content": "hystrix-go\n==========\n\n[![Build Status](https://travis-ci.org/afex/hystrix-go.png?branch=master)](https://travis-ci.org/afex/hystrix-go)\n[![GoDoc Documentation](http://godoc.org/github.com/afex/hystrix-go/hystrix?status.png)](https://godoc.org/github.com/afex/hystrix-go/hystrix)\n\n[Hystrix](https://github.com/Netflix/Hystrix) is a great project from Netflix.\n\n> Hystrix is a latency and fault tolerance library designed to isolate points of access to remote systems, services and 3rd party libraries, stop cascading failure and enable resilience in complex distributed systems where failure is inevitable.\n\nI think the Hystrix patterns of programmer-defined fallbacks and adaptive health monitoring are good for any distributed system. Go routines and channels are great concurrency primitives, but don't directly help our application stay available during failures.\n\nhystrix-go aims to allow Go programmers to easily build applications with similar execution semantics of the Java-based Hystrix library.\n\nFor more about how Hystrix works, refer to the [Java Hystrix wiki](https://github.com/Netflix/Hystrix/wiki)\n\nFor API documentation, refer to [GoDoc](https://godoc.org/github.com/afex/hystrix-go/hystrix)\n\nHow to use\n----------\n\n```go\nimport \"github.com/afex/hystrix-go/hystrix\"\n```\n\n### Execute code as a Hystrix command\n\nDefine your application logic which relies on external systems, passing your function to ```hystrix.Go```. When that system is healthy this will be the only thing which executes.\n\n```go\nhystrix.Go(\"my_command\", func() error {\n\t// talk to other services\n\treturn nil\n}, nil)\n```\n\n### Defining fallback behavior\n\nIf you want code to execute during a service outage, pass in a second function to ```hystrix.Go```. Ideally, the logic here will allow your application to gracefully handle external services being unavailable.\n\nThis triggers when your code returns an error, or whenever it is unable to complete based on a [variety of health checks](https://github.com/Netflix/Hystrix/wiki/How-it-Works).\n\n```go\nhystrix.Go(\"my_command\", func() error {\n\t// talk to other services\n\treturn nil\n}, func(err error) error {\n\t// do this when services are down\n\treturn nil\n})\n```\n\n### Waiting for output\n\nCalling ```hystrix.Go``` is like launching a goroutine, except you receive a channel of errors you can choose to monitor.\n\n```go\noutput := make(chan bool, 1)\nerrors := hystrix.Go(\"my_command\", func() error {\n\t// talk to other services\n\toutput <- true\n\treturn nil\n}, nil)\n\nselect {\ncase out := <-output:\n\t// success\ncase err := <-errors:\n\t// failure\n}\n```\n\n### Synchronous API\n\nSince calling a command and immediately waiting for it to finish is a common pattern, a synchronous API is available with the `hystrix.Do` function which returns a single error.\n\n```go\nerr := hystrix.Do(\"my_command\", func() error {\n\t// talk to other services\n\treturn nil\n}, nil)\n```\n\n### Configure settings\n\nDuring application boot, you can call ```hystrix.ConfigureCommand()``` to tweak the settings for each command.\n\n```go\nhystrix.ConfigureCommand(\"my_command\", hystrix.CommandConfig{\n\tTimeout:               1000,\n\tMaxConcurrentRequests: 100,\n\tErrorPercentThreshold: 25,\n})\n```\n\nYou can also use ```hystrix.Configure()``` which accepts a ```map[string]CommandConfig```.\n\n### Enable dashboard metrics\n\nIn your main.go, register the event stream HTTP handler on a port and launch it in a goroutine.  Once you configure turbine for your [Hystrix Dashboard](https://github.com/Netflix/Hystrix/tree/master/hystrix-dashboard) to start streaming events, your commands will automatically begin appearing.\n\n```go\nhystrixStreamHandler := hystrix.NewStreamHandler()\nhystrixStreamHandler.Start()\ngo http.ListenAndServe(net.JoinHostPort(\"\", \"81\"), hystrixStreamHandler)\n```\n\n### Send circuit metrics to Statsd\n\n```go\nc, err := plugins.InitializeStatsdCollector(&plugins.StatsdCollectorConfig{\n\tStatsdAddr: \"localhost:8125\",\n\tPrefix:     \"myapp.hystrix\",\n})\nif err != nil {\n\tlog.Fatalf(\"could not initialize statsd client: %v\", err)\n}\n\nmetricCollector.Registry.Register(c.NewStatsdCollector)\n```\n\nFAQ\n---\n\n**What happens if my run function panics? Does hystrix-go trigger the fallback?**\n\nNo. hystrix-go does not use ```recover()``` so panics will kill the process like normal.\n\nBuild and Test\n--------------\n\n- Install vagrant and VirtualBox\n- Clone the hystrix-go repository\n- Inside the hystrix-go directory, run ```vagrant up```, then ```vagrant ssh```\n- ```cd /go/src/github.com/afex/hystrix-go```\n- ```go test ./...```\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 0.3564453125,
+          "content": "Vagrant.configure(\"2\") do |config|\n\tconfig.vm.box = \"ubuntu/trusty64\"\n\tconfig.vm.hostname = 'hystrix-go.local'\n\n\tconfig.vm.provision :shell, :path => \"scripts/vagrant.sh\"\n\t\n\tconfig.vm.synced_folder \".\", \"/go/src/github.com/afex/hystrix-go\"\n\n\tconfig.vm.provider \"virtualbox\" do |v|\n\t\tv.cpus = 3\n\tend\n\n\tconfig.vm.network \"forwarded_port\", guest: 8888, host: 8888\nend\n"
+        },
+        {
+          "name": "hystrix",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "loadtest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "plugins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
