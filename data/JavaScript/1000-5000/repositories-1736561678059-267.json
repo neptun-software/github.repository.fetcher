@@ -1,0 +1,40 @@
+{
+  "metadata": {
+    "timestamp": 1736561678059,
+    "page": 267,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Tencent/westore",
+      "stars": 4249,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0673828125,
+          "content": "/packages/*/node_modules\n/packages/westore-omi\n.DS_Store\n/*/.DS_Store"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.435546875,
+          "content": "# Westore - 小程序MVVM分层架构\n\n* **Object-Oriented Programming:** Westore 强制小程序使用面向对象程序设计，开发者起手不是直接写页面，而是使用职责驱动设计 (Responsibility-Driven Design)的方式抽象出类、类属性和方法以及类之间的关联关系。\n* **Write Once, Use Anywhere(Model):** 通过面向对象分析设计出的 Model 可以表达整个业务模型，开发者可移植 100% 的 Model 代码不带任何改动到其他环境，并使用其他渲染技术承载项目的 View，比如小程序WebView、小游戏、Web浏览器、Canvas、WebGL。\n* **Passive View:** Westore 架构下的 View 非常薄，没有参杂任何业务逻辑，只做被动改变。\n* **Simple and Intuitive:** Westore 内部使用 deepClone + dataDiff 换取最短路径 `setData` 和更符合直觉的编程体验，只需 `update`，不需要再使用 `setData`。\n* **Testability:** View 和 Model 之间没有直接依赖，开发者能够借助模拟对象注入测试两者中的任一方。\n\n![](./assets/westore.png)\n\nWestore 架构和 MVP(Model-View-Presenter) 架构很相似:\n\n* View 和 Store 是双向通讯，View 和 Store 互相引用\n* View 与 Model 不发生联系，都通过 Store 传递\n* Store 引用 Model 里对象的实例，Model 不依赖 Store\n* View 非常薄，不部署任何业务逻辑，称为\"被动视图\"（Passive View），即没有任何主动性\n* Store 非常薄，只复杂维护 View 需要的数据和桥接 View 和 Model\n* Model 非常厚，所有逻辑都部署在那里，Model 可以脱离 Store 和 View 完整表达所有业务/游戏逻辑\n\nStore 层可以理解成 **中介者模式** 中的中介者，使 View 和 Model 之间的多对多关系数量减少为 0，负责中转控制视图对象 View 和模型对象 Model 之间的交互。\n\n随着小程序承载的项目越来越复杂，合理的架构可以提升小程序的扩展性和维护性。把逻辑写到 Page/Component 是一种罪恶，当业务逻辑变得复杂的时候 Page/Component 会变得越来越臃肿难以维护，每次需求变更如履薄冰， westore 定义了一套合理的小程序架构适用于任何复杂度的小程序，让项目底座更健壮，易维护可扩展。\n\n## 安装\n\n```bash\nnpm i westore --save\n```\n\nnpm 相关问题参考：[小程序官方文档: npm 支持](https://developers.weixin.qq.com/miniprogram/dev/devtools/npm.html)\n\n## Packages\n\n| **项目**                         | **描述**                           |\n| ------------------------------- | ----------------------------------- |\n| [westore](https://github.com/Tencent/westore/tree/master/packages/westore)  | westore 的核心代码 |\n| [westore-example](https://github.com/Tencent/westore/tree/master/packages/westore-example) | westore 官方例子|\n| [westore-example-ts](https://github.com/Tencent/westore/tree/master/packages/westore-example-ts)|  westore 官方例子(ts+scss) |\n\n## 举个例子\n\n<img src=\"./assets/home-demo.png\" width=\"400px\">\n\n其类图如下所示：\n\n<img src=\"./assets/class-diagram.png\" width=\"800px\">\n\n```js\n// 平台无关的 Model\nimport Counter from '../models/counter'\n// 平台无关的 Model\nimport User  from '../models/user'\nimport { Store }  from 'westore'\n\n// 页面 store，一个页面一个\nclass HomeStore extends Store {\n  constructor() {\n    super()\n    this.data = {\n      count: 0,\n      motto: 'Hello World',\n      userInfo: null\n    }\n    // 消费 Model\n    this.counter = new Counter()\n    // 消费 Model\n    this.user = new User({\n      onUserInfoLoaded: () => {\n        this.syncUserModel()\n      }\n    })\n    this.syncCountModel()\n  }\n\n  // 同步 Model 的数据到 ViewModel 并更新视图\n  syncCountModel () {\n    this.data.count = this.counter.count\n    this.update()\n  }\n\n  // 同步 Model 的数据到 ViewModel 并更新视图 \n  syncUserModel () {\n    this.data.motto = this.user.motto\n    this.data.userInfo = this.user.userInfo\n    this.update()\n  }\n\n  increment() {\n    this.counter.increment()\n    this.syncCountModel()\n  }\n\n  decrement() {\n    this.counter.decrement()\n    this.syncCountModel()\n  }\n\n  getUserProfile() {\n    this.user.getUserProfile()\n  }\n}\n\nmodule.exports = new HomeStore\n```\n\n通用 Model 是框架无关的，对于这样简单的程序甚至不值得把这种逻辑分开，但是随着需求的膨胀你会发现这么做带来的巨大好处。所以下面举一个复杂一点点的例子。\n\n## 贪吃蛇案例\n\n游戏截图：\n\n<img src=\"./assets/snake-game.jpg\" width=\"300px\">\n\n设计类图：\n\n![](./assets/snake.png)\n\n图中浅蓝色的部分可以在小程序贪吃蛇、小游戏贪吃蛇和Web贪吃蛇项目复用，不需要更改一行代码。\n\n## TodoApp 案例\n\n应用截图:\n\n<img src=\"./assets/todo-app.jpg\" width=\"250px\">\n\n设计类图：\n\n![](./assets/todo-app-class.png)\n\n图中浅蓝色的部分可以在小程序 TodoApp 和 Web TodoApp项目复用，不需要更改一行代码。\n\n## 官方案例\n\n官方例子把**贪吃蛇**和**TodoApp**做进了一个小程序目录如下:\n\n```\n├─ models    // 业务模型实体\n│   └─ snake-game\n│       ├─ game.js\n│       └─ snake.js   \n│  \n│  ├─ log.js\n│  ├─ todo.js   \n│  └─ user.js   \n│\n├─ pages     // 页面\n│  ├─ game\n│  ├─ index\n│  ├─ logs   \n│  └─ other.js  \n│\n├─ stores    // 页面的数据逻辑，page 和 models 的桥接器\n│  ├─ game-store.js   \n│  ├─ log-store.js      \n│  ├─ other-store.js    \n│  └─ user-store.js   \n│\n├─ utils\n\n```\n\n详细代码[点击这里](https://github.com/Tencent/westore/tree/master/packages/westore-example)\n\n扫码体验:\n\n<img src=\"./assets/mp.jpg\" width=\"200px\">\n\n## 原理\n\n### setData 去哪了？\n\n回答 **setData 去哪了？** 之前先要思考为什么 westore 封装了这个 api，让用户不直接使用。在小程序中，通过 `setData` 改变视图。\n\n```js\nthis.setData({\n  'array[0].text':'changed text'\n})\n```\n\n但是符合直觉的编程体验是:\n\n```js\nthis.data.array[0].text = 'changed text'\n```\n\n如果 data 不是响应式的，需要手动 update:\n\n```js\nthis.data.array[0].text = 'changed text'\nthis.update()\n```\n\n上面的编程体验是符合直觉且对开发者更友好的。所以 westore 隐藏了 setData 不直接暴露给开发者，而是内部使用 diffData 出最短更新路径，暴露给开发者的只有 update 方法。\n\n### Diff Data\n\n先看一下 westore [diffData](https://github.com/Tencent/westore/blob/master/packages/westore/index.esm.js#L6-L12) 的能力:\n\n``` js\ndiff({\n    a: 1, b: 2, c: \"str\", d: { e: [2, { a: 4 }, 5] }, f: true, h: [1], g: { a: [1, 2], j: 111 }\n}, {\n    a: [], b: \"aa\", c: 3, d: { e: [3, { a: 3 }] }, f: false, h: [1, 2], g: { a: [1, 1, 1], i: \"delete\" }, k: 'del'\n})\n```\n\nDiff 的结果是:\n\n``` js\n{ \"a\": 1, \"b\": 2, \"c\": \"str\", \"d.e[0]\": 2, \"d.e[1].a\": 4, \"d.e[2]\": 5, \"f\": true, \"h\": [1], \"g.a\": [1, 2], \"g.j\": 111, \"g.i\": null, \"k\": null }\n```\n\n![diff](./assets/diff.jpg)\n\nDiff 原理:\n\n* 同步所有 key 到当前 store.data\n* 携带 path 和 result 递归遍历对比所有 key value\n\n``` js\nexport function diffData(current, previous) {\n  const result = {}\n  if (!previous) return current\n  syncKeys(current, previous)\n  _diff(current, previous, '', result)\n  return result\n}\n```\n\n同步上一轮 state.data 的 key 主要是为了检测 array 中删除的元素或者 obj 中删除的 key。\n\n### Westore 实现细节\n\n![](./assets/westore-detail.png)\n\n提升编程体验的同时，也规避了每次 setData 都传递大量新数据的问题，因为每次 diff 之后的 patch 都是 setData 的最短路径更新。\n\n所以没使用 westore 的时候经常可以看到这样的代码:\n\n![not-westore](./assets/not-westore.png)\n\n使用完 westore 之后:\n\n```js\nthis.data.a.b[1].c = 'f'\nthis.update()\n```\n\n## 小结\n\n从目前来看，绝大部分的小程序项目都把业务逻辑堆积在小程序的 Page 构造函数里，可读性基本没有，给后期的维护带来了巨大的成本，westore 架构的目标把业务/游戏逻辑解耦出去，Page 就是纯粹的 Page，它只负责展示和接收用户的输入、点击、滑动、长按或者其他手势指令，把指令中转给 store，store 再去调用真正的程序逻辑 model，这种分层边界清晰，维护性、扩展性和可测试性极强，单个文件模块大小也能控制得非常合适。\n\n## 贡献者\n\n<a href=\"https://github.com/Tencent/westore/graphs/contributors\">\n  <img src=\"https://contrib.rocks/image?repo=Tencent/westore\" />\n</a>\n\n\n## License\n\nMIT \n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packages",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

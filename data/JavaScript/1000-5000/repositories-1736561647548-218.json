@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "timestamp": 1736561647548,
+    "page": 218,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "zaach/jison",
+      "stars": 4362,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0830078125,
+          "content": ".DS_Store\nnode_modules\n\n# Editor backup files\n*.bak\n*~\nweb/content/assets/js/jison.js"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "src/\nweb/\nexamples/\nports/"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.03515625,
+          "content": "language: node_js\nnode_js:\n  - 0.10\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.5146484375,
+          "content": "Contributing to Jison\n=======\n\nFork, make your changes, run tests and/or add tests then send a pull request.\n\n## Running tests\n\nPrerequesites: `node` and `npm`.\n\nFirst run:\n\n    npm install\n\nThen run tests with:\n\n    make test\n\n## Building the site\n\nTo build the site, as well as the Browserified web version of Jison, run:\n\n    make site\n    \nThen you can also preview the site by doing:\n\n    make preview\n    \nNote that you will need `nanoc` and `adsf` in order to build/preview the site. `gem install` them if you haven't.\n\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.466796875,
+          "content": "\nall: test\n\nsite:\n\t./node_modules/.bin/browserify entry.js --exports require | ./node_modules/.bin/uglifyjs > web/content/assets/js/jison.js\n\tcd web/ && nanoc compile\n\tcp -r examples web/output/jison/\n\npreview:\n\tcd web/ && nanoc view &\n\topen http://localhost:3000/jison/\n\ndeploy:\n\trm -r ../pages/jison/*\n\tcp -r web/output/jison/* ../pages/jison/\n\tcd ../pages/jison && git add . && git commit -m 'Deploy site updates' && git push origin gh-pages\n\ntest:\n\tnode tests/all-tests.js\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.802734375,
+          "content": "Jison\n=====\n* [issues](http://github.com/zaach/jison/issues)\n* [discuss](mailto:jison@librelist.com)\n\n[![build status](https://travis-ci.org/zaach/jison.svg)](http://travis-ci.org/zaach/jison)\n\nAn API for creating parsers in JavaScript\n-----------------------------------------\n\nJison generates bottom-up parsers in JavaScript. Its API is similar to Bison's, hence the name. It supports many of Bison's major features, plus some of its own. If you are new to parser generators such as Bison, and Context-free Grammars in general, a [good introduction][1] is found in the Bison manual. If you already know Bison, Jison should be easy to pickup.\n\nBriefly, Jison takes a JSON encoded grammar or Bison style grammar and outputs a JavaScript file capable of parsing the language described by that grammar. You can then use the generated script to parse inputs and accept, reject, or perform actions based on the input.\n\nInstallation\n------------\nJison can be installed for [Node](http://nodejs.org) using [`npm`](http://github.com/isaacs/npm/)\n\nUsing npm:\n\n    npm install jison -g\n\nUsage from the command line\n-----------------------\n\nClone the github repository for examples:\n\n    git clone git://github.com/zaach/jison.git\n    cd jison/examples\n\nNow you're ready to generate some parsers:\n\n    jison calculator.jison\n\nThis will generate `calculator.js` in your current working directory. This file can be used to parse an input file, like so:\n\n    echo \"2^32 / 1024\" > testcalc\n    node calculator.js testcalc\n\nThis will print out `4194304`.\n\nFull cli option list:\n\n    Usage: jison [file] [lexfile] [options]\n\n    file        file containing a grammar\n    lexfile     file containing a lexical grammar\n\n    Options:\n       -j, --json                    force jison to expect a grammar in JSON format\n       -o FILE, --outfile FILE       Filename and base module name of the generated parser\n       -t, --debug                   Debug mode\n       -m TYPE, --module-type TYPE   The type of module to generate (commonjs, amd, js)\n       -p TYPE, --parser-type TYPE   The type of algorithm to use for the parser (lr0, slr, lalr, lr)\n       -V, --version                 print version and exit\n\n\nUsage from a CommonJS module\n--------------------------\n\nYou can generate parsers programatically from JavaScript as well. Assuming Jison is in your commonjs environment's load path:\n\n```javascript\n// mygenerator.js\nvar Parser = require(\"jison\").Parser;\n\n// a grammar in JSON\nvar grammar = {\n    \"lex\": {\n        \"rules\": [\n           [\"\\\\s+\", \"/* skip whitespace */\"],\n           [\"[a-f0-9]+\", \"return 'HEX';\"]\n        ]\n    },\n\n    \"bnf\": {\n        \"hex_strings\" :[ \"hex_strings HEX\",\n                         \"HEX\" ]\n    }\n};\n\n// `grammar` can also be a string that uses jison's grammar format\nvar parser = new Parser(grammar);\n\n// generate source, ready to be written to disk\nvar parserSource = parser.generate();\n\n// you can also use the parser directly from memory\n\n// returns true\nparser.parse(\"adfe34bc e82a\");\n\n// throws lexical error\nparser.parse(\"adfe34bc zxg\");\n```\n\nMore Documentation\n------------------\nFor more information on creating grammars and using the generated parsers, read the [documentation](http://jison.org/docs).\n\nHow to contribute\n-----------------\n\nSee [CONTRIBUTING.md](https://github.com/zaach/jison/blob/master/CONTRIBUTING.md) for contribution guidelines, how to run the tests, etc.\n\nProjects using Jison\n------------------\n\nView them on the [wiki](https://github.com/zaach/jison/wiki/ProjectsUsingJison), or add your own.\n\n\nContributors\n------------\n[Githubbers](http://github.com/zaach/jison/contributors)\n\nSpecial thanks to Jarred Ligatti, Manuel E. Bermúdez \n\nLicense\n-------\n\n> Copyright (c) 2009-2014 Zachary Carter\n> \n>  Permission is hereby granted, free of\n> charge, to any person  obtaining a\n> copy of this software and associated\n> documentation  files (the \"Software\"),\n> to deal in the Software without \n> restriction, including without\n> limitation the rights to use,  copy,\n> modify, merge, publish, distribute,\n> sublicense, and/or sell  copies of the\n> Software, and to permit persons to\n> whom the  Software is furnished to do\n> so, subject to the following \n> conditions:\n> \n>  The above copyright notice and this\n> permission notice shall be  included\n> in all copies or substantial portions\n> of the Software.\n> \n>  THE SOFTWARE IS PROVIDED \"AS IS\",\n> WITHOUT WARRANTY OF ANY KIND,  EXPRESS\n> OR IMPLIED, INCLUDING BUT NOT LIMITED\n> TO THE WARRANTIES  OF MERCHANTABILITY,\n> FITNESS FOR A PARTICULAR PURPOSE AND \n> NONINFRINGEMENT. IN NO EVENT SHALL THE\n> AUTHORS OR COPYRIGHT  HOLDERS BE\n> LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n> LIABILITY,  WHETHER IN AN ACTION OF\n> CONTRACT, TORT OR OTHERWISE, ARISING \n> FROM, OUT OF OR IN CONNECTION WITH THE\n> SOFTWARE OR THE USE OR  OTHER DEALINGS\n> IN THE SOFTWARE.\n\n\n  [1]: http://dinosaur.compilertools.net/bison/bison_4.html\n\n"
+        },
+        {
+          "name": "entry.js",
+          "type": "blob",
+          "size": 0.064453125,
+          "content": "\nJison = require('./lib/jison.js');\nbnf = require('ebnf-parser');\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "{\n  \"author\": \"Zach Carter <zach@carter.name> (http://zaa.ch)\",\n  \"name\": \"jison\",\n  \"description\": \"A parser generator with Bison's API\",\n  \"version\": \"0.4.18\",\n  \"license\": \"MIT\",\n  \"keywords\": [\n    \"jison\",\n    \"bison\",\n    \"yacc\",\n    \"parser\",\n    \"generator\",\n    \"lexer\",\n    \"flex\",\n    \"tokenizer\",\n    \"compiler\"\n  ],\n  \"preferGlobal\": true,\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/zaach/jison.git\"\n  },\n  \"bugs\": {\n    \"email\": \"jison@librelist.com\",\n    \"url\": \"http://github.com/zaach/jison/issues\"\n  },\n  \"main\": \"lib/jison\",\n  \"bin\": \"lib/cli.js\",\n  \"engines\": {\n    \"node\": \">=0.4\"\n  },\n  \"dependencies\": {\n    \"JSONSelect\": \"0.4.0\",\n    \"esprima\": \"1.1.x\",\n    \"escodegen\": \"1.3.x\",\n    \"jison-lex\": \"0.3.x\",\n    \"ebnf-parser\": \"0.1.10\",\n    \"lex-parser\": \"~0.1.3\",\n    \"nomnom\": \"1.5.2\",\n    \"cjson\": \"0.3.0\"\n  },\n  \"devDependencies\": {\n    \"test\": \"0.6.x\",\n    \"jison\": \"0.4.x\",\n    \"uglify-js\": \"~2.4.0\",\n    \"browserify\": \"2.x.x\"\n  },\n  \"scripts\": {\n    \"test\": \"node tests/all-tests.js\"\n  },\n  \"homepage\": \"http://jison.org\"\n}\n"
+        },
+        {
+          "name": "ports",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

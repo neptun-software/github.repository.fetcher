@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "timestamp": 1736561678514,
+    "page": 268,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "vadimdemedes/tailwind-rn",
+      "stars": 4244,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "root = true\n\n[*]\nindent_style = tab\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.yml]\nindent_style = space\nindent_size = 2\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "* text=auto eol=lf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.02734375,
+          "content": "dist\nnode_modules\nyarn.lock\n"
+        },
+        {
+          "name": ".npmrc",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "package-lock=false\n"
+        },
+        {
+          "name": "header.jpg",
+          "type": "blob",
+          "size": 274.029296875,
+          "content": null
+        },
+        {
+          "name": "license",
+          "type": "blob",
+          "size": 1.0869140625,
+          "content": "MIT License\n\nCopyright (c) Vadim Demedes <vdemedes@gmail.com> (https://vadimdemedes.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "migrate.md",
+          "type": "blob",
+          "size": 4.001953125,
+          "content": "# Migrate from v3.x\n\nBefore you start migrating `tailwind-rn` to the latest version, make sure to read the [release notes](https://github.com/tailwindlabs/tailwindcss/releases/tag/v3.0.0) of Tailwind 3.0 first.\nThen follow the [instructions](readme.md#getting-started) to set up latest `tailwind-rn`.\n\nThis document assumes you've done the steps above and describes what's needed to migrate the code to use the API from 4.x.\n\nHere's a brief overview of what kind of changes you can expect.\n\nBefore:\n\n```jsx\nimport {SafeAreaView, View, Text} from 'react-native';\nimport tailwind from 'tailwind-rn';\n\nconst App = () => (\n\t<SafeAreaView style={tailwind('h-full')}>\n\t\t<View style={tailwind('pt-12 items-center')}>\n\t\t\t<View style={tailwind('bg-blue-200 px-3 py-1 rounded-full')}>\n\t\t\t\t<Text style={tailwind('text-blue-800 font-semibold')}>\n\t\t\t\t\tHello Tailwind\n\t\t\t\t</Text>\n\t\t\t</View>\n\t\t</View>\n\t</SafeAreaView>\n);\n\nexport default App;\n```\n\nAfter:\n\n```jsx\nimport {SafeAreaView, View, Text} from 'react-native';\nimport {TailwindProvider, useTailwind} from 'tailwind-rn';\nimport utilities from './tailwind.json';\n\nconst App = () => {\n\tconst tailwind = useTailwind();\n\n\treturn (\n\t\t<SafeAreaView style={tailwind('h-full')}>\n\t\t\t<View style={tailwind('pt-12 items-center')}>\n\t\t\t\t<View style={tailwind('bg-blue-200 px-3 py-1 rounded-full')}>\n\t\t\t\t\t<Text style={tailwind('text-blue-800 font-semibold')}>\n\t\t\t\t\t\tHello Tailwind\n\t\t\t\t\t</Text>\n\t\t\t\t</View>\n\t\t\t</View>\n\t\t</SafeAreaView>\n\t);\n};\n\nconst Root = () => (\n\t<TailwindProvider utilities={utilities}>\n\t\t<App />\n\t</TailwindProvider>\n);\n\nexport default Root;\n```\n\n## 1. Wrap your app with `TailwindProvider`\n\n`TailwindProvider` is used to make Tailwind utilities available to children components. It's recommended to wrap your root app components with it.\nIt accepts `utilities` property, which should be a parsed JSON object of `tailwind.json` file contents.\n\n```jsx\nimport {TailwindProvider} from 'tailwind-rn';\nimport utilities from './utilities.json';\n\nconst App = () => (\n\t<TailwindProvider utilities={utilities}>\n\t\t<MyComponent />\n\t</TailwindProvider>\n);\n```\n\n## 2. Update how styles are applied\n\nFollowing the release of Tailwind 3.0, `tailwind-rn` also supports JIT mode only.\nThis means that there's no `tailwind` function with a default build of Tailwind exported from `tailwind-rn`.\nInstead, new `tailwind-rn` exposes a `useTailwind` React hook, which returns the `tailwind` function, similar to the one in 3.x version.\n\nBefore:\n\n```jsx\nimport tailwind from 'tailwind-rn';\n\nconst MyComponent = () => {\n\treturn <Text style={tailwind('text-blue-600')}>Hello world</Text>;\n};\n```\n\nAfter:\n\n```jsx\nimport {useTailwind} from 'tailwind-rn';\n\nconst MyComponent = () => {\n\tconst tailwind = useTailwind();\n\n\treturn <Text style={tailwind('text-blue-600')}>Hello world</Text>;\n};\n```\n\n## 3. Remove code for a custom configuration\n\nLatest `tailwind-rn` supports custom configuration of Tailwind out of the box, so there's no additional steps needed to configure it.\nThis means that you should remove `styles.json` file from the root of your project and delete code using the [`create`](https://github.com/vadimdemedes/tailwind-rn/blob/9f977e82910d916c5a8684eb6d8b423b6130d785/readme.md#createstyles) function, because it's no longer available.\nAll your custom styles will automatically become available through `useTailwind` React hook.\n\n## 4. Remove usage of `getColor` function\n\nThere's no longer [`getColor`](https://github.com/vadimdemedes/tailwind-rn/blob/9f977e82910d916c5a8684eb6d8b423b6130d785/readme.md#getcolorcolor) function exported from `tailwind-rn`.\nThis means that you need to update the code to extract Tailwind colors in a different way.\n\nBefore:\n\n```jsx\nimport {getColor} from 'tailwind-rn';\n\nconst MyComponent = () => {\n\tconst color = getColor('blue-500 opacity-50');\n\n\treturn <Text style={{color}}>Hello world</Text>;\n};\n```\n\nAfter:\n\n```jsx\nimport {useTailwind} from 'tailwind-rn';\n\nconst MyComponent = () => {\n\tconst tailwind = useTailwind();\n\tconst {color} = tailwind('text-blue-500/50');\n\n\treturn <Text style={{color}}>Hello world</Text>;\n};\n```\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.71875,
+          "content": "{\n\t\"name\": \"tailwind-rn\",\n\t\"version\": \"4.2.0\",\n\t\"description\": \"Use Tailwind CSS in React Native projects\",\n\t\"license\": \"MIT\",\n\t\"repository\": \"vadimdemedes/tailwind-rn\",\n\t\"author\": {\n\t\t\"name\": \"Vadim Demedes\",\n\t\t\"email\": \"vdemedes@gmail.com\",\n\t\t\"url\": \"https://vadimdemedes.com\"\n\t},\n\t\"main\": \"dist\",\n\t\"bin\": {\n\t\t\"tailwind-rn\": \"dist/cli.js\"\n\t},\n\t\"engines\": {\n\t\t\"node\": \">=12\"\n\t},\n\t\"scripts\": {\n\t\t\"build\": \"tsc\",\n\t\t\"test\": \"xo && tsc && ava\"\n\t},\n\t\"files\": [\n\t\t\"dist\",\n\t\t\"unsupported-core-plugins.js\"\n\t],\n\t\"keywords\": [\n\t\t\"tailwind\",\n\t\t\"tailwindcss\",\n\t\t\"react-native\"\n\t],\n\t\"dependencies\": {\n\t\t\"@react-native-community/hooks\": \"^2.8.1\",\n\t\t\"chokidar\": \"^3.5.2\",\n\t\t\"color-string\": \"^1.9.0\",\n\t\t\"css\": \"^3.0.0\",\n\t\t\"css-mediaquery\": \"^0.1.2\",\n\t\t\"css-to-react-native\": \"^3.0.0\",\n\t\t\"meow\": \"^7.0.1\"\n\t},\n\t\"devDependencies\": {\n\t\t\"@sindresorhus/tsconfig\": \"^0.9.0\",\n\t\t\"@types/color-string\": \"^1.5.2\",\n\t\t\"@types/css\": \"^0.0.33\",\n\t\t\"@types/css-mediaquery\": \"^0.1.1\",\n\t\t\"@types/css-to-react-native\": \"^3.0.0\",\n\t\t\"@types/react\": \"^17.0.38\",\n\t\t\"@types/react-native\": \"^0.66.11\",\n\t\t\"@vdemedes/prettier-config\": \"^1.0.1\",\n\t\t\"ava\": \"^4.0.0\",\n\t\t\"dataloader\": \"^2.0.0\",\n\t\t\"delay\": \"^5.0.0\",\n\t\t\"execa\": \"^5.1.1\",\n\t\t\"postcss\": \"^8.4.5\",\n\t\t\"prettier\": \"^2.5.1\",\n\t\t\"react\": \"^17.0.2\",\n\t\t\"react-test-renderer\": \"^17.0.2\",\n\t\t\"tailwindcss\": \"^3.0.11\",\n\t\t\"tempy\": \"^1.0.1\",\n\t\t\"typescript\": \"^4.5.4\",\n\t\t\"xo\": \"^0.39.1\"\n\t},\n\t\"peerDependencies\": {\n\t\t\"react-native\": \"*\",\n\t\t\"tailwindcss\": \"^3.0.0\"\n\t},\n\t\"prettier\": \"@vdemedes/prettier-config\",\n\t\"xo\": {\n\t\t\"prettier\": true,\n\t\t\"rules\": {\n\t\t\t\"import/extensions\": \"off\",\n\t\t\t\"import/no-extraneous-dependencies\": [\n\t\t\t\t\"error\",\n\t\t\t\t{\n\t\t\t\t\t\"peerDependencies\": true\n\t\t\t\t}\n\t\t\t]\n\t\t},\n\t\t\"settings\": {\n\t\t\t\"import/ignore\": [\n\t\t\t\t\"react-native\"\n\t\t\t]\n\t\t}\n\t}\n}\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 9.357421875,
+          "content": "[![](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://github.com/vshymanskyy/StandWithUkraine/blob/main/docs/README.md)\n\n---\n\n# tailwind-rn ![Status](https://github.com/vadimdemedes/tailwind-rn/workflows/test/badge.svg)\n\n> Use [Tailwind](https://tailwindcss.com) in [React Native](https://reactnative.dev) projects\n\n![](header.jpg)\n\nAll styles are generated directly from Tailwind's output, so they're always up-to-date.\n\n- JIT mode\n- Responsive breakpoints (e.g. `sm`, `md`, `lg`)\n- Dark mode\n- Custom configuration\n\n[Migrating from v3.x?](migrate.md)\n\n---\n\n## Install\n\n```\n$ npm install tailwind-rn\n```\n\n## Getting Started\n\nRun the following command to automatically add `tailwind-rn` to your React Native project:\n\n```\n$ npx setup-tailwind-rn\n```\n\nIt will do most of the setup for you, but you'll have to follow a few more instructions from `setup-tailwind-rn` to finish the process.\n\n<details>\n<summary>Manual setup</summary>\n\n1. Install `tailwind-rn`.\n\n```\n$ npm install tailwind-rn\n```\n\n2. Install Tailwind and `concurrently`.\n\n```\n$ npm install --save-dev tailwindcss postcss concurrently\n```\n\n3. Create Tailwind config and necessary files.\n\n```\n$ npx tailwindcss init\n$ echo '@tailwind utilities;' > input.css\n```\n\nThese commands will create the following files:\n\n- **tailwind.config.js** - Tailwind configuration file.\n- **input.css** - Entrypoint for Tailwind compiler. It's required to override the output of Tailwind, so that it doesn't generate CSS for resetting browser styles, which will cause `tailwind-rn` to fail.\n\nDisable unsupported utilities by adding this line to your **tailwind.config.js**:\n\n```diff\nmodule.exports = {\n+\tcorePlugins: require('tailwind-rn/unsupported-core-plugins')\n};\n```\n\nMake sure to configure [`content`](https://tailwindcss.com/docs/content-configuration) part of the config in **tailwind.config.js** to point to your JavaScript files to speed up compilation.\n\n4. Add scripts to build Tailwind styles in package.json.\n\n```diff\n{\n\t\"scripts\": {\n+\t\t\"build:tailwind\": \"tailwindcss --input input.css --output tailwind.css --no-autoprefixer && tailwind-rn\",\n+\t\t\"dev:tailwind\": \"concurrently \\\"tailwindcss --input input.css --output tailwind.css --no-autoprefixer --watch\\\" \\\"tailwind-rn --watch\\\"\"\n\t}\n}\n```\n\n5. Build Tailwind styles in watch mode.\n\n```\n$ npm run dev:tailwind\n```\n\nAfter styles are built, you'll see two more files:\n\n- **tailwind.css** - CSS generated by Tailwind.\n- **tailwind.json** - The same CSS, but converted into JSON, so that `tailwind-rn` can understand it.\n\n6. Import [`TailwindProvider`](#tailwindprovider) and `tailwind.json` in the root of your app and wrap the root of your app with it:\n\n```jsx\nimport {TailwindProvider} from 'tailwind-rn';\nimport utilities from './tailwind.json';\n\nconst App = () => (\n\t<TailwindProvider utilities={utilities}>\n\t\t<MyComponent />\n\t</TailwindProvider>\n);\n\nexport default App;\n```\n\n7. Use Tailwind in React Native!\n\n```jsx\nimport {useTailwind} from 'tailwind-rn';\n\nconst MyComponent = () => {\n\tconst tailwind = useTailwind();\n\n\treturn <Text style={tailwind('text-blue-600')}>Hello world</Text>;\n};\n```\n\n</details>\n\n## Usage\n\nUse [`useTailwind`](#usetailwind) React hook and apply any of the [supported utilities](#supported-utilities) from Tailwind in your React Native views.\n\n```jsx\nimport React from 'react';\nimport {SafeAreaView, View, Text} from 'react-native';\nimport {useTailwind} from 'tailwind-rn';\n\nconst Hello = () => {\n\tconst tailwind = useTailwind();\n\n\treturn (\n\t\t<SafeAreaView style={tailwind('h-full')}>\n\t\t\t<View style={tailwind('pt-12 items-center')}>\n\t\t\t\t<View style={tailwind('bg-blue-200 px-3 py-1 rounded-full')}>\n\t\t\t\t\t<Text style={tailwind('text-blue-800 font-semibold')}>\n\t\t\t\t\t\tHello Tailwind\n\t\t\t\t\t</Text>\n\t\t\t\t</View>\n\t\t\t</View>\n\t\t</SafeAreaView>\n\t);\n};\n\nexport default Hello;\n```\n\n<img src=\"screenshot.jpg\" width=\"544\">\n\n`tailwind` function returns a simple object with styles, which can be used in any React Native view, such as `<View>`, `<Text>` and others.\n\n```js\ntailwind('pt-12 items-center');\n//=> {\n//     paddingTop: 48,\n//     alignItems: 'center'\n//   }\n```\n\n## CLI\n\n```\n$ tailwind-rn --help\n\n  Use Tailwind CSS in React Native projects\n\n  Usage\n    $ tailwind-rn [options]\n\n  Options\n    -i, --input    Path to CSS file that Tailwind generates (default: tailwind.css)\n    -o, --output   Output file (default: tailwind.json)\n    -w, --watch    Watch for changes and rebuild as needed\n\n```\n\nRun `tailwind-rn` CLI to transform the CSS generated by Tailwind into a JSON file that can be consumed by [`TailwindProvider`](#tailwindprovider). Add `--watch` flag to watch for changes and build styles continuously, which is useful for development.\n\n## API\n\n### TailwindProvider\n\n#### utilities\n\nType: `object`\n\nParsed JSON object of styles generated by `tailwind-rn` CLI stored in `tailwind.json` by default.\n\n```jsx\nimport {TailwindProvider} from 'tailwind-rn';\nimport utilities from './tailwind.json';\n\nconst App = () => (\n\t<TailwindProvider utilities={utilities}>\n\t\t<MyComponent />\n\t</TailwindProvider>\n);\n```\n\n#### colorScheme\n\nType: `string`\n\nOverride the default color scheme. Possible values are `light` or `dark`.\n\n```jsx\nimport {TailwindProvider} from 'tailwind-rn';\nimport utilities from './tailwind.json';\n\nconst App = () => (\n\t<TailwindProvider utilities={utilities} colorScheme=\"dark\">\n\t\t<MyComponent />\n\t</TailwindProvider>\n);\n```\n\n### useTailwind\n\nReact hook, which returns a `tailwind` function, that accepts a string with class names. This function returns an object of styles, which can be applied to a React Native view via `style` property.\n\n**Note:** Add [`TailwindProvider`](#tailwindprovider) above the component where you're using this hook.\n\n```jsx\nimport {useTailwind} from 'tailwind-rn';\n\nconst MyComponent = () => {\n\tconst tailwind = useTailwind();\n\n\treturn <Text style={tailwind('text-blue-600')}>Hello world</Text>;\n};\n```\n\n## Supported Utilities\n\n### Modifiers\n\n- [Responsive Breakpoints](https://tailwindcss.com/docs/responsive-design) (all except [multi-range breakpoints](https://tailwindcss.com/docs/responsive-design))\n- [Dark Mode](https://tailwindcss.com/docs/dark-mode)\n- [Prefers Reduced Motion](https://tailwindcss.com/docs/hover-focus-and-other-states#prefers-reduced-motion)\n- [Viewport Orientation](https://tailwindcss.com/docs/hover-focus-and-other-states#viewport-orientation)\n\n### Layout\n\n- [Display](https://tailwindcss.com/docs/display) (only `hidden` and `flex`)\n- [Overflow](https://tailwindcss.com/docs/overflow) (only `overflow-hidden`, `overflow-scroll` and `overflow-visible`)\n- [Position](https://tailwindcss.com/docs/position) (only `relative` and `absolute`)\n- [Top / Right / Bottom / Left](https://tailwindcss.com/docs/top-right-bottom-left) (all except `*-auto`)\n- [Z-Index](https://tailwindcss.com/docs/z-index) (all except `z-auto`)\n\n### Flexbox\n\n- [Flex Direction](https://tailwindcss.com/docs/flex-direction)\n- [Flex Wrap](https://tailwindcss.com/docs/flex-wrap)\n- [Align Items](https://tailwindcss.com/docs/align-items)\n- [Align Content](https://tailwindcss.com/docs/align-content)\n- [Align Self](https://tailwindcss.com/docs/align-self)\n- [Justify Content](https://tailwindcss.com/docs/justify-content)\n- [Flex](https://tailwindcss.com/docs/flex)\n- [Flex Grow](https://tailwindcss.com/docs/flex-grow)\n- [Flex Shrink](https://tailwindcss.com/docs/flex-shrink)\n\n### Spacing\n\n- [Padding](https://tailwindcss.com/docs/padding)\n- [Margin](https://tailwindcss.com/docs/margin)\n\n### Sizing\n\n- [Width](https://tailwindcss.com/docs/width) (all except `w-auto` and `w-screen`)\n- [Min-Width](https://tailwindcss.com/docs/min-width)\n- [Max-Width](https://tailwindcss.com/docs/max-width)\n- [Height](https://tailwindcss.com/docs/height) (all except `h-auto` and `h-screen`)\n- [Min-Height](https://tailwindcss.com/docs/min-height) (all except `min-h-screen`)\n- [Max-Height](https://tailwindcss.com/docs/max-height) (only `max-h-full`)\n\n### Typography\n\n- [Font Family](https://tailwindcss.com/docs/font-family) (only custom font families that you defined in `tailwind.config.js`)\n- [Font Size](https://tailwindcss.com/docs/font-size)\n- [Font Style](https://tailwindcss.com/docs/font-style)\n- [Font Weight](https://tailwindcss.com/docs/font-weight)\n- [Font Variant Numeric](https://tailwindcss.com/docs/font-variant-numeric) (only `oldstyle-nums`, `lining-nums`, `tabular-nums` and `proportional-nums`)\n- [Letter Spacing](https://tailwindcss.com/docs/letter-spacing) (must be used with font size utilities, e.g. `text-lg`)\n- [Line Height](https://tailwindcss.com/docs/line-height)\n- [Text Align](https://tailwindcss.com/docs/text-align)\n- [Text Color](https://tailwindcss.com/docs/text-color) (all except `text-current`)\n- [Text Decoration](https://tailwindcss.com/docs/text-decoration)\n- [Text Decoration Color](https://tailwindcss.com/docs/text-decoration-color)\n- [Text Decoration Style](https://tailwindcss.com/docs/text-decoration-style) (all except `decoration-wavy`)\n- [Text Transform](https://tailwindcss.com/docs/text-transform)\n\n### Backgrounds\n\n- [Background Color](https://tailwindcss.com/docs/background-color)\n\n### Borders\n\n- [Border Color](https://tailwindcss.com/docs/border-color)\n- [Border Style](https://tailwindcss.com/docs/border-style) (all except `border-current`)\n- [Border Width](https://tailwindcss.com/docs/border-width)\n- [Border Radius](https://tailwindcss.com/docs/border-radius)\n\n### Effects\n\n- [Opacity](https://tailwindcss.com/docs/opacity)\n\n### Interactivity\n\n- [Pointer Events](https://tailwindcss.com/docs/pointer-events)\n"
+        },
+        {
+          "name": "screenshot.jpg",
+          "type": "blob",
+          "size": 36.4052734375,
+          "content": null
+        },
+        {
+          "name": "source",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tsconfig.json",
+          "type": "blob",
+          "size": 0.1259765625,
+          "content": "{\n\t\"extends\": \"@sindresorhus/tsconfig\",\n\t\"compilerOptions\": {\n\t\t\"outDir\": \"dist\",\n\t\t\"target\": \"es2018\",\n\t\t\"lib\": [\"es2018\"]\n\t}\n}\n"
+        },
+        {
+          "name": "unsupported-core-plugins.js",
+          "type": "blob",
+          "size": 0.0673828125,
+          "content": "module.exports = require('./dist/unsupported-core-plugins').default;\n"
+        }
+      ]
+    }
+  ]
+}

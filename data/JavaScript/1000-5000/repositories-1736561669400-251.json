@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736561669400,
+    "page": 251,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "501351981/vue-office",
+      "stars": 4292,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1015625,
+          "content": "*.js linguist-language=JavaScript\n*.css linguist-language=JavaScript\n*.html linguist-language=JavaScript"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.21875,
+          "content": ".DS_Store\nnode_modules\n\n\n# local env files\n.env.local\n.env.*.local\n\n# Log files\nnpm-debug.log*\nyarn-debug.log*\nyarn-error.log*\npnpm-debug.log*\n\n# Editor directories and files\n.idea\n.vscode\n*.suo\n*.ntvs*\n*.njsproj\n*.sln\n*.sw?"
+        },
+        {
+          "name": ".nojekyll",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.40234375,
+          "content": "# vue-office\n\n支持多种文件(**docx、excel、pdf、pptx**)预览的vue组件库，支持vue2/3。也支持非Vue框架的预览。\n\n[《演示效果》](https://501351981.github.io/vue-office/examples/dist/)\n\n[《使用非Vue框架（原生js、React等）、或者Vue里面报错，看这里》](https://501351981.github.io/vue-office/examples/docs/guide/js-preview.html)\n## 功能特色\n- 一站式：提供word(.docx)、pdf、excel(.xlsx, .xls)、ppt(.pptx)多种文档的在线预览方案，有它就够了\n- 简单：只需提供文档的src(网络地址)即可完成文档预览\n- 体验好：选择每个文档的最佳预览方案，保证用户体验和性能都达到最佳状态\n- 性能好：针对数据量较大做了优化\n\n## 安装\n```shell\n#docx文档预览组件\nnpm install @vue-office/docx vue-demi@0.14.6\n\n#excel文档预览组件\nnpm install @vue-office/excel vue-demi@0.14.6\n\n#pdf文档预览组件\nnpm install @vue-office/pdf vue-demi@0.14.6\n\n#pptx文档预览组件\nnpm install @vue-office/pptx vue-demi@0.14.6\n```\n如果是vue2.6版本或以下还需要额外安装 @vue/composition-api\n```shell\nnpm install @vue/composition-api\n```\n\n## 使用示例\n\n文档预览场景大致可以分为三种：\n- 有文档CDN地址，比如 https://***.docx，将文档地址字符串传给组件的src属性\n- 通过接口请求获取文件内容，此时可以获取文件的ArrayBuffer或Blob格式数据传给组件的src属性\n- 文件上传时预览，此时可以获取文件的ArrayBuffer或Blob格式数据传给组件的src属性\n\n<details>\n<summary>docx文件预览示例 （三种使用方式均有示例）</summary>\n\n**1. 使用网络地址预览**\n```vue\n<template>\n    <vue-office-docx\n        :src=\"docx\"\n        style=\"height: 100vh;\"\n        @rendered=\"rendered\"\n    />\n</template>\n\n<script>\n//引入VueOfficeDocx组件\nimport VueOfficeDocx from '@vue-office/docx'\n//引入相关样式\nimport '@vue-office/docx/lib/index.css'\n\nexport default {\n    components:{\n        VueOfficeDocx\n    },\n    data(){\n        return {\n            docx: 'http://static.shanhuxueyuan.com/test6.docx' //设置文档网络地址，可以是相对地址\n        }\n    },\n    methods:{\n        rendered(){\n            console.log(\"渲染完成\")\n        }\n    }\n}\n</script>\n```\n\n**2. 上传文件预览**\n\n读取文件的ArrayBuffer\n```vue\n<template>\n    <div>\n        <input type=\"file\" @change=\"changeHandle\"/>\n        <vue-office-docx :src=\"src\"/>\n    </div>\n</template>\n\n<script>\nimport VueOfficeDocx from '@vue-office/docx'\nimport '@vue-office/docx/lib/index.css'\n\nexport default {\n    components: {\n        VueOfficeDocx\n    },\n    data(){\n        return {\n            src: ''\n        }\n    },\n    methods:{\n        changeHandle(event){\n            let file = event.target.files[0]\n            let fileReader = new FileReader()\n            fileReader.readAsArrayBuffer(file)\n            fileReader.onload =  () => {\n                this.src = fileReader.result\n            }\n        }\n    }\n}\n</script>\n```\n\n**3. 二进制文件预览**\n\n如果后端给的不是CDN地址，而是一些POST接口，该接口返回二进制流，则可以调用接口获取文件的ArrayBuffer数据，传递给src属性。\n\n```vue\n<template>\n    <vue-office-docx\n        :src=\"docx\"\n        style=\"height: 100vh;\"\n        @rendered=\"rendered\"\n    />\n</template>\n\n<script>\n//引入VueOfficeDocx组件\nimport VueOfficeDocx from '@vue-office/docx'\n//引入相关样式\nimport '@vue-office/docx/lib/index.css'\n\nexport default {\n    components:{\n        VueOfficeDocx\n    },\n    data(){\n        return {\n            docx: ''\n        }\n    },\n    mounted(){\n        fetch('你的API文件地址', {\n            method: 'post'\n        }).then(res=>{\n            //读取文件的arrayBuffer\n            res.arrayBuffer().then(res=>{\n                this.docx = res\n            })\n        })\n    },\n    methods:{\n        rendered(){\n            console.log(\"渲染完成\")\n        }\n    }\n}\n</script>\n```\n\n</details>\n\n<details>\n<summary>excel 文件预览示例 </summary>\n\n通过网络地址预览示例如下，通过文件ArrayBuffer预览和上面docx的使用方式一致。\n```vue\n<template>\n    <vue-office-excel\n        :src=\"excel\"\n        style=\"height: 100vh;\"\n        @rendered=\"renderedHandler\"\n        @error=\"errorHandler\"\n    />\n</template>\n\n<script>\n//引入VueOfficeExcel组件\nimport VueOfficeExcel from '@vue-office/excel'\n//引入相关样式\nimport '@vue-office/excel/lib/index.css'\n\nexport default {\n    components: {\n        VueOfficeExcel\n    },\n    data() {\n        return {\n            excel: 'http://static.shanhuxueyuan.com/demo/excel.xlsx'//设置文档地址\n        }\n    },\n    methods: {\n        renderedHandler() {\n            console.log(\"渲染完成\")\n        },\n        errorHandler() {\n            console.log(\"渲染失败\")\n        }\n    }\n}\n</script>\n```\n</details>\n\n<details>\n<summary>pdf 文件预览示例 </summary>\n\n通过网络地址预览示例如下，通过文件ArrayBuffer预览和上面docx的使用方式一致。\n```vue\n<template>\n    <vue-office-pdf\n        :src=\"pdf\"\n        style=\"height: 100vh\"\n        @rendered=\"renderedHandler\"\n        @error=\"errorHandler\"\n    />\n</template>\n\n<script>\n//引入VueOfficePdf组件\nimport VueOfficePdf from '@vue-office/pdf'\n\nexport default {\n    components: {\n        VueOfficePdf\n    },\n    data() {\n        return {\n            pdf: 'http://static.shanhuxueyuan.com/test.pdf' //设置文档地址\n        }\n    },\n    methods: {\n        renderedHandler() {\n            console.log(\"渲染完成\")\n        },\n        errorHandler() {\n            console.log(\"渲染失败\")\n        }\n    }\n}\n</script>\n```\n\n</details>\n\n\n<details>\n<summary>pptx 文件预览示例 </summary>\n\n通过网络地址预览示例如下，通过文件ArrayBuffer预览和上面docx的使用方式一致。\n```vue\n<template>\n    <vue-office-pptx\n        :src=\"pdf\"\n        style=\"height: 100vh\"\n        @rendered=\"renderedHandler\"\n        @error=\"errorHandler\"\n    />\n</template>\n\n<script>\nimport VueOfficePptx from '@vue-office/pptx'\n\nexport default {\n    components: {\n        VueOfficePptx\n    },\n    data() {\n        return {\n            pdf: 'http://****/test.pptx' //设置文档地址\n        }\n    },\n    methods: {\n        renderedHandler() {\n            console.log(\"渲染完成\")\n        },\n        errorHandler() {\n            console.log(\"渲染失败\")\n        }\n    }\n}\n</script>\n```\n\n</details>\n\n# 项目依赖的第三方库\n\n- docx： 基于docx-preview库实现，相关issues暂不处理\n- pdf： 基于pdfjs库实现，实现了虚拟列表增加性能\n- excel: 基于exceljs 和 x-data-spreadsheet实现，全网样式支持更好\n- pptx： 基于自研库 [pptx-preview](https://github.com/501351981/pptx-preview) 实现，源码单独付费向作者索取\n\n# 我要支持作者\n\n如果该项目帮到了您，节省了您宝贵的开发时间，还请您不吝给项目点个免费的赞。\n\n当然了，如果您能请作者喝杯咖啡，哪怕喝瓶娃娃哈矿泉水，也是对作者最真诚的鼓励，打赏用户欢迎添加微信，后续交流前端相关问题。\n\n![](https://501351981.github.io/vue-office/examples/dist/static/wx.png)\n\n如果您有问题要咨询或者解决，可打赏咨询作者，自2024年12月起，可能不会及时处理issues内容，作者也要吃饭，也面临大龄程序员困境。\n\n## 为什么没有开放源码（打赏50+送源码）\n\n我们都知道，如果一件事情没有收益，那是很难长久的，特别是对于一个大龄程序员来说，花费大量的时间\"用爱发电\"对大家来说是非常值得尊敬的，而我感觉对家庭来说可能是不道德的，没有收益，没有正反馈，很难把这个库完善下去，我们也看到了，很多开源库已经多年没有更新了。为了后续开发出更好用的前端office文件预览库，本项目需要大家的支持！\n\n源码需付费向作者索要（_**打赏50**+_），打赏用户（无论多少）均可添加作者微信，交流该库或者前端领域话题，源码不得用于开源（这也是关闭源码的原因之一，有些人直接复制开源作为自己项目）。\n\n## 掘金小册\n\n凝聚作者近10年工作经验的掘金小册[《如何写出高质量的前端代码》](https://juejin.cn/book/7351005935306801188) 已经上线啦，欢迎前端同学关注，希望能够提升大家的前端编码水平。\n\n小册已售 890+份，收到前端同学的高度评价，对提升日常开发效率和质量，有非常大的帮助。\n\n\n"
+        },
+        {
+          "name": "demo-cdn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demo-vue2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demo-vue3",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

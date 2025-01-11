@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "timestamp": 1736561556094,
+    "page": 95,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "developit/greenlet",
+      "stars": 4689,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.052734375,
+          "content": "/dist\n/node_modules\n/package-lock.json\n/npm-debug.log\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1376953125,
+          "content": "language: node_js\nnode_js:\n  - stable\ndist: trusty\nsudo: false\naddons:\n  chrome: stable\ncache:\n  npm: true\n  directories:\n    - node_modules\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.48828125,
+          "content": "<p align=\"center\">\n  <img src=\"https://i.imgur.com/e8XbYbd.png\" width=\"1000\" alt=\"Greenlet\">\n</p>\n\n## Greenlet [![npm](https://img.shields.io/npm/v/greenlet.svg)](https://npm.im/greenlet) [![travis](https://travis-ci.org/developit/greenlet.svg?branch=master)](https://travis-ci.org/developit/greenlet) [![gzip size](http://img.badgesize.io/https://unpkg.com/greenlet/dist/greenlet.js?compression=gzip)](https://unpkg.com/greenlet/dist/greenlet.umd.js) [![install size](https://packagephobia.now.sh/badge?p=greenlet)](https://packagephobia.now.sh/result?p=greenlet)\n\n> Move an async function into its own thread.\n>\n> A simplified single-function version of [workerize](https://github.com/developit/workerize), offering [the same performance as direct Worker usage](https://esbench.com/bench/5b16b61af2949800a0f61ce3).\n\nThe name is somewhat of a poor choice, but it was [available on npm](https://npm.im/greenlet).\n\n_Greenlet supports IE10+, since it uses [Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers). For NodeJS usage, Web Workers must be polyfilled using a library like [node-webworker](https://github.com/pgriess/node-webworker)._\n\n## Installation & Usage\n\n```sh\nnpm i -S greenlet\n```\n\nAccepts an async function with, produces a copy of it that runs within a Web Worker.\n\n> ⚠️ **Caveat:** the function you pass cannot rely on its surrounding scope, since it is executed in an isolated context.\n\n```\ngreenlet(Function) -> Function\n```\n\n> ‼️ **Important:** never call greenlet() dynamically. Doing so creates a new Worker thread for every call:\n\n```diff\n-const BAD = () => greenlet(x => x)('bad') // creates a new thread on every call\n+const fn = greenlet(x => x);\n+const GOOD = () => fn('good'); // uses the same thread on every call\n```\n\nSince Greenlets can't rely on surrounding scope anyway, it's best to always create them at the \"top\" of your module.\n\n\n## Example\n\nGreenlet is most effective when the work being done has relatively small inputs/outputs.\n\nOne such example would be fetching a network resource when only a subset of the resulting information is needed:\n\n```js\nimport greenlet from 'greenlet'\n\nlet getName = greenlet( async username => {\n    let url = `https://api.github.com/users/${username}`\n    let res = await fetch(url)\n    let profile = await res.json()\n    return profile.name\n})\n\nconsole.log(await getName('developit'))\n```\n\n[🔄 **Run this example on JSFiddle**](https://jsfiddle.net/developit/mf9fbma5/)\n\n\n## Transferable ready\n\nGreenlet will even accept and optimize [transferables](https://developer.mozilla.org/en-US/docs/Web/API/Transferable) as arguments to and from a greenlet worker function.\n\n\n## Browser support\n\nThankfully, Web Workers have been around for a while and [are broadly supported](https://caniuse.com/#feat=webworkers) by Chrome, Firefox, Safari, Edge, and Internet Explorer 10+.\n\nIf you still need to support older browsers, you can just check for the presence of `window.Worker`:\n\n```js\nif (window.Worker) {\n    ...\n} else {\n    ...\n}\n```\n\n### CSP\n\nIf your app has a [Content-Security-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Security-Policy), Greenlet requires `worker-src blob:` and `script-src blob:` in your config.\n\n## License & Credits\n\n> In addition to the contributors, credit goes to [@sgb-io](https://github.com/sgb-io) for his annotated exploration of Greenlet's source. This prompted a refactor that clarified the code and allowed for further size optimizations.\n\n[MIT License](https://oss.ninja/mit/developit)\n"
+        },
+        {
+          "name": "greenlet.js",
+          "type": "blob",
+          "size": 2.3935546875,
+          "content": "/** Move an async function into its own thread.\n *  @param {Function} asyncFunction  An (async) function to run in a Worker.\n *  @public\n */\nexport default function greenlet(asyncFunction) {\n\t// A simple counter is used to generate worker-global unique ID's for RPC:\n\tlet currentId = 0;\n\n\t// Outward-facing promises store their \"controllers\" (`[request, reject]`) here:\n\tconst promises = {};\n\n\t// Use a data URI for the worker's src. It inlines the target function and an RPC handler:\n\tconst script = '$$='+asyncFunction+';onmessage='+(e => {\n\t\t/* global $$ */\n\n\t\t// Invoking within then() captures exceptions in the supplied async function as rejections\n\t\tPromise.resolve(e.data[1]).then(\n\t\t\tv => $$.apply($$, v)\n\t\t).then(\n\t\t\t// success handler - callback(id, SUCCESS(0), result)\n\t\t\t// if `d` is transferable transfer zero-copy\n\t\t\td => {\n\t\t\t\tpostMessage([e.data[0], 0, d], [d].filter(x => (\n\t\t\t\t\t(x instanceof ArrayBuffer) ||\n\t\t\t\t\t(x instanceof MessagePort) ||\n\t\t\t\t\t(self.ImageBitmap && x instanceof ImageBitmap)\n\t\t\t\t)));\n\t\t\t},\n\t\t\t// error handler - callback(id, ERROR(1), error)\n\t\t\ter => { postMessage([e.data[0], 1, '' + er]); }\n\t\t);\n\t});\n\tconst workerURL = URL.createObjectURL(new Blob([script]));\n\t// Create an \"inline\" worker (1:1 at definition time)\n\tconst worker = new Worker(workerURL);\n\n\t/** Handle RPC results/errors coming back out of the worker.\n\t *  Messages coming from the worker take the form `[id, status, result]`:\n\t *    id     - counter-based unique ID for the RPC call\n\t *    status - 0 for success, 1 for failure\n\t *    result - the result or error, depending on `status`\n\t */\n\tworker.onmessage = e => {\n\t\t// invoke the promise's resolve() or reject() depending on whether there was an error.\n\t\tpromises[e.data[0]][e.data[1]](e.data[2]);\n\n\t\t// ... then delete the promise controller\n\t\tpromises[e.data[0]] = null;\n\t};\n\n\t// Return a proxy function that forwards calls to the worker & returns a promise for the result.\n\treturn function (args) {\n\t\targs = [].slice.call(arguments);\n\t\treturn new Promise(function () {\n\t\t\t// Add the promise controller to the registry\n\t\t\tpromises[++currentId] = arguments;\n\n\t\t\t// Send an RPC call to the worker - call(id, params)\n\t\t\t// The filter is to provide a list of transferables to send zero-copy\n\t\t\tworker.postMessage([currentId, args], args.filter(x => (\n\t\t\t\t(x instanceof ArrayBuffer) ||\n\t\t\t\t(x instanceof MessagePort) ||\n\t\t\t\t(self.ImageBitmap && x instanceof ImageBitmap)\n\t\t\t)));\n\t\t});\n\t};\n}\n"
+        },
+        {
+          "name": "greenlet.test.js",
+          "type": "blob",
+          "size": 0.8671875,
+          "content": "import greenlet from 'greenlet';\n\ndescribe('greenlet', () => {\n\tit('should return an async function', () => {\n\t\tlet g = greenlet( () => 'one' );\n\t\texpect(g).toEqual(jasmine.any(Function));\n\t\texpect(g()).toEqual(jasmine.any(Promise));\n\t});\n\n\tit('should invoke sync functions', async () => {\n\t\tlet foo = greenlet( a => 'foo: '+a );\n\n\t\tlet ret = await foo('test');\n\t\texpect(ret).toEqual('foo: test');\n\t});\n\n\tit('should forward arguments', async () => {\n\t\tlet foo = greenlet(function() {\n\t\t\treturn {\n\t\t\t\targs: [].slice.call(arguments)\n\t\t\t};\n\t\t});\n\n\t\tlet ret = await foo('a', 'b', 'c', { position: 4 });\n\t\texpect(ret).toEqual({\n\t\t\targs: ['a', 'b', 'c', { position: 4 }]\n\t\t});\n\t});\n\n\tit('should invoke async functions', async () => {\n\t\tlet bar = greenlet( a => new Promise( resolve => {\n\t\t\tresolve('bar: '+a);\n\t\t}));\n\n\t\tlet ret = await bar('test');\n\t\texpect(ret).toEqual('bar: test');\n\t});\n});\n"
+        },
+        {
+          "name": "index.d.ts",
+          "type": "blob",
+          "size": 0.25,
+          "content": "type AsyncFunction<S extends any[], T> = (...args: S) => Promise<T>;\n\ntype MaybeAsyncFunction<S extends any[], T> = (...args: S) => (T | Promise<T>);\n\nexport default function greenlet<S extends any[], T>(fn: MaybeAsyncFunction<S, T>): AsyncFunction<S, T>;\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.1572265625,
+          "content": "{\n  \"name\": \"greenlet\",\n  \"version\": \"1.1.0\",\n  \"description\": \"Move an async function into its own thread.\",\n  \"source\": \"greenlet.js\",\n  \"main\": \"dist/greenlet.js\",\n  \"module\": \"dist/greenlet.m.js\",\n  \"types\": \"./index.d.ts\",\n  \"scripts\": {\n    \"prepare\": \"microbundle\",\n    \"test\": \"eslint *.js && npm run -s prepare && karmatic --no-coverage\",\n    \"release\": \"npm run -s prepare && npm test && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish\"\n  },\n  \"eslintConfig\": {\n    \"extends\": \"eslint-config-developit\",\n    \"rules\": {\n      \"prefer-spread\": 0,\n      \"prefer-rest-params\": 0\n    }\n  },\n  \"files\": [\n    \"greenlet.js\",\n    \"index.d.ts\",\n    \"dist\"\n  ],\n  \"repository\": \"developit/greenlet\",\n  \"keywords\": [\n    \"greenlet\",\n    \"thread\",\n    \"async\",\n    \"worker\",\n    \"web worker\"\n  ],\n  \"author\": \"Jason Miller <jason@developit.ca> (http://jasonformat.com)\",\n  \"license\": \"MIT\",\n  \"homepage\": \"https://github.com/developit/greenlet\",\n  \"devDependencies\": {\n    \"eslint\": \"^4.16.0\",\n    \"eslint-config-developit\": \"^1.1.1\",\n    \"karmatic\": \"^1.4.0\",\n    \"microbundle\": \"^0.4.3\",\n    \"webpack\": \"^4.29.6\"\n  }\n}\n"
+        }
+      ]
+    }
+  ]
+}

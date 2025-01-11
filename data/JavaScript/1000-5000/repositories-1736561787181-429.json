@@ -1,0 +1,83 @@
+{
+  "metadata": {
+    "timestamp": 1736561787181,
+    "page": 429,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "sindresorhus/speed-test",
+      "stars": 3908,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "root = true\n\n[*]\nindent_style = tab\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.yml]\nindent_style = space\nindent_size = 2\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "* text=auto eol=lf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0224609375,
+          "content": "node_modules\nyarn.lock\n"
+        },
+        {
+          "name": ".npmrc",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": "package-lock=false\n"
+        },
+        {
+          "name": "cli.js",
+          "type": "blob",
+          "size": 3.849609375,
+          "content": "#!/usr/bin/env node\nimport process from 'node:process';\nimport {URL} from 'node:url';\nimport meow from 'meow';\nimport speedtest from 'speedtest-net';\nimport {roundTo} from 'round-to';\nimport chalk from 'chalk';\nimport logUpdate from 'log-update';\nimport logSymbols from 'log-symbols';\nimport Ora from 'ora';\n\nconst cli = meow(`\n\tUsage\n\t  $ speed-test\n\n\tOptions\n\t  --json -j     Output the result as JSON\n\t  --bytes -b    Output the result in megabytes per second (MBps)\n\t  --verbose -v  Output more detailed information\n`, {\n\timportMeta: import.meta,\n\tflags: {\n\t\tjson: {\n\t\t\ttype: 'boolean',\n\t\t\talias: 'j',\n\t\t},\n\t\tbytes: {\n\t\t\ttype: 'boolean',\n\t\t\talias: 'b',\n\t\t},\n\t\tverbose: {\n\t\t\ttype: 'boolean',\n\t\t\talias: 'v',\n\t\t},\n\t},\n});\n\nconst stats = {\n\tping: '',\n\tdownload: '',\n\tupload: '',\n};\n\nlet state = 'ping';\nconst spinner = new Ora();\nconst unit = cli.flags.bytes ? 'MBps' : 'Mbps';\nconst multiplier = cli.flags.bytes ? 1 / 8 : 1;\n\nconst getSpinnerFromState = inputState => inputState === state ? chalk.gray.dim(spinner.frame()) : '  ';\n\nconst logError = error => {\n\tif (cli.flags.json) {\n\t\tconsole.error(JSON.stringify({error}));\n\t} else {\n\t\tconsole.error(logSymbols.error, error);\n\t}\n};\n\nfunction render() {\n\tif (cli.flags.json) {\n\t\tconsole.log(JSON.stringify(stats));\n\t\treturn;\n\t}\n\n\tlet output = `\n      Ping ${getSpinnerFromState('ping')}${stats.ping}\n  Download ${getSpinnerFromState('download')}${stats.download}\n    Upload ${getSpinnerFromState('upload')}${stats.upload}`;\n\n\tif (cli.flags.verbose) {\n\t\toutput += [\n\t\t\t'',\n\t\t\t'    Server   ' + (stats.data === undefined ? '' : chalk.cyan(stats.data.server.host)),\n\t\t\t'  Location   ' + (stats.data === undefined ? '' : chalk.cyan(stats.data.server.location + chalk.dim(' (' + stats.data.server.country + ')'))),\n\t\t\t'  Distance   ' + (stats.data === undefined ? '' : chalk.cyan(roundTo(stats.data.server.distance, 1) + chalk.dim(' km'))),\n\t\t].join('\\n');\n\t}\n\n\tlogUpdate(output);\n}\n\nfunction setState(newState) {\n\tstate = newState;\n\n\tif (newState && newState.length > 0) {\n\t\tstats[newState] = chalk.yellow(`0 ${chalk.dim(unit)}`);\n\t}\n}\n\nfunction map(server) {\n\tserver.host = new URL(server.url).host;\n\tserver.location = server.name;\n\tserver.distance = server.dist;\n\treturn server;\n}\n\nconst speedTest = speedtest({maxTime: 20_000});\n\nif (!cli.flags.json) {\n\tsetInterval(render, 50);\n}\n\nspeedTest.once('testserver', server => {\n\tif (cli.flags.verbose) {\n\t\tstats.data = {\n\t\t\tserver: map(server),\n\t\t};\n\t}\n\n\tsetState('download');\n\tconst ping = Math.round(server.bestPing);\n\tstats.ping = cli.flags.json ? ping : chalk.cyan(ping + chalk.dim(' ms'));\n});\n\nspeedTest.on('downloadspeedprogress', speed => {\n\tif (state === 'download' && cli.flags.json !== true) {\n\t\tspeed *= multiplier;\n\t\tconst download = roundTo(speed, speed >= 10 ? 0 : 1);\n\t\tstats.download = chalk.yellow(`${download} ${chalk.dim(unit)}`);\n\t}\n});\n\nspeedTest.on('uploadspeedprogress', speed => {\n\tif (state === 'upload' && cli.flags.json !== true) {\n\t\tspeed *= multiplier;\n\t\tconst upload = roundTo(speed, speed >= 10 ? 0 : 1);\n\t\tstats.upload = chalk.yellow(`${upload} ${chalk.dim(unit)}`);\n\t}\n});\n\nspeedTest.once('downloadspeed', speed => {\n\tsetState('upload');\n\tspeed *= multiplier;\n\tconst download = roundTo(speed, speed >= 10 && !cli.flags.json ? 0 : 1);\n\tstats.download = cli.flags.json ? download : chalk.cyan(download + ' ' + chalk.dim(unit));\n});\n\nspeedTest.once('uploadspeed', speed => {\n\tsetState('');\n\tspeed *= multiplier;\n\tconst upload = roundTo(speed, speed >= 10 && !cli.flags.json ? 0 : 1);\n\tstats.upload = cli.flags.json ? upload : chalk.cyan(upload + ' ' + chalk.dim(unit));\n});\n\nspeedTest.on('data', data => {\n\tif (cli.flags.verbose) {\n\t\tstats.data = data;\n\t}\n\n\trender();\n});\n\nspeedTest.on('done', () => {\n\tconsole.log();\n\tprocess.exit();\n});\n\nspeedTest.on('error', error => {\n\tif (error.code === 'ENOTFOUND') {\n\t\tlogError('Please check your internet connection');\n\t} else {\n\t\tlogError(error);\n\t}\n\n\tprocess.exit(1);\n});\n"
+        },
+        {
+          "name": "license",
+          "type": "blob",
+          "size": 1.0908203125,
+          "content": "MIT License\n\nCopyright (c) Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.0029296875,
+          "content": "{\n\t\"name\": \"speed-test\",\n\t\"version\": \"3.0.0\",\n\t\"description\": \"Test your internet connection speed and ping using speedtest.net from the CLI\",\n\t\"license\": \"MIT\",\n\t\"repository\": \"sindresorhus/speed-test\",\n\t\"funding\": \"https://github.com/sponsors/sindresorhus\",\n\t\"author\": {\n\t\t\"name\": \"Sindre Sorhus\",\n\t\t\"email\": \"sindresorhus@gmail.com\",\n\t\t\"url\": \"https://sindresorhus.com\"\n\t},\n\t\"type\": \"module\",\n\t\"bin\": \"./cli.js\",\n\t\"engines\": {\n\t\t\"node\": \"^12.20.0 || ^14.13.1 || >=16.0.0\"\n\t},\n\t\"scripts\": {\n\t\t\"test\": \"xo && ava\"\n\t},\n\t\"files\": [\n\t\t\"cli.js\"\n\t],\n\t\"keywords\": [\n\t\t\"cli-app\",\n\t\t\"cli\",\n\t\t\"speed\",\n\t\t\"test\",\n\t\t\"tester\",\n\t\t\"speed-test\",\n\t\t\"speedtest\",\n\t\t\"connection\",\n\t\t\"internet\",\n\t\t\"bandwidth\",\n\t\t\"ping\",\n\t\t\"measure\",\n\t\t\"check\"\n\t],\n\t\"dependencies\": {\n\t\t\"chalk\": \"^4.1.2\",\n\t\t\"log-symbols\": \"^5.0.0\",\n\t\t\"log-update\": \"^5.0.0\",\n\t\t\"meow\": \"^10.1.2\",\n\t\t\"ora\": \"^6.0.1\",\n\t\t\"round-to\": \"^6.0.0\",\n\t\t\"speedtest-net\": \"^1.6.2\"\n\t},\n\t\"devDependencies\": {\n\t\t\"ava\": \"^3.15.0\",\n\t\t\"execa\": \"^6.0.0\",\n\t\t\"p-event\": \"^5.0.1\",\n\t\t\"xo\": \"^0.46.4\"\n\t}\n}\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 0.728515625,
+          "content": "# speed-test\n\n> Test your internet connection speed and ping using [speedtest.net](https://www.speedtest.net) from the CLI\n\n<img src=\"screenshot.gif\" width=\"404\">\n\n## Install\n\nEnsure you have [Node.js](https://nodejs.org) version 12.20+ installed. Then run the following:\n\n```sh\nnpm install --global speed-test\n```\n\n## Usage\n\n```\n$ speed-test --help\n\n  Usage\n    $ speed-test\n\n  Options\n    --json -j     Output the result as JSON\n    --bytes -b    Output the result in megabytes per second (MBps)\n    --verbose -v  Output more detailed information\n```\n\n## Links\n\n- [Product Hunt post](https://www.producthunt.com/posts/speed-test-cli)\n\n## Related\n\n- [fast-cli](https://github.com/sindresorhus/fast-cli) - Test your download speed using fast.com\n"
+        },
+        {
+          "name": "screenshot.gif",
+          "type": "blob",
+          "size": 141.314453125,
+          "content": null
+        },
+        {
+          "name": "test.js",
+          "type": "blob",
+          "size": 0.736328125,
+          "content": "import childProcess from 'node:child_process';\nimport test from 'ava';\nimport {execa} from 'execa';\nimport {pEvent} from 'p-event';\n\ntest('main', async t => {\n\tconst subProcess = childProcess.spawn('./cli.js', {stdio: 'inherit'});\n\tt.is(await pEvent(subProcess, 'close'), 0);\n});\n\ntest('--json', async t => {\n\tconst {stdout} = await execa('./cli.js', ['--json']);\n\tconst parsed = JSON.parse(stdout);\n\tt.truthy(parsed.ping);\n\tt.truthy(parsed.upload);\n\tt.truthy(parsed.download);\n\tt.falsy(parsed.data);\n});\n\ntest('--verbose --json', async t => {\n\tconst {stdout} = await execa('./cli.js', ['--verbose', '--json']);\n\tconst parsed = JSON.parse(stdout);\n\tt.truthy(parsed.ping);\n\tt.truthy(parsed.upload);\n\tt.truthy(parsed.download);\n\tt.truthy(parsed.data);\n});\n"
+        }
+      ]
+    }
+  ]
+}

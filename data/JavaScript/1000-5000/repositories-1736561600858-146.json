@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": 1736561600858,
+    "page": 146,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "es-analysis/plato",
+      "stars": 4564,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.279296875,
+          "content": "# http://editorconfig.org\n\nroot = true\n\n[*]\nindent_style = space\nindent_size = 2\ntrim_trailing_whitespace = true\ninsert_final_newline = true\ncharset = utf-8\nend_of_line = lf\n\n[{lib/assets,reports}/**]\ninsert_final_newline = ignore\ntrim_trailing_whitespace = ignore\nend_of_line = ignore\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.068359375,
+          "content": ".idea\n.DS_Store\nnpm-debug.log\nnode_modules\n*.sass-cache\ntmp/\nreports/\n"
+        },
+        {
+          "name": ".jshintrc",
+          "type": "blob",
+          "size": 0.20703125,
+          "content": "\n{\n  \"curly\": false,\n  \"eqeqeq\": true,\n  \"immed\": true,\n  \"latedef\": false,\n  \"newcap\": true,\n  \"noarg\": true,\n  \"sub\": true,\n  \"undef\": true,\n  \"unused\": true,\n  \"boss\": true,\n  \"eqnull\": true,\n  \"node\": true\n}\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "/node_modules/\n.idea\nreports/"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1689453125,
+          "content": "language: node_js\nnode_js:\n  - \"4\"\n  - \"5\"\n  - \"6\"\nbefore_script:\n  - npm install -g grunt-cli\n  - mkdir ~/bin\n  - export PATH=~/bin:$PATH\n  - npm install\n\nscript: npm test\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 3.58203125,
+          "content": "'use strict';\n\nmodule.exports = function(grunt) {\n\n  // Project configuration.\n  grunt.initConfig({\n    nodeunit: {\n      files: ['test/**/*_test.js']\n    },\n    jshint: {\n      options: {\n        jshintrc: '.jshintrc'\n      },\n      gruntfile: {\n        src: 'Gruntfile.js'\n      },\n      lib: {\n        src: ['lib/**/*.js', '!lib/assets/**/*.js']\n      },\n      test: {\n        src: ['test/**/*.js','!test/fixtures/**/*.js']\n      },\n      assets: {\n        src: ['lib/assets/scripts/*.js']\n      }\n    },\n    uglify: {\n      'assets' : {\n        files : {\n          'lib/assets/scripts/bundles/core-bundle.js' : [\n            'lib/assets/scripts/vendor/jquery-1.8.3.min.js',\n            'lib/assets/scripts/vendor/lodash.min.js',\n            'lib/assets/scripts/vendor/raphael-min.js',\n            'lib/assets/scripts/vendor/morris.min.js',\n            'lib/assets/scripts/vendor/jquery.fittext.js',\n            'lib/assets/scripts/vendor/bootstrap-tooltip.js',\n            'lib/assets/scripts/vendor/bootstrap-popover.js'\n          ],\n          'lib/assets/scripts/bundles/codemirror.js' : [\n            'lib/assets/scripts/vendor/codemirror/codemirror.js',\n            'lib/assets/scripts/vendor/codemirror/javascript.js',\n            'lib/assets/scripts/vendor/codemirror/util/searchcursor.js'\n          ]\n        }\n      }\n    },\n    watch: {\n      gruntfile: {\n        files: '<%= jshint.gruntfile.src %>',\n        tasks: ['jshint:gruntfile']\n      },\n      lib: {\n        files: '<%= jshint.lib.src %>',\n        tasks: ['jshint:lib', 'nodeunit']\n      },\n      test: {\n        files: '<%= jshint.test.src %>',\n        tasks: ['jshint:test', 'nodeunit']\n      }\n    },\n    casper : {\n      test: {\n        files: {\n          'reports/casper.xml': [\n            'test/casper-overview.js',\n            'test/casper-sortable-file-list.js'\n          ],\n        },\n        options : {\n          test: true,\n          verbose: true,\n          'fail-fast': true,\n          'log-level': 'error',\n          concise: true,\n          parallel : false,\n          concurrency : 2\n        }\n      }\n    }\n  });\n\n  grunt.loadNpmTasks('grunt-contrib-jshint');\n  grunt.loadNpmTasks('grunt-contrib-nodeunit');\n  grunt.loadNpmTasks('grunt-contrib-uglify');\n  grunt.loadNpmTasks('grunt-contrib-watch');\n  grunt.loadNpmTasks('grunt-casper');\n\n  grunt.registerTask('runtest',function(){\n    var done = this.async();\n\n    grunt.util.spawn({\n        cmd : './bin/plato',\n        args : [\n          '-q',\n          '-dtmp',\n          '-ttest report',\n          'test/fixtures/a.js','test/fixtures/b.js','test/fixtures/c-es6.js','test/fixtures/d-es6.js','test/fixtures/empty.js'\n        ]\n      },\n      function(err, result, code){\n        console.log(result.stdout);\n        console.log(result.stderr);\n        if (err || code !== 0) {\n          grunt.fatal('Running plato binary failed');\n        }\n        done();\n      }\n    );\n  });\n\n  grunt.registerTask('runbin',function(){\n    var done = this.async();\n\n    grunt.util.spawn({\n        cmd : './bin/plato',\n        args : [\n          '-q',\n          '-r',\n          '-l.jshintrc',\n          '-xvendor|bundles',\n          '-dreports',\n          '-tPlato report',\n          'lib/'\n        ]\n      },\n      function(err, result, code){\n        console.log(result.stdout);\n        if (err || code !== 0) {\n          console.log(err);\n          grunt.fatal('Running plato binary failed');\n        }\n        done();\n      }\n    );\n  });\n\n  grunt.registerTask('optimize', ['uglify']);\n  // Default task.\n  grunt.registerTask('test', ['jshint', 'nodeunit', 'runtest', 'runbin', 'casper']);\n  grunt.registerTask('default', ['test']);\n\n};\n"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "type": "blob",
+          "size": 1.033203125,
+          "content": "Copyright (c) 2012 Jarrod Overson\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.8720703125,
+          "content": "# plato\n\n## Needs active maintainer\n\nplato was updated to support es6 by @devcrust, but needs an active maintainer to keep it moving forward.\n\n[![Build Status](https://travis-ci.org/es-analysis/plato.png?branch=master)](https://travis-ci.org/es-analysis/plato)\n\nVisualize JavaScript source complexity with plato.\n\n## Example report on popular projects\n\n - [jquery](http://es-analysis.github.com/plato/examples/jquery/)\n - [hapi](http://es-analysis.github.com/plato/examples/hapi/)\n - [marionettejs](http://es-analysis.github.com/plato/examples/marionette/)\n\n## Installation\nInstall the module with: `npm install -g plato`\n\n## Usage\n\n### From the commandline\n\n```\nUsage : plato [options] -d <output_dir> <input files>\n  -h, --help\n      Display this help text.\n  -q, --quiet\n      Reduce output to errors only\n  -v, --version\n      Print the version.\n  -x, --exclude : String\n      File exclusion regex\n  -d, --dir : String *required*\n      The output directory\n  -r, --recurse\n      Recursively search directories\n  -l, --jshint : String\n      Specify a jshintrc file for JSHint linting\n  -e, --eslint : String\n      Specify a eslintrc file for ESLint linting\n  -t, --title : String\n      Title of the report\n  -D, --date : String\n      Time to use as the report date (seconds, > 9999999999 assumed to be ms)\n  -n, --noempty\n      Skips empty lines from line count\n```\n\n__Example__\n\n```shell\nplato -r -d report src\n```\n\n__Extended example__\n\n```\nplato -r -d report -l .jshintrc -t \"My Awesome App\" -x .json routes/*.js\n```\n\n### From scripts\n\n```\nvar plato = require('plato');\n\nvar files = [\n  'path/to/javascript/file1.js',\n  ...\n  'path/to/javascript/fileN.js'\n];\n\nvar outputDir = './output/dir';\n// null options for this example\nvar options = {\n  title: 'Your title here'\n};\n\nvar callback = function (report){\n// once done the analysis,\n// execute this\n};\n\nplato.inspect(files, outputDir, options, callback);\n```\n\n## Data sources\n\n  - Complexity data by [Phil Booth](https://github.com/philbooth)'s [complexity-report](https://github.com/philbooth/complexityReport.js)\n  - Lint data from [jshint](https://github.com/jshint/jshint/) and [eslint](https://github.com/eslint/eslint)\n\n## Contributors\n  - [Jarrod Overson](https://github.com/jsoverson)\n  - [Craig Davis](https://github.com/there4)\n  - [David Linse](https://github.com/davidlinse)\n\n## Release History\n\n  - 1.6.0 Support es6 by updating eslint and using fork of escomplex\n  - 1.3.0 Merged 107,130,128,119,114. Numerous bug fixed.\n    - Minor bumped for changes to parsing of files passed. Technically a breaking change but effectively a bug fix + feature so bumping minor.\n  - 1.2.1 Bumping versions for jshint and lodash\n  - 1.2.0 add ability to disable jshint\n  - 1.1.0 fix issue with running casperjs tests\n  - 1.0.1 fix issue with first line hashbang\n  - 1.0.0 promote to 1.0.0 with bug fixes\n  - 0.6.2 Added sortable file list, updated to bootstrap 3\n  - 0.6.1 Fixed width overflow issues in file reports\n  - 0.6.0 updated major dependency complexity-report\n  - 0.5.0 Added historical reports\n  - 0.4.7 Updated jshint to 1.1.0 (via #22) to jshint to address #16\n  - 0.4.6 Performance improvements on file view\n  - 0.4.5 Updated complexity-report to 0.7.0 to prefer the 0-100 based maintainability index\n  - 0.4.4 Added quiet mode, exclusion regex, description popovers\n  - 0.4.3 Updated dependencies to fix reporting issues\n  - 0.4.2 Fixed overview links to files\n  - 0.4.1 Fixed jshint option passing\n  - 0.4.0 Added summary stats, Casper tests, nodunit tests\n    - Breaking : plato api\n  - 0.3.1 Added graphs\n  - 0.3.0 Formatting changes, refactoring.\n    - Breaking : jshint reporting api\n  - 0.2.0 added jshint reporting.\n    - Breaking : options api, cli api\n  - 0.1.0 initial release\n\n## License\nCopyright (c) 2012 Jarrod Overson\nLicensed under the MIT license.\n\n\n[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/es-analysis/plato/trend.png)](https://bitdeli.com/free \"Bitdeli Badge\")\n\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.2822265625,
+          "content": "{\n  \"name\": \"plato\",\n  \"description\": \"JavaScript source analysis and visualizer\",\n  \"version\": \"1.6.0\",\n  \"homepage\": \"https://github.com/es-analysis/plato\",\n  \"license\": \"MIT\",\n  \"author\": {\n    \"name\": \"Jarrod Overson\",\n    \"email\": \"jsoverson@gmail.com\",\n    \"url\": \"http://jarrodoverson.com/\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/es-analysis/plato.git\"\n  },\n  \"bugs\": {\n    \"url\": \"https://github.com/es-analysis/plato/issues\"\n  },\n  \"bin\": \"bin/plato\",\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"https://github.com/es-analysis/plato/blob/master/LICENSE-MIT\"\n    }\n  ],\n  \"main\": \"lib/plato\",\n  \"engines\": {\n    \"node\": \">= 4.4.5\"\n  },\n  \"scripts\": {\n    \"test\": \"grunt test\"\n  },\n  \"devDependencies\": {\n    \"grunt\": \"~1.0.1\",\n    \"grunt-casper\": \"~0.4.0\",\n    \"grunt-contrib-jshint\": \"~1.0.0\",\n    \"grunt-contrib-nodeunit\": \"~1.0.0\",\n    \"grunt-contrib-uglify\": \"~1.0.1\",\n    \"grunt-contrib-watch\": \"~1.0.0\"\n  },\n  \"keywords\": [\n    \"halstead\",\n    \"visualize\",\n    \"cyclomatic\",\n    \"complexity\",\n    \"report\",\n    \"analysis\",\n    \"analyze\"\n  ],\n  \"dependencies\": {\n    \"typhonjs-escomplex\": \"0.0.9\",\n    \"fs-extra\": \"~0.30.0\",\n    \"glob\": \"~7.0.5\",\n    \"jshint\": \"~2.9.2\",\n    \"lodash\": \"~4.13.1\",\n    \"posix-getopt\": \"~1.2.0\",\n    \"eslint\": \"~3.0.1\"\n  }\n}\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "update.sh",
+          "type": "blob",
+          "size": 1.3232421875,
+          "content": "#!/bin/bash\n\nORIGWD=$PWD\n\nTMPDIR=/tmp/plato\n\nCMD=$PWD/bin/plato\n\necho Original directory : $ORIGWD\necho Temporary root directory : $TMPDIR\necho Command : $CMD\n\nunset REFETCH\n\nif [ $1 ]\nthen\nREFETCH=true\nfi\n\nif [ -d examples ]\nthen\n rm -rf examples\nfi\n\n\nif [ $REFETCH ]\nthen\n  if [ -d $TMPDIR ]\n  then\n    echo \"Removing $TMPDIR\"\n    rm -rf $TMPDIR\n  fi\n  git clone git://github.com/jquery/jquery.git $TMPDIR/jquery\n  git clone git://github.com/gruntjs/grunt.git $TMPDIR/grunt\n  git clone https://github.com/marionettejs/backbone.marionette.git $TMPDIR/marionette\nfi\n\nfunction runCommand() {\n  echo $1\n  $1\n}\n\nfor DAYS_AGO in 60 30 20 10 0; do\n  DATE=$(date -j -f \"%a %b %d %T %Z %Y\" \"`date -v -${DAYS_AGO}d`\" \"+%s\")\n\n  echo Using date $DATE / $(date -j -f \"%s\" \"$DATE\" \"+%a %b %d %T %Z %Y\")\n\n  cd $TMPDIR/jquery &&\n    echo In $PWD &&\n    git co -f $(git rev-list -n 1 --before=\"$DATE\" master) &&\n    runCommand \"$CMD -D $DATE -r -d $ORIGWD/examples/jquery -x 'exports.js|tro.js' src\";\n\n  cd $TMPDIR/marionette &&\n    echo In $PWD &&\n    git co -f $(git rev-list -n 1 --before=\"$DATE\" master) &&\n    runCommand \"$CMD -D $DATE -d $ORIGWD/examples/marionette src/*.js\";\n\n  cd $TMPDIR/grunt &&\n    echo In $PWD &&\n    git co -f $(git rev-list -n 1 --before=\"$DATE\" master) &&\n    runCommand \"$CMD -D $DATE -r -d $ORIGWD/examples/grunt lib\";\ndone\n\ncd $ORIGWD\n"
+        }
+      ]
+    }
+  ]
+}

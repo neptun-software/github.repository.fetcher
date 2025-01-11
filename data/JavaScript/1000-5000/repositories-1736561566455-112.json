@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736561566455,
+    "page": 112,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "camwiegert/in-view",
+      "stars": 4644,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.09765625,
+          "content": "node_modules/\nnpm-debug.log\n.DS_Store\n.DS_Store?\n._*\nThumbs.db\n.Spotlight-V100\n.Trashes\n/index.html\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0703125,
+          "content": "language: node_js\nnode_js:\n    - \"6\"\nbefore_install:\n    - npm i -g npm\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "MIT License\n\nCopyright (c) 2016-present Cam Wiegert\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.92578125,
+          "content": "# in-view.js :eyes:\n\nGet notified when a DOM element enters or exits the viewport. A small (~1.9kb gzipped), dependency-free, javascript utility for IE9+.\n\n[camwiegert.github.io/in-view](https://camwiegert.github.io/in-view)\n\n[![Build Status](https://travis-ci.org/camwiegert/in-view.svg?branch=master)](https://travis-ci.org/camwiegert/in-view)\n[![npm/in-view](https://img.shields.io/npm/v/in-view.svg?maxAge=2592000)](https://npmjs.com/package/in-view)\n\n![in-view.js](https://camwiegert.github.io/in-view/lib/images/in-view.png)\n\n---\n\n## Installation\n\nEither download the [latest release](https://unpkg.com/in-view/dist/in-view.min.js) and include it in your markup or install with [npm](http://npmjs.com/package/in-view):\n\n```sh\nnpm install --save in-view\n```\n\n---\n\n## Basic Usage\n\nWith in-view, you can register handlers that are called when an element **enters** or **exits** the viewport. Each handler receives one element, the one entering or exiting the viewport, as its only argument.\n\n```js\ninView('.someSelector')\n    .on('enter', doSomething)\n    .on('exit', el => {\n        el.style.opacity = 0.5;\n    });\n```\n\n---\n\n## API\n\nin-view maintains a separate handler registry for each set of elements captured with `inView(<selector>)`. Each registry exposes the same four methods. in-view also exposes four top-level methods. (`is`, `offset`, `threshold`, `test`).\n\n### inView(\\<selector>).on(\\<event>, \\<handler>)\n> Register a handler to the elements selected by `selector` for `event`. The only events in-view emits are `'enter'` and `'exit'`.\n\n> ```js\n> inView('.someSelector').on('enter', doSomething);\n> ```\n\n### inView(\\<selector>).once(\\<event>, \\<handler>)\n> Register a handler to the elements selected by `selector` for `event`. Handlers registered with `once` will only be called once.\n\n> ```js\n> inView('.someSelector').once('enter', doSomething);\n> ```\n\n### inView.is(\\<element>)\n> Check if `element` is in the viewport.\n\n> ```js\n> inView.is(document.querySelector('.someSelector'));\n> // => true\n> ```\n\n### inView.offset(\\<offset>)\n> By default, in-view considers something in viewport if it breaks any edge of the viewport. This can be used to set an offset from that edge. For example, an offset of `100` will consider elements in viewport if they break any edge of the viewport by at least `100` pixels. `offset` can be a positive or negative integer.\n\n> ```js\n> inView.offset(100);\n> inView.offset(-50);\n> ```\n\n> Offset can also be set per-direction by passing an object.\n\n> ```js\n> inView.offset({\n>     top: 100,\n>     right: 75,\n>     bottom: 50,\n>     left: 25\n> });\n> ```\n\n### inView.threshold(\\<threshold>)\n> Set the ratio of an element's height **and** width that needs to be visible for it to be considered in viewport. This defaults to `0`, meaning any amount. A threshold of `0.5` or `1` will require that half or all, respectively, of an element's height and width need to be visible. `threshold` must be a number between `0` and `1`.\n> ```js\n> inView.threshold(0);\n> inView.threshold(0.5);\n> inView.threshold(1);\n> ```\n\n### inView.test(\\<test>)\n> Override in-view's default visibility criteria with a custom function. This function will receive the element and the options object as its only two arguments. Return `true` when an element should be considered visible and `false` otherwise.\n> ```js\n> inView.test((el, options) => {\n>     // ...\n> });\n> ```\n\n### inView(\\<selector>).check()\n> Manually check the status of the elements selected by `selector`. By default, all registries are checked on `window`'s `scroll`, `resize`, and `load` events.\n\n> ```js\n> inView('.someSelector').check();\n> ```\n\n### inView(\\<selector>).emit(\\<event>, \\<element>)\n> Manually emit `event` for any single element.\n\n> ```js\n> inView('.someSelector').emit('exit', document.querySelectorAll('.someSelector')[0]);\n> ```\n\n---\n\n## Browser Support\n\n**in-view supports all modern browsers and IE9+.**\n\nAs a small caveat, in-view utilizes [MutationObserver](https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver) to check the visibility of registered elements after a DOM mutation. If that's functionality you need in IE9-10, consider using a [polyfill](https://github.com/webcomponents/webcomponentsjs/blob/master/src/MutationObserver/MutationObserver.js).\n\n---\n\n## Performance\n\nAny library that watches scroll events runs the risk of degrading page performance. To mitigate this, currently, in-view only registers a single, throttled (maximum once every 100ms) event listener on each of `window`'s `load`, `resize`, and `scroll` events and uses those to run a check on each registry.\n\n### Utilizing IntersectionObserver\n\nThere's an emerging browser API, [`IntersectionObserver`](https://wicg.github.io/IntersectionObserver/), that aims to provide developers with a performant way to check the visibility of DOM elements. Going forward, in-view will aim to delegate to `IntersectionObserver` when it's supported, falling back to polling only when necessary.\n\n---\n\n**License** [MIT](https://opensource.org/licenses/MIT)\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.7685546875,
+          "content": "{\n  \"name\": \"in-view\",\n  \"version\": \"0.6.1\",\n  \"description\": \"Get notified when a DOM element enters or exits the viewport.\",\n  \"repository\": \"https://github.com/camwiegert/in-view\",\n  \"main\": \"dist/in-view.min.js\",\n  \"scripts\": {\n    \"start\": \"NODE_ENV=production webpack -wp\",\n    \"build\": \"NODE_ENV=production webpack -p\",\n    \"prepublish\": \"npm run -s test\",\n    \"lint\": \"eslint src/**/*.js\",\n    \"pretest\": \"npm run -s lint\",\n    \"test\": \"ava -v\",\n    \"docs\": \"npm run -s docs-server & npm run -s docs-js & npm run -s docs-css\",\n    \"docs-server\": \"http-server ./docs -o\",\n    \"docs-js\": \"NODE_ENV=production webpack -wp --config ./docs/docs.webpack.config.js\",\n    \"docs-css\": \"node-sass -w --output-style=compressed ./docs/lib/css/main.scss ./docs/lib/css/main.min.css\"\n  },\n  \"ava\": {\n    \"files\": [\n      \"test/*js\"\n    ],\n    \"require\": [\n      \"babel-register\",\n      \"./test/helpers/setup-browser-env.js\"\n    ],\n    \"babel\": \"inherit\"\n  },\n  \"babel\": {\n    \"plugins\": [\n      \"lodash\"\n    ],\n    \"presets\": [\n      \"es2015\"\n    ]\n  },\n  \"eslintConfig\": {\n    \"extends\": \"eslint:recommended\",\n    \"env\": {\n      \"browser\": true,\n      \"node\": true\n    },\n    \"parserOptions\": {\n      \"ecmaVersion\": 6,\n      \"sourceType\": \"module\"\n    }\n  },\n  \"author\": \"Cam Wiegert <cam@camwiegert.com>\",\n  \"homepage\": \"https://camwiegert.github.io/in-view\",\n  \"license\": \"MIT\",\n  \"devDependencies\": {\n    \"ava\": \"^0.16.0\",\n    \"babel-core\": \"^6.14.0\",\n    \"babel-loader\": \"^6.2.5\",\n    \"babel-plugin-lodash\": \"^3.2.8\",\n    \"babel-preset-es2015\": \"^6.14.0\",\n    \"babel-register\": \"^6.11.6\",\n    \"eslint\": \"^3.3.1\",\n    \"http-server\": \"^0.9.0\",\n    \"jsdom\": \"^9.4.2\",\n    \"lodash-webpack-plugin\": \"^0.10.0\",\n    \"node-sass\": \"^3.8.0\",\n    \"webpack\": \"^1.13.2\"\n  },\n  \"dependencies\": {\n    \"lodash\": \"^4.15.0\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webpack.config.js",
+          "type": "blob",
+          "size": 0.8310546875,
+          "content": "const LodashModuleReplacementPlugin = require('lodash-webpack-plugin'),\n      webpack = require('webpack'),\n      package = require('./package');\n\nconst banner = `${package.name} ${package.version} - ${package.description}\\nCopyright (c) ${ new Date().getFullYear() } ${package.author} - ${package.homepage}\\nLicense: ${package.license}`;\n\nmodule.exports = {\n    'context': __dirname + '/src',\n    'entry': './index.js',\n    'output': {\n        'path': __dirname + '/dist',\n        'filename': `${package.name}.min.js`,\n        'library': `inView`,\n        'libraryTarget': 'umd'\n    },\n    'module': {\n        'loaders': [{\n            'test': /\\.js$/,\n            'exclude': /node_modules/,\n            'loader': 'babel'\n        }]\n    },\n    'plugins': [\n        new webpack.BannerPlugin(banner),\n        new LodashModuleReplacementPlugin\n    ]\n};\n"
+        }
+      ]
+    }
+  ]
+}

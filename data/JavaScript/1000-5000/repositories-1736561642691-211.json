@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "timestamp": 1736561642691,
+    "page": 211,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "developit/workerize",
+      "stars": 4376,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.23046875,
+          "content": "root = true\n\n[*]\nindent_style = tab\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[{package.json,.*rc,*.yml}]\nindent_style = space\nindent_size = 2\n\n[*.md]\ntrim_trailing_whitespace = false\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.05078125,
+          "content": "node_modules\ndist\nbuild\n.DS_Store\npackage-lock.json\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0576171875,
+          "content": "language: node_js\nnode_js:\n  - \"8\"\n  - \"10\"\ngit:\n  depth: 5"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.357421875,
+          "content": "<h2 align=\"center\">\n  💖 Using Webpack? You want <a href=\"https://github.com/developit/workerize-loader\">workerize-loader ➡️</a>\n</h2>\n\n<img src=\"https://i.imgur.com/MBlHoDp.jpg\" width=\"1358\" alt=\"workerize\">\n\n# Workerize [![npm](https://img.shields.io/npm/v/workerize.svg?style=flat)](https://www.npmjs.org/package/workerize) [![travis](https://travis-ci.org/developit/workerize.svg?branch=master)](https://travis-ci.org/developit/workerize)\n\n> Moves a module into a Web Worker, automatically reflecting exported functions as asynchronous proxies.\n\n- Bundles a tiny, purpose-built RPC implementation into your app\n- If exported module methods are already async, signature is unchanged\n- Supports synchronous and asynchronous worker functions\n- Works beautifully with async/await\n- Just **800 bytes** of gzipped ES3\n\n\n## Install\n\n```sh\nnpm install --save workerize\n```\n\n\n### Usage\n\nPass either a function or a string containing code.\n\n**worker.js**:\n\n```js\nlet worker = workerize(`\n\texport function add(a, b) {\n\t\t// block for half a second to demonstrate asynchronicity\n\t\tlet start = Date.now();\n\t\twhile (Date.now()-start < 500);\n\t\treturn a + b;\n\t}\n`);\n\n(async () => {\n\tconsole.log('3 + 9 = ', await worker.add(3, 9));\n\tconsole.log('1 + 2 = ', await worker.add(1, 2));\n})();\n```\n\n### License\n\n[MIT License](https://oss.ninja/mit/developit/) © [Jason Miller](https://jasonformat.com)\n"
+        },
+        {
+          "name": "demo.html",
+          "type": "blob",
+          "size": 0.4833984375,
+          "content": "<!DOCTYPE html>\n<html>\n\t<head>\n\t\t<title>Workerize Demo</title>\n\t</head>\n\t<body>\n\t\t<script type=\"module\">\n\t\t\timport workerize from './dist/workerize.m.js';\n\n\t\t\tconst worker = workerize(`\n\t\t\t\texport function get(url) {\n\t\t\t\t\treturn fetch(location.origin+'/'+url).then(asJson);\n\t\t\t\t}\n\t\t\t\tfunction asJson(res) {\n\t\t\t\t\treturn res.json();\n\t\t\t\t}\n\t\t\t`, { type: 'module' });\n\n\t\t\tworker.get('package.json').then( pkg => {\n\t\t\t\tconsole.log('Got package name: ', pkg.name);\n\t\t\t});\n\t\t</script>\n\t</body>\n</html>\n"
+        },
+        {
+          "name": "loader.js",
+          "type": "blob",
+          "size": 0.234375,
+          "content": "try {\n\tmodule.exports = require('workerize-loader');\n}\ncatch (e) {\n\tconsole.warn(\"Warning: workerize-loader is not installed.\");\n\tmodule.exports = function() {\n\t\tthrow \"To use workerize as a loader, you must install workerize-loader.\";\n\t}\n}"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.0048828125,
+          "content": "{\n  \"name\": \"workerize\",\n  \"version\": \"0.1.8\",\n  \"description\": \"Run a module in a Web Worker.\",\n  \"main\": \"dist/workerize.js\",\n  \"module\": \"dist/workerize.m.js\",\n  \"source\": \"src/index.js\",\n  \"repository\": \"developit/workerize\",\n  \"loader\": \"./loader.js\",\n  \"scripts\": {\n    \"build\": \"microbundle\",\n    \"prepublishOnly\": \"npm run build\",\n    \"release\": \"npm t && git commit -am $npm_package_version && git tag $npm_package_version && git push && git push --tags && npm publish\",\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 0\"\n  },\n  \"eslintConfig\": {\n    \"extends\": \"eslint-config-developit\",\n    \"rules\": {\n      \"prefer-spread\": 0,\n      \"prefer-rest-params\": 0\n    }\n  },\n  \"files\": [\n    \"src\",\n    \"dist\",\n    \"loader.js\"\n  ],\n  \"keywords\": [\n    \"worker\",\n    \"web workers\",\n    \"threads\"\n  ],\n  \"author\": \"Jason Miller <jason@developit.ca> (http://jasonformat.com)\",\n  \"license\": \"MIT\",\n  \"devDependencies\": {\n    \"eslint\": \"^4.16.0\",\n    \"eslint-config-developit\": \"^1.1.1\",\n    \"microbundle\": \"^0.4.3\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

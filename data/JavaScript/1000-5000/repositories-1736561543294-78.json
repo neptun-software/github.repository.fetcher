@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "timestamp": 1736561543294,
+    "page": 78,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "schteppe/cannon.js",
+      "stars": 4749,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1025390625,
+          "content": "# Python compiled files\n*.pyc\n\n# Temp files\n*~\n*#\n\n# Node Modules\nnode_modules/*\n\n# File system\n.DS_Store"
+        },
+        {
+          "name": ".jshintignore",
+          "type": "blob",
+          "size": 0.099609375,
+          "content": "src/wrapper\nsrc/objects/sph.js\nsrc/demo\nbuild\nexamples\ndemos\nlibs\nnode_modules\ntest\nutils\nGruntfile.js"
+        },
+        {
+          "name": ".jshintrc",
+          "type": "blob",
+          "size": 0.578125,
+          "content": "{\n    // environments\n    \"node\" : true,\n    \"browser\" : true,\n\n    // options\n    \"boss\" : false,\n    \"curly\": true,\n    \"debug\": false,\n    \"devel\": false,\n    \"eqeqeq\": true,\n    \"eqnull\": true,\n    \"evil\": false,\n    \"forin\": false,\n    \"immed\": true,\n    \"laxbreak\": false,\n    \"newcap\": true,\n    \"noarg\": true,\n    \"noempty\": false,\n    \"nonew\": false,\n    \"plusplus\": false,\n    \"regexp\": false,\n    \"smarttabs\": true,\n    \"sub\": true,\n    \"strict\": false,\n    \"trailing\" : true,\n    \"undef\": true,\n    \"indent\":4,\n    \"shadow\" : true,\n    \"globals\": {\n        \"CANNON\": true\n    }\n}\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 2.986328125,
+          "content": "var fs = require('fs')\n\nmodule.exports = function(grunt) {\n\n    var bundlePath = \"build/cannon.js\",\n        minifiedBundlePath = \"build/cannon.min.js\";\n\n    grunt.initConfig({\n        pkg: grunt.file.readJSON('package.json'),\n        concat: {\n            options: {\n                separator: '\\n\\n'\n            },\n\n            demo : {\n                src: ['src/demo/Demo.js'],\n                dest: 'build/cannon.demo.js'\n            },\n        },\n\n        browserify : {\n            cannon : {\n                src : [\"src/Cannon.js\"],\n                dest : bundlePath,\n                options : {\n                    bundleOptions: {\n                        standalone : \"CANNON\"\n                    }\n                }\n            }\n        },\n\n        uglify : {\n            build : {\n                src : [bundlePath],\n                dest : minifiedBundlePath\n            }\n        },\n\n        yuidoc: {\n            compile: {\n                name: '<%= pkg.name %>',\n                description: '<%= pkg.description %>',\n                version: '<%= pkg.version %>',\n                url: '<%= pkg.homepage %>',\n                options: {\n                    outdir : \"docs\",\n                    paths : [\"./src/\"],\n                },\n            }\n        },\n\n        nodeunit: {\n            all: ['test/**/*.js'],\n        },\n    });\n\n    grunt.loadNpmTasks('grunt-contrib-uglify');\n    grunt.loadNpmTasks('grunt-contrib-concat');\n    grunt.loadNpmTasks('grunt-contrib-yuidoc');\n    grunt.loadNpmTasks('grunt-contrib-nodeunit');\n    grunt.loadNpmTasks('grunt-browserify');\n    grunt.registerTask('default', ['test', 'concat', 'browserify', 'uglify', 'addLicense', 'addDate', 'requireJsFix']);\n    grunt.registerTask('test', ['nodeunit']);\n\n    grunt.registerTask('addDate','Adds the current date to the top of the built files',function(){\n        var text = '// ' + new Date().toUTCString() + '\\n';\n\n        var dev = fs.readFileSync(bundlePath).toString();\n        var min = fs.readFileSync(minifiedBundlePath).toString();\n\n        fs.writeFileSync(bundlePath,text+\"\\n\"+dev);\n        fs.writeFileSync(minifiedBundlePath,text+\"\\n\"+min);\n    });\n\n    grunt.registerTask('addLicense','Adds the LICENSE to the top of the built files',function(){\n        var text = fs.readFileSync(\"LICENSE\").toString();\n\n        var dev = fs.readFileSync(bundlePath).toString();\n        var min = fs.readFileSync(minifiedBundlePath).toString();\n\n        fs.writeFileSync(bundlePath,text+\"\\n\"+dev);\n        fs.writeFileSync(minifiedBundlePath,text+\"\\n\"+min);\n    });\n\n    // Not sure what flag Browserify needs to do this. Fixing it manually for now.\n    grunt.registerTask('requireJsFix','Modifies the browserify bundle so it works with RequireJS',function(){\n        [bundlePath, minifiedBundlePath].forEach(function(path){\n            var text = fs.readFileSync(path).toString();\n            text = text.replace('define.amd', 'false'); // This makes the bundle skip using define() from RequireJS\n            fs.writeFileSync(path, text);\n        });\n    });\n};\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0986328125,
+          "content": "/*\n * Copyright (c) 2015 cannon.js Authors\n *\n * Permission is hereby granted, free of charge, to any person\n * obtaining a copy of this software and associated documentation\n * files (the \"Software\"), to deal in the Software without\n * restriction, including without limitation the rights to use, copy,\n * modify, merge, publish, distribute, sublicense, and/or sell copies\n * of the Software, and to permit persons to whom the Software is\n * furnished to do so, subject to the following conditions:\n *\n * The above copyright notice and this permission notice shall be\n * included in all copies or substantial portions of the Software.\n *\n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\n * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\n * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\n * LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\n * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\n * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n */\n"
+        },
+        {
+          "name": "README.markdown",
+          "type": "blob",
+          "size": 4.2978515625,
+          "content": "# cannon.js\n\n### Lightweight 3D physics for the web\nInspired by [three.js](https://github.com/mrdoob/three.js) and [ammo.js](https://github.com/kripken/ammo.js), and driven by the fact that the web lacks a physics engine, here comes cannon.js.\nThe rigid body physics engine includes simple collision detection, various body shapes, contacts, friction and constraints.\n\n[Demos](http://schteppe.github.com/cannon.js) - [Documentation](http://schteppe.github.com/cannon.js/docs) - [Rendering hints](https://github.com/schteppe/cannon.js/tree/master/examples) - [NPM package](https://npmjs.org/package/cannon) - [CDN](https://cdnjs.com/libraries/cannon.js)\n\n### Browser install\n\nJust include [cannon.js](https://github.com/schteppe/cannon.js/releases/download/v0.6.2/cannon.js) or [cannon.min.js](https://github.com/schteppe/cannon.js/releases/download/v0.6.2/cannon.min.js) in your html and you're done:\n\n```html\n<script src=\"cannon.min.js\"></script>\n```\n\n### Node.js install\n\nInstall the cannon package via NPM:\n\n```bash\nnpm install --save cannon\n```\n\nAlternatively, point to the Github repo directly to get the very latest version:\n\n```bash\nnpm install --save schteppe/cannon.js\n```\n\n### Example\n\nThe sample code below creates a sphere on a plane, steps the simulation, and prints the sphere simulation to the console. Note that Cannon.js uses [SI units](http://en.wikipedia.org/wiki/International_System_of_Units) (metre, kilogram, second, etc.).\n\n```javascript\n// Setup our world\nvar world = new CANNON.World();\nworld.gravity.set(0, 0, -9.82); // m/s²\n\n// Create a sphere\nvar radius = 1; // m\nvar sphereBody = new CANNON.Body({\n   mass: 5, // kg\n   position: new CANNON.Vec3(0, 0, 10), // m\n   shape: new CANNON.Sphere(radius)\n});\nworld.addBody(sphereBody);\n\n// Create a plane\nvar groundBody = new CANNON.Body({\n    mass: 0 // mass == 0 makes the body static\n});\nvar groundShape = new CANNON.Plane();\ngroundBody.addShape(groundShape);\nworld.addBody(groundBody);\n\nvar fixedTimeStep = 1.0 / 60.0; // seconds\nvar maxSubSteps = 3;\n\n// Start the simulation loop\nvar lastTime;\n(function simloop(time){\n  requestAnimationFrame(simloop);\n  if(lastTime !== undefined){\n     var dt = (time - lastTime) / 1000;\n     world.step(fixedTimeStep, dt, maxSubSteps);\n  }\n  console.log(\"Sphere z position: \" + sphereBody.position.z);\n  lastTime = time;\n})();\n```\n\nIf you want to know how to use cannon.js with a rendering engine, for example Three.js, see the [Examples](examples).\n\n### Features\n* Rigid body dynamics\n* Discrete collision detection\n* Contacts, friction and restitution\n* Constraints\n   * PointToPoint (a.k.a. ball/socket joint)\n   * Distance\n   * Hinge (with optional motor)\n   * Lock\n   * ConeTwist\n* Gauss-Seidel constraint solver and an island split algorithm\n* Collision filters\n* Body sleeping\n* Experimental SPH / fluid support\n* Various shapes and collision algorithms (see table below)\n\n|             | [Sphere](http://schteppe.github.io/cannon.js/docs/classes/Sphere.html) | [Plane](http://schteppe.github.io/cannon.js/docs/classes/Plane.html) | [Box](http://schteppe.github.io/cannon.js/docs/classes/Box.html) | [Convex](http://schteppe.github.io/cannon.js/docs/classes/ConvexPolyhedron.html) | [Particle](http://schteppe.github.io/cannon.js/docs/classes/Particle.html) | [Heightfield](http://schteppe.github.io/cannon.js/docs/classes/Heightfield.html) | [Trimesh](http://schteppe.github.io/cannon.js/docs/classes/Trimesh.html) |\n| :-----------|:------:|:-----:|:---:|:------:|:--------:|:-----------:|:-------:|\n| Sphere      | Yes    | Yes   | Yes | Yes    | Yes      | Yes         | Yes     |\n| Plane       | -      | -     | Yes | Yes    | Yes      | -           | Yes     |\n| Box         | -      | -     | Yes | Yes    | Yes      | Yes         | (todo)  |\n| Cylinder    | -      | -     | Yes | Yes    | Yes      | Yes         | (todo)  |\n| Convex      | -      | -     | -   | Yes    | Yes      | Yes         | (todo)  |\n| Particle    | -      | -     | -   | -      | -        | (todo)      | (todo)  |\n| Heightfield | -      | -     | -   | -      | -        | -           | (todo)  |\n| Trimesh     | -      | -     | -   | -      | -        | -           | -       |\n\n### Todo\nThe simpler todos are marked with ```@todo``` in the code. Github Issues can and should also be used for todos.\n\n### Help\nCreate an [issue](https://github.com/schteppe/cannon.js/issues) if you need help.\n"
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 6.4970703125,
+          "content": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset='utf-8'>\n  <title>schteppe/cannon.js @ GitHub</title>\n  <meta name=\"description\" content=\"A lightweight and simple 3D physics engine for the web.\" />\n  <meta name=\"keywords\" content=\"javascript,three.js,physics,ammo.js,engine\" />\n  <meta name=\"author\" content=\"Stefan Hedman (schteppe)\" />\n  <style type=\"text/css\">\n    body {\n      margin-top: 1.0em;\n      background-color: white;\n      font-family: Helvetica, Arial, FreeSans, san-serif;\n      color: black;\n    }\n    #container {\n      margin: 0 auto;\n      width: 700px;\n    }\n    h1 { font-size: 3.8em; color: #a1925e; margin-bottom: 3px; }\n    h1 .small { font-size: 0.4em; }\n    h1 a { text-decoration: none }\n    h2 { font-size: 1.5em; color: #a1925e; }\n    h3 { text-align: center; color: #a1925e; }\n    a { color: #a1925e; }\n    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}\n    .download { float: right; }\n    pre { background: #000; color: #fff; padding: 15px;}\n    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}\n    .footer { text-align:center; padding-top:10px; font-style: italic; }\n    #examples img {\n      max-height:150px;\n      box-shadow:0px 0px 10px rgba(0,0,0,1);\n      margin:10px;\n    }\n    .twitter-share-button {\n        float:right;\n\n    }\n  </style>\n</head>\n\n<body>\n  <a href=\"https://github.com/schteppe/cannon.js\"><img style=\"position: absolute; top: 0; right: 0; border: 0;\" src=\"http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png\" alt=\"Fork me on GitHub\" /></a>\n\n  <div id=\"container\">\n\n    <div class=\"download\">\n      <a href=\"https://github.com/schteppe/cannon.js/zipball/master\">\n        <img border=\"0\" width=\"90\" src=\"https://github.com/images/modules/download/zip.png\"></a>\n      <a href=\"https://github.com/schteppe/cannon.js/tarball/master\">\n        <img border=\"0\" width=\"90\" src=\"https://github.com/images/modules/download/tar.png\"></a>\n    </div>\n\n    <h1><a href=\"https://github.com/schteppe/cannon.js\">cannon.js</a>\n      <span class=\"small\">by <a href=\"https://github.com/schteppe\">schteppe</a></span></h1>\n\n    <div class=\"description\">\n      A lightweight and simple 3D physics engine for the web.\n\n        <a href=\"https://twitter.com/share\" class=\"twitter-share-button\" data-url=\"http://schteppe.github.com/cannon.js/\" data-text=\"Cannon.js - Lightweight 3D javascript physics\" data-via=\"schteppe\" data-size=\"large\" data-hashtags=\"cannonjs\">Tweet</a>\n        <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=\"http://platform.twitter.com/widgets.js\";fjs.parentNode.insertBefore(js,fjs);}}(document,\"script\",\"twitter-wjs\");</script>\n    </div>\n\n    <h2>Documentation</h2>\n    <p><a href=\"docs\">Go to the documentation</a>.</p>\n\n    <h2>Examples</h2>\n    <p>\n      Click on an image to show the corresponding example.\n    </p>\n    <div id=\"examples\">\n      <a href=\"examples/threejs_cloth.html\"><img src=\"images/threejs_cloth.png\" alt=\"Cloth\"></a>\n      <a href=\"examples/threejs_fps.html\"><img src=\"images/fps.png\" alt=\"Shooter\"></a>\n      <a href=\"examples/threejs_mousepick.html\"><img src=\"images/threejs_mousepick.png\" alt=\"Mousepick\"></a>\n      <a href=\"examples/threejs_voxel_fps.html\"><img src=\"images/threejs_voxel_fps.png\" alt=\"Voxel landscape\"></a>\n      <a href=\"examples/worker.html\"><img src=\"images/worker.png\" alt=\"Worker\"></a>\n\n      <a href=\"demos/bodyTypes.html\"><img src=\"images/motionstates.png\" alt=\"Body types\"></a>\n      <a href=\"demos/bounce.html\"><img src=\"images/bounce.png\" alt=\"Bounce\"></a>\n      <a href=\"demos/bunny.html\"><img src=\"images/bunny.png\" alt=\"Bunny\"></a>\n      <a href=\"demos/callbacks.html\"><img src=\"images/callbacks.png\" alt=\"Callbacks\"></a>\n      <a href=\"demos/collisionFilter.html\"><img src=\"images/collisionFilter.png\" alt=\"Collision filters\"></a>\n      <a href=\"demos/collisions.html\"><img src=\"images/collisions.png\" alt=\"Pair collisions\"></a>\n      <a href=\"demos/compound.html\"><img src=\"images/compound.png\" alt=\"Compound shapes\"></a>\n      <a href=\"demos/constraints.html\"><img src=\"images/constraints.png\" alt=\"Constraints\"></a>\n      <a href=\"demos/container.html\"><img src=\"images/container2.png\" alt=\"Container\"></a>\n      <a href=\"demos/convex.html\"><img src=\"images/convexhull.png\" alt=\"Convex\"></a>\n      <a href=\"demos/events.html\"><img src=\"images/events.png\" alt=\"Events\"></a>\n      <a href=\"demos/fixedRotation.html\"><img src=\"images/fixedRotation.png\" alt=\"Fixed rotation\"></a>\n      <a href=\"demos/friction.html\"><img src=\"images/friction.png\" alt=\"Friction\"></a>\n      <a href=\"demos/heightfield.html\"><img src=\"images/heightfield.png\" alt=\"Hinge\"></a>\n      <a href=\"demos/hinge.html\"><img src=\"images/hinge.png\" alt=\"Hinge\"></a>\n      <a href=\"demos/impulses.html\"><img src=\"images/impulses.png\" alt=\"Impulses\"></a>\n      <a href=\"demos/pile.html\"><img src=\"images/pile.png\" alt=\"Pile\"></a>\n      <a href=\"demos/raycastVehicle.html\"><img src=\"images/raycastVehicle.png\" alt=\"RaycastVehicle\"></a>\n      <a href=\"demos/rigidVehicle.html\"><img src=\"images/rigidVehicle.png\" alt=\"RigidVehicle\"></a>\n      <a href=\"demos/shapes.html\"><img src=\"images/shapes.png\" alt=\"Shapes\"></a>\n      <a href=\"demos/singleBodyOnPlane.html\"><img src=\"images/single.png\" alt=\"Single shape on a plane.\"></a>\n      <a href=\"demos/sleep.html\"><img src=\"images/sleep.png\" alt=\"Sleep\"></a>\n      <a href=\"demos/sph.html\"><img src=\"images/sph.png\" alt=\"SPH fluid simulation\"></a>\n      <a href=\"demos/splitSolver.html\"><img src=\"images/splitSolver.png\" alt=\"SplitSolver\"></a>\n      <a href=\"demos/spring.html\"><img src=\"images/spring.png\" alt=\"Spring\"></a>\n      <a href=\"demos/stacks.html\"><img src=\"images/stack.png\" alt=\"Different types of stacks\"></a>\n    </div>\n\n    <div class=\"footer\">\n        Read more and download the code at <a href=\"https://github.com/schteppe/cannon.js\">github.com/schteppe/cannon.js</a>\n    </div>\n\n    <h2>What is cannon.js?</h2>\n    <p>Inspired by <a href=\"https://github.com/mrdoob/three.js\">three.js</a> and <a href=\"https://github.com/kripken/ammo.js\">ammo.js</a>, and driven by the fact that the web lacks a physics engine, here comes <b>cannon.js</b>.</p>\n\n    <h3>Features</h3>\n    <ul>\n      <li>Lightweight, smaller file size than many ported physics engines.</li>\n      <li>100% open source JavaScript, written from scratch.</li>\n      <li>Uses an iterative Gauss-Seidel solver to solve constraints.</li>\n      <li>Uses the <a href=\"https://www8.cs.umu.se/kurser/5DV058/VT09/lectures/spooknotes.pdf\">SPOOK</a> stepper.</li>\n    </ul>\n\n  </div>\n\n</body>\n</html>\n"
+        },
+        {
+          "name": "libs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.998046875,
+          "content": "{\n  \"name\": \"cannon\",\n  \"version\": \"0.6.2\",\n  \"description\": \"A lightweight 3D physics engine written in JavaScript.\",\n  \"homepage\": \"https://github.com/schteppe/cannon.js\",\n  \"author\": \"Stefan Hedman <schteppe@gmail.com> (http://steffe.se)\",\n  \"keywords\": [\n    \"cannon.js\",\n    \"cannon\",\n    \"physics\",\n    \"engine\",\n    \"3d\"\n  ],\n  \"main\": \"./src/Cannon.js\",\n  \"engines\": {\n    \"node\": \"*\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/schteppe/cannon.js.git\"\n  },\n  \"bugs\": {\n    \"url\": \"https://github.com/schteppe/cannon.js/issues\"\n  },\n  \"licenses\": [\n    {\n      \"type\": \"MIT\"\n    }\n  ],\n  \"devDependencies\": {\n    \"jshint\": \"latest\",\n    \"uglify-js\": \"latest\",\n    \"nodeunit\": \"^0.9.0\",\n    \"grunt\": \"~0.4.0\",\n    \"grunt-contrib-jshint\": \"~0.1.1\",\n    \"grunt-contrib-nodeunit\": \"^0.4.1\",\n    \"grunt-contrib-concat\": \"~0.1.3\",\n    \"grunt-contrib-uglify\": \"^0.5.1\",\n    \"grunt-browserify\": \"^2.1.4\",\n    \"grunt-contrib-yuidoc\": \"^0.5.2\",\n    \"browserify\": \"*\"\n  },\n  \"dependencies\": {}\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "util",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "yuidoc.json",
+          "type": "blob",
+          "size": 0.0810546875,
+          "content": "{\n    \"options\": {\n        \"outdir\" : \"docs\",\n        \"paths\" : [\"./src/\"]\n    }\n}\n"
+        }
+      ]
+    }
+  ]
+}
