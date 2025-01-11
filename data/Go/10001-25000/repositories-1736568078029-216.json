@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "timestamp": 1736568078029,
+    "page": 216,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "projectdiscovery/subfinder",
+      "stars": 10868,
+      "defaultBranch": "dev",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.197265625,
+          "content": ".DS_Store\ncmd/subfinder/subfinder\n# subfinder binary when built with `go build`\nv2/cmd/subfinder/subfinder\n# subfinder binary when built with `make`\nv2/subfinder\nvendor/\n.idea\n.devcontainer\n.vscode\ndist"
+        },
+        {
+          "name": "DISCLAIMER.md",
+          "type": "blob",
+          "size": 1.2890625,
+          "content": "## Disclaimer\n\nSubfinder leverages multiple open APIs, it is developed for individuals to help them for research or internal work. If you wish to incorporate this tool into a commercial offering or purposes, you must agree to the Terms of the leveraged services:\n\n- Bufferover:  https://tls.bufferover.run\n- CommonCrawl: https://commoncrawl.org/terms-of-use/full\n- certspotter: https://sslmate.com/terms\n- dnsdumpster: https://hackertarget.com/terms\n- Google Transparency: https://policies.google.com/terms\n- Alienvault: https://www.alienvault.com/terms/website-terms-of-use07may2018\n\n---\n\nYou expressly understand and agree that Subfinder (creators and contributors) shall not be liable for any damages or losses resulting from your use of this tool or third-party products that use it.\n\nCreators aren't in charge of any and have/has no responsibility for any kind of:\n\n- Unlawful or illegal use of the tool.\n- Legal or Law infringement (acted in any country, state, municipality, place) by third parties and users.\n- Act against ethical and / or human moral, ethic, and peoples and cultures of the world.\n- Malicious act, capable of causing damage to third parties, promoted or distributed by third parties or the user through this tool.\n\n\n### Contact\n\nPlease contact at contact@projectdiscovery.io for any questions.\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.34375,
+          "content": "# Build\nFROM golang:1.21-alpine AS build-env\nRUN apk add build-base\nWORKDIR /app\nCOPY . /app\nWORKDIR /app/v2\nRUN go mod download\nRUN go build ./cmd/subfinder\n\n# Release\nFROM alpine:3.18.6\nRUN apk upgrade --no-cache \\\n    && apk add --no-cache bind-tools ca-certificates\nCOPY --from=build-env /app/v2/subfinder /usr/local/bin/\n\nENTRYPOINT [\"subfinder\"]\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "MIT License\n\nCopyright (c) 2021 ProjectDiscovery, Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.16015625,
+          "content": "<h1 align=\"center\">\n  <img src=\"static/subfinder-logo.png\" alt=\"subfinder\" width=\"200px\">\n  <br>\n</h1>\n\n<h4 align=\"center\">Fast passive subdomain enumeration tool.</h4>\n\n\n<p align=\"center\">\n<a href=\"https://goreportcard.com/report/github.com/projectdiscovery/subfinder/v2\"><img src=\"https://goreportcard.com/badge/github.com/projectdiscovery/subfinder\"></a>\n<a href=\"https://github.com/projectdiscovery/subfinder/issues\"><img src=\"https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat\"></a>\n<a href=\"https://github.com/projectdiscovery/subfinder/releases\"><img src=\"https://img.shields.io/github/release/projectdiscovery/subfinder\"></a>\n<a href=\"https://twitter.com/pdiscoveryio\"><img src=\"https://img.shields.io/twitter/follow/pdiscoveryio.svg?logo=twitter\"></a>\n<a href=\"https://discord.gg/projectdiscovery\"><img src=\"https://img.shields.io/discord/695645237418131507.svg?logo=discord\"></a>\n</p>\n\n<p align=\"center\">\n  <a href=\"#features\">Features</a> •\n  <a href=\"#installation\">Install</a> •\n  <a href=\"#running-subfinder\">Usage</a> •\n  <a href=\"#post-installation-instructions\">API Setup</a> •\n  <a href=\"#subfinder-go-library\">Library</a> •\n  <a href=\"https://discord.gg/projectdiscovery\">Join Discord</a>\n</p>\n\n---\n\n\n`subfinder` is a subdomain discovery tool that returns valid subdomains for websites, using passive online sources. It has a simple, modular architecture and is optimized for speed. `subfinder` is built for\ndoing one thing only - passive subdomain enumeration, and it does that very well.\n\nWe have made it to comply with all the used passive source licenses and usage restrictions. The passive model guarantees speed and stealthiness that can be leveraged by both penetration testers and bug bounty\nhunters alike.\n\n# Features\n\n<h1 align=\"left\">\n  <img src=\"static/subfinder-run.png\" alt=\"subfinder\" width=\"700px\"></a>\n  <br>\n</h1>\n\n- Fast and powerful resolution and wildcard elimination modules\n- **Curated** passive sources to maximize results\n- Multiple output formats supported (JSON, file, stdout)\n- Optimized for speed and **lightweight** on resources\n- **STDIN/OUT** support enables easy integration into workflows\n\n# Usage\n\n```sh\nsubfinder -h\n```\n\nThis will display help for the tool. Here are all the switches it supports.\n\n```yaml\nUsage:\n  ./subfinder [flags]\n\nFlags:\nINPUT:\n  -d, -domain string[]  domains to find subdomains for\n  -dL, -list string     file containing list of domains for subdomain discovery\n\nSOURCE:\n  -s, -sources string[]           specific sources to use for discovery (-s crtsh,github). Use -ls to display all available sources.\n  -recursive                      use only sources that can handle subdomains recursively (e.g. subdomain.domain.tld vs domain.tld)\n  -all                            use all sources for enumeration (slow)\n  -es, -exclude-sources string[]  sources to exclude from enumeration (-es alienvault,zoomeyeapi)\n\nFILTER:\n  -m, -match string[]   subdomain or list of subdomain to match (file or comma separated)\n  -f, -filter string[]   subdomain or list of subdomain to filter (file or comma separated)\n\nRATE-LIMIT:\n  -rl, -rate-limit int  maximum number of http requests to send per second\n  -rls value            maximum number of http requests to send per second for providers in key=value format (-rls \"hackertarget=10/s,shodan=15/s\")\n  -t int                number of concurrent goroutines for resolving (-active only) (default 10)\n\nUPDATE:\n  -up, -update                 update subfinder to latest version\n  -duc, -disable-update-check  disable automatic subfinder update check\n\nOUTPUT:\n  -o, -output string       file to write output to\n  -oJ, -json               write output in JSONL(ines) format\n  -oD, -output-dir string  directory to write output (-dL only)\n  -cs, -collect-sources    include all sources in the output (-json only)\n  -oI, -ip                 include host IP in output (-active only)\n\nCONFIGURATION:\n  -config string                flag config file (default \"$CONFIG/subfinder/config.yaml\")\n  -pc, -provider-config string  provider config file (default \"$CONFIG/subfinder/provider-config.yaml\")\n  -r string[]                   comma separated list of resolvers to use\n  -rL, -rlist string            file containing list of resolvers to use\n  -nW, -active                  display active subdomains only\n  -proxy string                 http proxy to use with subfinder\n  -ei, -exclude-ip              exclude IPs from the list of domains\n\nDEBUG:\n  -silent             show only subdomains in output\n  -version            show version of subfinder\n  -v                  show verbose output\n  -nc, -no-color      disable color in output\n  -ls, -list-sources  list all available sources\n\nOPTIMIZATION:\n  -timeout int   seconds to wait before timing out (default 30)\n  -max-time int  minutes to wait for enumeration results (default 10)\n```\n\n# Installation\n\n`subfinder` requires **go1.21** to install successfully. Run the following command to install the latest version:\n\n```sh\ngo install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest\n```\n\nLearn about more ways to install subfinder here: https://docs.projectdiscovery.io/tools/subfinder/install.\n\n## Post Installation Instructions\n\n`subfinder` can be used right after the installation, however many sources required API keys to work. Learn more here: https://docs.projectdiscovery.io/tools/subfinder/install#post-install-configuration.\n\n## Running Subfinder\n\nLearn about how to run Subfinder here: https://docs.projectdiscovery.io/tools/subfinder/running.\n\n## Subfinder Go library\n\nSubfinder can also be used as library and a minimal examples of using subfinder SDK is available [here](v2/examples/main.go)\n\n</td>\n</tr>\n</table>\n\n### Resources\n\n- [Recon with Me !!!](https://dhiyaneshgeek.github.io/bug/bounty/2020/02/06/recon-with-me/)\n\n# License\n\n`subfinder` is made with 🖤 by the [projectdiscovery](https://projectdiscovery.io) team. Community contributions have made the project what it is. See\nthe **[THANKS.md](https://github.com/projectdiscovery/subfinder/blob/main/THANKS.md)** file for more details.\n\nRead the usage disclaimer at [DISCLAIMER.md](https://github.com/projectdiscovery/subfinder/blob/main/DISCLAIMER.md) and [contact us](mailto:contact@projectdiscovery.io) for any API removal.\n"
+        },
+        {
+          "name": "THANKS.md",
+          "type": "blob",
+          "size": 0.8603515625,
+          "content": "### Thanks\n\nMany people have contributed to subfinder making it a wonderful tool either by making a pull request fixing some stuff or giving generous donations to support the further development of this tool. Here, we recognize these persons and thank them. \n\n- All the contributors at [CONTRIBUTORS](https://github.com/projectdiscovery/subfinder/graphs/contributors) who made subfinder what it is.\n\nWe'd like to thank some additional amazing people, who contributed a lot in subfinder's journey - \n\n- [@vzamanillo](https://github.com/vzamanillo) - For adding multiple features and overall project improvements.\n- [@infosec-au](https://github.com/infosec-au) - Donating to the project.\n- [@codingo](https://github.com/codingo) - Initial work on the project, managing it, lot of work!\n- [@picatz](https://github.com/picatz) - Improving the structure of the project a lot. New ideas!"
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v2",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

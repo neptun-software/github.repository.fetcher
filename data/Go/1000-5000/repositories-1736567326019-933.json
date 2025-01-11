@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "timestamp": 1736567326019,
+    "page": 933,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bilibili/overlord",
+      "stars": 2228,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".codecov.yml",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "coverage:\n  status:\n    project: on\n    patch: off\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.453125,
+          "content": "# Binaries for programs and plugins\n*.exe\n*.dll\n*.so\n*.dylib\n*.idea\n\n# Test binary, build with `go test -c`\n*.test\n*.prof\n\n# Output of the go coverage tool, specifically when used with LiteIDE\n*.out\n\n# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736\n.glide/\n\ncmd/proxy/proxy\ncmd/executor/executor\ncmd/apiserver/apiserver\ncmd/scheduler/scheduler\ncmd/balancer/balancer\ncmd/apicli/apicli\ncmd/anzi/anzi\ncmd/enri/enri\ncoverage.txt\ngo.sum\n"
+        },
+        {
+          "name": ".gosimpleignore",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.9296875,
+          "content": "language: go\n\ngo:\n  - 1.12\n\n# Only clone the most recent commit.\ngit:\n  depth: 1\n\n# Force-enable Go modules. This will be unnecessary when Go 1.12 lands.\nenv:\n  - GO111MODULE=on\n\n# Skip the install step. Don't `go get` dependencies. Only build with the code\n# in vendor/\ninstall: true\n\nservices:\n  - memcached\n  - redis\n  - docker\n\n# Anything in before_script that returns a nonzero exit code will flunk the\n# build and immediately stop. It's sorta like having set -e enabled in bash.\n# Make sure golangci-lint is vendored.\nbefore_script:\n  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $GOPATH/bin\n\ninstall:\n  - bash -x scripts/init-ci-all.sh\n\nscript:\n  - ./scripts/codecov.sh\n  - make build\n\nafter_success:\n  - bash <(curl -s https://codecov.io/bash)\n  - golangci-lint run       # run a bunch of code checkers/linters in parallel \n  \nafter_script:\n- docker stop redis-cluster\n- docker rm redis-cluster\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.1357421875,
+          "content": "# Overlord\n\n# proxy\n\nLatest Version 1.5.5 [history](proxy/CHANGELOG.md)\n\n# platform\n\nLatest Version 2.0.0 [history](platform/CHANGELOG.md)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0400390625,
+          "content": "MIT License\n\nCopyright (c) 2018 Felix Hao\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.3037109375,
+          "content": "export GO111MODULE=on\n\ntest:\n\t./scripts/codecov.sh\n\nbuild:\n\tcd cmd/apicli && go build && cd -\n\tcd cmd/apiserver && go build && cd -\n\tcd cmd/balancer && go build && cd -\n\tcd cmd/executor && go build && cd -\n\tcd cmd/proxy && go build && cd -\n\tcd cmd/scheduler && go build && cd -\n\tcd cmd/anzi && go build && cd -\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.9296875,
+          "content": "# Overlord \n[![Build Status](https://travis-ci.org/bilibili/overlord.svg?branch=master)](https://travis-ci.org/bilibili/overlord) \n[![GoDoc](http://godoc.org/github.com/bilibili/overlord/proxy?status.svg)](http://godoc.org/github.com/bilibili/overlord/proxy) \n[![codecov](https://codecov.io/gh/bilibili/overlord/branch/master/graph/badge.svg)](https://codecov.io/gh/bilibili/overlord)\n[![Go Report Card](https://goreportcard.com/badge/github.com/bilibili/overlord)](https://goreportcard.com/report/github.com/bilibili/overlord)\n\nOverlord是[哔哩哔哩](https://www.bilibili.com)基于Go语言编写的memcache和redis&cluster的代理及集群管理功能，致力于提供自动化高可用的缓存服务解决方案。主要包括以下组件:  \n\n* [proxy](doc/wiki-cn/proxy-usage.md)：轻量高可用的缓存代理模块，支持memcache和redis的代理，相当于twemproxy，不同在于支持redis-cluster及能将自己伪装为cluster模式。\n* [platform](doc/wiki-cn/platform-deploy.md)：包含apiserver、mesos framework&executor、集群节点任务管理job等。\n* [GUI](doc/wiki-cn/platform-usage.md)：web管理界面，通过dashboard可视化方便用于集群管理，包括创建删除、扩缩容、加减节点等。\n* [anzi](doc/wiki-cn/tools.md)：redis-cluster的数据同步工具，可服务化与apiserver进行配合工作。\n* [enri](doc/wiki-cn/tools.md)：redis-cluster的集群管理工具，可灵活的创建集群、迁移slot等。\n\nOverlord已被哔哩哔哩用于生产环境。\n\n## Document\n[简体中文](doc/wiki-cn/SUMMARY.md)\n\n## GUI\n\n![GUI](doc/images/create-cluster.gif)\n\n## Architecture\n\n![architecture](doc/images/overlord_arch.png)\n\n## Cache-Platform\n\n基于mesos&etcd提供了自动化的缓存节点管理平台\n\n![cache-platform Architecture](doc/images/cache-platform-arch.png)\n\n-------------\n\n*Please report bugs, concerns, suggestions by issues, or join QQ-group 716486124 to discuss problems around source code.*\n"
+        },
+        {
+          "name": "anzi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "enri",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 2.474609375,
+          "content": "module overlord\n\nrequire (\n\tbou.ke/monkey v1.0.1\n\tgithub.com/BurntSushi/toml v0.3.1\n\tgithub.com/Microsoft/go-winio v0.4.14 // indirect\n\tgithub.com/Pallinder/go-randomdata v1.1.0\n\tgithub.com/aviddiviner/go-murmur v0.0.0-20150519214947-b9740d71e571\n\tgithub.com/bouk/monkey v1.0.1\n\tgithub.com/bradfitz/gomemcache v0.0.0-20190329173943-551aad21a668\n\tgithub.com/docker/distribution v2.7.1+incompatible // indirect\n\tgithub.com/docker/docker v1.13.1\n\tgithub.com/docker/go-connections v0.4.0 // indirect\n\tgithub.com/docker/go-units v0.4.0 // indirect\n\tgithub.com/dvyukov/go-fuzz v0.0.0-20190402070214-9cfa592d5792\n\tgithub.com/fsnotify/fsnotify v1.4.7\n\tgithub.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect\n\tgithub.com/gin-gonic/gin v1.3.0\n\tgithub.com/gofrs/flock v0.7.0\n\tgithub.com/gogo/protobuf v1.2.0 // indirect\n\tgithub.com/golang/groupcache v0.0.0-20181024230925-c65c006176ff // indirect\n\tgithub.com/golang/protobuf v1.2.0\n\tgithub.com/gomodule/redigo v1.7.0\n\tgithub.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c // indirect\n\tgithub.com/grpc-ecosystem/grpc-gateway v1.6.4 // indirect\n\tgithub.com/json-iterator/go v1.1.5 // indirect\n\tgithub.com/kr/pretty v0.1.0 // indirect\n\tgithub.com/mesos/mesos-go v0.0.8\n\tgithub.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect\n\tgithub.com/modern-go/reflect2 v1.0.1 // indirect\n\tgithub.com/opencontainers/go-digest v1.0.0-rc1 // indirect\n\tgithub.com/pborman/uuid v1.2.0\n\tgithub.com/pkg/errors v0.8.1\n\tgithub.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7 // indirect\n\tgithub.com/prometheus/client_golang v0.9.2\n\tgithub.com/prometheus/client_model v0.0.0-20190109181635-f287a105a20e // indirect\n\tgithub.com/prometheus/common v0.0.0-20190107103113-2998b132700a // indirect\n\tgithub.com/prometheus/procfs v0.0.0-20190104112138-b1a0a9a36d74 // indirect\n\tgithub.com/stretchr/testify v1.4.0\n\tgithub.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5 // indirect\n\tgithub.com/urfave/cli v1.18.0\n\tgo.etcd.io/etcd v0.0.0-20190109224148-fae6e92407e0\n\tgolang.org/x/crypto v0.0.0-20191011191535-87dc89f01550 // indirect\n\tgolang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect\n\tgolang.org/x/sync v0.0.0-20190423024810-112230192c58 // indirect\n\tgolang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect\n\tgoogle.golang.org/grpc v1.17.0 // indirect\n\tgopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect\n\tgopkg.in/go-playground/assert.v1 v1.2.1 // indirect\n\tgopkg.in/go-playground/validator.v8 v8.18.2 // indirect\n)\n\ngo 1.12\n"
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "platform",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "version",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

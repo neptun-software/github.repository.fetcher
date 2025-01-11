@@ -1,0 +1,131 @@
+{
+  "metadata": {
+    "timestamp": 1736568009681,
+    "page": 145,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "CodisLabs/codis",
+      "stars": 13175,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1064453125,
+          "content": "*.log\n*.swp\n*.out\n*.dump\n*.log.*\n*.tmp\n*.rdb\n\n.DS_Store\n.htaccess\n\n/bin\n/tmp\n/pkg/utils/version.go\n\nmakefile\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.8310546875,
+          "content": "language: go\n\nos:\n    - linux\n    - osx\n\ngo:\n    - 1.11.x\n    - 1.10.x\n    - 1.9.x\n    - 1.8.x\n\nscript:\n    - make\n    - make gotest\n\nbefore_deploy:\n    - export   DEPLOY_TARGET=codis${TRAVIS_TAG}-go${TRAVIS_GO_VERSION}-${TRAVIS_OS_NAME}\n    - mv bin ${DEPLOY_TARGET}\n    - zip -r ${DEPLOY_TARGET}.zip ${DEPLOY_TARGET} && tar -czvf ${DEPLOY_TARGET}.tar.gz ${DEPLOY_TARGET}\n\ndeploy:\n    provider: releases\n    overwrite: true\n    api_key:\n        secure: RKVkoCwNJej19d6KbgpxkwJ9H3bu0icS895G9BkaytUjRVO129S93L4xpHRfeIyySZNVrd4P/le01JIJ6/Fl89wKCc/5oX07aFo6l0w/+JKxSn33FsGh8pGTg5wt9Vm5aqccB6lbkylwKrvDUOwuJCbzMva8f1YrWv0a+3I6JKU=\n    file:\n        - ${DEPLOY_TARGET}.zip\n        - ${DEPLOY_TARGET}.tar.gz\n    skip_cleanup: true\n    on:\n        repo: CodisLabs/codis\n        tags: true\n        condition: $TRAVIS_GO_VERSION =~ ^1\\.(1[0-9]|[8-9])\\.[0-9]+$\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.2744140625,
+          "content": "FROM golang:1.8\n\nRUN apt-get update\nRUN apt-get install -y autoconf\n\nENV GOPATH /gopath\nENV CODIS  ${GOPATH}/src/github.com/CodisLabs/codis\nENV PATH   ${GOPATH}/bin:${PATH}:${CODIS}/bin\nCOPY . ${CODIS}\n\nRUN make -C ${CODIS} distclean\nRUN make -C ${CODIS} build-all\n\nWORKDIR /codis\n"
+        },
+        {
+          "name": "Godeps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "MIT-LICENSE.txt",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 CodisLabs\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.681640625,
+          "content": ".DEFAULT_GOAL := build-all\n\nexport GO15VENDOREXPERIMENT=1\n\nbuild-all: codis-server codis-dashboard codis-proxy codis-admin codis-ha codis-fe clean-gotest\n\ncodis-deps:\n\t@mkdir -p bin config && bash version\n\t@make --no-print-directory -C vendor/github.com/spinlock/jemalloc-go/\n\ncodis-dashboard: codis-deps\n\tgo build -i -o bin/codis-dashboard ./cmd/dashboard\n\t@./bin/codis-dashboard --default-config > config/dashboard.toml\n\ncodis-proxy: codis-deps\n\tgo build -i -tags \"cgo_jemalloc\" -o bin/codis-proxy ./cmd/proxy\n\t@./bin/codis-proxy --default-config > config/proxy.toml\n\ncodis-admin: codis-deps\n\tgo build -i -o bin/codis-admin ./cmd/admin\n\ncodis-ha: codis-deps\n\tgo build -i -o bin/codis-ha ./cmd/ha\n\ncodis-fe: codis-deps\n\tgo build -i -o bin/codis-fe ./cmd/fe\n\t@rm -rf bin/assets; cp -rf cmd/fe/assets bin/\n\ncodis-server:\n\t@mkdir -p bin\n\t@rm -f bin/codis-server*\n\tmake -j4 -C extern/redis-3.2.11/\n\t@cp -f extern/redis-3.2.11/src/redis-server  bin/codis-server\n\t@cp -f extern/redis-3.2.11/src/redis-benchmark bin/\n\t@cp -f extern/redis-3.2.11/src/redis-cli bin/\n\t@cp -f extern/redis-3.2.11/src/redis-sentinel bin/\n\t@cp -f extern/redis-3.2.11/redis.conf config/\n\t@sed -e \"s/^sentinel/# sentinel/g\" extern/redis-3.2.11/sentinel.conf > config/sentinel.conf\n\nclean-gotest:\n\t@rm -rf ./pkg/topom/gotest.tmp\n\nclean: clean-gotest\n\t@rm -rf bin\n\t@rm -rf scripts/tmp\n\ndistclean: clean\n\t@make --no-print-directory --quiet -C extern/redis-3.2.11 distclean\n\t@make --no-print-directory --quiet -C vendor/github.com/spinlock/jemalloc-go/ distclean\n\ngotest: codis-deps\n\tgo test ./cmd/... ./pkg/...\n\ngobench: codis-deps\n\tgo test -gcflags -l -bench=. -v ./pkg/...\n\ndocker:\n\tdocker build --force-rm -t codis-image .\n\ndemo:\n\tpushd example && make\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.1025390625,
+          "content": "<img src=\"doc/pictures/logo-3.png\" height=80></img>\n\n[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CodisLabs/codis?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n[![Build Status](https://travis-ci.org/CodisLabs/codis.svg)](https://travis-ci.org/CodisLabs/codis)\n\nCodis is a proxy based high performance Redis cluster solution written in Go. It is production-ready and widely used at [wandoujia.com](http://wandoujia.com) and many companies. You can see [Codis Releases](https://github.com/CodisLabs/codis/releases) for latest and most stable realeases.\n\n## Donation\nDonate if you want to help us maintaining this project. Thank you!\n[See this issue for details](https://github.com/CodisLabs/codis/issues/976)\n\n## Compared with Twemproxy and Redis Cluster\n<table>\n<tr><th></th><th>Codis</th><th>Twemproxy</th><th>Redis Cluster</th></tr>\n<tr><td>resharding without restarting cluster</td><td>Yes</td><td>No</td><td>Yes</td></tr>\n<tr><td>pipeline</td><td>Yes</td><td>Yes</td><td>No</td></tr>\n<tr><td>hash tags for multi-key operations</td><td>Yes</td><td>Yes</td><td>Yes</td></tr>\n<tr><td>multi-key operations while resharding</td><td>Yes</td><td>-</td><td>No(<a href=\"http://redis.io/topics/cluster-spec#multiple-keys-operations\">details</a>)</td></tr>\n<tr><td>Redis clients supporting</td><td>Any clients</td><td>Any clients</td><td>Clients have to support cluster protocol</td></tr>\n</table>\n\"Resharding\" means migrating the data in one slot from one redis server to another, usually happens while increasing/decreasing the number of redis servers.\n\n## Other Features\n* GUI website dashboard & admin tools\n* Supports most of Redis commands, Fully compatible with Twemproxy(https://github.com/twitter/twemproxy)\n* Proxies can register on zk/etcd, clients can avoid dead proxies, see \"High Availability\" section.\n\n## Tutorial\n\n[简体中文](doc/tutorial_zh.md)\n[English (WIP) ](doc/tutorial_en.md)\n\n## FAQ\n\n[简体中文](doc/FAQ_zh.md)\n[English (WIP) ](FAQ_en.md)\n\n## High Availability\n\n[简体中文](doc/tutorial_zh.md#3-jodis-与-ha)\n[English (WIP) ](doc/tutorial_en.md#ha)\n\n## Architecture\n\n![architecture](doc/pictures/architecture.png)\n\n## Snapshots\n\nProxy\n![proxy](doc/pictures/snapshots1.png)\n\nSlots\n![slots](doc/pictures/snapshots2.png)\n\nGroup\n![group](doc/pictures/snapshots3.png)\n\nSentinel\n![sentinel](doc/pictures/snapshots4.png)\n\n## Benchmarks\n[See benchmark results](doc/benchmark.md)\n\n## Authors\n\nActive authors:\n* [@spinlock9](https://github.com/spinlock) [微博@斯宾洛克](http://weibo.com/spinlock9)\n* [@yangzhe1991](https://github.com/yangzhe1991) [微博@\\_杨肉\\_](http://weibo.com/yangzhe1991)\n\nEmeritus authors:\n* [@goroutine](https://github.com/ngaut) [微博@goroutine](http://weibo.com/u/1923497393)\n* [@c4pt0r](https://github.com/c4pt0r) [微博@Dongxu\\_Huang](http://weibo.com/c4pt0r)\n\nThanks:\n* [@ivanzhaowy](https://github.com/ivanzhaowy)\n* [@Apache9](https://github.com/apache9) [微博@Apache9](http://weibo.com/u/1876829375)\n\n## License\n\nCodis is licensed under MIT， see MIT-LICENSE.txt\n\n-------------\n*You are welcome to use Codis in your product, and feel free to let us know~ :)*\n"
+        },
+        {
+          "name": "admin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ansible",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "deploy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extern",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kubernetes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "version",
+          "type": "blob",
+          "size": 0.5126953125,
+          "content": "#!/bin/bash\n\nversion=`git log --date=iso --pretty=format:\"%cd @%H\" -1`\nif [ $? -ne 0 ]; then\n    version=\"unknown version\"\nfi\n\ncompile=`date +\"%F %T %z\"`\" by \"`go version`\nif [ $? -ne 0 ]; then\n    compile=\"unknown datetime\"\nfi\n\ndescribe=`git describe --tags 2>/dev/null`\nif [ $? -eq 0 ]; then\n    version=\"${version} @${describe}\"\nfi\n\ncat << EOF | gofmt > pkg/utils/version.go\npackage utils\n\nconst (\n    Version = \"$version\"\n    Compile = \"$compile\"\n)\nEOF\n\ncat << EOF > bin/version\nversion = $version\ncompile = $compile\nEOF\n"
+        },
+        {
+          "name": "wandoujia_license.txt",
+          "type": "blob",
+          "size": 1.0556640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Wandoujia Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        }
+      ]
+    }
+  ]
+}

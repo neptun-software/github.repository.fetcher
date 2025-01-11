@@ -1,0 +1,160 @@
+{
+  "metadata": {
+    "timestamp": 1736567331700,
+    "page": 941,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "sevlyar/go-daemon",
+      "stars": 2214,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2060546875,
+          "content": "language: go\n\ngo:\n  - 1.3\n  - 1.5\n  - tip\n\nbefore_install:\n  - go get -t -v ./...\n\nscript:\n  - go test -v -coverprofile=coverage.txt -covermode=atomic\n\nafter_success:\n  - bash <(curl -s https://codecov.io/bash)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0341796875,
+          "content": "Copyright (C) 2013 Sergey Yarmonov\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0703125,
+          "content": "# go-daemon [![Build Status](https://travis-ci.org/sevlyar/go-daemon.svg?branch=master)](https://travis-ci.org/sevlyar/go-daemon) [![GoDoc](https://godoc.org/github.com/sevlyar/go-daemon?status.svg)](https://godoc.org/github.com/sevlyar/go-daemon)\n\nLibrary for writing system daemons in Go.\n\nNow supported only UNIX-based OS (Windows is not supported). But the library was tested only on Linux\nand OSX, so that if you have an ability to test the library on other platforms, give me feedback, please (#26).\n\n*Please, feel free to send me bug reports and fixes. Many thanks to all contributors.*\n\n## Features\n\n* Goroutine-safe daemonization;\n* Out of box work with pid-files;\n* Easy handling of system signals;\n* The control of a daemon.\n\n## Installation\n\n\tgo get github.com/sevlyar/go-daemon\n\nYou can use [gopkg.in](http://labix.org/gopkg.in):\n\n\tgo get gopkg.in/sevlyar/go-daemon.v0\n\nIf you want to use the library in production project, please use vendoring,\nbecause i can not ensure backward compatibility before release v1.0.\n\n## Examples\n\n* [Simple](examples/cmd/gd-simple/)\n* [Log rotation](examples/cmd/gd-log-rotation/)\n* [Signal handling](examples/cmd/gd-signal-handling/)\n\n## Documentation\n\n[godoc.org/github.com/sevlyar/go-daemon](https://godoc.org/github.com/sevlyar/go-daemon)\n\n## How it works\n\nWe can not use `fork` syscall in Golang's runtime, because child process doesn't inherit\nthreads and goroutines in that case. The library uses a simple trick: it runs its own copy with\na mark - a predefined environment variable. Availability of the variable for the process means\nan execution in the child's copy. So that if the mark is not setted - the library executes\nparent's operations and runs its own copy with mark, and if the mark is setted - the library\nexecutes child's operations:\n\n```go\nimport \"log\"\n\nfunc main() {\n\tPre()\n\n\tcontext := new(Context)\n\tchild, _ := context.Reborn()\n\n\tif child != nil {\n\t\tPostParent()\n\t} else {\n\t\tdefer func() {\n\t\t\tif err := context.Release(); err != nil {\n\t\t\t\tlog.Printf(\"Unable to release pid-file: %s\", err.Error())\n\t\t\t}\n\t\t}()\n\n\t\tPostChild()\n\t}\n}\n```\n\n![](img/idea.png)\n"
+        },
+        {
+          "name": "command.go",
+          "type": "blob",
+          "size": 1.9482421875,
+          "content": "package daemon\n\nimport (\n\t\"fmt\"\n\t\"os\"\n)\n\n// AddCommand is wrapper on AddFlag and SetSigHandler functions.\nfunc AddCommand(f Flag, sig os.Signal, handler SignalHandlerFunc) {\n\tif f != nil {\n\t\tAddFlag(f, sig)\n\t}\n\tif handler != nil {\n\t\tSetSigHandler(handler, sig)\n\t}\n}\n\n// Flag is the interface implemented by an object that has two state:\n// 'set' and 'unset'.\ntype Flag interface {\n\tIsSet() bool\n}\n\n// BoolFlag returns new object that implements interface Flag and\n// has state 'set' when var with the given address is true.\nfunc BoolFlag(f *bool) Flag {\n\treturn &boolFlag{f}\n}\n\n// StringFlag returns new object that implements interface Flag and\n// has state 'set' when var with the given address equals given value of v.\nfunc StringFlag(f *string, v string) Flag {\n\treturn &stringFlag{f, v}\n}\n\ntype boolFlag struct {\n\tb *bool\n}\n\nfunc (f *boolFlag) IsSet() bool {\n\tif f == nil {\n\t\treturn false\n\t}\n\treturn *f.b\n}\n\ntype stringFlag struct {\n\ts *string\n\tv string\n}\n\nfunc (f *stringFlag) IsSet() bool {\n\tif f == nil {\n\t\treturn false\n\t}\n\treturn *f.s == f.v\n}\n\nvar flags = make(map[Flag]os.Signal)\n\n// Flags returns flags that was added by the function AddFlag.\nfunc Flags() map[Flag]os.Signal {\n\treturn flags\n}\n\n// AddFlag adds the flag and signal to the internal map.\nfunc AddFlag(f Flag, sig os.Signal) {\n\tflags[f] = sig\n}\n\n// SendCommands sends active signals to the given process.\nfunc SendCommands(p *os.Process) (err error) {\n\tif p == nil {\n\t\treturn fmt.Errorf(\"process not found\")\n\t}\n\tfor _, sig := range signals() {\n\t\tif err = p.Signal(sig); err != nil {\n\t\t\treturn fmt.Errorf(\"failed to send signal %d: %w\", sig, err)\n\t\t}\n\t}\n\treturn nil\n}\n\n// ActiveFlags returns flags that has the state 'set'.\nfunc ActiveFlags() (ret []Flag) {\n\tret = make([]Flag, 0, 1)\n\tfor f := range flags {\n\t\tif f.IsSet() {\n\t\t\tret = append(ret, f)\n\t\t}\n\t}\n\treturn\n}\n\nfunc signals() (ret []os.Signal) {\n\tret = make([]os.Signal, 0, 1)\n\tfor f, sig := range flags {\n\t\tif f.IsSet() {\n\t\t\tret = append(ret, sig)\n\t\t}\n\t}\n\treturn\n}\n"
+        },
+        {
+          "name": "compilation_test.go",
+          "type": "blob",
+          "size": 1.578125,
+          "content": "package daemon\n\nimport (\n\t\"os\"\n\t\"os/exec\"\n\t\"runtime\"\n\t\"strconv\"\n\t\"strings\"\n\t\"testing\"\n)\n\nfunc TestCompilation(t *testing.T) {\n\tif testing.Short() {\n\t\tt.Skip(\"short mode\")\n\t}\n\tif !requireMinor(5) {\n\t\tt.Skip(runtime.Version(), \"cross-compilation requires compiler bootstrapping\")\n\t}\n\n\tpairs := []string{\n\t\t\"darwin/amd64\",\n\t\t\"dragonfly/amd64\",\n\t\t\"freebsd/386\",\n\t\t\"freebsd/amd64\",\n\t\t\"freebsd/arm\",\n\t\t\"linux/386\",\n\t\t\"linux/amd64\",\n\t\t\"linux/arm\",\n\t\t\"linux/arm64\",\n\t\t\"linux/riscv64\",\n\t\t\"netbsd/386\",\n\t\t\"netbsd/amd64\",\n\t\t\"netbsd/arm\",\n\t\t\"openbsd/386\",\n\t\t\"openbsd/amd64\",\n\t\t\"openbsd/arm\",\n\t\t\"solaris/amd64\",\n\t\t\"windows/386\",\n\t\t\"windows/amd64\",\n\n\t\t// TODO(yar): support plan9\n\t\t//\"plan9/386\",\n\t\t//\"plan9/amd64\",\n\t\t//\"plan9/arm\",\n\t}\n\n\tenv := os.Environ()\n\tfor i := range pairs {\n\t\tp := pairs[i]\n\t\tpair := strings.Split(p, \"/\")\n\t\tgoos, goarch := pair[0], pair[1]\n\t\tif goos == \"solaris\" && !requireMinor(7) {\n\t\t\tt.Log(\"skip, solaris requires at least go1.7\")\n\t\t\tcontinue\n\t\t}\n\t\tif goarch == \"riscv64\" && !requireMinor(14) {\n\t\t\tt.Log(\"skip, riscv64 requires at least go1.14\")\n\t\t\tcontinue\n\t\t}\n\t\tcmd := exec.Command(\"go\", \"build\", \"./\")\n\t\tenv := append([]string(nil), env...)\n\t\tcmd.Env = append(env, \"GOOS=\"+goos, \"GOARCH=\"+goarch)\n\t\tout, err := cmd.CombinedOutput()\n\t\tif len(out) > 0 {\n\t\t\tt.Log(p, \"\\n\", string(out))\n\t\t}\n\t\tif err != nil {\n\t\t\tt.Error(p, err)\n\t\t}\n\t}\n}\n\nfunc requireMinor(minor int) bool {\n\tstr := runtime.Version()\n\tif !strings.HasPrefix(str, \"go1.\") {\n\t\treturn true\n\t}\n\tstr = strings.TrimPrefix(str, \"go1.\")\n\tver, err := strconv.ParseFloat(str, 10)\n\tif err != nil {\n\t\treturn false\n\t}\n\treturn ver >= float64(minor)\n}\n"
+        },
+        {
+          "name": "daemon.go",
+          "type": "blob",
+          "size": 1.2880859375,
+          "content": "package daemon\n\nimport (\n\t\"errors\"\n\t\"os\"\n)\n\nvar errNotSupported = errors.New(\"daemon: Non-POSIX OS is not supported\")\n\n// Mark of daemon process - system environment variable _GO_DAEMON=1\nconst (\n\tMARK_NAME  = \"_GO_DAEMON\"\n\tMARK_VALUE = \"1\"\n)\n\n// Default file permissions for log and pid files.\nconst FILE_PERM = os.FileMode(0640)\n\n// WasReborn returns true in child process (daemon) and false in parent process.\nfunc WasReborn() bool {\n\treturn os.Getenv(MARK_NAME) == MARK_VALUE\n}\n\n// Reborn runs second copy of current process in the given context.\n// function executes separate parts of code in child process and parent process\n// and provides demonization of child process. It look similar as the\n// fork-daemonization, but goroutine-safe.\n// In success returns *os.Process in parent process and nil in child process.\n// Otherwise returns error.\nfunc (d *Context) Reborn() (child *os.Process, err error) {\n\treturn d.reborn()\n}\n\n// Search searches daemons process by given in context pid file name.\n// If success returns pointer on daemons os.Process structure,\n// else returns error. Returns nil if filename is empty.\nfunc (d *Context) Search() (daemon *os.Process, err error) {\n\treturn d.search()\n}\n\n// Release provides correct pid-file release in daemon.\nfunc (d *Context) Release() error {\n\treturn d.release()\n}\n"
+        },
+        {
+          "name": "daemon_stub.go",
+          "type": "blob",
+          "size": 1.5849609375,
+          "content": "//go:build !darwin && !dragonfly && !freebsd && !linux &&!netbsd && !openbsd && !plan9 && !solaris\n// +build !darwin,!dragonfly,!freebsd,!linux,!netbsd,!openbsd,!plan9,!solaris\n\npackage daemon\n\nimport (\n\t\"os\"\n)\n\n// A Context describes daemon context.\ntype Context struct {\n\t// If PidFileName is non-empty, parent process will try to create and lock\n\t// pid file with given name. Child process writes process id to file.\n\tPidFileName string\n\t// Permissions for new pid file.\n\tPidFilePerm os.FileMode\n\n\t// If LogFileName is non-empty, parent process will create file with given name\n\t// and will link to fd 2 (stderr) for child process.\n\tLogFileName string\n\t// Permissions for new log file.\n\tLogFilePerm os.FileMode\n\n\t// If WorkDir is non-empty, the child changes into the directory before\n\t// creating the process.\n\tWorkDir string\n\t// If Chroot is non-empty, the child changes root directory\n\tChroot string\n\n\t// If Env is non-nil, it gives the environment variables for the\n\t// daemon-process in the form returned by os.Environ.\n\t// If it is nil, the result of os.Environ will be used.\n\tEnv []string\n\t// If Args is non-nil, it gives the command-line args for the\n\t// daemon-process. If it is nil, the result of os.Args will be used\n\t// (without program name).\n\tArgs []string\n\n\t// If Umask is non-zero, the daemon-process call Umask() func with given value.\n\tUmask int\n}\n\nfunc (d *Context) reborn() (child *os.Process, err error) {\n\treturn nil, errNotSupported\n}\n\nfunc (d *Context) search() (daemon *os.Process, err error) {\n\treturn nil, errNotSupported\n}\n\nfunc (d *Context) release() (err error) {\n\treturn errNotSupported\n}\n"
+        },
+        {
+          "name": "daemon_test.go",
+          "type": "blob",
+          "size": 1.2001953125,
+          "content": "package daemon\n\nimport (\n\t\"flag\"\n\t\"log\"\n\t\"os\"\n\t\"syscall\"\n\t\"time\"\n)\n\nfunc Example() {\n\tsignal := flag.String(\"s\", \"\", \"send signal to daemon\")\n\n\thandler := func(sig os.Signal) error {\n\t\tlog.Println(\"signal:\", sig)\n\t\tif sig == syscall.SIGTERM {\n\t\t\treturn ErrStop\n\t\t}\n\t\treturn nil\n\t}\n\n\t// Define command: command-line arg, system signal and handler\n\tAddCommand(StringFlag(signal, \"term\"), syscall.SIGTERM, handler)\n\tAddCommand(StringFlag(signal, \"reload\"), syscall.SIGHUP, handler)\n\tflag.Parse()\n\n\t// Define daemon context\n\tdmn := &Context{\n\t\tPidFileName: \"/var/run/daemon.pid\",\n\t\tPidFilePerm: 0644,\n\t\tLogFileName: \"/var/log/daemon.log\",\n\t\tLogFilePerm: 0640,\n\t\tWorkDir:     \"/\",\n\t\tUmask:       027,\n\t}\n\n\t// Send commands if needed\n\tif len(ActiveFlags()) > 0 {\n\t\td, err := dmn.Search()\n\t\tif err != nil {\n\t\t\tlog.Fatalln(\"Unable send signal to the daemon:\", err)\n\t\t}\n\t\tSendCommands(d)\n\t\treturn\n\t}\n\n\t// Process daemon operations - send signal if present flag or daemonize\n\tchild, err := dmn.Reborn()\n\tif err != nil {\n\t\tlog.Fatalln(err)\n\t}\n\tif child != nil {\n\t\treturn\n\t}\n\tdefer dmn.Release()\n\n\t// Run main operation\n\tgo func() {\n\t\tfor {\n\t\t\ttime.Sleep(0)\n\t\t}\n\t}()\n\n\terr = ServeSignals()\n\tif err != nil {\n\t\tlog.Println(\"Error:\", err)\n\t}\n}\n"
+        },
+        {
+          "name": "daemon_unix.go",
+          "type": "blob",
+          "size": 5.607421875,
+          "content": "//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd || plan9 || solaris\n// +build darwin dragonfly freebsd linux netbsd openbsd plan9 solaris\n\npackage daemon\n\nimport (\n\t\"encoding/json\"\n\t\"fmt\"\n\t\"os\"\n\t\"path/filepath\"\n\t\"syscall\"\n)\n\n// A Context describes daemon context.\ntype Context struct {\n\t// If PidFileName is non-empty, parent process will try to create and lock\n\t// pid file with given name. Child process writes process id to file.\n\tPidFileName string\n\t// Permissions for new pid file.\n\tPidFilePerm os.FileMode\n\n\t// If LogFileName is non-empty, parent process will create file with given name\n\t// and will link to fd 2 (stderr) for child process.\n\tLogFileName string\n\t// Permissions for new log file.\n\tLogFilePerm os.FileMode\n\n\t// If WorkDir is non-empty, the child changes into the directory before\n\t// creating the process.\n\tWorkDir string\n\t// If Chroot is non-empty, the child changes root directory\n\tChroot string\n\n\t// If Env is non-nil, it gives the environment variables for the\n\t// daemon-process in the form returned by os.Environ.\n\t// If it is nil, the result of os.Environ will be used.\n\tEnv []string\n\t// If Args is non-nil, it gives the command-line args for the\n\t// daemon-process. If it is nil, the result of os.Args will be used.\n\tArgs []string\n\n\t// Credential holds user and group identities to be assumed by a daemon-process.\n\tCredential *syscall.Credential\n\t// If Umask is non-zero, the daemon-process call Umask() func with given value.\n\tUmask int\n\n\t// Struct contains only serializable public fields (!!!)\n\tabspath  string\n\tpidFile  *LockFile\n\tlogFile  *os.File\n\tnullFile *os.File\n\n\trpipe, wpipe *os.File\n}\n\nfunc (d *Context) SetLogFile(fd *os.File) {\n\td.logFile = fd\n}\n\nfunc (d *Context) reborn() (child *os.Process, err error) {\n\tif !WasReborn() {\n\t\tchild, err = d.parent()\n\t} else {\n\t\terr = d.child()\n\t}\n\treturn\n}\n\nfunc (d *Context) search() (daemon *os.Process, err error) {\n\tif len(d.PidFileName) > 0 {\n\t\tvar pid int\n\t\tif pid, err = ReadPidFile(d.PidFileName); err != nil {\n\t\t\treturn\n\t\t}\n\t\tdaemon, err = os.FindProcess(pid)\n\t\tif err == nil && daemon != nil {\n\t\t\t// Send a test signal to test if this daemon is actually alive or dead\n\t\t\t// An error means it is dead\n\t\t\tif daemon.Signal(syscall.Signal(0)) != nil {\n\t\t\t\tdaemon = nil\n\t\t\t}\n\t\t}\n\t}\n\treturn\n}\n\nfunc (d *Context) parent() (child *os.Process, err error) {\n\tif err = d.prepareEnv(); err != nil {\n\t\treturn\n\t}\n\n\tdefer d.closeFiles()\n\tif err = d.openFiles(); err != nil {\n\t\treturn\n\t}\n\n\tattr := &os.ProcAttr{\n\t\tDir:   d.WorkDir,\n\t\tEnv:   d.Env,\n\t\tFiles: d.files(),\n\t\tSys: &syscall.SysProcAttr{\n\t\t\t//Chroot:     d.Chroot,\n\t\t\tCredential: d.Credential,\n\t\t\tSetsid:     true,\n\t\t},\n\t}\n\n\tif child, err = os.StartProcess(d.abspath, d.Args, attr); err != nil {\n\t\tif d.pidFile != nil {\n\t\t\td.pidFile.Remove()\n\t\t}\n\t\treturn\n\t}\n\n\td.rpipe.Close()\n\tencoder := json.NewEncoder(d.wpipe)\n\terr = encoder.Encode(d)\n\treturn\n}\n\nfunc (d *Context) openFiles() (err error) {\n\tif d.PidFilePerm == 0 {\n\t\td.PidFilePerm = FILE_PERM\n\t}\n\tif d.LogFilePerm == 0 {\n\t\td.LogFilePerm = FILE_PERM\n\t}\n\n\tif d.nullFile, err = os.Open(os.DevNull); err != nil {\n\t\treturn\n\t}\n\n\tif len(d.PidFileName) > 0 {\n\t\tif d.PidFileName, err = filepath.Abs(d.PidFileName); err != nil {\n\t\t\treturn err\n\t\t}\n\t\tif d.pidFile, err = OpenLockFile(d.PidFileName, d.PidFilePerm); err != nil {\n\t\t\treturn\n\t\t}\n\t\tif err = d.pidFile.Lock(); err != nil {\n\t\t\treturn\n\t\t}\n\t\tif len(d.Chroot) > 0 {\n\t\t\t// Calculate PID-file absolute path in child's environment\n\t\t\tif d.PidFileName, err = filepath.Rel(d.Chroot, d.PidFileName); err != nil {\n\t\t\t\treturn err\n\t\t\t}\n\t\t\td.PidFileName = \"/\" + d.PidFileName\n\t\t}\n\t}\n\n\tif len(d.LogFileName) > 0 {\n\t\tif d.LogFileName == \"/dev/stdout\" {\n\t\t\td.logFile = os.Stdout\n\t\t} else if d.LogFileName == \"/dev/stderr\" {\n\t\t\td.logFile = os.Stderr\n\t\t} else if d.logFile, err = os.OpenFile(d.LogFileName,\n\t\t\tos.O_WRONLY|os.O_CREATE|os.O_APPEND, d.LogFilePerm); err != nil {\n\t\t\treturn\n\t\t}\n\t}\n\n\td.rpipe, d.wpipe, err = os.Pipe()\n\treturn\n}\n\nfunc (d *Context) closeFiles() (err error) {\n\tcl := func(file **os.File) {\n\t\tif *file != nil {\n\t\t\t(*file).Close()\n\t\t\t*file = nil\n\t\t}\n\t}\n\tcl(&d.rpipe)\n\tcl(&d.wpipe)\n\tcl(&d.logFile)\n\tcl(&d.nullFile)\n\tif d.pidFile != nil {\n\t\td.pidFile.Close()\n\t\td.pidFile = nil\n\t}\n\treturn\n}\n\nfunc (d *Context) prepareEnv() (err error) {\n\tif d.abspath, err = osExecutable(); err != nil {\n\t\treturn\n\t}\n\n\tif len(d.Args) == 0 {\n\t\td.Args = os.Args\n\t}\n\n\tmark := fmt.Sprintf(\"%s=%s\", MARK_NAME, MARK_VALUE)\n\tif len(d.Env) == 0 {\n\t\td.Env = os.Environ()\n\t}\n\td.Env = append(d.Env, mark)\n\n\treturn\n}\n\nfunc (d *Context) files() (f []*os.File) {\n\tlog := d.nullFile\n\tif d.logFile != nil {\n\t\tlog = d.logFile\n\t}\n\n\tf = []*os.File{\n\t\td.rpipe,    // (0) stdin\n\t\tlog,        // (1) stdout\n\t\tlog,        // (2) stderr\n\t\td.nullFile, // (3) dup on fd 0 after initialization\n\t}\n\n\tif d.pidFile != nil {\n\t\tf = append(f, d.pidFile.File) // (4) pid file\n\t}\n\treturn\n}\n\nvar initialized = false\n\nfunc (d *Context) child() (err error) {\n\tif initialized {\n\t\treturn os.ErrInvalid\n\t}\n\tinitialized = true\n\n\tdecoder := json.NewDecoder(os.Stdin)\n\tif err = decoder.Decode(d); err != nil {\n\t\treturn\n\t}\n\n\t// create PID file after context decoding to know PID file full path.\n\tif len(d.PidFileName) > 0 {\n\t\td.pidFile = NewLockFile(os.NewFile(4, d.PidFileName))\n\t\tif err = d.pidFile.WritePid(); err != nil {\n\t\t\treturn\n\t\t}\n\t\tdefer func() {\n\t\t\tif err != nil {\n\t\t\t\td.pidFile.Remove()\n\t\t\t}\n\t\t}()\n\t}\n\n\tif err = syscallDup(3, 0); err != nil {\n\t\treturn\n\t}\n\n\tif d.Umask != 0 {\n\t\tsyscall.Umask(int(d.Umask))\n\t}\n\tif len(d.Chroot) > 0 {\n\t\terr = syscall.Chroot(d.Chroot)\n\t\tif err != nil {\n\t\t\treturn\n\t\t}\n\t}\n\n\treturn\n}\n\nfunc (d *Context) release() error {\n\tif !initialized || d.pidFile == nil {\n\t\treturn nil\n\t}\n\n\treturn d.pidFile.Remove()\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.1435546875,
+          "content": "module github.com/sevlyar/go-daemon\n\ngo 1.13\n\nrequire (\n\tgithub.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0\n\tgolang.org/x/sys v0.17.0\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 0.37109375,
+          "content": "github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=\ngithub.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=\ngolang.org/x/sys v0.17.0 h1:25cE3gD+tdBA7lp7QfhuV+rJiE9YXTcS3VG1SqssI/Y=\ngolang.org/x/sys v0.17.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=\n"
+        },
+        {
+          "name": "img",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lock_file.go",
+          "type": "blob",
+          "size": 2.5869140625,
+          "content": "package daemon\n\nimport (\n\t\"errors\"\n\t\"fmt\"\n\t\"io\"\n\t\"os\"\n)\n\nvar (\n\t// ErrWouldBlock indicates on locking pid-file by another process.\n\tErrWouldBlock = errors.New(\"daemon: Resource temporarily unavailable\")\n)\n\n// LockFile wraps *os.File and provide functions for locking of files.\ntype LockFile struct {\n\t*os.File\n}\n\n// NewLockFile returns a new LockFile with the given File.\nfunc NewLockFile(file *os.File) *LockFile {\n\treturn &LockFile{file}\n}\n\n// CreatePidFile opens the named file, applies exclusive lock and writes\n// current process id to file.\nfunc CreatePidFile(name string, perm os.FileMode) (lock *LockFile, err error) {\n\tif lock, err = OpenLockFile(name, perm); err != nil {\n\t\treturn\n\t}\n\tif err = lock.Lock(); err != nil {\n\t\tlock.Remove()\n\t\treturn\n\t}\n\tif err = lock.WritePid(); err != nil {\n\t\tlock.Remove()\n\t}\n\treturn\n}\n\n// OpenLockFile opens the named file with flags os.O_RDWR|os.O_CREATE and specified perm.\n// If successful, function returns LockFile for opened file.\nfunc OpenLockFile(name string, perm os.FileMode) (lock *LockFile, err error) {\n\tvar file *os.File\n\tif file, err = os.OpenFile(name, os.O_RDWR|os.O_CREATE, perm); err == nil {\n\t\tlock = &LockFile{file}\n\t}\n\treturn\n}\n\n// Lock apply exclusive lock on an open file. If file already locked, returns error.\nfunc (file *LockFile) Lock() error {\n\treturn lockFile(file.Fd())\n}\n\n// Unlock remove exclusive lock on an open file.\nfunc (file *LockFile) Unlock() error {\n\treturn unlockFile(file.Fd())\n}\n\n// ReadPidFile reads process id from file with give name and returns pid.\n// If unable read from a file, returns error.\nfunc ReadPidFile(name string) (pid int, err error) {\n\tvar file *os.File\n\tif file, err = os.OpenFile(name, os.O_RDONLY, 0640); err != nil {\n\t\treturn\n\t}\n\tdefer file.Close()\n\n\tlock := &LockFile{file}\n\tpid, err = lock.ReadPid()\n\treturn\n}\n\n// WritePid writes current process id to an open file.\nfunc (file *LockFile) WritePid() (err error) {\n\tif _, err = file.Seek(0, io.SeekStart); err != nil {\n\t\treturn\n\t}\n\tvar fileLen int\n\tif fileLen, err = fmt.Fprint(file, os.Getpid()); err != nil {\n\t\treturn\n\t}\n\tif err = file.Truncate(int64(fileLen)); err != nil {\n\t\treturn\n\t}\n\terr = file.Sync()\n\treturn\n}\n\n// ReadPid reads process id from file and returns pid.\n// If unable read from a file, returns error.\nfunc (file *LockFile) ReadPid() (pid int, err error) {\n\tif _, err = file.Seek(0, io.SeekStart); err != nil {\n\t\treturn\n\t}\n\t_, err = fmt.Fscan(file, &pid)\n\treturn\n}\n\n// Remove removes lock, closes and removes an open file.\nfunc (file *LockFile) Remove() error {\n\tdefer file.Close()\n\n\tif err := file.Unlock(); err != nil {\n\t\treturn err\n\t}\n\n\treturn os.Remove(file.Name())\n}\n"
+        },
+        {
+          "name": "lock_file_solaris.go",
+          "type": "blob",
+          "size": 0.681640625,
+          "content": "//go:build solaris\n// +build solaris\n\npackage daemon\n\nimport (\n\t\"io\"\n\t\"syscall\"\n)\n\nfunc lockFile(fd uintptr) error {\n\tlockInfo := syscall.Flock_t{\n\t\tType:   syscall.F_WRLCK,\n\t\tWhence: io.SeekStart,\n\t\tStart:  0,\n\t\tLen:    0,\n\t}\n\tif err := syscall.FcntlFlock(fd, syscall.F_SETLK, &lockInfo); err != nil {\n\t\tif err == syscall.EAGAIN {\n\t\t\terr = ErrWouldBlock\n\t\t}\n\t\treturn err\n\t}\n\treturn nil\n}\n\nfunc unlockFile(fd uintptr) error {\n\tlockInfo := syscall.Flock_t{\n\t\tType:   syscall.F_UNLCK,\n\t\tWhence: io.SeekStart,\n\t\tStart:  0,\n\t\tLen:    0,\n\t}\n\tif err := syscall.FcntlFlock(fd, syscall.F_GETLK, &lockInfo); err != nil {\n\t\tif err == syscall.EAGAIN {\n\t\t\terr = ErrWouldBlock\n\t\t}\n\t\treturn err\n\t}\n\treturn nil\n}\n"
+        },
+        {
+          "name": "lock_file_stub.go",
+          "type": "blob",
+          "size": 0.310546875,
+          "content": "//go:build !darwin && !dragonfly && !freebsd && !linux && !netbsd && !openbsd && !plan9 && !solaris\n// +build !darwin,!dragonfly,!freebsd,!linux,!netbsd,!openbsd,!plan9,!solaris\n\npackage daemon\n\nfunc lockFile(fd uintptr) error {\n\treturn errNotSupported\n}\n\nfunc unlockFile(fd uintptr) error {\n\treturn errNotSupported\n}\n"
+        },
+        {
+          "name": "lock_file_test.go",
+          "type": "blob",
+          "size": 2.1279296875,
+          "content": "package daemon\n\nimport (\n\t\"fmt\"\n\t\"io/ioutil\"\n\t\"os\"\n\t\"runtime\"\n\t\"testing\"\n)\n\nvar (\n\tfilename                = os.TempDir() + \"/test.lock\"\n\tfileperm    os.FileMode = 0644\n\tinvalidname             = \"/x/y/unknown\"\n)\n\nfunc TestCreatePidFile(test *testing.T) {\n\tif _, err := CreatePidFile(invalidname, fileperm); err == nil {\n\t\ttest.Fatal(\"CreatePidFile(): Error was not detected on invalid name\")\n\t}\n\n\tlock, err := CreatePidFile(filename, fileperm)\n\tif err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tdefer lock.Remove()\n\n\tdata, err := ioutil.ReadFile(filename)\n\tif err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tif string(data) != fmt.Sprint(os.Getpid()) {\n\t\ttest.Fatal(\"pids not equal\")\n\t}\n\n\tfile, err := os.OpenFile(filename, os.O_RDONLY, fileperm)\n\tif err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tif err = NewLockFile(file).WritePid(); err == nil {\n\t\ttest.Fatal(\"WritePid(): Error was not detected on invalid permissions\")\n\t}\n}\n\nfunc TestNewLockFile(test *testing.T) {\n\tlock := NewLockFile(os.NewFile(1001, \"\"))\n\terr := lock.Remove()\n\tif err == nil {\n\t\ttest.Fatal(\"Remove(): Error was not detected on invalid fd\")\n\t}\n\terr = lock.WritePid()\n\tif err == nil {\n\t\ttest.Fatal(\"WritePid(): Error was not detected on invalid fd\")\n\t}\n}\n\nfunc TestReadPid(test *testing.T) {\n\tlock, err := CreatePidFile(filename, fileperm)\n\tif err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tdefer lock.Remove()\n\n\tpid, err := lock.ReadPid()\n\tif err != nil {\n\t\ttest.Fatal(\"ReadPid(): Unable read pid from file:\", err)\n\t}\n\n\tif pid != os.Getpid() {\n\t\ttest.Fatal(\"Pid not equal real pid\")\n\t}\n}\n\nfunc TestLockFileLock(test *testing.T) {\n\tlock1, err := OpenLockFile(filename, fileperm)\n\tif err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tif err := lock1.Lock(); err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tdefer lock1.Remove()\n\n\tlock2, err := OpenLockFile(filename, fileperm)\n\tif err != nil {\n\t\ttest.Fatal(err)\n\t}\n\tif runtime.GOOS == \"solaris\" {\n\t\t// Solaris does not see a double lock attempt by the same process as failure.\n\t\tif err := lock2.Lock(); err != nil {\n\t\t\ttest.Fatal(\"To lock file more than once must be unavailable.\")\n\t\t}\n\t} else {\n\t\tif err := lock2.Lock(); err != nil && err != ErrWouldBlock {\n\t\t\ttest.Fatal(\"To lock file more than once must be unavailable.\")\n\t\t}\n\t}\n}\n"
+        },
+        {
+          "name": "lock_file_unix.go",
+          "type": "blob",
+          "size": 0.498046875,
+          "content": "//go:build darwin || dragonfly || freebsd || linux || netbsd || openbsd || plan9\n// +build darwin dragonfly freebsd linux netbsd openbsd plan9\n\npackage daemon\n\nimport (\n\t\"syscall\"\n)\n\nfunc lockFile(fd uintptr) error {\n\terr := syscall.Flock(int(fd), syscall.LOCK_EX|syscall.LOCK_NB)\n\tif err == syscall.EWOULDBLOCK {\n\t\terr = ErrWouldBlock\n\t}\n\treturn err\n}\n\nfunc unlockFile(fd uintptr) error {\n\terr := syscall.Flock(int(fd), syscall.LOCK_UN)\n\tif err == syscall.EWOULDBLOCK {\n\t\terr = ErrWouldBlock\n\t}\n\treturn err\n}\n"
+        },
+        {
+          "name": "os_executable.go",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "//go:build go1.8\n// +build go1.8\n\npackage daemon\n\nimport (\n\t\"os\"\n)\n\nfunc osExecutable() (string, error) {\n\treturn os.Executable()\n}\n"
+        },
+        {
+          "name": "os_executable_pre18.go",
+          "type": "blob",
+          "size": 0.1572265625,
+          "content": "//go:build !go1.8\n// +build !go1.8\n\npackage daemon\n\nimport (\n\t\"github.com/kardianos/osext\"\n)\n\nfunc osExecutable() (string, error) {\n\treturn osext.Executable()\n}\n"
+        },
+        {
+          "name": "signal.go",
+          "type": "blob",
+          "size": 1.1513671875,
+          "content": "package daemon\n\nimport (\n\t\"errors\"\n\t\"os\"\n\t\"os/signal\"\n\t\"syscall\"\n)\n\n// ErrStop should be returned signal handler function\n// for termination of handling signals.\nvar ErrStop = errors.New(\"stop serve signals\")\n\n// SignalHandlerFunc is the interface for signal handler functions.\ntype SignalHandlerFunc func(sig os.Signal) (err error)\n\n// SetSigHandler sets handler for the given signals.\n// SIGTERM has the default handler, he returns ErrStop.\nfunc SetSigHandler(handler SignalHandlerFunc, signals ...os.Signal) {\n\tfor _, sig := range signals {\n\t\thandlers[sig] = handler\n\t}\n}\n\n// ServeSignals calls handlers for system signals.\nfunc ServeSignals() (err error) {\n\tsignals := make([]os.Signal, 0, len(handlers))\n\tfor sig := range handlers {\n\t\tsignals = append(signals, sig)\n\t}\n\n\tch := make(chan os.Signal, 8)\n\tsignal.Notify(ch, signals...)\n\n\tfor sig := range ch {\n\t\terr = handlers[sig](sig)\n\t\tif err != nil {\n\t\t\tbreak\n\t\t}\n\t}\n\n\tsignal.Stop(ch)\n\n\tif err == ErrStop {\n\t\terr = nil\n\t}\n\n\treturn\n}\n\nvar handlers = make(map[os.Signal]SignalHandlerFunc)\n\nfunc init() {\n\thandlers[syscall.SIGTERM] = sigtermDefaultHandler\n}\n\nfunc sigtermDefaultHandler(sig os.Signal) error {\n\treturn ErrStop\n}\n"
+        },
+        {
+          "name": "syscall_dup.go",
+          "type": "blob",
+          "size": 0.2880859375,
+          "content": "//go:build (!linux || !arm64) && (!linux || !riscv64) && !windows && go1.7\n// +build !linux !arm64\n// +build !linux !riscv64\n// +build !windows\n// +build go1.7\n\npackage daemon\n\nimport \"golang.org/x/sys/unix\"\n\nfunc syscallDup(oldfd int, newfd int) (err error) {\n\treturn unix.Dup2(oldfd, newfd)\n}\n"
+        },
+        {
+          "name": "syscall_dup3.go",
+          "type": "blob",
+          "size": 0.3037109375,
+          "content": "//go:build linux && (riscv64 || arm64)\n// +build linux\n// +build riscv64 arm64\n\npackage daemon\n\nimport \"syscall\"\n\nfunc syscallDup(oldfd int, newfd int) (err error) {\n\t// linux_arm64 platform doesn't have syscall.Dup2\n\t// so use the nearly identical syscall.Dup3 instead.\n\treturn syscall.Dup3(oldfd, newfd, 0)\n}\n"
+        },
+        {
+          "name": "syscall_dup_pre17.go",
+          "type": "blob",
+          "size": 0.2353515625,
+          "content": "//go:build (!linux || !arm64) && !windows && !go1.7\n// +build !linux !arm64\n// +build !windows\n// +build !go1.7\n\npackage daemon\n\nimport (\n\t\"syscall\"\n)\n\nfunc syscallDup(oldfd int, newfd int) (err error) {\n\treturn syscall.Dup2(oldfd, newfd)\n}\n"
+        }
+      ]
+    }
+  ]
+}

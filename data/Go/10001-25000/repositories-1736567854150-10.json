@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736567854150,
+    "page": 10,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "inconshreveable/ngrok",
+      "stars": 24218,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.146484375,
+          "content": "*.swp\nbin/\npkg/\nsrc/code.google.com\nsrc/github.com\nsrc/bitbucket.org\nsrc/launchpad.net\nsrc/gopkg.in\nsrc/ngrok/client/assets/\nsrc/ngrok/server/assets/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.15234375,
+          "content": "sudo: false\nlanguage: go\nscript: make release-all\ninstall: true\ngo: \n    - 1.4\n    - 1.5\n    - 1.6\n    - tip\n\nmatrix:\n    allow_failures:\n        - go: tip\n"
+        },
+        {
+          "name": "CONTRIBUTORS",
+          "type": "blob",
+          "size": 0.1943359375,
+          "content": "Contributors to ngrok, both large and small:\n\n- Alan Shreve \n- Brandon Philips \n- Caleb Spare \n- Jay Hayes \n- Kevin Burke \n- Kyle Conroy \n- Nick Presta \n- Stephen Huenneke \n- inconshreveable \n- jzs \n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.5380859375,
+          "content": "Copyright 2013 Alan Shreve\n\nLicensed under the Apache License, Version 2.0 (the \"License\");\nyou may not use this file except in compliance with the License.\nYou may obtain a copy of the License at\n\n   http://www.apache.org/licenses/LICENSE-2.0\n\nUnless required by applicable law or agreed to in writing, software\ndistributed under the License is distributed on an \"AS IS\" BASIS,\nWITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\nSee the License for the specific language governing permissions and\nlimitations under the License.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.3994140625,
+          "content": ".PHONY: default server client deps fmt clean all release-all assets client-assets server-assets contributors\nexport GOPATH:=$(shell pwd)\n\nBUILDTAGS=debug\ndefault: all\n\ndeps: assets\n\tgo get -tags '$(BUILDTAGS)' -d -v ngrok/...\n\nserver: deps\n\tgo install -tags '$(BUILDTAGS)' ngrok/main/ngrokd\n\nfmt:\n\tgo fmt ngrok/...\n\nclient: deps\n\tgo install -tags '$(BUILDTAGS)' ngrok/main/ngrok\n\nassets: client-assets server-assets\n\nbin/go-bindata:\n\tGOOS=\"\" GOARCH=\"\" go get github.com/jteeuwen/go-bindata/go-bindata\n\nclient-assets: bin/go-bindata\n\tbin/go-bindata -nomemcopy -pkg=assets -tags=$(BUILDTAGS) \\\n\t\t-debug=$(if $(findstring debug,$(BUILDTAGS)),true,false) \\\n\t\t-o=src/ngrok/client/assets/assets_$(BUILDTAGS).go \\\n\t\tassets/client/...\n\nserver-assets: bin/go-bindata\n\tbin/go-bindata -nomemcopy -pkg=assets -tags=$(BUILDTAGS) \\\n\t\t-debug=$(if $(findstring debug,$(BUILDTAGS)),true,false) \\\n\t\t-o=src/ngrok/server/assets/assets_$(BUILDTAGS).go \\\n\t\tassets/server/...\n\nrelease-client: BUILDTAGS=release\nrelease-client: client\n\nrelease-server: BUILDTAGS=release\nrelease-server: server\n\nrelease-all: fmt release-client release-server\n\nall: fmt client server\n\nclean:\n\tgo clean -i -r ngrok/...\n\trm -rf src/ngrok/client/assets/ src/ngrok/server/assets/\n\ncontributors:\n\techo \"Contributors to ngrok, both large and small:\\n\" > CONTRIBUTORS\n\tgit log --raw | grep \"^Author: \" | sort | uniq | cut -d ' ' -f2- | sed 's/^/- /' | cut -d '<' -f1 >> CONTRIBUTORS\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.578125,
+          "content": "# ngrok - Unified Ingress for Developers\n\n[https://ngrok.com](https://ngrok.com)\n\n## ngrok Community on GitHub\n\nIf you are having an issue with the ngrok cloud service please open an issue on the [ngrok community on GitHub](https://github.com/ngrok/ngrok)\n\n## This repository is archived\n\nThis is the GitHub repository for the old v1 version of ngrok which was actively developed from 2013-2016.\n\n**This repository is archived: ngrok v1 is no longer developed, supported or maintained.**\n\nThank you to everyone who contributed to ngrok v1 it in its early days with PRs, issues and feedback. If you wish to continue development on this codebase, please fork it.\n\nngrok's cloud service continues to operate and you can sign up for it here: [https://ngrok.com/signup](https://ngrok.com/signup)\n\n## What is ngrok?\n\nngrok is a globally distributed reverse proxy that secures, protects and accelerates your applications and network services, no matter where you run them. You can think of ngrok as the front door to your applications. ngrok combines your reverse proxy, firewall, API gateway, and global load balancing into one. ngrok can capture and analyze all traffic to your web service for later inspection and replay.\n\nTo use ngrok, sign up at [https://ngrok.com/signup](https://ngrok.com/signup)\n\n## ngrok open-source development\nngrok continues to contribute to the open source ecosystem at [https://github.com/ngrok](https://github.com/ngrok) with:\n- [The ngrok kubernetes operator](https://github.com/ngrok/kubernetes-ingress-controller)\n- [The ngrok agent SDKs](https://ngrok.com/docs/agent-sdks/) for [Python](https://github.com/ngrok/ngrok-python), [JavaScript](https://github.com/ngrok/ngrok-javascript), [Go](https://github.com/ngrok/ngrok-go), [Rust](https://github.com/ngrok/ngrok-rust) and [Java](https://github.com/ngrok/ngrok-java)\n\n\n## What is ngrok for?\n\n[What can you do with ngrok?](https://ngrok.com/docs/what-is-ngrok/#what-can-you-do-with-ngrok)\n\n- Site-to-site Connectivity: Connect securely to APIs and databases in your customers' networks without complex network configuration.\n- Developer Previews: Demoing an app from your local machine without deploying it\n- Webhook Testing: Developing any services which consume webhooks (HTTP callbacks) by allowing you to replay those requests\n- API Gateway: An global gateway-as-a-service that works for API running anywhere with simple CEL-based traffic policy for rate limiting, jwt authentication and more.\n- Device Gateway: Run ngrok on your IoT devices to control device APIs from your cloud \n- Debug and understand any web service by inspecting the HTTP traffic to it\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "contrib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

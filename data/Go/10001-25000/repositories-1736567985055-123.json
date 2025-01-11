@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "timestamp": 1736567985055,
+    "page": 123,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mailhog/MailHog",
+      "stars": 14367,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.001953125,
+          "content": "*\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0068359375,
+          "content": "build/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0302734375,
+          "content": "language: go\ngo:\n - 1.6\n - tip\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.619140625,
+          "content": "#\n# MailHog Dockerfile\n#\n\nFROM golang:1.18-alpine as builder\n\n# Install MailHog:\nRUN apk --no-cache add --virtual build-dependencies \\\n    git \\\n  && mkdir -p /root/gocode \\\n  && export GOPATH=/root/gocode \\\n  && go install github.com/mailhog/MailHog@latest\n\nFROM alpine:3\n# Add mailhog user/group with uid/gid 1000.\n# This is a workaround for boot2docker issue #581, see\n# https://github.com/boot2docker/boot2docker/issues/581\nRUN adduser -D -u 1000 mailhog\n\nCOPY --from=builder /root/gocode/bin/MailHog /usr/local/bin/\n\nUSER mailhog\n\nWORKDIR /home/mailhog\n\nENTRYPOINT [\"MailHog\"]\n\n# Expose the SMTP and HTTP ports:\nEXPOSE 1025 8025\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.056640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 - 2016 Ian Kent\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "VERSION=1.0.0\n\nall: fmt combined\n\ncombined:\n\tgo install .\n\nrelease: tag release-deps \n\tgox -ldflags \"-X main.version=${VERSION}\" -output=\"build/{{.Dir}}_{{.OS}}_{{.Arch}}\" .\n\nfmt:\n\tgo fmt ./...\n\nrelease-deps:\n\tgo get github.com/mitchellh/gox\n\npull:\n\tgit pull\n\tcd ../data; git pull\n\tcd ../http; git pull\n\tcd ../MailHog-Server; git pull\n\tcd ../MailHog-UI; git pull\n\tcd ../smtp; git pull\n\tcd ../storage; git pull\n\ntag:\n\tgit tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\tcd ../data; git tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\tcd ../http; git tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\tcd ../MailHog-Server; git tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\tcd ../MailHog-UI; git tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\tcd ../smtp; git tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\tcd ../storage; git tag -a -m 'v${VERSION}' v${VERSION} && git push origin v${VERSION}\n\n.PHONY: all combined release fmt release-deps pull tag\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.138671875,
+          "content": "MailHog [ ![Download](https://img.shields.io/github/release/mailhog/MailHog.svg) ](https://github.com/mailhog/MailHog/releases/tag/v1.0.0) [![GoDoc](https://godoc.org/github.com/mailhog/MailHog?status.svg)](https://godoc.org/github.com/mailhog/MailHog) [![Build Status](https://travis-ci.org/mailhog/MailHog.svg?branch=master)](https://travis-ci.org/mailhog/MailHog)\n=========\n\nInspired by [MailCatcher](https://mailcatcher.me/), easier to install.\n\n* Download and run MailHog\n* Configure your outgoing SMTP server\n* View your outgoing email in a web UI\n* Release it to a real mail server\n\nBuilt with Go - MailHog runs without installation on multiple platforms.\n\n### Overview\n\nMailHog is an email testing tool for developers:\n\n* Configure your application to use MailHog for SMTP delivery\n* View messages in the web UI, or retrieve them with the JSON API\n* Optionally release messages to real SMTP servers for delivery\n\n### Installation\n\n#### Manual installation\n[Download the latest release for your platform](/docs/RELEASES.md). Then\n[read the deployment guide](/docs/DEPLOY.md) for deployment options.\n\n#### MacOS\n```bash\nbrew update && brew install mailhog\n```\n\nThen, start MailHog by running `mailhog` in the command line.\n\n#### Debian / Ubuntu Go < v1.18\n```bash\nsudo apt-get -y install golang-go\ngo get github.com/mailhog/MailHog\n```\n\n#### Go >= v1.17 (Debian Bookworm) \n```bash\nsudo apt-get -y install golang-go\ngo install github.com/mailhog/MailHog@latest\n```\n\nThen, start MailHog by running `/path/to/MailHog` in the command line.\n\nE.g. the path to Go's bin files on Ubuntu is `~/go/bin/`, so to start the MailHog run:\n\n```bash\n~/go/bin/MailHog\n```\n\n#### FreeBSD\n```bash\npkg install mailhog\nsysrc mailhog_enable=\"YES\"\nservice mailhog start\n```\n\n#### Docker\n[Run it from Docker Hub](https://registry.hub.docker.com/r/mailhog/mailhog/) or using the provided [Dockerfile](Dockerfile)\n\n### Configuration\n\nCheck out how to [configure MailHog](/docs/CONFIG.md), or use the default settings:\n  * the SMTP server starts on port 1025\n  * the HTTP server starts on port 8025\n  * in-memory message storage\n\n### Features\n\nSee [MailHog libraries](docs/LIBRARIES.md) for a list of MailHog client libraries.\n\n* ESMTP server implementing RFC5321\n* Support for SMTP AUTH (RFC4954) and PIPELINING (RFC2920)\n* Web interface to view messages (plain text, HTML or source)\n  * Supports RFC2047 encoded headers\n* Real-time updates using EventSource\n* Release messages to real SMTP servers\n* Chaos Monkey for failure testing\n  * See [Introduction to Jim](/docs/JIM.md) for more information\n* HTTP API to list, retrieve and delete messages\n  * See [APIv1](/docs/APIv1.md) and [APIv2](/docs/APIv2.md) documentation for more information\n* [HTTP basic authentication](docs/Auth.md) for MailHog UI and API\n* Multipart MIME support\n* Download individual MIME parts\n* In-memory message storage\n* MongoDB and file based storage for message persistence\n* Lightweight and portable\n* No installation required\n\n#### sendmail\n\n[mhsendmail](https://github.com/mailhog/mhsendmail) is a sendmail replacement for MailHog.\n\nIt redirects mail to MailHog using SMTP.\n\nYou can also use `MailHog sendmail ...` instead of the separate mhsendmail binary.\n\nAlternatively, you can use your native `sendmail` command by providing `-S`, for example:\n\n```bash\n/usr/sbin/sendmail -S mail:1025\n```\n\nFor example, in PHP you could add either of these lines to `php.ini`:\n\n```\nsendmail_path = /usr/local/bin/mhsendmail\nsendmail_path = /usr/sbin/sendmail -S mail:1025\n```\n\n#### Web UI\n\n![Screenshot of MailHog web interface](/docs/MailHog.png \"MailHog web interface\")\n\n### Contributing\n\nMailHog is a rewritten version of [MailHog](https://github.com/ian-kent/MailHog), which was born out of [M3MTA](https://github.com/ian-kent/M3MTA).\n\nClone this repository to ```$GOPATH/src/github.com/mailhog/MailHog``` and type ```make deps```.\n\nSee the [Building MailHog](/docs/BUILD.md) guide.\n\nRequires Go 1.4+ to build.\n\nRun tests using ```make test``` or ```goconvey```.\n\nIf you make any changes, run ```go fmt ./...``` before submitting a pull request.\n\n### Licence\n\nCopyright ©‎ 2014 - 2017, Ian Kent (http://iankent.uk)\n\nReleased under MIT license, see [LICENSE](LICENSE.md) for details.\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "main.go",
+          "type": "blob",
+          "size": 2.8818359375,
+          "content": "package main\n\nimport (\n\t\"flag\"\n\t\"fmt\"\n\t\"os\"\n\n\tgohttp \"net/http\"\n\n\t\"github.com/gorilla/pat\"\n\t\"github.com/ian-kent/go-log/log\"\n\t\"github.com/mailhog/MailHog-Server/api\"\n\tcfgapi \"github.com/mailhog/MailHog-Server/config\"\n\t\"github.com/mailhog/MailHog-Server/smtp\"\n\t\"github.com/mailhog/MailHog-UI/assets\"\n\tcfgui \"github.com/mailhog/MailHog-UI/config\"\n\t\"github.com/mailhog/MailHog-UI/web\"\n\tcfgcom \"github.com/mailhog/MailHog/config\"\n\t\"github.com/mailhog/http\"\n\t\"github.com/mailhog/mhsendmail/cmd\"\n\t\"golang.org/x/crypto/bcrypt\"\n)\n\nvar apiconf *cfgapi.Config\nvar uiconf *cfgui.Config\nvar comconf *cfgcom.Config\nvar exitCh chan int\nvar version string\n\nfunc configure() {\n\tcfgcom.RegisterFlags()\n\tcfgapi.RegisterFlags()\n\tcfgui.RegisterFlags()\n\tflag.Parse()\n\tapiconf = cfgapi.Configure()\n\tuiconf = cfgui.Configure()\n\tcomconf = cfgcom.Configure()\n\n\tapiconf.WebPath = comconf.WebPath\n\tuiconf.WebPath = comconf.WebPath\n}\n\nfunc main() {\n\tif len(os.Args) > 1 && (os.Args[1] == \"-version\" || os.Args[1] == \"--version\") {\n\t\tfmt.Println(\"MailHog version: \" + version)\n\t\tos.Exit(0)\n\t}\n\n\tif len(os.Args) > 1 && os.Args[1] == \"sendmail\" {\n\t\targs := os.Args\n\t\tos.Args = []string{args[0]}\n\t\tif len(args) > 2 {\n\t\t\tos.Args = append(os.Args, args[2:]...)\n\t\t}\n\t\tcmd.Go()\n\t\treturn\n\t}\n\n\tif len(os.Args) > 1 && os.Args[1] == \"bcrypt\" {\n\t\tvar pw string\n\t\tif len(os.Args) > 2 {\n\t\t\tpw = os.Args[2]\n\t\t} else {\n\t\t\t// TODO: read from stdin\n\t\t}\n\t\tb, err := bcrypt.GenerateFromPassword([]byte(pw), 4)\n\t\tif err != nil {\n\t\t\tlog.Fatalf(\"error bcrypting password: %s\", err)\n\t\t\tos.Exit(1)\n\t\t}\n\t\tfmt.Println(string(b))\n\t\tos.Exit(0)\n\t}\n\n\tconfigure()\n\n\tif comconf.AuthFile != \"\" {\n\t\thttp.AuthFile(comconf.AuthFile)\n\t}\n\n\texitCh = make(chan int)\n\tif uiconf.UIBindAddr == apiconf.APIBindAddr {\n\t\tcb := func(r gohttp.Handler) {\n\t\t\tweb.CreateWeb(uiconf, r.(*pat.Router), assets.Asset)\n\t\t\tapi.CreateAPI(apiconf, r.(*pat.Router))\n\t\t}\n\t\tgo http.Listen(uiconf.UIBindAddr, assets.Asset, exitCh, cb)\n\t} else {\n\t\tcb1 := func(r gohttp.Handler) {\n\t\t\tapi.CreateAPI(apiconf, r.(*pat.Router))\n\t\t}\n\t\tcb2 := func(r gohttp.Handler) {\n\t\t\tweb.CreateWeb(uiconf, r.(*pat.Router), assets.Asset)\n\t\t}\n\t\tgo http.Listen(apiconf.APIBindAddr, assets.Asset, exitCh, cb1)\n\t\tgo http.Listen(uiconf.UIBindAddr, assets.Asset, exitCh, cb2)\n\t}\n\tgo smtp.Listen(apiconf, exitCh)\n\n\t<-exitCh\n\tlog.Printf(\"Received exit signal\")\n}\n\n/*\n\nAdd some random content to the end of this file, hopefully tricking GitHub\ninto recognising this as a Go repo instead of Makefile.\n\nA gopher, ASCII art style - borrowed from\nhttps://gist.github.com/belbomemo/b5e7dad10fa567a5fe8a\n\n          ,_---~~~~~----._\n   _,,_,*^____      _____``*g*\\\"*,\n  / __/ /'     ^.  /      \\ ^@q   f\n [  @f | @))    |  | @))   l  0 _/\n  \\`/   \\~____ / __ \\_____/    \\\n   |           _l__l_           I\n   }          [______]           I\n   ]            | | |            |\n   ]             ~ ~             |\n   |                            |\n    |                           |\n\n*/\n"
+        },
+        {
+          "name": "snapcraft.yaml",
+          "type": "blob",
+          "size": 0.552734375,
+          "content": "name: mailhog\nsummary: Web and API based SMTP testing\ndescription: |\n MailHog is an email testing tool for developers:\n * Configure your application to use MailHog for SMTP delivery\n * View messages in the web UI, or retrieve them with the JSON API\n * Optionally release messages to real SMTP servers for delivery\nversion: \"master\"\nconfinement: strict\ngrade: stable\napps:\n  mailhog:\n    command: MailHog\n    plugs: [network-bind]\n    daemon: simple\nparts:\n  mailhog:\n    plugin: go\n    go-packages:\n      - github.com/mailhog/MailHog\n    build-packages:\n      - git\n"
+        },
+        {
+          "name": "vendor",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

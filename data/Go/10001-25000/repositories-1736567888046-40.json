@@ -1,0 +1,179 @@
+{
+  "metadata": {
+    "timestamp": 1736567888046,
+    "page": 40,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "abiosoft/colima",
+      "stars": 20381,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.0244140625,
+          "content": "[*.go]\nindent_style = tab"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0517578125,
+          "content": ".idea/\n.fleet/\n.vscode/\n_output/\n_build/\nbin/\nresult\n"
+        },
+        {
+          "name": ".golangci.yml",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "linters:\n  enable:\n    - gocritic\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0458984375,
+          "content": "MIT License\n\nCopyright (c) 2021 Abiola Ibrahim\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.8828125,
+          "content": "\nOS ?= $(shell uname)\nARCH ?= $(shell uname -m)\n\nGOOS ?= $(shell echo \"$(OS)\" | tr '[:upper:]' '[:lower:]')\nGOARCH_x86_64 = amd64\nGOARCH_aarch64 = arm64\nGOARCH_arm64 = arm64\nGOARCH ?= $(shell echo \"$(GOARCH_$(ARCH))\")\n\nVERSION := $(shell git describe --tags --always)\nREVISION := $(shell git rev-parse HEAD)\nPACKAGE := github.com/abiosoft/colima/config\nVERSION_VARIABLES := -X $(PACKAGE).appVersion=$(VERSION) -X $(PACKAGE).revision=$(REVISION)\n\nOUTPUT_DIR := _output/binaries\nOUTPUT_BIN := colima-$(OS)-$(ARCH)\nINSTALL_DIR := /usr/local/bin\nBIN_NAME := colima\n\nLDFLAGS := $(VERSION_VARIABLES)\n\n.PHONY: all\nall: build\n\n.PHONY: clean\nclean:\n\trm -rf _output _build\n\n.PHONY: gopath\ngopath:\n\tgo get -v ./cmd/colima\n\n.PHONY: fmt\nfmt:\n\tgo fmt ./...\n\tgoimports -w .\n\n.PHONY: build\nbuild:\n\tGOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags=\"$(LDFLAGS)\" -o $(OUTPUT_DIR)/$(OUTPUT_BIN) ./cmd/colima\nifeq ($(GOOS),darwin)\n\tcodesign -s - $(OUTPUT_DIR)/$(OUTPUT_BIN)\nendif\n\tcd $(OUTPUT_DIR) && openssl sha256 -r -out $(OUTPUT_BIN).sha256sum $(OUTPUT_BIN)\n\n.PHONY: test\ntest:\n\tgo test -v -ldflags=\"$(LD_FLAGS)\" ./...\n\n.PHONY: vmnet\nvmnet:\n\tsh scripts/build_vmnet.sh\n\n.PHONY: install\ninstall:\n\tmkdir -p $(INSTALL_DIR)\n\trm -f $(INSTALL_DIR)/$(BIN_NAME)\n\tcp $(OUTPUT_DIR)/colima-$(OS)-$(ARCH) $(INSTALL_DIR)/$(BIN_NAME)\n\tchmod +x $(INSTALL_DIR)/$(BIN_NAME)\n\n.PHONY: lint\nlint: ## Assumes that golangci-lint is installed and in the path.  To install: https://golangci-lint.run/usage/install/\n\tgolangci-lint --timeout 3m run\n\n.PHONY: print-binary-name\nprint-binary-name:\n\t@echo $(OUTPUT_DIR)/$(OUTPUT_BIN)\n\n.PHONY: nix-derivation-shell\nnix-derivation-shell:\n\t$(eval DERIVATION=$(shell nix-build))\n\techo $(DERIVATION) | grep ^/nix\n\tnix-shell -p $(DERIVATION)\n\n.PHONY: integration\nintegration: build\n\tGOARCH=$(GOARCH) COLIMA_BINARY=$(OUTPUT_DIR)/$(OUTPUT_BIN) scripts/integration.sh\n\n.PHONY: images-sha\nimages-sha:\n\tbash embedded/images/images_sha.sh\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.3515625,
+          "content": "![colima-logo](colima.png)\n\n## Colima - container runtimes on macOS (and Linux) with minimal setup.\n\n[![Go](https://github.com/abiosoft/colima/actions/workflows/go.yml/badge.svg)](https://github.com/abiosoft/colima/actions/workflows/go.yml)\n[![Integration](https://github.com/abiosoft/colima/actions/workflows/integration.yml/badge.svg)](https://github.com/abiosoft/colima/actions/workflows/integration.yml)\n[![Go Report Card](https://goreportcard.com/badge/github.com/abiosoft/colima)](https://goreportcard.com/report/github.com/abiosoft/colima)\n\n![Demonstration](colima.gif)\n\n## Features\n\n  Support for Intel and Apple Silicon Macs, and Linux\n- Simple CLI interface with sensible defaults\n- Automatic Port Forwarding\n- Volume mounts\n- Multiple instances\n- Support for multiple container runtimes\n  - [Docker](https://docker.com) (with optional Kubernetes)\n  - [Containerd](https://containerd.io) (with optional Kubernetes)\n  - [Incus](https://linuxcontainers.org/incus) (containers and virtual machines)\n\n## Getting Started\n\n### Installation\n\nColima is available on Homebrew, MacPorts, and Nix. Check [here](docs/INSTALL.md) for other installation options.\n\n```\n# Homebrew\nbrew install colima\n\n# MacPorts\nsudo port install colima\n\n# Nix\nnix-env -iA nixpkgs.colima\n```\n\nOr stay on the bleeding edge (only Homebrew)\n\n```\nbrew install --HEAD colima\n```\n\n### Upgrading\n\nIf upgrading from v0.5.6 or lower, it is required to start afresh by deleting existing instance.\n\n```sh\ncolima delete # delete existing instance\ncolima start\n```\n\n## Usage\n\nStart Colima with defaults\n\n```\ncolima start\n```\n\nFor more usage options\n\n```\ncolima --help\ncolima start --help\n```\n\nOr use a config file\n\n```\ncolima start --edit\n```\n\n## Runtimes\n\nOn initial startup, Colima initiates with a user specified runtime that defaults to Docker.\n\n### Docker\n\nDocker client is required for Docker runtime. Installable with brew `brew install docker`.\n\nYou can use the `docker` client on macOS after `colima start` with no additional setup.\n\n### Containerd\n\n`colima start --runtime containerd` starts and setup Containerd. You can use `colima nerdctl` to interact with\nContainerd using [nerdctl](https://github.com/containerd/nerdctl).\n\nIt is recommended to run `colima nerdctl install` to install `nerdctl` alias script in $PATH.\n\n### Kubernetes\n\nkubectl is required for Kubernetes. Installable with `brew install kubectl`.\n\nTo enable Kubernetes, start Colima with `--kubernetes` flag.\n\n```\ncolima start --kubernetes\n```\n\n#### Interacting with Image Registry\n\nFor Docker runtime, images built or pulled with Docker are accessible to Kubernetes.\n\nFor Containerd runtime, images built or pulled in the `k8s.io` namespace are accessible to Kubernetes.\n\n### Incus\n\n<small>**Requires v0.7.0**</small>\n\n\nIncus client is required for Incus runtime. Installable with brew `brew install incus`.\n\n`colima start --runtime incus` starts and setup Incus.\n\nYou can use the `incus` client on macOS after `colima start` with no additional setup.\n\n**Note:** Running virtual machines on Incus is only supported on m3 or newer Apple Silicon devices.\n\n### None\n\n<small>**Requires v0.7.0**</small>\n\nColima can also be utilised solely as a headless virtual machine manager by specifying `none` runtime.\n\n\n### Customizing the VM\n\nThe default VM created by Colima has 2 CPUs, 2GiB memory and 100GiB storage.\n\nThe VM can be customized either by passing additional flags to `colima start`.\ne.g. `--cpu`, `--memory`, `--disk`, `--runtime`.\nOr by editing the config file with `colima start --edit`.\n\n**NOTE**: ~~disk size cannot be changed after the VM is created.~~ From v0.5.3, disk size can be increased.\n\n#### Customization Examples\n\n- create VM with 1CPU, 2GiB memory and 10GiB storage.\n\n  ```\n  colima start --cpu 1 --memory 2 --disk 10\n  ```\n\n- modify an existing VM to 4CPUs and 8GiB memory.\n\n  ```\n  colima stop\n  colima start --cpu 4 --memory 8\n  ```\n\n- create VM with Rosetta 2 emulation. Requires v0.5.3 and MacOS >= 13 (Ventura) on Apple Silicon.\n\n  ```\n  colima start --vm-type=vz --vz-rosetta\n  ```\n\n## Project Goal\n\nTo provide container runtimes on macOS with minimal setup.\n\n## What is with the name?\n\nColima means Containers on [Lima](https://github.com/lima-vm/lima).\n\nSince Lima is aka Linux Machines. By transitivity, Colima can also mean Containers on Linux Machines.\n\n## And the Logo?\n\nThe logo was contributed by [Daniel Hodvogner](https://github.com/dhodvogner). Check [this issue](https://github.com/abiosoft/colima/issues/781) for more.\n\n## Troubleshooting and FAQs\n\nCheck [here](docs/FAQ.md) for Frequently Asked Questions.\n\n## Community\n- [GitHub Discussions](https://github.com/abiosoft/colima/discussions)\n- [GitHub Issues](https://github.com/abiosoft/colima/issues)\n- `#colima` channel in the CNCF Slack\n  - New account: <https://slack.cncf.io/>\n  - Login: <https://cloud-native.slack.com/>\n\n## Help Wanted\n\n- Documentation (wiki pages)\n\n## License\n\nMIT\n\n\n## Sponsoring the Project\n\nIf you (or your company) are benefiting from the project and would like to support the contributors, kindly support the project.\n\n<a href=\"https://www.buymeacoffee.com/abiosoft\" target=\"_blank\"><img src=\"https://cdn.buymeacoffee.com/buttons/v2/default-blue.png\" alt=\"Buy Me A Coffee\" style=\"height: 40px !important;width: 160px !important;\" ></a>\n\n[<img src=\"https://uploads-ssl.webflow.com/5ac3c046c82724970fc60918/5c019d917bba312af7553b49_MacStadium-developerlogo.png\" style=\"max-height: 150px\"/>](https://macstadium.com)\n\n\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 1.1708984375,
+          "content": "Thanks for helping make Colima safe for everyone.\n\n## Security\n\nWe take the security of Colima seriously.\n\nWe will ensure that your finding gets passed along to the appropriate maintainers for remediation. \n\n## Reporting Security Issues\n\nIf you believe you have found a security vulnerability in this repository, please report it to us through coordinated disclosure.\n\n**Please do not report security vulnerabilities through public GitHub issues, discussions, or pull requests.**\n\nInstead, please send an email to git[@]abiosoft.com.\n\nPlease include as much of the information listed below as you can to help us better understand and resolve the issue:\n\n  * The type of issue (e.g., buffer overflow, SQL injection, or cross-site scripting)\n  * Full paths of source file(s) related to the manifestation of the issue\n  * The location of the affected source code (tag/branch/commit or direct URL)\n  * Any special configuration required to reproduce the issue\n  * Step-by-step instructions to reproduce the issue\n  * Proof-of-concept or exploit code (if possible)\n  * Impact of the issue, including how an attacker might exploit the issue\n\nThis information will help us triage your report more quickly.\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "colima.gif",
+          "type": "blob",
+          "size": 657.9638671875,
+          "content": null
+        },
+        {
+          "name": "colima.nix",
+          "type": "blob",
+          "size": 0.9873046875,
+          "content": "{ pkgs ? import <nixpkgs> }:\n\nwith pkgs;\n\nbuildGo120Module {\n  name = \"colima\";\n  pname = \"colima\";\n  src = ./.;\n  nativeBuildInputs = [ installShellFiles makeWrapper git ];\n  vendorSha256 = \"sha256-7DIhSjHpaCyHyXKhR8KWQc2YGaD8CMq+BZHF4zIkL50=\";\n  CGO_ENABLED = 1;\n\n  subPackages = [ \"cmd/colima\" ];\n\n  # `nix-build` has .git folder but `nix build` does not, this caters for both cases\n  preConfigure = ''\n    export VERSION=\"$(git describe --tags --always || echo nix-build-at-\"$(date +%s)\")\"\n    export REVISION=\"$(git rev-parse HEAD || echo nix-unknown)\"\n    ldflags=\"-X github.com/abiosoft/colima/config.appVersion=$VERSION\n              -X github.com/abiosoft/colima/config.revision=$REVISION\"\n  '';\n\n  postInstall = ''\n    wrapProgram $out/bin/colima \\\n      --prefix PATH : ${lib.makeBinPath [ qemu lima ]}\n    installShellCompletion --cmd colima \\\n      --bash <($out/bin/colima completion bash) \\\n      --fish <($out/bin/colima completion fish) \\\n      --zsh <($out/bin/colima completion zsh)\n  '';\n}\n\n"
+        },
+        {
+          "name": "colima.png",
+          "type": "blob",
+          "size": 15.1474609375,
+          "content": null
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "daemon",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "default.nix",
+          "type": "blob",
+          "size": 0.0634765625,
+          "content": "with import <nixpkgs> { };\ncallPackage (import ./colima.nix) { }\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "embedded",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "environment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "flake.lock",
+          "type": "blob",
+          "size": 0.9736328125,
+          "content": "{\n  \"nodes\": {\n    \"flake-utils\": {\n      \"locked\": {\n        \"lastModified\": 1656065134,\n        \"narHash\": \"sha256-oc6E6ByIw3oJaIyc67maaFcnjYOz1mMcOtHxbEf9NwQ=\",\n        \"owner\": \"numtide\",\n        \"repo\": \"flake-utils\",\n        \"rev\": \"bee6a7250dd1b01844a2de7e02e4df7d8a0a206c\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"id\": \"flake-utils\",\n        \"type\": \"indirect\"\n      }\n    },\n    \"nixpkgs\": {\n      \"locked\": {\n        \"lastModified\": 1678654296,\n        \"narHash\": \"sha256-aVfw3ThpY7vkUeF1rFy10NAkpKDS2imj3IakrzT0Occ=\",\n        \"owner\": \"NixOS\",\n        \"repo\": \"nixpkgs\",\n        \"rev\": \"5a1dc8acd977ff3dccd1328b7c4a6995429a656b\",\n        \"type\": \"github\"\n      },\n      \"original\": {\n        \"owner\": \"NixOS\",\n        \"ref\": \"nixos-unstable\",\n        \"repo\": \"nixpkgs\",\n        \"type\": \"github\"\n      }\n    },\n    \"root\": {\n      \"inputs\": {\n        \"flake-utils\": \"flake-utils\",\n        \"nixpkgs\": \"nixpkgs\"\n      }\n    }\n  },\n  \"root\": \"root\",\n  \"version\": 7\n}\n"
+        },
+        {
+          "name": "flake.nix",
+          "type": "blob",
+          "size": 0.56640625,
+          "content": "{\n  description = \"Container runtimes on macOS (and Linux) with minimal setup\";\n\n  inputs.nixpkgs.url = \"github:NixOS/nixpkgs/nixos-unstable\";\n\n  outputs = { self, nixpkgs, flake-utils }: flake-utils.lib.eachDefaultSystem\n    (system:\n      let\n        pkgs = nixpkgs.legacyPackages.${system};\n      in\n      {\n        packages.default = import ./colima.nix { inherit pkgs; };\n        devShell = import ./shell.nix { inherit pkgs; };\n        apps.default = {\n          type = \"app\";\n          program = \"${self.packages.${system}.default}/bin/colima\";\n        };\n      }\n    );\n}\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.78515625,
+          "content": "module github.com/abiosoft/colima\n\ngo 1.20\n\nrequire (\n\tgithub.com/coreos/go-semver v0.3.1\n\tgithub.com/fatih/color v1.18.0\n\tgithub.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510\n\tgithub.com/rjeczalik/notify v0.9.3\n\tgithub.com/sirupsen/logrus v1.9.3\n\tgithub.com/spf13/cobra v1.8.1\n\tgolang.org/x/term v0.28.0\n\tgopkg.in/yaml.v3 v3.0.1\n)\n\nrequire github.com/stretchr/testify v1.8.4 // indirect\n\nrequire (\n\tgithub.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect\n\tgithub.com/sevlyar/go-daemon v0.1.6\n)\n\nrequire (\n\tgithub.com/docker/go-units v0.5.0\n\tgithub.com/inconshreveable/mousetrap v1.1.0 // indirect\n\tgithub.com/mattn/go-colorable v0.1.13 // indirect\n\tgithub.com/mattn/go-isatty v0.0.20 // indirect\n\tgithub.com/spf13/pflag v1.0.5 // indirect\n\tgolang.org/x/sys v0.29.0 // indirect\n)\n"
+        },
+        {
+          "name": "go.sum",
+          "type": "blob",
+          "size": 4.4814453125,
+          "content": "github.com/coreos/go-semver v0.3.1 h1:yi21YpKnrx1gt5R+la8n5WgS0kCrsPp33dmEyHReZr4=\ngithub.com/coreos/go-semver v0.3.1/go.mod h1:irMmmIw/7yzSRPWryHsK7EYSg09caPQL03VsM8rvUec=\ngithub.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=\ngithub.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/docker/go-units v0.5.0 h1:69rxXcBk27SvSaaxTtLh/8llcHD8vYHT7WSdRZ/jvr4=\ngithub.com/docker/go-units v0.5.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=\ngithub.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=\ngithub.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=\ngithub.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 h1:El6M4kTTCOh6aBiKaUGG7oYTSPP8MxqL4YI3kZKwcP4=\ngithub.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510/go.mod h1:pupxD2MaaD3pAXIBCelhxNneeOaAeabZDe5s4K6zSpQ=\ngithub.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=\ngithub.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=\ngithub.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 h1:iQTw/8FWTuc7uiaSepXwyf3o52HaUYcV+Tu66S3F5GA=\ngithub.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=\ngithub.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=\ngithub.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=\ngithub.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=\ngithub.com/mattn/go-isatty v0.0.20 h1:xfD0iDuEKnDkl03q4limB+vH+GxLEtL/jb4xVJSWWEY=\ngithub.com/mattn/go-isatty v0.0.20/go.mod h1:W+V8PltTTMOvKvAeJH7IuucS94S2C6jfK/D7dTCTo3Y=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/rjeczalik/notify v0.9.3 h1:6rJAzHTGKXGj76sbRgDiDcYj/HniypXmSJo1SWakZeY=\ngithub.com/rjeczalik/notify v0.9.3/go.mod h1:gF3zSOrafR9DQEWSE8TjfI9NkooDxbyT4UgRGKZA0lc=\ngithub.com/russross/blackfriday/v2 v2.1.0/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=\ngithub.com/sevlyar/go-daemon v0.1.6 h1:EUh1MDjEM4BI109Jign0EaknA2izkOyi0LV3ro3QQGs=\ngithub.com/sevlyar/go-daemon v0.1.6/go.mod h1:6dJpPatBT9eUwM5VCw9Bt6CdX9Tk6UWvhW3MebLDRKE=\ngithub.com/sirupsen/logrus v1.9.3 h1:dueUQJ1C2q9oE3F7wvmSGAaVtTmUizReu6fjN8uqzbQ=\ngithub.com/sirupsen/logrus v1.9.3/go.mod h1:naHLuLoDiP4jHNo9R0sCBMtWGeIprob74mVsIT4qYEQ=\ngithub.com/spf13/cobra v1.8.1 h1:e5/vxKd/rZsfSJMUX1agtjeTDf+qv1/JdBF8gg5k9ZM=\ngithub.com/spf13/cobra v1.8.1/go.mod h1:wHxEcudfqmLYa8iTfL+OuZPbBZkmvliBWKIezN3kD9Y=\ngithub.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=\ngithub.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=\ngithub.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=\ngithub.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=\ngithub.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=\ngithub.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=\ngolang.org/x/sys v0.0.0-20180926160741-c2ed4eda69e7/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=\ngolang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/sys v0.6.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=\ngolang.org/x/sys v0.29.0 h1:TPYlXGxvx1MGTn2GiZDhnjPA9wZzZeGKHHmKhHYvgaU=\ngolang.org/x/sys v0.29.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=\ngolang.org/x/term v0.28.0 h1:/Ts8HFuMR2E6IP/jlo7QVLZHggjKQbhu/7H0LJFr3Gg=\ngolang.org/x/term v0.28.0/go.mod h1:Sw/lC2IAUZ92udQNf3WodGtn4k/XoLyZoh8v/8uiwek=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        },
+        {
+          "name": "integration",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shell.nix",
+          "type": "blob",
+          "size": 0.486328125,
+          "content": "{ pkgs ? import <nixpkgs> { } }:\n\npkgs.mkShell {\n  # nativeBuildInputs is usually what you want -- tools you need to run\n  nativeBuildInputs = with pkgs.buildPackages; [\n    go_1_20\n    git\n    lima\n    qemu\n  ];\n  shellHook = ''\n    echo Nix Shell with $(go version)\n    echo\n\n    COLIMA_BIN=\"$PWD/$(make print-binary-name)\"\n    if [ ! -f \"$COLIMA_BIN\" ]; then\n        echo \"Run 'make' to build Colima.\"\n        echo\n    fi\n\n    set -x\n    set -x\n    alias colima=\"$COLIMA_BIN\"\n    set +x\n  '';\n}\n"
+        },
+        {
+          "name": "util",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
