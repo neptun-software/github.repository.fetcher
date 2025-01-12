@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "timestamp": 1736711376589,
+    "page": 111,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "flawiddsouza/Restfox",
+      "stars": 2150,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.16796875,
+          "content": "root = true\n\n[*]\nindent_style = space\nindent_size = 4\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.yml]\nindent_size = 2\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.84375,
+          "content": "# Stage 1: Build the UI and web-standalone\nFROM node:19.8.1-alpine3.17 AS build\nRUN apk add --no-cache git\nRUN mkdir /app\nADD .git /app/.git\nADD ./docs /app/docs\n# To fix: Could not resolve \"../../electron/package.json\" from \"src/helpers.ts\", we need to include this:\nADD ./packages/electron/package.json /app/packages/electron/package.json\nADD ./packages/ui /app/packages/ui/\nADD ./packages/web-standalone /app/web-standalone/\nWORKDIR /app/packages/ui\nRUN npm ci && npm run build-web-standalone\nWORKDIR /app/web-standalone\nRUN npm ci\n\n# Stage 2: Copy the necessary files from the build stage and remove unnecessary files\nFROM node:19.8.1-alpine3.17\nRUN mkdir -p /app/web-standalone/public\nWORKDIR /app/web-standalone\nCOPY --from=build /app/web-standalone /app/web-standalone\nCOPY --from=build /app/packages/ui/dist /app/web-standalone/public\nCMD [\"npm\", \"start\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0458984375,
+          "content": "MIT License\n\nCopyright (c) 2022 Flawid D'Souza\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.0185546875,
+          "content": "# ![Restfox](https://raw.github.com/flawiddsouza/Restfox/main/packages/ui/public/pwa-192x192.png \"Restfox\")\n\n# Restfox\n\n[**Web App**](https://restfox.dev) **|** [**Install**](#installation) **|** [**Releases/Downloads**](https://github.com/flawiddsouza/Restfox/releases) **|** [**Screenshots**](#screenshots) **|** [**Docs**](https://docs.restfox.dev) **|** [**Compiling**](#compiling) **|** [**Compiling Web Standalone**](#using-web-standalone)\n\nOffline-First Minimalistic HTTP & Socket Testing Client for the Web & Desktop\n\nWatch video to see plugins in action:<br>\n[<img src=\"https://img.youtube.com/vi/3cOQPm43Wus/hqdefault.jpg\" width=\"600\" height=\"300\" width=\"100%\"\n/>](https://www.youtube.com/watch?v=3cOQPm43Wus)\n\n## Installation\n\n### macOS\nPackage available in homebrew by using:\n```\nbrew install restfox\n```\n\n### Ubuntu and other distributions supporting snap\nPackage available through snap can be installed using:\n```\nsudo snap install restfox\n```\n\n### RPM, DEB and NuPKG\nThere are precompiled binaries in the [releases](https://github.com/flawiddsouza/Restfox/releases) page.\n\n### Windows\n```\nscoop bucket add extras\nscoop install restfox\n```\nThere are also precompiled binaries in the [releases](https://github.com/flawiddsouza/Restfox/releases) page.\n\n### [Docker](https://hub.docker.com/r/flawiddsouza/restfox)\n```\ndocker run --name Restfox -d -p 4004:4004 flawiddsouza/restfox:0.35.0\n```\n\nStart webapp using docker compose\n```\ndocker-compose up -d\n```\n\nStart webapp using docker compose with custom port\n```\ndocker-compose -p 5000:4004 up -d\n```\n\nStart webapp using docker compose with different version\n```\nRESTFOX_VERSION=0.35.0 docker-compose up -d\n```\n\n## Screenshots\n\n<img src=\"screenshots/1.png?raw=true\">\n\n<img src=\"screenshots/2.png?raw=true\">\n\n### Response History\n\n<img src=\"screenshots/3.png?raw=true\">\n\n### Context Menu\n\n<img src=\"screenshots/8.png?raw=true\">\n\n### Environment Variables\n\n<img src=\"screenshots/4.png?raw=true\">\n<img src=\"screenshots/5.png?raw=true\">\n\n### Plugins\n\n<img src=\"screenshots/6.png?raw=true\">\n<img src=\"screenshots/7.png?raw=true\">\n\n# Compiling\n\n## ui\n\n### Development\n```\nnpm run dev\n```\n\n### Distribution\n```\nnpm run build\n```\n\n### Desktop distribution and development\n```\nnpm run build-desktop\n```\n\n### Web Standalone distribution and development\n```\nnpm run build-web-standalone\n```\n\n### To upgrade codemirror to latest version\n```bash\nnpm i @codemirror/autocomplete@latest @codemirror/commands@latest @codemirror/lang-javascript@latest @codemirror/lang-json@latest @codemirror/language@latest @codemirror/search@latest @codemirror/state@latest @codemirror/view@latest\n```\n\n## electron\n\n### To upgrade electron to latest version\n```bash\nnpm install --save-dev electron@latest @electron-forge/cli@latest @electron-forge/maker-deb@latest @electron-forge/maker-rpm@latest @electron-forge/maker-squirrel@latest @electron-forge/maker-zip@latest @electron-forge/maker-flatpak@latest @electron-forge/publisher-github@latest electron-builder@latest\n```\n\n### Development\n```\nnpm run start\n```\n\n### Distribution\n```\nnpm run make\n```\nor\n```\nnpm run publish\n```\n\n### Development\n```\nnpm run dev\n```\n\n### Distribution\n```\nnpm run build\n```\n\n## Using web-standalone\n```\ngit clone https://github.com/flawiddsouza/Restfox\ncd Restfox/packages/ui\nnpm i\nnpm run build-web-standalone\ncd ../web-standalone\nnpm i\nnpm start\n```\n\nBy default npm start will run Restfox at port 4004. You can override the port by passing port like so `PORT=5040 npm start`.\n\n## Docker Build Instructions\n\nFirst refer to [**Compiling Web Standalone**](#using-web-standalone) to build successfully locally and use it normally.\nThen in the project root directory (directory with Dockerfile), execute:\n```\ndocker build -t restfox:xx .\n```\n> Note: xx is the version number\n\nAfter the build is complete, use the following command to start the service:\n```\ndocker run -d -p:4004:4004 restfox:xx\n```\nVisit after successful startup: localhost:4004\n\nAlternatively, you can also use the pre-built Docker image available on [Docker Hub](https://hub.docker.com/r/flawiddsouza/restfox). See: [**Docker**](#docker).\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.1904296875,
+          "content": "version: '3.8'\n\nservices:\n  Restfox:\n    image: flawiddsouza/restfox:${RESTFOX_VERSION:-0.14.1}\n    container_name: Restfox\n    ports:\n      - \"${CUSTOM_PORT_ON_HOST:-4004}:4004\"\n    detach: true"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packages",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshots",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "timestamp": 1736709376113,
+    "page": 84,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "iron/iron",
+      "stars": 6128,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2685546875,
+          "content": "deps/\n.DS_Store\n*~\n*#\n*.o\n*.so\n*.swp\n*.dylib\n*.dSYM\n*.dll\n*.rlib\n*.dummy\n*.exe\n*-test\n/src/generated/mimes.txt\n/src/generated/mimegen\n/src/response/mimes/mod.rs\n/bin/main\n/bin/test-internal\n/bin/test-external\n/doc/\n/target\n/build/\n/.rust/\nwatch.sh\nrusti.sh\nCargo.lock\n.cargo\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.6591796875,
+          "content": "language: rust\n\nmatrix:\n    include:\n    # Linux 64bit\n    - os: linux\n        rust: stable\n        compiler: gcc\n    - os: linux\n        rust: nightly\n        compiler: gcc\n\n    # macOS 64bit\n    - env: MACOSX_DEPLOYMENT_TARGET=10.9\n        os: osx\n        rust: stable\n        osx_image: xcode9.4\n        compiler: clang\n    - env: MACOSX_DEPLOYMENT_TARGET=10.9\n        os: osx\n        rust: nightly\n        osx_image: xcode9.4\n        compiler: clang\n\n    # Windows 64bit\n    - os: windows\n        rust: stable\n\ncache:\n  directories:\n   - $HOME/.cargo\nbefore-cache:\n  - rm -rf $HOME/.cargo/registry\nsudo: false\nscript:\n    - cargo build\n    - cargo test\n    - cargo bench\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.6201171875,
+          "content": "# Contributing\n\n### Overview\n\n* Fork iron to your own account\n* Create a feature branch, namespaced by.\n  * bug/...\n  * feat/...\n  * test/...\n  * doc/...\n  * refactor/...\n* Make commits to your feature branch. Prefix each commit like so:\n  * (feat) Added a new feature\n  * (fix) Fixed inconsistent tests [Fixes #0]\n  * (refactor) ...\n  * (cleanup) ...\n  * (test) ...\n  * (doc) ...\n* Make a pull request with your changes directly to master. Include a\n  description of your changes.\n* Wait for one of the reviewers to look at your code and either merge it or\n  give feedback which you should adapt to.\n\n#### Thank you for contributing!\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.111328125,
+          "content": "[workspace]\n\nmembers = [\n    \"examples\",\n    \"iron\",\n    \"logger\",\n    \"mount\",\n    \"persistent\",\n    \"router\",\n]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0556640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Iron Core Team\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.3583984375,
+          "content": "# Iron\n\n[![Build Status](https://secure.travis-ci.org/iron/iron.svg?branch=master)](https://travis-ci.org/iron/iron)\n[![Crates.io Status](http://meritbadge.herokuapp.com/iron)](https://crates.io/crates/iron)\n[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/iron/iron/master/LICENSE)\n\n> Extensible, Concurrency Focused Web Development in Rust.\n\n## Response Timer Example\n\nNote: This example works with the current `iron` code in this repository (master branch). If you are using `iron` 0.6 from crates.io, please refer to the [corresponding example](https://github.com/iron/iron/blob/0.6-maintenance/README.md) in the branch [0.6-maintenance](https://github.com/iron/iron/tree/0.6-maintenance).\n\n```rust\nextern crate iron;\nextern crate time;\n\nuse iron::prelude::*;\nuse iron::{typemap, AfterMiddleware, BeforeMiddleware};\nuse time::precise_time_ns;\n\nstruct ResponseTime;\n\nimpl typemap::Key for ResponseTime { type Value = u64; }\n\nimpl BeforeMiddleware for ResponseTime {\n    fn before(&self, req: &mut Request) -> IronResult<()> {\n        req.extensions.insert::<ResponseTime>(precise_time_ns());\n        Ok(())\n    }\n}\n\nimpl AfterMiddleware for ResponseTime {\n    fn after(&self, req: &mut Request, res: Response) -> IronResult<Response> {\n        let delta = precise_time_ns() - *req.extensions.get::<ResponseTime>().unwrap();\n        println!(\"Request took: {} ms\", (delta as f64) / 1000000.0);\n        Ok(res)\n    }\n}\n\nfn hello_world(_: &mut Request) -> IronResult<Response> {\n    Ok(Response::with((iron::StatusCode::OK, \"Hello World\")))\n}\n\nfn main() {\n    let mut chain = Chain::new(hello_world);\n    chain.link_before(ResponseTime);\n    chain.link_after(ResponseTime);\n    Iron::new(chain).http(\"localhost:3000\");\n}\n```\n\n## Overview\n\nIron is a high level web framework built in and for Rust, built on\n[hyper](https://github.com/hyperium/hyper). Iron is designed to take advantage\nof Rust's greatest features - its excellent type system and its principled\napproach to ownership in both single threaded and multi threaded contexts.\n\nIron is highly concurrent and can scale horizontally on more machines behind a\nload balancer or by running more threads on a more powerful machine. Iron\navoids the bottlenecks encountered in highly concurrent code by avoiding shared\nwrites and locking in the core framework.\n\nIron is 100% safe code:\n\n```sh\n$ rg unsafe src | wc\n       0       0       0\n```\n\n## Philosophy\n\nIron is meant to be as extensible and pluggable as possible; Iron's core is\nconcentrated and avoids unnecessary features by leaving them to middleware,\nplugins, and modifiers.\n\nMiddleware, Plugins, and Modifiers are the main ways to extend Iron with new\nfunctionality. Most extensions that would be provided by middleware in other\nweb frameworks are instead addressed by the much simpler Modifier and Plugin\nsystems.\n\nModifiers allow external code to manipulate Requests and Response in an ergonomic\nfashion, allowing third-party extensions to get the same treatment as modifiers\ndefined in Iron itself. Plugins allow for lazily-evaluated, automatically cached\nextensions to Requests and Responses, perfect for parsing, accessing, and\notherwise lazily manipulating an http connection.\n\nMiddleware are only used when it is necessary to modify the control flow of a\nRequest flow, hijack the entire handling of a Request, check an incoming\nRequest, or to do final post-processing. This covers areas such as routing,\nmounting, static asset serving, final template rendering, authentication, and\nlogging.\n\nIron comes with only basic modifiers for setting the status, body, and various\nheaders, and the infrastructure for creating modifiers, plugins, and\nmiddleware. No plugins or middleware are bundled with Iron.\n\n## Performance\n\nIron averages [72,000+ requests per second for hello world](https://github.com/iron/iron/wiki/How-to-Benchmark-hello.rs-Example)\nand is mostly IO-bound, spending over 70% of its time in the kernel send-ing or\nrecv-ing data.\\*\n\n\\* _Numbers from profiling on my OS X machine, your mileage may vary._\n\n## Core Extensions\n\nIron aims to fill a void in the Rust web stack - a high level framework that is\n_extensible_ and makes organizing complex server code easy.\n\nExtensions are painless to build. Some important ones are:\n\nMiddleware:\n\n- [Routing](https://github.com/iron/router)\n- [Mounting](https://github.com/iron/mount)\n- [Static File Serving](https://github.com/iron/staticfile)\n- [Logging](https://github.com/iron/logger)\n\nPlugins:\n\n- [JSON Body Parsing](https://github.com/iron/body-parser)\n- [URL Encoded Data Parsing](https://github.com/iron/urlencoded)\n- [All-In-One (JSON, URL, & Form Data) Parameter Parsing](https://github.com/iron/params)\n\nBoth:\n\n- [Shared Memory (also used for Plugin configuration)](https://github.com/iron/persistent)\n- [Sessions](https://github.com/iron/iron-sessionstorage)\n\nThis allows for extremely flexible and powerful setups and allows nearly all\nof Iron's features to be swappable - you can even change the middleware\nresolution algorithm by swapping in your own `Chain`.\n\n\\* Due to the rapidly evolving state of the Rust ecosystem, not everything\nbuilds all the time. Please be patient and file issues for breaking builds,\nwe're doing our best.\n\n## Underlying HTTP Implementation\n\nIron is based on and uses [`hyper`](https://github.com/hyperium/hyper) as its\nHTTP implementation, and lifts several types from it, including its header\nrepresentation, status, and other core HTTP types. It is usually unnecessary to\nuse `hyper` directly when using Iron, since Iron provides a facade over\n`hyper`'s core facilities, but it is sometimes necessary to depend on it as\nwell.\n\n<!--\nFIXME: expand on when it is necessary to user hyper for serving,\ne.g. when doing HTTPS.\n-->\n\n## Installation\n\nIf you're using `Cargo`, just add Iron to your `Cargo.toml`:\n\n```toml\n[dependencies.iron]\nversion = \"*\"\n```\n\n## [Documentation](https://docs.rs/iron)\n\nThe documentation is hosted [online](https://docs.rs/iron) and\nauto-updated with each successful release. You can also use `cargo doc` to\nbuild a local copy.\n\n## [Examples](/examples)\n\nCheck out the [examples](/examples) directory!\n\nYou can run an individual example using `cargo run --bin example-name` inside\nthe [examples](/examples) directory. Note that for benchmarking you should make\nsure to use the `--release` flag, which will cause cargo to compile the entire\ntoolchain with optimizations. Without `--release` you will get truly sad numbers.\n\n## Getting Help\n\nFeel free to ask questions as github issues in this or other related repos.\n\nThe best place to get immediate help is on IRC, on any of these channels on the\nmozilla network:\n\n- `#rust-webdev`\n- `#iron`\n- `#rust`\n\nOne of the maintainers or contributors is usually around and can probably help.\nWe encourage you to stop by and say hi and tell us what you're using Iron for,\neven if you don't have any questions. It's invaluable to hear feedback from users\nand always nice to hear if someone is using the framework we've worked on.\n\n## Maintainers\n\nJonathan Reem ([reem](https://github.com/reem)) is the core maintainer and\nauthor of Iron.\n\nCommit Distribution (as of `8e55759`):\n\n```\nJonathan Reem (415)\nZach Pomerantz (123)\nMichael Sproul (9)\nPatrick Tran (5)\nCorey Richardson (4)\nBryce Fisher-Fleig (3)\nBarosl Lee (2)\nChristoph Burgdorf (2)\nda4c30ff (2)\narathunku (1)\nCengiz Can (1)\nDarayus (1)\nEduardo Bautista (1)\nMehdi Avdi (1)\nMichael Sierks (1)\nNerijus Arlauskas (1)\nSuprDewd (1)\n```\n\n## License\n\nMIT\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "iron",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "logger",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mount",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "persistent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "router",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

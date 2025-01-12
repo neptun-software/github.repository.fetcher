@@ -1,0 +1,148 @@
+{
+  "metadata": {
+    "timestamp": 1736709385955,
+    "page": 102,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "graphql-rust/juniper",
+      "stars": 5740,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".codespellrc",
+          "type": "blob",
+          "size": 0.037109375,
+          "content": "[codespell]\nignore-words-list = crate\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0556640625,
+          "content": "/.idea/\n/.vscode/\n/*.iml\n.DS_Store\n\n/Cargo.lock\n/target/\n"
+        },
+        {
+          "name": ".rustfmt.toml",
+          "type": "blob",
+          "size": 0.060546875,
+          "content": "imports_granularity = \"Crate\"\nuse_field_init_shorthand = true\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.1806640625,
+          "content": "# Juniper Contribution Guide\n\nJuniper is always looking for new contributors, so don't be afraid to jump in and help!  \nThe maintainers are happy to provide guidance if required.\n\nTo get started, you can look for [issues with the \"help wanted\" label](https://github.com/graphql-rust/juniper/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).\n\n## PR Checklist\n\nBefore submitting a PR, you should follow these steps to prevent redundant churn or CI failures:\n\n- [ ] Ensure proper formatting\n- [ ] Run all tests\n- [ ] Update the CHANGELOG\n\n### Ensure proper formatting\n\nConsistent formatting is enforced on the CI.\n\nBefore you submit your PR, you should run `cargo +nightly fmt --all` in the root directory (or use the `make fmt` shortcut).\n\nFormatting should be run on the **nightly** compiler.\n\n### Run all tests\n\nTo run all available tests, including verifying the code examples in the book:\n\n1. Run `cargo test` in the root directory.\n2. Run `make test.book` in the root directory.\n\n### Update the CHANGELOG\n\nAdd your changes to the relevant changelog if they affect users in any way.\nEach sub-crate has it's own CHANGELOG.md.\n\nYour changes should be added to a `[master]` section on top of the file.\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.3369140625,
+          "content": "[workspace]\nresolver = \"1\" # unifying Cargo features asap for Book tests\nmembers = [\n    \"benches\",\n    \"juniper_codegen\",\n    \"juniper\",\n    \"juniper_hyper\",\n    \"juniper_rocket\",\n    \"juniper_subscriptions\",\n    \"juniper_graphql_ws\",\n    \"juniper_warp\",\n    \"juniper_actix\",\n    \"juniper_axum\",\n    \"tests/codegen\",\n    \"tests/integration\",\n]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.5576171875,
+          "content": "BSD 2-Clause License\n\nCopyright (c) 2016-2025 Magnus Hallin <mhallin@fastmail.com>,\n                        Christoph Herzog <chris@theduke.at>,\n                        Christian Legnitto <christian@legnitto.com>,\n                        Ilya Solovyiov <ilya.solovyiov@gmail.com>,\n                        Kai Ren <tyranron@gmail.com>\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n* Redistributions of source code must retain the above copyright notice, this\n  list of conditions and the following disclaimer.\n\n* Redistributions in binary form must reproduce the above copyright notice,\n  this list of conditions and the following disclaimer in the documentation\n  and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 3.779296875,
+          "content": "###############################\n# Common defaults/definitions #\n###############################\n\ncomma := ,\n\n# Checks two given strings for equality.\neq = $(if $(or $(1),$(2)),$(and $(findstring $(1),$(2)),\\\n                                $(findstring $(2),$(1))),1)\n\n\n\n\n###########\n# Aliases #\n###########\n\nbook: book.build\n\n\ncodespell: book.codespell\n\n\nfmt: cargo.fmt\n\n\nlint: cargo.lint\n\n\ntest: test.cargo\n\n\nrelease: cargo.release\n\n\n\n\n##################\n# Cargo commands #\n##################\n\n# Format Rust sources with rustfmt.\n#\n# Usage:\n#\tmake cargo.fmt [check=(no|yes)]\n\ncargo.fmt:\n\tcargo +nightly fmt --all $(if $(call eq,$(check),yes),-- --check,)\n\n\n# Lint Rust sources with Clippy.\n#\n# Usage:\n#\tmake cargo.lint\n\ncargo.lint:\n\tcargo clippy --workspace --all-features -- -D warnings\n\tcargo clippy -p juniper_integration_tests --tests --all-features -- -D warnings\n\n\n# Release Rust crate.\n#\n# Read more about bump levels here:\n#\thttps://github.com/crate-ci/cargo-release/blob/master/docs/reference.md#bump-level\n#\n# Usage:\n#\tmake cargo.release crate=<crate-name> [ver=(release|<bump-level>)]\n#\t                   ([exec=no]|exec=yes [push=(yes|no)])\n#\t                   [install=(yes|no)]\n\ncargo.release:\nifneq ($(install),no)\n\tcargo install cargo-release\nendif\n\tcargo release -p $(crate) --all-features \\\n\t\t$(if $(call eq,$(exec),yes),\\\n\t\t\t--no-publish $(if $(call eq,$(push),no),--no-push,) --execute,\\\n\t\t\t-v $(if $(call eq,$(CI),),,--no-publish)) \\\n\t\t$(or $(ver),release)\n\n\ncargo.test: test.cargo\n\n\n\n\n####################\n# Testing commands #\n####################\n\n# Run Rust tests of Book.\n#\n# Usage:\n#\tmake test.book [clean=(no|yes)]\n\ntest.book:\nifeq ($(clean),yes)\n\tcargo clean\nendif\n\t$(eval target := $(strip $(shell cargo -vV | sed -n 's/host: //p')))\n\tcargo build --all-features\n\tmdbook test book -L target/debug/deps $(strip \\\n\t\t$(if $(call eq,$(findstring windows,$(target)),),,\\\n\t\t\t$(shell cargo metadata -q \\\n\t\t\t        | jq -r '.packages[] | select(.name == \"windows_$(word 1,$(subst -, ,$(target)))_$(word 4,$(subst -, ,$(target)))\") | .manifest_path' \\\n\t\t\t        | sed -e \"s/^/-L '/\" -e 's/Cargo.toml/lib/' -e \"s/$$/'/\" )))\n\n\n# Run Rust tests of project crates.\n#\n# Usage:\n#\tmake test.cargo [crate=<crate-name>] [careful=(no|yes)]\n\ntest.cargo:\nifeq ($(careful),yes)\nifeq ($(shell cargo install --list | grep cargo-careful),)\n\tcargo install cargo-careful\nendif\nifeq ($(shell rustup component list --toolchain=nightly \\\n              | grep 'rust-src (installed)'),)\n\trustup component add --toolchain=nightly rust-src\nendif\nendif\n\tcargo $(if $(call eq,$(careful),yes),+nightly careful,) \\\n\t\ttest $(if $(call eq,$(crate),),--workspace,-p $(crate)) --all-features\n\n\n\n\n#################\n# Book commands #\n#################\n\n# Build Book.\n#\n# Usage:\n#\tmake book.build [out=<dir>]\n\nbook.build:\n\tmdbook build book/ $(if $(call eq,$(out),),,-d $(out))\n\n\n# Spellcheck Book.\n#\n# Usage:\n#\tmake book.codespell [fix=(no|yes)]\n\nbook.codespell:\n\tcodespell book/ $(if $(call eq,$(fix),yes),--write-changes,)\n\n\n# Serve Book on some port.\n#\n# Usage:\n#\tmake book.serve [port=(3000|<port>)]\n\nbook.serve:\n\tmdbook serve book/ -p=$(or $(port),3000)\n\n\n\n\n######################\n# Forwarded commands #\n######################\n\n# Download and prepare actual version of GraphiQL static files, used for\n# integrating it.\n#\n# Usage:\n#\tmake graphiql\n\ngraphiql:\n\t@cd juniper/ && \\\n\tmake graphiql\n\n\n# Download and prepare actual version of GraphQL Playground static files, used\n# for integrating it.\n#\n# Usage:\n#\tmake graphql-playground\n\ngraphql-playground:\n\t@cd juniper/ && \\\n\tmake graphql-playground\n\n\n\n\n##################\n# .PHONY section #\n##################\n\n.PHONY: book codespell fmt lint release test \\\n        book.build book.codespell book.serve \\\n        cargo.fmt cargo.lint cargo.release cargo.test \\\n        graphiql graphql-playground \\\n        test.book test.cargo\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.6728515625,
+          "content": "<img src=\"https://github.com/graphql-rust/juniper/raw/master/assets/logo/juniper-dark-word.png\" alt=\"Juniper\" width=\"500\" />\n\n> GraphQL server library for Rust\n\n[![Build Status](https://dev.azure.com/graphql-rust/GraphQL%20Rust/_apis/build/status/graphql-rust.juniper)](https://dev.azure.com/graphql-rust/GraphQL%20Rust/_build/latest?definitionId=1)\n[![codecov](https://codecov.io/gh/graphql-rust/juniper/branch/master/graph/badge.svg)](https://codecov.io/gh/graphql-rust/juniper)\n[![Crates.io](https://img.shields.io/crates/v/juniper.svg?maxAge=2592000)](https://crates.io/crates/juniper)\n[![Gitter chat](https://badges.gitter.im/juniper-graphql/gitter.svg)](https://gitter.im/juniper-graphql/Lobby)\n\n---\n\n[GraphQL][graphql] is a data query language developed by Facebook intended to\nserve mobile and web application frontends.\n\n_Juniper_ makes it possible to write GraphQL servers in Rust that are\ntype-safe and blazingly fast. We also try to make declaring and resolving\nGraphQL schemas as convenient as Rust will allow.\n\nJuniper does not include a web server - instead it provides building blocks to\nmake integration with existing servers straightforward. It optionally provides a\npre-built integration for the [Actix][actix], [Hyper][hyper], [Rocket], and [Warp][warp] frameworks, including\nembedded [Graphiql][graphiql] and [GraphQL Playground][playground] for easy debugging.\n\n- [Cargo crate](https://crates.io/crates/juniper)\n- [API Reference][docsrs]\n- [Book][book]: Guides and Examples ([current][book] | [master][book_master])\n\nThe book is also available for the master branch and older versions published after 0.11.1. See the [book index][book_index].\n\n\n## Getting Started\n\nThe best place to get started is the [Juniper Book][book], which contains\nguides with plenty of examples, covering all features of Juniper. (very much WIP)\n\nTo get started quickly and get a feel for Juniper, check out the\n[Quickstart][book_quickstart] section.\n\nFor specific information about macros, types and the Juniper api, the\n[API Reference][docsrs] is the best place to look.\n\nYou can also check out the [Star Wars schema][test_schema_rs] to see a complex\nexample including polymorphism with traits and interfaces.\nFor an example of web framework integration,\nsee the [actix][actix_examples], [axum][axum_examples], [hyper][hyper_examples], [rocket][rocket_examples], and [warp][warp_examples] examples folders.\n\n## Features\n\nJuniper supports the full GraphQL query language according to the\n[specification (October 2021)][graphql_spec], including interfaces, unions, schema\nintrospection, and validations. It can also output the schema in the [GraphQL Schema Language][schema_language].\n\nAs an exception to other GraphQL libraries for other languages, Juniper builds\nnon-null types by default. A field of type `Vec<Episode>` will be converted into\n`[Episode!]!`. The corresponding Rust type for e.g. `[Episode]` would be\n`Option<Vec<Option<Episode>>>`.\n\nJuniper is agnostic to serialization format and network transport.\n\nJuniper supports both asynchronous and synchronous execution using `execute()` and `execute_sync()` respectively. Asynchronous execution is runtime agnostic.\n\nJuniper follows a [code-first approach][schema_approach] to defining GraphQL schemas. If you would like to use a [schema-first approach][schema_approach] instead, consider [juniper-from-schema][] for generating code from a schema file.\n\n## Integrations\n\n### Data types\n\nJuniper has automatic integration with some very common Rust crates to make\nbuilding schemas a breeze. The types from these crates will be usable in\nyour Schemas automatically.\n\n- [uuid][uuid]\n- [url][url]\n- [chrono][chrono]\n- [chrono-tz][chrono-tz]\n- [jiff][jiff]\n- [time][time]\n- [bson][bson]\n\n### Web Frameworks\n\n- [actix][actix]\n- [axum][axum]\n- [hyper][hyper]\n- [rocket][rocket]\n- [warp][warp]\n\n## Guides & Examples\n\n- [Juniper + actix-web example](https://github.com/actix/examples/tree/master/graphql/juniper)\n\n## API Stability\n\nJuniper has not reached 1.0 yet, thus some API instability should be expected.\n\n[actix]: https://actix.rs/\n[axum]: https://docs.rs/axum\n[graphql]: http://graphql.org\n[graphiql]: https://github.com/graphql/graphiql\n[playground]: https://github.com/prisma/graphql-playground\n[graphql_spec]: https://spec.graphql.org/October2021\n[schema_language]: https://graphql.org/learn/schema/#type-language\n[schema_approach]: https://blog.logrocket.com/code-first-vs-schema-first-development-graphql/\n[test_schema_rs]: https://github.com/graphql-rust/juniper/blob/master/juniper/src/tests/fixtures/starwars/schema.rs\n[tokio]: https://github.com/tokio-rs/tokio\n[actix_examples]: https://github.com/graphql-rust/juniper/tree/master/juniper_actix/examples\n[axum_examples]: https://github.com/graphql-rust/juniper/tree/master/juniper_axum/examples\n[hyper_examples]: https://github.com/graphql-rust/juniper/tree/master/juniper_hyper/examples\n[rocket_examples]: https://github.com/graphql-rust/juniper/tree/master/juniper_rocket/examples\n[hyper]: https://hyper.rs\n[rocket]: https://rocket.rs\n[book]: https://graphql-rust.github.io/juniper\n[book_master]: https://graphql-rust.github.io/juniper/master\n[book_index]: https://graphql-rust.github.io/juniper\n[book_quickstart]: https://graphql-rust.github.io/juniper/quickstart.html\n[docsrs]: https://docs.rs/juniper\n[warp]: https://github.com/seanmonstar/warp\n[warp_examples]: https://github.com/graphql-rust/juniper/tree/master/juniper_warp/examples\n[uuid]: https://crates.io/crates/uuid\n[url]: https://crates.io/crates/url\n[chrono]: https://crates.io/crates/chrono\n[chrono-tz]: https://crates.io/crates/chrono-tz\n[jiff]: https://crates.io/crates/jiff\n[time]: https://crates.io/crates/time\n[bson]: https://crates.io/crates/bson\n[juniper-from-schema]: https://github.com/davidpdrsn/juniper-from-schema\n"
+        },
+        {
+          "name": "RELEASING.md",
+          "type": "blob",
+          "size": 1.9853515625,
+          "content": "Releasing new crate versions\n============================\n\nReleasing of [workspace] crates of this project is performed by pushing the Git release tag (having `<crate-name>@<version>` format), following by the [CI pipeline] creating a [GitHub release] and publishing the crate to [crates.io].\n\n> __WARNING__: Only one [workspace] crate may be released at a time. So, if you need to release multiple [workspace] crates, do this sequentially.\n\n\n\n\n## Prerequisites\n\nWe use [`cargo-release`] to automate crate releases. You will need to install it locally:\n```bash\ncargo install cargo-release\n```\n\n\n\n\n## Preparing\n\nTo produce a new release a [workspace] crate, perform the following steps:\n\n1. Check its `CHANGELOG.md` file to be complete and correctly formatted. The section for the new release __should start__ with `## master` header. Commit any changes you've made.\n\n2. Determine a new release [bump level] (`patch`, `minor`, `major`, or default `release`).\n\n3. Run the release process in dry-run mode and check the produced diffs to be made in the returned output.\n    ```bash\n    make release crate=juniper ver=minor\n    ```\n\n4. (Optional) Not everything may be captured in dry-run mode. It may be a good idea to run a local test, without pushing the created Git commit and tag.\n    ```bash\n    make release crate=juniper ver=minor exec=yes push=no\n    ```\n\n\n\n\n## Executing\n\nOnce everything is prepared and checked, just execute the releasing process:\n```bash\nmake release crate=juniper ver=minor exec=yes\n```\n\nOnce the [CI pipeline] for the pushed Git tag successfully finishes, the crate is fully released.\n\n\n\n\n[`cargo-release`]: https://crates.io/crates/cargo-release\n[CI pipeline]: /../../blob/master/.github/workflows/ci.yml\n[crates.io]: https://crates.io\n[GitHub release]: https://docs.github.com/repositories/releasing-projects-on-github/about-releases\n[release level]: https://github.com/crate-ci/cargo-release/blob/master/docs/reference.md#bump-level\n[workspace]: https://doc.rust-lang.org/cargo/reference/workspaces.html\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "benches",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "book",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_actix",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_axum",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_codegen",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_graphql_ws",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_hyper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_rocket",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_subscriptions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "juniper_warp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "release.toml",
+          "type": "blob",
+          "size": 0.2314453125,
+          "content": "allow-branch = [\"*\"]\nconsolidate-commits = false\npre-release-commit-message = \"Prepare {{version}} release of `{{crate_name}}` crate\"\ntag-message = \"{{version}} version of `{{crate_name}}` crate\"\ntag-name = \"{{crate_name}}-v{{version}}\"\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
