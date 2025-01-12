@@ -1,0 +1,120 @@
+{
+  "metadata": {
+    "timestamp": 1736709688109,
+    "page": 56,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "remzi-arpacidusseau/ostep-projects",
+      "stars": 4453,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "INSTALL-xv6.md",
+          "type": "blob",
+          "size": 3.9658203125,
+          "content": "\n# Install Notes\n\nTo get xv6 up and running on your machine, you'll need a few tools\ninstalled. Here, we'll walk you through what you need to do.\n\n## The xv6 Source Code\n\nTo obtain the xv6 source code, just clone it from github:\n\n```sh\nprompt> git clone https://github.com/mit-pdos/xv6-public\nloning into 'xv6-public'...\nremote: Enumerating objects: 13974, done.\nremote: Total 13974 (delta 0), reused 0 (delta 0), pack-reused 13974\nReceiving objects: 100% (13974/13974), 17.15 MiB | 2.73 MiB/s, done.\nResolving deltas: 100% (9534/9534), done.\nprompt> cd xv6-public\n```\n\nThere! Now you have completed the easiest part.\n\n## MacOS Build Environment for xv6\n\nTo play with xv6 on a Mac, you'll need to install two pieces of software. The\nfirst is the [`qemu`](https://www.qemu.org/download/) machine emulation\nenvironment. \n\nTo learn more about what emulation is, read [this\npage](https://en.wikipedia.org/wiki/Emulator). The short story is that an\nemulator is just another computer program, but one that is a realistic\nfacsimile of a particular computer system. In this case, we'll use `qemu` to\npretend we are running an x86 computer system; on this pretend x86 system,\nwe'll boot our xv6 kernel.\n\nNow you might ask: why not just run xv6 on a real machine? You could do that,\nbut it would make running and debugging xv6 slower and more painful. With a\nrealistic emulator like `qemu`, you can quickly run your kernel but not have\nthe pain of rebooting the actual system you are using. Further, if you make a\nmistake, your entire machine doesn't lock up, just the emulator, which you can\nexit or kill. It just makes your life much better than doing the real thing. \n\nTo install `qemu` on a Mac, just do the following:\n\n```sh\nprompt> sudo port install qemu\n```\n\nThis will take a little while, so pour yourself a cup of coffee and enjoy. \n\nThis command assumes you have [MacPorts](https://www.macports.org/)\ninstalled. If you don't, go to the [MacPorts install\npage](https://www.macports.org/install.php) and follow instructions first. \n\nTh command further assumes that the path to port (usually `/opt/local/bin`) is\nin your path. You should probably add this directory to your path anyhow; the\n`qemu` software will get installed there too.\n\nWhen finished, you should be able to run the `qemu` software. To run the x86\nversion (which is what is needed for xv6), type the following command:\n\n```sh\nprompt> qemu-system-x86_64 -nographic\n```\n\nThis will run the `qemu` emulator, but with no kernel to boot! Alas, not that\nuseful. \n\nTo quit `qemu`, type `C-a x` (that is, hold down `control` and while doing so,\npress `a`, then let go of `control`, then press `x`). \n\nThe second piece of software you'll need is the `gcc` cross-compilation\ntoolchain. To install these pieces of software, type:\n\n```sh\nprompt> sudo port install i386-elf-gcc gdb\n```\n\nWhen you're done, you're ready to try to build and run xv6. Change into the\n`xv6-public` directory, and type:\n\n```sh\nprompt> make TOOLPREFIX=i386-elf- qemu-nox\n```\n\nIf all has worked well, you'll see something like:\n\n```sh\nBooting from Hard Disk..xv6...\ncpu1: starting 1\ncpu0: starting 0\nsb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap\nsta8\ninit: starting sh\n$\n```\n\nThe `$` is the shell command prompt: who-hoo! \n\nRemember to type `C-a x` to quit the emulation.\n\nA couple of quick edits might be useful to the xv6 `Makefile`. First, change\nthe `TOOLPREFIX` line to uncommented, and to look as follows:\n\n```sh\nTOOLPREFIX = i386-elf-\n```\n\nThis will all you to type the following simpler `make` command:\n\n```sh\nprompt> make qemu-nox\n```\n\nNote: `qemu-nox` is the way this `Makefile` allows you to build and run xv6\nwithout spinning up a separate window, but rather running `qemu` directly\nwithin your terminal, which we prefer. If you want the new window to pop up\ninstead, just run `make qemu`.\n\nWe also usually edit the `Makefile` to use one CPU (not two). Look for the\nline that says:\n\n```sh\nCPUS := 2\n```\n\nand change it to:\n\n```sh\nCPUS := 1\n```\n\nNow, time to go do the projects!\n\n\n## Linux\n\nTBD.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.146484375,
+          "content": "\n# Projects for an Operating Systems Class\n\nThis repository holds a number of projects that can be used in an operating\nsystems class aimed at upper-level undergraduates and (in some cases)\nbeginning graduate students. They are based on years of teaching such a course\nat the University of Wisconsin-Madison.\n\nAlso (increasingly) available are some tests to see if your code works; eventually\nevery project will have a set of tests available. The testing framework that is\ncurrently available is found [here](https://github.com/remzi-arpacidusseau/ostep-projects/tree/master/tester).\nA specific testing script, found in each project directory, can be used to run\nthe tests against your code. \n\nFor example, in the initial utilities project, the relatively simple `wcat`\nprogram that you create can be tested by running the `test-wcat.sh` script.\nThis could be accomplished by the following commands:\n```sh\nprompt> git clone https://github.com/remzi-arpacidusseau/ostep-projects\nprompt> cd ostep-projects/initial-utilities/wcat\nprompt> emacs -nw wcat.c \nprompt> gcc -o wcat wcat.c -Wall \nprompt> ./test-wcat.sh\ntest 1: passed\ntest 2: passed\ntest 3: passed\ntest 4: passed\ntest 5: passed\ntest 6: passed\ntest 7: passed\nprompt> \n```\nOf course, this sequence assumes (a) you use `emacs` (you should!), (b) your\ncode is written in one shot (impressive!), and (c) that it works perfectly\n(well done!). Even for simple assignments, it is likely that the\ncompile/run/debug cycle might take a few iterations.\n\n## C/Linux Projects\n\n### Initial Projects\n\nThese projects are meant to get you warmed up with programming in the C/UNIX\nenvironment. None are meant to be particularly hard, but should be enough so\nthat you can get more comfortable programming. \n\nRealize the best thing you can do to learn to program in any environment is to\nprogram **a lot**. These small projects are only the beginning of that\njourney; you'll have to do more on your own to truly become proficient.\n\n* [Unix Utilities](initial-utilities) (cat, grep, zip/unzip)\n* Sort (text-based)\n* Sort (binary)\n* [Reverse](initial-reverse) (very simple reverse program)\n\n### Processes and Scheduling\n\n* [Shell](processes-shell)\n\n### Virtual Memory\n\n* Memory Allocator\n\n### Concurrency\n\n* [Web Server](concurrency-webserver)\n* [Parallel Zip](concurrency-pzip)\n* [MapReduce](concurrency-mapreduce)\n* Web Crawler\n\n### File Systems\n\n* [File System Checker](filesystems-checker)\n\n### Distributed Systems\n\n\n## Kernel Hacking Projects (xv6)\n\nThese projects all are to be done inside the\n[xv6](https://pdos.csail.mit.edu/6.828/2017/xv6.html) kernel based on an early\nversion of Unix and developed at MIT. Unlike the C/Linux projects, these give\nyou direct experience inside a real, working operating system (albeit a simple\none).\n\nRead the [install notes](INSTALL-xv6.md) to see how to download the latest xv6 \nand install the tools you'll need.\n\n### Initial Projects\n\n* [Intro To xv6](initial-xv6)\n\n### Processes and Scheduling\n\n* [Scheduling (Lottery)](scheduling-xv6-lottery)\n\n### Virtual Memory\n\n* [Virtual Memory (Null Pointer and Read-Only Regions)](vm-xv6-intro)\n\n### Concurrency\n\n* [Kernel Threads (Basic Implementation)](concurrency-xv6-threads)\n\n### File Systems\n\n\n\n"
+        },
+        {
+          "name": "concurrency-mapreduce",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "concurrency-pzip",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "concurrency-sort",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "concurrency-webserver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "concurrency-xv6-threads",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "filesystems-checker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "filesystems-distributed-ufs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "filesystems-distributed",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "initial-kv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "initial-memcached",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "initial-reverse",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "initial-utilities",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "initial-xv6-tracer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "initial-xv6",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "processes-shell",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scheduling-xv6-lottery",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tester",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vm-xv6-intro",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

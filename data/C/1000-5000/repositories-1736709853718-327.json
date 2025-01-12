@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": 1736709853718,
+    "page": 327,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mofarrell/p2pvc",
+      "stars": 2900,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2607421875,
+          "content": "# Object files\n*.o\n*.ko\n*.obj\n*.elf\n\n# Vim swap files.\n*.swp\n\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Libraries\n*.lib\n*.a\n*.la\n*.lo\n\n# Shared objects (inc. Windows DLLs)\n*.dll\n*.so\n*.so.*\n*.dylib\n\n# Executables\n*.exe\n*.out\n*.app\n*.i*86\n*.x86_64\n*.hex\np2pvc\nvideo\naudio\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.244140625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 Bram Wasti <bwasti@cmu.edu>\nCopyright (c) 2015 Connell Donaghy <cpd@andrew.cmu.edu>\nCopyright (c) 2015 Michael O'Farrell <mofarrel@andrew.cmu.edu>\nCopyright (c) 2015 Stefan Dasbach <sdasbach@andrew.cmu.edu>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.9833984375,
+          "content": "OBJDIR=objs\nSRCDIR=src\nINCDIR=$(SRCDIR)/inc\nCFLAGS+=-I$(INCDIR)\nplatform=$(shell uname -s)\n\nSRCS=$(wildcard $(SRCDIR)/*.c)\nOBJS=$(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRCS))\n\nCFLAGS+=-O2 -Wall\nifeq ($(platform), Linux)\nCFLAGS+=-DPA_USE_ALSA\nelse\nCFLAGS+=-DPA_USE_COREAUDIO\nendif\nCFLAGS+=`pkg-config --cflags opencv`\nCFLAGS_DEBUG+=-O0 -g3 -Werror -DDEBUG\nLDFLAGS+=-lpthread -lncurses -lportaudio -lm\nLDFLAGS+=`pkg-config --libs opencv`\n\nall: p2pvc\n\n.PHONY: all clean debug\n\ndebug: CC := $(CC) $(CFLAGS_DEBUG)\ndebug: clean p2pvc\n\np2pvc: $(OBJS)\n\t$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)\n\nvideo: CFLAGS := $(CFLAGS) -DVIDEOONLY\nvideo: $(filter-out objs/p2pvc.o, $(OBJS))\n\t$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)\n\naudio: CFLAGS := $(CFLAGS) -DAUDIOONLY\naudio: $(filter-out objs/p2pvc.o, $(OBJS))\n\t$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)\n\n$(OBJS): | $(OBJDIR)\n$(OBJDIR):\n\tmkdir -p $@\n\n$(OBJDIR)/%.o: $(SRCDIR)/%.c $(wildcard $(INCDIR)/*.h) Makefile\n\t$(CC) $(CFLAGS) $< -c -o $@\n\nclean:\n\trm -rf $(OBJDIR) audio video p2pvc\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.5673828125,
+          "content": "# p2pvc\nA point to point color terminal video chat.\n\n![Demo](http://giant.gfycat.com/HideousSpiffyAdder.gif)\n\n[and here's a still image](http://i.imgur.com/ziRPCWE.png)\n\n# Installation\n\nArch users can install `p2pvc-git` from [the AUR](https://aur.archlinux.org/packages/p2pvc-git/)\n\n### Dependencies\n\n* OpenCV\n* PortAudio\n* ncurses\n\n#### Ubuntu:\n\n     sudo apt-get install libncurses-dev libopencv-dev portaudio19-dev\n\n#### OS X (with Homebrew):\n\n     brew install ncurses portaudio opencv\n\n#### OS X (with MacPorts):\n\n     sudo port install ncurses portaudio opencv\n\n### Compilation\nMake the binary.\n\n    make\n\nVideo chat with yourself to test the camera. (Be sure to mute your mic or speakers or you'll get feedback!)\n\n    ./p2pvc 127.0.0.1 -v\n\n# Usage\n\n#### Audio only\n\n    ./p2pvc [ip address]\n\n#### Flags\n\n`-v` enables video chat.\n\n     ./p2pvc [ip address] -v\n\n`-d` sets the dimension of the video in `[width]x[height]` format.\n\n     ./p2pvc [ip address] -v -d 200x50\n\n`-A` and `-V` allow you to specify the port the audio and video run on respectively.\n\n     ./p2pvc [ip address] -v -A 1337 -V 1338\n\n`-b` displays incoming bandwidth in the top-right of the video display.\n \n     ./p2pvc [ip address] -v -b\n\n`-e` to print stderr (which is by default routed to /dev/null).\n\n     ./p2pvc [ip address] -e\n     \n`-B` renders in Braille Unicode characters.  Note that the dimensions must both be divisible by 4. \n\n     ./p2pvc [ip address] -v -B -d 200x152\n\n`-I` sets the threshold for turning pixels on (when using the `-B` flag).  Ranges from 1 - 99, defaults 25.\n\n    ./p2pvc [ip address] -v -B -I 50\n\n`-E` sets and edge filter with `[lower]:[upper]` bounds.\n\n    ./p2pvc [ip address] -v -B -E 100:300\n\n`-c` sets the color of the video.  Used in the form `[r]:[g]:[b]`.  Each color ranges from 0 - 100.\n\n     ./p2pvc [ip address] -v -c 0:100:0\n\n`-s` sets the saturation of the colors in the video.  0.0 is greyscale, 2.0 is default.\n\n     ./p2pvc [ip address] -v -s 3.0\n     \n`-a` sets custom ASCII character maps.  Repeat characters to weight their frequency.\n\n     ./p2pvc [ip address] -v -a \" ......#####\"\n     \n`-r` sets the refresh rate.\n\n     ./p2pvc [ip address] -v -r 10\n     \n![Demo](http://fat.gfycat.com/WideRecklessChinesecrocodilelizard.gif)\n# Known problems and resolutions\n\n#### Black and white\n\nThis happens when p2pvc thinks the terminal doesn't have enough colors to display all 256.  Try `export TERM=xterm-256color` or equivalent to get it working.\n\n#### No connection made\n\np2pvc does not get around NAT, so you may need to port forward.  It uses ports 55555 and 55556 for audio and video respectively.\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

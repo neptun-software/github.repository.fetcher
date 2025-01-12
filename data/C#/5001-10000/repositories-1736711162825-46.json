@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736711162825,
+    "page": 46,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Tyrrrz/DiscordChatExporter",
+      "stars": 8009,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.099609375,
+          "content": "# User-specific files\n.vs/\n.idea/\n*.suo\n*.user\n\n# Build results\nbin/\nobj/\n\n# Test results\nTestResults/"
+        },
+        {
+          "name": "Directory.Build.props",
+          "type": "blob",
+          "size": 0.4111328125,
+          "content": "<Project>\n\n  <PropertyGroup>\n    <TargetFramework>net9.0</TargetFramework>\n    <Version>999.9.9-dev</Version>\n    <Company>Tyrrrz</Company>\n    <Copyright>Copyright (c) Oleksii Holub</Copyright>\n    <LangVersion>preview</LangVersion>\n    <Nullable>enable</Nullable>\n    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>\n    <ILLinkTreatWarningsAsErrors>false</ILLinkTreatWarningsAsErrors>\n  </PropertyGroup>\n\n</Project>"
+        },
+        {
+          "name": "DiscordChatExporter.Cli.Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DiscordChatExporter.Cli.dockerfile",
+          "type": "blob",
+          "size": 2.61328125,
+          "content": "# -- Build\n# Specify the platform here so that we pull the SDK image matching the host platform,\n# instead of the target platform specified during build by the `--platform` option.\nFROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0-alpine AS build\n\n# Expose the target architecture set by the `docker build --platform` option, so that\n# we can build the assembly for the correct platform.\nARG TARGETARCH\n\n# Allow setting the assembly version from the build command\nARG VERSION=0.0.0\n\nWORKDIR /tmp/app\n\nCOPY favicon.ico .\nCOPY NuGet.config .\nCOPY Directory.Build.props .\nCOPY DiscordChatExporter.Core DiscordChatExporter.Core\nCOPY DiscordChatExporter.Cli DiscordChatExporter.Cli\n\n# Publish a self-contained assembly so we can use a slimmer runtime image\nRUN dotnet publish DiscordChatExporter.Cli \\\n    -p:Version=$VERSION \\\n    -p:CSharpier_Bypass=true \\\n    --configuration Release \\\n    --self-contained \\\n    --use-current-runtime \\\n    --arch $TARGETARCH \\\n    --output DiscordChatExporter.Cli/bin/publish/\n\n# -- Run\n# Use `runtime-deps` instead of `runtime` because we have a self-contained assembly\nFROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/runtime-deps:9.0-alpine AS run\n\nLABEL org.opencontainers.image.title=\"DiscordChatExporter.Cli\"\nLABEL org.opencontainers.image.description=\"DiscordChatExporter is an application that can be used to export message history from any Discord channel to a file.\"\nLABEL org.opencontainers.image.authors=\"tyrrrz.me\"\nLABEL org.opencontainers.image.source=\"https://github.com/Tyrrrz/DiscordChatExporter\"\nLABEL org.opencontainers.image.licenses=\"MIT\"\n\n# Alpine image doesn't come with the ICU libraries pre-installed, so we need to install them manually.\n# We need the full ICU data because we allow the user to specify any locale for formatting purposes.\nRUN apk add --no-cache icu-libs icu-data-full\nENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false\nENV LC_ALL=en_US.UTF-8\nENV LANG=en_US.UTF-8\n\n# Alpine is missing tzdata, which we need to support timezones\nRUN apk add --no-cache tzdata\n\n# Use a non-root user to ensure that the files shared with the host are accessible by the host user\n# https://github.com/Tyrrrz/DiscordChatExporter/issues/851\n# https://github.com/Tyrrrz/DiscordChatExporter/issues/1174\nRUN apk add --no-cache su-exec\nRUN addgroup -S -g 1000 dce && adduser -S -H -G dce -u 1000 dce\n\n# This directory is exposed to the user for mounting purposes, so it's important that it always\n# stays the same for backwards compatibility.\nWORKDIR /out\n\nCOPY --from=build /tmp/app/DiscordChatExporter.Cli/bin/publish /opt/app\nCOPY docker-entrypoint.sh /opt/app\nENTRYPOINT [\"/opt/app/docker-entrypoint.sh\"]\n"
+        },
+        {
+          "name": "DiscordChatExporter.Cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DiscordChatExporter.Core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DiscordChatExporter.Gui",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DiscordChatExporter.sln",
+          "type": "blob",
+          "size": 3.025390625,
+          "content": "﻿\nMicrosoft Visual Studio Solution File, Format Version 12.00\n# Visual Studio Version 16\nVisualStudioVersion = 16.0.28729.10\nMinimumVisualStudioVersion = 10.0.40219.1\nProject(\"{2150E333-8FDC-42A3-9474-1A3956D46DE8}\") = \"Solution Items\", \"Solution Items\", \"{EA305DD5-1F98-415D-B6C4-65053A58F914}\"\n\tProjectSection(SolutionItems) = preProject\n\t\tLicense.txt = License.txt\n\t\tReadme.md = Readme.md\n\t\tDirectory.Build.props = Directory.Build.props\n\t\tDiscordChatExporter.Cli.dockerfile = DiscordChatExporter.Cli.dockerfile\n\tEndProjectSection\nEndProject\nProject(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"DiscordChatExporter.Gui\", \"DiscordChatExporter.Gui\\DiscordChatExporter.Gui.csproj\", \"{732A67AF-93DE-49DF-B10F-FD74710B7863}\"\nEndProject\nProject(\"{9A19103F-16F7-4668-BE54-9A1E7A4F7556}\") = \"DiscordChatExporter.Cli\", \"DiscordChatExporter.Cli\\DiscordChatExporter.Cli.csproj\", \"{D08624B6-3081-4BCB-91F8-E9832FACC6CE}\"\nEndProject\nProject(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"DiscordChatExporter.Core\", \"DiscordChatExporter.Core\\DiscordChatExporter.Core.csproj\", \"{E19980B9-2B84-4257-A517-540FF1E3FCDD}\"\nEndProject\nProject(\"{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}\") = \"DiscordChatExporter.Cli.Tests\", \"DiscordChatExporter.Cli.Tests\\DiscordChatExporter.Cli.Tests.csproj\", \"{C5064B8B-692E-4515-BA55-A9BE392EE540}\"\nEndProject\nGlobal\n\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\n\t\tDebug|Any CPU = Debug|Any CPU\n\t\tRelease|Any CPU = Release|Any CPU\n\tEndGlobalSection\n\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\n\t\t{732A67AF-93DE-49DF-B10F-FD74710B7863}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n\t\t{732A67AF-93DE-49DF-B10F-FD74710B7863}.Debug|Any CPU.Build.0 = Debug|Any CPU\n\t\t{732A67AF-93DE-49DF-B10F-FD74710B7863}.Release|Any CPU.ActiveCfg = Release|Any CPU\n\t\t{732A67AF-93DE-49DF-B10F-FD74710B7863}.Release|Any CPU.Build.0 = Release|Any CPU\n\t\t{D08624B6-3081-4BCB-91F8-E9832FACC6CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n\t\t{D08624B6-3081-4BCB-91F8-E9832FACC6CE}.Debug|Any CPU.Build.0 = Debug|Any CPU\n\t\t{D08624B6-3081-4BCB-91F8-E9832FACC6CE}.Release|Any CPU.ActiveCfg = Release|Any CPU\n\t\t{D08624B6-3081-4BCB-91F8-E9832FACC6CE}.Release|Any CPU.Build.0 = Release|Any CPU\n\t\t{E19980B9-2B84-4257-A517-540FF1E3FCDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n\t\t{E19980B9-2B84-4257-A517-540FF1E3FCDD}.Debug|Any CPU.Build.0 = Debug|Any CPU\n\t\t{E19980B9-2B84-4257-A517-540FF1E3FCDD}.Release|Any CPU.ActiveCfg = Release|Any CPU\n\t\t{E19980B9-2B84-4257-A517-540FF1E3FCDD}.Release|Any CPU.Build.0 = Release|Any CPU\n\t\t{C5064B8B-692E-4515-BA55-A9BE392EE540}.Debug|Any CPU.ActiveCfg = Debug|Any CPU\n\t\t{C5064B8B-692E-4515-BA55-A9BE392EE540}.Debug|Any CPU.Build.0 = Debug|Any CPU\n\t\t{C5064B8B-692E-4515-BA55-A9BE392EE540}.Release|Any CPU.ActiveCfg = Release|Any CPU\n\t\t{C5064B8B-692E-4515-BA55-A9BE392EE540}.Release|Any CPU.Build.0 = Release|Any CPU\n\tEndGlobalSection\n\tGlobalSection(SolutionProperties) = preSolution\n\t\tHideSolutionNode = FALSE\n\tEndGlobalSection\n\tGlobalSection(ExtensibilityGlobals) = postSolution\n\t\tSolutionGuid = {51587D08-01E1-4511-AC57-A417D1A9162F}\n\tEndGlobalSection\nEndGlobal\n"
+        },
+        {
+          "name": "License.txt",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "MIT License\n\nCopyright (c) 2017-2025 Oleksii Holub\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "NuGet.config",
+          "type": "blob",
+          "size": 0.3125,
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<configuration>\n  <packageSources>\n    <clear />\n    <add key=\"nuget.org\" value=\"https://api.nuget.org/v3/index.json\" protocolVersion=\"3\" />\n  </packageSources>\n  <config>\n    <add key=\"defaultPushSource\" value=\"https://api.nuget.org/v3/index.json\" />\n  </config>\n</configuration>\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 4.7783203125,
+          "content": "# DiscordChatExporter\n\n[![Status](https://img.shields.io/badge/status-maintenance-ffd700.svg)](https://github.com/Tyrrrz/.github/blob/master/docs/project-status.md)\n[![Made in Ukraine](https://img.shields.io/badge/made_in-ukraine-ffd700.svg?labelColor=0057b7)](https://tyrrrz.me/ukraine)\n[![Build](https://img.shields.io/github/actions/workflow/status/Tyrrrz/DiscordChatExporter/main.yml?branch=master)](https://github.com/Tyrrrz/DiscordChatExporter/actions)\n[![Coverage](https://img.shields.io/codecov/c/github/Tyrrrz/DiscordChatExporter/master)](https://codecov.io/gh/Tyrrrz/DiscordChatExporter)\n[![Release](https://img.shields.io/github/release/Tyrrrz/DiscordChatExporter.svg)](https://github.com/Tyrrrz/DiscordChatExporter/releases)\n[![Downloads](https://img.shields.io/github/downloads/Tyrrrz/DiscordChatExporter/total.svg)](https://github.com/Tyrrrz/DiscordChatExporter/releases)\n[![Pulls](https://img.shields.io/docker/pulls/tyrrrz/discordchatexporter)](https://hub.docker.com/r/tyrrrz/discordchatexporter)\n[![Discord](https://img.shields.io/discord/869237470565392384?label=discord)](https://discord.gg/2SUWKFnHSm)\n[![Fuck Russia](https://img.shields.io/badge/fuck-russia-e4181c.svg?labelColor=000000)](https://twitter.com/tyrrrz/status/1495972128977571848)\n\n<table>\n    <tr>\n        <td width=\"99999\" align=\"center\">Development of this project is entirely funded by the community. <b><a href=\"https://tyrrrz.me/donate\">Consider donating to support!</a></b></td>\n    </tr>\n</table>\n\n<p align=\"center\">\n    <img src=\"favicon.png\" alt=\"Icon\" />\n</p>\n\n**DiscordChatExporter** is an application that can be used to export message history from any [Discord](https://discord.com) channel to a file.\nIt works with direct messages, group messages, and server channels, and supports Discord's dialect of markdown as well as most other rich media features.\n\n> ❔ If you have questions or issues, **please refer to the [docs](.docs)**.\n\n> 💬 If you want to chat, **join my [Discord server](https://discord.gg/2SUWKFnHSm)**.\n\n## Terms of use<sup>[[?]](https://github.com/Tyrrrz/.github/blob/master/docs/why-so-political.md)</sup>\n\nBy using this project or its source code, for any purpose and in any shape or form, you grant your **implicit agreement** to all the following statements:\n\n- You **condemn Russia and its military aggression against Ukraine**\n- You **recognize that Russia is an occupant that unlawfully invaded a sovereign state**\n- You **support Ukraine's territorial integrity, including its claims over temporarily occupied territories of Crimea and Donbas**\n- You **reject false narratives perpetuated by Russian state propaganda**\n\nTo learn more about the war and how you can help, [click here](https://tyrrrz.me/ukraine). Glory to Ukraine! 🇺🇦\n\n## Download\n\n- **Graphical user interface** (desktop app):\n  - 🟢 **[Stable release](https://github.com/Tyrrrz/DiscordChatExporter/releases/latest)**: look for `DiscordChatExporter.*.zip`\n  - 🟠 [CI build](https://github.com/Tyrrrz/DiscordChatExporter/actions/workflows/main.yml): look for `DiscordChatExporter.*.zip`\n- **Command-line interface** (terminal app):\n  - 🟢 **[Stable release](https://github.com/Tyrrrz/DiscordChatExporter/releases/latest)**: look for `DiscordChatExporter.Cli.*.zip`\n  - 🟠 [CI build](https://github.com/Tyrrrz/DiscordChatExporter/actions/workflows/main.yml): look for `DiscordChatExporter.Cli.*.zip`\n  - 🐋 [Docker](https://hub.docker.com/r/tyrrrz/discordchatexporter): `docker pull tyrrrz/discordchatexporter`\n  - 📦 [AUR](https://aur.archlinux.org/packages/discord-chat-exporter-cli): `discord-chat-exporter-cli`\n  - 📦 [Nix](https://search.nixos.org/packages?query=discordchatexporter-cli): `discordchatexporter-cli`\n\n> **Note**:\n> If you're unsure which build is right for your system, consult with [this page](https://useragent.cc) to determine your OS and CPU architecture.\n\n> **Note**:\n> AUR and Nix packages linked above are maintained by the community.\n> If you have any issues with them, please contact the corresponding maintainers.\n\n## Features\n\n- Cross-platform graphical and command-line interfaces\n- Authentication via either a user or a bot token\n- Multiple output formats: HTML (dark/light), TXT, CSV, JSON\n- Support for markdown, attachments, embeds, emoji, and other rich media features\n- File partitioning, date ranges, message filtering, and other export options\n- Self-contained exports that can be viewed offline\n\n## Screenshots\n\n![channel list](.assets/list.png)\n![rendered output](.assets/output.png)\n\n## See also\n\n- [**Chat Analytics**](https://github.com/mlomb/chat-analytics) — solution for analyzing chat patterns of Discord users, using exports produced by **DiscordChatExporter**.\n- [**DiscordChatExporter-frontend**](https://github.com/slatinsky/DiscordChatExporter-frontend) — convenient viewer for exports produced by **DiscordChatExporter**."
+        },
+        {
+          "name": "docker-entrypoint.sh",
+          "type": "blob",
+          "size": 0.2568359375,
+          "content": "#!/usr/bin/env sh\n\n# If we are root, ensure the files in /out are writable\n# by the dce user and restart the process as the dce user\nif [ \"$(id -u)\" = '0' ]; then\n  chown -R dce:dce /out\n  exec su-exec dce \"$0\" \"$@\"\nfi\n\nexec /opt/app/DiscordChatExporter.Cli \"$@\"\n"
+        },
+        {
+          "name": "favicon.ico",
+          "type": "blob",
+          "size": 4.185546875,
+          "content": null
+        },
+        {
+          "name": "favicon.png",
+          "type": "blob",
+          "size": 18.2265625,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

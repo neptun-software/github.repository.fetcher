@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736709866130,
+    "page": 346,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "saminiir/level-ip",
+      "stars": 2850,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0595703125,
+          "content": "*.pyc\nbuild/*.o\na.out\n*.o\n*cscope*\nlvl-ip\ntests/venv\nvgcore*\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2890625,
+          "content": "sudo: required\n\nlanguage: c\n\ncompiler:\n  - clang\n\nbefore_install:\n  - sudo apt-get -qq update\n  - sudo apt-get install -qqy iputils-arping libcap-dev libcap2-bin\n\nscript:\n  - sudo mknod /dev/net/tap c 10 200\n  - sudo chmod 0666 /dev/net/tap\n  - sudo setcap cap_net_admin=ep /bin/ip\n  - make test\n"
+        },
+        {
+          "name": "Documentation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 Sami Niiranen\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.8125,
+          "content": "CPPFLAGS = -I include -Wall -Werror -pthread\n\nsrc = $(wildcard src/*.c)\nobj = $(patsubst src/%.c, build/%.o, $(src))\nheaders = $(wildcard include/*.h)\napps = apps/curl/curl\n\nlvl-ip: $(obj)\n\t$(CC) $(CFLAGS) $(CPPFLAGS) $(obj) -o lvl-ip\n\t@echo\n\t@echo \"lvl-ip needs CAP_NET_ADMIN:\"\n\tsudo setcap cap_setpcap,cap_net_admin=ep lvl-ip\n\nbuild/%.o: src/%.c ${headers}\n\t$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@\n\ndebug: CFLAGS+= -DDEBUG_SOCKET -DDEBUG_TCP -g -fsanitize=thread\ndebug: lvl-ip\n\napps: $(apps)\n\t$(MAKE) -C tools\n\t$(MAKE) -C apps/curl\n\t$(MAKE) -C apps/curl-poll\n\nall: lvl-ip apps\n\ntest: debug apps\n\t@echo\n\t@echo \"Networking capabilites are required for test dependencies:\"\n\twhich arping | sudo xargs setcap cap_net_raw=ep\n\twhich tc | sudo xargs setcap cap_net_admin=ep\n\t@echo\n\tcd tests && ./test-run-all\n\nclean:\n\trm build/*.o lvl-ip\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.3349609375,
+          "content": "# Level-IP [![Build Status](https://travis-ci.org/saminiir/level-ip.svg?branch=master)](https://travis-ci.org/saminiir/level-ip)\n\nLevel-IP is a Linux userspace TCP/IP stack, implemented with TUN/TAP devices.\n\nThe main goals are to:\n* Learn TCP/IP\n* Learn Linux systems/network programming\n* Learn Linux Socket API\n\nThe results of the learning experience will be accompanied by explanatory blog posts:\n\n- Part 1, Ethernet & ARP: http://www.saminiir.com/lets-code-tcp-ip-stack-1-ethernet-arp\n- Part 2, IPv4 & ICMPv4: http://www.saminiir.com/lets-code-tcp-ip-stack-2-ipv4-icmpv4\n- Part 3, TCP Basics & Handshake: http://www.saminiir.com/lets-code-tcp-ip-stack-3-tcp-handshake/\n- Part 4, TCP Data Flow & Socket API: http://www.saminiir.com/lets-code-tcp-ip-stack-4-tcp-data-flow-socket-api/\n- Part 5, TCP Retransmission: http://www.saminiir.com/lets-code-tcp-ip-stack-5-tcp-retransmission/\n\nSee [Getting Started](Documentation/getting-started.md).\n\nFor development documentation, start with [Development](Documentation/development.md).\n\n# Reference works\n\n* Linux kernel TCP/IP stack, [source code](https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/net/ipv4)\n* picoTCP, [source code](https://github.com/tass-belgium/picotcp)\n* Xiaochen Wang's TCP/IP stack, [source code](https://github.com/chobits/tapip)\n\n# License\n\nSee [LICENSE.md](LICENSE.md) (MIT)\n"
+        },
+        {
+          "name": "apps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

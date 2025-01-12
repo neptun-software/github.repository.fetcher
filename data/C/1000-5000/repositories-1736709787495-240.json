@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "timestamp": 1736709787495,
+    "page": 240,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jakogut/tinyvm",
+      "stars": 3209,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.05078125,
+          "content": "*.o\nprofile\nvalgrind*\ncachegrind*\ncallgrind*\ncore*\n\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "[submodule \"mlibc\"]\n\tpath = mlibc\n\turl = https://github.com/jakogut/mlibc.git\n\tbranch = master\n"
+        },
+        {
+          "name": "GNUmakefile",
+          "type": "blob",
+          "size": 1.728515625,
+          "content": "CC = clang\n\nCFLAGS = -Wall -pipe -Iinclude/ -std=gnu11\nOFLAGS = \nLFLAGS = $(CFLAGS) -Llib/\nPEDANTIC_FLAGS = -Werror -pedantic -pedantic-errors\nFREESTANDING_FLAGS = -nostdlib -nodefaultlibs -fno-builtin -Imlibc/include\n\nLIBTVM_SOURCES = $(wildcard libtvm/*.c)\nLIBTVM_OBJECTS = $(LIBTVM_SOURCES:.c=.o)\n\nTDB_SOURCES = $(wildcard tdb/*.c)\nTDB_OBJECTS = $(TDB_SOURCES:.c=.o)\n\nBIN_DIR = bin\nLIB_DIR = lib\nINC_DIR = include\nPROGRAM_DIR = programs\nINSTALL_PREFIX = /usr\n\nDEBUG = no\nPEDANTIC = yes\nOPTIMIZATION = -O3\n\nFREESTANDING = no\n\nPROFILER = operf\nPROF_ARGS = \"programs/tinyvm/euler/euler7.vm\"\n\nifeq ($(DEBUG), yes)\n\tCFLAGS += -g\nendif\n\nifeq ($(PEDANTIC), yes)\n\tCFLAGS += $(PEDANTIC_FLAGS)\nendif\n\nifeq ($(FREESTANDING), yes)\n\tLFLAGS += -Lmlibc/lib -lminimalc\n\tCFLAGS += $(FREESTANDING_FLAGS)\n\tFREESTANDING_DEPS = mlibc\nendif\n\nCFLAGS += $(OPTIMIZATION)\n\nall: libtvm tvmi tdb\n\ninstall: libtvm tvmi\n\tcp -f $(BIN_DIR)/tvmi $(INSTALL_PREFIX)/bin/\n\tcp -rf $(INC_DIR)/tvm $(INSTALL_PREFIX)/include/\n\tcp -f $(LIB_DIR)/libtvm* $(INSTALL_PREFIX)/lib/\n\nuninstall:\n\trm -rf /usr/bin/tvmi\n\trm -rf /usr/include/tvmi\n\trm -rf /usr/lib/libtvm*\n\nlibtvm: $(LIBTVM_OBJECTS)\n\tar rcs $(LIB_DIR)/libtvm.a $(LIBTVM_OBJECTS)\n\nsubmodules:\n\tgit submodule update --init\n\nmlibc: submodules\n\t(cd mlibc && $(MAKE))\n\n# Build the TVM interpreter\ntvmi: libtvm $(FREESTANDING_DEPS)\n\t$(CC) src/tvmi.c -ltvm $(LFLAGS) -o $(BIN_DIR)/tvmi\n\ntdb: libtvm $(TDB_OBJECTS) $(FREESTANDING_DEPS)\n\t$(CC) $(TDB_OBJECTS) -ltvm $(LFLAGS) -o $(BIN_DIR)/tdb\n\nprofile: tvmi\n\ttime $(PROFILER) $(BIN_DIR)/tvmi $(PROF_ARGS)\n\n%.o: %.c\n\t$(CC) $(CFLAGS) -c $< -o $@\n\nclean:\n\trm -rf $(BIN_DIR)/* $(LIB_DIR)/* libtvm/*.o tdb/*.o gmon.out *.save *.o core* vgcore*\n\nrebuild: clean all\n\n.PHONY : clean\n.SILENT : clean\n.NOTPARALLEL : clean\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0576171875,
+          "content": "MIT License\n\nCopyright (c) 2013 Joseph A. Kogut\n\nPermission is hereby granted, free of charge, to any person obtaining a copy \nof this software and associated documentation files (the \"Software\"), to deal \nin the Software without restriction, including without limitation the rights \nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell \ncopies of the Software, and to permit persons to whom the Software is \nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all \ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE \nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, \nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN \nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README",
+          "type": "blob",
+          "size": 0.5,
+          "content": "TinyVM is a virtual machine with the goal of having a small footprint.\nLow memory usage, a small amount of code, and a small binary.\n\nBuilding can be accomplished on UNIX-like systems with make and GCC.\n\nThere are no external dependencies, save the C standard library.\n\nBuilding can be accomplished using \"make,\" or \"make rebuild\".\n\nTo build a debug version, add \"DEBUG=yes\" after \"make\". To build a binary with\nprofiling enabled, add \"PROFILE=yes\" after \"make\".\n\nI can be reached at \"joseph.kogut(at)gmail.com\"\n"
+        },
+        {
+          "name": "SYNTAX",
+          "type": "blob",
+          "size": 5.6796875,
+          "content": "This virtual machine loosely follows traditional Intel x86 assembly syntax.\n\n//////////////////////////////////////////////////\n// Table of Contents /////////////////////////////\n//////////////////////////////////////////////////\n0. VALUES\n1. REGISTERS\n2. MEMORY\n3. LABELS\n4. PREPROCESSOR\n5. INSTRUCTION LISTING\n\tI.    Memory\n\tII.   Stack\n\tIII.  Calling Conventions\n\tIV.   Arithmetic Operators\n\tV.    Binary Operators\n\tVI.   Comparison\n\tVII.  Control Flow Manipulation\n\tVIII. Input / Output\n\n//////////////////////////////////////////////////\n// 0. VALUES /////////////////////////////////////\n//////////////////////////////////////////////////\n\nValues can be specified in decimal, hexadecimal, or binary. The only difference between Intel syntax assembly and TVM\nsyntax is the delimiter between the value and the base specifier. By default, values without a base specifier are assumed\nto be in decimal. Any value prepended with \"0x\" is assumed to be in hexadecimal. \n\nValues can also be specified using base identifiers. To specify the value \"32,\" I can use 0x20 for hexadecimal, 20|h for hexadecimal\nusing a base identifier, or 100000|b for binary using a base identifer.\n\n//////////////////////////////////////////////////\n// 1. REGISTERS //////////////////////////////////\n//////////////////////////////////////////////////\n\nTVM has 17 registers, modeled after x86 registers.\nRegister names are written lower-case.\n\n(EAX - EDX, General Purpose)\nEAX\nEBX\nECX\nEDX\n\nESI\nEDI\n\nESP - Stack pointer, points to the top of the stack\nEBP - Base pointer, points to the base of the stack\n\nEIP - Instruction pointer, this is modified with the jump commands, never directly\n\nR08 - R15, General Purpose\n\n//////////////////////////////////////////////////\n// 2. MEMORY /////////////////////////////////////\n//////////////////////////////////////////////////\n\nMemory addresses are specified using brackets, in units of four bytes. Programs running within the virtual machine have their own \naddress space, so no positive address within the address space is off limits.\n\nIt is important to note that certain areas of memory are used for vital program function, such as the memory used by the stack.\nOverwriting such parts of memory will likely cause the program to crash. As such, it is recommended that no absolute addressing be used.\nInstead, address memory relatively. \n\nTo specify the 256th word in the address space, you can use [256], [100|h], [0x100], or [100000000|b]. Any syntax that's\nvalid when specifying a value is valid when specifying an address.\n\n//////////////////////////////////////////////////\n// 3. LABELS /////////////////////////////////////\n//////////////////////////////////////////////////\n\nLabels are specified by appending a colon to an identifier. Local labels are not yet supported.\n\nLabels must be specified at the beginning of a line or on their own line.\n\n//////////////////////////////////////////////////\n// 4. PREPROCESSOR ///////////////////////////////\n//////////////////////////////////////////////////\n\nTVM's preprocessor works similarly to many C compilers and uses the prefix \"%\".\n\n\t// I. Include //\n\n\t\t%include filename\n\t\tPastes all of the contents of filename into the source code before interpretting it.\n\n\t// II. Define //\n\n\t\t%define identifier value\n\t\tDefine a constant so that all instances of the string \"identifier\" will be replaced by \"value\".\n\n//////////////////////////////////////////////////\n// 5. INSTRUCTION LISTING ////////////////////////\n//////////////////////////////////////////////////\n\nInstructions listed are displayed in complete usage form, with example arguments, enclosed in square brackets.\nThe square brackets are not to be used in actual TVM programs.\n\n\t// I. Memory //\n\n\t\t[mov arg0, arg1]\n\t\tMoves value specified from arg1 to arg0\n\n\t// II. Stack //\n\n\t\t[push arg]\n\t\tPushes arg onto the stack\n\n\t\t[pop arg]\n\t\tPops a value from the stack, storing it in arg\n\n\t\t[pushf]\n\t\tPushes the FLAGS register to the stack\n\n\t\t[popf arg]\n\t\tPops the flag register to arg\n\n\t// III. Calling Conventions //\n\n\t\t[call address]\n\t\tPush the current address to the stack and jump to the subroutine specified\n\n\t\t[ret]\n\t\tPop the previous address from the stack to the instruction pointer to return control to the caller\n\n\t// IV. Arithmetic Operators //\n\n\t\t[inc arg]\n\t\tIncrements arg\n\n\t\t[dec arg]\n\t\tDecrements arg\n\n\t\t[add arg0, arg1]\n\t\tAdds arg1 to arg0, storing the result in arg0\n\n\t\t[sub arg0, arg1]\n\t\tSubtracts arg1 from arg0, storing the result in arg0\n\n\t\t[mul arg0, arg1]\n\t\tMultiplies arg1 and arg0, storing the result in arg0\n\n\t\t[div arg0, arg1]\n\t\tDivides arg0 by arg1, storing the quotient in arg0\n\n\t\t[mod arg0, arg1]\n\t\tSame as the '%' (modulus) operator in C. Calculates arg0 mod arg1 and stores the result in the remainder register.\n\n\t\t[rem arg]\n\t\tRetrieves the value stored in the remainder register, storing it in arg\n\n\t// V. Binary Operators //\n\n\t\t[not arg]\n\t\tCalculates the binary NOT of arg, storing it in arg\n\n\t\t[xor arg0, arg1]\n\t\tCalculates the binary XOR of arg0 and arg1, storing the result in arg0\n\n\t\t[or arg0, arg1]\n\t\tCalculates the binary OR of arg0 and arg1, storing the result in arg0\n\n\t\t[and arg0, arg1]\n\t\tCalculates the binary AND of arg0 and arg1, storing the result in arg0\n\n\t\t[shl arg0, arg1]\n\t\tShift arg0 left by arg1 places\n\n\t\t[shr arg0, arg1]\n\t\tShifts arg0 right by arg1 places\n\n\t// VI. Comparison //\n\n\t\t[cmp arg0, arg1]\n\t\tCompares arg0 and arg1, storing the result in the FLAGS register\n\n\t// VII. Control Flow Manipulation //\n\n\t\t[jmp address]\n\t\tJumps to an address or label\n\n\t\t[je address]\n\t\tJump if equal\n\n\t\t[jne address]\n\t\tJump if not equal\n\n\t\t[jg address]\n\t\tJump if greater\n\n\t\t[jge address]\n\t\tJump if equal or greater\n\n\t\t[jl address]\n\t\tJump if lesser\n\n\t\t[jle address]\n\t\tJump if lesser or equal\n\n\t// VIII. Input / Output //\n\n\t\t[prn arg]\n\t\tPrint an integer\n"
+        },
+        {
+          "name": "TODO",
+          "type": "blob",
+          "size": 0.458984375,
+          "content": "TODO:\n\n\t(Basic)\n\t- NASM style local labels\n\t- Implement defining bytes/words/dwords\n\t- Add C style defines to preprocessor\n\t- Move parsed TVM program code into the VM's virtual address space\n\n\t(Advanced)\n\t- Fix/refactor the debugger (it doesn't work)\n\t- Interrupts\n\t- SDL or GLFW based screen for outputting the contents of a framebuffer\n\t- JIT compilation\n\t- C interface\n\t- C Library written in TVM code\n\nPlease send patches to Joseph Kogut <joseph.kogut(at)gmail.com>\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libtvm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mlibc",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "programs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tdb",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

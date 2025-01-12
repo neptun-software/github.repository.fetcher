@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "timestamp": 1736709828780,
+    "page": 292,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nihui/waifu2x-ncnn-vulkan",
+      "stars": 3032,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1748046875,
+          "content": "[submodule \"src/ncnn\"]\n\tpath = src/ncnn\n\turl = https://github.com/Tencent/ncnn.git\n[submodule \"src/libwebp\"]\n\tpath = src/libwebp\n\turl = https://github.com/webmproject/libwebp.git\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2019 nihui\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.7275390625,
+          "content": "# waifu2x ncnn Vulkan\n\n![CI](https://github.com/nihui/waifu2x-ncnn-vulkan/workflows/CI/badge.svg)\n![download](https://img.shields.io/github/downloads/nihui/waifu2x-ncnn-vulkan/total.svg)\n\nncnn implementation of waifu2x converter. Runs fast on Intel / AMD / Nvidia / Apple-Silicon with Vulkan API.\n\nwaifu2x-ncnn-vulkan uses [ncnn project](https://github.com/Tencent/ncnn) as the universal neural network inference framework.\n\n## [Download](https://github.com/nihui/waifu2x-ncnn-vulkan/releases)\n\nDownload Windows/Linux/MacOS Executable for Intel/AMD/Nvidia GPU\n\n**https://github.com/nihui/waifu2x-ncnn-vulkan/releases**\n\nThis package includes all the binaries and models required. It is portable, so no CUDA or Caffe runtime environment is needed :)\n\n## Usages\n\n### Example Command\n\n```shell\nwaifu2x-ncnn-vulkan.exe -i input.jpg -o output.png -n 2 -s 2\n```\n\n### Full Usages\n\n```console\nUsage: waifu2x-ncnn-vulkan -i infile -o outfile [options]...\n\n  -h                   show this help\n  -v                   verbose output\n  -i input-path        input image path (jpg/png/webp) or directory\n  -o output-path       output image path (jpg/png/webp) or directory\n  -n noise-level       denoise level (-1/0/1/2/3, default=0)\n  -s scale             upscale ratio (1/2/4/8/16/32, default=2)\n  -t tile-size         tile size (>=32/0=auto, default=0) can be 0,0,0 for multi-gpu\n  -m model-path        waifu2x model path (default=models-cunet)\n  -g gpu-id            gpu device to use (-1=cpu, default=auto) can be 0,1,2 for multi-gpu\n  -j load:proc:save    thread count for load/proc/save (default=1:2:2) can be 1:2,2,2:2 for multi-gpu\n  -x                   enable tta mode\n  -f format            output image format (jpg/png/webp, default=ext/png)\n```\n\n- `input-path` and `output-path` accept either file path or directory path\n- `noise-level` = noise level, large value means strong denoise effect, -1 = no effect\n- `scale` = scale level, 1 = no scaling, 2 = upscale 2x\n- `tile-size` = tile size, use smaller value to reduce GPU memory usage, default selects automatically\n- `load:proc:save` = thread count for the three stages (image decoding + waifu2x upscaling + image encoding), using larger values may increase GPU usage and consume more GPU memory. You can tune this configuration with \"4:4:4\" for many small-size images, and \"2:2:2\" for large-size images. The default setting usually works fine for most situations. If you find that your GPU is hungry, try increasing thread count to achieve faster processing.\n- `format` = the format of the image to be output, png is better supported, however webp generally yields smaller file sizes, both are losslessly encoded\n\nIf you encounter a crash or error, try upgrading your GPU driver:\n\n- Intel: https://downloadcenter.intel.com/product/80939/Graphics-Drivers\n- AMD: https://www.amd.com/en/support\n- NVIDIA: https://www.nvidia.com/Download/index.aspx\n\n## Build from Source\n\n1. Download and setup the Vulkan SDK from https://vulkan.lunarg.com/\n  - For Linux distributions, you can either get the essential build requirements from package manager\n```shell\ndnf install vulkan-headers vulkan-loader-devel\n```\n```shell\napt-get install libvulkan-dev\n```\n```shell\npacman -S vulkan-headers vulkan-icd-loader\n```\n\n2. Clone this project with all submodules\n\n```shell\ngit clone https://github.com/nihui/waifu2x-ncnn-vulkan.git\ncd waifu2x-ncnn-vulkan\ngit submodule update --init --recursive\n```\n\n3. Build with CMake\n  - You can pass -DUSE_STATIC_MOLTENVK=ON option to avoid linking the vulkan loader library on MacOS\n\n```shell\nmkdir build\ncd build\ncmake ../src\ncmake --build . -j 4\n```\n\n## Speed Comparison with waifu2x-caffe-cui\n\n### Environment\n\n- Windows 10 1809\n- AMD R7-1700\n- Nvidia GTX-1070\n- Nvidia driver 419.67\n- CUDA 10.1.105\n- cuDNN 10.1\n\n```powershell\nMeasure-Command { waifu2x-ncnn-vulkan.exe -i input.png -o output.png -n 2 -s 2 -t [block size] -m [model dir] }\n```\n\n```powershell\nMeasure-Command { waifu2x-caffe-cui.exe -t 0 --gpu 0 -b 1 -c [block size] -p cudnn --model_dir [model dir] -s 2 -n 2 -m noise_scale -i input.png -o output.png }\n```\n\n### cunet\n\n||Image Size|Target Size|Block Size|Total Time(s)|GPU Memory(MB)|\n|---|---|---|---|---|---|\n|waifu2x-ncnn-vulkan|200x200|400x400|400/200/100|0.86/0.86/0.82|638/638/197|\n|waifu2x-caffe-cui|200x200|400x400|400/200/100|2.54/2.39/2.36|3017/936/843|\n|waifu2x-ncnn-vulkan|400x400|800x800|400/200/100|1.17/1.04/1.02|2430/638/197|\n|waifu2x-caffe-cui|400x400|800x800|400/200/100|2.91/2.43/2.7|3202/1389/1178|\n|waifu2x-ncnn-vulkan|1000x1000|2000x2000|400/200/100|2.35/2.26/2.46|2430/638/197|\n|waifu2x-caffe-cui|1000x1000|2000x2000|400/200/100|4.04/3.79/4.35|3258/1582/1175|\n|waifu2x-ncnn-vulkan|2000x2000|4000x4000|400/200/100|6.46/6.59/7.49|2430/686/213|\n|waifu2x-caffe-cui|2000x2000|4000x4000|400/200/100|7.01/7.54/10.11|3258/1499/1200|\n|waifu2x-ncnn-vulkan|4000x4000|8000x8000|400/200/100|22.78/23.78/27.61|2448/654/213|\n|waifu2x-caffe-cui|4000x4000|8000x8000|400/200/100|18.45/21.85/31.82|3325/1652/1236|\n\n### upconv_7_anime_style_art_rgb\n\n||Image Size|Target Size|Block Size|Total Time(s)|GPU Memory(MB)|\n|---|---|---|---|---|---|\n|waifu2x-ncnn-vulkan|200x200|400x400|400/200/100|0.74/0.75/0.72|482/482/142|\n|waifu2x-caffe-cui|200x200|400x400|400/200/100|2.04/1.99/1.99|995/546/459|\n|waifu2x-ncnn-vulkan|400x400|800x800|400/200/100|0.95/0.83/0.81|1762/482/142|\n|waifu2x-caffe-cui|400x400|800x800|400/200/100|2.08/2.12/2.11|995/546/459|\n|waifu2x-ncnn-vulkan|1000x1000|2000x2000|400/200/100|1.52/1.41/1.44|1778/482/142|\n|waifu2x-caffe-cui|1000x1000|2000x2000|400/200/100|2.72/2.60/2.68|1015/570/459|\n|waifu2x-ncnn-vulkan|2000x2000|4000x4000|400/200/100|3.45/3.42/3.63|1778/482/142|\n|waifu2x-caffe-cui|2000x2000|4000x4000|400/200/100|3.90/4.01/4.35|1015/521/462|\n|waifu2x-ncnn-vulkan|4000x4000|8000x8000|400/200/100|11.16/11.29/12.07|1796/498/158|\n|waifu2x-caffe-cui|4000x4000|8000x8000|400/200/100|9.24/9.81/11.16|995/546/436|\n\n## Sample Images\n\n### Original Image\n\n![origin](images/0.jpg)\n\n### Upscale 2x with ImageMagick\n\n```shell\nconvert origin.jpg -resize 200% output.png\n```\n\n![browser](images/1.png)\n\n### Upscale 2x with ImageMagick Lanczo4 Filter\n\n```shell\nconvert origin.jpg -filter Lanczos -resize 200% output.png\n```\n\n![browser](images/4.png)\n\n### Upscale 2x with waifu2x noise=2 scale=2\n\n```shell\nwaifu2x-ncnn-vulkan.exe -i origin.jpg -o output.png -n 2 -s 2\n```\n\n![waifu2x](images/2.png)\n\n## Original waifu2x Project\n\n- https://github.com/nagadomi/waifu2x\n- https://github.com/lltcggie/waifu2x-caffe\n\n## Other Open-Source Code Used\n\n- https://github.com/Tencent/ncnn for fast neural network inference on ALL PLATFORMS\n- https://github.com/webmproject/libwebp for encoding and decoding Webp images on ALL PLATFORMS\n- https://github.com/nothings/stb for decoding and encoding image on Linux / MacOS\n- https://github.com/tronkko/dirent for listing files in directory on Windows\n"
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "models",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

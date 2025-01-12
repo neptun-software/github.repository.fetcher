@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "timestamp": 1736709715987,
+    "page": 99,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jdah/minecraft-weekend",
+      "stars": 4099,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.45703125,
+          "content": "bin/game\n\n*.icloud\n.DS_Store\n.vscode\n\n# Prerequisites\n*.d\n\n# Object files\n*.o\n*.ko\n*.obj\n*.elf\n\n# Linker output\n*.ilk\n*.map\n*.exp\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Libraries\n*.lib\n*.a\n*.la\n*.lo\n\n# Shared objects (inc. Windows DLLs)\n*.dll\n*.so\n*.so.*\n*.dylib\n\n# Executables\n*.exe\n*.out\n*.app\n*.i*86\n*.x86_64\n*.hex\n\n# Debug files\n*.dSYM/\n*.su\n*.idb\n*.pdb\n\n# Kernel Module Compile Results\n*.mod*\n*.cmd\n.tmp_versions/\nmodules.order\nModule.symvers\nMkfile.old\ndkms.conf\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.15625,
+          "content": "[submodule \"lib/glfw\"]\n\tpath = lib/glfw\n\turl = https://github.com/glfw/glfw.git\n[submodule \"lib/cglm\"]\n\tpath = lib/cglm\n\turl = https://github.com/recp/cglm.git\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0361328125,
+          "content": "MIT License\n\nCopyright (c) 2020 jdah\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.197265625,
+          "content": "UNAME_S = $(shell uname -s)\n\nCC = clang\nCFLAGS = -std=c11 -O3 -g -Wall -Wextra -Wpedantic -Wstrict-aliasing\nCFLAGS += -Wno-pointer-arith -Wno-newline-eof -Wno-unused-parameter -Wno-gnu-statement-expression\nCFLAGS += -Wno-gnu-compound-literal-initializer -Wno-gnu-zero-variadic-macro-arguments\nCFLAGS += -Ilib/cglm/include -Ilib/glad/include -Ilib/glfw/include -Ilib/stb -Ilib/noise -fbracket-depth=1024\nLDFLAGS = lib/glad/src/glad.o lib/cglm/libcglm.a lib/glfw/src/libglfw3.a lib/noise/libnoise.a -lm\n\n# GLFW required frameworks on OSX\nifeq ($(UNAME_S), Darwin)\n\tLDFLAGS += -framework OpenGL -framework IOKit -framework CoreVideo -framework Cocoa\nendif\n\nifeq ($(UNAME_S), Linux)\n\tLDFLAGS += -ldl -lpthread\nendif\n\nSRC  = $(wildcard src/**/*.c) $(wildcard src/*.c) $(wildcard src/**/**/*.c) $(wildcard src/**/**/**/*.c)\nOBJ  = $(SRC:.c=.o)\nBIN = bin\n\n.PHONY: all clean\n\nall: dirs libs game\n\nlibs:\n\tcd lib/cglm && cmake . -DCGLM_STATIC=ON && make\n\tcd lib/glad && $(CC) -o src/glad.o -Iinclude -c src/glad.c\n\tcd lib/glfw && cmake . && make\n\tcd lib/noise && make\n\ndirs:\n\tmkdir -p ./$(BIN)\n\nrun: all\n\t$(BIN)/game\n\ngame: $(OBJ)\n\t$(CC) -o $(BIN)/game $^ $(LDFLAGS)\n\n%.o: %.c\n\t$(CC) -o $@ -c $< $(CFLAGS)\n\nclean:\n\trm -rf $(BIN) $(OBJ)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.486328125,
+          "content": "# Minecraft, but I made it in 48 hours*\n\n\\* I've actually updated it since - [see this commit for the 48 hour version](https://github.com/jdah/minecraft-weekend/tree/cb19738305804b5734faa7118c1c784f26ff9463).\n\n![screenshot](screenshots/1.png)\n\n#### Features:\n- Infinite, procedurally generated world\n- Infinite height/depth\n- Day/night cycle\n- Biomes\n- ECS-driven player and entities with full collision and movement\n- Full RGB lighting\n- Full transparency + translucency support\n- Sprite blocks (flowers)\n- Animated blocks (water + lava)\n- Distance fog\n- A whole lot of different block types\n- More\n\n#### Building\n\n##### Unix-like\n`$ git clone --recurse-submodules https://github.com/jdah/minecraft-weekend.git`\\\n`$ make`\n\nThe following static libraries under `lib/` must be built before the main project can be built:\n\n- GLAD `lib/glad/src/glad.o`\n- CGLM `lib/cglm/.libs/libcglm.a`\n- GLFW `lib/glfw/src/libglfw3.a`\n- libnoise `lib/noise/libnoise.a`\n\nAll of the above have their own Makefile under their respective subdirectory and can be built with `$ make libs`.\nIf libraries are not found, ensure that submodules have been cloned.\n\nThe game binary, once built with `$ make`, can be found in `./bin/`.\n\n*Be sure* to run with `$ ./bin/game` out of the root directory of the repository.\nIf you are getting \"cannot open file\" errors (such as \"cannot find ./res/shaders/*.vs\"), this is the issue. \n\n##### Windows\n\ngood luck 🤷‍♂️ probably try building under WSL and using an X environment to pass graphics through.\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "res",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshots",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

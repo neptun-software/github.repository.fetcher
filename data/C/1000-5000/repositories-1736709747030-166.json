@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "timestamp": 1736709747030,
+    "page": 166,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "AlexAltea/orbital",
+      "stars": 3630,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.4853515625,
+          "content": "# EditorConfig\n# http://editorconfig.org\n\nroot = true\n\n[**.{c,cpp,h}]\nindent_style = space\nindent_size = 4\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[**.{py}]\nindent_style = space\nindent_size = 4\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[**.{html,css}]\nindent_style = space\nindent_size = 2\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[**.{js}]\nindent_style = space\nindent_size = 4\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2119140625,
+          "content": "# Binaries\nbin/*.exe\nbin/*.dll\nout/\n\n# Dependencies\nvcpkg_installed\n\n# IDE\n.idea\n.vs\n\n# Objects\n*.a\n*.o\n\n# Python\n*.pyc\n\n# Private\ntools/private\n\n# TBD.\nCMakeSettings.json\nvcpkg.json\nexternals\nassets/analysis/freebsd\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 3.6552734375,
+          "content": "# Copyright 2020-2021. Alexandro Sanchez Bach.\n\ncmake_minimum_required(VERSION 3.12)\n\n# Version\nset(ORBITAL_VERSION_MAJOR 0)\nset(ORBITAL_VERSION_MINOR 1)\nset(ORBITAL_VERSION_PATCH 0)\n\n# Directories\nset(ORBITAL_DIR_ROOT       ${CMAKE_CURRENT_LIST_DIR})\nset(ORBITAL_DIR_CMAKE      \"${ORBITAL_DIR_ROOT}/cmake\")\nset(ORBITAL_DIR_EXTERNALS  \"${ORBITAL_DIR_ROOT}/externals\")\nset(ORBITAL_DIR_SOURCES    \"${ORBITAL_DIR_ROOT}/src\")\n\n# Project\nproject(orbital CXX)\n\n# Dependencies\nfind_package(SDL2 REQUIRED)\nfind_package(imgui REQUIRED)\nfind_package(fmt CONFIG REQUIRED)\nfind_package(RapidJSON CONFIG REQUIRED)\nfind_package(Vulkan REQUIRED)\nfind_package(ZLIB REQUIRED)\nfind_library(BOTAN_LIBRARIES NAMES BOTAN2 botan2 BOTAN botan)\nfind_library(CAPSTONE_LIBRARIES NAMES capstone_dll capstone)\n\n# Sources\nmacro(ORBITAL_FILES_APPEND)\n    file(GLOB FILES_APPEND CONFIGURE_DEPENDS ${ARGV})\n    list(APPEND ORBITAL_SOURCES ${FILES_APPEND})\nendmacro()\nmacro(ORBITAL_SOURCES_APPEND)\n    ORBITAL_FILES_APPEND(${ARGV0}/*.h)\n    ORBITAL_FILES_APPEND(${ARGV0}/*.cpp)\nendmacro()\n\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/analysis)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/analysis/orbis)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/host)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/host/graphics)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/aeolia)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/aeolia/hpet)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/aeolia/msic)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/aeolia/uart)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool/gca)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool/gmc)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool/oss)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool/smu)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/hardware/liverpool/sam)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/software)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/software/sbl)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/ui)\nORBITAL_SOURCES_APPEND(${ORBITAL_DIR_SOURCES}/orbital/ui/imgui)\n\n# Target\nadd_executable(orbital ${ORBITAL_SOURCES})\ntarget_include_directories(orbital PUBLIC ${ORBITAL_DIR_EXTERNALS})\ntarget_include_directories(orbital PUBLIC ${ORBITAL_DIR_SOURCES})\ntarget_include_directories(orbital PUBLIC ${RAPIDJSON_INCLUDE_DIRS})\ntarget_include_directories(orbital PUBLIC ${Vulkan_INCLUDE_DIRS})\ntarget_link_libraries(orbital PRIVATE fmt::fmt SDL2::SDL2 imgui::imgui ZLIB::ZLIB\n    ${Vulkan_LIBRARIES} ${BOTAN_LIBRARIES} ${CAPSTONE_LIBRARIES})\nif (EXISTS ${ORBITAL_DIR_EXTERNALS}/core.cmake)\n    include(${ORBITAL_DIR_EXTERNALS}/core.cmake)\nelse()\n    message(FATAL_ERROR \"\n        Orbital depends on an unreleased third-party library and cannot be built without the required `core.cmake` script.\n        Functionality related to PS4 emulation/introspection is open-sourced *only* as documentation for fellow developers and hackers.\n        To build Orbital, wait for the upcoming release of `core.cmake` or reimplement one yourself that includes/links QEMU instead.\n        Please do NOT ask for help/support related to `core.cmake` issues.\")\nendif()\n\n# Properties\nset_target_properties(orbital PROPERTIES CXX_STANDARD 20)\nset_target_properties(orbital PROPERTIES CXX_STANDARD_REQUIRED ON)\nset_target_properties(orbital PROPERTIES POSITION_INDEPENDENT_CODE 1)\n"
+        },
+        {
+          "name": "CONTRIBUTE.md",
+          "type": "blob",
+          "size": 3.9609375,
+          "content": "# Contribution Guidelines\n\n**Orbital welcomes all contributions.** Please take a moment to read about our internal organization and requirements for contributors.\n\n\n## Organization\n\nWe define the following lists of people involved in Orbital:\n\n* _Author_: Original developer of this project.\n* _Maintainers_: Current lead developers and responsible of reviews and maintenance.\n* _Developers_: Current and former regular developers.\n* _Contributors_: People who have occasionally contributed to this project.\n* _Supporters_: People who provided economical support.\n\nThese lists must be stored in [CREDITS.md](CREDITS.md) and may also be available through Orbital's GUI/CLI. Three pieces of information about a person may be provided:\n\n- _Name_: Legal given name(s) and/or legal family name(s).\n- _Alias_: Nickname chosen by the person.\n- _Email_: Valid email address owned by the person.\n\nThese shall be formatted as follows `$name (@$alias) <$email>`. If *Name* is not provided, *Alias* shall not be wrapped in parenthesis. If neither *Name* nor *Alias* are provided, *Email* shall not be wrapped in angle brackets. Members of the lists: *Maintainers* and *Developers* must provide a valid email address, to allow contacting them if required.\n\nThese lists might be managed following these rules:\n\n1. Only *Author* and *Maintainers* shall modify the lists: {*Maintainers*, *Developers*, *Affiliated*, *Supporters*}.\n2. Any listed person may remove or modify their own data.\n3. The lists will be sorted by \"joining date\", i.e. the date the name was added to the list, by keeping older entries first.\n\n\n## Licensing\n\nAll files and patches contributed to Orbital shall be licensed under *MIT License*, described at root-level file: [LICENSE](LICENSE), unless this license gets overriden in any of the following circumstances:\n\n- The file header specifies a different license.\n- Any parent folders contain a different *LICENSE* file.\n\nTo ensure licensing criteria are met, we require contributors to follow the [Developer Certificate of Origin](https://developercertificate.org/). The DCO is an attestation attached to every contribution made by every developer. In the commit message of the contribution (described more fully later in this document), the developer simply adds a `Signed-off-by` statement and thereby agrees to the DCO.\n\nBelow you'll find an excerpt from the original document linked above listing all major points of the DCO:\n\n```\nDeveloper's Certificate of Origin 1.1\n\nBy making a contribution to this project, I certify that:\n\n(a) The contribution was created in whole or in part by me and I\n    have the right to submit it under the open source license\n    indicated in the file; or\n\n(b) The contribution is based upon previous work that, to the best\n    of my knowledge, is covered under an appropriate open source\n    license and I have the right under that license to submit that\n    work with modifications, whether created in whole or in part\n    by me, under the same open source license (unless I am\n    permitted to submit under a different license), as indicated\n    in the file; or\n\n(c) The contribution was provided directly to me by some other\n    person who certified (a), (b) or (c) and I have not modified\n    it.\n\n(d) I understand and agree that this project and the contribution\n    are public and that a record of the contribution (including all\n    personal information I submit with it, including my sign-off) is\n    maintained indefinitely and may be redistributed consistent with\n    this project or the open source license(s) involved.\n```\n\nTo comply with the DCO, we require a sign-off message, in the following format, to be included on each commit in the pull request:\n\n```\nSigned-off-by: $name <$email>\n```\n\nThis footer can be added by specifying the `-s` or `--signoff` flag to the `git commit` command. Contributors must do this with every commit they want to upstream to Orbital. Optionally, contributors should digitally sign the commits by adding the `-S` flag, and uploading their GPG public key to GitHub.\n"
+        },
+        {
+          "name": "CREDITS.md",
+          "type": "blob",
+          "size": 0.6845703125,
+          "content": "# Credits\n\n## Author\n\nOriginal developer of this project.\n\n- `Alexandro Sanchez <alexandro@phi.nz>`\n\n\n## Maintainers\n\nCurrent lead developers and responsible of reviews and maintenance.\n\n- `Alexandro Sanchez <alexandro@phi.nz>`\n\n\n## Developers\n\nCurrent and former regular developers.\n\n- `Alexandro Sanchez <alexandro@phi.nz>`\n- `Nick Renieris <velocityra@gmail.com>`\n- `Jake Arveson <jarveson@gmail.com>`\n\n\n## Contributors\n\nPeople who have occasionally contributed to this project.\n\n- `Mason Lee Back <masonleeback@gmail.com>`\n- `Andrey (@jfhs) <romoper@yandex.ru>`\n- `Zion Nimchuk <zionnimchuk@gmail.com>`\n\n\n## Supporters\n\nPeople who provided non-technical support: donations, hardware, etc.\n\n(TBD.)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "MIT License\n\nCopyright (c) 2017 Alexandro Sanchez\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.41015625,
+          "content": "Orbital\n=======\n\nVirtualization-based PlayStation 4 emulator.\n\n## Status\n\nThe current state of Orbital at booting decrypted kernels can be followed in the issue tracker: both [PS4 4.55](https://github.com/AlexAltea/orbital/issues/3) and [PS4 5.00](https://github.com/AlexAltea/orbital/issues/4) have been tested. You can also get occasional updates and news via [Twitter](https://twitter.com/AlexAltea).\n\nFuture plans for the emulator can be found at the [Roadmap](https://github.com/AlexAltea/orbital/wiki/Roadmap) page.\n\n## FAQ\n\n> Where can I get Orbital?\n\n**This project is not ready for end users.** No binaries are provided, so you must build each of the three components (BIOS, GRUB, QEMU) yourself. Furthermore, configuring the emulator to do something will be hard, as you will need to extract your own console keys. More information and guides on this matter will be available in the future.\n\n## Requirements\n\n* __System__: Windows (7+), Linux (4.4+), macOS (10.10+).\n* __Processor__: x86-64 CPU with AVX/BMI1 and virtualization extensions.\n* __Memory__: 12 GB RAM.\n* __Graphics__:  GPU with software support for Vulkan 1.0+.\n\n## Acknowledgements\n\nThanks to all people who have directly or indirectly helped in making this possible. In alphabetical order: *flatz, idc, m0rph3us1987, masterzorag, proxima, wildcard, x41, zecoxao, zer0xff, z80*. Also many anonymous folks and others who might have slipped my mind. You know who you are!\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 3.27734375,
+          "content": "<!doctype html>\n<html>\n  <head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Orbital</title>\n    <style>\n      @import url('https://fonts.googleapis.com/css?family=Roboto:100');\n      @import url('https://fonts.googleapis.com/css?family=Orbitron:900');\n      body {\n        background-color: #232742;\n        color: #eee;\n        font-size: 20px;\n      }\n      #content {\n        position: absolute;\n        left: 50%;\n        top: 50%;\n        width: 400px;\n        height: 300px;\n        margin-left: -200px;\n        margin-top: -150px;\n        text-align: center;\n      }\n      h1 {\n        margin: 0;\n        font-family: 'Roboto', sans-serif;\n        font-weight: 100;\n        font-size: 120px;\n      }\n      h2 {\n        margin: 0;\n        font-family: 'Orbitron', sans-serif;\n        font-weight: 900;\n        font-size: 20px;\n      }\n      a {\n        font-family: 'Roboto', sans-serif;\n        font-weight: 100;\n      }\n      a:link    { color: #eee; text-decoration: none; }\n      a:visited { color: #ddd; text-decoration: none; }\n      a:hover   { color: #fff; text-decoration: none; }\n      a:active  { color: #fff; text-decoration: none; }\n    </style>\n  </head>\n\n  <body>\n    <div id=\"background\"></div>\n    <div id=\"content\">\n      <h1>Orbital</h1>\n      <h2>Coming 2049</h2>\n      <br>\n      <a href=\"https://github.com/AlexAltea/orbital/\">GitHub</a> -\n      <a href=\"https://discord.me/orbitalemu\">Discord</a>\n    </div>\n    <script src=\"//cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js\"></script>\n    <script>\n      particlesJS(\"background\", {\n        \"particles\": {\n          \"number\": {\n            \"value\": 160,\n            \"density\": {\n              \"enable\": true,\n              \"value_area\": 800\n            }\n          },\n          \"color\": { \"value\": \"#fff\" },\n          \"shape\": {\n            \"type\": \"circle\",\n            \"stroke\": { \"width\": 0, \"color\": \"#000000\" },\n            \"polygon\": { \"nb_sides\": 5 }\n          },\n          \"opacity\": {\n            \"value\": 0.8,\n            \"random\": true,\n            \"anim\": {\n              \"enable\": true,\n              \"speed\": 1,\n              \"opacity_min\": 0,\n              \"sync\": false\n            }\n          },\n          \"size\": {\n            \"value\": 3,\n            \"random\": true,\n            \"anim\": {\n              \"enable\": false,\n            }\n          },\n          \"line_linked\": {\n            \"enable\": false,\n          },\n          \"move\": {\n            \"enable\": true,\n            \"speed\": 1,\n            \"direction\": \"none\",\n            \"random\": true,\n            \"straight\": false,\n            \"out_mode\": \"out\",\n            \"attract\": {\n              \"enable\": false,\n              \"rotateX\": 600,\n              \"rotateY\": 1200\n            }\n          }\n        },\n        \"interactivity\": {\n          \"detect_on\": \"window\",\n          \"events\": {\n            \"onhover\": { \"enable\": true, \"mode\": \"bubble\" },\n            \"onclick\": { \"enable\": false },\n            \"resize\": true\n          },\n          \"modes\": {\n            \"bubble\": {\n              \"distance\": 400,\n              \"size\": 0,\n              \"duration\": 2,\n              \"opacity\": 0.8,\n              \"speed\": 3\n            }\n          }\n        },\n        \"retina_detect\": true\n      });\n    </script>\n  </body>\n</html>\n"
+        },
+        {
+          "name": "resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

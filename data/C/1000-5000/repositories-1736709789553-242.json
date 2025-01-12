@@ -1,0 +1,101 @@
+{
+  "metadata": {
+    "timestamp": 1736709789553,
+    "page": 242,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rvaiya/keyd",
+      "stars": 3197,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": "data/* -diff\nlayouts/* -diff\nsrc/unicode.c -diff\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.076171875,
+          "content": "*.swp\n*.swn\n*.swo\n*.out\ntags\nbin/\n*.o\n*.gch\n__pycache__\ntest.log\nkeyd.service\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.4951171875,
+          "content": "The best way to contribute is to file an issue with any bugs you find or any\nfeatures you think belong in keyd. Small issues pertaining to things like\ncompilation on different platforms can be submitted as PRs but please avoid\nsending in patches which change core functionality without filing an issue\nfirst. The key logic can be deceptively simple and contains a few subtleties\nthat need to be managed properly. Additionally, I reserve the right to reject\nany features which I do not think belong in keyd.\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0673828125,
+          "content": "MIT/X Consortium License\n\n© 2020 Raheman Vaiya <r.vaiya@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a\ncopy of this software and associated documentation files (the \"Software\"),\nto deal in the Software without restriction, including without limitation\nthe rights to use, copy, modify, merge, publish, distribute, sublicense,\nand/or sell copies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL\nTHE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER\nDEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 3.298828125,
+          "content": ".PHONY: all clean install uninstall debug man compose test-harness\nVERSION=2.5.0\nCOMMIT=$(shell git describe --no-match --always --abbrev=7 --dirty)\nVKBD=uinput\nPREFIX?=/usr/local\n\nCONFIG_DIR?=/etc/keyd\nSOCKET_PATH=/var/run/keyd.socket\n\nCFLAGS:=-DVERSION=\\\"v$(VERSION)\\ \\($(COMMIT)\\)\\\" \\\n\t-I/usr/local/include \\\n\t-L/usr/local/lib \\\n\t-Wall \\\n\t-Wextra \\\n\t-Wno-unused \\\n\t-std=c11 \\\n\t-DSOCKET_PATH=\\\"$(SOCKET_PATH)\\\" \\\n\t-DCONFIG_DIR=\\\"$(CONFIG_DIR)\\\" \\\n\t-DDATA_DIR=\\\"$(PREFIX)/share/keyd\\\" \\\n\t-D_FORTIFY_SOURCE=2 \\\n\t-D_DEFAULT_SOURCE \\\n\t-Werror=format-security \\\n\t$(CFLAGS)\n\nplatform=$(shell uname -s)\n\nifeq ($(platform), Linux)\n\tCOMPAT_FILES=\nelse\n\tLDFLAGS+=-linotify\n\tCOMPAT_FILES=\nendif\n\nall:\n\t-mkdir bin\n\tcp scripts/keyd-application-mapper bin/\n\t$(CC) $(CFLAGS) -O3 $(COMPAT_FILES) src/*.c src/vkbd/$(VKBD).c -lpthread -o bin/keyd $(LDFLAGS)\ndebug:\n\tCFLAGS=\"-g -fsanitize=address -Wunused\" $(MAKE)\ncompose:\n\t-mkdir data\n\t./scripts/generate_xcompose\nman:\n\tfor f in docs/*.scdoc; do \\\n\t\ttarget=$${f%%.scdoc}.1.gz; \\\n\t\ttarget=data/$${target##*/}; \\\n\t\tscdoc < \"$$f\" | gzip > \"$$target\"; \\\n\tdone\ninstall:\n\n\t@if [ -e /run/systemd/system ]; then \\\n\t\tsed -e 's#@PREFIX@#$(PREFIX)#' keyd.service.in > keyd.service; \\\n\t\tmkdir -p $(DESTDIR)$(PREFIX)/lib/systemd/system/; \\\n\t\tinstall -Dm644 keyd.service $(DESTDIR)$(PREFIX)/lib/systemd/system/keyd.service; \\\n\telse \\\n\t\techo \"NOTE: systemd not found, you will need to manually add keyd to your system's init process.\"; \\\n\tfi\n\n\t@if [ \"$(VKBD)\" = \"usb-gadget\" ]; then \\\n\t\tsed -e 's#@PREFIX@#$(PREFIX)#' src/vkbd/usb-gadget.service.in > src/vkbd/usb-gadget.service; \\\n\t\tinstall -Dm644 src/vkbd/usb-gadget.service $(DESTDIR)$(PREFIX)/lib/systemd/system/keyd-usb-gadget.service; \\\n\t\tinstall -Dm755 src/vkbd/usb-gadget.sh $(DESTDIR)$(PREFIX)/bin/keyd-usb-gadget.sh; \\\n\tfi\n\n\tmkdir -p $(DESTDIR)$(CONFIG_DIR)\n\tmkdir -p $(DESTDIR)$(PREFIX)/bin/\n\tmkdir -p $(DESTDIR)$(PREFIX)/share/keyd/\n\tmkdir -p $(DESTDIR)$(PREFIX)/share/keyd/layouts/\n\tmkdir -p $(DESTDIR)$(PREFIX)/share/man/man1/\n\tmkdir -p $(DESTDIR)$(PREFIX)/share/doc/keyd/\n\tmkdir -p $(DESTDIR)$(PREFIX)/share/doc/keyd/examples/\n\n\t-groupadd keyd\n\tinstall -m755 bin/* $(DESTDIR)$(PREFIX)/bin/\n\tinstall -m644 docs/*.md $(DESTDIR)$(PREFIX)/share/doc/keyd/\n\tinstall -m644 examples/* $(DESTDIR)$(PREFIX)/share/doc/keyd/examples/\n\tinstall -m644 layouts/* $(DESTDIR)$(PREFIX)/share/keyd/layouts\n\tcp -r data/gnome-* $(DESTDIR)$(PREFIX)/share/keyd\n\tinstall -m644 data/*.1.gz $(DESTDIR)$(PREFIX)/share/man/man1/\n\tinstall -m644 data/keyd.compose $(DESTDIR)$(PREFIX)/share/keyd/\n\nuninstall:\n\t-groupdel keyd\n\trm -rf $(DESTDIR)$(PREFIX)/lib/systemd/system/keyd.service \\\n\t\t$(DESTDIR)$(PREFIX)/bin/keyd \\\n\t\t$(DESTDIR)$(PREFIX)/bin/keyd-application-mapper \\\n\t\t$(DESTDIR)$(PREFIX)/share/doc/keyd/ \\\n\t\t$(DESTDIR)$(PREFIX)/share/man/man1/keyd*.gz \\\n\t\t$(DESTDIR)$(PREFIX)/share/keyd/ \\\n\t\t$(DESTDIR)$(PREFIX)/lib/systemd/system/keyd-usb-gadget.service \\\n\t\t$(DESTDIR)$(PREFIX)/bin/keyd-usb-gadget.sh \\\n\t\t$(DESTDIR)$(PREFIX)/lib/systemd/system/keyd.service\nclean:\n\t-rm -rf bin keyd.service src/vkbd/usb-gadget.service\ntest:\n\t@cd t; \\\n\tfor f in *.sh; do \\\n\t\t./$$f; \\\n\tdone\ntest-io:\n\t-mkdir bin\n\t$(CC) \\\n\t-DDATA_DIR= \\\n\t-o bin/test-io \\\n\t\tt/test-io.c \\\n\t\tsrc/keyboard.c \\\n\t\tsrc/string.c \\\n\t\tsrc/macro.c \\\n\t\tsrc/config.c \\\n\t\tsrc/log.c \\\n\t\tsrc/ini.c \\\n\t\tsrc/keys.c  \\\n\t\tsrc/unicode.c && \\\n\t./bin/test-io t/test.conf t/*.t\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.607421875,
+          "content": "[![Kofi](https://badgen.net/badge/icon/kofi?icon=kofi&label)](https://ko-fi.com/rvaiya)\n\n# Impetus\n\n[![Packaging status](https://repology.org/badge/tiny-repos/keyd.svg)](https://repology.org/project/keyd/versions)\n\nLinux lacks a good key remapping solution. In order to achieve satisfactory\nresults a medley of tools need to be employed (e.g xcape, xmodmap) with the end\nresult often being tethered to a specified environment (X11). keyd attempts to\nsolve this problem by providing a flexible system wide daemon which remaps keys\nusing kernel level input primitives (evdev, uinput).\n\n# Note on v2\n\nThe config format has undergone several iterations since the first\nrelease. For those migrating their configs from v1 it is best\nto reread the man page. \n\nSee also: [changelog](docs/CHANGELOG.md).\n\n# Goals\n\n  - Speed       (a hand tuned input loop written in C that takes <<1ms)\n  - Simplicity  (a [config format](#sample-config) that is intuitive)\n  - Consistency (modifiers that [play nicely with layers](https://github.com/rvaiya/keyd/blob/6dc2d5c4ea76802fd192b143bdd53b1787fd6deb/docs/keyd.scdoc#L128) by default)\n  - Modularity  (a UNIXy core extensible through the use of an [IPC](https://github.com/rvaiya/keyd/blob/90973686723522c2e44d8e90bb3508a6da625a20/docs/keyd.scdoc#L391) mechanism)\n\n# Features\n\nkeyd has several unique features many of which are traditionally only\nfound in custom keyboard firmware like [QMK](https://github.com/qmk/qmk_firmware)\nas well as some which are unique to keyd.\n\nSome of the more interesting ones include:\n\n- Layers (with support for [hybrid modifiers](https://github.com/rvaiya/keyd/blob/6dc2d5c4ea76802fd192b143bdd53b1787fd6deb/docs/keyd.scdoc#L128)).\n- Key overloading (different behaviour on tap/hold).\n- Keyboard specific configuration.\n- Instantaneous remapping (no more flashing :)).\n- A client-server model that facilitates scripting and display server agnostic application remapping. (Currently ships with support for X, sway, and gnome (wayland)).\n- System wide config (works in a VT).\n- First class support for modifier overloading.\n- Unicode support.\n\n### keyd is for people who:\n\n - Would like to experiment with custom [layers](https://docs.qmk.fm/feature_layers) (i.e custom shift keys)\n   and oneshot modifiers.\n - Want to have multiple keyboards with different layouts on the same machine.\n - Want to be able to remap `C-1` without breaking modifier semantics.\n - Want a keyboard config format which is easy to grok.\n - Like tiny daemons that adhere to the Unix philosophy.\n - Want to put the control and escape keys where God intended.\n - Wish to be able to switch to a VT to debug something without breaking their keymap.\n\n### What keyd isn't:\n\n - A tool for programming individual key up/down events.\n\n# Dependencies\n\n - Your favourite C compiler\n - Linux kernel headers (already present on most systems)\n\n## Optional\n\n - python      (for application specific remapping)\n - python-xlib (only for X support)\n - dbus-python (only for KDE support)\n\n# Installation\n\n*Note:* master serves as the development branch, things may occasionally break\nbetween releases. Releases are [tagged](https://github.com/rvaiya/keyd/tags), and should be considered stable.\n\n## From Source\n\n    git clone https://github.com/rvaiya/keyd\n    cd keyd\n    make && sudo make install\n    sudo systemctl enable --now keyd\n\n# Quickstart\n\n1. Install and start keyd (e.g `sudo systemctl enable keyd --now`)\n\n2. Put the following in `/etc/keyd/default.conf`:\n\n```\n[ids]\n\n*\n\n[main]\n\n# Maps capslock to escape when pressed and control when held.\ncapslock = overload(control, esc)\n\n# Remaps the escape key to capslock\nesc = capslock\n```\n\nKey names can be obtained by using the `keyd monitor` command. Note that while keyd is running, the output of this\ncommand will correspond to keyd's output. The original input events can be seen by first stopping keyd and then\nrunning the command. See the man page for more details.\n\n3. Run `sudo keyd reload` to reload the config set.\n\n4. See the man page (`man keyd`) for a more comprehensive description.\n\nConfig errors will appear in the log output and can be accessed in the usual\nway using your system's service manager (e.g `sudo journalctl -eu keyd`).\n\n*Note*: It is possible to render your machine unusable with a bad config file.\nShould you find yourself in this position, the special key sequence\n`backspace+escape+enter` should cause keyd to terminate.\n\nSome mice (e.g the Logitech MX Master) are capable of emitting keys and\nare consequently matched by the wildcard id. It may be necessary to\nexplicitly blacklist these.\n\n## Application Specific Remapping (experimental)\n\n- Add yourself to the keyd group:\n\n\t`usermod -aG keyd <user>`\n\n- Populate `~/.config/keyd/app.conf`:\n\nE.G\n\n\t[alacritty]\n\n\talt.] = macro(C-g n)\n\talt.[ = macro(C-g p)\n\n\t[chromium]\n\n\talt.[ = C-S-tab\n\talt.] = macro(C-tab)\n\n- Run:\n\n\t`keyd-application-mapper`\n\nYou will probably want to put `keyd-application-mapper -d` somewhere in your \ndisplay server initialization logic (e.g ~/.xinitrc) unless you are running Gnome.\n\nSee the man page for more details.\n\n## SBC support\n\nExperimental support for single board computers (SBCs) via usb-gadget\nhas been added courtesy of Giorgi Chavchanidze.\n\nSee [usb-gadget.md](src/vkbd/usb-gadget.md) for details.\n\n## Packages\n\nThird party packages for the some distributions also exist. If you wish to add\nyours to the list please file a PR. These are kindly maintained by community\nmembers, no personal responsibility is taken for them.\n\n### Alpine Linux\n\n[keyd](https://pkgs.alpinelinux.org/packages?name=keyd) package maintained by [@jirutka](https://github.com/jirutka).\n\n### Arch\n\n[Arch Linux](https://archlinux.org/packages/extra/x86_64/keyd/) package maintained by Arch packagers.\n\n### Debian\n\nExperimental `keyd` and `keyd-application-mapper` packages can be found in the\nCI build artifacts of the [work-in-progress Debian package\nrepository](https://salsa.debian.org/rhansen/keyd):\n\n  * [amd64 (64-bit)](https://salsa.debian.org/rhansen/keyd/-/jobs/artifacts/debian/latest/browse/debian/output?job=build)\n  * [i386 (32-bit)](https://salsa.debian.org/rhansen/keyd/-/jobs/artifacts/debian/latest/browse/debian/output?job=build%20i386)\n\nAny Debian Developer who is willing to review the debianization effort and\nsponsor its upload is encouraged to contact\n[@rhansen](https://github.com/rhansen) (also see the [Debian ITP\nbug](https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1060023)).\n\n### Fedora\n\n[COPR](https://copr.fedorainfracloud.org/coprs/alternateved/keyd/) package maintained by [@alternateved](https://github.com/alternateved).\n\n### openSUSE\n[opensuse](https://software.opensuse.org//download.html?project=hardware&package=keyd) package maintained by [@bubbleguuum](https://github.com/bubbleguuum).\n\nEasy install with `sudo zypper in keyd`.\n\n### Ubuntu\n\nExperimental `keyd` and `keyd-application-mapper` packages can be found in the\n[`ppa:keyd-team/ppa`\narchive](https://launchpad.net/~keyd-team/+archive/ubuntu/ppa).\n\nIf you wish to help maintain this PPA, please contact\n[@rhansen](https://github.com/rhansen).\n\n# Example 1\n\n\t[ids]\n\n\t*\n\t\n\t[main]\n\n\tleftshift = oneshot(shift)\n\tcapslock = overload(symbols, esc)\n\n\t[symbols]\n\n\td = ~\n\tf = /\n\t...\n\n# Example 2\n\nThis overrides specific alt combinations macOS users might\nbe more familiar with, while keeping the rest intact.\n\n\t[ids]\n\t*\n\n\t[alt]\n\n\tx = C-x\n\tc = C-c\n\tv = C-v\n\n\ta = C-a\n\tf = C-f\n\tr = C-r\n\tz = C-z\n\n# Recommended config\n\nMany users will probably not be interested in taking full advantage of keyd.\nFor those who seek simple quality of life improvements I can recommend the\nfollowing config:\n\n\t[ids]\n\n\t*\n\n\t[main]\n\n\tshift = oneshot(shift)\n\tmeta = oneshot(meta)\n\tcontrol = oneshot(control)\n\n\tleftalt = oneshot(alt)\n\trightalt = oneshot(altgr)\n\n\tcapslock = overload(control, esc)\n\tinsert = S-insert\n\nThis overloads the capslock key to function as both escape (when tapped) and\ncontrol (when held) and remaps all modifiers to 'oneshot' keys. Thus to produce\nthe letter A you can now simply tap shift and then a instead of having to hold\nit. Finally it remaps insert to S-insert (paste on X11).\n\n# FAQS\n\n## What about xmodmap/setxkbmap/*?\n\nxmodmap and friends are display server level tools with limited functionality.\nkeyd is a system level solution which implements advanced features like\nlayering and [oneshot](https://docs.qmk.fm/#/one_shot_keys)\nmodifiers.  While some X tools offer similar functionality I am not aware of\nanything that is as flexible as keyd.\n\n## What about [kmonad](https://github.com/kmonad/kmonad)?\n\nkeyd was written several years ago to allow me to easily experiment with\ndifferent layouts on my growing keyboard collection. At the time kmonad did not\nexist and custom keyboard firmware like\n[QMK](https://github.com/qmk/qmk_firmware) (which inspired keyd) was the only\nway to get comparable features. I became aware of kmonad after having published\nkeyd. While kmonad is a fine project with similar goals, it takes a different\napproach and has a different design philosophy.\n\nNotably keyd was written entirely in C with performance and simplicitly in\nmind and will likely never be as configurable as kmonad (which is extensible\nin Haskell). Having said that, it supplies (in the author's opinion) the\nmost valuable features in less than 2000 lines of C while providing\na simple language agnostic config format.\n\n## Why doesn't keyd implement feature X?\n\nIf you feel something is missing or find a bug you are welcome to file an issue\non github. keyd has a minimalist (but sane) design philosophy which\nintentionally omits certain features (e.g execing arbitrary executables\nas root). Things which already exist in custom keyboard firmware like QMK are\ngood candidates for inclusion.\n\n# Contributing\n\nSee [CONTRIBUTING](CONTRIBUTING.md).\nIRC Channel: #keyd on oftc\n"
+        },
+        {
+          "name": "TODO",
+          "type": "blob",
+          "size": 0.2412109375,
+          "content": "streamline test logic\norganize tests\ncleanup manpage\n[idea] tmux like layer timeouts\nimproved mouse support (integrate moused?)\nmulti-user support (remove keyd group)\nsplit up the man page + add FAQ\nadd descriptor state + isolate descriptor logic\n"
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "keyd.service.in",
+          "type": "blob",
+          "size": 0.1259765625,
+          "content": "[Unit]\nDescription=key remapping daemon\n\n[Service]\nType=simple\nExecStart=@PREFIX@/bin/keyd\n\n[Install]\nWantedBy=multi-user.target\n"
+        },
+        {
+          "name": "layouts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "t",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

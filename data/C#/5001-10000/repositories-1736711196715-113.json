@@ -1,0 +1,187 @@
+{
+  "metadata": {
+    "timestamp": 1736711196715,
+    "page": 113,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lambci/docker-lambda",
+      "stars": 5824,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".eslintignore",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "node_modules\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.998046875,
+          "content": "node_modules\nbase/diff\nbase/diff-2\n*.pyc\n*.vs\n*.userprefs\n.gradle\nbase/tar-find-layer/layer.zip\nbase/dump-java8/bin\nbase/dump-java8/build\nbase/dump-java8al2/bin\nbase/dump-java8al2/build\nbase/dump-java11/bin\nbase/dump-java11/build\nbase/dump-dotnetcore20/bin\nbase/dump-dotnetcore20/obj\nbase/dump-dotnetcore21/bin\nbase/dump-dotnetcore21/obj\nbase/dump-dotnetcore31/bin\nbase/dump-dotnetcore31/obj\nbase/dump-providedal2/bootstrap\nbase/dump-providedal2/bootstrap.zip\ndotnetcore2.0/run/MockBootstraps/bin\ndotnetcore2.0/run/MockBootstraps/obj\ndotnetcore2.1/run/MockBootstraps/bin\ndotnetcore2.1/run/MockBootstraps/obj\njava8/run/lambda-runtime-mock/target\nexamples/dotnetcore2.0/bin\nexamples/dotnetcore2.0/obj\nexamples/dotnetcore2.0/pub\nexamples/dotnetcore2.1/bin\nexamples/dotnetcore2.1/obj\nexamples/dotnetcore2.1/pub\nexamples/dotnetcore3.1/bin\nexamples/dotnetcore3.1/obj\nexamples/dotnetcore3.1/pub\nexamples/java/bin\nexamples/java/build\nexamples/go1.x/handler\nexamples/go1.x/handler\nexamples/provided.al2/bootstrap\npackage-lock.json\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.06640625,
+          "content": "base\nexamples\nnodejs*\npython*\njava*\ngo1*\ndotnetcore*\nruby*\nprovided\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "Copyright 2016 Michael Hart and LambCI contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 16.9296875,
+          "content": "# Deprecated\n\nNB: these images are deprecated in favor of AWS' official images, which you can find at:\n\nhttps://github.com/aws/aws-lambda-base-images\n\nAnd browse on the ECR public gallery, eg:\n\nhttps://gallery.ecr.aws/lambda/python\n\nThis project is now archived and will not receive any further updates.\n\n# docker-lambda\n\nA sandboxed local environment that replicates the live [AWS Lambda](https://aws.amazon.com/lambda/)\nenvironment almost identically – including installed software and libraries,\nfile structure and permissions, environment variables, context objects and\nbehaviors – even the user and running process are the same.\n\n<img src=\"https://raw.githubusercontent.com/lambci/docker-lambda/master/examples/terminal3.png\" width=\"969\" alt=\"Example usage with java11 runtime\">\n\nYou can use it for [running your functions](#run-examples) in the same strict Lambda environment,\nknowing that they'll exhibit the same behavior when deployed live. You can\nalso use it to [compile native dependencies](#build-examples) knowing that you're linking to the\nsame library versions that exist on AWS Lambda and then deploy using\nthe [AWS CLI](https://aws.amazon.com/cli/).\n\n---\n\n## Contents\n\n* [Usage](#usage)\n* [Run Examples](#run-examples)\n* [Build Examples](#build-examples)\n* [Using a Dockerfile to build](#using-a-dockerfile-to-build)\n* [Docker tags](#docker-tags)\n* [Verifying images](#verifying-images)\n* [Environment variables](#environment-variables)\n* [Build environment](#build-environment)\n* [Questions](#questions)\n\n---\n\n## Usage\n\n### Running Lambda functions\n\nYou can run your Lambdas from local directories using the `-v` arg with\n`docker run`. You can run them in two modes: as a single execution, or as\n[an API server that listens for invoke events](#running-in-stay-open-api-mode).\nThe default is single execution mode, which outputs all logging to stderr and the result of the handler to stdout.\n\nYou mount your (unzipped) lambda code at `/var/task` and any (unzipped) layer\ncode at `/opt`, and most runtimes take two arguments – the first for the\nhandler and the second for the event, ie:\n\n```sh\ndocker run --rm \\\n  -v <code_dir>:/var/task:ro,delegated \\\n  [-v <layer_dir>:/opt:ro,delegated] \\\n  lambci/lambda:<runtime> \\\n  [<handler>] [<event>]\n```\n\n(the `--rm` flag will remove the docker container once it has run, which is usually what you want,\nand the `ro,delegated` options ensure the directories are mounted read-only and have the highest performance)\n\nYou can pass environment variables (eg `-e AWS_ACCESS_KEY_ID=abcd`) to talk to live AWS services,\nor modify aspects of the runtime. See [below](#environment-variables) for a list.\n\n#### Running in \"stay-open\" API mode\n\nIf you pass the environment variable `DOCKER_LAMBDA_STAY_OPEN=1` to the container, then instead of\nexecuting the event and shutting down, it will start an API server (on port 9001 by default), which\nyou can then call with HTTP following the [Lambda Invoke API](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html).\nThis allows you to make fast subsequent calls to your handler without paying the \"cold start\" penalty each time.\n\n```sh\ndocker run --rm [-d] \\\n  -e DOCKER_LAMBDA_STAY_OPEN=1 \\\n  -p 9001:9001 \\\n  -v <code_dir>:/var/task:ro,delegated \\\n  [-v <layer_dir>:/opt:ro,delegated] \\\n  lambci/lambda:<runtime> \\\n  [<handler>]\n```\n\n(the `-d` flag will start the container in detached mode, in the background)\n\nYou should then see:\n\n```sh\nLambda API listening on port 9001...\n```\n\nThen, in another terminal shell/window you can invoke your function using the [AWS CLI](https://aws.amazon.com/cli/)\n(or any http client, like `curl`):\n\n```sh\naws lambda invoke --endpoint http://localhost:9001 --no-sign-request \\\n  --function-name myfunction --payload '{}' output.json\n```\n\n(if you're using [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/cliv2-migration.html#cliv2-migration-binaryparam), you'll need to add `--cli-binary-format raw-in-base64-out` to the above command)\n\nOr just:\n\n```sh\ncurl -d '{}' http://localhost:9001/2015-03-31/functions/myfunction/invocations\n```\n\nIt also supports the [documented Lambda API headers](https://docs.aws.amazon.com/lambda/latest/dg/API_Invoke.html)\n`X-Amz-Invocation-Type`, `X-Amz-Log-Type` and `X-Amz-Client-Context`.\n\nIf you want to change the exposed port, eg run on port 3000 on the host, use `-p 3000:9001` (then query `http://localhost:3000`).\n\nYou can change the internal Lambda API port from `9001` by passing `-e DOCKER_LAMBDA_API_PORT=<port>`.\nYou can also change the [custom runtime](https://docs.aws.amazon.com/lambda/latest/dg/runtimes-custom.html#runtimes-custom-build)\nport from `9001` by passing `-e DOCKER_LAMBDA_RUNTIME_PORT=<port>`.\n\n#### Developing in \"stay-open\" mode\n\ndocker-lambda can watch for changes to your handler (and layer) code and restart the internal bootstrap process\nso you can always invoke the latest version of your code without needing to shutdown the container.\n\nTo enable this, pass `-e DOCKER_LAMBDA_WATCH=1` to `docker run`:\n\n```\ndocker run --rm \\\n  -e DOCKER_LAMBDA_WATCH=1 -e DOCKER_LAMBDA_STAY_OPEN=1 -p 9001:9001 \\\n  -v \"$PWD\":/var/task:ro,delegated \\\n  lambci/lambda:java11 handler\n```\n\nThen when you make changes to any file in the mounted directory, you'll see:\n\n```\nHandler/layer file changed, restarting bootstrap...\n```\n\nAnd the next invoke will reload your handler with the latest version of your code.\n\nNOTE: This doesn't work in exactly the same way with some of the older runtimes due to the way they're loaded. Specifically: `nodejs8.10` and earlier, `python3.6` and earlier, `dotnetcore2.1` and earlier, `java8` and `go1.x`. These runtimes will instead exit with error code 2\nwhen they are in watch mode and files in the handler or layer are changed.\n\nThat way you can use the `--restart on-failure` capabilities of `docker run` to have the container automatically restart instead.\n\nSo, for `nodejs8.10`, `nodejs6.10`, `nodejs4.3`, `python3.6`, `python2.7`, `dotnetcore2.1`, `dotnetcore2.0`, `java8` and `go1.x`, you'll\nneed to run watch mode like this instead:\n\n```\ndocker run --restart on-failure \\\n  -e DOCKER_LAMBDA_WATCH=1 -e DOCKER_LAMBDA_STAY_OPEN=1 -p 9001:9001 \\\n  -v \"$PWD\":/var/task:ro,delegated \\\n  lambci/lambda:java8 handler\n```\n\nWhen you make changes to any file in the mounted directory, you'll see:\n\n```\nHandler/layer file changed, restarting bootstrap...\n```\n\nAnd then the docker container will restart. See the [Docker documentation](https://docs.docker.com/engine/reference/commandline/run/#restart-policies---restart) for more details. Your terminal may get detached, but the container should still be running and the\nAPI should have restarted. You can do `docker ps` to find the container ID and then `docker attach <container_id>` to reattach if you wish.\n\nIf none of the above strategies work for you, you can use a file-watching utility like [nodemon](https://nodemon.io/):\n\n```sh\n# npm install -g nodemon\nnodemon -w ./ -e '' -s SIGINT -x docker -- run --rm \\\n  -e DOCKER_LAMBDA_STAY_OPEN=1 -p 9001:9001 \\\n  -v \"$PWD\":/var/task:ro,delegated \\\n  lambci/lambda:go1.x handler\n```\n\n### Building Lambda functions\n\nThe build images have a [number of extra system packages installed](#build-environment)\nintended for building and packaging your Lambda functions. You can run your build commands (eg, `gradle` on the java image), and then package up your function using `zip` or the\n[AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html),\nall from within the image.\n\n```sh\ndocker run [--rm] -v <code_dir>:/var/task [-v <layer_dir>:/opt] lambci/lambda:build-<runtime> <build-cmd>\n```\n\nYou can also use [yumda](https://github.com/lambci/yumda) to install precompiled native dependencies using `yum install`.\n\n## Run Examples\n\n```sh\n# Test a `handler` function from an `index.js` file in the current directory on Node.js v12.x\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:nodejs12.x index.handler\n\n# Using a different file and handler, with a custom event\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:nodejs12.x app.myHandler '{\"some\": \"event\"}'\n\n# Test a `lambda_handler` function in `lambda_function.py` with an empty event on Python 3.8\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:python3.8 lambda_function.lambda_handler\n\n# Similarly with Ruby 2.7\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:ruby2.7 lambda_function.lambda_handler\n\n# Test on Go 1.x with a compiled handler named my_handler and a custom event\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:go1.x my_handler '{\"some\": \"event\"}'\n\n# Test a function from the current directory on Java 11\n# The directory must be laid out in the same way the Lambda zip file is,\n# with top-level package source directories and a `lib` directory for third-party jars\n# https://docs.aws.amazon.com/lambda/latest/dg/java-package.html\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:java11 org.myorg.MyHandler\n\n# Test on .NET Core 3.1 given a test.dll assembly in the current directory,\n# a class named Function with a FunctionHandler method, and a custom event\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:dotnetcore3.1 test::test.Function::FunctionHandler '{\"some\": \"event\"}'\n\n# Test with a provided runtime (assumes you have a `bootstrap` executable in the current directory)\ndocker run --rm -v \"$PWD\":/var/task:ro,delegated lambci/lambda:provided handler '{\"some\": \"event\"}'\n\n# Test with layers (assumes your function code is in `./fn` and your layers in `./layer`)\ndocker run --rm -v \"$PWD\"/fn:/var/task:ro,delegated -v \"$PWD\"/layer:/opt:ro,delegated lambci/lambda:nodejs12.x\n\n# Run custom commands\ndocker run --rm --entrypoint node lambci/lambda:nodejs12.x -v\n\n# For large events you can pipe them into stdin if you set DOCKER_LAMBDA_USE_STDIN\necho '{\"some\": \"event\"}' | docker run --rm -v \"$PWD\":/var/task:ro,delegated -i -e DOCKER_LAMBDA_USE_STDIN=1 lambci/lambda:nodejs12.x\n```\n\nYou can see more examples of how to build docker images and run different\nruntimes in the [examples](./examples) directory.\n\n## Build Examples\n\nTo use the build images, for compilation, deployment, etc:\n\n```sh\n# To compile native deps in node_modules\ndocker run --rm -v \"$PWD\":/var/task lambci/lambda:build-nodejs12.x npm rebuild --build-from-source\n\n# To install defined poetry dependencies\ndocker run --rm -v \"$PWD\":/var/task lambci/lambda:build-python3.8 poetry install\n\n# To resolve dependencies on go1.x (working directory is /go/src/handler)\ndocker run --rm -v \"$PWD\":/go/src/handler lambci/lambda:build-go1.x go mod download\n\n# For .NET Core, this will publish the compiled code to `./pub`,\n# which you can then use to run with `-v \"$PWD\"/pub:/var/task`\ndocker run --rm -v \"$PWD\":/var/task lambci/lambda:build-dotnetcore3.1 dotnet publish -c Release -o pub\n\n# Run custom commands on a build container\ndocker run --rm lambci/lambda:build-python3.8 aws --version\n\n# To run an interactive session on a build container\ndocker run -it lambci/lambda:build-python3.8 bash\n```\n\n## Using a Dockerfile to build\n\nCreate your own Docker image to build and deploy:\n\n```dockerfile\nFROM lambci/lambda:build-nodejs12.x\n\nENV AWS_DEFAULT_REGION us-east-1\n\nCOPY . .\n\nRUN npm install\n\nRUN zip -9yr lambda.zip .\n\nCMD aws lambda update-function-code --function-name mylambda --zip-file fileb://lambda.zip\n```\n\nAnd then:\n\n```sh\ndocker build -t mylambda .\ndocker run --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY mylambda\n```\n\n## Node.js module\n\nUsing the Node.js module (`npm install docker-lambda`) – for example in tests:\n\n```js\nvar dockerLambda = require('docker-lambda')\n\n// Spawns synchronously, uses current dir – will throw if it fails\nvar lambdaCallbackResult = dockerLambda({event: {some: 'event'}, dockerImage: 'lambci/lambda:nodejs12.x'})\n\n// Manually specify directory and custom args\nlambdaCallbackResult = dockerLambda({taskDir: __dirname, dockerArgs: ['-m', '1.5G'], dockerImage: 'lambci/lambda:nodejs12.x'})\n```\n\nOptions to pass to `dockerLambda()`:\n  - `dockerImage`\n  - `handler`\n  - `event`\n  - `taskDir`\n  - `cleanUp`\n  - `addEnvVars`\n  - `dockerArgs`\n  - `spawnOptions`\n  - `returnSpawnResult`\n\n## Docker tags\n\nThese follow the Lambda runtime names:\n\n  - `nodejs4.3`\n  - `nodejs6.10`\n  - `nodejs8.10`\n  - `nodejs10.x`\n  - `nodejs12.x`\n  - `python2.7`\n  - `python3.6`\n  - `python3.7`\n  - `python3.8`\n  - `ruby2.5`\n  - `ruby2.7`\n  - `java8`\n  - `java8.al2`\n  - `java11`\n  - `go1.x`\n  - `dotnetcore2.0`\n  - `dotnetcore2.1`\n  - `dotnetcore3.1`\n  - `provided`\n  - `provided.al2`\n  - `build-nodejs4.3`\n  - `build-nodejs6.10`\n  - `build-nodejs8.10`\n  - `build-nodejs10.x`\n  - `build-nodejs12.x`\n  - `build-python2.7`\n  - `build-python3.6`\n  - `build-python3.7`\n  - `build-python3.8`\n  - `build-ruby2.5`\n  - `build-ruby2.7`\n  - `build-java8`\n  - `build-java8.al2`\n  - `build-java11`\n  - `build-go1.x`\n  - `build-dotnetcore2.0`\n  - `build-dotnetcore2.1`\n  - `build-dotnetcore3.1`\n  - `build-provided`\n  - `build-provided.al2`\n\n## Verifying images\n\nThese images are signed using [Docker Content Trust](https://docs.docker.com/engine/security/trust/content_trust/),\nwith the following keys:\n\n- Repository Key: `e966126aacd4be5fb92e0160212dd007fc16a9b4366ef86d28fc7eb49f4d0809`\n- Root Key: `031d78bcdca4171be103da6ffb55e8ddfa9bd113e0ec481ade78d897d9e65c0e`\n\nYou can verify/inspect an image using `docker trust inspect`:\n\n```sh\n$ docker trust inspect --pretty lambci/lambda:provided\n\nSignatures for lambci/lambda:provided\n\nSIGNED TAG          DIGEST                                                             SIGNERS\nprovided            838c42079b5fcfd6640d486f13c1ceeb52ac661e19f9f1d240b63478e53d73f8   (Repo Admin)\n\nAdministrative keys for lambci/lambda:provided\n\n  Repository Key:\te966126aacd4be5fb92e0160212dd007fc16a9b4366ef86d28fc7eb49f4d0809\n  Root Key:\t031d78bcdca4171be103da6ffb55e8ddfa9bd113e0ec481ade78d897d9e65c0e\n```\n\n(The `DIGEST` for a given tag may not match the example above, but the Repository and Root keys should match)\n\n## Environment variables\n\n  - `AWS_LAMBDA_FUNCTION_HANDLER` or `_HANDLER`\n  - `AWS_LAMBDA_EVENT_BODY`\n  - `AWS_LAMBDA_FUNCTION_NAME`\n  - `AWS_LAMBDA_FUNCTION_VERSION`\n  - `AWS_LAMBDA_FUNCTION_INVOKED_ARN`\n  - `AWS_LAMBDA_FUNCTION_MEMORY_SIZE`\n  - `AWS_LAMBDA_FUNCTION_TIMEOUT`\n  - `_X_AMZN_TRACE_ID`\n  - `AWS_REGION` or `AWS_DEFAULT_REGION`\n  - `AWS_ACCOUNT_ID`\n  - `AWS_ACCESS_KEY_ID`\n  - `AWS_SECRET_ACCESS_KEY`\n  - `AWS_SESSION_TOKEN`\n  - `DOCKER_LAMBDA_USE_STDIN`\n  - `DOCKER_LAMBDA_STAY_OPEN`\n  - `DOCKER_LAMBDA_API_PORT`\n  - `DOCKER_LAMBDA_RUNTIME_PORT`\n  - `DOCKER_LAMBDA_DEBUG`\n  - `DOCKER_LAMBDA_NO_MODIFY_LOGS`\n\n## Build environment\n\nYum packages installed on build images:\n\n  - `development` (group, includes `gcc-c++`, `autoconf`, `automake`, `git`, `vim`, etc)\n  - `aws-cli`\n  - `aws-sam-cli`\n  - `docker` (Docker in Docker!)\n  - `clang`\n  - `cmake`\n  \nThe build image for older Amazon Linux 1 based runtimes also include:\n\n  - `python27-devel`\n  - `python36-devel`\n  - `ImageMagick-devel`\n  - `cairo-devel`\n  - `libssh2-devel`\n  - `libxslt-devel`\n  - `libmpc-devel`\n  - `readline-devel`\n  - `db4-devel`\n  - `libffi-devel`\n  - `expat-devel`\n  - `libicu-devel`\n  - `lua-devel`\n  - `gdbm-devel`\n  - `sqlite-devel`\n  - `pcre-devel`\n  - `libcurl-devel`\n  - `yum-plugin-ovl`\n\n## Questions\n\n* *When should I use this?*\n\n  When you want fast local reproducibility. When you don't want to spin up an\n  Amazon Linux EC2 instance (indeed, network aside, this is closer to the real\n  Lambda environment because there are a number of different files, permissions\n  and libraries on a default Amazon Linux instance). When you don't want to\n  invoke a live Lambda just to test your Lambda package – you can do it locally\n  from your dev machine or run tests on your CI system (assuming it has Docker\n  support!)\n\n\n* *Wut, how?*\n\n  By [tarring the full filesystem in Lambda, uploading that to S3](./base/dump-nodejs43.js),\n  and then [piping into Docker to create a new image from scratch](./base/create-base.sh) –\n  then [creating mock modules](./nodejs4.3/run/awslambda-mock.js) that will be\n  required/included in place of the actual native modules that communicate with\n  the real Lambda coordinating services.  Only the native modules are mocked\n  out – the actual parent JS/PY/Java runner files are left alone, so their behaviors\n  don't need to be replicated (like the overriding of `console.log`, and custom\n  defined properties like `callbackWaitsForEmptyEventLoop`)\n\n* *What's missing from the images?*\n\n  Hard to tell – anything that's not readable – so at least `/root/*` –\n  but probably a little more than that – hopefully nothing important, after all,\n  it's not readable by Lambda, so how could it be!\n\n* *Is it really necessary to replicate exactly to this degree?*\n\n  Not for many scenarios – some compiled Linux binaries work out of the box\n  and an Amazon Linux Docker image can compile some binaries that work on\n  Lambda too, for example – but for testing it's great to be able to reliably\n  verify permissions issues, library linking issues, etc.\n\n* *What's this got to do with LambCI?*\n\n  Technically nothing – it's just been incredibly useful during the building\n  and testing of LambCI.\n"
+        },
+        {
+          "name": "base",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-lambda.code-workspace",
+          "type": "blob",
+          "size": 0.955078125,
+          "content": "{\n\t\"folders\": [\n    {\n      \"path\": \".\"\n    },\n    {\n      \"path\": \"go1.x/run\"\n    },\n    {\n      \"path\": \"provided/run\"\n    },\n    {\n      \"path\": \"examples/go1.x\"\n    },\n    {\n      \"path\": \"base/dump-go1x\"\n    },\n    {\n      \"path\": \"base/dump-java11\"\n    },\n    {\n      \"path\": \"base/dump-java8\"\n    },\n    {\n      \"path\": \"base/dump-java8al2\"\n    },\n    {\n      \"path\": \"examples/java\"\n    },\n    {\n      \"path\": \"java8/run/lambda-runtime-mock\"\n    },\n    {\n      \"path\": \"base/dump-dotnetcore20\"\n    },\n    {\n      \"path\": \"base/dump-dotnetcore21\"\n    },\n    {\n      \"path\": \"base/dump-dotnetcore31\"\n    },\n    {\n      \"path\": \"examples/dotnetcore2.0\"\n    },\n    {\n      \"path\": \"examples/dotnetcore2.1\"\n    },\n    {\n      \"path\": \"examples/dotnetcore3.1\"\n    },\n    {\n      \"path\": \"dotnetcore2.0/run/MockBootstraps\"\n    },\n    {\n      \"path\": \"dotnetcore2.1/run/MockBootstraps\"\n    }\n  ],\n\t\"settings\": {\n\t\t\"java.configuration.updateBuildConfiguration\": \"automatic\"\n\t}\n}\n"
+        },
+        {
+          "name": "dotnetcore2.0",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dotnetcore2.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dotnetcore3.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "go1.x",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.js",
+          "type": "blob",
+          "size": 2.251953125,
+          "content": "var spawnSync = require('child_process').spawnSync\n\nvar ENV_VARS = [\n  'AWS_REGION',\n  'AWS_DEFAULT_REGION',\n  'AWS_ACCOUNT_ID',\n  'AWS_ACCESS_KEY_ID',\n  'AWS_SECRET_ACCESS_KEY',\n  'AWS_SESSION_TOKEN',\n  'AWS_LAMBDA_FUNCTION_NAME',\n  'AWS_LAMBDA_FUNCTION_VERSION',\n  'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',\n  'AWS_LAMBDA_FUNCTION_TIMEOUT',\n  'AWS_LAMBDA_FUNCTION_HANDLER',\n  'AWS_LAMBDA_EVENT_BODY',\n  'DOCKER_LAMBDA_USE_STDIN',\n]\nvar ENV_ARGS = [].concat.apply([], ENV_VARS.map(function(x) { return ['-e', x] }))\n\n// Will spawn `docker run` synchronously and return stdout\nmodule.exports = function runSync(options) {\n  options = options || {}\n  var dockerImage = options.dockerImage || 'lambci/lambda:nodejs4.3'\n  var handler = options.handler || 'index.handler'\n  var event = options.event || {}\n  var taskDir = options.taskDir == null ? process.cwd() : options.taskDir\n  var cleanUp = options.cleanUp == null ? true : options.cleanUp\n  var addEnvVars = options.addEnvVars || false\n  var dockerArgs = options.dockerArgs || []\n  var spawnOptions = options.spawnOptions || {encoding: 'utf8'}\n  var returnSpawnResult = options.returnSpawnResult || false\n\n  var args = ['run']\n    .concat(taskDir ? ['-v', taskDir + ':/var/task'] : [])\n    .concat(cleanUp ? ['--rm'] : [])\n    .concat(addEnvVars ? ENV_ARGS : [])\n    .concat(dockerArgs)\n    .concat([dockerImage, handler, JSON.stringify(event)])\n\n  var spawnResult = spawnSync('docker', args, spawnOptions)\n\n  if (returnSpawnResult) {\n    return spawnResult\n  }\n\n  if (spawnResult.error || spawnResult.status !== 0) {\n    var err = spawnResult.error\n    if (!err) {\n      err = new Error(spawnResult.stdout || spawnResult.stderr)\n      err.code = spawnResult.status\n      err.stdout = spawnResult.stdout\n      err.stderr = spawnResult.stderr\n    }\n    throw err\n  }\n\n  // If stdio is inherited, stdout/stderr will be null\n  if (spawnResult.stdout == null) return null\n\n  var stdout = spawnResult.stdout.trim().split('\\n')\n  try {\n    return JSON.parse(stdout[stdout.length - 1])\n  } catch (err) {\n    // This should return undefined and not null to indicate that either the\n    // Lambda function had not output or the output could not be parsed. Both\n    // cases should be rare and are most likely the result of an issue with the\n    // Lambda function.\n  }\n}\n"
+        },
+        {
+          "name": "java11",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "java8.al2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "java8",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs10.x",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs12.x",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs4.3",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs6.10",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs8.10",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.478515625,
+          "content": "{\n  \"name\": \"docker-lambda\",\n  \"version\": \"0.15.3\",\n  \"description\": \"A Docker image and test runner that (very closely) mimics the live AWS Lambda environment\",\n  \"main\": \"index.js\",\n  \"scripts\": {\n    \"test\": \"node test.js\"\n  },\n  \"directories\": {\n    \"example\": \"examples\"\n  },\n  \"repository\": \"lambci/docker-lambda\",\n  \"author\": \"Michael Hart <michael@soothbooth.com>\",\n  \"license\": \"MIT\",\n  \"engines\": {\n    \"node\": \">=0.11.12\"\n  },\n  \"devDependencies\": {\n    \"should\": \"^8.4.0\"\n  }\n}\n"
+        },
+        {
+          "name": "provided.al2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "provided",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python2.7",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python3.6",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python3.7",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "python3.8",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ruby2.5",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ruby2.7",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.js",
+          "type": "blob",
+          "size": 2.8515625,
+          "content": "var should = require('should')\nrequire('child_process').spawnSync = mockSpawnSync\n\nvar dockerLambda = require('.')\n\nvar captured = {}\nvar mockReturn\nfunction mockSpawnSync(cmd, args, options) {\n  captured.cmd = cmd\n  captured.args = args\n  captured.options = options\n  return mockReturn\n}\nfunction resetMock(returnVal) {\n  mockReturn = returnVal || {status: 0, stdout: '{}'}\n}\n\n// Should return defaults if calling with no options\nresetMock()\nvar result = dockerLambda()\ncaptured.cmd.should.equal('docker')\ncaptured.args.should.eql([\n  'run',\n  '-v',\n  __dirname + ':/var/task',\n  '--rm',\n  'lambci/lambda:nodejs4.3',\n  'index.handler',\n  '{}',\n])\ncaptured.options.should.eql({encoding: 'utf8'})\nresult.should.eql({})\n\n// Should use env vars if asked to\nresetMock()\nresult = dockerLambda({addEnvVars: true})\ncaptured.cmd.should.equal('docker')\ncaptured.args.should.eql([\n  'run',\n  '-v',\n  __dirname + ':/var/task',\n  '--rm',\n  '-e',\n  'AWS_REGION',\n  '-e',\n  'AWS_DEFAULT_REGION',\n  '-e',\n  'AWS_ACCOUNT_ID',\n  '-e',\n  'AWS_ACCESS_KEY_ID',\n  '-e',\n  'AWS_SECRET_ACCESS_KEY',\n  '-e',\n  'AWS_SESSION_TOKEN',\n  '-e',\n  'AWS_LAMBDA_FUNCTION_NAME',\n  '-e',\n  'AWS_LAMBDA_FUNCTION_VERSION',\n  '-e',\n  'AWS_LAMBDA_FUNCTION_MEMORY_SIZE',\n  '-e',\n  'AWS_LAMBDA_FUNCTION_TIMEOUT',\n  '-e',\n  'AWS_LAMBDA_FUNCTION_HANDLER',\n  '-e',\n  'AWS_LAMBDA_EVENT_BODY',\n  '-e',\n  'DOCKER_LAMBDA_USE_STDIN',\n  'lambci/lambda:nodejs4.3',\n  'index.handler',\n  '{}',\n])\ncaptured.options.should.eql({encoding: 'utf8'})\nresult.should.eql({})\n\n// Should return spawn result if asked to\nresetMock({status: 0, stdout: 'null'})\nresult = dockerLambda({returnSpawnResult: true})\nresult.should.eql({status: 0, stdout: 'null'})\n\n// Should not fail if stdout contains logging\nresetMock({status: 0, stdout: 'Test\\nResult\\n{\"success\":true}'})\nresult = dockerLambda()\nresult.should.eql({success: true})\n\n// Should not fail if stdout contains extra newlines\nresetMock({status: 0, stdout: 'Test\\nResult\\n\\n{\"success\":true}\\n\\n'})\nresult = dockerLambda()\nresult.should.eql({success: true})\n\n// Should return undefined if last stdout entry cannot be parsed\nresetMock({status: 0, stdout: 'Test\\nResult\\nsuccess'})\nresult = dockerLambda()\nshould.not.exist(result)\n\n// Should return undefined when function was successful but there is no stdout\nresetMock({status: 0, stdout: ''})\nresult = dockerLambda()\nshould.not.exist(result)\n\n// Should throw error if spawn returns error\nresetMock({error: new Error('Something went wrong')})\nvar err\ntry {\n  result = dockerLambda()\n} catch (e) {\n  err = e\n}\nerr.should.eql(new Error('Something went wrong'))\n\n// Should throw error if spawn process dies\nresetMock({status: 1, stdout: 'wtf', stderr: 'ftw'})\ntry {\n  result = dockerLambda()\n} catch (e) {\n  err = e\n}\nvar expectedErr = new Error('wtf')\nexpectedErr.code = 1\nexpectedErr.stdout = 'wtf'\nexpectedErr.stderr = 'ftw'\nerr.should.eql(expectedErr)\n\nconsole.log('All Passed!')\n"
+        }
+      ]
+    }
+  ]
+}

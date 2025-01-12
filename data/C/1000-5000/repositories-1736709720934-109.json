@@ -1,0 +1,134 @@
+{
+  "metadata": {
+    "timestamp": 1736709720934,
+    "page": 109,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "geohot/qira",
+      "stars": 3974,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3818359375,
+          "content": "web/.meteor/local\n.*.swp\n.*.swo\ntests/a.out\ntests/*.o\n*.pyc\nida/*.o\nida/qira.*\nida/libwebsockets.a\ntests/idb\nold/qiradb/qiradb\ndb/\nqemu/qemu-2*\ndistrib/\nqiradb/build\ncda/include\ncda/clang-latest\ntests/system\npin/pin-*\npin/obj-*\npin.log\n*~\ncda/codesearch-*\n*.DS_Store\n/libs/\ntests/bap/out.*\ntests/bap/*.log\nbap/\nstatic/python32\ntestvm/.vagrant\nradare\nvenv\ncapstone\ntests_auto/binary-autogen\n\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.3037109375,
+          "content": "sudo: true\n\nlanguage: python\n\npython:\n  - 2.7\n\naddons:\n  apt:\n    sources:\n    - ubuntu-toolchain-r-test\n    packages:\n    - gcc-4.8\n    - g++-4.8\n    - clang\n\ninstall:\n  - if [ \"$CXX\" = \"g++\" ]; then export CXX=\"g++-4.8\" CC=\"gcc-4.8\"; fi\n  - ./install.sh\n\nscript:\n  - ./run_tests.sh\n  - ./run_tests_static.sh\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.03125,
+          "content": "Copyright (c) 2018, George Hotz\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.7822265625,
+          "content": "# QIRA\n\n[![Build Status](https://travis-ci.org/geohot/qira.svg?branch=master)](https://travis-ci.org/geohot/qira)\n\n* QIRA is a competitor to strace and gdb\n* See http://qira.me/ for high level usage information\n* All QIRA code is released under MIT license\n* Other code in this repo released under its respective license\n\n## Supported OS\n\n<pre>\nUbuntu 14.04 and 16.04 supported out of the box.\n18.04 is having a problem with building QEMU\nSee forked QEMU source at https://github.com/geohot/qemu/tree/qira to fix.\n\nNon Linux hosts may run the rest of QIRA, but cannot run the QEMU tracer.\nVery limited support for Mac OS X and Windows natively.\nThe Docker image in docker should work everywhere.\n</pre>\n\n## Installing release\n\nSee instructions on [qira.me](http://qira.me/) to install 1.3\n\n## Installing trunk\n\n<pre>\ncd ~/\ngit clone https://github.com/geohot/qira.git\ncd qira/\n./install.sh\n</pre>\n\n## Installation Extras\n\n* ./fetchlibs.sh will fetch the libraries for i386, armhf, armel, aarch64, mips, mipsel, and ppc\n* ./tracers/pin_build.sh will install the QIRA PIN plugin, allowing --pin to work\n\n\n## Releases\n\n* v1.3 -- Update using pinned python packages\n* v1.2 -- Many many changes. Forced release due to v1.0 not working anymore.\n* v1.1 -- Support for names and comments. Static stuff added. Register colors.\n* v1.0 -- Perf is good! Tons of bugfixes. Quality software. http://qira.me/\n* v0.9 -- Function indentation. haddrline added (look familiar?). Register highlighting in hexdump.\n* v0.8 -- Intel syntax! Shipping CDA (cda a.out) and experimental PIN backend. Bugfixes. Windows support?\n* v0.7 -- DWARF support. Builds QEMU if distributed binaries don't work. Windows IDA plugin.\n* v0.6 -- Added changes before webforking. Highlight strace addresses. Default on analysis.\n* v0.5 -- Fixed regression in C++ database causing wrong values. Added PowerPC support. Added \"A\" button.\n* v0.4 -- Using 50x faster C++ database. strace support. argv and envp are there.\n* v0.3 -- Built in socat, multiple traces, forks (experimental). Somewhat working x86-64 and ARM support\n* v0.2 -- Removed dependency on mongodb, much faster. IDA plugin fixes, Mac version.\n* v0.1 -- Initial release\n\n\n## UI\n\n<pre>\nAt the top, you have 4 boxes, called the controls.\n  Blue = change number, grey = fork number\n  red = instruction address (iaddr), yellow = data address (daddr).\n\nOn the left you have the vtimeline, this is the full trace of the program.\n  The top is the start of the program, the bottom is the end/current state.\n  More green = deeper into a function.\n  The currently selected change is blue, red is every passthrough of the current iaddr\n  Bright yellow is a write to the daddr, dark yellow is a read from the daddr.\n  This color scheme is followed everywhere.\n\nBelow the controls, you have the idump, showing instructions near the current change\nUnder that is the regviewer, datachanges, hexeditor, and strace, all self explanatory.\n</pre>\n\n\n## Mouse Actions\nClick on vtimeline to navigate around. Right-click forks to delete them. Click on data (or doubleclick if highlightable) to follow in data. Right-click on instruction address to follow in instruction.\n\n## Keyboard Shortcuts in web/client/controls.js\n<pre>\nj -- next invocation of instruction\nk -- prev invocation of instruction\n\nshift-j -- next toucher of data\nshift-k -- prev toucher of data\n\nm -- go to return from current function\n, -- go to start of current function\n\nz -- zoom out max on vtimeline\n\nleft  -- -1 fork\nright -- +1 fork\nup    -- -1 clnum\ndown  -- +1 clnum\n\nesc -- back\n\nshift-c -- clear all forks\n\nn -- rename instruction\nshift-n -- rename data\n: -- add comment at instruction\nshift-: -- add comment at data\n\ng -- go to change, address, or name\nspace -- toggle flat/function view\n\np -- analyze function at iaddr\nc -- make code at iaddr, one instruction\na -- make ascii at iaddr\nd -- make data at iaddr\nu -- make undefined at iaddr\n</pre>\n\n## Installation on Windows (experimental)\n\n* Install git and python 2.7.9\n* Run install.bat\n\n\n## Session state\n<pre>\nclnum -- selected changelist number\nforknum -- selected fork number\niaddr -- selected instruction address\ndaddr -- selected data address\n\ncview -- viewed changelists in the vtimeline\ndview -- viewed window into data in the hexeditor\niview -- viewed address in the static view\n\nmax_clnum -- max changelist number for each fork\ndirtyiaddr -- whether we should update the clnum based on the iaddr or not\nflat -- if we are in flat view\n</pre>\n\n\n## Static\n\nQIRA static has historically been such a trash heap it's gated behind -S. QIRA should not be trying to compete with IDA.\n\nUser input and the actual traces of the program should drive creation of the static database. Don't try to recover all CFGs, only what ran.\n\nThe basic idea of static is that it exists at change -1 and doesn't change ever. Each address has a set of tags, including things like name.\n\n"
+        },
+        {
+          "name": "VERSION",
+          "type": "blob",
+          "size": 0.00390625,
+          "content": "1.4\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extra",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fetchlibs.sh",
+          "type": "blob",
+          "size": 1.4736328125,
+          "content": "#!/bin/bash -e\n\nDEBOOTSTRAP_DIR=/usr/share/debootstrap\nUBUNTU_KEYRING=/usr/share/keyrings/ubuntu-archive-keyring.gpg\nDEBIAN_KEYRING=/usr/share/keyrings/debian-archive-keyring.gpg\n\nif [ ! -d \"$DEBOOTSTRAP_DIR\" ] || [ ! -f \"$DEBIAN_KEYRING\" ]; then\n  echo \"this script requires debootstrap and debian-archive-keyring to be installed\"\n  exit 1\nfi\n\n# this is ubuntu specific i think\nfetcharch() {\n  ARCH=\"$1\"\n  DISTRO=\"$2\"\n  SUITE=\"$3\"\n  exec 4>&1\n  SHA_SIZE=256\n  DEBOOTSTRAP_CHECKSUM_FIELD=\"SHA$SHA_SIZE\"\n  TARGET=\"$ARCH\"\n  TARGET=\"$(echo \"`pwd`/$TARGET\")\"\n  HOST_ARCH=`/usr/bin/dpkg --print-architecture`\n  HOST_OS=linux\n  USE_COMPONENTS=main\n  RESOLVE_DEPS=true\n  export DEBOOTSTRAP_CHECKSUM_FIELD\n\n  mkdir -p \"$TARGET\" \"$TARGET/debootstrap\"\n\n  . $DEBOOTSTRAP_DIR/functions\n  . $DEBOOTSTRAP_DIR/scripts/$SUITE\n\n  if [ $DISTRO == \"ubuntu\" ]; then\n    KEYRING=$UBUNTU_KEYRING\n    MIRRORS=\"$DEF_MIRROR\"\n  elif [ $DISTRO == \"debian\" ]; then\n    KEYRING=$DEBIAN_KEYRING\n    MIRRORS=\"http://ftp.us.debian.org/debian\"\n  else\n    echo \"need a distro\"\n    exit 1\n  fi\n\n  download_indices\n  work_out_debs\n\n  all_debs=$(resolve_deps $LIBS)\n  echo \"$all_debs\"\n  download $all_debs\n\n  choose_extractor\n  extract $all_debs\n}\n\n#rm -rf libs\nmkdir -p libs\ncd libs\n\nLIBS=\"libc-bin libstdc++6\"\nfetcharch armhf ubuntu trusty\nfetcharch armel ubuntu precise\nfetcharch powerpc ubuntu trusty\nfetcharch arm64 ubuntu trusty\nfetcharch i386 ubuntu trusty\nfetcharch mips debian jessie\nfetcharch mipsel debian jessie\n\n# mini debootstrap \n\n"
+        },
+        {
+          "name": "ida",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 1.3447265625,
+          "content": "#!/bin/bash -e\n\n# install system deps\nif [ $(which apt-get) ]; then\n  echo \"installing deps for ubuntu\"\n  sudo apt-get -y install git curl python python-dev python3-pip build-essential pkg-config zlib1g-dev libglib2.0-dev libpixman-1-dev\n  sudo pip3 install virtualenv \n \nelse\n  echo \"*** You'll need to install Ubuntu or get a working build env for qemu and python yourself ***\"\nfi\n\n# build qemu\nif [[ \"$(uname)\" == 'Linux' ]]; then\n  if [ $(tracers/qemu/qira-i386 > /dev/null; echo $?) == 1 ]; then\n    echo \"QIRA QEMU appears to run okay\"\n  else\n    echo \"building QEMU\"\n    cd tracers\n    ./qemu_build.sh\n    cd ../\n  fi\nelse\n  echo \"QEMU user only works on Linux.\"\n  echo \"While the rest of QIRA will run, you cannot run binaries.\"\n  echo \"This is due to QEMU user forwarding the syscalls to the kernel.\"\n  echo \"See other backends in qira/tracers, PIN may work on Windows and OS X\"\nfi\n\necho \"building python venv\"\nvirtualenv venv\nsource venv/bin/activate\npip install --upgrade pip\npip install --upgrade -r requirements.txt\n\necho \"running tests\"\n./run_tests.sh\n\necho \"making systemwide symlink\"\nsudo ln -sf $(pwd)/qira /usr/local/bin/qira\n\necho \"***************************************\"\necho \"  Thanks for installing QIRA\"\necho \"  Check out README for more info\"\necho \"  Or just dive in with 'qira /bin/ls'\"\necho \"  And point Chrome to localhost:3002\"\necho \"    ~geohot\"\n\n"
+        },
+        {
+          "name": "middleware",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "qira",
+          "type": "blob",
+          "size": 0.4013671875,
+          "content": "#!/bin/bash -e\nunamestr=$(uname)\nif [[ \"$unamestr\" == 'Linux' ]]; then\n  DIR=$(dirname $(readlink -f $0))\nelif [[ \"$unamestr\" == \"Darwin\" ]]; then\n  cmd=$(which \"$0\")\n  if [ -L \"$cmd\" ]; then\n    cmd=$(readlink \"$cmd\")\n  fi\n  DIR=$(dirname \"$cmd\")\nelse\n  echo \"Only Linux and Mac OS X are supported!\"\n  exit\nfi\n\nunset PYTHONPATH\nsource $DIR/venv/bin/activate\nexec /usr/bin/env python $DIR/middleware/qira.py $*\n"
+        },
+        {
+          "name": "qira_tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.447265625,
+          "content": "capstone==4.0.1\ncertifi==2019.3.9\nchardet==3.0.4\nClick==7.0\nCython==0.29.6\nFlask==1.0.2\nFlask-SocketIO==3.3.2\ngevent==1.4.0\ngreenlet==0.4.15\nhexdump==3.3\nidna==2.8\nipaddr==2.2.0\nitsdangerous==1.1.0\nJinja2==2.10\nMarkupSafe==1.1.1\nnose==1.3.7\nPillow==5.4.1\npydot==1.4.1\npyelftools==0.25\npyparsing==2.3.1\npython-engineio==3.5.0\npython-socketio==3.1.2\nrequests==2.21.0\nsix==1.12.0\nsocketIO-client==0.7.2\nurllib3==1.24.1\nwebsocket-client==0.56.0\nWerkzeug==0.15.1\n"
+        },
+        {
+          "name": "run_tests.sh",
+          "type": "blob",
+          "size": 0.46484375,
+          "content": "#!/bin/bash -e\n\n# test distribution\nif [ \"$1\" == \"distrib\" ] ; then\n  echo \"*** testing distrib\"\n  ./bdistrib.sh\n  cd distrib/qira\n  ./install.sh\n  cd ../../\nfi\n\nsource venv/bin/activate\nnosetests -v -s\n\n# integration test\n./qira qira_tests/bin/loop &\nQIRA_PID=$!\ntrap \"kill $QIRA_PID\" EXIT\necho \"qira pid is $QIRA_PID\"\nsleep 2\n\n# replace phantomjs test with this\n#phantomjs qira_tests/load_page.js\ncurl http://localhost:3002/ | grep \"<title>qira</title>\"\n\necho \"tests pass\"\n\n"
+        },
+        {
+          "name": "run_tests_static.sh",
+          "type": "blob",
+          "size": 0.2333984375,
+          "content": "#!/bin/bash -e\n\nsource venv/bin/activate\n\n# ned's tests, which are really awesome\n# why weren't these used?\ncd tests_auto\n#./autogen-extras.sh\n#python autogen.py --dwarf --all\npython autogen.py --dwarf\ncd ../\ncd static2\npython testing.py\n\n"
+        },
+        {
+          "name": "static2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests_auto",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests_manual",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tracers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

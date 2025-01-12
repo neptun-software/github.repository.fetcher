@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "timestamp": 1736709719989,
+    "page": 106,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cmusphinx/pocketsphinx",
+      "stars": 3995,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.1728515625,
+          "content": "build\ndocs/build\ncython/pocketsphinx/model\n_skbuild\n__pycache__\n*~\nCMakeCache.txt\nCMakeFiles\nCTestTestfile.cmake\nDartConfiguration.tcl\ncmake_install.cmake\nDockerfile\n*.whl\ndist\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.291015625,
+          "content": "build/\n*~\n.vscode/settings.json\n*.egg-info\n_skbuild\ndist\nMANIFEST\n__pycache__\njsbuild\nCMakeCache.txt\nCMakeFiles\nCTestTestfile.cmake\nDartConfiguration.tcl\ncmake_install.cmake\nvenv/\n.tox\nMakefile\nconfig.h\ninclude/pocketsphinx/sphinx_config.h\npocketsphinx.pc\ntest/testfuncs.sh\ntest/unit/test_macros.h\n"
+        },
+        {
+          "name": ".readthedocs.yml",
+          "type": "blob",
+          "size": 0.169921875,
+          "content": "version: 2\n\nbuild:\n  os: ubuntu-22.04\n  tools:\n    python: \"3.10\"\n\nsphinx:\n  configuration: docs/source/conf.py\n\npython:\n  install:\n    - requirements: docs/requirements.txt\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.205078125,
+          "content": "Fil Alleva\nRobert Brennan\nHsiao-wen Hon\nRavishankar Mosur\nEric Thayer\nKevin Lenzo\nAlan W Black\nEvandro Gouvea\nDavid Huggins-Daines\nAlexander Solovets\nVyacheslav Klimkov\n\nMore! please help us get all the names.\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 3.8466796875,
+          "content": "cmake_minimum_required(VERSION 3.14) # I like pie\n\nproject(PocketSphinx VERSION 5.0.4\n  DESCRIPTION \"A small speech recognizer\"\n  HOMEPAGE_URL \"https://github.com/cmusphinx/pocketsphinx\"\n  LANGUAGES C)\ninclude(CMakePrintHelpers)\nset(PACKAGE_NAME ${PROJECT_NAME})\nstring(TOLOWER ${PROJECT_NAME} PROJECT_SHORTNAME)\nset(PACKAGE_VERSION ${PROJECT_VERSION})\nset(PACKAGE_STRING \"${PROJECT_NAME} ${PROJECT_VERSION}\")\nset(PACKAGE_TARNAME \"${PROJECT_SHORTNAME}-${PROJECT_VERSION}\")\nset(PACKAGE_URL ${PROJECT_HOMEPAGE_URL})\nset(PACKAGE_BUGREPORT dhdaines@gmail.com)\n\nif(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)\n  include(CTest)\n  add_custom_target(check COMMAND ${CMAKE_CTEST_COMMAND})\nendif()\n\ninclude(CheckTypeSize)\ninclude(CheckSymbolExists)\ninclude(CheckLibraryExists)\ninclude(TestBigEndian)\ninclude(GNUInstallDirs)\n\nCHECK_INCLUDE_FILE(unistd.h HAVE_UNISTD_H)\nCHECK_INCLUDE_FILE(sys/types.h HAVE_SYS_TYPES_H)\nCHECK_INCLUDE_FILE(sys/stat.h HAVE_SYS_STAT_H)\nCHECK_INCLUDE_FILE(stdint.h HAVE_STDINT_H)\nCHECK_SYMBOL_EXISTS(snprintf stdio.h HAVE_SNPRINTF)\nCHECK_SYMBOL_EXISTS(popen stdio.h HAVE_POPEN)\nCHECK_TYPE_SIZE(long LONG)\nCHECK_TYPE_SIZE(\"long long\" LONG_LONG)\n# OMG CMake is so incredibly awful\nset(SIZEOF_LONG ${LONG})\nset(SIZEOF_LONG_LONG ${LONG_LONG})\ncmake_print_variables(SIZEOF_LONG SIZEOF_LONG_LONG)\ntest_big_endian(WORDS_BIGENDIAN)\ncmake_print_variables(WORDS_BIGENDIAN)\n\n# Don't do this\n#if(CMAKE_BUILD_TYPE STREQUAL Debug)\n#  set(SPHINX_DEBUG 1)\n#endif()\n\n# Compiles some code as the wrong endianness in order to ensure that\n# it works properly\nif(DEBUG_ENDIAN)\n  add_definitions(-DDEBUG_ENDIAN)\nendif()\ncmake_print_variables(SPHINX_DEBUG DEBUG_ENDIAN)\n\nif(MSVC)\n  add_compile_options(/W3)\nelse()\n  add_compile_options(-Wall -Wextra)\nendif()\n\noption(FIXED_POINT \"Build using fixed-point math\" OFF)\nif(NOT DEFAULT_RADIX)\n  set(DEFAULT_RADIX 12)\nendif()\ncmake_print_variables(FIXED_POINT DEFAULT_RADIX)\n\n# Maybe not a great idea, but it does work on both Windows and Linux\nset (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})\nset (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})\nset (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})\n\nconfigure_file(config.h.in config.h)\nconfigure_file(sphinx_config.h.in include/pocketsphinx/sphinx_config.h)\nadd_definitions(-DHAVE_CONFIG_H)\n\nif(SKBUILD)\n  # Python build\n\n  # Allow compiling against systemwide libpocketsphinx.so for Docker\n  # or distribution packages\n  option(USE_INSTALLED_POCKETSPHINX \"Build using installed PocketSphinx library\" OFF)\n  if(USE_INSTALLED_POCKETSPHINX)\n    find_package(PkgConfig)\n    # Get the libraries and headers\n    pkg_check_modules(POCKETSPHINX pocketsphinx)\n    # Set the model directory to the systemwide one.  Don't try to use\n    # CMAKE_INSTALL_FULL_DATADIR!  That is not what you want.\n    pkg_get_variable(MODELDIR pocketsphinx modeldir)\n  else()\n    add_subdirectory(src)\n  endif()\n  add_subdirectory(cython)\nelse()\n  # C build\n\n  # Set the default model directory to the install location\n  set(MODELDIR ${CMAKE_INSTALL_FULL_DATADIR}/pocketsphinx/model)\n  option(BUILD_SHARED_LIBS \"Build using shared libraries\" OFF)\n  if(BUILD_SHARED_LIBS)\n    add_definitions(-DSPHINX_DLL)\n  endif()\n  add_subdirectory(src)\n  add_subdirectory(model)\n  add_subdirectory(doxygen)\n  add_subdirectory(programs)\n  add_subdirectory(examples)\n  if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)\n    add_subdirectory(test)\n  endif()\n  configure_file(pocketsphinx.pc.in pocketsphinx.pc @ONLY)\n  install(TARGETS pocketsphinx LIBRARY)\n  install(DIRECTORY include/ TYPE INCLUDE)\n  install(DIRECTORY ${CMAKE_BINARY_DIR}/include/ TYPE INCLUDE)\n  install(FILES ${CMAKE_BINARY_DIR}/pocketsphinx.pc DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)\n\n  option(BUILD_GSTREAMER \"Build GStreamer plugin\" OFF)\n  if(BUILD_GSTREAMER)\n    add_subdirectory(gst)\n  endif()\nendif()\n\n# Can print this at the end, just to know what it was\ncmake_print_variables(MODELDIR)\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.6328125,
+          "content": "FROM alpine:latest as runtime\nRUN apk add --no-cache python3 py3-pip sox portaudio alsa-utils alsaconf\n\nFROM runtime as build\nRUN apk add --no-cache cmake ninja gcc musl-dev python3-dev pkgconfig\n\nCOPY . /pocketsphinx\nWORKDIR /pocketsphinx\nRUN cmake -S . -B build -DBUILD_SHARED_LIBS=ON -G Ninja && cmake --build build --target install\n# Cannot use --build-option because pip sucks\nRUN CMAKE_ARGS=\"-DUSE_INSTALLED_POCKETSPHINX=ON\" pip wheel -v .\n\nFROM runtime\nCOPY --from=build /usr/local/ /usr/local/\nCOPY --from=build /pocketsphinx/*.whl /\nRUN pip install --break-system-packages /*.whl && rm /*.whl\n\nCOPY examples/ /work/examples/\nWORKDIR /work\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 6.5400390625,
+          "content": "Copyright (c) 1999-2016 Carnegie Mellon University.  All rights\nreserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions\nare met:\n\n1. Redistributions of source code must retain the above copyright\n   notice, this list of conditions and the following disclaimer. \n\n2. Redistributions in binary form must reproduce the above copyright\n   notice, this list of conditions and the following disclaimer in\n   the documentation and/or other materials provided with the\n   distribution.\n\nThis work was supported in part by funding from the Defense Advanced \nResearch Projects Agency and the National Science Foundation of the \nUnited States of America, and the CMU Sphinx Speech Consortium.\n\nTHIS SOFTWARE IS PROVIDED BY CARNEGIE MELLON UNIVERSITY ``AS IS'' AND \nANY EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, \nTHE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR\nPURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL CARNEGIE MELLON UNIVERSITY\nNOR ITS EMPLOYEES BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT \nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, \nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY \nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT \n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE \nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\nWebRTC VAD code (in src/vad):\n\nCopyright (c) 2011, The WebRTC project authors. All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n  * Redistributions of source code must retain the above copyright\n    notice, this list of conditions and the following disclaimer.\n\n  * Redistributions in binary form must reproduce the above copyright\n    notice, this list of conditions and the following disclaimer in\n    the documentation and/or other materials provided with the\n    distribution.\n\n  * Neither the name of Google nor the names of its contributors may\n    be used to endorse or promote products derived from this software\n    without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nHOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\nPython WebRTC VAD code and test files (in cython and test/data/vad):\n\nThe MIT License (MIT)\n\nCopyright (c) 2016 John Wiseman\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\nJSON parser (in src/jsmn.h):\n\nCopyright (c) 2010 Serge A. Zaitsev\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\nEscaping code in JSON serialization (src/ps_config.c):\n\nCopyright (C) 2014 James McLaughlin.  All rights reserved.\nhttps://github.com/udp/json-builder\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions\nare met:\n\n1. Redistributions of source code must retain the above copyright\n  notice, this list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright\n  notice, this list of conditions and the following disclaimer in the\n  documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\nOR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\nHOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\nLIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\nOUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\nSUCH DAMAGE.\n"
+        },
+        {
+          "name": "MANIFEST.in",
+          "type": "blob",
+          "size": 1.1806640625,
+          "content": "include AUTHORS\ninclude CMakeLists.txt\ninclude LICENSE\ninclude NEWS\ninclude README.md\ninclude Dockerfile\ninclude .dockerignore\ninclude build_wheels.sh\ninclude config.h.in\ninclude pocketsphinx.pc.in\ninclude indent.sh\ninclude pyproject.toml\ninclude requirements.dev.txt\ninclude setup.cfg\ninclude setup.py\ninclude sphinx_config.h.in\nrecursive-include cython *\nrecursive-include gst *\nrecursive-include docs *\nrecursive-include doxygen *\nrecursive-include examples *\nrecursive-include include *\nrecursive-include model *\nrecursive-include programs *\nrecursive-include src *\nrecursive-include test *\nexclude MANIFEST.in\nexclude .readthedocs.yml\nexclude .travis.yml\nexclude .gitignore\nexclude examples/simple\nexclude examples/live\nexclude examples/vad\nrecursive-exclude .github *\nrecursive-exclude _skbuild *\nrecursive-exclude build *\nrecursive-exclude docs/build *\nrecursive-exclude cython/pocketsphinx/model *\nrecursive-exclude cython/pocketsphinx.egg-info *\nrecursive-exclude * .gitignore\nrecursive-exclude * *.py[co]\nrecursive-exclude * *~ \nrecursive-exclude * *.orig\nrecursive-exclude * *.DS_Store\nrecursive-exclude * __pycache__\nrecursive-exclude * *.so\nrecursive-exclude * *.egg-info\nrecursive-exclude venv *"
+        },
+        {
+          "name": "NEWS",
+          "type": "blob",
+          "size": 1.7763671875,
+          "content": "PocketSphinx 5.0.3\n^^^^^^^^^^^^^^^^^^\n\nThe NEWS file has not been updated for some time.  See the GitHub\nreleases page at https://github.com/cmusphinx/pocketsphinx/releases\ninstead.\n\nPocketsphinx 0.8\n^^^^^^^^^^^^^^^^\n\nThanks: Tanel Alumae, Douglas Bagnall, Halle Winkler, Peter Grasch, Vyacheslav Klimkov\nErik Andresen, Nicola Murino, Melmahdy, Scott Silliman, Riccardo Magliocchetti, Marc Legendre,\nKho-And-Mica, Zheng6822, Pankaj Pailwar, Evandro Gouvea\n\nImprovements:\n * API is better exposed in Python, SWIG and gstreamer\n * New API for exact grammar match\n * Configurable type for the frame counter, allows utterances way longer than 5 minutes\n\nFixes:\n * Memory leaks, refcounting and other memory-related issues\n * Use proper word boundary senones for the words added on the fly\n * Accurate FSG lextree construction\n\nPocketsphinx 0.7\n^^^^^^^^^^^^^^^^\n\nThanks: David Huggins-Daines, Chen Tao, creative64, Edwin Miguel, Bhiksha Raj\n\nImprovements:\n\n * Nice performance improvements\n * Use arc iterators to build FSG lextrees, speeds this up immensely\n * Filler word propagation is responsible for 5% speedup\n * Continuous decoder can decode files, not from the microphone\n * Add senone score dumping and reloading capability\n * Functional alignment pass\n * Symbian support \n * Add the Android makefile and other JNI stuff\n * Case sensitive names, including phone names\n * Better error messages\n * Report timing for individual search passes\n\nBug fixes:\n\n * Accuracy regression fixes\n * Fixes the bug with reading transition matrix on big-endian platforms\n * Fixes very important regression with NULL transitions in fsg search\n * Proper acoustic score scaling during posterior calculation.\n \nAnd many, many, many more interesting things!\n\nPocketsphinx pre\n^^^^^^^^^^^^^^^^\n\n2000-01-27 CMU Sphinx is going Open Source!\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.2724609375,
+          "content": "PocketSphinx 5.0.4\n==================\n\nThis is PocketSphinx, one of Carnegie Mellon University's open source large\nvocabulary, speaker-independent continuous speech recognition engines.\n\nAlthough this was at one point a research system, active development\nhas largely ceased and it has become very, very far from the state of\nthe art.  I am making a release, because people are nonetheless using\nit, and there are a number of historical errors in the build system\nand API which needed to be corrected.\n\nThe version number is strangely large because there was a \"release\"\nthat people are using called 5prealpha, and we will use proper\n[semantic versioning](https://semver.org/) from now on.\n\n**Please see the LICENSE file for terms of use.**\n\nInstallation\n------------\n\nWe now use CMake for building, which should give reasonable results\nacross Linux and Windows.  Not certain about Mac OS X because I don't\nhave one of those.  In addition, the audio library, which never really\nbuilt or worked correctly on any platform at all, has simply been\nremoved.\n\nThere is no longer any dependency on SphinxBase.  There is no\nSphinxBase anymore.  This is not the SphinxBase you're looking for.\nAll your SphinxBase are belong to us.\n\nThere are some other dependencies that you may find useful in order to\nuse the example code (though they are not strictly necessary to build\nand install).  On Debian GNU/Linux and its derivatives (such as\nRaspberry Pi OS, Ubuntu, etc), you can install them with:\n\n    sudo apt install \\\n        ffmpeg \\\n        libasound2-dev \\\n        libportaudio2 \\\n        libportaudiocpp0 \\\n        libpulse-dev \\\n        libsox-fmt-all \\\n        portaudio19-dev \\\n        sox\n\nTo install the Python module in a virtual environment (replace\n`~/ve_pocketsphinx` with the virtual environment you wish to create),\nfrom the top level directory:\n\n```\npython3 -m venv ~/ve_pocketsphinx\n. ~/ve_pocketsphinx/bin/activate\npip install .\n```\n\nTo install the C library and bindings (assuming you have access to\n/usr/local - if not, use `-DCMAKE_INSTALL_PREFIX` to set a different\nprefix in the first `cmake` command below):\n\n```\ncmake -S . -B build\ncmake --build build\ncmake --build build --target install\n```\n\nUsage\n-----\n\nThe `pocketsphinx` command-line program reads single-channel 16-bit\nPCM audio from standard input or one or more files, and attempts to\nrecognize speech in it using the default acoustic and language model.\nIt accepts a large number of options which you probably don't care\nabout, a *command* which defaults to `live`, and one or more inputs\n(except in `align` mode), or `-` to read from standard input.\n\nIf you have a single-channel WAV file called \"speech.wav\" and you want\nto recognize speech in it, you can try doing this (the results may not\nbe wonderful):\n\n    pocketsphinx single speech.wav\n    \nIf your input is in some other format I suggest converting it with\n`sox` as described below.\n\nThe commands are as follows:\n\n  - `help`: Print a long list of those options you don't care about.\n  \n  - `config`: Dump configuration as JSON to standard output (can be\n    loaded with the `-config` option).\n\n  - `live`: Detect speech segments in each input, run recognition\n    on them (using those options you don't care about), and write the\n    results to standard output in line-delimited JSON.  I realize this\n    isn't the prettiest format, but it sure beats XML.  Each line\n    contains a JSON object with these fields, which have short names\n    to make the lines more readable:\n    \n    - `b`: Start time in seconds, from the beginning of the stream\n    - `d`: Duration in seconds\n    - `p`: Estimated probability of the recognition result, i.e. a\n      number between 0 and 1 representing the likelihood of the input\n      according to the model\n    - `t`: Full text of recognition result\n    - `w`: List of segments (usually words), each of which in turn\n      contains the `b`, `d`, `p`, and `t` fields, for start, end,\n      probability, and the text of the word.  If `-phone_align yes`\n      has been passed, then a `w` field will be present containing\n      phone segmentations, in the same format.\n\n  - `single`: Recognize each input as a single utterance, and write a\n    JSON object in the same format described above.\n    \n  - `align`: Align a single input file (or `-` for standard input) to\n    a word sequence, and write a JSON object in the same format\n    described above.  The first positional argument is the input, and\n    all subsequent ones are concatenated to make the text, to avoid\n    surprises if you forget to quote it.  You are responsible for\n    normalizing the text to remove punctuation, uppercase, centipedes,\n    etc. For example:\n    \n        pocketsphinx align goforward.wav \"go forward ten meters\"\n        \n    By default, only word-level alignment is done.  To get phone\n    alignments, pass `-phone_align yes` in the flags, e.g.:\n    \n        pocketsphinx -phone_align yes align audio.wav $text\n        \n    This will make not particularly readable output, but you can use\n    [jq](https://stedolan.github.io/jq/) to clean it up.  For example,\n    you can get just the word names and start times like this:\n    \n        pocketsphinx align audio.wav $text | jq '.w[]|[.t,.b]'\n        \n    Or you could get the phone names and durations like this:\n    \n        pocketsphinx -phone_align yes align audio.wav $text | jq '.w[]|.w[]|[.t,.d]'\n        \n    There are many, many other possibilities, of course.\n\n  - `soxflags`: Return arguments to `sox` which will create the\n    appropriate input format.  Note that because the `sox`\n    command-line is slightly quirky these must always come *after* the\n    filename or `-d` (which tells `sox` to read from the microphone).\n    You can run live recognition like this:\n    \n        sox -d $(pocketsphinx soxflags) | pocketsphinx -\n\n    or decode from a file named \"audio.mp3\" like this:\n    \n        sox audio.mp3 $(pocketsphinx soxflags) | pocketsphinx -\n        \nBy default only errors are printed to standard error, but if you want\nmore information you can pass `-loglevel INFO`.  Partial results are\nnot printed, maybe they will be in the future, but don't hold your\nbreath.\n\nProgramming\n-----------\n\nFor programming, see the [examples directory](./examples/) for a\nnumber of examples of using the library from C and Python.  You can\nalso read the [documentation for the Python\nAPI](https://pocketsphinx.readthedocs.io) or [the C\nAPI](https://cmusphinx.github.io/doc/pocketsphinx/)\n\nAuthors\n-------\n\nPocketSphinx is ultimately based on `Sphinx-II` which in turn was\nbased on some older systems at Carnegie Mellon University, which were\nreleased as free software under a BSD-like license thanks to the\nefforts of Kevin Lenzo.  Much of the decoder in particular was written\nby Ravishankar Mosur (look for \"rkm\" in the comments), but various\nother people contributed as well, see [the AUTHORS file](./AUTHORS)\nfor more details.\n\nDavid Huggins-Daines (the author of this document) is\nresponsible for creating `PocketSphinx` which added\nvarious speed and memory optimizations, fixed-point computation, JSGF\nsupport, portability to various platforms, and a somewhat coherent\nAPI.  He then disappeared for a while.\n\nNickolay Shmyrev took over maintenance for quite a long time\nafterwards, and a lot of code was contributed by Alexander Solovets,\nVyacheslav Klimkov, and others.\n\nCurrently this is maintained by David Huggins-Daines again.\n"
+        },
+        {
+          "name": "TODO.md",
+          "type": "blob",
+          "size": 0.435546875,
+          "content": "- Documentation:\n  - Update tutorial\n    - LM tutorial use pocketsphinx_lm_convert, pocketsphinx\n    - Training tutorial use Docker\n    - Android tutorial add note that it's out of date\n  - FAQ update for new pocketsphinx program\n  - CLI quick start in README.md\n  - Python quick start in main page of Python docs\n  - C quick start in <pocketsphinx.h>\n- Support NumPy arrays for input (see soundfile usage)\n- Environment variable for model path\n\n"
+        },
+        {
+          "name": "config.h.in",
+          "type": "blob",
+          "size": 1.8916015625,
+          "content": "/* include/config.h.in.  Generated from configure.ac by autoheader.  */\n\n/* Default radix point for fixed-point */\n#cmakedefine DEFAULT_RADIX @DEFAULT_RADIX@\n\n/* Define to use fixed-point computation */\n#cmakedefine FIXED_POINT\n\n/* Define if the system has the type `long long'. */\n#cmakedefine HAVE_LONG_LONG\n\n/* Define if you have the `popen' function. */\n#cmakedefine HAVE_POPEN\n\n/* Define if you have the `snprintf' function. */\n#cmakedefine HAVE_SNPRINTF\n\n/* Define if you have the <sys/stat.h> header file. */\n#cmakedefine HAVE_SYS_STAT_H\n\n/* Define if you have the <sys/types.h> header file. */\n#cmakedefine HAVE_SYS_TYPES_H\n\n/* Define if you have the <unistd.h> header file. */\n#cmakedefine HAVE_UNISTD_H\n\n/* Define if you have the <inttypes.h> header file. */\n#cmakedefine HAVE_INTTYPES_H\n\n/* Define if you have the <stdint.h> header file. */\n#cmakedefine HAVE_STDINT_H\n\n/* The size of `long', as computed by sizeof. */\n#cmakedefine SIZEOF_LONG @SIZEOF_LONG@\n\n/* The size of `long long', as computed by sizeof. */\n#cmakedefine SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@\n\n/* Define WORDS_BIGENDIAN if your processor stores words with the most\n   significant byte first (like Motorola and SPARC, unlike Intel). */\n#if defined __BIG_ENDIAN__\n#  define WORDS_BIGENDIAN\n#else\n#  cmakedefine WORDS_BIGENDIAN\n#endif\n\n/* Define to the address where bug reports for this package should be sent. */\n#cmakedefine PACKAGE_BUGREPORT \"@PACKAGE_BUGREPORT@\"\n\n/* Define to the full name of this package. */\n#cmakedefine PACKAGE_NAME \"@PACKAGE_NAME@\"\n\n/* Define to the full name and version of this package. */\n#cmakedefine PACKAGE_STRING \"@PACKAGE_STRING@\"\n\n/* Define to the one symbol short name of this package. */\n#cmakedefine PACKAGE_TARNAME \"@PACKAGE_TARNAME@\"\n\n/* Define to the home page for this package. */\n#cmakedefine PACKAGE_URL \"@PACKAGE_URL@\"\n\n/* Define to the version of this package. */\n#cmakedefine PACKAGE_VERSION \"@PACKAGE_VERSION@\"\n\n"
+        },
+        {
+          "name": "cython",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doxygen",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gst",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "indent.sh",
+          "type": "blob",
+          "size": 0.181640625,
+          "content": "#!/bin/sh\n\n# This is the equivalent of the following Emacs thing:\n# -*- c-basic-offset: 4; indent-tabs-mode: nil -*-\n\nfind . -name '*.c' -print0 | xargs -0 indent -i4 -kr -psl -nce -nut\n"
+        },
+        {
+          "name": "model",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pocketsphinx.pc.in",
+          "type": "blob",
+          "size": 0.4873046875,
+          "content": "prefix=@CMAKE_INSTALL_PREFIX@\nexec_prefix=@CMAKE_INSTALL_PREFIX@\nlibdir=@CMAKE_INSTALL_FULL_LIBDIR@\nincludedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@\nlibs=\ndatadir=@CMAKE_INSTALL_FULL_DATADIR@/@PROJECT_SHORTNAME@\nmodeldir=@CMAKE_INSTALL_FULL_DATADIR@/@PROJECT_SHORTNAME@/model\n\nName: PocketSphinx\nDescription: Lightweight speech recognition system\nVersion: @PROJECT_VERSION@\nURL: @PACKAGE_URL@\nLibs: -L${libdir} -lpocketsphinx\nLibs.private: ${libs} -lm\nCflags: -I${includedir} -I${includedir}/pocketsphinx\n"
+        },
+        {
+          "name": "programs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pyproject.toml",
+          "type": "blob",
+          "size": 1.9384765625,
+          "content": "[build-system]\nrequires = [\n     \t \"scikit-build-core\",\n\t \"Cython\"\n]\nbuild-backend = \"scikit_build_core.build\"\n\n[project]\nname = \"pocketsphinx\"\nversion = \"5.0.4\"\ndescription = \"Official Python bindings for PocketSphinx\"\nreadme = \"cython/README.md\"\nauthors = [\n        {name = \"David Huggins-Daines\", email = \"dhdaines@gmail.com\"}\n]\nkeywords = [\"asr\", \"speech\"]\ndependencies = [\"sounddevice\"]\nclassifiers = [\n    \"Development Status :: 6 - Mature\",\n    \"Programming Language :: C\",\n    \"Programming Language :: Cython\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3.8\",\n    \"Programming Language :: Python :: 3.9\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"License :: OSI Approved :: BSD License\",\n    \"Operating System :: OS Independent\",\n    \"Topic :: Multimedia :: Sound/Audio :: Speech\",\n]\n\n[project.urls]\nHomepage = \"https://github.com/cmusphinx/pocketsphinx\"\nDocumentation = \"https://pocketsphinx.readthedocs.io/en/latest/\"\nRepository = \"https://github.com/cmusphinx/pocketsphinx.git\"\nIssues = \"https://github.com/cmusphinx/pocketsphinx/issues\"\n\n[project.scripts]\npocketsphinx_lm = \"pocketsphinx.lm:main\"\n\n[tool.cibuildwheel]\n# Build a reduced selection of binaries as there are tons of them\nbuild = [\n      \"pp310*\",\n      \"cp38-*\",\n      \"cp310-*\",\n      \"cp311-*\",\n      \"cp312-*\",\n      \"cp313-*\",\n]\n# Build only universal wheels for Mac where possible, and skip 32-bit\n# builds to avoid building a gigabyte of stuff all the time\nskip = [\n     \"cp*-macosx_x86_64\",\n     \"cp*-macosx_arm64\",\n     \"*_i686\",\n     \"*-win32\",\n]\n\n[tool.cibuildwheel.macos]\narchs = [\"x86_64\", \"universal2\", \"arm64\"]\n\n[tool.isort]\nprofile = \"black\"\n\n[tool.flake8]\nextend-ignore = \"E203\"\nmax-line-length = \"88\"\n\n[tool.scikit-build]\ncmake.verbose = true\nlogging.level = \"INFO\"\nwheel.packages = [\"cython/pocketsphinx\"]\n"
+        },
+        {
+          "name": "release-checklist.md",
+          "type": "blob",
+          "size": 0.30859375,
+          "content": "- versions:\n  - CMakeLists.txt\n  - cython/README.md\n  - docs/source/conf.py\n  - doxygen/CMakeLists.txt\n  - README.md\n  - pyproject.toml\n  - include/pocketsphinx.h\n- docker build\n- make github release and tag\n- upload wheels to PyPI\n- make doxygen docs and upload to cmusphinx.github.io\n- post on cmusphinx.github.io\n"
+        },
+        {
+          "name": "sphinx_config.h.in",
+          "type": "blob",
+          "size": 0.7158203125,
+          "content": "/* sphinx_config.h: Externally visible configuration parameters */\n\n/* Define to use fixed-point computation */\n#cmakedefine FIXED_POINT\n\n/* Default radix point for fixed-point */\n#cmakedefine DEFAULT_RADIX @DEFAULT_RADIX@\n\n/* Define if you have the <stdint.h> header file. */\n#ifndef HAVE_STDINT_H\n#cmakedefine HAVE_STDINT_H\n#endif\n\n/* The size of `long', as computed by sizeof. */\n#cmakedefine SIZEOF_LONG @SIZEOF_LONG@\n\n/* Define if the system has the type `long long'. */\n#ifndef HAVE_LONG_LONG /* sometimes it is already defined */\n#cmakedefine HAVE_LONG_LONG\n#endif\n\n/* The size of `long long', as computed by sizeof. */\n#cmakedefine SIZEOF_LONG_LONG @SIZEOF_LONG_LONG@\n\n/* Enable debugging output */\n#cmakedefine SPHINX_DEBUG\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tox.ini",
+          "type": "blob",
+          "size": 0.3486328125,
+          "content": "[tox]\nenv_list = py{38,39,310,311,312,313}\nminversion = 4.11.4\n\n[testenv]\ndescription = run the tests with pytest\npackage = wheel\nwheel_build_env = .pkg\ndeps =\n    pytest>=6\n    memory_profiler\ncommands =\n    pytest {tty:--color=yes} {posargs}\n\n[gh]\npython =\n    3.13 = py313\n    3.12 = py312\n    3.11 = py311\n    3.10 = py310\n    3.9 = py39\n    3.8 = py38\n"
+        }
+      ]
+    }
+  ]
+}

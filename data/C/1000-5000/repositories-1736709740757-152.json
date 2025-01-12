@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp": 1736709740757,
+    "page": 152,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjE2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jorisvink/kore",
+      "stars": 3701,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1064453125,
+          "content": "kore\n*.o\n*.swp\n*.swo\n*.module\n*.DSYM\ncert\nobj\n.lvimrc\nkodev/kodev\nkore.features\nsrc/version.c\nsrc/platform.h\n"
+        },
+        {
+          "name": "BEERS",
+          "type": "blob",
+          "size": 0.8701171875,
+          "content": "THE BEER LIST.\n\nAny contributer to Kore that submitted patches will be put on this list.\n\nIf you are on this list, I owe you a beer if we ever run into\neach other at any time.\n\nIt is however your responsibility to remind me ;)\n\nI will note down the beer of your choice between the brackets.\n\n[] Andreas Pfohl\n[] Ansen Dong\n[] Carl Ekerot\n[] Cleve Lendon\n[] Corbin Hughes\n[] Daniel Fahlgren x 6\n[] Daniel Melani\n[] Dmitrii Golub\n[] Elliot Schlegelmilch\n[] Erik Karlsson x 2\n[] Frederic Cambus\n[] Guy Nankivell\n[] James Turner\n[] Joel Arbring x 2\n[] Manuel Kniep\n[] Marcin Szczepaniak\n[] Matt Thompson\n[] Matthew Norström\n[] Nandor Kracser\n[] Pascal Borreli\n[] Quentin Perez\n[] Raphaël Monrouzeau\n[] Raymond Pasco\n[] Remy Noulin\n[] Rickard Lind x 3\n[] Shih-Yuan Lee\n[] Stanislav Yudin\n[] Stig Telfer\n[] Thordur Bjornsson\n[] Tobias Kortkamp\n[] Yorick de Wid\n[] Yvan Sraka\n[] Ángel González\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.7734375,
+          "content": "/*\n * Copyright (c) 2013-2022 Joris Vink <joris@coders.se>\n *\n * Permission to use, copy, modify, and distribute this software for any\n * purpose with or without fee is hereby granted, provided that the above\n * copyright notice and this permission notice appear in all copies.\n *\n * THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\n * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\n * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\n * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\n * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\n * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n */\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 7.537109375,
+          "content": "# Kore Makefile\n\nCC?=cc\nDESTDIR?=\nPREFIX?=/usr/local\nOBJDIR?=obj\nKORE=kore\nKODEV=kodev/kodev\nKOREPATH?=$(shell pwd)\nKORE_CRYPTO?=crypto\nINSTALL_DIR=$(PREFIX)/bin\nSHARE_DIR=$(PREFIX)/share/kore\nINCLUDE_DIR=$(PREFIX)/include/kore\nTLS_BACKEND?=openssl\nKORE_TMPDIR?=/tmp\n\nTOOLS=\tkore-serve\n\nGENERATED=\nPLATFORM=platform.h\nVERSION=$(OBJDIR)/version.c\nPYTHON_CURLOPT=misc/curl/python_curlopt.h\n\nS_SRC=\tsrc/kore.c src/buf.c src/config.c src/connection.c \\\n\tsrc/domain.c src/filemap.c src/fileref.c src/json.c src/log.c \\\n\tsrc/mem.c src/msg.c src/module.c src/net.c src/pool.c src/runtime.c \\\n\tsrc/sha1.c src/sha2.c src/timer.c src/utils.c src/worker.c\nS_SRC+= src/tls_$(TLS_BACKEND).c\n\nFEATURES=\nFEATURES_INC=\n\nCFLAGS+=-Wall -Werror -Wstrict-prototypes -Wmissing-prototypes\nCFLAGS+=-Wmissing-declarations -Wshadow -Wpointer-arith -Wcast-qual\nCFLAGS+=-Wsign-compare -Iinclude/kore -I$(OBJDIR) -std=c99 -pedantic\nCFLAGS+=-Wtype-limits -fno-common\nCFLAGS+=-DPREFIX='\"$(PREFIX)\"' -fstack-protector-all\n\nLDFLAGS+=-rdynamic\n\nifeq (\"$(TLS_BACKEND)\", \"openssl\")\n\tS_SRC+=src/keymgr_openssl.c\n\tCFLAGS+=-DTLS_BACKEND_OPENSSL\n\tFEATURES+=-DTLS_BACKEND_OPENSSL\n\n\tifneq (\"$(OPENSSL_PATH)\", \"\")\n\t\tCFLAGS+=-I$(OPENSSL_PATH)/include\n\t\tLDFLAGS+=-L$(OPENSSL_PATH)/lib -lssl -l$(KORE_CRYPTO)\n\telse\n\t\tLDFLAGS+=-lssl -l$(KORE_CRYPTO)\n\tendif\nelse\nifneq (\"$(ACME)\", \"\")\n$(error ACME not supported under TLS backend $(TLS_BACKEND))\nendif\nendif\n\nifneq (\"$(KORE_SINGLE_BINARY)\", \"\")\n\tCFLAGS+=-DKORE_SINGLE_BINARY -DKORE_TMPDIR='\"$(KORE_TMPDIR)\"'\n\tFEATURES+=-DKORE_SINGLE_BINARY\nendif\n\nifneq (\"$(DEBUG)\", \"\")\n\tCFLAGS+=-g\n\tFEATURES+=-DKORE_DEBUG\nendif\n\nifneq (\"$(NOOPT)\", \"\")\n\tCFLAGS+=-O0\nelse\n\tCFLAGS+=-O2\nendif\n\nifneq (\"$(NOSENDFILE)\", \"\")\n\tCFLAGS+=-DKORE_NO_SENDFILE\nendif\n\nifneq (\"$(NOHTTP)\", \"\")\n\tCFLAGS+=-DKORE_NO_HTTP\n\tFEATURES+=-DKORE_NO_HTTP\nelse\n\tS_SRC+= src/auth.c src/accesslog.c src/http.c \\\n\t\tsrc/route.c src/validator.c src/websocket.c\nendif\n\nifneq (\"$(PGSQL)\", \"\")\n\tS_SRC+=src/pgsql.c\n\tLDFLAGS+=-L$(shell pg_config --libdir) -lpq\n\tCFLAGS+=-I$(shell pg_config --includedir) -DKORE_USE_PGSQL \\\n\t    -DPGSQL_INCLUDE_PATH=\"\\\"$(shell pg_config --includedir)\\\"\"\n\tFEATURES+=-DKORE_USE_PGSQL\n\tFEATURES_INC+=-I$(shell pg_config --includedir)\nendif\n\nifneq (\"$(TASKS)\", \"\")\n\tS_SRC+=src/tasks.c\n\tLDFLAGS+=-lpthread\n\tCFLAGS+=-DKORE_USE_TASKS\n\tFEATURES+=-DKORE_USE_TASKS\nendif\n\nifneq (\"$(JSONRPC)\", \"\")\n\tS_SRC+=src/jsonrpc.c\n\tLDFLAGS+=-lyajl\n\tCFLAGS+=-DKORE_USE_JSONRPC\n\tFEATURES+=-DKORE_USE_JSONRPC\nendif\n\nifneq (\"$(PYTHON)\", \"\")\n\tS_SRC+=src/python.c\n\tGENERATED+=$(PYTHON_CURLOPT)\n\tKORE_PYTHON_LIB?=$(shell ./misc/python3-config.sh --ldflags)\n\tKORE_PYTHON_INC?=$(shell ./misc/python3-config.sh --includes)\n\tLDFLAGS+=$(KORE_PYTHON_LIB)\n\tCFLAGS+=$(KORE_PYTHON_INC) -DKORE_USE_PYTHON\n\tFEATURES+=-DKORE_USE_PYTHON\n\tFEATURES_INC+=$(KORE_PYTHON_INC)\nendif\n\nifneq (\"$(LUA)\", \"\")\n\tS_SRC+=src/lua.c\n\tKORE_LUA_LIB?=$(shell pkg-config --libs lua$(LUA_VERSION))\n\tKORE_LUA_INC?=$(shell pkg-config --cflags lua$(LUA_VERSION))\n\tLDFLAGS+=$(KORE_LUA_LIB)\n\tCFLAGS+=$(KORE_LUA_INC) -DKORE_USE_LUA\n\tFEATURES+=-DKORE_USE_LUA\n\tFEATURES_INC+=$(KORE_LUA_INC)\nendif\n\nOSNAME=$(shell uname -s | sed -e 's/[-_].*//g' | tr A-Z a-z)\nifeq (\"$(OSNAME)\", \"freebsd\")\n\tKORE_CURL_LIB=-L/usr/local/lib -lcurl\n\tKORE_CURL_INC=-I/usr/local/include\nendif\n\nifneq (\"$(ACME)\", \"\")\n\tS_SRC+=src/acme.c\n\tCURL=1\n\tCFLAGS+=-DKORE_USE_ACME\n\tFEATURES+=-DKORE_USE_ACME\nendif\n\nifneq (\"$(CURL)\", \"\")\n\tS_SRC+=src/curl.c\n\tKORE_CURL_LIB?=$(shell curl-config --libs)\n\tKORE_CURL_INC?=$(shell curl-config --cflags)\n\tLDFLAGS+=$(KORE_CURL_LIB)\n\tCFLAGS+=$(KORE_CURL_INC) -DKORE_USE_CURL\n\tFEATURES+=-DKORE_USE_CURL\n\tFEATURES_INC+=$(KORE_CURL_INC)\nendif\n\nifneq (\"$(SANITIZE)\", \"\")\n\tCFLAGS+=-fsanitize=$(SANITIZE)\n\tLDFLAGS+=-fsanitize=$(SANITIZE)\nendif\n\nifeq (\"$(OSNAME)\", \"darwin\")\n\tifeq (\"$(TLS_BACKEND)\", \"openssl\")\n\t\tOSSL_INCL=$(shell pkg-config openssl --cflags)\n\t\tCFLAGS+=$(OSSL_INCL)\n\t\tLDFLAGS+=$(shell pkg-config openssl --libs)\n\t\tFEATURES_INC+=$(OSSL_INCL)\n\tendif\n\tS_SRC+=src/bsd.c\nelse ifeq (\"$(OSNAME)\", \"linux\")\n\tCFLAGS+=-D_GNU_SOURCE=1 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2\n\tLDFLAGS+=-ldl\n\tS_SRC+=src/linux.c src/seccomp.c\nelse\n\tS_SRC+=src/bsd.c\n\tifneq (\"$(JSONRPC)\", \"\")\n\t\tCFLAGS+=-I/usr/local/include\n\t\tLDFLAGS+=-L/usr/local/lib\n\tendif\nendif\n\nS_OBJS=\t$(S_SRC:src/%.c=$(OBJDIR)/%.o)\nS_OBJS+=$(OBJDIR)/version.o\n\nall: $(PLATFORM) $(GENERATED) $(VERSION) $(KORE) $(KODEV)\n\n$(PLATFORM): $(OBJDIR) force\n\t@if [ -f misc/$(OSNAME)-platform.sh ]; then \\\n\t\tmisc/$(OSNAME)-platform.sh > $(OBJDIR)/$(PLATFORM) ; \\\n\tfi\n\n$(PYTHON_CURLOPT): $(OBJDIR) force\n\t@cp $(PYTHON_CURLOPT) $(OBJDIR)\n\n$(VERSION): $(OBJDIR) force\n\t@if [ -d .git ]; then \\\n\t\tGIT_REVISION=`git rev-parse --short=8 HEAD`; \\\n\t\tGIT_BRANCH=`git rev-parse --abbrev-ref HEAD`; \\\n\t\trm -f $(VERSION); \\\n\t\tprintf \"const char *kore_version = \\\"%s-%s\\\";\\n\" \\\n\t\t    $$GIT_BRANCH $$GIT_REVISION > $(VERSION); \\\n\telif [ -f RELEASE ]; then \\\n\t\tprintf \"const char *kore_version = \\\"%s\\\";\\n\" \\\n\t\t    `cat RELEASE` > $(VERSION); \\\n\telse \\\n\t\techo \"No version information found (no .git or RELEASE)\"; \\\n\t\texit 1; \\\n\tfi\n\t@printf \"const char *kore_build_date = \\\"%s\\\";\\n\" \\\n\t    `date +\"%Y-%m-%d\"` >> $(VERSION);\n\n$(KODEV): src/cli.c\n\t$(MAKE) -C kodev\n\n$(KORE): $(OBJDIR) $(S_OBJS)\n\t$(CC) $(S_OBJS) $(LDFLAGS) -o $(KORE)\n\t@echo $(LDFLAGS) > kore.linker\n\t@echo $(FEATURES) $(FEATURES_INC) > kore.features\n\nobjects: $(OBJDIR) $(PLATFORM) $(GENERATED) $(S_OBJS)\n\t@echo $(LDFLAGS) > $(OBJDIR)/ldflags\n\t@echo \"$(FEATURES) $(FEATURES_INC)\" > $(OBJDIR)/features\n\n$(OBJDIR):\n\t@mkdir -p $(OBJDIR)\n\ninstall:\n\tmkdir -p $(DESTDIR)$(SHARE_DIR)\n\tmkdir -p $(DESTDIR)$(INCLUDE_DIR)\n\tmkdir -p $(DESTDIR)$(INSTALL_DIR)\n\tinstall -m 555 $(KORE) $(DESTDIR)$(INSTALL_DIR)/$(KORE)\n\tinstall -m 644 kore.features $(DESTDIR)$(SHARE_DIR)/features\n\tinstall -m 644 kore.linker $(DESTDIR)$(SHARE_DIR)/linker\n\tinstall -m 644 include/kore/*.h $(DESTDIR)$(INCLUDE_DIR)\n\tinstall -m 644 misc/ffdhe4096.pem $(DESTDIR)$(SHARE_DIR)/ffdhe4096.pem\n\t$(MAKE) -C kodev install\n\t$(MAKE) install-sources\n\ninstall-sources:\n\t@mkdir -p $(DESTDIR)$(SHARE_DIR)\n\t@cp Makefile $(DESTDIR)$(SHARE_DIR)\n\t@cp -R src $(DESTDIR)$(SHARE_DIR)\n\t@cp -R include $(DESTDIR)$(SHARE_DIR)\n\t@cp -R misc $(DESTDIR)$(SHARE_DIR)\n\t@if [ -d .git ]; then \\\n\t\tGIT_REVISION=`git rev-parse --short=8 HEAD`; \\\n\t\tGIT_BRANCH=`git rev-parse --abbrev-ref HEAD`; \\\n\t\trm -f $(VERSION); \\\n\t\techo \"$$GIT_BRANCH-$$GIT_REVISION\" > \\\n\t\t    $(DESTDIR)$(SHARE_DIR)/RELEASE; \\\n\telif [ -f RELEASE ]; then \\\n\t\tcp RELEASE $(DESTDIR)$(SHARE_DIR); \\\n\telse \\\n\t\techo \"No version information found (no .git or RELEASE)\"; \\\n\t\texit 1; \\\n\tfi\n\nuninstall:\n\trm -f $(DESTDIR)$(INSTALL_DIR)/$(KORE)\n\trm -rf $(DESTDIR)$(INCLUDE_DIR)\n\trm -rf $(DESTDIR)$(SHARE_DIR)\n\t$(MAKE) -C kodev uninstall\n\ntools-build: $(KODEV)\n\tfor t in $(TOOLS); do \\\n\t\tcd tools/$$t; \\\n\t\tenv \\\n\t\t    KODEV_OUTPUT=$(KOREPATH) \\\n\t\t    KORE_SOURCE=$(KOREPATH) \\\n\t\t    KORE_BUILD_FLAVOR=$(OSNAME) \\\n\t\t    $(KOREPATH)/$(KODEV) build; \\\n\t\tcd $(KOREPATH); \\\n\tdone\n\ntools-clean: $(KODEV)\n\tfor t in $(TOOLS); do \\\n\t\tcd tools/$$t; \\\n\t\t$(KOREPATH)/$(KODEV) clean; \\\n\t\tcd $(KOREPATH); \\\n\tdone\n\ntools-install:\n\tmkdir -p $(DESTDIR)$(INSTALL_DIR)\n\tfor t in $(TOOLS); do \\\n\t\tinstall -m 555 $$t $(DESTDIR)$(INSTALL_DIR)/$$t; \\\n\tdone\n\n$(OBJDIR)/%.o: src/%.c\n\t$(CC) $(CFLAGS) -c $< -o $@\n\nsrc/kore.c: $(VERSION)\n\nsrc/python.c: $(PYTHON_CURLOPT)\n\nsrc/seccomp.c: $(PLATFORM)\n\nclean:\n\trm -f $(VERSION)\n\tfind . -type f -name \\*.o -exec rm {} \\;\n\trm -rf $(KORE) $(OBJDIR) kore.features kore.linker\n\t$(MAKE) -C kodev clean\n\nreleng-build-examples:\n\trm -rf /tmp/kore_releng\n\t$(MAKE) clean\n\t$(MAKE) PYTHON=1 PGSQL=1 TASKS=1 PREFIX=/tmp/kore_releng\n\t$(MAKE) install PREFIX=/tmp/kore_releng\n\t$(MAKE) -C examples\n\n.PHONY: all clean force\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.6201171875,
+          "content": "About\n-----\n\nKore (https://kore.io) is a web application platform for writing scalable,\nconcurrent web based processes in C or Python.\n\nIt is built with a \"secure by default\" approach. It is fully privilege\nseparated while using strong security features at the operating system level\nsuch as seccomp, pledge, unveil and more.\n\nToday Kore is used in a variety of applications ranging from high assurance\ncryptographic devices, machine-learning stacks and even in the aerospace\nindustry.\n\nFrom embedded platforms all the way to high performance servers. *Kore scales.*\n\nKey Features\n------------\n* Supports SNI\n* Supports HTTP/1.1\n* Websocket support\n* Privseps by default\n* TLS enabled by default\n* Optional background tasks\n* Built-in parameter validation\n* Optional asynchronous PostgreSQL support\n* Optional support for page handlers in Python\n* Reload private keys and certificates on-the-fly\n* Automatic X509 certificates via ACME (with privsep)\n* Private keys isolated in separate process (RSA and ECDSA)\n* Default sane TLS ciphersuites (PFS in all major browsers)\n* Modules can be reloaded on-the-fly, even while serving content\n* Worker processes sandboxed on OpenBSD (pledge) and Linux (seccomp)\n* Event driven (epoll/kqueue) architecture with per CPU worker processes\n* Build your web application as a precompiled dynamic library or single binary\n\nAnd lots more.\n\nLicense\n-------\n* Kore is licensed under the ISC license\n\nDocumentation\n--------------\n[Read the documentation](https://docs.kore.io/4.2.0/)\n\nPerformance\n-----------\nRead the [benchmarks](https://blog.kore.io/posts/benchmarks) blog post.\n\nPlatforms supported\n-------------------\n* Linux\n* OpenBSD\n* FreeBSD\n* MacOS\n\nKore only supports x64, arm and aarch64 architectures.\n\nBuilding Kore\n-------------\nClone this repository or get the latest release at [https://kore.io/releases/4.2.3](https://kore.io/releases/4.2.3).\n\nRequirements\n* openssl 1.1.1, libressl 3.x or openssl 3.\n\nRequirement for asynchronous curl (optional)\n* libcurl (7.64.0 or higher)\n\nRequirements for background tasks (optional)\n* pthreads\n\nRequirements for pgsql (optional)\n* libpq\n\nRequirements for python (optional)\n* Python 3.6+\n\nRequirements for lua support (optional)\n* Lua 5.4+\n\nNormal compilation and installation:\n\n```\n$ cd kore\n$ make\n# make install\n```\n\nIf you would like to build a specific flavor, you can enable\nthose by setting a shell environment variable before running **_make_**.\n\n* LUA=1 (compiles in LUA support)\n* ACME=1 (compiles in ACME support)\n* CURL=1 (compiles in asynchronous curl support)\n* TASKS=1 (compiles in task support)\n* PGSQL=1 (compiles in pgsql support)\n* DEBUG=1 (enables use of -d for debug)\n* NOHTTP=1 (compiles Kore without HTTP support)\n* NOOPT=1 (disable compiler optimizations)\n* JSONRPC=1 (compiles in JSONRPC support)\n* PYTHON=1 (compiles in the Python support)\n* TLS_BACKEND=none (compiles Kore without any TLS backend)\n\nNote that certain build flavors cannot be mixed together and you will just\nbe met with compilation errors.\n\nExample applications\n-----------------\nYou can find example applications under **_examples/_**.\n\nThe examples contain a README file with instructions on how\nto build or use them.\n\nMailing lists\n-------------\n\n**patches@kore.io** - Send patches here, preferably inline.\n\n**users@kore.io** - Questions regarding kore.\n\n\nIf you want to signup to those mailing lists send an empty email to\n\tlistname+subscribe@kore.io\n\n\nOther mailboxes (these are **not** mailing lists):\n\n**security@kore.io** - Mail this email if you think you found a security problem.\n\n**sponsor@kore.io** - If your company would like to sponsor part of Kore development.\n\nMore information can be found on https://kore.io/\n"
+        },
+        {
+          "name": "RELEASE.md",
+          "type": "blob",
+          "size": 0.943359375,
+          "content": "Kore release procedure:\n\n$next = next release\n$prev = previous release\n\nkore:\n    $ git checkout 4.x-releng\n    $ git merge master\n        [update RELEASE, README.md]\n    $ git commit -a -m \"update for $next\"\n    $ git tag -a $next -m \"Kore $next\"\n    $ git archive --format=tgz --prefix=kore-$next/ -o ~/kore-$next.tgz $next\n    $ minisign -S -c \"Kore $next release\"  -m kore-$next.tar.gz\n    $ shasum -a256 kore-$next.tar.gz > kore-$next.tar.gz.sha256\n    $ git push --tags origin 4.x-releng\n    $ git push --tags github 4.x-releng\n\nkore-site:\n    $ cp ~/kore-$next* webroot/releases\n    $ cp webroot/releases/$prev.html webroot/releases/$next.html\n        [update all relevant links]\n        [write changelog on release page]\n    $ git add webroot && git commit -a -m \"update to $next\"\n    $ git push origin master\n\n    [on nightfall]\n    $ cd kore-site && git pull origin master && make install-docs\n\nkore-docker:\n    $ cp -R $prev $next\n    $ ./build.sh $next\n"
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kodev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "minisign.pub",
+          "type": "blob",
+          "size": 0.0986328125,
+          "content": "untrusted comment: Kore minisign public key\nRWSxkEDc2y+whfKTmvhqs/YaFmEwblmvar7l6RXMjnu6o9tZW3LC0Hc9\n"
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

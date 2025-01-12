@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "timestamp": 1736709834496,
+    "page": 302,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "eclipse-threadx/threadx",
+      "stars": 3004,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".devcontainer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 1.125,
+          "content": ".git*            export-ignore\n.hooks*          export-ignore\n\n# Custom attribute to mark sources as using our C code style.\n[attr]our-c-style  whitespace=tab-in-indent eol=lf format.clang-format-6.0\n\n# Custom attribute to mark sources as generated.\n# Do not perform whitespace checks.  Do not format.\n[attr]generated  whitespace=-tab-in-indent,-indent-with-non-tab -format.clang-format-6.0\n\nbootstrap        eol=lf\nconfigure        eol=lf\n*.[1-9]          eol=lf\n*.bash           eol=lf\n*.sh             eol=lf\n*.sh.in          eol=lf\n\n*.bat            eol=crlf\n*.bat.in         eol=crlf\n*.sln            eol=crlf\n*.vcproj         eol=crlf\n\n*.pfx            -text\n*.png            -text\n*.png.in         -text\n\n*.c              our-c-style\n*.cc             our-c-style\n*.cpp            our-c-style\n*.cu             our-c-style\n*.cxx            our-c-style\n*.h              our-c-style\n*.hh             our-c-style\n*.hpp            our-c-style\n*.hxx            our-c-style\n*.notcu          our-c-style\n\n*.cmake          whitespace=tab-in-indent\n*.rst            whitespace=tab-in-indent conflict-marker-size=79\n*.txt            whitespace=tab-in-indent"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.240234375,
+          "content": ".vscode/\n.settings/\n.metadata/\n_deps/\nbuild/\nDebug/\nCMakeFiles/\nCMakeScripts/\nCMakeLists.txt.user\nCMakeCache.txt\nTesting\nMakefile\ncmake_install.cmake\ninstall_manifest.txt\ncompile_commands.json\nCTestTestfile.cmake\n*.dep\n*.o\n*.axf\n*.map\n*.a\n*.htm\n\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.1748046875,
+          "content": "cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)\n\n# Set up the project\nproject(threadx\n    LANGUAGES C ASM\n)\n\nif(NOT DEFINED THREADX_ARCH)\n    message(FATAL_ERROR \"Error: THREADX_ARCH not defined\")\nendif()\nif(NOT DEFINED THREADX_TOOLCHAIN)\n    message(FATAL_ERROR \"Error: THREADX_TOOLCHAIN not defined\")\nendif()\nmessage(STATUS \"THREADX_ARCH: ${THREADX_ARCH}\")\nmessage(STATUS \"THREADX_TOOLCHAIN: ${THREADX_TOOLCHAIN}\")\n\n# Define our target library and an alias for consumers\nadd_library(${PROJECT_NAME})\nadd_library(\"azrtos::${PROJECT_NAME}\" ALIAS ${PROJECT_NAME})\n\n# A place for generated/copied include files (no need to change)\nset(CUSTOM_INC_DIR ${CMAKE_CURRENT_BINARY_DIR}/custom_inc)\n\n# Pick up the port specific variables and apply them\nif(DEFINED THREADX_CUSTOM_PORT)\n    add_subdirectory(${THREADX_CUSTOM_PORT} threadx_port)\nelse()\n    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ports/${THREADX_ARCH}/${THREADX_TOOLCHAIN})\nendif()\n\n# Pick up the common stuff\nadd_subdirectory(${CMAKE_CURRENT_LIST_DIR}/common)\n\n# Define the FreeRTOS adaptation layer\nadd_library(freertos-threadx EXCLUDE_FROM_ALL)\ntarget_include_directories(freertos-threadx\n    PUBLIC\n    ${CMAKE_CURRENT_LIST_DIR}/utility/rtos_compatibility_layers/FreeRTOS\n)\ntarget_sources(freertos-threadx\n    PRIVATE\n    ${CMAKE_CURRENT_LIST_DIR}/utility/rtos_compatibility_layers/FreeRTOS/tx_freertos.c\n)\ntarget_link_libraries(freertos-threadx PUBLIC threadx)\n\n# If the user provided an override, copy it to the custom directory\nif (NOT TX_USER_FILE)\n    message(STATUS \"Using default tx_user.h file\")\n    set(TX_USER_FILE ${CMAKE_CURRENT_LIST_DIR}/common/inc/tx_user_sample.h)\nelse()\n    message(STATUS \"Using custom tx_user.h file from ${TX_USER_FILE}\")\nendif()    \nconfigure_file(${TX_USER_FILE} ${CUSTOM_INC_DIR}/tx_user.h COPYONLY)\ntarget_include_directories(${PROJECT_NAME} \n    PUBLIC \n    ${CUSTOM_INC_DIR}\n)\ntarget_compile_definitions(${PROJECT_NAME} PUBLIC \"TX_INCLUDE_USER_DEFINE_FILE\" )\n\n# Enable a build target that produces a ZIP file of all sources\nset(CPACK_SOURCE_GENERATOR \"ZIP\")\nset(CPACK_SOURCE_IGNORE_FILES\n  \\\\.git/\n  \\\\.github/\n  _build/\n  \\\\.git\n  \\\\.gitattributes\n  \\\\.gitignore\n  \".*~$\"\n)\nset(CPACK_VERBATIM_VARIABLES YES)\ninclude(CPack)"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 3.259765625,
+          "content": "# Contributing to Eclipse ThreadX\n\nThanks for your interest in this project.\n\n## Project description\n\nEclipse ThreadX provides a vendor-neutral, open source, safety certified OS for\nreal-time applications published on under a permissive license. The Eclipse\nThreadX suite encompasses:  \n* ThreadX - advanced real-time operating system (RTOS) designed specifically for deeply embedded applications\n* NetX Duo - advanced, industrial-grade TCP/IP network stack designed specifically for deeply embedded real-time and IoT applications\n* FileX - high-performance, FAT-compatible file system that’s fully integrated with ThreadX kernel\n* GUIX - provides a complete, embedded graphical user interface (GUI) library\n* USBX - high-performance USB host, device, and on-the-go (OTG) embedded stack, that is fully integrated with ThreadX kernel\n* LevelX - Flash Wear Leveling for FileX and stand-alone purposes\n* GuiX Studio - design environment, facilitating the creation and maintenance of all graphical elements for GUIX\n* TraceX - analysis tool that provides a graphical view of real-time system events to better understand the behavior of real-time systems\n\nProject site: https://projects.eclipse.org/projects/iot.threadx\n\n## Terms of Use\n\nThis repository is subject to the Terms of Use of the Eclipse Foundation  \nhttps://www.eclipse.org/legal/termsofuse.php\n\n## Developer resources\n\nInformation regarding source code management, builds, coding standards, and more.\nhttps://projects.eclipse.org/projects/iot.threadx/developer\n\nThe project maintains the following source code repositories\n\n* https://github.com/eclipse-threadx/.github\n* https://github.com/eclipse-threadx/cmsis-packs\n* https://github.com/eclipse-threadx/filex\n* https://github.com/eclipse-threadx/getting-started\n* https://github.com/eclipse-threadx/guix\n* https://github.com/eclipse-threadx/levelx\n* https://github.com/eclipse-threadx/netxduo\n* https://github.com/eclipse-threadx/rtos-docs\n* https://github.com/eclipse-threadx/samples\n* https://github.com/eclipse-threadx/threadx\n* https://github.com/eclipse-threadx/threadx-learn-samples\n* https://github.com/eclipse-threadx/tracex\n* https://github.com/eclipse-threadx/usbx\n\n## Eclipse Development Process\n\nThis Eclipse Foundation open project is governed by the Eclipse Foundation\nDevelopment Process and operates under the terms of the Eclipse IP Policy.\n\n* https://eclipse.org/projects/dev_process\n* https://www.eclipse.org/org/documents/Eclipse_IP_Policy.pdf\n\n## Eclipse Contributor Agreement\n\nIn order to be able to contribute to Eclipse Foundation projects you must electronically sign the Eclipse Contributor Agreement (ECA).  \nhttps://www.eclipse.org/legal/ECA.php\n\nThe ECA provides the Eclipse Foundation with a permanent record that you agree\nthat each of your contributions will comply with the commitments documented in\nthe Developer Certificate of Origin (DCO). Having an ECA on file associated with\nthe email address matching the \"Author\" field of your contribution's Git commits\nfulfills the DCO's requirement that you sign-off on your contributions.\n\nFor more information, please see the Eclipse Committer Handbook:  \nhttps://www.eclipse.org/projects/handbook/#resources-commit\n\n## Contact\n\nContact the project developers via the project's \"dev\" list.  \nhttps://accounts.eclipse.org/mailing-list/threadx-dev\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.0625,
+          "content": "MIT License\n\nCopyright (c) 2024 - present Microsoft Corporation\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 11.7939453125,
+          "content": "# Eclipse ThreadX RTOS\n\nThis advanced real-time operating system (RTOS) is designed specifically for deeply embedded applications. Among the multiple benefits it provides are advanced scheduling facilities, message passing, interrupt management, and messaging services. Eclipse ThreadX RTOS has many advanced features, including picokernel architecture, preemption threshold, event chaining, and a rich set of system services.\n\nHere are the key features and modules of ThreadX:\n\n![ThreadX Key Features](./docs/threadx-features.png)\n\n## Getting Started\n\nEclipse ThreadX has been integrated to the semiconductor's SDKs and development environment. You can develop using the tools of choice from [STMicroelectronics](https://www.st.com/content/st_com/en/campaigns/x-cube-azrtos-azure-rtos-stm32.html), [NXP](https://www.nxp.com/design/software/embedded-software/azure-rtos-for-nxp-microcontrollers:AZURE-RTOS), [Renesas](https://github.com/renesas/azure-rtos) and [Microchip](https://mu.microchip.com/get-started-simplifying-your-iot-design-with-azure-rtos).\n\nWe also provide [getting started guide](https://github.com/eclipse-threadx/getting-started) and [samples](https://github.com/eclipse-threadx/samples) using development boards from semiconductors you can build and test with.\n\nSee [Overview of Eclipse ThreadX RTOS](https://github.com/eclipse-threadx/rtos-docs/blob/main/rtos-docs/threadx/overview-threadx.md) for the high-level overview. \n\n## Repository Structure and Usage\n### Directory layout\n\n    .\n    ├── cmake                        # CMakelist files for building the project\n    ├── common                       # Core ThreadX files\n    ├── common_modules               # Core ThreadX module files\n    ├── common_smp                   # Core ThreadX SMP files\n    ├── docs                         # Documentation supplements\n    ├── ports                        # Architecture and compiler specific files. See below for directory breakdown     \n    │   ├── cortex_m7     \n    │   │   ├── iar                  # Example IAR compiler sample project\n    │   │   │   ├── example build    # IAR workspace and sample project files\n    │   │   │   ├── inc              # tx_port.h for this architecture\n    │   │   │   └── src              # Source files for this architecture\n    │   │   ├── ac6                  # Example ac6/Keil sample project\n    │   │   ├── gnu                  # Example gnu sample project\n    │   │   └── ...\n    │   └── ...        \n    ├── ports_modules                # Architecture and compiler specific files for threadX modules\n    ├── ports_smp                    # Architecture and compiler specific files for threadX SMP\n    ├── samples                      # demo_threadx.c\n    └── utility                      # Test cases and utilities\n\n\n## Branches & Releases\n\nThe master branch has the most recent code with all new features and bug fixes. It does not represent the latest General Availability (GA) release of the library. Each official release (preview or GA) will be tagged to mark the commit and push it into the Github releases tab, e.g. `v6.2-rel`.\n\n> When you see xx-xx-xxxx, 6.x or x.x in function header, this means the file is not officially released yet. They will be updated in the next release. See example below.\n```\n/**************************************************************************/\n/*                                                                        */\n/*  FUNCTION                                               RELEASE        */\n/*                                                                        */\n/*    _tx_initialize_low_level                          Cortex-M23/GNU    */\n/*                                                           6.x          */\n/*  AUTHOR                                                                */\n/*                                                                        */\n/*    Scott Larson, Microsoft Corporation                                 */\n/*                                                                        */\n/*  DESCRIPTION                                                           */\n/*                                                                        */\n/*    This function is responsible for any low-level processor            */\n/*    initialization, including setting up interrupt vectors, setting     */\n/*    up a periodic timer interrupt source, saving the system stack       */\n/*    pointer for use in ISR processing later, and finding the first      */\n/*    available RAM memory address for tx_application_define.             */\n/*                                                                        */\n/*  INPUT                                                                 */\n/*                                                                        */\n/*    None                                                                */\n/*                                                                        */\n/*  OUTPUT                                                                */\n/*                                                                        */\n/*    None                                                                */\n/*                                                                        */\n/*  CALLS                                                                 */\n/*                                                                        */\n/*    None                                                                */\n/*                                                                        */\n/*  CALLED BY                                                             */\n/*                                                                        */\n/*    _tx_initialize_kernel_enter           ThreadX entry function        */\n/*                                                                        */\n/*  RELEASE HISTORY                                                       */\n/*                                                                        */\n/*    DATE              NAME                      DESCRIPTION             */\n/*                                                                        */\n/*  09-30-2020      Scott Larson            Initial Version 6.1           */\n/*  xx-xx-xxxx      Scott Larson            Include tx_user.h,            */\n/*                                            resulting in version 6.x    */\n/*                                                                        */\n/**************************************************************************/ \n```\n\n## Supported Architecture Ports\n\n### ThreadX\n```\narc_em      cortex_a12        cortex_m0     cortex_r4\narc_hs      cortex_a15        cortex_m23    cortex_r5\narm11       cortex_a17        cortex_m3     cortex_r7\narm9        cortex_a34        cortex_m33    \nc667x       cortex_a35        cortex_m4    \nlinux       cortex_a5         cortex_m55\nrisc-v32    cortex_a53        cortex_m7\nrxv1        cortex_a55        cortex_m85\nrxv2        cortex_a57\nrxv3        cortex_a5x\nwin32       cortex_a65\nxtensa      cortex_a65ae\n            cortex_a7\n            cortex_a72\n            cortex_a73\n            cortex_a75\n            cortex_a76\n            cortex_a76ae\n            cortex_a77\n            cortex_a8\n            cortex_a9\n```\n\n### ThreadX Modules\n[Eclipse ThreadX Modules](https://github.com/eclipse-threadx/rtos-docs/blob/main/rtos-docs/threadx-modules/chapter1.md) component provides an infrastructure for applications to dynamically load modules that are built separately from the resident portion of the application.\n```\ncortex_a35\ncortex_a35_smp\ncortex_a7\ncortex_m0+\ncortex_m23\ncortex_m3\ncortex_m33\ncortex_m4\ncortex_m7\ncortex_r4\nrxv2\n```\n\n### ThreadX SMP\n[Eclipse ThreadX SMP](https://github.com/eclipse-threadx/rtos-docs/blob/main/rtos-docs/threadx/threadx-smp/chapter1.md) is a high-performance real-time SMP kernel designed specifically for embedded applications.\n```\narc_hs_smp\ncortex_a34_smp\ncortex_a35_smp\ncortex_a53_smp\ncortex_a55_smp\ncortex_a57_smp\ncortex_a5x_smp\ncortex_a5_smp\ncortex_a65ae_smp\ncortex_a65_smp\ncortex_a72_smp\ncortex_a73_smp\ncortex_a75_smp\ncortex_a76ae_smp\ncortex_a76_smp\ncortex_a77_smp\ncortex_a78_smp\ncortex_a7_smp\ncortex_a9_smp\nlinux\n```\n\n## Adaptation layer for ThreadX\n\nThreadX is an advanced real-time operating system (RTOS) designed specifically for deeply embedded applications. To help ease application migration to ThreadX RTOS, Eclipse ThreadX provides [adaption layers](https://github.com/eclipse-threadx/threadx/tree/master/utility/rtos_compatibility_layers) for various legacy RTOS APIs (FreeRTOS, POSIX, OSEK, etc.).\n\n## Component dependencies\n\nThe main components of ThreadX RTOS are each provided in their own repository, but there are dependencies between them, as shown in the following graph. This is important to understand when setting up your builds.\n\n![dependency graph](docs/deps.png)\n\n> You will have to take the dependency graph above into account when building anything other than ThreadX itself.\n\n### Building and using the library\n\nInstruction for building the ThreadX as static library using Arm GNU Toolchain and CMake. If you are using toolchain and IDE from semiconductor, you might follow its own instructions to use ThreadX RTOS components as explained in the [Getting Started](#getting-started) section.\n\n1. Install the following tools:\n\n    * [CMake](https://cmake.org/download/) version 3.0 or later\n    * [Arm GNU Toolchain for arm-none-eabi](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads)\n    * [Ninja](https://ninja-build.org/)\n\n1. Cloning the repo\n\n    ```bash\n    $ git clone https://github.com/eclipse-threadx/threadx.git\n    ```\n\n1. Define the features and addons you need in `tx_user.h` and build together with the component source code. You can refer to [`tx_user_sample.h`](https://github.com/eclipse-threadx/threadx/blob/master/common/inc/tx_user_sample.h) as an example.\n\n1. Building as a static library\n\n    Each component of ThreadX RTOS comes with a composable CMake-based build system that supports many different MCUs and host systems. Integrating any of these components into your device app code is as simple as adding a git submodule and then including it in your build using the CMake `add_subdirectory()`.\n\n    While the typical usage pattern is to include ThreadX into your device code source tree to be built & linked with your code, you can compile this project as a standalone static library to confirm your build is set up correctly.\n\n    An example of building the library for Cortex-M4:\n\n    ```bash\n    $ cmake -Bbuild -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/cortex_m4.cmake .\n\n    $ cmake --build ./build\n    ```\n\n## Licensing\n\nLicense terms for using Eclipse ThreadX are defined in the LICENSE.txt file of this repo. Please refer to this file for all definitive licensing information for all content, incl. the history of this repo.\n\n## Resources\n\nThe following are references to additional ThreadX RTOS resources:\n\n- **Product introduction**: https://github.com/eclipse-threadx/rtos-docs\n- **Product issues and bugs, or feature requests**: https://github.com/eclipse-threadx/threadx/issues\n- **TraceX Installer**: https://aka.ms/azrtos-tracex-installer\n\nYou can also check [previous questions](https://stackoverflow.com/questions/tagged/threadx-rtos+threadx) or ask new ones on StackOverflow using the `threadx-rtos` and `threadx` tags.\n\n## Security\n\nEclipse ThreadX provides OEMs with components to secure communication and to create code and data isolation using underlying MCU/MPU hardware protection mechanisms. It is ultimately the responsibility of the device builder to ensure the device fully meets the evolving security requirements associated with its specific use case.\n\n## Contribution\n\nPlease follow the instructions provided in the [CONTRIBUTING.md](./CONTRIBUTING.md) for the corresponding repository.\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 0.724609375,
+          "content": "# Security Policy\n\n## Supported Versions\n\n| Version | Supported          |\n| ------- | ------------------ |\n| 6.4.x   | :white_check_mark: |\n\n## Reporting a Vulnerability\n\nIf you think you have found a vulnerability in <project> you can report it using one of the following ways:\n\n* Contact the [Eclipse Foundation Security Team](mailto:security@eclipse-foundation.org)\n* [Report a Vulnerability](https://github.com/eclipse-threadx/threadx/security/advisories/new)\n\nYou can find more information about reporting and disclosure at the [Eclipse Foundation Security page](https://www.eclipse.org/security/).\n\n## Security Policy\n\nThis project follows [Eclipse Foundation Vulnerability Reporting Policy](https://www.eclipse.org/security/policy/).\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common_modules",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common_smp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ports",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ports_arch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ports_module",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ports_smp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "samples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utility",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "metadata": {
+    "timestamp": 1736709678523,
+    "page": 40,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "matz/streem",
+      "stars": 4607,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2802734375,
+          "content": "# /\n*.bak\n*.d\n*.o\n*.exe\n*.orig\n*.pdb\n*.rej\n*.sav\n*.swp\n*.tmp\n*~\n.DS_Store\n.ccmalloc\n.svn\n/.git\na.out\ncscope.out\ngmon.out\ncompile_commands.json\nGPATH\nGRTAGS\nGTAGS\nTAGS\ntags\n/src/y.tab.c\n/src/lex.yy.c\n/src/y.tab.h\n/src/lex.yy.h\n/src/parse.tab.c\n/src/y.output\n/bin\n/build\n/vagrant/.vagrant\n"
+        },
+        {
+          "name": ".markdownlint.yml",
+          "type": "blob",
+          "size": 0.0380859375,
+          "content": "MD014: false\nMD040: false\nMD041: false\n"
+        },
+        {
+          "name": ".yamllint",
+          "type": "blob",
+          "size": 0.0888671875,
+          "content": "---\n\nextends: default\n\nrules:\n  document-start: false\n  line-length: false\n  truthy: false\n"
+        },
+        {
+          "name": "CODEOWNERS",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": "*   @matz\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.533203125,
+          "content": "##################################\n#       Streem Dockerfile.       #\n# https://github.com/matz/streem #\n##################################\nFROM alpine\n\nCOPY . /usr/src/streem\n\nRUN \\\n    sed -i -e 's/^CDEFS.*/\\0 -DNO_QSORT_R/g' /usr/src/streem/src/Makefile && \\\n    apk update && \\\n    apk add \\\n      musl-dev gcc flex \\\n      bison gc-dev make \\\n    && \\\n    cd /usr/src/streem && \\\n    make && \\\n    apk del --purge \\\n        musl-dev gcc flex \\\n        bison gc-dev make \\\n    && \\\n    rm -rf /var/cache/apk/*\n\nCMD /usr/src/streem/bin/streem\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0673828125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 Yukihiro \"Matz\" Matsumoto\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.1943359375,
+          "content": "TARGET = bin/streem\n\nifeq (Windows_NT,$(OS))\nTARGET:=$(TARGET).exe\nendif\n\nTESTS=$(wildcard examples/*.strm)\n\n.PHONY : all test clean\n\nall clean:\n\t$(MAKE) -C src $@\n\ntest : all\n\t$(TARGET) -c $(TESTS)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.9892578125,
+          "content": "# Streem\n\n[![Build Status](https://github.com/matz/streem/workflows/ci/badge.svg)](https://github.com/matz/streem/actions?query=workflow%3Aci)\n[![Gitter](https://badges.gitter.im/JoinChat.svg)](https://gitter.im/matz/streem?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)\n\nStreem is a stream based concurrent scripting language. It is based on a\nprogramming model similar to the shell, with influences from Ruby, Erlang, and\nother functional programming languages.\n\n__Note:__ Streem is still in the design stage. It's not working yet. Stay tuned.\n\n## Compiling\n\n### Installing dependencies\n\n* bison\n* flex\n* gcc / clang\n\n### Run make\n\n```shell\nmake\n```\n\n## Examples\n\nIn Streem, a simple `cat` program looks like this:\n\n```\nstdin | stdout\n```\n\nYou can try it out by (firstly `cd` to streem top directory):\n\n```shell\n$ bin/streem -e 'stdin | stdout'\n```\n\nor\n\n```shell\n$ bin/streem examples/01cat.strm\n```\n\nStreem is a (sort of) DSL for data flows. Above code means\nbuilding data-flow connection between `stdin` and `stdout`.\nActual data processing will be done in the event loop\ninvoked after program execution.\n\nFor another example, a simple FizzBuzz will look like this:\n\n```\n# seq(100) returns a stream of numbers from 1 to 100.\n# A function object in pipeline works as a map function.\n# stdout is an output destination.\nseq(100) | map{x->\n  if (x % 15 == 0)     \"FizzBuzz\"\n  else if (x % 3 == 0) \"Fizz\"\n  else if (x % 5 == 0) \"Buzz\"\n  else                 x\n} | stdout\n```\n\nThe second part in the pipeline (`{x ->...}`) is a function\nobject. If a function object is connected in the pipeline,\nit will be invoked for each element in the stream.\n\nThere are more examples under folder `examples/`. Just play with them!\n\n## Contributing\n\nSend a pull request to <https://github.com/matz/streem>.  We consider\nyou have granted non-exclusive right to your contributed code under\nMIT license. Use <https://github.com/matz/streem/issues> for\ndiscussion.\n\n## License\n\nMIT license (&copy; 2015-2016 Yukihiro Matsumoto)\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vagrant",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
