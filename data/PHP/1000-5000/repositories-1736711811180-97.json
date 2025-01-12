@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736711811180,
+    "page": 97,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "defuse/php-encryption",
+      "stars": 3811,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.169921875,
+          "content": "/.gitattributes export-ignore\n/.gitignore export-ignore\n/.php_cs export-ignore\n/.travis.yml export-ignore\n/psalm.xml export-ignore\n/test.sh export-ignore\n/test export-ignore\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.203125,
+          "content": "*~\n/test/unit/File/big-generated-file\n/composer.lock\n/vendor\ndefuse-crypto.phar\ndefuse-crypto.phar.sig\ncomposer.phar\nbox.phar\nphpunit.phar\nphpunit.phar.asc\ntest/unit/File/tmp\ntest/.phpunit.result.cache\n.idea\n"
+        },
+        {
+          "name": ".php_cs",
+          "type": "blob",
+          "size": 1.6572265625,
+          "content": "<?php\n\n$config = Symfony\\CS\\Config\\Config::create()\n    ->level(Symfony\\CS\\FixerInterface::PSR2_LEVEL)\n    ->fixers([\n        'blankline_after_open_tag',\n        'empty_return',\n        'extra_empty_lines',\n        'function_typehint_space',\n        'join_function',\n        'method_argument_default_value',\n        'multiline_array_trailing_comma',\n        'no_blank_lines_after_class_opening',\n        'no_empty_lines_after_phpdocs',\n        'phpdoc_indent',\n        'phpdoc_no_access',\n        'phpdoc_no_empty_return',\n        'phpdoc_no_package',\n        'phpdoc_params',\n        'phpdoc_scalar',\n        'phpdoc_separation',\n        'phpdoc_trim',\n        'phpdoc_type_to_var',\n        'phpdoc_types',\n        'phpdoc_var_without_name',\n        'remove_leading_slash_use',\n        'remove_lines_between_uses',\n        'short_bool_cast',\n        'single_quote',\n        'spaces_after_semicolon',\n        'spaces_before_semicolon',\n        'spaces_cast',\n        'standardize_not_equal',\n        'ternary_spaces',\n        'trim_array_spaces',\n        'unneeded_control_parentheses',\n        'unused_use',\n        'whitespacy_lines',\n        'align_double_arrow',\n        'concat_with_spaces',\n        'logical_not_operators_with_successor_space',\n        'multiline_spaces_before_semicolon',\n        'newline_after_open_tag',\n        'ordered_use',\n        'php_unit_construct',\n        'phpdoc_order',\n        'short_array_syntax',\n    ]);\n\nif (null === $input->getArgument('path')) {\n    $config\n        ->finder(\n            Symfony\\CS\\Finder\\DefaultFinder::create()\n                ->in('src')\n                ->in('test')\n                ->exclude('vendor')\n        );\n}\n\nreturn $config;\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 2.2734375,
+          "content": "language: php\nsudo: false\n\nmatrix:\n  fast_finish: true\n  include:\n    - php: \"5.6\"\n      env: \n        - USE_PSALM=0\n        - BUILD_PHAR=0\n    - php: \"7.0\"\n      env: \n        - USE_PSALM=0\n        - BUILD_PHAR=0\n    - php: \"7.1\"\n      env: \n        - USE_PSALM=0\n        - BUILD_PHAR=0\n    - php: \"7.2\"\n      env: \n        - USE_PSALM=0\n        - BUILD_PHAR=0\n    - php: \"7.3\"\n      env:\n        - USE_PSALM=0\n        - BUILD_PHAR=0\n    - php: \"7.4\"\n      env: \n        - USE_PSALM=1\n        - BUILD_PHAR=0\n    - php: \"8.0\"\n      # psalm currently doesn't like our \\[#SensitiveParameter]s\n      env: \n        - USE_PSALM=0\n        - BUILD_PHAR=0\n    - php: \"8.1\"\n      # psalm currently doesn't like our \\[#SensitiveParameter]s\n      env: \n        - USE_PSALM=0\n        - BUILD_PHAR=1\n    - php: \"8.2\"\n      env:\n        - USE_PSALM=1\n        - BUILD_PHAR=1\n      dist: focal\n    - php: \"nightly\"\n      env: \n        - USE_PSALM=1\n        - BUILD_PHAR=1\n    - php: \"hhvm\"\n      env: \n        - USE_PSALM=1\n        - BUILD_PHAR=1\n  allow_failures:\n    - php: \"nightly\"\n    - php: \"hhvm\"\n    # Travis-CI's 8.2 is currently broken, see:\n    # https://github.com/defuse/php-encryption/pull/506#issuecomment-1594084107\n    #- php: \"8.2\"\ninstall:\n    - composer install\nbefore_script:\n    - echo \"xdebug.mode = coverage\" > extra_php_config.ini\n    - phpenv config-add extra_php_config.ini\nscript:\n    - ./test.sh\n    - if [[ $BUILD_PHAR -eq 1 ]]; then mkdir /tmp/box; fi\n    - if [[ $BUILD_PHAR -eq 1 ]]; then chmod 755 /tmp/box; fi\n    - if [[ $BUILD_PHAR -eq 1 ]]; then curl -LSs https://github.com/box-project/box/releases/download/4.3.8/box.phar -o /tmp/box/box; fi\n    - if [[ $BUILD_PHAR -eq 1 ]]; then chmod 755 /tmp/box/box; fi\n    - if [[ $BUILD_PHAR -eq 1 ]]; then PATH=\"$PATH:/tmp/box/\" which box; fi\n    - if [[ $BUILD_PHAR -eq 1 ]]; then PATH=\"$PATH:/tmp/box/\" make -C dist/ build-phar; fi\n    - if [[ $BUILD_PHAR -eq 1 ]]; then ./test.sh dist/phar-testing-autoload.php; fi\n    - if [[ $USE_PSALM -eq 1 ]]; then composer require --with-all-dependencies --dev \"vimeo/psalm:dev-master\"; fi\n    - if [[ $USE_PSALM -eq 1 ]]; then composer install; fi\n    - if [[ $USE_PSALM -eq 1 ]]; then vendor/bin/psalm; fi\n\nafter_success:\n    - cat coverage1.xml\n    - cat coverage2.xml\n    - bash <(curl -s https://codecov.io/bash) -Z\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.1474609375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 Taylor Hornby <https://defuse.ca>\nCopyright (c) 2016 Paragon Initiative Enterprises <https://paragonie.com>.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.36328125,
+          "content": "php-encryption\n===============\n\n![Build Status](https://app.travis-ci.com/defuse/php-encryption.svg?branch=master)\n[![codecov](https://codecov.io/gh/defuse/php-encryption/branch/master/graph/badge.svg)](https://codecov.io/gh/defuse/php-encryption)\n[![Latest Stable Version](https://poser.pugx.org/defuse/php-encryption/v/stable)](https://packagist.org/packages/defuse/php-encryption)\n[![License](https://poser.pugx.org/defuse/php-encryption/license)](https://packagist.org/packages/defuse/php-encryption)\n[![Downloads](https://img.shields.io/packagist/dt/defuse/php-encryption.svg)](https://packagist.org/packages/defuse/php-encryption)\n\n```terminal\ncomposer require defuse/php-encryption\n```\n\nThis is a library for encrypting data with a key or password in PHP. **It\nrequires PHP 5.6 or newer and OpenSSL 1.0.1 or newer.** We recommend using a\nversion of PHP that [still has security\nsupport](https://www.php.net/supported-versions.php), which at the time of\nwriting means PHP 8.0 or later. Using this library with an unsupported\nversion of PHP could lead to security vulnerabilities.\n\nThe current version of `php-encryption` is v2.4.0. This library is expected to\nremain stable and supported by its authors with security and bugfixes until at\nleast January 1st, 2024.\n\nThe library is a joint effort between [Taylor Hornby](https://defuse.ca/) and\n[Scott Arciszewski](https://paragonie.com/blog/author/scott-arcizewski) as well\nas numerous open-source contributors.\n\nWhat separates this library from other PHP encryption libraries is, firstly,\nthat it is secure. The authors used to encounter insecure PHP encryption code on\na daily basis, so they created this library to bring more security to the\necosystem. Secondly, this library is \"difficult to misuse.\" Like\n[libsodium](https://github.com/jedisct1/libsodium), its API is designed to be\neasy to use in a secure way and hard to use in an insecure way.\n\n\nDependencies\n------------\n\nThis library requires no special dependencies except for PHP 5.6 or newer with\nthe OpenSSL extensions (version 1.0.1 or later) enabled (this is the default).\nIt uses [random\\_compat](https://github.com/paragonie/random_compat), which is\nbundled in with this library so that your users will not need to follow any\nspecial installation steps.\n\nGetting Started\n----------------\n\nStart with the [**Tutorial**](docs/Tutorial.md). You can find instructions for\nobtaining this library's code securely in the [Installing and\nVerifying](docs/InstallingAndVerifying.md) documentation.\n\nAfter you've read the tutorial and got the code, refer to the formal\ndocumentation for each of the classes this library provides:\n\n- [Crypto](docs/classes/Crypto.md)\n- [File](docs/classes/File.md)\n- [Key](docs/classes/Key.md)\n- [KeyProtectedByPassword](docs/classes/KeyProtectedByPassword.md)\n\nIf you encounter difficulties, see the [FAQ](docs/FAQ.md) answers. The fixes to\nthe most commonly-reported problems are explained there.\n\nIf you're a cryptographer and want to understand the nitty-gritty details of how\nthis library works, look at the [Cryptography Details](docs/CryptoDetails.md)\ndocumentation.\n\nIf you're interested in contributing to this library, see the [Internal\nDeveloper Documentation](docs/InternalDeveloperDocs.md).\n\nOther Language Support\n----------------------\n\nThis library is intended for server-side PHP software that needs to encrypt data at rest.\nIf you are building software that needs to encrypt client-side, or building a system that\nrequires cross-platform encryption/decryption support, we strongly recommend using\n[libsodium](https://download.libsodium.org/doc/bindings_for_other_languages) instead.\n\nExamples\n---------\n\nIf the documentation is not enough for you to understand how to use this\nlibrary, then you can look at an example project that uses this library:\n\n- [encutil](https://github.com/defuse/encutil)\n- [fileencrypt](https://github.com/tsusanka/fileencrypt)\n\nSecurity Audit Status\n---------------------\n\nThis code has not been subjected to a formal, paid, security audit. However, it\nhas received lots of review from members of the PHP security community, and the\nauthors are experienced with cryptography. In all likelihood, you are safer\nusing this library than almost any other encryption library for PHP.\n\nIf you use this library as a part of your business and would like to help fund\na formal audit, please [contact Taylor Hornby](https://defuse.ca/contact.htm).\n\nPublic Keys\n------------\n\nThe GnuPG public key used to sign the current and new releases is available in\n[dist/signingkey-new.asc](https://github.com/defuse/php-encryption/raw/master/dist/signingkey-new.asc). Its fingerprint is:\n\n```\n6DD6 E677 0281 5846 FC85  25A3 DD2E 507F 7BDB 1669\n```\n\nYou can verify it against Taylor Hornby's [contact\npage](https://defuse.ca/contact.htm) and\n[twitter](https://twitter.com/DefuseSec/status/1670840796743081984).\n\nOlder releases were signed with a (now-expired) available in\n[dist/signingkey-old.asc](https://github.com/defuse/php-encryption/raw/master/dist/signingkey-old.asc). The old key's fingerprint is:\n\n```\n2FA6 1D8D 99B9 2658 6BAC  3D53 385E E055 A129 1538\n```\n\nThe old key's fingerprint can be verified against Taylor Hornby's [contact page](https://defuse.ca/contact.htm) and\n[twitter](https://twitter.com/DefuseSec/status/723741424253059074).\n\nA signature of this new key by the old key is available in\n[dist/signingkey-new.asc.sig](https://github.com/defuse/php-encryption/raw/master/dist/signingkey-new.asc.sig).\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9658203125,
+          "content": "{\n    \"name\": \"defuse/php-encryption\",\n    \"description\": \"Secure PHP Encryption Library\",\n    \"license\": \"MIT\",\n    \"keywords\": [\"security\", \"encryption\", \"AES\", \"openssl\", \"cipher\", \"cryptography\", \"symmetric key cryptography\", \"crypto\", \"encrypt\", \"authenticated encryption\"],\n    \"authors\": [\n        {\n            \"name\": \"Taylor Hornby\",\n            \"email\": \"taylor@defuse.ca\",\n            \"homepage\": \"https://defuse.ca/\"\n        },\n        {\n            \"name\": \"Scott Arciszewski\",\n            \"email\": \"info@paragonie.com\",\n            \"homepage\": \"https://paragonie.com\"\n        }\n    ],\n    \"autoload\": {\n        \"psr-4\": {\n            \"Defuse\\\\Crypto\\\\\": \"src\"\n        }\n    },\n    \"require\": {\n        \"paragonie/random_compat\": \">= 2\",\n        \"ext-openssl\": \"*\",\n        \"php\":  \">=5.6.0\"\n    },\n    \"require-dev\": {\n        \"yoast/phpunit-polyfills\": \"^2.0.0\",\n        \"phpunit/phpunit\": \"^5|^6|^7|^8|^9|^10\"\n    },\n    \"bin\": [\n        \"bin/generate-defuse-key\"\n    ]\n}\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "psalm.xml",
+          "type": "blob",
+          "size": 0.5224609375,
+          "content": "<?xml version=\"1.0\"?>\n<psalm\n    useDocblockTypes=\"true\"\n>\n    <projectFiles>\n        <directory name=\"src\" />\n    </projectFiles>\n    <issueHandlers>\n        <DocblockTypeContradiction errorLevel=\"info\" />\n        <RedundantCondition errorLevel=\"info\" />\n        <RedundantConditionGivenDocblockType errorLevel=\"info\" />\n        <!-- It's complaining about our #[\\SensitiveParameter]s for no reason -->\n        <InvalidAttribute errorLevel=\"info\" />\n        <UndefinedAttributeClass errorLevel=\"info\" />\n    </issueHandlers>\n</psalm>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.sh",
+          "type": "blob",
+          "size": 0.646484375,
+          "content": "#!/bin/sh\nset -e\n\nBIG_GENERATED_FILE=./test/unit/File/big-generated-file\nif [ ! -e $BIG_GENERATED_FILE ] || [ $(wc -c < $BIG_GENERATED_FILE) -ne \"209715200\" ]; then\n    echo \"Please wait while I create a large random test plaintext file...\"\n    dd if=/dev/urandom \"of=$BIG_GENERATED_FILE\" bs=1M count=200\nfi\n\nif [ -n \"$1\" ]; then\n    BOOTSTRAP=\"$1\"\n    MEASURECOVERAGE=\"0\"\nelse\n    # You need to run `composer install` to generate this file.\n    BOOTSTRAP=\"vendor/autoload.php\"\n    MEASURECOVERAGE=\"1\"\nfi\n\n# loading bootstrap should output nothing\nload=$(php -r \"require '$BOOTSTRAP';\")\ntest -z \"$load\"\n\n./test/phpunit.sh \"$BOOTSTRAP\" \"$MEASURECOVERAGE\"\necho \"\"\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

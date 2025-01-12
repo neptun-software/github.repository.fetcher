@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736711827647,
+    "page": 129,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "owner888/phpspider",
+      "stars": 3491,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0673828125,
+          "content": ".*\n/vendor/\ncomposer.lock\ndata/ \ndemo/\ncache/\nclient.php\n*.bak.php\n\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.01953125,
+          "content": "# phpspider -- PHP蜘蛛爬虫框架\n《我用爬虫一天时间“偷了”知乎一百万用户，只为证明PHP是世界上最好的语言 》所使用的程序  \n\nphpspider是一个爬虫开发框架。使用本框架，你不用了解爬虫的底层技术实现，爬虫被网站屏蔽、有些网站需要登录或验证码识别才能爬取等问题。简单几行PHP代码，就可以创建自己的爬虫，利用框架封装的多进程Worker类库，代码更简洁，执行效率更高速度更快。\n\ndemo目录下有一些特定网站的爬取规则，只要你安装了PHP环境，代码就可以在命令行下直接跑。 对爬虫感兴趣的开发者可以加QQ群一起讨论：147824717。\n\n下面以糗事百科为例, 来看一下我们的爬虫长什么样子:\n\n```\n$configs = array(\n    'name' => '糗事百科',\n    'domains' => array(\n        'qiushibaike.com',\n        'www.qiushibaike.com'\n    ),\n    'scan_urls' => array(\n        'http://www.qiushibaike.com/'\n    ),\n    'content_url_regexes' => array(\n        \"http://www.qiushibaike.com/article/\\d+\"\n    ),\n    'list_url_regexes' => array(\n        \"http://www.qiushibaike.com/8hr/page/\\d+\\?s=\\d+\"\n    ),\n    'fields' => array(\n        array(\n            // 抽取内容页的文章内容\n            'name' => \"article_content\",\n            'selector' => \"//*[@id='single-next-link']\",\n            'required' => true\n        ),\n        array(\n            // 抽取内容页的文章作者\n            'name' => \"article_author\",\n            'selector' => \"//div[contains(@class,'author')]//h2\",\n            'required' => true\n        ),\n    ),\n);\n$spider = new phpspider($configs);\n$spider->start();\n```\n爬虫的整体框架就是这样, 首先定义了一个$configs数组, 里面设置了待爬网站的一些信息, 然后通过调用```$spider = new phpspider($configs);```和```$spider->start();```来配置并启动爬虫.\n\n#### 运行界面如下:      \n\n![](http://www.epooll.com/zhihu/pachong.gif)\n\n更多详细内容，移步到：\n\n[开发文档](http://doc.phpspider.org)\n"
+        },
+        {
+          "name": "autoloader.php",
+          "type": "blob",
+          "size": 1.8974609375,
+          "content": "<?php\n/**\n * This file is part of phpspider.\n *\n * Licensed under The MIT License\n * For full copyright and license information, please see the MIT-LICENSE.txt\n * Redistributions of files must retain the above copyright notice.\n *\n * @author    seatle<seatle@foxmail.com>\n * @copyright seatle<seatle@foxmail.com>\n * @link      http://www.phpspider.org/\n * @license   http://www.opensource.org/licenses/mit-license.php MIT License\n */\nnamespace phpspider;\n\n/**\n * autoloader.\n */\nclass autoloader\n{\n    /**\n     * Autoload root path.\n     *\n     * @var string\n     */\n    protected static $_autoload_root_path = '';\n\n    /**\n     * Set autoload root path.\n     *\n     * @param string $root_path\n     * @return void\n     */\n    public static function set_root_path($root_path)\n    {\n        self::$_autoload_root_path = $root_path;\n    }\n\n    /**\n     * Load files by namespace.\n     *\n     * @param string $name\n     * @return boolean\n     */\n    public static function load_by_namespace($name)\n    {\n        $class_path = str_replace('\\\\', DIRECTORY_SEPARATOR, $name);\n\n        if (strpos($name, 'phpspider\\\\') === 0) \n        {\n            $class_file = __DIR__ . substr($class_path, strlen('phpspider')) . '.php';\n        }\n        else \n        {\n            if (self::$_autoload_root_path) \n            {\n                $class_file = self::$_autoload_root_path . DIRECTORY_SEPARATOR . $class_path . '.php';\n            }\n            if (empty($class_file) || !is_file($class_file)) \n            {\n                $class_file = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . \"$class_path.php\";\n            }\n        }\n\n        if (is_file($class_file)) \n        {\n            require_once($class_file);\n            if (class_exists($name, false)) \n            {\n                return true;\n            }\n        }\n        return false;\n    }\n}\n\nspl_autoload_register('\\phpspider\\autoloader::load_by_namespace', true, true);\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9541015625,
+          "content": "{\n    \"name\": \"owner888/phpspider\",\n    \"type\": \"library\",\n    \"keywords\": [\n        \"framework\", \n        \"phpspider\"\n    ],\n    \"homepage\": \"http://www.phpspider.org\",\n    \"license\": \"MIT\",\n    \"description\": \"The PHPSpider Framework.\",\n    \"authors\": [\n        {\n            \"name\": \"Seatle Yang\",\n            \"email\": \"seatle@foxmail.com\",\n            \"homepage\": \"http://www.phpspider.org\",\n            \"role\": \"Developer\"\n        }\n    ],\n    \"support\": {\n        \"email\": \"seatle@foxmail.com\",\n        \"issues\": \"https://github.com/owner888/phpspider/issues\",\n        \"forum\": \"http://wenda.phpspider.org/\",\n        \"wiki\": \"http://doc.phpspider.org/\",\n        \"source\": \"https://github.com/owner888/phpspider\"\n    },\n    \"require\": {\n        \"php\": \">=5.5.0\"\n    },\n    \"suggest\": {\n        \"ext-pcntl、ext-redis\": \"For better performance. \"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"phpspider\\\\\": \"./\"\n        }\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "demo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gitadd.sh",
+          "type": "blob",
+          "size": 0.3544921875,
+          "content": "#!/bin/bash\nif [ ! -d \"$1\" ] && [ ! -f \"$1\" ]; then \n    echo \"file $1 not exists\"\n    exit\nfi\nfilename=$1\n\ncomment=\"add file\"\nif [[ $2 != \"\" ]]; then\n    comment=$2\nfi\n\necho \"start update...\"\ngit pull\necho \"start add new file...\"\ngit add $filename\necho \"start commit...\"\ngit commit -m \"$comment\" $filename\ngit push -u origin master\necho \"git commit complete...\"\n"
+        },
+        {
+          "name": "hacked-emails",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "library",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.go",
+          "type": "blob",
+          "size": 0.0703125,
+          "content": "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"vim-go\")\n\tfmt\n}\n"
+        },
+        {
+          "name": "test.php",
+          "type": "blob",
+          "size": 0.6357421875,
+          "content": "<?php\n\n$str = hash('sha256', 'bc');\necho strlen($str);\nexit;\n$data = array(\"url\" => 'http://www.test.com');  \n$data = http_build_query($data);\n// Create a stream\n$opts = [\n    //\"http\" => [\n        //\"method\" => \"POST\",\n        //\"header\" => \"Content-Type: multipart/form-data\\r\\n\",\n        //\"content\" => $data,\n    //],\n    \"ssl\" => array(\n        \"verify_peer\"=>false,\n        \"verify_peer_name\"=>false,\n    ),\n];\n\n$context = stream_context_create($opts);\n\n// Open the file using the HTTP headers set above\n$file = file_get_contents('https://api.potato.im:8443/10100386:Z0dT3Oalvu5IGC71OrvGs3hT/setWebhook', false, $context);\n\nvar_dump($file);    \n"
+        },
+        {
+          "name": "worker.php",
+          "type": "blob",
+          "size": 0.48828125,
+          "content": "<?php\n\necho \"Starting\\n\";\n\n$gmworker = new GearmanWorker();\n$gmworker->addServer('10.10.10.238');\n$gmworker->addFunction(\"reverse\", \"reverse_fn\");\n\nprint \"Waiting for job...\\n\";\nwhile($gmworker->work())\n{\n    if ($gmworker->returnCode() != GEARMAN_SUCCESS)\n    {\n        echo \"return_code: \" . $gmworker->returnCode() . \"\\n\";\n        break;\n    }\n    //break;\n}\n\nfunction reverse_fn($job)\n{\n    sleep(3);\n    echo $job->workload().\"\\n\";\n    return strrev($job->workload());\n}\n\n\necho \"hello\\n\";\n?>\n\n\n\n"
+        }
+      ]
+    }
+  ]
+}

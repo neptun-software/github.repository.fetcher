@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "timestamp": 1736711814991,
+    "page": 106,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "archtechx/tenancy",
+      "stars": 3729,
+      "defaultBranch": "3.x",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.4814453125,
+          "content": "# Path-based git attributes\n# https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html\n\n# Ignore all test and documentation with \"export-ignore\".\n/.github export-ignore\n/art export-ignore\n/tests export-ignore\n/.gitattributes export-ignore\n/.gitignore export-ignore\n/.styleci.yml export-ignore\n/docker-compose.yml export-ignore\n/Dockerfile export-ignore\n/test export-ignore\n/phpunit.xml export-ignore\n/.editorconfig export-ignore\n/.coverage.xml export-ignore\n/coverage export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1865234375,
+          "content": ".env\ncomposer.lock\nvendor/\n.vscode/\n.idea\npsysh\n.phpunit.result.cache\n.phpunit.cache\nphpunit_var_*.xml\ncoverage/\nclover.xml\ntests/Etc/tmp/queuetest.json\ndocker-compose.override.yml\n.DS_Store\n"
+        },
+        {
+          "name": ".styleci.yml",
+          "type": "blob",
+          "size": 0.1171875,
+          "content": "risky: true\npreset: laravel\nenabled:\n- declare_strict_types\ndisabled:\n- concat_without_spaces\n- ternary_operator_spaces\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.4736328125,
+          "content": "# Contributing\n\n## Code style\n\nStyleCI will flag code style violations in your pull requests.\n\n## Running tests\n\nRun `docker-compose up -d` to start the containers. Then run `./test` to run the tests.\n\nWhen you're done testing, run `docker-compose down` to shut down the containers.\n\n### Docker on M1\n\nYou can add:\n```yaml\nservices:\n  mysql:\n    platform: linux/amd64\n  mysql2:\n    platform: linux/amd64\n```\n\nto `docker-compose.override.yml` to make `docker-compose up -d` work on M1.\n"
+        },
+        {
+          "name": "DONATIONS.md",
+          "type": "blob",
+          "size": 0.2529296875,
+          "content": "# Donations\n\nAny donations will be greatly appreciated and help ensure that the package is developed and maintained in the future.\n\nTo donate, see the donation page on the website: [https://tenancyforlaravel.com/donate](https://tenancyforlaravel.com/donate).\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.8798828125,
+          "content": "# add amd64 platform to support Mac M1\nFROM --platform=linux/amd64 shivammathur/node:jammy-amd64\n\nARG PHP_VERSION=8.1\n\nWORKDIR /var/www/html\n\n# our default timezone and langauge\nENV TZ=Europe/London\nENV LANG=en_GB.UTF-8\n\n# install MYSSQL ODBC Driver\nRUN apt-get update \\\n    && apt-get install -y gnupg2 \\\n    && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \\\n    && curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list \\\n    && apt-get update \\\n    && ACCEPT_EULA=Y apt-get install -y unixodbc-dev=2.3.7 unixodbc=2.3.7 odbcinst1debian2=2.3.7 odbcinst=2.3.7 msodbcsql17\n\n# set PHP version\nRUN update-alternatives --set php /usr/bin/php$PHP_VERSION \\\n    && update-alternatives --set phar /usr/bin/phar$PHP_VERSION \\\n    && update-alternatives --set phar.phar /usr/bin/phar.phar$PHP_VERSION \\\n    && update-alternatives --set phpize /usr/bin/phpize$PHP_VERSION \\\n    && update-alternatives --set php-config /usr/bin/php-config$PHP_VERSION\n\nRUN apt-get update \\\n    && apt-get install -y --no-install-recommends libhiredis0.14 libjemalloc2 liblua5.1-0 lua-bitop lua-cjson redis redis-server redis-tools\n\nRUN pecl install redis-5.3.7 sqlsrv pdo_sqlsrv pcov \\\n    && printf \"; priority=20\\nextension=redis.so\\n\" > /etc/php/$PHP_VERSION/mods-available/redis.ini \\\n    && printf \"; priority=20\\nextension=sqlsrv.so\\n\" > /etc/php/$PHP_VERSION/mods-available/sqlsrv.ini \\\n    && printf \"; priority=30\\nextension=pdo_sqlsrv.so\\n\" > /etc/php/$PHP_VERSION/mods-available/pdo_sqlsrv.ini \\\n    && printf \"; priority=40\\nextension=pcov.so\\n\" > /etc/php/$PHP_VERSION/mods-available/pcov.ini \\\n    && phpenmod -v $PHP_VERSION redis sqlsrv pdo_sqlsrv pcov\n\n# install composer\nCOPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer\n\n# set the system timezone\nRUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \\\n    && echo $TZ > /etc/timezone\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0458984375,
+          "content": "MIT License\n\nCopyright (c) 2019 Samuel Štancl\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.6943359375,
+          "content": "<p align=\"center\">\n    <a href=\"https://tenancyforlaravel.com\"><img width=\"800\" src=\"/art/logo.png\" alt=\"Tenancy for Laravel logo\" /></a>\n</p>\n\n<p align=\"center\">\n    <a href=\"https://laravel.com\"><img alt=\"Laravel 10.x\" src=\"https://img.shields.io/badge/laravel-10.x-red.svg\"></a>\n    <a href=\"https://packagist.org/packages/stancl/tenancy\"><img alt=\"Latest Stable Version\" src=\"https://poser.pugx.org/stancl/tenancy/version\"></a>\n    <a href=\"https://github.com/stancl/tenancy/actions\"><img alt=\"GitHub Actions CI status\" src=\"https://github.com/stancl/tenancy/workflows/CI/badge.svg\"></a>\n    <a href=\"https://github.com/stancl/tenancy/blob/3.x/DONATIONS.md\"><img alt=\"Donate\" src=\"https://img.shields.io/badge/Donate-%3C3-red\"></a>\n</p>\n\n<h1><a href=\"https://tenancyforlaravel.com\">Tenancy for Laravel &mdash; stancl/tenancy</a></h1>\n\n### *Automatic multi-tenancy for your Laravel app.*\n\nYou won't have to change a thing in your application's code.\n\n- :heavy_check_mark: No model traits to change database connection\n- :heavy_check_mark: No replacing of Laravel classes (`Cache`, `Storage`, ...) with tenancy-aware classes\n- :heavy_check_mark: Built-in tenant identification based on hostname (including second level domains)\n\n### [Documentation](https://tenancyforlaravel.com/docs/v3/)\n\nDocumentation can be found here: https://tenancyforlaravel.com/docs/v3/\n\nThe repository with the documentation source code can be found here: [stancl/tenancy-docs](https://github.com/stancl/tenancy-docs).\n\n### [Need help?](https://github.com/stancl/tenancy/blob/3.x/SUPPORT.md)\n\n### Credits\n\n- Package created by [Samuel Štancl](https://twitter.com/samuelstancl)\n- Design help & current logo by [Florian Karsten](https://floriankarsten.com/)\n"
+        },
+        {
+          "name": "SUPPORT.md",
+          "type": "blob",
+          "size": 0.2958984375,
+          "content": "# Get Support\n\nIf you need help with implementing the package, you can join our community [Discord server](https://archte.ch/discord) and ask in `#tenancy-help`.\n\nIf you're interested in paid consulting from the maintainer, see the [contact page](https://tenancyforlaravel.com/contact/) on our website.\n"
+        },
+        {
+          "name": "art",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.5751953125,
+          "content": "{\n    \"name\": \"stancl/tenancy\",\n    \"description\": \"Automatic multi-tenancy for your Laravel application.\",\n    \"keywords\": [\"laravel\", \"multi-tenancy\", \"multi-database\", \"tenancy\"],\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Samuel Štancl\",\n            \"email\": \"samuel.stancl@gmail.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.0\",\n        \"ext-json\": \"*\",\n        \"illuminate/support\": \"^9.0|^10.0|^11.0\",\n        \"facade/ignition-contracts\": \"^1.0.2\",\n        \"ramsey/uuid\": \"^4.7.3\",\n        \"stancl/jobpipeline\": \"^1.6.2\",\n        \"stancl/virtualcolumn\": \"^1.3.1\"\n    },\n    \"require-dev\": {\n        \"laravel/framework\": \"^9.0|^10.0|^11.0\",\n        \"orchestra/testbench\": \"^7.0|^8.0|^9.0\",\n        \"league/flysystem-aws-s3-v3\": \"^3.12.2\",\n        \"doctrine/dbal\": \"^3.6.0\",\n        \"spatie/valuestore\": \"^1.3.2\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Stancl\\\\Tenancy\\\\\": \"src/\"\n        },\n        \"files\": [\n            \"src/helpers.php\"\n        ]\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Stancl\\\\Tenancy\\\\Tests\\\\\": \"tests/\"\n        }\n    },\n    \"extra\": {\n        \"laravel\": {\n            \"providers\": [\n                \"Stancl\\\\Tenancy\\\\TenancyServiceProvider\"\n            ],\n            \"aliases\": {\n                \"Tenancy\": \"Stancl\\\\Tenancy\\\\Facades\\\\Tenancy\",\n                \"GlobalCache\": \"Stancl\\\\Tenancy\\\\Facades\\\\GlobalCache\"\n            }\n        }\n    },\n    \"minimum-stability\": \"dev\",\n    \"prefer-stable\": true,\n    \"config\": {\n        \"allow-plugins\": {\n            \"pestphp/pest-plugin\": true\n        }\n    }\n}\n"
+        },
+        {
+          "name": "docker-compose-m1.override.yml",
+          "type": "blob",
+          "size": 0.130859375,
+          "content": "services:\n  mysql:\n    platform: linux/amd64\n  mysql2:\n    platform: linux/amd64\n  mssql:\n    image: mcr.microsoft.com/azure-sql-edge\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 1.8642578125,
+          "content": "services:\n    test:\n        build:\n            context: .\n            args:\n              PHP_VERSION: ${PHP_VERSION:-8.1}\n        depends_on:\n            mysql:\n                condition: service_healthy\n            postgres:\n                condition: service_healthy\n            redis:\n                condition: service_healthy\n        volumes:\n            - .:/var/www/html:delegated\n        environment:\n            DOCKER: 1\n            DB_PASSWORD: password\n            DB_USERNAME: root\n            DB_DATABASE: main\n            TENANCY_TEST_REDIS_HOST: redis\n            TENANCY_TEST_MYSQL_HOST: mysql\n            TENANCY_TEST_PGSQL_HOST: postgres\n        stdin_open: true\n        tty: true\n    mysql:\n        image: mysql:5.7\n        environment:\n            MYSQL_ROOT_PASSWORD: password\n            MYSQL_DATABASE: main\n            MYSQL_USER: user # redundant\n            MYSQL_PASSWORD: password\n        healthcheck:\n            test: [\"CMD\", \"mysqladmin\" ,\"ping\", \"-h\", \"localhost\"]\n            timeout: 10s\n            retries: 10\n    mysql2:\n        image: mysql:5.7\n        environment:\n            MYSQL_ROOT_PASSWORD: password\n            MYSQL_DATABASE: main\n            MYSQL_USER: user # redundant\n            MYSQL_PASSWORD: password\n        healthcheck:\n            test: [\"CMD\", \"mysqladmin\" ,\"ping\", \"-h\", \"localhost\"]\n            timeout: 10s\n            retries: 10\n    postgres:\n        image: postgres:11\n        environment:\n            POSTGRES_PASSWORD: password\n            POSTGRES_USER: root # superuser name\n            POSTGRES_DB: main\n        healthcheck:\n            test: [\"CMD-SHELL\", \"pg_isready -U postgres\"]\n            interval: 10s\n            timeout: 5s\n            retries: 5\n    redis:\n        image: redis:alpine\n        healthcheck:\n            test: [\"CMD\", \"redis-cli\", \"ping\"]\n            interval: 1s\n            timeout: 3s\n            retries: 30\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 1.2724609375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" backupGlobals=\"false\" bootstrap=\"vendor/autoload.php\" colors=\"true\" processIsolation=\"false\" stopOnFailure=\"false\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/11.0/phpunit.xsd\" cacheDirectory=\".phpunit.cache\" backupStaticProperties=\"false\">\n  <coverage>\n    <report>\n      <clover outputFile=\"coverage/phpunit/clover.xml\"/>\n      <html outputDirectory=\"coverage/phpunit/html\" lowUpperBound=\"35\" highLowerBound=\"70\"/>\n    </report>\n  </coverage>\n  <testsuites>\n    <testsuite name=\"Unit\">\n      <directory suffix=\"Test.php\">./tests</directory>\n    </testsuite>\n  </testsuites>\n  <php>\n    <env name=\"APP_ENV\" value=\"testing\"/>\n    <env name=\"BCRYPT_ROUNDS\" value=\"4\"/>\n    <env name=\"CACHE_DRIVER\" value=\"redis\"/>\n    <env name=\"MAIL_DRIVER\" value=\"array\"/>\n    <env name=\"QUEUE_CONNECTION\" value=\"sync\"/>\n    <env name=\"SESSION_DRIVER\" value=\"array\"/>\n    <env name=\"DB_CONNECTION\" value=\"central\"/>\n    <env name=\"AWS_DEFAULT_REGION\" value=\"us-west-2\"/>\n  </php>\n  <logging/>\n  <source>\n    <include>\n      <directory suffix=\".php\">./src</directory>\n    </include>\n    <exclude>\n      <file>./src/routes.php</file>\n      <file>./src/Vite.php</file>\n    </exclude>\n  </source>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "blob",
+          "size": 0.1552734375,
+          "content": "#!/bin/bash\n\ncat vendor/laravel/framework/src/Illuminate/Foundation/Application.php | grep 'const VERSION'\ndocker compose exec -T test vendor/bin/phpunit \"$@\"\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

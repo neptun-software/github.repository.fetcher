@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "timestamp": 1736711775834,
+    "page": 34,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "endroid/qr-code",
+      "stars": 4501,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.099609375,
+          "content": "/.github/ export-ignore\n/tests/ export-ignore\n/.gitattributes export-ignore\n/.gitignore export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "/composer\n/composer.lock\n/tests/coverage/\n/vendor/\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "Copyright 2024 (c) Jeroen van den Enden\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.5439453125,
+          "content": "# QR Code\r\n\r\n*By [endroid](https://endroid.nl/)*\r\n\r\nIf you like my work please support me by visiting the [sponsor page](https://github.com/sponsors/endroid) or [buying me a coffee](https://www.buymeacoffee.com/endroid) :coffee:\r\n\r\n[![Latest Stable Version](http://img.shields.io/packagist/v/endroid/qr-code.svg)](https://packagist.org/packages/endroid/qr-code)\r\n[![Build Status](https://github.com/endroid/qr-code/workflows/CI/badge.svg)](https://github.com/endroid/qr-code/actions)\r\n[![Total Downloads](http://img.shields.io/packagist/dt/endroid/qr-code.svg)](https://packagist.org/packages/endroid/qr-code)\r\n[![Monthly Downloads](http://img.shields.io/packagist/dm/endroid/qr-code.svg)](https://packagist.org/packages/endroid/qr-code)\r\n[![License](http://img.shields.io/packagist/l/endroid/qr-code.svg)](https://packagist.org/packages/endroid/qr-code)\r\n\r\nThis library helps you generate QR codes in a jiffy. Makes use of [bacon/bacon-qr-code](https://github.com/Bacon/BaconQrCode)\r\nto generate the matrix and [khanamiryan/qrcode-detector-decoder](https://github.com/khanamiryan/php-qrcode-detector-decoder)\r\nfor validating generated QR codes. Further extended with Twig extensions, generation routes, a factory and a\r\nSymfony bundle for easy installation and configuration. Different writers are provided to generate the QR code\r\nas PNG, SVG, EPS or in binary format.\r\n\r\n## Sponsored by\r\n\r\n[![Blackfire.io](.github/blackfire.png)](https://www.blackfire.io)\r\n\r\n## Installation\r\n\r\nUse [Composer](https://getcomposer.org/) to install the library. Also make sure you have enabled and configured the\r\n[GD extension](https://www.php.net/manual/en/book.image.php) if you want to generate images.\r\n\r\n``` bash\r\n composer require endroid/qr-code\r\n```\r\n\r\n## Usage: using the builder\r\n\r\n```php\r\nuse Endroid\\QrCode\\Builder\\Builder;\r\nuse Endroid\\QrCode\\Encoding\\Encoding;\r\nuse Endroid\\QrCode\\ErrorCorrectionLevel;\r\nuse Endroid\\QrCode\\Label\\LabelAlignment;\r\nuse Endroid\\QrCode\\Label\\Font\\OpenSans;\r\nuse Endroid\\QrCode\\RoundBlockSizeMode;\r\nuse Endroid\\QrCode\\Writer\\PngWriter;\r\n\r\n$builder = new Builder(\r\n    writer: new PngWriter(),\r\n    writerOptions: [],\r\n    validateResult: false,\r\n    data: 'Custom QR code contents',\r\n    encoding: new Encoding('UTF-8'),\r\n    errorCorrectionLevel: ErrorCorrectionLevel::High,\r\n    size: 300,\r\n    margin: 10,\r\n    roundBlockSizeMode: RoundBlockSizeMode::Margin,\r\n    logoPath: __DIR__.'/assets/symfony.png',\r\n    logoResizeToWidth: 50,\r\n    logoPunchoutBackground: true,\r\n    labelText: 'This is the label',\r\n    labelFont: new OpenSans(20),\r\n    labelAlignment: LabelAlignment::Center\r\n);\r\n\r\n$result = $builder->build();\r\n```\r\n\r\n## Usage: without using the builder\r\n\r\n```php\r\nuse Endroid\\QrCode\\Color\\Color;\r\nuse Endroid\\QrCode\\Encoding\\Encoding;\r\nuse Endroid\\QrCode\\ErrorCorrectionLevel;\r\nuse Endroid\\QrCode\\QrCode;\r\nuse Endroid\\QrCode\\Label\\Label;\r\nuse Endroid\\QrCode\\Logo\\Logo;\r\nuse Endroid\\QrCode\\RoundBlockSizeMode;\r\nuse Endroid\\QrCode\\Writer\\PngWriter;\r\nuse Endroid\\QrCode\\Writer\\ValidationException;\r\n\r\n$writer = new PngWriter();\r\n\r\n// Create QR code\r\n$qrCode = new QrCode(\r\n    data: 'Life is too short to be generating QR codes',\r\n    encoding: new Encoding('UTF-8'),\r\n    errorCorrectionLevel: ErrorCorrectionLevel::Low,\r\n    size: 300,\r\n    margin: 10,\r\n    roundBlockSizeMode: RoundBlockSizeMode::Margin,\r\n    foregroundColor: new Color(0, 0, 0),\r\n    backgroundColor: new Color(255, 255, 255)\r\n);\r\n\r\n// Create generic logo\r\n$logo = new Logo(\r\n    path: __DIR__.'/assets/symfony.png',\r\n    resizeToWidth: 50,\r\n    punchoutBackground: true\r\n);\r\n\r\n// Create generic label\r\n$label = new Label(\r\n    text: 'Label',\r\n    textColor: new Color(255, 0, 0)\r\n);\r\n\r\n$result = $writer->write($qrCode, $logo, $label);\r\n\r\n// Validate the result\r\n$writer->validateResult($result, 'Life is too short to be generating QR codes');\r\n```\r\n\r\n## Usage: working with results\r\n\r\n```php\r\n\r\n// Directly output the QR code\r\nheader('Content-Type: '.$result->getMimeType());\r\necho $result->getString();\r\n\r\n// Save it to a file\r\n$result->saveToFile(__DIR__.'/qrcode.png');\r\n\r\n// Generate a data URI to include image data inline (i.e. inside an <img> tag)\r\n$dataUri = $result->getDataUri();\r\n```\r\n\r\n![QR Code](.github/example.png)\r\n\r\n### Writer options\r\n\r\nSome writers provide writer options. Each available writer option is can be\r\nfound as a constant prefixed with WRITER_OPTION_ in the writer class.\r\n\r\n* `PdfWriter`\r\n  * `unit`: unit of measurement (default: mm)\r\n  * `fpdf`: PDF to place the image in (default: new PDF)\r\n  * `x`: image offset (default: 0)\r\n  * `y`: image offset (default: 0)\r\n  * `link`: a URL or an identifier returned by `AddLink()`.\r\n* `PngWriter`\r\n  * `compression_level`: compression level (0-9, default: -1 = zlib default)\r\n* `SvgWriter`\r\n  * `block_id`: id of the block element for external reference (default: block)\r\n  * `exclude_xml_declaration`: exclude XML declaration (default: false)\r\n  * `exclude_svg_width_and_height`: exclude width and height (default: false)\r\n  * `force_xlink_href`: forces xlink namespace in case of compatibility issues (default: false)\r\n  * `compact`: create using `path` element, otherwise use `defs` and `use` (default: true)\r\n* `WebPWriter`\r\n  * `quality`: image quality (0-100, default: 80)\r\n\r\nYou can provide any writer options like this.\r\n\r\n```php\r\nuse Endroid\\QrCode\\Writer\\SvgWriter;\r\n\r\n$builder = new Builder(\r\n    writer: new SvgWriter(),\r\n    writerOptions: [\r\n        SvgWriter::WRITER_OPTION_EXCLUDE_XML_DECLARATION => true\r\n    ]\r\n);\r\n```\r\n\r\n### Encoding\r\n\r\nIf you use a barcode scanner you can have some troubles while reading the\r\ngenerated QR codes. Depending on the encoding you chose you will have an extra\r\namount of data corresponding to the ECI block. Some barcode scanner are not\r\nprogrammed to interpret this block of information. To ensure a maximum\r\ncompatibility you can use the `ISO-8859-1` encoding that is the default\r\nencoding used by barcode scanners (if your character set supports it,\r\ni.e. no Chinese characters are present).\r\n\r\n### Round block size mode\r\n\r\nBy default block sizes are rounded to guarantee sharp images and improve\r\nreadability. However some other rounding variants are available.\r\n\r\n* `margin (default)`: the size of the QR code is shrunk if necessary but the size\r\n  of the final image remains unchanged due to additional margin being added.\r\n* `enlarge`: the size of the QR code and the final image are enlarged when\r\n  rounding differences occur.\r\n* `shrink`: the size of the QR code and the final image are\r\n  shrunk when rounding differences occur.\r\n* `none`: No rounding. This mode can be used when blocks don't need to be rounded\r\n  to pixels (for instance SVG).\r\n\r\n## Readability\r\n\r\nThe readability of a QR code is primarily determined by the size, the input\r\nlength, the error correction level and any possible logo over the image so you\r\ncan tweak these parameters if you are looking for optimal results. You can also\r\ncheck $qrCode->getRoundBlockSize() value to see if block dimensions are rounded\r\nso that the image is more sharp and readable. Please note that rounding block\r\nsize can result in additional padding to compensate for the rounding difference.\r\nAnd finally the encoding (default UTF-8 to support large character sets) can be\r\nset to `ISO-8859-1` if possible to improve readability.\r\n\r\n## Validating the generated QR code\r\n\r\nIf you need to be extra sure the QR code you generated is readable and contains\r\nthe exact data you requested you can enable the validation reader, which is\r\ndisabled by default. You can do this either via the builder or directly on any\r\nwriter that supports validation. See the examples above.\r\n\r\nPlease note that validation affects performance so only use it in case of problems.\r\n\r\n## Symfony integration\r\n\r\nThe [endroid/qr-code-bundle](https://github.com/endroid/qr-code-bundle)\r\nintegrates the QR code library in Symfony for an even better experience.\r\n\r\n* Configure your defaults (like image size, default writer etc.)\r\n* Support for multiple configurations and injection via aliases\r\n* Generate QR codes for defined configurations via URL like /qr-code/<config>/Hello\r\n* Generate QR codes or URLs directly from Twig using dedicated functions\r\n\r\nRead the [bundle documentation](https://github.com/endroid/qr-code-bundle)\r\nfor more information.\r\n\r\n## Versioning\r\n\r\nVersion numbers follow the MAJOR.MINOR.PATCH scheme. Backwards compatibility\r\nbreaking changes will be kept to a minimum but be aware that these can occur.\r\nLock your dependencies for production and test your code when upgrading.\r\n\r\n## License\r\n\r\nThis bundle is under the MIT license. For the full copyright and license\r\ninformation please view the LICENSE file that was distributed with this source code.\r\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.427734375,
+          "content": "{\n    \"name\": \"endroid/qr-code\",\n    \"description\": \"Endroid QR Code\",\n    \"keywords\": [\"endroid\", \"qrcode\", \"qr\", \"code\", \"php\"],\n    \"homepage\": \"https://github.com/endroid/qr-code\",\n    \"type\": \"library\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Jeroen van den Enden\",\n            \"email\": \"info@endroid.nl\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.2\",\n        \"bacon/bacon-qr-code\": \"^3.0\"\n    },\n    \"require-dev\": {\n        \"ext-gd\": \"*\",\n        \"endroid/quality\": \"dev-main\",\n        \"khanamiryan/qrcode-detector-decoder\": \"^2.0.2\",\n        \"setasign/fpdf\": \"^1.8.2\"\n    },\n    \"suggest\": {\n        \"ext-gd\": \"Enables you to write PNG images\",\n        \"khanamiryan/qrcode-detector-decoder\": \"Enables you to use the image validator\",\n        \"roave/security-advisories\": \"Makes sure package versions with known security issues are not installed\",\n        \"setasign/fpdf\": \"Enables you to use the PDF writer\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Endroid\\\\QrCode\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Endroid\\\\QrCode\\\\Tests\\\\\": \"tests/\"\n        }\n    },\n    \"config\": {\n        \"sort-packages\": true,\n        \"preferred-install\": {\n            \"endroid/*\": \"source\"\n        },\n        \"allow-plugins\": {\n            \"endroid/installer\": true\n        }\n    },\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-main\": \"6.x-dev\"\n        }\n    }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

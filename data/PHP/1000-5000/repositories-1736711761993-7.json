@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736711761993,
+    "page": 7,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "chriskacerguis/codeigniter-restserver",
+      "stars": 4895,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": ".DS_Store\nvendor\n.idea"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.072265625,
+          "content": "The MIT License\n\nCopyright (c) 2012 - 2015 Phil Sturgeon, Chris Kacerguis\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.3544921875,
+          "content": "# CodeIgniter RestServer\n\n[![StyleCI](https://github.styleci.io/repos/230589/shield?branch=master)](https://github.styleci.io/repos/230589)\n\nA fully RESTful server implementation for CodeIgniter using one library, one config file and one controller.\n\n## Important!!\n\nCodeIgniter 4 includes REST support out of the box and therefore does not require the RestServer.\n\nSee the documentation here: [RESTful Resource Handling](https://codeigniter4.github.io/userguide/incoming/restful.html)\n\n## Requirements\n\n- PHP 7.2 or greater\n- CodeIgniter 3.1.11+\n\n## Installation\n\n```sh\ncomposer require chriskacerguis/codeigniter-restserver\n```\n\n## Usage\n\nCodeIgniter Rest Server is available on [Packagist](https://packagist.org/packages/chriskacerguis/codeigniter-restserver) (using semantic versioning), and installation via composer is the recommended way to install Codeigniter Rest Server. Just add this line to your `composer.json` file:\n\n```json\n\"chriskacerguis/codeigniter-restserver\": \"^3.1\"\n```\n\nor run\n\n```sh\ncomposer require chriskacerguis/codeigniter-restserver\n```\n\nNote that you will need to copy `rest.php` to your `config` directory (e.g. `application/config`)\n\nStep 1: Add this to your controller (should be before any of your code)\n\n```php\nuse chriskacerguis\\RestServer\\RestController;\n```\n\nStep 2: Extend your controller\n\n```php\nclass Example extends RestController\n```\n\n## Basic GET example\n\nHere is a basic example. This controller, which should be saved as `Api.php`, can be called in two ways:\n\n* `http://domain/api/users/` will return the list of all users\n* `http://domain/api/users/id/1` will only return information about the user with id = 1\n\n```php\n<?php\ndefined('BASEPATH') OR exit('No direct script access allowed');\n\nuse chriskacerguis\\RestServer\\RestController;\n\nclass Api extends RestController {\n\n    function __construct()\n    {\n        // Construct the parent class\n        parent::__construct();\n    }\n\n    public function users_get()\n    {\n        // Users from a data store e.g. database\n        $users = [\n            ['id' => 0, 'name' => 'John', 'email' => 'john@example.com'],\n            ['id' => 1, 'name' => 'Jim', 'email' => 'jim@example.com'],\n        ];\n\n        $id = $this->get( 'id' );\n\n        if ( $id === null )\n        {\n            // Check if the users data store contains users\n            if ( $users )\n            {\n                // Set the response and exit\n                $this->response( $users, 200 );\n            }\n            else\n            {\n                // Set the response and exit\n                $this->response( [\n                    'status' => false,\n                    'message' => 'No users were found'\n                ], 404 );\n            }\n        }\n        else\n        {\n            if ( array_key_exists( $id, $users ) )\n            {\n                $this->response( $users[$id], 200 );\n            }\n            else\n            {\n                $this->response( [\n                    'status' => false,\n                    'message' => 'No such user found'\n                ], 404 );\n            }\n        }\n    }\n}\n```\n\n## Extending supported formats\n\nIf you need to be able to support more formats for replies, you can extend the\n`Format` class to add the required `to_...` methods\n\n1. Extend the `RestController` class (in `libraries/MY_REST_Controller.php`)\n```php\n<?php\n\nuse chriskacerguis\\RestServer\\RestController;\n\nclass MY_REST_Controller extends RestController\n{\n    public function __construct()\n    {\n        parent::__construct();\n        // This can be the library's chriskacerguis\\RestServer\\Format\n        // or your own custom overloaded Format class (see bellow)\n        $this->format = new Format();\n    }\n}\n```\n\n2. Extend the `Format` class (can be created as a CodeIgniter library in `libraries/Format.php`).\nFollowing is an example to add support for PDF output\n\n```php\n<?php\n\nuse chriskacerguis\\RestServer\\Format as RestServerFormat;\n\nclass Format extends RestServerFormat\n{\n    public function to_pdf($data = null)\n    {\n        if ($data === null && func_num_args() === 0) {\n            $data = $this->_data;\n        }\n\n        if (is_array($data) || substr($data, 0, 4) != '%PDF') {\n            $html = $this->to_html($data);\n\n            // Use your PDF lib of choice. For example mpdf\n            $mpdf = new \\Mpdf\\Mpdf();\n            $mpdf->WriteHTML($html);\n            return $mpdf->Output('', 'S');\n        }\n\n        return $data;\n    }\n}\n```\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.3935546875,
+          "content": "{\n    \"name\": \"chriskacerguis/codeigniter-restserver\",\n    \"description\": \"CI Rest Server\",\n    \"type\": \"library\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Chris Kacerguis\",\n            \"email\": \"chriskacerguis@gmail.com\"\n        }\n    ],\n    \"minimum-stability\": \"dev\",\n    \"autoload\": {\n        \"psr-4\": {\"chriskacerguis\\\\RestServer\\\\\": \"src/\"}\n    },\n    \"require\": {}\n}\n"
+        },
+        {
+          "name": "language",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

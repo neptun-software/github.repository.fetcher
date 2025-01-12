@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": 1736711782252,
+    "page": 45,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hanc00l/wooyun_public",
+      "stars": 4394,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0634765625,
+          "content": "\nflask/static/drops/运维安全-2547.html\n\n*.html\n\n*.jpg\n\n*.pyc\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.5302734375,
+          "content": "# wooyun_public\n**乌云公开漏洞、知识库爬虫和搜索**\n**crawl and search for wooyun.org public bug(vulnerability) and drops**\n\n\n1.wooyun公开漏洞爬虫版\n--------\n![index](index.png)\n![search](search.png)\n\n源自2016年6月底使用scrapy爬虫爬取的4W公开漏洞和知识库，虚拟机为ubuntu14.04，采用python2+mongodb+flask(tornado)和Elasticsearch搜索引擎。\n\n虚拟机下载地址：\n\n[https://pan.baidu.com/s/1HkR4ggvAwTikshsjcKYBuA](https://pan.baidu.com/s/1HkR4ggvAwTikshsjcKYBuA) ，提取密码：8wnb（2018.4.23更新）\n\n[安装、使用指南（点我）](README_PUBLIC.md)\n\n2.wooyun公开漏洞纪念版\n--------\n![index_final](index_final.png)\n![search_final](search_final.png)\n\n漏洞信息和代码来自于[m0l1ce的wooyun_all_bugs_8.8W](https://github.com/m0l1ce/wooyunallbugs)，包含8.8W漏洞信息（不含知识库）；搜索和漏洞信息代码位于wooyun_final，对代码进行了部份修改:\n\n+ 修改了搜索功能，支持多关键字搜索和在漏洞详情中搜索\n+ 修改了离线图片文件的位置，搜索结果直接使用虚拟机中的离线图片\n+ 修改了代码以适应PHP5.6及更新版本\n\n虚拟机为ubuntu16.04，PHP5.6+MySQL5.7+Apache2。虚拟机下载地址：\n[https://pan.baidu.com/s/1qYRqa3U](https://pan.baidu.com/s/1qYRqa3U) 密码: w8vb (2017.7.4)\n\n虚拟机用户名、密码为hancool/qwe123\n\n3.其它\n--------\n\n+ 本程序只用于技术研究和个人使用，程序组件均为开源程序，漏洞和知识库来源于乌云公开漏洞，版权归wooyun.org。\n\n"
+        },
+        {
+          "name": "README_PUBLIC.md",
+          "type": "blob",
+          "size": 4.8212890625,
+          "content": "# wooyun_public\n**乌云公开漏洞、知识库爬虫和搜索**\n\n**crawl and search for wooyun.org public bug(vulnerability) and drops**\n\n![index](index.png)\n![search](search.png)\n\n1.依赖组件\n--------\n+ python 2.7和pip\n+ mongodb\n+ scrapy\n+ flask 或者 tornado\n+ pymongo\n+ Elasticsearch (搜索引擎，可选）\n\n [在ubuntu下的安装过程（点我）](install.md)\n\n\n2.爬虫（由于wooyun已不可访问，爬虫功能已不可用）\n--------\n\n+ 乌云公开漏洞和知识库的爬虫分别位于目录scrapy/wooyun和scrapy/wooyun_drops\n\n+ 运行scrapy crawl wooyun -a page_max=1  -a local_store=false -a update=false，有三个参数用于控制爬取：\n\n\t    -a page_max: 控制爬取的页数，默认为1，如果值为0，表示所有页面\n\t    -a local_store: 控制是否将每个漏洞离线存放到本地，默认为false  \n\t    -a update：控制是否重复爬取，默认为false\n\n+ 第一次爬取全部内容时，用scrapy crawl wooyun -a page_max=0 -a update=true\n\n+ 平时只爬取最近的更新时，用scrapy crawl wooyun -a page_max=1，可以根据自己的爬取频率和网站更新情况调整page_max的值\n\n+ 全部公开漏洞的列表和每个漏洞的文本内容存在mongodb中，大概约2G内容；如果整站爬全部文本和图片作为离线查询，大概需要10G空间、2小时（10M电信带宽）；爬取全部知识库，总共约500M空间。（截止2015年10月）\n\n3.搜索\n--------\n+ 漏洞搜索使用了Flask作为web server，bootstrap作为前端（8.12增加tornador web server，可配合nginx反向代理，支持高并发的应用）\n\n+ 启动web server ：在flask目录下运行./app.py，默认端口是5000\n\n+ #### 启动Elassticsearch（如果已配置了Elasticsearch）：在elasticsearch-2.3.4/bin目录下运行./elasticsearch -d (-d表示以后台方式运行）\n\n  注：elasticsearch 5.x版本需将flask/app.py中的搜索方式改为bool搜索。\n  即将```search_mongodb_by_es```函数中的```query_dsl```替换为如下所示\n\n```\n...\n      if keywords.strip() == '':\n            query_dsl = {\n                \"query\": {\n                    \"bool\": {\n                        \"must\": {\n                            \"match_all\": {}\n                        }\n                    }\n                },\n                \"sort\": {\"datetime\": {\"order\": \"desc\"}},\n                \"from\": row_start,\n                \"size\": ROWS_PER_PAGE\n            }\n        else:\n            query_dsl = {\n                \"query\": {\n                    \"bool\": {\n                        \"must\": {\n                            \"match\": {\n                                field_name: {\n                                    'query': keywords,\n                                    'operator': 'and'\n                                }\n                            }\n                        }\n                    }\n                },\n                \"sort\": {\"datetime\": {\"order\": \"desc\"}},\n                \"from\": row_start,\n                \"size\": ROWS_PER_PAGE\n            }\n...\n```\n\n+ 搜索：在浏览器通过http://localhost:5000进行搜索漏洞，多个关键字可以用空格分开。\n\n+ 默认使用mongodb的数据库搜索，在进行全文搜索时比较慢，推荐安装使用Elasicsearch搜索引擎。[安装和配置Elasicsearch的方法（点我）](elasticsearch_install.md)\n\n4.为mongodb数据库创建索引\n--------\n```bash\nmongo\nuse wooyun\ndb.wooyun_list.ensureIndex({\"datetime\":1})\ndb.wooyun_drops.ensureIndex({\"datetime\":1})\n```\n\n5.虚拟机\n------\n\n+ 虚拟机：在2016年6月底爬的wooyun全部漏洞库和知识库内容，集成了Elasticsearch搜索，总共35G（压缩后约14G），网盘地址为： [https://pan.baidu.com/s/1HkR4ggvAwTikshsjcKYBuA](https://pan.baidu.com/s/1HkR4ggvAwTikshsjcKYBuA) ，提取密码：8wnb（2018.4.23更新）\n\n\t使用方法：\n\n\t\t1、压缩包解压后是一个vmware虚拟机的镜像，可以由vmware直接打开运行；\n\t\t2、由于在制作压缩包时虚拟机为“挂起”状态，当前虚拟机的IP地址可能和宿主机的IP地址段不一致，请将虚拟机重启后重新获取IP地址，虚拟机用户密码为hancool/qwe123；\n\t\t3、进入wooyun_public目录，先用git更新一下到最新的代码git pull（如果提示merge冲突，先进行git reset --hard origin/master后再git pull）；\n\t\t4、在elasticsearch-2.3.4/bin目录下运行./elasticsearch -d (-d表示以后台方式运行）\n\t\t5、进入wooyun_public/flask目录，运行./app.py；\n\t\t6、打开浏览器，输入http://ip:5000，ip为虚拟机的网卡地址（使用ifconfig eth0查看）\n\n  注：推荐将mongodb升级至最新版本，可将数据部分缩减至1G以内（800M左右）。\n\n6.其它\n--------\n\n+ 本程序只用于技术研究和个人使用，程序组件均为开源程序，漏洞和知识库来源于乌云公开漏洞，版权归wooyun.org。\n\n+ 期待雨过天晴、重开wooyun!\n"
+        },
+        {
+          "name": "elasticsearch_install.md",
+          "type": "blob",
+          "size": 5.5400390625,
+          "content": "Elasticsearch Install\n=============================\n\n当进行全文搜索时，使用mongodb效率很低，且比较耗内存；解决办法是使用elasticsearch引擎，通过mongo-connector将数据同步到elasticsearch后进行快速搜索。\n\n安装elasticsearch\n--------\n\n1、安装JDK（或者JRE）\n\n```bash\nsudo apt-get install openjdk-7-jdk\n```\n\n注：5.x 版本需安装```openjdk-8-jdk```。\n\n2、下载elasticseach\n\n```bash\nwget https://download.elastic.co/elasticsearch/release/org/elasticsearch/distribution/tar/elasticsearch/2.3.4/elasticsearch-2.3.4.tar.gz\ntar xvf elasticsearch-2.3.4.tar.gz\n```\n\n亦可通过apt或者yum安装，参见\n\ndeb [https://www.elastic.co/guide/en/elasticsearch/reference/5.0/deb.html](https://www.elastic.co/guide/en/elasticsearch/reference/5.0/deb.html)\n\nrpm [https://www.elastic.co/guide/en/elasticsearch/reference/5.0/rpm.html](https://www.elastic.co/guide/en/elasticsearch/reference/5.0/rpm.html)\n\n注：国内可使用tsinghua（清华）镜像源[https://mirrors.tuna.tsinghua.edu.cn/elasticstack/5.x/](https://mirrors.tuna.tsinghua.edu.cn/elasticstack/5.x/)\n\n3、运行elasticsearch\n\n```bash\ncd elasticsearch-2.3.4/bin\n./elasticsearch\n```\n\n亦可通过systemd启动\n\n```\nsystemctl enable elasticsearch\nsystemctl start elasticsearch\n```\n\n4、测试一下，安装完成运行后elasticsearch会在9200端口上进行监听\n\n```bash\ncurl -X GET http://localhost:9200\n{\n  \"name\" : \"Sebastian Shaw\",\n  \"cluster_name\" : \"elasticsearch\",\n  \"version\" : {\n    \"number\" : \"2.3.4\",\n    \"build_hash\" : \"e455fd0c13dceca8dbbdbb1665d068ae55dabe3f\",\n    \"build_timestamp\" : \"2016-06-30T11:24:31Z\",\n    \"build_snapshot\" : false,\n    \"lucene_version\" : \"5.5.0\"\n  },\n  \"tagline\" : \"You Know, for Search\"\n}\n```\n\n\n配置mongodb\n-------\n\n1、编辑/etc/mongodb.conf，增加：\n\n\treplSet=rs0 #这里是指定replSet的名字 \n\toplogSize=100 #这里是指定oplog表数据大小（太大了不支持）\n\n重启动mongodb\n\n```bash\nsudo service mongodb restart\n```\n2，进入mongodb shell，初始化replicSet\n\n```bash\nmongo\nrs.initiate( {\"_id\" : \"rs0\", \"version\" : 1, \"members\" : [ { \"_id\" : 0, \"host\" : \"127.0.0.1:27017\" } ]})\n```\n3，搭建好replicSet之后，退出mongo shell重新登录，提示符会变成：rs0:PRIMARY>，就可以退出Mongodb\n\n\n安装中文分词插件elasticsearch-analysis-ik\n-------\n\n1、从github下载编译好好的插件\n\n```bash\ncd ~  \nsudo apt-get install unzip\nwget https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v1.9.4/elasticsearch-analysis-ik-1.9.4.zip\nunzip elasticsearch-analysis-ik-1.9.4.zip -d elasticsearch-analysis-ik\n```\n\n2、将插件复制到elasticsearch的plugins目录\n\n```bash\ncp -r elasticsearch-analysis-ik elasticsearch-2.3.4/plugins\n```\n\n3、修改elasticsearch.yml配置，定义插件配置\n\n```bash\nvi elasticsearch-2.3.4/config/elasticsearch.yml\n```\n在最后增加:\n\n\tindex.analysis.analyzer.ik.type : 'ik'\n\tindex.analysis.analyzer.default.type : 'ik'\n\n注：此部操作在5.x版本中已废弃，参见[https://github.com/medcl/elasticsearch-analysis-ik](https://github.com/medcl/elasticsearch-analysis-ik)\n\n4、退出并重启elasticsearch\n\n```bash\n elasticsearch-2.3.4/bin/elasticsearch -d\n (-d表示以后台方式运行）\n```\n\n安装mongo-connector，将数据同步到elasticsearch\n-------\n\n```bash\nsudo pip install mongo-connector elastic2_doc_manager\nsudo mongo-connector -m localhost:27017 -t localhost:9200 -d elastic2_doc_manager\n```\n显示Logging to mongo-connector.log.后将会把mongodb数据库的信息同步到elasticsearch中，完全同步完成估计需要30分钟左右，同步期间不能中断，否则可能导致elasticsearch与mongodb数据不一致。\n\n在同步过程中，可能会报错：\n\n```bash\nOperationFailed: ConnectionTimeout caused by - ReadTimeoutError(HTTPConnectionPool(host=u'localhost', port=9200): Read timed out. (read timeout=10))\n2016-08-04 17:24:53,372 [ERROR] mongo_connector.oplog_manager:633 - OplogThread: Failed during dump collection cannot recover! Collection(Database(MongoClient(u'127.0.0.1', 27017), u'local'), u'oplog.rs')\n2016-08-04 17:24:54,371 [ERROR] mongo_connector.connector:304 - MongoConnector: OplogThread <OplogThread(Thread-7, started 140485117060864)> unexpectedly stopped! Shutting down\n```\n\n####解决办法:\n\n修改timeout值，从默认的10改为200\n\n```bash\nsudo vi /usr/local/lib/python2.7/dist-packages/mongo_connector/doc_managers/elastic2_doc_manager.py\n```\n\t将：\n\tself.elastic = Elasticsearch(hosts=[url],**kwargs.get('clientOptions', {}))\n\n\t修改为：\n\tself.elastic = Elasticsearch(hosts=[url],timeout=200, **kwargs.get('clientOptions', {}))\n\n\n启用全文搜索\n-------\n1、安装elasticsearch-py\n\n```bash\npip install elasticsearch\n```\n2、更新app.py\n\n```bash\ncd ~/wooyun_public\ngit pull\n```\n\n3、修改app.py\n\n```bash\nvi ~/wooyun_public/flask/app.py\n修改:\n\tSEARCH_BY_ES = 'auto'\n```\n参考链接\n-------\n1、[https://imququ.com/post/elasticsearch.html](https://imququ.com/post/elasticsearch.html)\n\n2、[https://github.com/medcl/elasticsearch-analysis-ik](https://github.com/medcl/elasticsearch-analysis-ik)\n\n3、[http://es.xiaoleilu.com](http://es.xiaoleilu.com)\n\n4、[http://www.cnblogs.com/ciaos/p/3601209.html](http://www.cnblogs.com/ciaos/p/3601209.html)\n\n5、[https://segmentfault.com/a/1190000002470467](https://segmentfault.com/a/1190000002470467)\n\n6、[https://github.com/medcl/elasticsearch-analysis-ik/issues/207](https://github.com/medcl/elasticsearch-analysis-ik/issues/207)\n\n7、[https://github.com/mongodb-labs/mongo-connector/wiki/Usage%20with%20ElasticSearch](https://github.com/mongodb-labs/mongo-connector/wiki/Usage%20with%20ElasticSearch)\n"
+        },
+        {
+          "name": "flask",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.png",
+          "type": "blob",
+          "size": 111.7197265625,
+          "content": null
+        },
+        {
+          "name": "index_final.png",
+          "type": "blob",
+          "size": 398.3623046875,
+          "content": null
+        },
+        {
+          "name": "install.md",
+          "type": "blob",
+          "size": 0.802734375,
+          "content": "wooyun_public在Ubuntu下的安装\n=============================\n\n以下为在ubuntu14.04和16.04的安装过程，需要安装的依赖组件：\n\n+ python 2.7和pip\n+ mongodb\n+ scrapy \n+ flask 或 tornado\n+ pymongo \n\n步骤\n--------\n1、安装python、pip、mongodb\n\n```bash\nsudo apt-get install python python-pip mongodb\n```\n2、安装scrapy\n\n```bash\n安装scrapy如果报错，则先apt-get安装下述依赖包，然后安装pip安装lxml后即可正常安装scrapy\nsudo apt-get install libxml2-dev libxslt1-dev python-dev zlib1g-dev libevent-dev python-openssl\n\nsudo pip install lxml\nsudo pip install scrapy\n```\n3、安装pymongo和flask（或tornado）\n\n```bash\nsudo pip install flask pymongo\n(sudo pip install tornado)\n```\n4、从github下载源码\n\n```bash\ngit clone https://github.com/hanc00l/wooyun_public\n```\n\n\n"
+        },
+        {
+          "name": "scrapy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "search.png",
+          "type": "blob",
+          "size": 373.2978515625,
+          "content": null
+        },
+        {
+          "name": "search_final.png",
+          "type": "blob",
+          "size": 243.80859375,
+          "content": null
+        },
+        {
+          "name": "tornado",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "update.sh",
+          "type": "blob",
+          "size": 0.1875,
+          "content": "#!/bin/bash\n\nmongod --config /usr/local/etc/mongod.conf &\n\ncd scrapy/wooyun\nscrapy crawl wooyun -a page_max=100\n\ncd ../wooyun_drops\nscrapy crawl wooyun -a page_max=10\n\ncd ../../flask\n./app.py\n"
+        },
+        {
+          "name": "wooyun_final",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

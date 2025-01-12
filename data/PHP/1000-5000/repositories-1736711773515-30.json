@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "timestamp": 1736711773515,
+    "page": 30,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jenssegers/agent",
+      "stars": 4569,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.087890625,
+          "content": "/tests              export-ignore\n/.*\t\t\t\t\texport-ignore\n/phpunit.xml        export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.05859375,
+          "content": "/vendor\ncomposer.phar\ncomposer.lock\n.DS_Store\n.php_cs.cache\n"
+        },
+        {
+          "name": ".php_cs",
+          "type": "blob",
+          "size": 0.5625,
+          "content": "<?php\n\nuse PhpCsFixer\\Config;\nuse PhpCsFixer\\Finder;\n\n$finder = Finder::create()\n    ->in(['src', 'tests']);\n\nreturn Config::create()\n    ->setRules([\n        '@Symfony' => true,\n        'ordered_imports' => true,\n        'phpdoc_align' => false,\n        'phpdoc_to_comment' => false,\n        'phpdoc_inline_tag' => false,\n        'yoda_style' => false,\n        'blank_line_before_statement' => false,\n        'phpdoc_separation' => false,\n        'pre_increment' => false,\n        'increment_style' => false,\n        'phpdoc_types' => false,\n    ])\n    ->setFinder($finder);\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.345703125,
+          "content": "language: php\n\ndist: trusty\n\nphp:\n  - 7.0\n  - 7.1\n  - 7.2\n  - 7.3\n\nsudo: false\n\nbefore_install:\n  - travis_retry composer self-update\n\ninstall:\n  - travis_retry composer update --no-interaction --prefer-source\n\nscript:\n  - mkdir -p build/logs\n  - ./vendor/bin/phpunit --coverage-clover build/logs/clover.xml\n\nafter_success:\n  - ./vendor/bin/coveralls -v\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2020 Jens Segers\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.1240234375,
+          "content": "Agent\n=====\n\n[![Latest Stable Version](http://img.shields.io/packagist/v/jenssegers/agent.svg)](https://packagist.org/packages/jenssegers/agent) [![Total Downloads](http://img.shields.io/packagist/dm/jenssegers/agent.svg)](https://packagist.org/packages/jenssegers/agent) [![Build Status](http://img.shields.io/travis/jenssegers/agent.svg)](https://travis-ci.org/jenssegers/agent) [![Coverage Status](http://img.shields.io/coveralls/jenssegers/agent.svg)](https://coveralls.io/r/jenssegers/agent) [![Donate](https://img.shields.io/badge/donate-paypal-blue.svg)](https://www.paypal.me/jenssegers)\n\nA PHP desktop/mobile user agent parser with support for Laravel, based on [Mobile Detect](https://github.com/serbanghita/Mobile-Detect) with desktop support and additional functionality.\n\n<p align=\"center\">\n<img src=\"https://jenssegers.com/static/media/agent.png\" height=\"275\">\n</p>\n\nInstallation\n------------\n\nInstall using composer:\n\n```bash\ncomposer require jenssegers/agent\n```\n\nLaravel (optional)\n------------------\n\nAdd the service provider in `config/app.php`:\n\n```php\nJenssegers\\Agent\\AgentServiceProvider::class,\n```\n\nAnd add the Agent alias to `config/app.php`:\n\n```php\n'Agent' => Jenssegers\\Agent\\Facades\\Agent::class,\n```\n\nBasic Usage\n-----------\n\nStart by creating an `Agent` instance (or use the `Agent` Facade if you are using Laravel):\n\n```php\nuse Jenssegers\\Agent\\Agent;\n\n$agent = new Agent();\n```\n\nIf you want to parse user agents other than the current request in CLI scripts for example, you can use the `setUserAgent` and `setHttpHeaders` methods:\n\n```php\n$agent->setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2');\n$agent->setHttpHeaders($headers);\n```\n\nAll of the original [Mobile Detect](https://github.com/serbanghita/Mobile-Detect) methods are still available, check out some original examples at https://github.com/serbanghita/Mobile-Detect/wiki/Code-examples\n\n### Is?\n\nCheck for a certain property in the user agent.\n\n```php\n$agent->is('Windows');\n$agent->is('Firefox');\n$agent->is('iPhone');\n$agent->is('OS X');\n```\n\n### Magic is-method\n\nMagic method that does the same as the previous `is()` method:\n\n```php\n$agent->isAndroidOS();\n$agent->isNexus();\n$agent->isSafari();\n```\n\n### Mobile detection\n\nCheck for mobile device:\n\n```php\n$agent->isMobile();\n$agent->isTablet();\n```\n\n### Match user agent\n\nSearch the user agent with a regular expression:\n\n```php\n$agent->match('regexp');\n```\n\nAdditional Functionality\n------------------------\n\n### Accept languages\n\nGet the browser's accept languages. Example:\n\n```php\n$languages = $agent->languages();\n// ['nl-nl', 'nl', 'en-us', 'en']\n```\n\n### Device name\n\nGet the device name, if mobile. (iPhone, Nexus, AsusTablet, ...)\n\n```php\n$device = $agent->device();\n```\n\n### Operating system name\n\nGet the operating system. (Ubuntu, Windows, OS X, ...)\n\n```php\n$platform = $agent->platform();\n```\n\n### Browser name\n\nGet the browser name. (Chrome, IE, Safari, Firefox, ...)\n\n```php\n$browser = $agent->browser();\n```\n\n### Desktop detection\n\nCheck if the user is using a desktop device.\n\n```php\n$agent->isDesktop();\n```\n\n*This checks if a user is not a mobile device, tablet or robot.*\n\n### Phone detection\n\nCheck if the user is using a phone device.\n\n```php\n$agent->isPhone();\n```\n\n### Robot detection\n\nCheck if the user is a robot. This uses [jaybizzle/crawler-detect](https://github.com/JayBizzle/Crawler-Detect) to do the actual robot detection.\n\n```php\n$agent->isRobot();\n```\n\n### Robot name\n\nGet the robot name.\n\n```php\n$robot = $agent->robot();\n```\n\n### Browser/platform version\n\nMobileDetect recently added a `version` method that can get the version number for components. To get the browser or platform version you can use:\n\n```php\n$browser = $agent->browser();\n$version = $agent->version($browser);\n\n$platform = $agent->platform();\n$version = $agent->version($platform);\n```\n\n*Note, the version method is still in beta, so it might not return the correct result.*\n\n## License\n\nLaravel User Agent is licensed under [The MIT License (MIT)](LICENSE).\n\n## Security contact information\n\nTo report a security vulnerability, follow [these steps](https://tidelift.com/security).\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.201171875,
+          "content": "{\n    \"name\": \"jenssegers/agent\",\n    \"description\": \"Desktop/mobile user agent parser with support for Laravel, based on Mobiledetect\",\n    \"keywords\": [\"laravel\", \"useragent\", \"agent\", \"user agent\", \"browser\", \"platform\", \"mobile\", \"desktop\"],\n    \"homepage\": \"https://github.com/jenssegers/agent\",\n    \"license\" : \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Jens Segers\",\n            \"homepage\": \"https://jenssegers.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.6\",\n        \"mobiledetect/mobiledetectlib\": \"^2.7.6\",\n        \"jaybizzle/crawler-detect\": \"^1.2\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^5.0|^6.0|^7.0\",\n        \"php-coveralls/php-coveralls\": \"^2.1\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Jenssegers\\\\Agent\\\\\": \"src/\"\n        }\n    },\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-master\": \"3.0-dev\"\n        },\n        \"laravel\": {\n            \"providers\": [\n                \"Jenssegers\\\\Agent\\\\AgentServiceProvider\"\n            ],\n            \"aliases\": {\n                \"Agent\": \"Jenssegers\\\\Agent\\\\Facades\\\\Agent\"\n            }\n        }\n    },\n    \"suggest\": {\n        \"illuminate/support\": \"Required for laravel service providers\"\n    }\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.7080078125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"vendor/autoload.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n>\n    <testsuites>\n        <testsuite name=\"all\">\n            <directory>tests/</directory>\n            <exclude>tests/VendorsTest.php</exclude>\n        </testsuite>\n    </testsuites>\n\n    <filter>\n        <whitelist addUncoveredFilesFromWhitelist=\"false\">\n            <directory suffix=\".php\">src/</directory>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

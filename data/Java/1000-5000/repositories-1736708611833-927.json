@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736708611833,
+    "page": 927,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "xingda920813/HelloDaemon",
+      "stars": 2314,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1220703125,
+          "content": "*.iml\n.gradle\n/local.properties\n/.idea/workspace.xml\n/.idea/libraries\n.DS_Store\n/build\n/captures\n.externalNativeBuild\n.idea/\n"
+        },
+        {
+          "name": ".idea",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2016 Da Xing\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.021484375,
+          "content": "# HelloDaemon\n\n<a href=\"https://996.icu\"><img src=\"https://img.shields.io/badge/link-996.icu-red.svg\"></a>\n\n### Android 服务保活/常驻 (Android Service Daemon)\n\n#### 建议只在App的核心功能需要保活/常驻时使用。\n\n#### 本示例中使用的保活方法部分来源于下面的博客和库。启动前台服务而不显示通知来自于D-clock的AndroidDaemonService，对其他的一些非native层保活方法进行了实现。\n\n[Android 进程常驻（2）----细数利用android系统机制的保活手段](http://blog.csdn.net/marswin89/article/details/50890708)\n\n[D-clock / AndroidDaemonService](https://github.com/D-clock/AndroidDaemonService)\n\n## 实现了上面 2 个链接中的大多数保活思路 :\n\n#### 1. 将Service设置为前台服务而不显示通知\n\n> D-clock :  \n>  \n思路一：API < 18，启动前台Service时直接传入new Notification()；\n>   \n思路二：API >= 18，同时启动两个id相同的前台Service，然后再将后启动的Service做stop处理；\n\n//启动前台服务而不显示通知的漏洞已在 API Level 25 修复，大快人心！\n\n前台服务相对于后台服务的优势，除了优先级的提升以外，还有一点：\n\n在最近任务列表中划掉卡片时，前台服务不会停止；\n\n(更新：经过测试，发现只是对于AOSP/CM/国际上对Framework层改动较小的Android系统是成立的；EMUI/MIUI等未加入白名单的情况下，划掉卡片，前台服务也会停止；加入白名单后划掉卡片的行为与国际厂商的系统相似。)\n\n而后台服务会停止，并在稍后重新启动（onStartCommand 返回 START_STICKY 时）。\n\n前台服务和后台服务被划掉卡片时，回调的都是 onTaskRemoved 方法。\n\nonDestroy 方法只在 设置 -> 开发者选项 -> 正在运行的服务 里停止服务时才会回调。\n\n#### 2. 在 Service 的 onStartCommand 方法里返回 START_STICKY\n\n#### 3. 覆盖 Service 的 onDestroy/onTaskRemoved 方法, 保存数据到磁盘, 然后重新拉起服务\n\n#### 4. 监听 8 种系统广播 :\n\nCONNECTIVITY\\_CHANGE, USER\\_PRESENT, ACTION\\_POWER\\_CONNECTED, ACTION\\_POWER\\_DISCONNECTED, BOOT\\_COMPLETED, PACKAGE\\_ADDED, PACKAGE\\_REMOVED.\n\n在网络连接改变, 用户屏幕解锁, 电源连接 / 断开, 系统启动完成, 安装 / 卸载软件包时拉起 Service.\n\nService 内部做了判断，若 Service 已在运行，不会重复启动.\n\n#### 5. 开启守护服务 : 定时检查服务是否在运行，如果不在运行就拉起来\n\n#### 6. 守护 Service 组件的启用状态, 使其不被 MAT 等工具禁用\n\n详见上面的 2 个链接。\n\n## 增加实现 :\n\n#### \\+ 守护服务 : Android 5.0 及以上版本使用 JobScheduler，效果比 AlarmManager 好\n\n使用 JobScheduler, Android 系统能自动拉起被 Force Stop 的 Package，而 AlarmManager 无法拉起.\n\nAndroid 4.4 及以下版本使用 AlarmManager.\n\n#### \\+ 使用定时 Observable : 避免 Android 定制系统 JobScheduler / AlarmManager 唤醒间隔不稳定的情况\n\n#### \\+ 增加停止服务并取消定时唤醒的快捷方法\n\n#### \\+ 增加在不需要服务运行时取消 Job / Alarm / Subscription 的快捷方法 (广播 Action)\n\n#### \\+ 增强对国产机型的适配 : 防止华为机型按返回键回到桌面再锁屏后几秒钟进程被杀\n\n测试机型 : 华为 荣耀6 Plus (EMUI 4.0 Android 6.0), 应用未加入白名单.\n\n>  \n观察到 :\n>  \n在未加入白名单的情况下，按Back键回到桌面再锁屏后几秒钟即会杀掉进程；\n>  \n但是按Home键返回桌面的话，即使锁屏，也不会杀掉进程。\n\n(更新：经过测试，在EMUI系统上，『即使锁屏，也不会杀掉进程』只对App的卡片还在多任务屏幕的第一屏时有效，一旦被挤到第二页及以后，锁屏后几秒钟即会杀掉进程；加入白名单后，回到桌面再锁屏后不会杀进程。)\n\n因此，重写了onBackPressed方法，使其只是返回到桌面，而不是将当前Activity finish/destroy掉。\n\n测试机型 : 红米1S 4G (MIUI 8 Android 4.4.2), 应用未加入白名单.\n\n>  \n观察到 :\n>  \n在未加入白名单的情况下，回到桌面再锁屏后不会杀进程；\n>  \n但划掉卡片，进程死亡并不再启动；加入白名单后，划掉卡片，服务不会停止，与CM的行为相似。\n\n可以看出，若不想使用Native保活，引导用户加入白名单可能是比较可行的方法。\n\n#### \\+ 用 Intent 跳转\n\n- Android Doze 模式\n- 华为 自启管理\n- 华为 锁屏清理\n- 小米 自启动管理\n- 小米 神隐模式\n- 三星 5.0/5.1 自启动应用程序管理\n- 三星 6.0+ 未监视的应用程序管理\n- 魅族 自启动管理\n- 魅族 待机耗电管理\n- Oppo 自启动管理\n- Vivo 后台高耗电\n- 金立 应用自启\n- 金立 绿色后台\n- 乐视 自启动管理\n- 乐视 应用保护\n- 酷派 自启动管理\n- 联想 后台管理\n- 联想 后台耗电优化\n- 中兴 自启管理\n- 中兴 锁屏加速受保护应用\n\n配合 android.support.v7.AlertDialog 引导用户将 App 加入白名单.\n\n#### \\+ 守护服务和BroadcastReceiver运行在:watch子进程中，与主进程分离\n\n#### \\+ 工作服务运行在主进程中，免去与服务通信需使用AIDL或其他IPC方式的麻烦\n\n参考了 Poweramp, 启动的前台服务与 UI 运行在同一进程中。\n\n#### \\+ 做了防止重复启动Service的处理，可以任意调用startService(Intent i)\n\n若服务还在运行，就什么也不做；若服务不在运行就拉起来。\n\n#### \\+ 在子线程中运行定时任务，处理了运行前检查和销毁时保存的问题\n\n开始任务前，先检查磁盘中是否有上次销毁时保存的数据；定期将数据保存到磁盘。\n\n## 引入\n\n### 1. 添加二进制\n\nbuild.gradle 中添加\n\n```\ncompile 'com.xdandroid:hellodaemon:+'\n```\n\n### 2. 继承 AbsWorkService, 实现 6 个抽象方法\n\n```\n/**\n * 是否 任务完成, 不再需要服务运行?\n * @return 应当停止服务, true; 应当启动服务, false; 无法判断, null.\n */\nBoolean shouldStopService();\n\n/**\n * 任务是否正在运行?\n * @return 任务正在运行, true; 任务当前不在运行, false; 无法判断, null.\n */\nBoolean isWorkRunning();\n\nvoid startWork();\n\nvoid stopWork();\n\n//Service.onBind(Intent intent)\n@Nullable IBinder onBind(Intent intent, Void unused);\n\n//服务被杀时调用, 可以在这里面保存数据.\nvoid onServiceKilled();\n```\n\n别忘了在 Manifest 中注册这个 Service.\n\n### 3. 自定义 Application\n\n在 Application 的 `onCreate()` 中, 调用\n\n```\nDaemonEnv.initialize(\n  Context app,  //Application Context.\n  Class<? extends AbsWorkService> serviceClass, //刚才创建的 Service 对应的 Class 对象.\n  @Nullable Integer wakeUpInterval);  //定时唤醒的时间间隔(ms), 默认 6 分钟.\n\nContext.startService(new Intent(Context app, Class<? extends AbsWorkService> serviceClass));\n```\n\n别忘了在 Manifest 中通过 android:name 使用这个自定义的 Application.\n\n### 4. API 说明\n\n#### 启动 Service:\n\n```\nContext.startService(new Intent(Context c, Class<? extends AbsWorkService> serviceClass))\n```\n\n#### 停止 Service:\n\n在 ? extends AbsWorkService 中, 添加 `stopService()` 方法:\n\n1.操作自己维护的 flag, 使 `shouldStopService()` 返回 `true`;\n\n2.调用自己的方法或第三方 SDK 提供的 API, 停止任务;\n\n3.调用 ```AbsWorkService.cancelJobAlarmSub()``` 取消 Job / Alarm / Subscription.\n\n需要停止服务时, 调用 ? extends AbsWorkService 上的 `stopService()` 即可.\n\n#### 处理白名单:\n\n以下 API 全部位于 IntentWrapper 中:  \n\n```\nList<IntentWrapper> getIntentWrapperList();\n\n//弹出 android.support.v7.AlertDialog, 引导用户将 App 加入白名单.\nvoid whiteListMatters(Activity a, String reason);\n\n//防止华为机型未加入白名单时按返回键回到桌面再锁屏后几秒钟进程被杀.\n//重写 MainActivity.onBackPressed(), 只保留对以下 API 的调用.\nvoid onBackPressed(Activity a);\n```\n\n#### 为节省用户的电量, 当不再需要服务运行时, 可以调用 ```AbsWorkService.cancelJobAlarmSub()``` 取消定时唤醒的 Job / Alarm / Subscription, 并调用 `stopService()` 停止服务.\n\n详见代码及注释。\n"
+        },
+        {
+          "name": "build.gradle",
+          "type": "blob",
+          "size": 0.59375,
+          "content": "// Top-level build file where you can add configuration options common to all sub-projects/modules.\n\nbuildscript {\n    repositories {\n        google()\n        jcenter()\n    }\n    dependencies {\n        classpath 'com.android.tools.build:gradle:3.0.1'\n        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'\n        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.4.1'\n    }\n}\n\nallprojects {\n    repositories {\n        google()\n        jcenter()\n    }\n}\n\ntask clean(type: Delete) {\n    delete rootProject.buildDir\n}\n\ntask javadoc(type: Javadoc) {\n    options.encoding = \"utf-8\"\n}\n"
+        },
+        {
+          "name": "gradle.properties",
+          "type": "blob",
+          "size": 0.0400390625,
+          "content": "org.gradle.jvmargs=-Dfile.encoding=UTF-8\n"
+        },
+        {
+          "name": "gradle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gradlew",
+          "type": "blob",
+          "size": 4.8544921875,
+          "content": "#!/usr/bin/env bash\n\n##############################################################################\n##\n##  Gradle start up script for UN*X\n##\n##############################################################################\n\n# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\nDEFAULT_JVM_OPTS=\"\"\n\nAPP_NAME=\"Gradle\"\nAPP_BASE_NAME=`basename \"$0\"`\n\n# Use the maximum available, or set MAX_FD != -1 to use that value.\nMAX_FD=\"maximum\"\n\nwarn ( ) {\n    echo \"$*\"\n}\n\ndie ( ) {\n    echo\n    echo \"$*\"\n    echo\n    exit 1\n}\n\n# OS specific support (must be 'true' or 'false').\ncygwin=false\nmsys=false\ndarwin=false\ncase \"`uname`\" in\n  CYGWIN* )\n    cygwin=true\n    ;;\n  Darwin* )\n    darwin=true\n    ;;\n  MINGW* )\n    msys=true\n    ;;\nesac\n\n# Attempt to set APP_HOME\n# Resolve links: $0 may be a link\nPRG=\"$0\"\n# Need this for relative symlinks.\nwhile [ -h \"$PRG\" ] ; do\n    ls=`ls -ld \"$PRG\"`\n    link=`expr \"$ls\" : '.*-> \\(.*\\)$'`\n    if expr \"$link\" : '/.*' > /dev/null; then\n        PRG=\"$link\"\n    else\n        PRG=`dirname \"$PRG\"`\"/$link\"\n    fi\ndone\nSAVED=\"`pwd`\"\ncd \"`dirname \\\"$PRG\\\"`/\" >/dev/null\nAPP_HOME=\"`pwd -P`\"\ncd \"$SAVED\" >/dev/null\n\nCLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar\n\n# Determine the Java command to use to start the JVM.\nif [ -n \"$JAVA_HOME\" ] ; then\n    if [ -x \"$JAVA_HOME/jre/sh/java\" ] ; then\n        # IBM's JDK on AIX uses strange locations for the executables\n        JAVACMD=\"$JAVA_HOME/jre/sh/java\"\n    else\n        JAVACMD=\"$JAVA_HOME/bin/java\"\n    fi\n    if [ ! -x \"$JAVACMD\" ] ; then\n        die \"ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\n    fi\nelse\n    JAVACMD=\"java\"\n    which java >/dev/null 2>&1 || die \"ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\n\nPlease set the JAVA_HOME variable in your environment to match the\nlocation of your Java installation.\"\nfi\n\n# Increase the maximum file descriptors if we can.\nif [ \"$cygwin\" = \"false\" -a \"$darwin\" = \"false\" ] ; then\n    MAX_FD_LIMIT=`ulimit -H -n`\n    if [ $? -eq 0 ] ; then\n        if [ \"$MAX_FD\" = \"maximum\" -o \"$MAX_FD\" = \"max\" ] ; then\n            MAX_FD=\"$MAX_FD_LIMIT\"\n        fi\n        ulimit -n $MAX_FD\n        if [ $? -ne 0 ] ; then\n            warn \"Could not set maximum file descriptor limit: $MAX_FD\"\n        fi\n    else\n        warn \"Could not query maximum file descriptor limit: $MAX_FD_LIMIT\"\n    fi\nfi\n\n# For Darwin, add options to specify how the application appears in the dock\nif $darwin; then\n    GRADLE_OPTS=\"$GRADLE_OPTS \\\"-Xdock:name=$APP_NAME\\\" \\\"-Xdock:icon=$APP_HOME/media/gradle.icns\\\"\"\nfi\n\n# For Cygwin, switch paths to Windows format before running java\nif $cygwin ; then\n    APP_HOME=`cygpath --path --mixed \"$APP_HOME\"`\n    CLASSPATH=`cygpath --path --mixed \"$CLASSPATH\"`\n    JAVACMD=`cygpath --unix \"$JAVACMD\"`\n\n    # We build the pattern for arguments to be converted via cygpath\n    ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`\n    SEP=\"\"\n    for dir in $ROOTDIRSRAW ; do\n        ROOTDIRS=\"$ROOTDIRS$SEP$dir\"\n        SEP=\"|\"\n    done\n    OURCYGPATTERN=\"(^($ROOTDIRS))\"\n    # Add a user-defined pattern to the cygpath arguments\n    if [ \"$GRADLE_CYGPATTERN\" != \"\" ] ; then\n        OURCYGPATTERN=\"$OURCYGPATTERN|($GRADLE_CYGPATTERN)\"\n    fi\n    # Now convert the arguments - kludge to limit ourselves to /bin/sh\n    i=0\n    for arg in \"$@\" ; do\n        CHECK=`echo \"$arg\"|egrep -c \"$OURCYGPATTERN\" -`\n        CHECK2=`echo \"$arg\"|egrep -c \"^-\"`                                 ### Determine if an option\n\n        if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition\n            eval `echo args$i`=`cygpath --path --ignore --mixed \"$arg\"`\n        else\n            eval `echo args$i`=\"\\\"$arg\\\"\"\n        fi\n        i=$((i+1))\n    done\n    case $i in\n        (0) set -- ;;\n        (1) set -- \"$args0\" ;;\n        (2) set -- \"$args0\" \"$args1\" ;;\n        (3) set -- \"$args0\" \"$args1\" \"$args2\" ;;\n        (4) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" ;;\n        (5) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" ;;\n        (6) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" ;;\n        (7) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" ;;\n        (8) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" ;;\n        (9) set -- \"$args0\" \"$args1\" \"$args2\" \"$args3\" \"$args4\" \"$args5\" \"$args6\" \"$args7\" \"$args8\" ;;\n    esac\nfi\n\n# Split up the JVM_OPTS And GRADLE_OPTS values into an array, following the shell quoting and substitution rules\nfunction splitJvmOpts() {\n    JVM_OPTS=(\"$@\")\n}\neval splitJvmOpts $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS\nJVM_OPTS[${#JVM_OPTS[*]}]=\"-Dorg.gradle.appname=$APP_BASE_NAME\"\n\nexec \"$JAVACMD\" \"${JVM_OPTS[@]}\" -classpath \"$CLASSPATH\" org.gradle.wrapper.GradleWrapperMain \"$@\"\n"
+        },
+        {
+          "name": "gradlew.bat",
+          "type": "blob",
+          "size": 2.259765625,
+          "content": "@if \"%DEBUG%\" == \"\" @echo off\n@rem ##########################################################################\n@rem\n@rem  Gradle startup script for Windows\n@rem\n@rem ##########################################################################\n\n@rem Set local scope for the variables with windows NT shell\nif \"%OS%\"==\"Windows_NT\" setlocal\n\n@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.\nset DEFAULT_JVM_OPTS=\n\nset DIRNAME=%~dp0\nif \"%DIRNAME%\" == \"\" set DIRNAME=.\nset APP_BASE_NAME=%~n0\nset APP_HOME=%DIRNAME%\n\n@rem Find java.exe\nif defined JAVA_HOME goto findJavaFromJavaHome\n\nset JAVA_EXE=java.exe\n%JAVA_EXE% -version >NUL 2>&1\nif \"%ERRORLEVEL%\" == \"0\" goto init\n\necho.\necho ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.\necho.\necho Please set the JAVA_HOME variable in your environment to match the\necho location of your Java installation.\n\ngoto fail\n\n:findJavaFromJavaHome\nset JAVA_HOME=%JAVA_HOME:\"=%\nset JAVA_EXE=%JAVA_HOME%/bin/java.exe\n\nif exist \"%JAVA_EXE%\" goto init\n\necho.\necho ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%\necho.\necho Please set the JAVA_HOME variable in your environment to match the\necho location of your Java installation.\n\ngoto fail\n\n:init\n@rem Get command-line arguments, handling Windowz variants\n\nif not \"%OS%\" == \"Windows_NT\" goto win9xME_args\nif \"%@eval[2+2]\" == \"4\" goto 4NT_args\n\n:win9xME_args\n@rem Slurp the command line arguments.\nset CMD_LINE_ARGS=\nset _SKIP=2\n\n:win9xME_args_slurp\nif \"x%~1\" == \"x\" goto execute\n\nset CMD_LINE_ARGS=%*\ngoto execute\n\n:4NT_args\n@rem Get arguments from the 4NT Shell from JP Software\nset CMD_LINE_ARGS=%$\n\n:execute\n@rem Setup the command line\n\nset CLASSPATH=%APP_HOME%\\gradle\\wrapper\\gradle-wrapper.jar\n\n@rem Execute Gradle\n\"%JAVA_EXE%\" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% \"-Dorg.gradle.appname=%APP_BASE_NAME%\" -classpath \"%CLASSPATH%\" org.gradle.wrapper.GradleWrapperMain %CMD_LINE_ARGS%\n\n:end\n@rem End local scope for the variables with windows NT shell\nif \"%ERRORLEVEL%\"==\"0\" goto mainEnd\n\n:fail\nrem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of\nrem the _cmd.exe /c_ return code!\nif  not \"\" == \"%GRADLE_EXIT_CONSOLE%\" exit 1\nexit /b 1\n\n:mainEnd\nif \"%OS%\"==\"Windows_NT\" endlocal\n\n:omega\n"
+        },
+        {
+          "name": "hellodaemon",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sample",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "settings.gradle",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "include ':hellodaemon', ':sample'\n"
+        }
+      ]
+    }
+  ]
+}
