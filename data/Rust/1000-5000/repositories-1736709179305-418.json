@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736709179305,
+    "page": 418,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "redox-os/termion",
+      "stars": 2117,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": "target\nCargo.lock\n"
+        },
+        {
+          "name": ".gitlab-ci.yml",
+          "type": "blob",
+          "size": 0.875,
+          "content": "image: \"redoxos/redoxer\"\n\nstages:\n    - build\n    - test\n\nvariables:\n    REDOXER_USE_FUSE: no\n\nbefore_script:\n    cargo install redoxer --git \"https://gitlab.redox-os.org/redox-os/redoxer.git\"\n\ncache:\n    paths:\n        - target/\n\nbuild:linux:stable:\n    stage: build\n    script:\n        - rustup update stable\n        - cargo +stable build --verbose\n\nbuild:linux:\n    stage: build\n    script: cargo +nightly build --verbose\n\nbuild:redox:\n    stage: build\n    script: redoxer build --verbose\n\ntest:linux:stable:\n    stage: test\n    dependencies:\n        - build:linux:stable\n    script:\n        - rustup update stable\n        - script -c \"cargo +stable test --verbose\"\n\ntest:linux:\n    stage: test\n    dependencies:\n        - build:linux\n    script: script -c \"cargo +nightly test --verbose\"\n\ntest:redox:\n    stage: test\n    dependencies:\n        - build:redox\n    script: redoxer test --verbose\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2998046875,
+          "content": "language: rust\ncache: cargo\nrust:\n    - stable\n    - beta\n    - nightly\nos:\n    - linux\n    - osx\nscript:\n    - if [[ \"$TRAVIS_OS_NAME\" == \"osx\" ]]; then FAKETTY=\"script -q /dev/null\"; fi\n    - $FAKETTY cargo build --verbose\n    - $FAKETTY cargo test --verbose\n    - $FAKETTY cargo test --release --verbose\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 3.7548828125,
+          "content": "# 4.0.3\n\nRemove unused code and update dependencies.\n\n# 4.0.2\n\nFixes an error check in Ctrl-Arrow code, no difference in behavior. Cleaned up examples.\n\n# 4.0.1\n\nFixes a regression in function keys F5 and above.\n\n# 4.0.0\n\n4.0.0 adds support for horizontal scrolling when working with `MouseTerminal`.\n\n## 3.0.0 to 4.0.0 guide\n\nA change is only necessary if you were matching on all variants of the `MouseEvent` enum without a wildcard.\nIn this case, you need to either handle the two new variants, `MouseLeft` and `MouseRight`, or add a wildcard.\n\n# 3.0.0\n\nv3 release improves `raw` terminal API and enables support of any TTY target.\n\n## 2.0.0 to 3.0.0 guide\n\nChanges are only required if you were using `IntoRawMode` on generic terminals `W: Write`. Now, terminal\nis also required to implement [`AsFd` trait][AsFd-trait]. So replacing generic bounds with `W: Write + AsFd`\nshould be sufficient.\n\n[AsFd-trait]: https://doc.rust-lang.org/std/os/fd/trait.AsFd.html\n\n# 1.0.0\n\nTermion 1.0.0 is out! This release is breaking, which is also the reason for the semver bump.\n\n## Highlights\n\nLot'ta goodies.\n\n- **Mouse support:** If you enabled mouse mode through the `MouseTerminal` struct, you can get mouse events (thanks to IGI-111).\n- **TrueColor support:** You can now use true color, by the `Rgb` struct.\n- **A complete revision of the way escapes are handled:** Everything is now done through `Display` instead of custom traits.\n- **`isatty` wrapper:** `termion::is_tty` takes any `T: AsRawFd` and gives you a `bool`.\n- **Crates.io release:** Previously, it was distributed solely through git. This turns out to be very convinient, but quite critical whenever making breaking changes (that is, major semver bumps).\n\n## 0.1.0 to 1.0.0 guide\n\nThis sample table gives an idea of how to go bu converting to the new major\nversion of Termion.\n\n| 0.1.0                          | 1.0.0\n|--------------------------------|---------------------------\n| `use termion::IntoRawMode`     | `use termion::raw::IntoRawMode`\n| `stdout.color(color::Red);`    | `write!(stdout, \"{}\", color::Fg(color::Red));`\n| `stdout.color_bg(color::Red);` | `write!(stdout, \"{}\", color::Bg(color::Red));`\n| `stdout.goto(x, y);`           | `write!(stdout, \"{}\", cursor::Goto(x, y));`\n| `color::rgb(r, g, b);`         | `color::Rgb(r, g, b)` (truecolor)\n| `x.with_mouse()`               | `MouseTerminal::from(x)`\n\n## An example\n\n```rust\n#![feature(step_by)]\n\nextern crate termion;\n\nuse termion::event::Key;\nuse termion::input::TermRead;\nuse termion::raw::IntoRawMode;\nuse std::io::{Write, stdout, stdin};\n\nfn rainbow<W: Write>(stdout: &mut W, blue: u8) {\n    write!(stdout, \"{}{}\", termion::cursor::Goto(1, 1), termion::clear::All).unwrap();\n\n    for red in (0..255).step_by(8 as u8) {\n        for green in (0..255).step_by(4) {\n            write!(stdout, \"{} \", termion::color::Bg(termion::color::Rgb(red, green, blue))).unwrap();\n        }\n        write!(stdout, \"\\n\\r\").unwrap();\n    }\n\n    writeln!(stdout, \"{}b = {}\", termion::style::Reset, blue).unwrap();\n}\n\nfn main() {\n    let stdin = stdin();\n    let mut stdout = stdout().into_raw_mode().unwrap();\n\n    writeln!(stdout, \"{}{}{}Use the arrow keys to change the blue in the rainbow.\",\n           termion::clear::All,\n           termion::cursor::Goto(1, 1),\n           termion::cursor::Hide).unwrap();\n\n    let mut blue = 172u8;\n\n    for c in stdin.keys() {\n        match c.unwrap() {\n            Key::Up => {\n                blue = blue.saturating_add(4);\n                rainbow(&mut stdout, blue);\n            },\n            Key::Down => {\n                blue = blue.saturating_sub(4);\n                rainbow(&mut stdout, blue);\n            },\n            Key::Char('q') => break,\n            _ => {},\n        }\n        stdout.flush().unwrap();\n    }\n\n    write!(stdout, \"{}\", termion::cursor::Show).unwrap();\n}\n```\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.7880859375,
+          "content": "[package]\nname = \"termion\"\nversion = \"4.0.3\"\nauthors = [\n    \"ticki <Ticki@users.noreply.github.com>\",\n    \"gycos <alexandre.bury@gmail.com>\",\n    \"IGI-111 <igi-111@protonmail.com>\",\n    \"Jeremy Soller <jackpot51@gmail.com>\",\n]\ndescription = \"A bindless library for manipulating terminals.\"\nrepository = \"https://gitlab.redox-os.org/redox-os/termion\"\ndocumentation = \"https://docs.rs/termion\"\nlicense = \"MIT\"\nkeywords = [\"tty\", \"color\", \"terminal\", \"password\", \"tui\"]\nexclude = [\"target\", \"CHANGELOG.md\", \"image.png\", \"Cargo.lock\"]\n\n[dependencies]\nnumtoa = { version = \"0.2.4\"}\nserde = { version = \"1.0\", features = [\"derive\"], optional = true }\n\n[target.'cfg(not(target_os = \"redox\"))'.dependencies]\nlibc = \"0.2\"\n\n[target.'cfg(target_os = \"redox\")'.dependencies]\nredox_termios = \"0.1.3\"\nlibredox = \"0.1.3\"\n"
+        },
+        {
+          "name": "FUNDING.json",
+          "type": "blob",
+          "size": 0.1044921875,
+          "content": "{\n  \"drips\": {\n    \"ethereum\": {\n      \"ownedBy\": \"0x083e29156955A4c0f7eAA406e1167Bd1bE88933E\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 Ticki\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.7783203125,
+          "content": "<p align=\"center\">\n<img alt=\"Termion logo\" src=\"https://rawgit.com/redox-os/termion/master/logo.svg\" />\n</p>\n\n[![Build Status](https://travis-ci.org/redox-os/termion.svg?branch=master)](https://travis-ci.org/redox-os/termion) [![Latest Version](https://img.shields.io/crates/v/termion.svg)](https://crates.io/crates/termion) | [Documentation](https://docs.rs/termion) | [Examples](https://github.com/redox-os/termion/tree/master/examples) | [Changelog](https://github.com/redox-os/termion/tree/master/CHANGELOG.md) | [Tutorial](http://ticki.github.io/blog/making-terminal-applications-in-rust-with-termion/)\n|----|----|----|----|----\n\n\n**Termion** is a pure Rust, bindless library for low-level handling, manipulating\nand reading information about terminals. This provides a full-featured\nalternative to Termbox.\n\nTermion aims to be simple and yet expressive. It is bindless, meaning that it\nis not a front-end to some other library (e.g., ncurses or termbox), but a\nstandalone library directly talking to the TTY.\n\nTermion is quite convenient, due to its complete coverage of essential TTY\nfeatures, providing one consistent API. Termion is rather low-level containing\nonly abstraction aligned with what actually happens behind the scenes. For\nsomething more high-level, refer to inquirer-rs, which uses Termion as backend.\n\nTermion generates escapes and API calls for the user. This makes it a whole lot\ncleaner to use escapes.\n\nSupports Redox, Mac OS X, BSD, and Linux (or, in general, ANSI terminals).\n\n## A note on stability\n\nThis crate is stable.\n\n## Cargo.toml\n\n```toml\n[dependencies]\ntermion = \"*\"\n```\n\n## 3.0.0 to 4.0.0 guide\n\nA change is only necessary if you were matching on all variants of the `MouseEvent` enum without a wildcard.\nIn this case, you need to either handle the two new variants, `MouseLeft` and `MouseRight`, or add a wildcard.\n\n## 2.0.0 to 3.0.0 guide\n\nChanges are only required if you were using `IntoRawMode` on generic terminals `W: Write`. Now, terminal\nis also required to implement [`AsFd` trait][AsFd-trait]. So replacing generic bounds with `W: Write + AsFd`\nshould be sufficient.\n\n[AsFd-trait]: https://doc.rust-lang.org/std/os/fd/trait.AsFd.html\n\n## 1.0.0 to 2.0.0 guide\n\n| 1.0.0                          | 2.0.0\n|--------------------------------|---------------------------\n| `AlternativeScreen::from(x)`   | `x.into_alternative_screen()`\n\n## 0.1.0 to 1.0.0 guide\n\nThis sample table gives an idea of how to go about converting to the new major\nversion of Termion.\n\n| 0.1.0                          | 1.0.0\n|--------------------------------|---------------------------\n| `use termion::IntoRawMode`     | `use termion::raw::IntoRawMode`\n| `use termion::TermRead`        | `use termion::input::TermRead`\n| `stdout.color(color::Red);`    | `write!(stdout, \"{}\", color::Fg(color::Red));`\n| `stdout.color_bg(color::Red);` | `write!(stdout, \"{}\", color::Bg(color::Red));`\n| `stdout.goto(x, y);`           | `write!(stdout, \"{}\", cursor::Goto(x, y));`\n| `color::rgb(r, g, b);`         | `color::Rgb(r, g, b)` (truecolor)\n| `x.with_mouse()`               | `MouseTerminal::from(x)`\n\n## Features\n\n- Raw mode.\n- TrueColor.\n- 256-color mode.\n- Cursor movement.\n- Text formatting.\n- Console size.\n- TTY-only stream.\n- Control sequences.\n- Termios control.\n- Password input.\n- Redox support.\n- Safe `isatty` wrapper.\n- Panic-free error handling.\n- Special keys events (modifiers, special keys, etc.).\n- Allocation-free.\n- Asynchronous key events.\n- Mouse input.\n- Carefully tested.\n- Detailed documentation on every item.\n\nand much more.\n\n## Examples\n\n### Style and colors.\n\n```rust\nextern crate termion;\n\nuse termion::{color, style};\n\nuse std::io;\n\nfn main() {\n    println!(\"{}Red\", color::Fg(color::Red));\n    println!(\"{}Blue\", color::Fg(color::Blue));\n    println!(\"{}Blue'n'Bold{}\", style::Bold, style::Reset);\n    println!(\"{}Just plain italic\", style::Italic);\n}\n```\n\n### Moving the cursor\n\n```rust\nextern crate termion;\n\nfn main() {\n    print!(\"{}{}Stuff\", termion::clear::All, termion::cursor::Goto(1, 1));\n}\n\n```\n\n### Mouse\n\n```rust\nextern crate termion;\n\nuse termion::event::{Key, Event, MouseEvent};\nuse termion::input::{TermRead, MouseTerminal};\nuse termion::raw::IntoRawMode;\nuse std::io::{Write, stdout, stdin};\n\nfn main() {\n    let stdin = stdin();\n    let mut stdout = MouseTerminal::from(stdout().into_raw_mode().unwrap());\n\n    write!(stdout, \"{}{}q to exit. Click, click, click!\", termion::clear::All, termion::cursor::Goto(1, 1)).unwrap();\n    stdout.flush().unwrap();\n\n    for c in stdin.events() {\n        let evt = c.unwrap();\n        match evt {\n            Event::Key(Key::Char('q')) => break,\n            Event::Mouse(me) => {\n                match me {\n                    MouseEvent::Press(_, x, y) => {\n                        write!(stdout, \"{}x\", termion::cursor::Goto(x, y)).unwrap();\n                    },\n                    _ => (),\n                }\n            }\n            _ => {}\n        }\n        stdout.flush().unwrap();\n    }\n}\n```\n\n### Read a password\n\n```rust\nextern crate termion;\n\nuse termion::input::TermRead;\nuse std::io::{Write, stdout, stdin};\n\nfn main() {\n    let stdout = stdout();\n    let mut stdout = stdout.lock();\n    let stdin = stdin();\n    let mut stdin = stdin.lock();\n\n    stdout.write_all(b\"password: \").unwrap();\n    stdout.flush().unwrap();\n\n    let pass = stdin.read_passwd(&mut stdout);\n\n    if let Ok(Some(pass)) = pass {\n        stdout.write_all(pass.as_bytes()).unwrap();\n        stdout.write_all(b\"\\n\").unwrap();\n    } else {\n        stdout.write_all(b\"Error\\n\").unwrap();\n    }\n}\n```\n\n## Usage\n\nSee `examples/`, and the documentation, which can be rendered using `cargo doc`.\n\nFor a more complete example, see [a minesweeper implementation](https://github.com/redox-os/games-for-redox/blob/master/src/minesweeper/main.rs), that I made for Redox using termion.\n\n<img src=\"image.png\" width=\"200\">\n\n## License\n\nMIT/X11.\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "image.png",
+          "type": "blob",
+          "size": 74.0537109375,
+          "content": null
+        },
+        {
+          "name": "logo.svg",
+          "type": "blob",
+          "size": 1.2978515625,
+          "content": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"60.099598mm\" height=\"18.291185mm\" viewBox=\"0 0 212.95 64.81\">\n  <style>\n    .blink { animation: blinker 3s linear infinite; } @keyframes blinker { 50% { opacity: 0; } }\n  </style>\n\n  <path d=\"M0 0h212.95v64.82H0z\" opacity=\".71\"/>\n  <path fill=\"#f9f9f9\" d=\"M12.24 17.8H34.5v3.33h-9.13v25.84H21.4V21.13h-9.16V17.8zm27 0h17.3v3.33H43.2v8.63h12.77v3.32h-12.8v10.57H56.9v3.32H39.24V17.8zM74.3 33.2q1.5.4 2.6 1.48 1.06 1.08 2.66 4.32l3.97 7.97H79.3l-3.5-7.37q-1.5-3.14-2.7-4.04-1.2-.92-3.13-.92H66.2v12.33h-3.96V17.8h8.13q4.8 0 7.36 2.17 2.56 2.17 2.56 6.27 0 2.9-1.6 4.73-1.6 1.82-4.4 2.23zm-8.1-12.15V31.4h4.32q2.83 0 4.22-1.27 1.4-1.27 1.4-3.9 0-2.5-1.5-3.83-1.46-1.35-4.27-1.35H66.2zm19-3.25h5.26l5.04 14.85 5.08-14.84h5.3V47h-3.66V21.2l-5.2 15.38h-2.98L88.82 21.2v25.77H85.2V17.8zm26.3 0h16.2v3.33h-6.12v22.52h6.1v3.32H111.5v-3.32h6.1V21.13h-6.1V17.8zm37.8 14.62q0-6.43-1.32-9.18-1.3-2.76-4.3-2.76t-4.33 2.76q-1.3 2.75-1.3 9.18 0 6.4 1.3 9.16 1.33 2.75 4.32 2.75 3 0 4.3-2.73 1.34-2.76 1.34-9.18zm4.13 0q0 7.6-2.42 11.36-2.4 3.75-7.3 3.75t-7.3-3.73q-2.4-3.73-2.4-11.38 0-7.64 2.4-11.4 2.4-3.74 7.35-3.74t7.34 3.75q2.42 3.75 2.42 11.4zm4.97-14.62h5l9.86 24v-24h3.8v29.17h-5l-9.84-24v24h-3.8V17.8z\"/>\n  <path fill=\"#f9f9f9\" d=\"M192.7 8.66v47.5h-3.93V8.66h3.94z\" class=\"blink\"/>\n</svg>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

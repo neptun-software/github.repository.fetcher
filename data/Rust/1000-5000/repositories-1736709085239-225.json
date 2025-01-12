@@ -1,0 +1,122 @@
+{
+  "metadata": {
+    "timestamp": 1736709085239,
+    "page": 225,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "redox-os/tfs",
+      "stars": 2946,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.056640625,
+          "content": "target\nCargo.lock\n*.aux\n*.pdf\n*.log\n*.out\n*.pdf_tex\n*.toc\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 Ticki\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.353515625,
+          "content": "# TFS was replaced by [RedoxFS](https://gitlab.redox-os.org/redox-os/redoxfs) and is no longer maintained, most of the features of TFS have been incorporated into RedoxFS\n\n![TFS](https://rawgit.com/ticki/tfs/master/icon.svg)\n\n# TFS: Next-generation file system\n\nTFS is a modular, fast, and feature rich next-gen file system, employing\nmodern techniques for high performance, high space efficiency, and high\nscalability.\n\nTFS was created out of the need for a modern file system for Redox OS,\nas a replacement for ZFS, which proved to be slow to implement because\nof its monolithic design.\n\nTFS is inspired by the ideas behind ZFS, but at the same time it aims to\nbe modular and easier to implement.\n\nTFS is not related to the file system of the same name by\n*terminalcloud*.\n\n*While many components are complete, TFS itself is not ready for use.*\n\n[![MIT/X11 permissive license.](https://img.shields.io/github/license/ticki/tfs.svg)](https://en.wikipedia.org/wiki/MIT_License)\n\n![GitHub Stars](https://img.shields.io/github/stars/ticki/tfs.svg?style=social&label=Star)\n\n## Design goals\n\nTFS is designed with the following goals in mind:\n\n- Concurrent\n\nTFS contains very few locks and aims to be as suitable for\n    multithreaded systems as possible. It makes use of multiple truly\n    concurrent structures to manage the data, and scales linearly by the\n    number of cores. **This is perhaps the most important feature\n    of TFS.**\n\n- Asynchronous\n\nTFS is asynchronous: operations can happen independently; writes and\n    reads from the disk need not block.\n\n- Full-disk compression\n\nTFS is the first file system to incorporate complete full-disk\n    compression through a scheme we call RACC (random-access\n    cluster compression). This means that every cluster is compressed\n    only affecting performance slightly. It is estimated that you get\n    60-120% more usable space.\n\n- Revision history\n\nTFS stores a revision history of every file without imposing\n    extra overhead. This means that you can revert any file into an\n    earlier version, backing up the system automatically and without\n    imposed overhead from copying.\n\n- Data integrity\n\nTFS, like ZFS, stores full checksums of the file (not just\n    metadata), and on top of that, it is done in the parent block. That\n    means that almost all data corruption will be detected upon read.\n\n- Copy-on-write semantics\n\nSimilarly to Btrfs and ZFS, TFS uses CoW semantics, meaning that no\n    cluster is ever overwritten directly, but instead it is copied and\n    written to a new cluster.\n\n- O(1) recursive copies\n\nLike some other file systems, TFS can do recursive copies in\n    constant time, but there is an unique addition: TFS doesn't copy\n    even after it is mutated. How? It maintains segments of the file\n    individually, such that only the updated segment needs copying.\n\n- Guaranteed atomicity\n\nThe system will never enter an inconsistent state (unless there is\n    hardware failure), meaning that unexpected power-off won't ever\n    damage the system.\n\n- Improved caching\n\nTFS puts a lot of effort into caching the disk to speed up\n    disk accesses. It uses machine learning to learn patterns and\n    predict future uses to reduce the number of cache misses. TFS also\n    compresses the in-memory cache, reducing the amount of\n    memory needed.\n\n- Better file monitoring\n\nCoW is very suitable for high-performance, scalable file monitoring,\n    but unfortunately only few file systems incorporate that. TFS is one\n    of those.\n\n- All memory safe\n\nTFS uses only components written in Rust. As such, memory unsafety\n    is only possible in code marked unsafe, which is checked\n    extra carefully.\n\n- Full coverage testing\n\nTFS aims to be full coverage with respect to testing. This gives\n    relatively strong guarantees on correctness by instantly revealing\n    large classes of bugs.\n\n- SSD friendly\n\nTFS tries to avoid the write limitation in SSD by repositioning\n    dead sectors.\n\n- Improved garbage collection\n\nTFS uses Bloom filters for space-efficient and fast\n    garbage collection. TFS allows the FS garbage collector to run in\n    the background without blocking the rest of the file system.\n\n## FAQ\n\n### Why do you use SPECK as the default cipher?\n\n- SPECK is a relatively young cipher, yet it has been subject to a lot\n    of (ineffective) cryptanalysis, so it is relatively secure. It has\n    really good performance and a simple implementation. Portability is\n    an important part of the TFS design, and truly portable AES\n    implementations without side-channel attacks is harder than many\n    think (particularly, there are issues with SubBytes in most\n    portable implementations). SPECK does not have this issue, and can\n    thus be securely implemented portably with minimal effort.\n\n### How similar is TFS and ZFS?\n\n- Not that similar, actually. They share many of the basic ideas, but\n    otherwise they are essentially unconnected. But ZFS' design has\n    shaped TFS' a lot.\n\n### Is TFS Redox-only?\n\n- No, and it was never planned to be Redox-only.\n\n### How does whole-disk compression work?\n\n- Whole-disk compression is -- to my knowledge -- exclusive to TFS. It\n    works by collecting as many \"pages\" (virtual data blocks) into a\n    \"cluster\" (allocation unit). By doing this, the pages can be read by\n    simply decompressing the respective cluster.\n\n### Why is ZMicro so slow? Will it affect the performance of TFS?\n\n- The reason ZMicro is so slow is because it works on a bit level,\n    giving excellent compression ratio on the cost of performance. This\n    horribly slow performance is paid back by the reduced number\n    of writes. In fact, more than 50% of the allocations with ZMicro\n    will only write one sector, as opposed to 3. Secondly, no matter how\n    fast your disk is, it will not get anywhere near the performance of\n    ZMicro because disk operations are inherently slow, and when put in\n    perspective, the performance of the compression is\n    really unimportant.\n\n### Extendible hashing or B+ trees?\n\n- Neither. TFS uses a combination of trees and hash tables: Nested hash tables, a form of hash trees. The idea is that instead of reallocating, a new subtable is created in the bucket.\n\n## Resources on design\n\nI've written a number of pieces on the design of TFS:\n\n- [SeaHash: Explained](http://ticki.github.io/blog/seahash-explained/) - This describes the default checksum algorithm designed for TFS.\n- [On Random-Access Compression](http://ticki.github.io/blog/on-random-access-compression/) - This post describes the algorithm used for random-access compression.\n- [Ternary as a prediction residue code](http://ticki.github.io/blog/ternary-as-a-prediction-residue-code/) - The use of this is related to creating a good adaptive (headerless) entropy compressor.\n- [How LZ4 works](http://ticki.github.io/blog/how-lz4-works/) - This describes how the LZ4 compression algorithm works.\n- [Collision Resolution with Nested Hash Tables](https://ticki.github.io/blog/collision-resolution-with-nested-hash-tables/) - This describes the method of nested hash tables we use for the directory structure.\n- [An Atomic Hash Table](https://ticki.github.io/blog/an-atomic-hash-table/) - This describes the concurrent, in-memory hash table/key-value store.\n\n## Specification\n\nThe full specification can be found in `specification.tex`, to render it install `texlive` or another distribution with XeTeX, and run:\n\n```sh\nxelatex --shell-escape specification.tex\n```\n\nThen open the file named `specification.pdf`"
+        },
+        {
+          "name": "atomic-hashmap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cbloom",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "chashmap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "control-flow",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "icon.svg",
+          "type": "blob",
+          "size": 0.27734375,
+          "content": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"110\" viewBox=\"20 29 8 11\">\n  <path fill=\"#1a1a1a\" d=\"M24 40l-5-3v-5l5-3 5 3v5\"/>\n  <path fill=\"#f0f0f0\" d=\"M25.55 33.1h-3.1v-1h3.1zm-1.05 3.8h-1v-3.2h1z\"/>\n  <path fill=\"#565656\" d=\"M29 37l-5 3v-5l5-3\" opacity=\".7\"/>\n</svg>\n"
+        },
+        {
+          "name": "little-endian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lz4",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mlcr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "notes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "seahash",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "speck",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "thread-object",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "type-name",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zmicro",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

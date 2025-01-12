@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "timestamp": 1736709201616,
+    "page": 468,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tildeio/helix",
+      "stars": 1976,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".appveyor.yml",
+          "type": "blob",
+          "size": 1.59375,
+          "content": "cache:\n  - '%HOMEDRIVE%%HOMEPATH%\\.cargo -> .appveyor.yml'\n  - '%HOMEDRIVE%%HOMEPATH%\\.multirust -> .appveyor.yml'\n\nenvironment:\n  # can't run game_of_life since termion doesn't support windows https://github.com/redox-os/termion/issues/103\n  EXAMPLES: unit calculator console duration docopt geometry json_builder membership text_transform turbo_blank\n  VERBOSE: true\n  RUST_BACKTRACE: 1\n  matrix:\n    # 32-bit\n    - RUBY_VERSION: 23\n      RUST_HOST: i686-pc-windows-msvc\n      RUST_VERSION: stable\n    # 64-bit\n    - RUBY_VERSION: 23-x64\n      RUST_HOST: x86_64-pc-windows-msvc\n      RUST_VERSION: stable\n    # 64-bit\n    - RUBY_VERSION: 23-x64\n      RUST_HOST: x86_64-pc-windows-msvc\n      RUST_VERSION: nightly\n\nmatrix:\n  allow_failures:\n    - RUST_VERSION: nightly\n    - RUST_HOST: i686-pc-windows-msvc\n\n  fast_finish: true\n\ninstall:\n  - set PATH=C:\\Ruby%RUBY_VERSION%\\bin;C:\\Ruby%RUBY_VERSION%\\DevKit\\bin;C:\\Ruby%RUBY_VERSION%\\DevKit\\mingw\\bin;%HOMEDRIVE%%HOMEPATH%\\.cargo\\bin;%APPVEYOR_BUILD_FOLDER%\\ruby\\windows_build;%PATH%\n  - echo %PATH%\n  - set HELIX_ROOT=%APPVEYOR_BUILD_FOLDER%\n  - IF NOT EXIST %HOMEDRIVE%%HOMEPATH%\\.cargo\\bin (curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain %RUST_VERSION% --default-host %RUST_HOST% -y)\n  - rustup default %RUST_VERSION%-%RUST_HOST%\n  - bash ./scripts/ci-install\n\ntest_script:\n  - rake\n\nnotifications:\n  - provider: Slack\n    incoming_webhook:\n      secure: TNI+AoiNHglfKJMvgc6q13UXc37KvQ4wWFCOTkeqD7KpAYeqX30Xuc3rTMBMABz5hqjdVZHwQV3KoGOgJr52WGtlq2NdIJg7p2j1InTLWfM=\n    on_build_success: false\n    on_build_failure: true\n    on_build_status_changed: true\n\nbuild: off\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.076171875,
+          "content": "target\nCargo.lock\nGemfile.lock\n.vscode\n*.o\n*.a\n*.so\n*.dylib\n*.bundle\n.vagrant\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 2.9912109375,
+          "content": "os:\n  - linux\n  - osx\n\ndist: trusty # For linux\n\naddons:\n  apt:\n    packages:\n    - g++-mingw-w64 # For dlltool\n\nlanguage: ruby\nrvm:\n  - 2.4.0\n\ncache:\n  directories:\n    - $HOME/.rvm/gems\n    - $HOME/.cargo\n    - $HOME/.multirust\n\nenv:\n  global:\n    - EXAMPLES=\"unit calculator console duration docopt game_of_life geometry json_builder membership text_transform turbo_blank\"\n    - VERBOSE=true\n    - RUST_BACKTRACE=1\n    - RUST_VERSION=stable\n\nmatrix:\n  include:\n    - os: linux\n      env: RUST_VERSION=nightly\n  allow_failures:\n    - env: RUST_VERSION=nightly\n\nbefore_install:\n  # If we've got a tag, we also want to test the release\n  - if [ ! -z \"$TRAVIS_TAG\" ]; then export TEST_RELEASE=1; fi\n  # This only works on Linux\n  - if [[ \"$TRAVIS_OS_NAME\" != \"linux\" ]]; then unset TEST_RELEASE; fi\n  # Only try to release on stable\n  # FIXME: There should be a better way of doing this\n  - if [[ \"$RUST_VERSION\" != \"stable\" ]]; then unset TEST_RELEASE; fi\n  # Install Rust\n  - if [ ! -e \"$HOME/.cargo/bin\" ]; then curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain $RUST_VERSION -y; fi\n  - export PATH=\"$HOME/.cargo/bin:$PATH\"\n  - rustup default $RUST_VERSION\n  - gem install bundler\n\ninstall:\n  - ./scripts/ci-install\n\nscript: |\n    if [ -z \"$TEST_RELEASE\" ]; then\n      # Run regular tests if we're not testing the release\n      rake\n    else\n      set -e\n\n      ./scripts/test-release\n\n      # Release if we're also tagged\n      if [ ! -z \"$TRAVIS_TAG\" ]; then\n        # Set up Cargo and Rubygems credentials\n        cargo login $CARGO_TOKEN\n\n        mkdir -p ~/.gem\n        echo -e \"---\\n:rubygems_api_key: $RUBYGEMS_TOKEN\" > ~/.gem/credentials\n        chmod 0600 ~/.gem/credentials\n\n        echo -e \"Publishing helix_runtime gem...\\n\"\n        pushd ruby\n        gem build helix_runtime.gemspec\n        gem push helix_runtime-*.gem\n        popd\n\n        echo -e \"Publishing libcruby-sys crate...\\n\"\n        # need to do this since there's a .gitignore with *.lib files\n        # there's a bug in Cargo, where include isn't overriding exclude\n        rm -rf .git\n        pushd crates/libcruby-sys\n        HELIX_LIB_DIR=$PWD cargo publish\n        popd\n\n        echo -e \"Publishing helix crate...\\n\"\n        cargo publish\n      fi\n    fi\n\nnotifications:\n  slack:\n    rooms:\n      - secure: \"EeBBy+QWPtj20Dh0dw9MrIiul6kmVb7YrAqaf8VzpujD8BctasqoPx8VEefHZbBYnzDo8+/yerNorwczU7w5SmSXPvYgTCpUe3eKMgbLNBDBkLhp7L5WMO6YWdlsBpOT+i7lpImqecxTasMcTeMTMPoljtkaZdF+6+kh0dPntGMXsJlh8WWipFHH08anbTz4Ll8R9kta54r9yT2YDp0LSBKC+C2mW6ll6yvRwHZMbLi3c+DzR1mqCIljmeNTIqVm0+Er34Jj8lKOL8dYhyB8TncmxlDdbpzA9R8rJ8GczwvUJOkY3IREvY0eZh1T8JZ4yZZucIq1VgukgMo8rWjMBxq5jJjHpO/EmcyGPvvNnrkg5/Jy/2zDPpdqLvAieD5DReGUEkXcyPjNC2o0K6HAMQnloO2qVRwWIsuvwPu/EK9CFtSebZYSA1cDbQsvAyQ8c4S8nxYOy5YiZwJoD55N051p6ehTGe0gPDn254GwDMEmPEpH4xP/TmYEMzMFqjeSpOKPHNKRqrTmM7dff5yQnRdcm8o2t5GABf29uRkbao0fJa5kVQkVchbzo7U0mfguMGCSMJWM9yMp+mJ8dlz5WitsbGx0Bimu2ZnjOQ5YdQaJWQnCX1Rf+DwqGEipI3ii+l9xeg1VKfZi9Geckn9cF8yaw/y5A/EuvQOKmeOQ7qQ=\"\n    on_pull_requests: false\n    on_success: change\n    on_failure: always\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 1.9853515625,
+          "content": "## 0.7.5 (June 4, 2018)\n\n* [IMPROVEMENT] Add coercion for `usize` and `isize`\n\n## 0.7.4 (June 2, 2018)\n\n* [BUGFIX] Ensure classes with a `struct` also defines `initialize`\n* [BUGFIX] Ensure Ruby Strings have the correct encoding before performing coercion\n* [BUGFIX] Abort rake task when `cargo build` fails\n* [IMPROVEMENT] Add coercion for tuples\n\n## 0.7.3 (March 6, 2018)\n\n* [IMPROVEMENT] Various improvements to the underlying `libcruby-sys` library\n\n## 0.7.2 (October 9, 2017)\n\n* [IMPROVEMENT] Add coercion for Symbols\n* [IMPROVEMENT] Allow consuming self in methods\n\n## 0.7.1 (October 6, 2017)\n\n* [IMPROVEMENT] Add coercion for `Vec` and `HashMap`\n\n## 0.7.0 (October 3, 2017)\n\n* [IMPROVEMENT] Add error message for parse errors\n* [IMPREVEMENT] Support #[ruby_name] remapping for classes\n* [IMPREVEMENT] Support returning an exception to Ruby (via `Result` coercion)\n* [BUGFIX] Fix build erros for project names with more than one `-`\n* [EXPERIMENTAL] Make it possible to implement `FromRuby` and `ToRuby` for custom types\n\n## 0.6.4 (September 7, 2017)\n\n* [BUGFIX] Compile 32-bit windows .lib with 32-bit toolchain\n\n## 0.6.3 (August 30, 2017)\n\n* [BUGFIX] Include *.lib in libcruby-sys\n\n## 0.6.2 (August 29, 2017)\n\n* [DEPRECATION] Deprecate passing project name to `BuildTask`\n\n## 0.6.1 (May 18, 2017)\n\n* [BUGFIX] Fix path in copy_dll task for Windows installation\n* [BUGFIX] Fix compatibility with serde_json\n* [BUGFIX] Correctly handle projects with dashes in their name\n* [IMPROVEMENT] Better language around coercion failures\n\n## 0.6.0 (May 3, 2017)\n\n* [BUGFIX] Raise TypeError on bad initialize\n* [BUGFIX] Fix Windows release\n* [IMPROVEMENT] Fewer allocations by making function signatures take `&CStr`s.\n* [IMPROVEMENT] Improve installation process when running examples\n* [IMPROVEMENT] Better handling of unbuilt helix_runtime/native during development\n* [IMPROVEMENT] Fix var shadowing and ambiguous args in ruby warnings\n* [IMPROVEMENT] Bump cslice crate: 0.2 -> 0.3.\n\n## 0.5.0 (April 26, 2017)\n\n* First official release\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 1.0263671875,
+          "content": "[package]\nname = \"helix\"\nversion = \"0.7.5\"\nauthors = [\"Godhuda <engineering+godhuda@tilde.io>\"]\ndescription = \"Embed Rust in your Ruby\"\ndocumentation = \"https://usehelix.com/documentation\"\nhomepage = \"https://usehelix.com\"\nrepository = \"https://github.com/tildeio/helix\"\nreadme = \"README.md\"\nkeywords = [\"ruby\", \"rails\", \"binding\", \"extension\", \"embed\"]\ncategories = [\"api-bindings\"]\nlicense = \"ISC\"\ninclude = [\n  \"src/**/*.rs\",\n  \"Cargo.toml\"\n]\n\n[badges]\ntravis-ci = { repository = \"tildeio/helix\", branch = \"master\" }\nappveyor = { repository = \"tildeio/helix\", branch = \"master\", service = \"github\" }\n\n[workspace]\nmembers = [\"examples/calculator\", \"examples/console\", \"examples/docopt\", \"examples/duration\", \"examples/game_of_life\", \"examples/geometry\", \"examples/json_builder\", \"examples/membership\", \"examples/text_transform\", \"examples/turbo_blank\", \"examples/unit\"]\n\n[dependencies]\nlibc = \"0.2.0\"\n\n[dependencies.libcruby-sys]\npath = \"crates/libcruby-sys\"\nversion = \"0.7.5\"\n\n[dependencies.cstr-macro]\npath = \"crates/cstr-macro\"\nversion = \"0.1.0\"\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 0.724609375,
+          "content": "ISC License (ISC)\nCopyright 2016 Tilde Inc.\n\nPermission to use, copy, modify, and/or distribute this software for any purpose\nwith or without fee is hereby granted, provided that the above copyright notice\nand this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH\nREGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND\nFITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,\nINDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS\nOF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER\nTORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF\nTHIS SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.4169921875,
+          "content": "[![Travis Build Status](https://travis-ci.org/tildeio/helix.svg?branch=master)](https://travis-ci.org/tildeio/helix)\n[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/tildeio/helix?branch=master&svg=true)](https://ci.appveyor.com/project/wagenet/helix)\n\n# ~~Helix~~\n\n> :warning: **Deprecated** :warning:\n>\n> Sadly, we have made the decision to deprecate this project. While we had\n> hoped to bootstrap the project to a point where it could flourish as a\n> community project, unfortunately we ran into a number of roadblocks along the\n> way, along with the need for significant architectural overhaul. While these\n> issues are solvable on a technical level, doing so correctly requires more\n> resources than we have been able to provide and progress has stalled.\n>\n> One of our goals was also to integrate our own Skylight agent with Helix,\n> aligning the company's priorities with the project. While the Skylight agent\n> is still written in Rust with a thin layer of C bindings (which is the part\n> Helix would replace), we were not able to get the project to the point where\n> we felt comfortable running it on our customer's servers. We did not identify\n> any specific blockers that would prevent us from doing this, but ultimate, we\n> did not have the necessary time and resources to realize this.\n>\n> Since we are a small team, it is unlikely that we will be able to provide the\n> necessary investment in the foreseeable future to achieve our ambitions for\n> the project. At this point, we believe it is in everyone's best interest to\n> formally deprecate the project, accurately reflecting its effective state.\n> Meanwhile, others in the Ruby and Rust communities have continued to explore\n> in the adjacent research areas. Some of them have made great progress and\n> brought new ideas and innovations to the table. We look forward to seeing\n> these new ideas come to fruition and fill the void we are leaving.\n\nHelix allows you to write Ruby classes in Rust without having to write the glue code yourself.\n\n```rust\nruby! {\n    class Console {\n        def log(string: String) {\n            println!(\"LOG: {}\", string);\n        }\n    }\n}\n```\n\n```shell\n$ rake build\n$ bundle exec irb\n>> require \"console\"\n>> Console.log(\"I'm in your Rust\")\nLOG: I'm in your Rust\n => nil\n```\n\n## Why Helix?\n\nRead the [*Introducing Helix*](http://blog.skylight.io/introducing-helix/) blog post for a quick introduction to the project!\n\n## Getting Started\n\nhttps://usehelix.com/getting_started\n\n## Demos\n\nhttps://usehelix.com/demos\n\n## Roadmap\n\nhttps://usehelix.com/roadmap\n\n## Compatibility\n\nHelix has been tested with the following, though other combinations may also work.\n\n* cargo 0.18.0 (fe7b0cdcf 2017-04-24)\n* rustc 1.17.0 (56124baa9 2017-04-24)\n* ruby 2.4.1p111 (2017-03-22 revision 58053) [x86_64-darwin16]\n* Bundler version 1.14.6\n\n## Contributing\n\nIf you'd like to experiment with Helix, you can start with some of the examples in this repository.\n\nClone and download the Helix repository:\n```shell\n$ git clone https://github.com/tildeio/helix\n$ cd helix\n```\n\nNavigate to the console example folder and bundle your `Gemfile`:\n```shell\n$ cd examples/console\n$ bundle install\n```\n\nRun `rake irb` to build and start irb:\n```shell\n$ bundle exec rake irb\n```\n\nTry running some of the methods defined in `examples/console/src/lib.rs`:\n```shell\n> c = Console.new\nConsole { helix: VALUE(0x7fdacc19a6a0) }\n =>\n> c.hello\nhello\n => nil\n> c.loglog('hello', 'world')\nhello world\n => nil\n```\n"
+        },
+        {
+          "name": "RELEASE.md",
+          "type": "blob",
+          "size": 0.5322265625,
+          "content": "# Helix Release Process\n\n1. Verify that CI is passing\n1. Update all version number references. (There are a lot, do a search.)\n1. Update CHANGELOG.md\n1. Run `./scripts/test-release` to make sure packages are ready for release.\n1. Commit and push version bump and changelog.\n1. Tag version in Git, prefixed with 'v' and push with `git push --tags`\n\n### In `./ruby`\n\n1. `gem build helix-runtime.gemspec`\n1. `gem push helix-runtime-VERSION.gem`\n\n### In `./crates/libcruby-sys`\n\n1. `HELIX_LIB_DIR=$PWD cargo publish`\n\n### In `.`\n\n1. `cargo publish`\n"
+        },
+        {
+          "name": "Rakefile",
+          "type": "blob",
+          "size": 0.5888671875,
+          "content": "desc \"Test Helix Examples\"\ntask :test do\n  cd \"ruby\" do\n    sh \"bundle exec rake\"\n  end\n\n  examples = ENV[\"EXAMPLES\"] || \"unit calculator console docopt duration game_of_life geometry json_builder membership text_transform turbo_blank\"\n\n  sh \"bash ./examples/runner default #{examples}\"\nend\n\ndesc \"Install Helix Examples\"\ntask :install do\n  cd \"ruby\" do\n    sh \"bundle\"\n  end\n\n  examples = ENV[\"EXAMPLES\"] || \"unit calculator console docopt duration game_of_life geometry json_builder membership text_transform turbo_blank\"\n\n  sh \"bash ./examples/runner install #{examples}\"\nend\n\ntask :default => :test\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 0.4267578125,
+          "content": "# -*- mode: ruby -*-\n# vi: set ft=ruby :\n\n# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!\nVAGRANTFILE_API_VERSION = \"2\"\n\nVagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n  config.vm.box = \"ubuntu/trusty64\"\n\n  config.vm.network \"private_network\", type: \"dhcp\"\n  config.vm.synced_folder \".\", \"/vagrant\", type: \"nfs\"\n\n  config.vm.provision \"shell\", path: \"scripts/provision.sh\", privileged: false\nend\n"
+        },
+        {
+          "name": "crates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ruby",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

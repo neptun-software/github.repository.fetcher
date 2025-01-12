@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "timestamp": 1736709233789,
+    "page": 539,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "BurntSushi/fst",
+      "stars": 1816,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.083984375,
+          "content": ".*.swp\ntags\ntarget\n*.lock\ntmp\n*.csv\n*.fst\n*-got\n*.csv.idx\nwords\n98m*\ndict\ntest\nmonths\n"
+        },
+        {
+          "name": "COPYING",
+          "type": "blob",
+          "size": 0.123046875,
+          "content": "This project is dual-licensed under the Unlicense and MIT licenses.\n\nYou may use this code under the terms of either license.\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.99609375,
+          "content": "[package]\nname = \"fst\"\nversion = \"0.4.7\"  #:version\nauthors = [\"Andrew Gallant <jamslam@gmail.com>\"]\ndescription = \"\"\"\nUse finite state transducers to compactly represents sets or maps of many\nstrings (> 1 billion is possible).\n\"\"\"\ndocumentation = \"https://docs.rs/fst\"\nhomepage = \"https://github.com/BurntSushi/fst\"\nrepository = \"https://github.com/BurntSushi/fst\"\nreadme = \"README.md\"\nkeywords = [\"search\", \"information\", \"retrieval\", \"dictionary\", \"map\"]\nlicense = \"Unlicense/MIT\"\nedition = \"2018\"\n\n[workspace]\nmembers = [\"bench\", \"fst-bin\"]\nexclude = [\"fst-levenshtein\", \"fst-regex\"]\n\n[features]\ndefault = []\nlevenshtein = [\"utf8-ranges\"]\n\n[patch.crates-io]\nfst = { path = \".\" }\n\n[dependencies]\nutf8-ranges = { version = \"1.0.4\", optional = true }\n\n[dev-dependencies]\ndoc-comment = \"0.3.1\"\nfnv = \"1.0.6\"\nmemmap2 = \"0.5.10\"\nquickcheck = { version = \"0.9.2\", default-features = false }\nrand = \"0.7.3\"\n\n[profile.release]\ndebug = true\n\n[profile.bench]\ndebug = true\n\n[package.metadata.docs.rs]\nfeatures = [\"levenshtein\"]\n"
+        },
+        {
+          "name": "LICENSE-MIT",
+          "type": "blob",
+          "size": 1.0556640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 Andrew Gallant\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.23046875,
+          "content": "fst\n===\nThis crate provides a fast implementation of ordered sets and maps using finite\nstate machines. In particular, it makes use of finite state transducers to map\nkeys to values as the machine is executed. Using finite state machines as data\nstructures enables us to store keys in a compact format that is also easily\nsearchable. For example, this crate leverages memory maps to make range queries\nvery fast.\n\nCheck out my blog post\n[Index 1,600,000,000 Keys with Automata and\nRust](https://blog.burntsushi.net/transducers/)\nfor extensive background, examples and experiments.\n\n[![Build status](https://github.com/BurntSushi/fst/workflows/ci/badge.svg)](https://github.com/BurntSushi/fst/actions)\n[![](https://meritbadge.herokuapp.com/fst)](https://crates.io/crates/fst)\n\nDual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).\n\n\n### Documentation\n\nhttps://docs.rs/fst\n\nThe\n[`regex-automata`](https://docs.rs/regex-automata)\ncrate provides implementations of the `fst::Automata` trait when its\n`transducer` feature is enabled. This permits using DFAs compiled by\n`regex-automata` to search finite state transducers produced by this crate.\n\n\n### Installation\n\nSimply add a corresponding entry to your `Cargo.toml` dependency list:\n\n```toml,ignore\n[dependencies]\nfst = \"0.4\"\n```\n\n\n### Example\n\nThis example demonstrates building a set in memory and executing a fuzzy query\nagainst it. You'll need `fst = \"0.4\"` with the `levenshtein` feature enabled in\nyour `Cargo.toml`.\n\n```rust\nuse fst::{IntoStreamer, Set};\nuse fst::automaton::Levenshtein;\n\nfn main() -> Result<(), Box<dyn std::error::Error>> {\n  // A convenient way to create sets in memory.\n  let keys = vec![\"fa\", \"fo\", \"fob\", \"focus\", \"foo\", \"food\", \"foul\"];\n  let set = Set::from_iter(keys)?;\n\n  // Build our fuzzy query.\n  let lev = Levenshtein::new(\"foo\", 1)?;\n\n  // Apply our fuzzy query to the set we built.\n  let stream = set.search(lev).into_stream();\n\n  let keys = stream.into_strs()?;\n  assert_eq!(keys, vec![\"fo\", \"fob\", \"foo\", \"food\"]);\n  Ok(())\n}\n```\n\nCheck out the documentation for a lot more examples!\n\n\n### Cargo features\n\n* `levenshtein` - **Disabled** by default. This adds the `Levenshtein`\n  automaton to the `automaton` sub-module. This includes an additional\n  dependency on `utf8-ranges`.\n"
+        },
+        {
+          "name": "UNLICENSE",
+          "type": "blob",
+          "size": 1.1826171875,
+          "content": "This is free and unencumbered software released into the public domain.\n\nAnyone is free to copy, modify, publish, use, compile, sell, or\ndistribute this software, either in source code form or as a compiled\nbinary, for any purpose, commercial or non-commercial, and by any\nmeans.\n\nIn jurisdictions that recognize copyright laws, the author or authors\nof this software dedicate any and all copyright interest in the\nsoftware to the public domain. We make this dedication for the benefit\nof the public at large and to the detriment of our heirs and\nsuccessors. We intend this dedication to be an overt act of\nrelinquishment in perpetuity of all present and future rights to this\nsoftware under copyright law.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR\nOTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,\nARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n\nFor more information, please refer to <http://unlicense.org/>\n"
+        },
+        {
+          "name": "bench",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.rs",
+          "type": "blob",
+          "size": 2.9755859375,
+          "content": "use std::env;\nuse std::fs::File;\nuse std::io::{self, Write};\nuse std::path::{Path, PathBuf};\n\nconst CASTAGNOLI_POLY: u32 = 0x82f63b78;\n\ntype Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;\n\nfn main() {\n    if let Err(err) = try_main() {\n        panic!(\"{}\", err);\n    }\n}\n\nfn try_main() -> Result<()> {\n    let out_dir = match env::var_os(\"OUT_DIR\") {\n        None => {\n            return Err(From::from(\"OUT_DIR environment variable not defined\"))\n        }\n        Some(out_dir) => PathBuf::from(out_dir),\n    };\n    write_tag_lookup_table(&out_dir)?;\n    write_crc_tables(&out_dir)?;\n    Ok(())\n}\n\nfn write_tag_lookup_table(out_dir: &Path) -> Result<()> {\n    let out_path = out_dir.join(\"tag.rs\");\n    let mut out = io::BufWriter::new(File::create(out_path)?);\n\n    writeln!(out, \"pub const TAG_LOOKUP_TABLE: [u16; 256] = [\")?;\n    for b in 0u8..=255 {\n        writeln!(out, \"    {},\", tag_entry(b))?;\n    }\n    writeln!(out, \"];\")?;\n    Ok(())\n}\n\nfn tag_entry(b: u8) -> u16 {\n    let b = b as u16;\n    match b & 0b00000011 {\n        0b00 => {\n            let lit_len = (b >> 2) + 1;\n            if lit_len <= 60 {\n                lit_len\n            } else {\n                assert!(lit_len <= 64);\n                (lit_len - 60) << 11\n            }\n        }\n        0b01 => {\n            let len = 4 + ((b >> 2) & 0b111);\n            let offset = (b >> 5) & 0b111;\n            (1 << 11) | (offset << 8) | len\n        }\n        0b10 => {\n            let len = 1 + (b >> 2);\n            (2 << 11) | len\n        }\n        0b11 => {\n            let len = 1 + (b >> 2);\n            (4 << 11) | len\n        }\n        _ => unreachable!(),\n    }\n}\n\nfn write_crc_tables(out_dir: &Path) -> Result<()> {\n    let out_path = out_dir.join(\"crc32_table.rs\");\n    let mut out = io::BufWriter::new(File::create(out_path)?);\n\n    let table = make_table(CASTAGNOLI_POLY);\n    let table16 = make_table16(CASTAGNOLI_POLY);\n\n    writeln!(out, \"pub const TABLE: [u32; 256] = [\")?;\n    for &x in table.iter() {\n        writeln!(out, \"    {},\", x)?;\n    }\n    writeln!(out, \"];\\n\")?;\n\n    writeln!(out, \"pub const TABLE16: [[u32; 256]; 16] = [\")?;\n    for table in table16.iter() {\n        writeln!(out, \"    [\")?;\n        for &x in table.iter() {\n            writeln!(out, \"        {},\", x)?;\n        }\n        writeln!(out, \"    ],\")?;\n    }\n    writeln!(out, \"];\")?;\n\n    out.flush()?;\n\n    Ok(())\n}\n\nfn make_table16(poly: u32) -> [[u32; 256]; 16] {\n    let mut tab = [[0; 256]; 16];\n    tab[0] = make_table(poly);\n    for i in 0..256 {\n        let mut crc = tab[0][i];\n        for j in 1..16 {\n            crc = (crc >> 8) ^ tab[0][crc as u8 as usize];\n            tab[j][i] = crc;\n        }\n    }\n    tab\n}\n\nfn make_table(poly: u32) -> [u32; 256] {\n    let mut tab = [0; 256];\n    for i in 0u32..256u32 {\n        let mut crc = i;\n        for _ in 0..8 {\n            if crc & 1 == 1 {\n                crc = (crc >> 1) ^ poly;\n            } else {\n                crc >>= 1;\n            }\n        }\n        tab[i as usize] = crc;\n    }\n    tab\n}\n"
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fst-bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fst-levenshtein",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fst-regex",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rustfmt.toml",
+          "type": "blob",
+          "size": 0.04296875,
+          "content": "max_width = 79\nuse_small_heuristics = \"max\"\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "timestamp": 1736709223087,
+    "page": 517,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rust-phf/rust-phf",
+      "stars": 1863,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "Cargo.lock\ntarget\n.idea\n*.iml\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.3671875,
+          "content": "[workspace]\nresolver = \"1\"\nmembers = [\n    \"phf\",\n    \"phf/examples/unicase-example\",\n    \"phf_codegen\",\n    \"phf_codegen/test\",\n    \"phf_generator\",\n    \"phf_macros\",\n    \"phf_macros_tests\",\n    \"phf_shared\"\n]\n\n[patch.crates-io]\nphf = { path = \"phf\" }\nphf_generator = { path = \"./phf_generator\" }\nphf_macros = { path = \"./phf_macros\" }\nphf_shared = { path = \"./phf_shared\" }\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0732421875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014-2022 Steven Fackler, Yuki Okushi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.0224609375,
+          "content": "# Rust-PHF\n\n[![CI](https://github.com/rust-phf/rust-phf/actions/workflows/ci.yml/badge.svg)](https://github.com/rust-phf/rust-phf/actions/workflows/ci.yml) [![Latest Version](https://img.shields.io/crates/v/phf.svg)](https://crates.io/crates/phf)\n\n[Documentation](https://docs.rs/phf)\n\nRust-PHF is a library to generate efficient lookup tables at compile time using\n[perfect hash functions](http://en.wikipedia.org/wiki/Perfect_hash_function).\n\nIt currently uses the\n[CHD algorithm](http://cmph.sourceforge.net/papers/esa09.pdf) and can generate\na 100,000 entry map in roughly .4 seconds.\n\nMSRV (minimum supported rust version) is Rust 1.61.\n\n## Usage\n\nPHF data structures can be constructed via either the procedural\nmacros in the `phf_macros` crate or code generation supported by the\n`phf_codegen` crate.\n\nTo compile the `phf` crate with a dependency on\nlibcore instead of libstd, enabling use in environments where libstd\nwill not work, set `default-features = false` for the dependency:\n\n```toml\n[dependencies]\n# to use `phf` in `no_std` environments\nphf = { version = \"0.11\", default-features = false }\n```\n\n### phf_macros\n\n```rust\nuse phf::phf_map;\n\n#[derive(Clone)]\npub enum Keyword {\n    Loop,\n    Continue,\n    Break,\n    Fn,\n    Extern,\n}\n\nstatic KEYWORDS: phf::Map<&'static str, Keyword> = phf_map! {\n    \"loop\" => Keyword::Loop,\n    \"continue\" => Keyword::Continue,\n    \"break\" => Keyword::Break,\n    \"fn\" => Keyword::Fn,\n    \"extern\" => Keyword::Extern,\n};\n\npub fn parse_keyword(keyword: &str) -> Option<Keyword> {\n    KEYWORDS.get(keyword).cloned()\n}\n```\n\n```toml\n[dependencies]\nphf = { version = \"0.11\", features = [\"macros\"] }\n```\n\n#### Note\n\nCurrently, the macro syntax has some limitations and may not\nwork as you want. See [#183] or [#196] for example.\n\n[#183]: https://github.com/rust-phf/rust-phf/issues/183\n[#196]: https://github.com/rust-phf/rust-phf/issues/196\n\n### phf_codegen\n\nTo use `phf_codegen` on build.rs, you have to add dependencies under `[build-dependencies]`:\n\n```toml\n[build-dependencies]\nphf = { version = \"0.11.1\", default-features = false }\nphf_codegen = \"0.11.1\"\n```\n\nThen put code on build.rs:\n\n```rust\nuse std::env;\nuse std::fs::File;\nuse std::io::{BufWriter, Write};\nuse std::path::Path;\n\nfn main() {\n    let path = Path::new(&env::var(\"OUT_DIR\").unwrap()).join(\"codegen.rs\");\n    let mut file = BufWriter::new(File::create(&path).unwrap());\n\n    write!(\n        &mut file,\n        \"static KEYWORDS: phf::Map<&'static str, Keyword> = {}\",\n        phf_codegen::Map::new()\n            .entry(\"loop\", \"Keyword::Loop\")\n            .entry(\"continue\", \"Keyword::Continue\")\n            .entry(\"break\", \"Keyword::Break\")\n            .entry(\"fn\", \"Keyword::Fn\")\n            .entry(\"extern\", \"Keyword::Extern\")\n            .build()\n    )\n    .unwrap();\n    write!(&mut file, \";\\n\").unwrap();\n}\n```\n\nand lib.rs:\n\n```rust\n#[derive(Clone)]\nenum Keyword {\n    Loop,\n    Continue,\n    Break,\n    Fn,\n    Extern,\n}\n\ninclude!(concat!(env!(\"OUT_DIR\"), \"/codegen.rs\"));\n\npub fn parse_keyword(keyword: &str) -> Option<Keyword> {\n    KEYWORDS.get(keyword).cloned()\n}\n```\n"
+        },
+        {
+          "name": "RELEASE_PROCESS.md",
+          "type": "blob",
+          "size": 1.142578125,
+          "content": "# How to make a new release\n\nSince v0.11.1, this repository uses [`cargo-smart-release`](https://crates.io/crates/cargo-smart-release) to release crates.\n\n## Installation\n\n```sh\ncargo install cargo-smart-release\n```\n\n## Before running `cargo-smart-release`\n\nIf the next version has a major change or bumps MSRV, i.e. it increases a minor version on `v0.Y.Z` or a major version on `vX.Y.Z`,\nupdate the versions mentioned on the README and doc comments (and CI config if it touches MSRV).\n\n## Run `cargo-smart-release`\n\nFirst, just run:\n\n```sh\ncargo smart-release phf phf_codegen phf_generator phf_macros phf_shared\n```\n\nThis would show what `cargo-smart-release` would do, e.g. how it updates the version number, changelog, etc.\nIf you satisfy the output, run:\n\n```sh\ncargo smart-release -u -e phf phf_codegen phf_generator phf_macros phf_shared\n```\n\nThis would make actual releases. `-e` means that it executes actual releases and `-u` means that it always updates crates-index.\n`cargo-smart-release` also takes care of the Git tags.\n\nAfter executing it, ensure that all the releases are actually happened and the tags are pushed.\nIf all the things are fine, that's it!\n"
+        },
+        {
+          "name": "build_docs.sh",
+          "type": "blob",
+          "size": 0.20703125,
+          "content": "#!/bin/bash\nset -e\n\nexport CARGO_TARGET_DIR=target\n\nfor toml in $(find . -maxdepth 2 -name \"Cargo.toml\"); do\n    cargo update --manifest-path $toml || true\n    cargo doc --no-deps --manifest-path $toml \"$@\"\ndone\n"
+        },
+        {
+          "name": "phf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phf_codegen",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phf_generator",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phf_macros",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phf_macros_tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phf_shared",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

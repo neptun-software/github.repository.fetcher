@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "timestamp": 1736709137392,
+    "page": 332,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "antoyo/relm",
+      "stars": 2443,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0283203125,
+          "content": "target\nCargo.lock\nrelease.sh\n"
+        },
+        {
+          "name": ".rustfmt.toml",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "disable_all_formatting = true\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.5634765625,
+          "content": "[package]\nauthors = [\"Antoni Boucher <bouanto@zoho.com>\"]\ncategories = [\"asynchronous\", \"gui\"]\ndescription = \"Asynchronous, GTK+-based, GUI library, inspired by Elm, written in Rust\"\nhomepage = \"https://relm.antoyo.xyz/\"\ndocumentation = \"https://docs.rs/relm/\"\nlicense = \"MIT\"\nname = \"relm\"\nreadme = \"README.adoc\"\nrepository = \"https://github.com/antoyo/relm\"\nversion = \"0.24.1\"\nedition = \"2018\"\n\n[dependencies]\ncairo-rs = \"0.16.1\"\nfragile = \"2.0\"\nglib = \"0.16.2\"\nglib-sys = \"0.16.0\"\ngobject-sys = \"0.16.0\"\ngtk = \"0.16.1\"\nlibc = \"^0.2.54\"\nlog = \"^0.4.6\"\n\n[features]\nhidpi = []\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "Copyright (c) 2017 Boucher, Antoni <bouanto@zoho.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.adoc",
+          "type": "blob",
+          "size": 9.3828125,
+          "content": "= Relm\n\nAsynchronous, GTK+-based, GUI library, inspired by Elm, written in Rust.\n\n*This library is in beta stage: it has not been thoroughly tested and its API may change at any time.*\n\nimage:https://img.shields.io/github/workflow/status/antoyo/relm/CI[link=\"https://github.com/antoyo/relm/actions\"]\nimage:https://img.shields.io/badge/Relm-Tutorial-blueviolet[link=\"https://relm.antoyo.xyz/documentation/tutorial/\"]\nimage:https://img.shields.io/crates/v/relm.svg[link=\"https://crates.io/crates/relm\"]\nimage:https://img.shields.io/badge/rust-documentation-blue.svg[link=\"https://docs.rs/relm/\"]\nimage:https://img.shields.io/crates/d/relm.svg[link=\"https://crates.io/crates/relm\"]\nimage:https://img.shields.io/matrix/relm:matrix.org?logo=matrix[link=\"https://matrix.to/#/#relm:matrix.org?via=matrix.org\"]\nimage:https://img.shields.io/crates/l/relm.svg[link=\"LICENSE\"]\nimage:https://img.shields.io/badge/Donate-Patreon-orange.svg[link=\"https://www.patreon.com/antoyo\"]\n\n== Requirements\n\nSince relm is based on GTK+, you need this library on your system in order to use it.\n\nSee https://www.gtk.org/docs/installations/[this page] for information on how to install GTK+.\n\n== Usage\n\nFirst, add this to your `Cargo.toml`:\n\n[source,toml]\n----\ngtk = \"^0.16.0\"\nrelm = \"^0.24.0\"\nrelm-derive = \"^0.24.0\"\n----\n\nNext, add this to your crate:\n\n[source,rust]\n----\nuse relm::{connect, Relm, Update, Widget};\nuse gtk::prelude::*;\nuse gtk::{Window, Inhibit, WindowType};\nuse relm_derive::Msg;\n----\n\nThen, create your model:\n\n[source,rust]\n----\nstruct Model {\n    // …\n}\n----\n\nThe model contains the data related to a `Widget`. It may be updated by the `Widget::update` function.\n\nCreate your message `enum`:\n\n[source,rust]\n----\n#[derive(Msg)]\nenum Msg {\n    // …\n    Quit,\n}\n----\n\nMessages are sent to `Widget::update` to indicate that an event happened. The model can be updated when an event is received.\n\nCreate a `struct` which represents a `Widget` which contains the GTK+ widgets (in this case, the main window of the application) and the model:\n\n[source,rust]\n----\nstruct Win {\n    // …\n    model: Model,\n    window: Window,\n}\n----\n\nTo make this `struct` a relm `Widget` that can be shown by the library, implement the `Update` and `Widget` traits:\n\n[source,rust]\n----\nimpl Update for Win {\n    // Specify the model used for this widget.\n    type Model = Model;\n    // Specify the model parameter used to init the model.\n    type ModelParam = ();\n    // Specify the type of the messages sent to the update function.\n    type Msg = Msg;\n\n    // Return the initial model.\n    fn model(_: &Relm<Self>, _: ()) -> Model {\n        Model {\n        }\n    }\n\n    // The model may be updated when a message is received.\n    // Widgets may also be updated in this function.\n    fn update(&mut self, event: Msg) {\n        match event {\n            Msg::Quit => gtk::main_quit(),\n        }\n    }\n}\n\nimpl Widget for Win {\n    // Specify the type of the root widget.\n    type Root = Window;\n\n    // Return the root widget.\n    fn root(&self) -> Self::Root {\n        self.window.clone()\n    }\n\n    // Create the widgets.\n    fn view(relm: &Relm<Self>, model: Self::Model) -> Self {\n        // GTK+ widgets are used normally within a `Widget`.\n        let window = Window::new(WindowType::Toplevel);\n\n        // Connect the signal `delete_event` to send the `Quit` message.\n        connect!(relm, window, connect_delete_event(_, _), return (Some(Msg::Quit), Inhibit(false)));\n        // There is also a `connect!()` macro for GTK+ events that do not need a\n        // value to be returned in the callback.\n\n        window.show_all();\n\n        Win {\n            model,\n            window,\n        }\n    }\n}\n----\n\nFinally, show this `Widget` by calling `Win::run()`:\n\n[source,rust]\n----\nfn main() {\n    Win::run(()).unwrap();\n}\n----\n\n=== `#[widget]` attribute\n\nA `#[widget]` attribute is provided to simplify the creation of a widget.\n\nThis attribute does the following:\n\n * Provide a `view!` macro to create the widget with a declarative syntax.\n * Automatically create the `fn root()`, `type Msg`, `type Model`, `type ModelParam` and `type Root` items.\n * Automatically insert the call to `Widget::set_property()` in the `update()` function when assigning to an attribute of the model.\n * Automatically create the `Widget` `struct`.\n * `Update` and `Widget` traits can be implemented at once.\n\nTo use this attribute, add the following code:\n\n[source,rust]\n----\nuse relm_derive::widget;\n----\n\nHere is an example using this attribute:\n\n[source,rust]\n----\n#[derive(Msg)]\npub enum Msg {\n    Decrement,\n    Increment,\n    Quit,\n}\n\npub struct Model {\n    counter: u32,\n}\n\n#[widget]\nimpl Widget for Win {\n    fn model() -> Model {\n        Model {\n            counter: 0,\n        }\n    }\n\n    fn update(&mut self, event: Msg) {\n        match event {\n            // A call to self.label1.set_text() is automatically inserted by the\n            // attribute every time the model.counter attribute is updated.\n            Msg::Decrement => self.model.counter -= 1,\n            Msg::Increment => self.model.counter += 1,\n            Msg::Quit => gtk::main_quit(),\n        }\n    }\n\n    view! {\n        gtk::Window {\n            gtk::Box {\n                orientation: Vertical,\n                gtk::Button {\n                    // By default, an event with one paramater is assumed.\n                    clicked => Msg::Increment,\n                    // Hence, the previous line is equivalent to:\n                    // clicked(_) => Increment,\n                    label: \"+\",\n                },\n                gtk::Label {\n                    // Bind the text property of this Label to the counter attribute\n                    // of the model.\n                    // Every time the counter attribute is updated, the text property\n                    // will be updated too.\n                    text: &self.model.counter.to_string(),\n                },\n                gtk::Button {\n                    clicked => Msg::Decrement,\n                    label: \"-\",\n                },\n            },\n            // Use a tuple when you want to both send a message and return a value to\n            // the GTK+ callback.\n            delete_event(_, _) => (Msg::Quit, Inhibit(false)),\n        }\n    }\n}\n----\n\nNOTE: The `struct Win` is now automatically created by the attribute, as are the function `root()` and the associated types `Model`, `ModelParam`, `Msg` and `Container`.\nYou can still provide the method and the associated types if needed, but you cannot create the `struct`.\n\nWARNING: The `#[widget]` makes the generated `struct` public: hence, the corresponding model and message types must be public too.\n\n[WARNING]\n====\nYour program might be slower when using this attribute because the code generation is simple.\nFor instance, the following code\n[source,rust]\n----\nfn update(&mut self, event: Msg) {\n    for _ in 0..100 {\n        self.model.counter += 1;\n    }\n}\n----\nwill generate this function:\n[source,rust]\n----\nfn update(&mut self, event: Msg) {\n    for _ in 0..100 {\n        self.model.counter += 1;\n        self.label1.set_text(&self.model.counter.to_string());\n    }\n}\n----\n====\n\n[WARNING]\n====\nAlso, the `set_property()` calls are currently only inserted when assigning to an attribute of the model.\nFor instance, the following code\n[source,rust]\n----\nfn update(&mut self, event: Msg) {\n    self.model.text.push_str(\"Text\");\n}\n----\nwill not work as expected.\n\nPlease use the following variation if needed.\n[source,rust]\n----\nfn update(&mut self, event: Msg) {\n    self.model.text += \"Text\";\n}\n----\n====\n\nFor more information about how you can use relm, you can take a look at the https://github.com/antoyo/relm/tree/master/relm-examples/[examples].\n\n== Donations\n\nIf you appreciate this project and want new features to be\nimplemented, please support me on Patreon.\n\nimage:https://c5.patreon.com/external/logo/become_a_patron_button.png[link=\"https://www.patreon.com/antoyo\"]\n\n== Projects using `relm`\n\n * https://github.com/sanpii/yellow-pitaya[Yellow Pitaya]: A desktop interface for the redpitaya hardware oscilloscope.\n * https://github.com/juchiast/gameoflife[Game of Life]: Conway's Game of Life Simulator\n * https://github.com/etrombly/country_parser[Country Parser]: Parses Google location history and displays timeline of countries visited\n * https://github.com/niklasf/rust-chessground[Chessground]: An experimental chessboard widget\n * https://github.com/sanpii/effitask[Effitask]: Graphical task manager, based on the todo.txt format\n * https://github.com/knack-supply/curve-tracer[KS Curve Tracer]: A companion app for AD2 curve tracer\n * https://github.com/emmanueltouzery/cigale[Cigale]: Tool to prepare the timesheet of the tasks you did at work\n * https://github.com/emmanueltouzery/projectpad2[Projectpad]: Manage secret credentials and server information as a software developer or sysadmin.\n * https://github.com/crrodger/timezoners[TimezoneRS]: A GUI application to visually see the time in different time zones\n * https://github.com/Schmiddiii/Tubefeeder[Tubefeeder] / https://gitlab.com/schmiddi-on-mobile/pipeline[Pipeline]: Watch YouTube, LBRY, and PeerTube videos in one place.\n * https://github.com/emmanueltouzery/hotwire[Hotwire]: Study network traffic of a few popular protocols in a simple way\n * https://mzte.de/git/LordMZTE/gue[gue]: GUI for controlling phillips hue lights\n * https://github.com/mycitadel/mycitadel-desktop[MyCitadel Wallet]: MyCitadel Cryptocurrency Wallet app\n\nIf you want to add your project to this list, please https://github.com/antoyo/relm/pulls[create a pull request].\n"
+        },
+        {
+          "name": "faq.adoc",
+          "type": "blob",
+          "size": 0.2705078125,
+          "content": "= Frequently Asked Questions\n\nWhy does a widget seem unresponsive/does not respond to events?:: This can happen if you do not keep the component representing the widget.\nWhen a component is dropped, its communication channel is closed so that any message sent will be ignored.\n"
+        },
+        {
+          "name": "release_script.sh",
+          "type": "blob",
+          "size": 0.1787109375,
+          "content": "#!/bin/bash\n\ngit pull\ngit push\n\ncd ./relm-derive\ncargo release publish --execute\ncd ..\n\ncargo release publish --execute\ngit push\n\ncd ./relm-test\ncargo release publish --execute\ncd ..\n"
+        },
+        {
+          "name": "relm-derive",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "relm-examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "relm-test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

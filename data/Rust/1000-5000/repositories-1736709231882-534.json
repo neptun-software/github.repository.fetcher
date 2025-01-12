@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "timestamp": 1736709231882,
+    "page": 534,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "zesterer/ariadne",
+      "stars": 1830,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": "/target\nCargo.lock"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 1.396484375,
+          "content": "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n# Unreleased\n\n### Breaking changes\n\n### Added\n\n### Removed\n\n### Changed\n\n### Fixed\n\n# [0.5.0] - 2024-10-28\n\n### Added\n\n- Support for multi-line notes\n- Support for `RangeInclusive` as spans\n\n### Changed\n\n- Made `Report::build` accept a proper span, avoiding much type annotation trouble\n\n### Fixed\n\n- Handling of empty lines\n- `Config::new()` is now `const`\n- Several subtle formatting bugs\n\n# [0.4.1] - 2024-04-25\n\n### Added\n\n- Support for byte spans\n\n- The ability to fetch the underlying `&str` of a `Source` using `source.as_ref()`\n\n### Changed\n\n- Upgraded `yansi` to `1.0`\n\n# [0.4.0] - 2024-01-01\n\n### Breaking changes\n\n- Added missing `S: Span` bound for `Label::new` constructor.\n\n- Previously labels with backwards spans could be constructed and\n  only resulted in a panic when writing (or printing) the report.\n  Now `Label::new` panics immediately when passed a backwards span.\n\n### Added\n\n- Support for alternative string-like types in `Source`\n\n### Changed\n\n- Memory & performance improvements\n\n### Fixed\n\n- Panic when provided with an empty input\n\n- Invalid unicode characters for certain arrows\n\n# [0.3.0] - 2023-06-07\n\n### Changed\n\n- Upgraded concolor to `0.1`.\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.630859375,
+          "content": "[package]\nname = \"ariadne\"\nversion = \"0.5.0\"\ndescription = \"A fancy diagnostics & reporting crate\"\nauthors = [\"Joshua Barretto <joshua.s.barretto@gmail.com>\"]\nlicense = \"MIT\"\nrepository = \"https://github.com/zesterer/ariadne\"\nreadme = \"README.md\"\nedition = \"2018\"\nkeywords = [\"error\", \"diagnostics\", \"report\", \"pretty\", \"compiler\"]\ncategories = [\"command-line-utilities\", \"compilers\", \"filesystem\", \"visualization\"]\nexclude = [\n\t\"/misc\",\n\t\"/misc/*\",\n]\n\n[features]\nauto-color = [\"concolor\", \"concolor/auto\"]\n\n[dependencies]\nyansi = \"1.0\"\nunicode-width = \"0.1.9\"\nconcolor = { version = \"0.1\", optional = true }\n\n[dev-dependencies]\ninsta = \"1.31.0\"\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "MIT License\n\nCopyright (c) 2021-2022 Joshua Barretto \n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.373046875,
+          "content": "# Ariadne\n\n[![crates.io](https://img.shields.io/crates/v/ariadne.svg)](https://crates.io/crates/ariadne)\n[![crates.io](https://docs.rs/ariadne/badge.svg)](https://docs.rs/ariadne)\n[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](https://github.com/zesterer/ariadne)\n![actions-badge](https://github.com/zesterer/ariadne/workflows/Rust/badge.svg?branch=main)\n\nA fancy compiler diagnostics crate.\n\n## Example\n\n<a href = \"https://github.com/zesterer/ariadne/blob/main/examples/multiline.rs\">\n<img src=\"https://raw.githubusercontent.com/zesterer/ariadne/main/misc/example.png\" alt=\"Ariadne supports arbitrary multi-line spans\"/>\n</a>\n\n```rust,ignore\nfn main() {\n    use ariadne::{Color, ColorGenerator, Fmt, Label, Report, ReportKind, Source};\n\n    let mut colors = ColorGenerator::new();\n\n    // Generate & choose some colours for each of our elements\n    let a = colors.next();\n    let b = colors.next();\n    let out = Color::Fixed(81);\n\n    Report::build(ReportKind::Error, (\"sample.tao\", 12..12))\n        .with_code(3)\n        .with_message(format!(\"Incompatible types\"))\n        .with_label(\n            Label::new((\"sample.tao\", 32..33))\n                .with_message(format!(\"This is of type {}\", \"Nat\".fg(a)))\n                .with_color(a),\n        )\n        .with_label(\n            Label::new((\"sample.tao\", 42..45))\n                .with_message(format!(\"This is of type {}\", \"Str\".fg(b)))\n                .with_color(b),\n        )\n        .with_label(\n            Label::new((\"sample.tao\", 11..48))\n                .with_message(format!(\n                    \"The values are outputs of this {} expression\",\n                    \"match\".fg(out),\n                ))\n                .with_color(out),\n        )\n        .with_note(format!(\n            \"Outputs of {} expressions must coerce to the same type\",\n            \"match\".fg(out)\n        ))\n        .finish()\n        .print((\"sample.tao\", Source::from(include_str!(\"sample.tao\"))))\n        .unwrap();\n}\n```\n\nSee [`examples/`](https://github.com/zesterer/ariadne/tree/main/examples) for more examples.\n\n## Usage\n\nFor each error you wish to report:\n* Call `Report::build()` to create a `ReportBuilder`.\n* Assign whatever details are appropriate to the error using the various\n  methods, and then call the `finish` method to get a `Report`.\n* For each `Report`, call `print` or `eprint` to write the report\n  directly to `stdout` or `stderr`. Alternately, you can use\n  `write` to send the report to any other `Write` destination (such as a file).\n\n## About\n\n`ariadne` is a sister project of [`chumsky`](https://github.com/zesterer/chumsky/). Neither are dependent on\none-another, but I'm working on both simultaneously and like to think that their features complement each other. If\nyou're thinking of using `ariadne` to process your compiler's output, why not try using `chumsky` to process its input?\n\n## Features\n\n- Inline and multi-line labels capable of handling arbitrary configurations of spans\n- Multi-file errors\n- Generic across custom spans and file caches\n- A choice of character sets to ensure compatibility\n- Coloured labels & highlighting with 8-bit and 24-bit color support (thanks to\n  [`yansi`](https://github.com/SergioBenitez/yansi))\n- Label priority and ordering\n- Compact mode for smaller diagnostics\n- Correct handling of variable-width characters such as tabs\n- A `ColorGenerator` type that generates distinct colours for visual elements.\n- A plethora of other options (tab width, label attach points, underlines, etc.)\n- Built-in ordering/overlap heuristics that come up with the best way to avoid overlapping & label crossover\n\n## Cargo Features\n\n- `\"concolor\"` enables integration with the [`concolor`](https://crates.io/crates/concolor) crate for global color output\n  control across your application\n- `\"auto-color\"` enables `concolor`'s `\"auto\"` feature for automatic color control\n\n`concolor`'s features should be defined by the top-level binary crate, but without any features enabled `concolor` does\nnothing. If `ariadne` is your only dependency using `concolor` then `\"auto-color\"` provides a convenience to enable\n`concolor`'s automatic color support detection, i.e. this:\n```TOML\n[dependencies]\nariadne = { version = \"...\", features = [\"auto-color\"] }\n```\nis equivalent to this:\n```TOML\n[dependencies]\nariadne = { version = \"...\", features = [\"concolor\"] }\nconcolor = { version = \"...\", features = [\"auto\"] }\n```\n\n## Planned Features\n\n- Improved layout planning & space usage\n- Non-ANSI terminal support\n- More accessibility options (screenreader-friendly mode, textured highlighting as an alternative to color, etc.)\n- More color options\n- Better support for layout restrictions (maximum terminal width, for example)\n\n## Stability\n\nThe API (should) follow [semver](https://www.semver.org/). However, this does not apply to the layout of final error\nmessages. Minor tweaks to the internal layout heuristics can often result in the exact format of error messages changing\nwith labels moving slightly. If you experience a change in layout that you believe to be a regression (either the change\nis incorrect, or makes your diagnostics harder to read) then please open an issue.\n\n## Credit\n\nThanks to:\n\n- `@brendanzab` for their beautiful [`codespan`](https://github.com/brendanzab/codespan) crate that inspired me to try\n  pushing the envelope of error diagnostics.\n\n- `@estebank` for showing innumerable people just how good compiler diagnostics can be through their work on Rust.\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

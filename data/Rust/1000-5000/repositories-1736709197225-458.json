@@ -1,0 +1,99 @@
+{
+  "metadata": {
+    "timestamp": 1736709197225,
+    "page": 458,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "vislyhq/stretch",
+      "stars": 1995,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.162109375,
+          "content": "/target\n/scripts/gentest/target\n/bindings/kotlin/stretch/src/main/rust/target\n/bindings/swift/StretchCore/target\n/bindings/js/target\n\n**/*.rs.bk\nCargo.lock\n.DS_Store\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 1.2451171875,
+          "content": "[package]\nname = \"stretch\"\nversion = \"0.3.2\"\nauthors = [\"Emil Sjölander <emil@visly.app>\"]\nedition = \"2018\"\ninclude = [\"src/**/*\", \"Cargo.toml\"]\ndescription = \"High performance & cross-platform Flexbox implementation\"\nrepository = \"https://github.com/vislyhq/stretch\"\nreadme = \"README.md\"\nkeywords = [\"ios\", \"android\", \"cross-platform\", \"layout\", \"flexbox\"]\ncategories = [\"gui\"]\nlicense-file = \"LICENSE\"\n\n[badges]\ncircle-ci = { repository = \"vislyhq/stretch\", branch = \"master\" }\nmaintenance = { status = \"experimental\" }\n\n[dependencies]\narrayvec = { version = \"0.5.1\", default-features = false }\nhash32 = \"0.1.1\"\nhash32-derive = \"0.1.0\"\nheapless = \"0.5.1\"\nnum-traits = { version = \"0.2.10\", default-features = false }\ntypenum = \"1.11.2\"\n\n[dependencies.hashbrown]\nversion = \"0.6.3\"\noptional = true\n\n[dependencies.serde]\nversion = \"1.0.102\"\nfeatures = [\"serde_derive\"]\noptional = true\n\n[features]\ndefault = [\"std\"]\nalloc = [\"hashbrown\"]\nstd = [\"num-traits/std\"]\nserde_camel_case = [\"serde\"]\nserde_kebab_case = [\"serde\"]\n\n[dev-dependencies]\ncriterion = \"0.3.0\"\n\n[profile.release]\nlto = true\npanic = 'abort'\n\n[[bench]]\nname = \"generated\"\npath = \"benches/generated/mod.rs\"\nharness = false\n\n[[bench]]\nname = \"complex\"\nharness = false\n\n[workspace]\nmembers = [ \"scripts/gentest\" ]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2018 Visly Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.51953125,
+          "content": "# Stretch\n[![CircleCI](https://circleci.com/gh/vislyhq/stretch.svg?style=svg)](https://circleci.com/gh/vislyhq/stretch)\n[![Cargo](https://img.shields.io/crates/v/stretch.svg)](https://crates.io/crates/stretch)\n[![npm](https://img.shields.io/npm/v/stretch-layout.svg)](https://www.npmjs.com/package/stretch-layout)\n[![cocoapods](https://img.shields.io/cocoapods/v/StretchKit.svg)](https://cocoapods.org/pods/StretchKit)\n[![bintray](https://api.bintray.com/packages/visly/maven/stretch-kotlin-bindings/images/download.svg)](https://bintray.com/visly/maven/stretch-kotlin-bindings)\n\nStretch is an implementation of Flexbox written in [Rust](https://www.rust-lang.org). The goal of stretch is to provide a solid foundation for layout across all platforms with a specific focus on mobile. Long term we want stretch to not only support flexbox but also many other layout algorithms such as grid layout. Stretch was made for and powers https://visly.app.\n\n## Goals\nBefore using or contributing to stretch it is good to be aware of the core goals of the project. These are goals we are working towards, not necessarily features we currently support.\n\n- High performance\n- Cross platform\n- Small binary size\n- Support multiple layout systems\n- Multi-threaded layout\n- Language bindings for most common languages\n\n## Supported Platforms\n\n- Rust\n- Android\n- iOS\n- JavaScript / TypeScript\n\n## Usage\nStretch is built in Rust but comes with bindings to multiple languages and platforms so you can use it in a way that feels natural to your project.\n\n### Rust\n```toml\n# Cargo.toml\n\n[dependencies]\nstretch = \"0.3.2\"\n```\n\n```rust\n// main.rs\n\nuse stretch::geometry::Size;\nuse stretch::style::*;\n\nfn main() -> Result<(), stretch::Error> {\n    let mut stretch = stretch::node::Stretch::new();\n    \n    let child = stretch.new_node(\n        Style { size: Size { width: Dimension::Percent(0.5), height: Dimension::Auto }, ..Default::default() },\n        vec![],\n    )?;\n\n    let node = stretch.new_node(\n        Style {\n            size: Size { width: Dimension::Points(100.0), height: Dimension::Points(100.0) },\n            justify_content: JustifyContent::Center,\n            ..Default::default()\n        },\n        vec![child],\n    )?;\n\n    stretch.compute_layout(node, Size::undefined())?;\n    dbg!(stretch.layout(node)?);\n}\n\n```\n\n### Android\n```groovy\n// Build.gradle\n\nandroid {\n    splits {\n        abi {\n            enable true\n        }\n    }\n}\n\ndependencies {\n    implementation 'app.visly.stretch:stretch:0.3.2'\n}\n```\n\n```kotlin\n// MainActivity.kt\n\nval node = Node(\n  Style(size = Size(Dimension.Points(100f), Dimension.Points(100f)), justifyContent = JustifyContent.Center), \n  listOf(\n    Node(Style(size = Size(Dimension.Percent(0.5f), Dimension.Percent(0.5f))), listOf())\n  ))\n\nval layout = node.computeLayout(Size(null, null))\nLog.d(TAG, \"width: ${layout.width}, height: ${layout.height}\")\n```\n\n### iOS\n```ruby\n# Podfile\n\npod 'StretchKit', '~> 0.3.2'\n```\n\n```swift\n// ViewController.swift\n \nlet node = Node(\n  style: Style(size: Size(width: .points(100.0), height: .points(100.0)), justifyContent: .center), \n  children: [\n    Node(style: Style(size: Size(width: .percent(0.5), height: .percent(0.5))), children: [])\n  ])\n  \nlet layout = node.computeLayout(thatFits: Size(width: nil, height: nil))\nprint(\"width: \\(layout.width), height: \\(layout.height)\")\n```\n\n### JavaScript\n```bash\n> npm install --save stretch-layout\n```\n\n```javascript\n// index.js\n\nimport { Allocator, Node, JustifyContent } from 'stretch-layout';\n\nconst allocator = new Allocator();\nconst node = new Node(allocator, {width: 100, height: 100, justifyContent: JustifyContent.Center});\nnode.addChild(new Node(allocator, {width: '50%', height: '50%'}));\nconst layout = node.computeLayout();\n\nconsole.log(layout.width, layout.height);\n```\n\n## Contributing\nContributions are very welcome. Though we ask that you open an issue or pull request early in the process (before writing code) so we can discuss solutions and additions before you start spending time on implementing them. There are some specific areas where we would be extra happy to receive contributions in.\n\n- Binary size reduction\n- Runtime performance\n- Ensure build / test environment works well on non macOS platforms\n- Alternate layout systems (grid layout perhaps?)\n- Web compatibility tests\n- RTL support\n- Platform bindings\n- API improvements\n- Documentation & Examples\n\n### Installation\nIf you don't have Rust installed you have to do that first as well as install some components that we make use of to format and lint the codebase. For more on Rust see their [website](https://www.rust-lang.org).\n\n```bash\ncurl https://sh.rustup.rs -sSf | sh\nrustup component add rustfmt\nrustup component add clippy\n```\n\nOnce that is done you can clone the repo and do some sanity checks to make sure everything is working correctly.\n\n```bash\ngit clone https://github.com/vislyhq/stretch.git\ncd stretch\ncargo test\n```\n\nIf you have made any changes to the API you should also update and run tests for all the platform bindings located in `/bindings/*`.\n\n### Testing\nStretch is tested by validating that layouts written in stretch perform the same as in Chrome. This is done by rendering an equivalent layout in HTML and then generating a Rust test case which asserts that the resulting layout is the same when run through stretch.\n\nYou can run these tests without setting up a webdriver environment but if you are looking to add any test case you will need to install [chromedriver](http://chromedriver.chromium.org). If you are developing on macOS this is easy to do through brew.\n\n```bash\nbrew tap homebrew/cask\nbrew cask install chromedriver\n```\n\nOnce you have chromedriver installed and available in `PATH` you can re-generate all tests by running `cargo run --package gentest`.\n\nTo add a new test case add another HTML file to `/test_fixtures` following the current tests as a template for new tests.\n\n### Benchmarking\nBenchmarks build on the same infrastructure as testing, and actually benchmarks are automatically generated from test fixtures just like tests. Run `cargo bench` to run benchmarks locally.\n\n## Relationship to Yoga\n[Yoga](https://www.yogalayout.com) is a cross-platform implementation of Flexbox written in C. Yoga is a fantastic project but has some fundamental issues which we hope to resolve. Compared to Yoga we aim to have a stronger adherence to web standards, a flexible architecture eventually supporting multiple layout algorithms, and future performance improvements including multi-threaded layout. In addition to this we aim to use a safer language with a more modern codebase.\n\n# LICENCE\n```\nCopyright (c) 2018 Visly Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n```\n"
+        },
+        {
+          "name": "StretchKit.podspec",
+          "type": "blob",
+          "size": 1.212890625,
+          "content": "Pod::Spec.new do |s|\n  s.name             = 'StretchKit'\n  s.version          = '0.3.2'\n  s.summary          = 'Swift bindings for the Stretch layout engine.'\n  s.description      = \"A high performance & cross-platform layout engine.\"\n  s.homepage         = 'https://vislyhq.github.io/stretch/'\n  s.license          = { :type => 'MIT', :file => 'LICENSE' }\n  s.author           = { 'Visly Inc.' => 'emil@visly.app' }\n  s.source           = { :git => 'https://github.com/vislyhq/stretch.git', :tag => s.version.to_s }\n  s.social_media_url = 'https://twitter.com/vislyhq'\n\n  s.swift_version = '4.2'\n  s.ios.deployment_target  = '9.3'\n  s.source_files = 'bindings/swift/StretchKit/Classes/**/*'\n  s.xcconfig = { \"ENABLE_BITCODE\" => \"NO\" }\n\n  s.subspec 'StretchCore' do |core|\n    core.source_files = 'bindings/swift/StretchKit/Headers/*.h'\n    core.vendored_libraries = \"bindings/swift/StretchKit/Libraries/libstretch.a\"\n    core.xcconfig = { \"HEADER_SEARCH_PATHS\" => \"${PODS_ROOT}/StretchCore/Headers\" }\n    core.preserve_paths = [\"bindings/swift/StretchKit/Libraries/libstretch.a\", \"bindings/swift/StretchKit/Headers/libstretch.h\"]\n    core.public_header_files = \"bindings/swift/StretchKit/Headers/*.h\"\n    core.requires_arc = false\n  end\nend\n"
+        },
+        {
+          "name": "benches",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bindings",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rustfmt.toml",
+          "type": "blob",
+          "size": 0.07421875,
+          "content": "max_width = 120\nuse_field_init_shorthand = true\nuse_small_heuristics = \"Max\""
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test_fixtures",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

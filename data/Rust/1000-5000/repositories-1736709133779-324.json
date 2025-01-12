@@ -1,0 +1,68 @@
+{
+  "metadata": {
+    "timestamp": 1736709133779,
+    "page": 324,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "sekey/sekey",
+      "stars": 2461,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0595703125,
+          "content": "language: rust\nos: osx\nrust:\n  - stable\n  - beta\n  - nightly\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.3798828125,
+          "content": "[package]\nname = \"sekey\"\nversion = \"0.1.0\"\nauthors = [\"Nicolas Trippar <ntrippar@gmail.com>\"]\nbuild = \"build.rs\"\n\n[dependencies]\nenv_logger = \"0.4.3\"\nclap = \"2.28.0\"\nbyteorder = \"1.1.0\"\nbase64 = \"0.8.0\"\neagre-asn1 = \"0.2.0\"\ncore-foundation = \"0.4.6\"\nlibc = \"0.2\"\nprettytable-rs = \"0.6.7\"\nhex = \"0.3.1\"\nrust-crypto = \"0.2.36\"\nssh_agent = { git = 'https://github.com/ntrippar/ssh-agent' }\n\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "MIT License\n\nCopyright (c) 2018 Nicolas Trippar\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.0400390625,
+          "content": "# SeKey\n\n[![Build Status][build-image]][build-link]\n[![MIT Licensed][license-image]][license-link]\n\n<p align=\"center\">\n  <img src=\"https://raw.githubusercontent.com/ntrippar/sekey/master/assets/screenshot.png\" alt=\"SeKey\" width=\"80%\" height=\"80%\" />\n</p>\n\n## About\nSeKey is a SSH Agent that allow users to authenticate to UNIX/Linux SSH servers using the Secure Enclave\n\n## How it Works?\nThe Secure Enclave is a hardware-based key manager that’s isolated from the main processor to provide an extra layer of security. When you store a private key in the Secure Enclave, you never actually handle the key, making it difficult for the key to become compromised. Instead, you instruct the Secure Enclave to create the key, securely store it, and perform operations with it. You receive only the output of these operations, such as encrypted data or a cryptographic signature verification outcome.\n\n\n### Limitations\n* Only support MacBook Pro with the Touch Bar and Touch ID\n* Can’t import preexisting key\n* Stores only 256-bit elliptic curve private key\n\n## Install\n\n**Homebrew**\n\nUnfortunately, I can't make a Homebrew formula because KeyChain API requires entitlements, so the binary has to be signed to work, still you can use [Homebrew Cask](https://caskroom.github.io/)\n\n**Homebrew Cask**\n1. Install Sekey\n```sh\nbrew cask install sekey\n```\n2. Append the following line to your `~/.bash_profile` or `~/.zshrc`\n```sh\nexport SSH_AUTH_SOCK=$HOME/.sekey/ssh-agent.ssh\n```\n_or_\n\n2. Add the following line you your `~/.ssh/config` or `/etc/ssh/ssh_config`\n```\nIdentityAgent ~/.sekey/ssh-agent.ssh\n```\n\n\n**Pkg Installer**\n1. Go to [Releases](https://github.com/ntrippar/sekey/releases/) and download the pkg release\n2. Install the application using the pkg.\n3. Set enviroment variables and fix the path of sekey folder.\n```\nexport PATH=$PATH:/Applications/SeKey.app/Contents/MacOS\nexport SSH_AUTH_SOCK=$HOME/.sekey/ssh-agent.ssh\n```\n\n**Manual Installation**\n1. Go to [Releases](https://github.com/ntrippar/sekey/releases/) and download the zip release\n2. Place the App in the Applications folder.\n3. Go to ~/Library/LaunchAgents\n4. Create the file com.ntrippar.sekey.plist\n5. Paste the following into the file and fix the path of the sekey binary:\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n    <key>Label</key>\n    <string>com.ntrippar.sekey</string>\n    <key>ProgramArguments</key>\n    <array>\n        <string>/absolute/path/to/SeKey.app/Contents/MacOS/sekey</string>\n        <string>--daemon</string>\n    </array>\n    <key>StandardErrorPath</key>\n    <string>/dev/null</string>\n    <key>StandardOutPath</key>\n    <string>/dev/null</string>\n    <key>KeepAlive</key>\n    <true/>\n</dict>\n</plist>\n\n```\n4. Fix permissions\n```sh\nchown youruser:staff /absolute/path/to/SeKey.app/Contents/MacOS/sekey\n```\n5. Load the agent to the user account:\n```sh\nlaunchctl load -F ~/Library/LaunchAgents/com.ntrippar.sekey.plist\n```\n6. Set enviroment variables and fix the path of sekey folder.\n```\nexport PATH=$PATH:/path/to/SeKey.app/Contents/MacOS\nexport SSH_AUTH_SOCK=$HOME/.sekey/ssh-agent.ssh\n```\n\n## Usage\n\nFor the help menu:\n\n```sh\nntrippar@macbookpro:~% sekey -h\nSeKey 1.0\nNicolas Trippar <ntrippar@gmail.com>\nUse Secure Enclave for SSH Authentication\n\nUSAGE:\n    sekey [FLAGS] [OPTIONS]\n\nFLAGS:\n        --daemon       Run the daemon\n    -h, --help         Prints help information\n        --list-keys    List all keys\n    -V, --version      Prints version information\n\nOPTIONS:\n        --delete-keypair <ID>         Deltes the keypair\n        --export-key <ID>             export key to OpenSSH Format\n        --generate-keypair <LABEL>    Generate a key inside the Secure Enclave\n```\n\n\n**Examples**\n\nCreate KeyPair inside the Secure Enclave:\n\n```sh\nntrippar@macbookpro:~% sekey --generate-keypair \"Github Key\"\nKeypair Github Key sucessfully generated\n\n```\n\nList keys in the secure enclave:\n\n```sh\nntrippar@macbookpro:~% sekey --list-keys\n\n┌────────────────────┬──────────────────────────────────────────────────┐\n│       Label        │                        ID                        │\n├────────────────────┼──────────────────────────────────────────────────┤\n│     Github Key     │     d179eb4c2d6a242de64e82240b8b6e611cf0d729     │\n└────────────────────┴──────────────────────────────────────────────────┘\n```\n\nExport public key to OpenSSH format:\n\n```sh\nntrippar@macbookpro:~% sekey --export-key d179eb4c2d6a242de64e82240b8b6e611cf0d729\necdsa-sha2-nistp25 AAAAEmVjZHNhLXNoYTItbmlzdHAyNQAAAAhuaXN0cDI1NgAAAEEE8HM7SBdu3yOYkmF0Wnj/q8t2NJC6JYJWZ4IyvkOVIeUs6mi4B424bAjhZ4Awgk5ax9r25RB3Q8tL2/7J/3xchQ==\n```\n\nDelete Keypair:\n\n```sh\nntrippar@macbookpro:~% sekey --delete-keypair d179eb4c2d6a242de64e82240b8b6e611cf0d729\nKey d179eb4c2d6a242de64e82240b8b6e611cf0d729 sucessfully deleted\n```\n\nUse key for a specific host:\n\n1. export the public key from sekey and save it to a file\n```sh\nntrippar@macbookpro:~% sekey --export-key d179eb4c2d6a242de64e82240b8b6e611cf0d729 > ~/.ssh/example.com.pub\n```\n2. on the ssh config file located in `~/.ssh/config` we should add a entry so the ssh only query that key for the given host\n\n```\nHost example.com\n    IdentityFile ~/.ssh/example.com.pub\n    IdentitiesOnly yes\n```\n\n## How to Build\n\n**Build**\n\nSekey is built with [Cargo](https://crates.io/), the Rust package manager.\n\n```sh\ngit clone https://github.com/ntrippar/sekey\ncd sekey\ncargo build --release\n```\n\n\n**Sign**\n\nSeKey utilizes the KeyChain API on MacOS, for using it the app needs to be signed and have the correct entitlements.\n\nYou need to change the sign parameter to match your own signing key\n\nListing keys\n\n```sh\nsecurity find-identity -v -p codesigning\n```\n\nSign\n\n```sh\ncodesign --force --identifier \"com.ntrippar.sekey\" --sign \"Developer ID Application: Nicolas Trippar (5E8NNEEMLP)\" --entitlements ./assets/sekey.entitlements --timestamp=none ./bundle/SeKey.app\n```\n\n**Package**\n\n```sh\ncp ./target/release/sekey ./bundle/Applications/SeKey.app/Contents/MacOS/sekey\n```\n\nif needed to create a pkg installer\n```sh\npkgbuild --analyze --root ./bundle/ SeKey.plist\n\npkgbuild --sign \"Developer ID Installer: Nicolas Trippar (5E8NNEEMLP)\" --identifier com.ntrippar.sekey --root ./bundle/ --scripts ./install-scripts --component-plist ./Sekey.plist ./sekey.pkg\n```\n\n## Contribute\nMembers of the open-source community are encouraged to submit pull requests directly through GitHub.\n\n[build-image]: https://travis-ci.org/sekey/sekey.svg?branch=master\n[build-link]: https://travis-ci.org/sekey/sekey\n[license-image]: https://img.shields.io/github/license/sekey/sekey.svg\n[license-link]: https://github.com/sekey/sekey/blob/master/LICENSE\n\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.rs",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": "fn main() {\n\tprintln!(\"cargo:rustc-link-lib=framework=Security\");\n}"
+        },
+        {
+          "name": "bundle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install-scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

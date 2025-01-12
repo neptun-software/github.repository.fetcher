@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "timestamp": 1736709288682,
+    "page": 656,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "orlp/glidesort",
+      "stars": 1624,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0810546875,
+          "content": "/fuzz/target\n/fuzz/corpus\n/fuzz/artifacts\n/fuzz/coverage\n/target\nCargo.lock\n.vscode"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.587890625,
+          "content": "[package]\nname = \"glidesort\"\nversion = \"0.1.2\"\nedition = \"2021\"\nauthors = [\"Orson Peters <orsonpeters@gmail.com>\"]\ndescription = \"Glidesort sorting algorithm\"\nrepository = \"https://github.com/orlp/glidesort\"\nlicense = \"MIT OR Apache-2.0\"\nreadme = \"README.md\"\nkeywords = [\"algorithm\", \"sort\", \"sorting\"]\ncategories = [\"algorithms\"]\n\n# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html\n\n[dependencies]\nlazy_static = { version = \"1.4.0\", optional = true }\n\n[dev-dependencies]\n\n[features]\ntracking = [\"lazy_static\"]\nunstable = []\n\n[profile.release]\nlto = \"thin\""
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.91796875,
+          "content": "# Glidesort\n\nGlidesort is a novel stable sorting algorithm that combines the best-case behavior\nof Timsort-style merge sorts for pre-sorted data with the best-case behavior of\n[pattern-defeating quicksort](https://github.com/orlp/pdqsort) for data with many duplicates.\nIt is a comparison-based sort supporting arbitrary comparison operators,\nand while exceptional on data with patterns it is also very fast for random data.\n\nFor sorting `n` elements with `k` distinct values glidesort has the following\ncharacteristics by default:\n\n```\nBest    Average     Worst       Memory      Stable      Deterministic\nn       n log k     n log n     n / 8       Yes         Yes\n```\n\nGlidesort can use as much (up to `n`) or as little extra memory as you want. If\ngiven only `O(1)` memory the average and worst case become `O(n (log n)^2)`, however\nin practice its performance is great for all but the most skewed data size /\nauxiliary space ratios. The default is to allocate up to `n` elements worth of\ndata, unless this exceeds 1 MiB, in which case we scale this down to `n / 2`\nelements worth of data up until 1 GiB after which glidesort uses `n / 8` memory.\n\n# Benchmark\n\nPerformance varies a lot from machine to machine and dataset to dataset, so your\nmileage will vary. Nevertheless, an example benchmark from a 2021 Apple M1\nmachine comparing against `[T]::sort` and `[T]::sort_unstable` for various input\ndistributions of `u64`:\n\n![Performance graph](https://i.imgur.com/8fIACqY.png)\n\nCompiled with `rustc 1.69.0-nightly (11d96b593)` using `--release --features unstable` and `lto = \"thin\"`.\n\n\n# Usage\n\nUse `cargo add glidesort` and replace `a.sort()` with `glidesort::sort(&mut a)`.\nA similar process works for `sort_by` and `sort_by_key`.\n\nGlidesort exposes two more families of sorting functions.\n`glidesort::sort_with_buffer(&mut a, buf)` asks you to pass a `&mut\n[MaybeUninit<T>]` buffer which it will then (exclusively) use as auxiliary space\nto sort the elements. `glidesort::sort_in_vec(&mut v)` behaves like normal\nglidesort but will allocate its auxiliary space at the end of the passed `Vec<T>`.\nThis allows future sorting calls to re-use the same space and reduce allocations.\nBoth these families also support the `_by` and `_by_key` interface.\n\n# Visualization\n\nThis visualization focuses on demonstrating the advanced merging techniques in glidesort:\n\nhttps://user-images.githubusercontent.com/202547/216675278-e4c8f15c-e42d-4224-b8c7-fdc67fdc2bde.mp4\n\nThis visualization shows how glidesort is adaptive to both pre-existing runs as well\nas many duplicates together:\n\nhttps://user-images.githubusercontent.com/202547/216675274-6e61689f-a120-4b7c-b1a7-9b5aa5fd013e.mp4\n\nNote that both visualizations have different small sorting thresholds and\nauxiliary memory parameters to show the techniques in action on a smaller scale.\n\n\n# Technique overview\n\nIf you prefer I also have a recorded talk\nI gave at FOSDEM 2023 that gives a high level overview of glidesort:\n\n[![Talk recording preview](https://i.imgur.com/Lcl0KbI.png)](https://fosdem.org/2023/schedule/event/rust_glidesort/)\n\nGlidesort uses a novel main loop based on powersort. Powersort is similar to\nTimsort, using heuristics to find a good order of stably merging sorted runs.\nLike powersort it does a linear scan over the input, recognizing any ascending\nor strictly descending sequences. However, unlike powersort it does not eagerly\nsort sequences that are considered unordered into small sorted blocks. Instead\nit processes them as-is, unsorted. This process produces *logical runs*, which\nmay be sorted or unsorted.\n\nGlidesort repeatedly uses a *logical* merge operation on these logical runs, as\npowersort would. In a logical merge unsorted runs are simply concatenated into\nlarger unsorted runs. Sorted runs are also concatenated into *double sorted*\nruns. Only when merging a sorted and unsorted run finally the unsorted run is\nsorted using stable quicksort, and when merging double sorted runs glidesort\nuses interleaved ping-pong merges.\n\nUsing this novel hybrid approach glidesort can take advantage of arbitrary\nsorted runs in the data as well as process data with many duplicate items faster\nsimilar to pattern-defeating quicksort.\n\n\n# Stable merging\n\nGlidesort merges multiple sorted runs at the same time, and interleaves their\nmerging loops for better memory-level and instruction-level parallelism as well\nas hiding data dependencies. For similar reasons it also interleaves independent\nleft-to-right and right-to-left merging loops as bidirectional merges, which are\na generalization of [quadsort](https://github.com/scandum/quadsort)s parity\nmerges. Merging multiple runs at the same time also lets glidesort use ping-pong\nmerging, avoiding unnecessary `memcpy` calls by using the implicit copy you get\nfrom an out-of-place merge. All merging loops are completely branchless, making\nit fast for random data as well.\n\nGlidesort further uses binary searches to split up large merge operations into\nsmaller merge operations that it then performs at the same time using\ninstruction-level parallelism. This splitting procedure also allows glidesort to\nuse arbitrarily small amounts of memory, as it can choose to split a merge\nrepeatedly until it fits in our scratch space to process.\n\n\n# Stable quicksort\n\nYes, stable quicksort. Wikipedia will outright tell you that quicksort is\nunstable, or at least all efficient implementations are. That simply isn't true,\nall it needs is auxiliary memory. Credit to Igor van den Hoven's\n[fluxsort](https://github.com/scandum/fluxsort) for demonstrating that stable\nquicksort can be efficient in practice.\n\nGlidesort uses a novel bidirectional stable partitioning method that interleaves\na left-to-right partition scan with a right-to-left partition scan for greater\nmemory-level parallelism and hiding data dependencies. Partitioning is done\nentirely branchlessly (if the comparison operator is), giving consistent\nperformance on all data.\n\n\n# License\n\nGlidesort is dual-licensed under the Apache License, Version 2.0 and the MIT license.\n"
+        },
+        {
+          "name": "fuzz",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

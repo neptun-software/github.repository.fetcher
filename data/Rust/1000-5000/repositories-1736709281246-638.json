@@ -1,0 +1,210 @@
+{
+  "metadata": {
+    "timestamp": 1736709281246,
+    "page": 638,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mozilla/mentat",
+      "stars": 1655,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".cargo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.5341796875,
+          "content": "*.class\n*.DS_Store\n*.jar\n*jar\n*~\n*.rs.bk\n.s*\n.*.sw*\n*.rs.bak\n*.bak\n.hg/\n.hgignore\n.lein-deps-sum\n.lein-failures\n.lein-plugins/\n.lein-repl-history\n.nrepl-port\n/.lein-*\n/.nrepl-port\nCargo.lock\n/checkouts/\n/classes/\n/node_modules/\n/out/\ntarget/\npom.xml\npom.xml.asc\n/.cljs_node_repl/\n/.cljs_rhino_repl/\n/addon/built/index.js\n/addon/node_modules/\n/addon/release/datomish-test.xpi\n/addon/release/datomish.js\n/addon/release/index.js\n/release-browser/cljs/\n/release-browser/cljs_promises/\n/release-browser/clojure/\n/release-browser/constants_table.js\n/release-browser/datomish.bare.js\n/release-browser/datomish.js\n/release-browser/datomish/\n/release-browser/goog/\n/release-browser/honeysql/\n/release-node/cljs/\n/release-node/cljs_promises/\n/release-node/clojure/\n/release-node/constants_table.js\n/release-node/datomish.bare.js\n/release-node/datomish.js\n/release-node/datomish/\n/release-node/goog/\n/release-node/honeysql/\n/edn/target/\n/fixtures/*.db-shm\n/fixtures/*.db-wal\n/query-parser/out/\n\n## Build generated\n/sdks/swift/Mentat/build/\n/sdks/android/**/build\nDerivedData\nbuild.xcarchive\n\n## Various settings\n*.pbxuser\n!default.pbxuser\n*.mode1v3\n!default.mode1v3\n*.mode2v3\n!default.mode2v3\n*.perspectivev3\n!default.perspectivev3\n/sdks/swift/Mentat/*.xcodeproj/project.xcworkspace/xcuserdata\n\n## Other\n*.xccheckout\n*.moved-aside\n*.xcuserstate\n*.xcscmblueprint\n\n## Obj-C/Swift specific\n*.hmap\n*.ipa\n/sdks/swift/Mentat/External-Dependencies\n\n# Android & IntelliJ\n**/*.iml\n**/.idea\n/sdks/android/**/local.properties\n\n# Documentation\ndocs/_site\ndocs/.sass-cache\ndocs/.jekyll-metadata\n"
+        },
+        {
+          "name": ".taskcluster.yml",
+          "type": "blob",
+          "size": 2.98828125,
+          "content": "# This Source Code Form is subject to the terms of the Mozilla Public\n# License, v. 2.0. If a copy of the MPL was not distributed with this\n# file, You can obtain one at http://mozilla.org/MPL/2.0/.\n\nversion: 0\nallowPullRequests: public\ntasks:\n####################################################################################################\n# Task: Pull requests\n####################################################################################################\n  - provisionerId: '{{ taskcluster.docker.provisionerId }}'\n    workerType: '{{ taskcluster.docker.workerType }}'\n    extra:\n      github:\n        env: true\n        events:\n          - pull_request.opened\n          - pull_request.edited\n          - pull_request.synchronize\n          - pull_request.reopened\n          - push\n    scopes:\n      - \"queue:create-task:aws-provisioner-v1/github-worker\"\n      - \"queue:scheduler-id:taskcluster-github\"\n    payload:\n      maxRunTime: 3600\n      deadline: \"{{ '2 hours' | $fromNow }}\"\n      image: 'mozillamobile/android-components:1.4'\n      command:\n        - /bin/bash\n        - '--login'\n        - '-cx'\n        - >-\n          export TERM=dumb\n          && git fetch {{ event.head.repo.url }} {{ event.head.repo.branch }}\n          && git config advice.detachedHead false\n          && git checkout {{event.head.sha}}\n          && python automation/taskcluster/decision_task_pull_request.py\n      features:\n        taskclusterProxy: true\n    metadata:\n      name: Mentat Android SDK - Pull Request\n      description: Building and testing the Mentat Android SDK - triggered by a pull request.\n      owner: '{{ event.head.user.email }}'\n      source: '{{ event.head.repo.url }}'\n####################################################################################################\n# Task: Release\n####################################################################################################\n  - provisionerId: '{{ taskcluster.docker.provisionerId }}'\n    workerType: '{{ taskcluster.docker.workerType }}'\n    extra:\n      github:\n        events:\n          - release\n    scopes:\n      - \"secrets:get:project/mentat/publish\"\n    payload:\n      maxRunTime: 3600\n      deadline: \"{{ '2 hours' | $fromNow }}\"\n      image: 'mozillamobile/mentat:1.2'\n      command:\n        - /bin/bash\n        - '--login'\n        - '-cx'\n        - >-\n          export TERM=dumb\n          && git fetch origin --tags\n          && git config advice.detachedHead false\n          && git checkout {{ event.version }}\n          && python automation/taskcluster/release/fetch-bintray-api-key.py\n          && cd sdks/android/Mentat\n          && ./gradlew --no-daemon clean library:assembleRelease\n          && VCS_TAG=`git show-ref {{ event.version }}` ./gradlew bintrayUpload --debug -PvcsTag=\"$VCS_TAG\"\n      features:\n        taskclusterProxy: true\n    metadata:\n      name: Mentat Android SDK - Release ({{ event.version }})\n      description: Building and publishing release versions.\n      owner: '{{ event.head.user.email }}'\n      source: '{{ event.head.repo.url }}'\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.27734375,
+          "content": "language: rust\n# We use OSX so that we can get a reasonably up to date version of SQLCipher.\n# (The version in Travis's default Ubuntu Trusty is much too old).\nos: osx\nbefore_install:\n  - brew install sqlcipher --with-fts\nrust:\n  - 1.25.0\n  - stable\n  - beta\n  - nightly\nmatrix:\n  allow_failures:\n    - rust: nightly\n  fast_finish: true\njobs:\n  include:\n    - stage: \"Test iOS\"\n      rust: 1.25.0\n      script: ./scripts/test-ios.sh\n    - stage: \"Docs\"\n      rust: 1.25.0\n      script: ./scripts/cargo-doc.sh\nscript:\n  - cargo test --verbose --all\n  - cargo test --features edn/serde_support --verbose --all\n  # We can't pick individual features out with `cargo test --all` (At the time of this writing, this\n  # works but does the wrong thing because of a bug in cargo, but its fix will be to disallow doing\n  # this all-together, see https://github.com/rust-lang/cargo/issues/5364 for more information). To\n  # work around this, we run tests individually for subcrates that rely on `rusqlite`.\n  - |\n    for crate in \"\" \"db\" \"db-traits\" \"ffi\" \"public-traits\" \"query-projector\" \"query-projector-traits\" \"query-pull\" \"sql\" \"tolstoy\" \"tolstoy-traits\" \"transaction\" \"tools/cli\"; do\n      cargo test --manifest-path ./$crate/Cargo.toml --verbose --no-default-features --features sqlcipher\n    done\ncache: cargo\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 1.2734375,
+          "content": "# 0.11.1 (2018-08-09)\n\n* sdks/android compiled against:\n  * Kotlin standard library 1.2.41\n\n* **API changes**: Changed wording of MentatError::ConflictingAttributeDefinitions, MentatError::ExistingVocabularyTooNew, MentatError::UnexpectedCoreSchema.\n\n* [Commits](https://github.com/mozilla/mentat/compare/v0.11.0...v0.11.1)\n\n# 0.11 (2018-07-31)\n\n* sdks/android compiled against:\n  * Kotlin standard library 1.2.41\n\n* **sdks/android**: `Mentat()` constructor replaced with `open` factory method.\n\n* [Commits](https://github.com/mozilla/mentat/compare/v0.10.0...v0.11.0)\n\n# 0.10 (2018-07-26)\n\n* sdks/android compiled against:\n  * Kotlin standard library 1.2.41\n\n* **API changes**:\n  * `store_open{_encrypted}` now accepts an error parameter; corresponding constructors changed to be factory functions.\n\n* [Commits](https://github.com/mozilla/mentat/compare/v0.9.0...v0.10.0)\n\n# 0.9 (2018-07-25)\n\n* sdks/android compiled against:\n  * Kotlin standard library 1.2.41\n\n* **API changes**:\n  * Mentat partitions now enforce their integrity, denying entids that aren't already known.\n\n* **sdks/android**: First version published to nalexander's personal bintray repository.\n* Various bugfixes and refactorings (see commits below for details)\n* [Commits](https://github.com/mozilla/mentat/compare/v0.8.1...v0.9.0)\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 2.0458984375,
+          "content": "[package]\nauthors = [\n  \"Richard Newman <rnewman@twinql.com>\",\n  \"Nicholas Alexander <nalexander@mozilla.com>\",\n  \"Victor Porof <vporof@mozilla.com>\",\n  \"Jordan Santell <jsantell@mozilla.com>\",\n  \"Joe Walker <jwalker@mozilla.com>\",\n  \"Emily Toop <etoop@mozilla.com>\",\n  \"Grisha Kruglov <grigory@kruglov.ca>\",\n  \"Kit Cambridge <kit@yakshaving.ninja>\",\n  \"Edouard Oger <eoger@fastmail.com>\",\n  \"Thom Chiovoloni <tchiovoloni@mozilla.com>\",\n]\nname = \"mentat\"\nversion = \"0.11.1\"\nbuild = \"build/version.rs\"\n\n[features]\ndefault = [\"bundled_sqlite3\", \"syncable\"]\nbundled_sqlite3 = [\"rusqlite/bundled\"]\nsqlcipher = [\"rusqlite/sqlcipher\", \"mentat_db/sqlcipher\"]\nsyncable = [\"mentat_tolstoy\", \"tolstoy_traits\", \"mentat_db/syncable\"]\n\n[workspace]\nmembers = [\"tools/cli\", \"ffi\"]\n\n[build-dependencies]\nrustc_version = \"0.2\"\n\n[dependencies]\nchrono = \"0.4\"\nfailure = \"0.1.1\"\nlazy_static = \"0.2\"\ntime = \"0.1\"\nlog = \"0.4\"\nuuid = { version = \"0.5\", features = [\"v4\", \"serde\"] }\n\n[dependencies.rusqlite]\nversion = \"0.13\"\n# System sqlite might be very old.\nfeatures = [\"limits\"]\n\n[dependencies.edn]\npath = \"edn\"\n\n[dependencies.core_traits]\npath = \"core-traits\"\n\n[dependencies.mentat_core]\npath = \"core\"\n\n[dependencies.mentat_sql]\npath = \"sql\"\n\n[dependencies.mentat_db]\npath = \"db\"\n\n[dependencies.db_traits]\npath = \"db-traits\"\n\n[dependencies.mentat_query_algebrizer]\npath = \"query-algebrizer\"\n\n[dependencies.query_algebrizer_traits]\npath = \"query-algebrizer-traits\"\n\n[dependencies.mentat_query_projector]\npath = \"query-projector\"\n\n[dependencies.query_projector_traits]\npath = \"query-projector-traits\"\n\n[dependencies.mentat_query_pull]\npath = \"query-pull\"\n\n[dependencies.query_pull_traits]\npath = \"query-pull-traits\"\n\n[dependencies.mentat_query_sql]\npath = \"query-sql\"\n\n[dependencies.sql_traits]\npath = \"sql-traits\"\n\n[dependencies.public_traits]\npath = \"public-traits\"\n\n[dependencies.mentat_transaction]\npath = \"transaction\"\n\n[dependencies.mentat_tolstoy]\npath = \"tolstoy\"\noptional = true\n\n[dependencies.tolstoy_traits]\npath = \"tolstoy-traits\"\noptional = true\n\n[profile.release]\nopt-level = 3\ndebug = false\nlto = true\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 11.091796875,
+          "content": "\n                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n   1. Definitions.\n\n      \"License\" shall mean the terms and conditions for use, reproduction,\n      and distribution as defined by Sections 1 through 9 of this document.\n\n      \"Licensor\" shall mean the copyright owner or entity authorized by\n      the copyright owner that is granting the License.\n\n      \"Legal Entity\" shall mean the union of the acting entity and all\n      other entities that control, are controlled by, or are under common\n      control with that entity. For the purposes of this definition,\n      \"control\" means (i) the power, direct or indirect, to cause the\n      direction or management of such entity, whether by contract or\n      otherwise, or (ii) ownership of fifty percent (50%) or more of the\n      outstanding shares, or (iii) beneficial ownership of such entity.\n\n      \"You\" (or \"Your\") shall mean an individual or Legal Entity\n      exercising permissions granted by this License.\n\n      \"Source\" form shall mean the preferred form for making modifications,\n      including but not limited to software source code, documentation\n      source, and configuration files.\n\n      \"Object\" form shall mean any form resulting from mechanical\n      transformation or translation of a Source form, including but\n      not limited to compiled object code, generated documentation,\n      and conversions to other media types.\n\n      \"Work\" shall mean the work of authorship, whether in Source or\n      Object form, made available under the License, as indicated by a\n      copyright notice that is included in or attached to the work\n      (an example is provided in the Appendix below).\n\n      \"Derivative Works\" shall mean any work, whether in Source or Object\n      form, that is based on (or derived from) the Work and for which the\n      editorial revisions, annotations, elaborations, or other modifications\n      represent, as a whole, an original work of authorship. For the purposes\n      of this License, Derivative Works shall not include works that remain\n      separable from, or merely link (or bind by name) to the interfaces of,\n      the Work and Derivative Works thereof.\n\n      \"Contribution\" shall mean any work of authorship, including\n      the original version of the Work and any modifications or additions\n      to that Work or Derivative Works thereof, that is intentionally\n      submitted to Licensor for inclusion in the Work by the copyright owner\n      or by an individual or Legal Entity authorized to submit on behalf of\n      the copyright owner. For the purposes of this definition, \"submitted\"\n      means any form of electronic, verbal, or written communication sent\n      to the Licensor or its representatives, including but not limited to\n      communication on electronic mailing lists, source code control systems,\n      and issue tracking systems that are managed by, or on behalf of, the\n      Licensor for the purpose of discussing and improving the Work, but\n      excluding communication that is conspicuously marked or otherwise\n      designated in writing by the copyright owner as \"Not a Contribution.\"\n\n      \"Contributor\" shall mean Licensor and any individual or Legal Entity\n      on behalf of whom a Contribution has been received by Licensor and\n      subsequently incorporated within the Work.\n\n   2. Grant of Copyright License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      copyright license to reproduce, prepare Derivative Works of,\n      publicly display, publicly perform, sublicense, and distribute the\n      Work and such Derivative Works in Source or Object form.\n\n   3. Grant of Patent License. Subject to the terms and conditions of\n      this License, each Contributor hereby grants to You a perpetual,\n      worldwide, non-exclusive, no-charge, royalty-free, irrevocable\n      (except as stated in this section) patent license to make, have made,\n      use, offer to sell, sell, import, and otherwise transfer the Work,\n      where such license applies only to those patent claims licensable\n      by such Contributor that are necessarily infringed by their\n      Contribution(s) alone or by combination of their Contribution(s)\n      with the Work to which such Contribution(s) was submitted. If You\n      institute patent litigation against any entity (including a\n      cross-claim or counterclaim in a lawsuit) alleging that the Work\n      or a Contribution incorporated within the Work constitutes direct\n      or contributory patent infringement, then any patent licenses\n      granted to You under this License for that Work shall terminate\n      as of the date such litigation is filed.\n\n   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and\n\n      (c) You must retain, in the Source form of any Derivative Works\n          that You distribute, all copyright, patent, trademark, and\n          attribution notices from the Source form of the Work,\n          excluding those notices that do not pertain to any part of\n          the Derivative Works; and\n\n      (d) If the Work includes a \"NOTICE\" text file as part of its\n          distribution, then any Derivative Works that You distribute must\n          include a readable copy of the attribution notices contained\n          within such NOTICE file, excluding those notices that do not\n          pertain to any part of the Derivative Works, in at least one\n          of the following places: within a NOTICE text file distributed\n          as part of the Derivative Works; within the Source form or\n          documentation, if provided along with the Derivative Works; or,\n          within a display generated by the Derivative Works, if and\n          wherever such third-party notices normally appear. The contents\n          of the NOTICE file are for informational purposes only and\n          do not modify the License. You may add Your own attribution\n          notices within Derivative Works that You distribute, alongside\n          or as an addendum to the NOTICE text from the Work, provided\n          that such additional attribution notices cannot be construed\n          as modifying the License.\n\n      You may add Your own copyright statement to Your modifications and\n      may provide additional or different license terms and conditions\n      for use, reproduction, or distribution of Your modifications, or\n      for any such Derivative Works as a whole, provided Your use,\n      reproduction, and distribution of the Work otherwise complies with\n      the conditions stated in this License.\n\n   5. Submission of Contributions. Unless You explicitly state otherwise,\n      any Contribution intentionally submitted for inclusion in the Work\n      by You to the Licensor shall be under the terms and conditions of\n      this License, without any additional terms or conditions.\n      Notwithstanding the above, nothing herein shall supersede or modify\n      the terms of any separate license agreement you may have executed\n      with Licensor regarding such Contributions.\n\n   6. Trademarks. This License does not grant permission to use the trade\n      names, trademarks, service marks, or product names of the Licensor,\n      except as required for reasonable and customary use in describing the\n      origin of the Work and reproducing the content of the NOTICE file.\n\n   7. Disclaimer of Warranty. Unless required by applicable law or\n      agreed to in writing, Licensor provides the Work (and each\n      Contributor provides its Contributions) on an \"AS IS\" BASIS,\n      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or\n      implied, including, without limitation, any warranties or conditions\n      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\n      PARTICULAR PURPOSE. You are solely responsible for determining the\n      appropriateness of using or redistributing the Work and assume any\n      risks associated with Your exercise of permissions under this License.\n\n   8. Limitation of Liability. In no event and under no legal theory,\n      whether in tort (including negligence), contract, or otherwise,\n      unless required by applicable law (such as deliberate and grossly\n      negligent acts) or agreed to in writing, shall any Contributor be\n      liable to You for damages, including any direct, indirect, special,\n      incidental, or consequential damages of any character arising as a\n      result of this License or out of the use or inability to use the\n      Work (including but not limited to damages for loss of goodwill,\n      work stoppage, computer failure or malfunction, or any and all\n      other commercial damages or losses), even if such Contributor\n      has been advised of the possibility of such damages.\n\n   9. Accepting Warranty or Additional Liability. While redistributing\n      the Work or Derivative Works thereof, You may choose to offer,\n      and charge a fee for, acceptance of support, warranty, indemnity,\n      or other liability obligations and/or rights consistent with this\n      License. However, in accepting such obligations, You may act only\n      on Your own behalf and on Your sole responsibility, not on behalf\n      of any other Contributor, and only if You agree to indemnify,\n      defend, and hold each Contributor harmless for any liability\n      incurred by, or claims asserted against, such Contributor by reason\n      of your accepting any such warranty or additional liability.\n\n   END OF TERMS AND CONDITIONS\n\n   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0\n\n   Unless required by applicable law or agreed to in writing, software\n   distributed under the License is distributed on an \"AS IS\" BASIS,\n   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n   See the License for the specific language governing permissions and\n   limitations under the License.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 15.3857421875,
+          "content": "# UNMAINTAINED Project Mentat\n[![Build Status](https://travis-ci.org/mozilla/mentat.svg?branch=master)](https://travis-ci.org/mozilla/mentat)\n\n**Project Mentat is [no longer being developed or actively maintained by Mozilla](https://mail.mozilla.org/pipermail/firefox-dev/2018-September/006780.html).**  This repository will be marked read-only in the near future.  You are, of course, welcome to fork the repository and use the existing code.\n\nProject Mentat is a persistent, embedded knowledge base. It draws heavily on [DataScript](https://github.com/tonsky/datascript) and [Datomic](http://datomic.com).\n\nMentat is implemented in Rust.\n\nThe first version of Project Mentat, named Datomish, [was written in ClojureScript](https://github.com/mozilla/mentat/tree/clojure), targeting both Node (on top of `promise_sqlite`) and Firefox (on top of `Sqlite.jsm`). It also worked in pure Clojure on the JVM on top of `jdbc-sqlite`. The name was changed to avoid confusion with [Datomic](http://datomic.com).\n\nThe Rust implementation gives us a smaller compiled output, better performance, more type safety, better tooling, and easier deployment into Firefox and mobile platforms.\n\n[Documentation](https://mozilla.github.io/mentat)\n\n---\n\n## Motivation\n\nMentat is intended to be a flexible relational (not key-value, not document-oriented) store that makes it easy to describe, grow, and reuse your domain schema.\n\nBy abstracting away the storage schema, and by exposing change listeners outside the database (not via triggers), we hope to make domain schemas stable, and allow both the data store itself and embedding applications to use better architectures, meeting performance goals in a way that allows future evolution.\n\n## Data storage is hard\n\nWe've observed that data storage is a particular area of difficulty for software development teams:\n\n- It's hard to define storage schemas well. A developer must:\n  - Model their domain entities and relationships.\n  - Encode that model _efficiently_ and _correctly_ using the features available in the database.\n  - Plan for future extensions and performance tuning.\n\n  In a SQL database, the same schema definition defines everything from high-level domain relationships through to numeric field sizes in the same smear of keywords. It's difficult for someone unfamiliar with the domain to determine from such a schema what's a domain fact and what's an implementation concession — are all part numbers always 16 characters long, or are we trying to save space? — or, indeed, whether a missing constraint is deliberate or a bug.\n\n  The developer must think about foreign key constraints, compound uniqueness, and nullability. They must consider indexing, synchronizing, and stable identifiers. Most developers simply don't do enough work in SQL to get all of these things right. Storage thus becomes the specialty of a few individuals.\n\n   Which one of these is correct?\n\n   ```edn\n   {:db/id          :person/email\n    :db/valueType   :db.type/string\n    :db/cardinality :db.cardinality/many     ; People can have multiple email addresses.\n    :db/unique      :db.unique/identity      ; For our purposes, each email identifies one person.\n    :db/index       true}                    ; We want fast lookups by email.\n   {:db/id          :person/friend\n    :db/valueType   :db.type/ref\n    :db/cardinality :db.cardinality/many}    ; People can have many friends.\n   ```\n   ```sql\n   CREATE TABLE people (\n     id INTEGER PRIMARY KEY,  -- Bug: because of the primary key, each person can have no more than 1 email.\n     email VARCHAR(64),       -- Bug?: no NOT NULL, so a person can have no email.\n                              -- Bug: nobody will ever have a long email address, right?\n   );\n   CREATE TABLE friendships (\n     FOREIGN KEY person REFERENCES people(id),  -- Bug?: no indexing, so lookups by friend or person will be slow.\n     FOREIGN KEY friend REFERENCES people(id),  -- Bug: no compound uniqueness constraint, so we can have dupe friendships.\n   );\n   ```\n\n   They both have limitations — the Mentat schema allows only for an open world (it's possible to declare friendships with people whose email isn't known), and requires validation code to enforce email string correctness — but we think that even such a tiny SQL example is harder to understand and obscures important domain decisions.\n\n- Queries are intimately tied to structural storage choices. That not only hides the declarative domain-level meaning of the query — it's hard to tell what a query is trying to do when it's a 100-line mess of subqueries and `LEFT OUTER JOIN`s — but it also means a simple structural schema change requires auditing _every query_ for correctness.\n\n- Developers often capture less event-shaped than they perhaps should, simply because their initial requirements don't warrant it. It's quite common to later want to [know when a fact was recorded](https://bugzilla.mozilla.org/show_bug.cgi?id=1341939), or _in which order_ two facts were recorded (particularly for migrations), or on which device an event took place… or even that a fact was _ever_ recorded and then deleted.\n\n- Common queries are hard. Storing values only once, upserts, complicated joins, and group-wise maxima are all difficult for non-expert developers to get right.\n\n- It's hard to evolve storage schemas. Writing a robust SQL schema migration is hard, particularly if a bad migration has ever escaped into the wild! Teams learn to fear and avoid schema changes, and eventually they ship a table called `metadata`, with three `TEXT` columns, so they never have to write a migration again. That decision pushes storage complexity into application code. (Or they start storing unversioned JSON blobs in the database…)\n\n- It's hard to share storage with another component, let alone share _data_ with another component. Conway's Law applies: your software system will often grow to have one database per team.\n\n- It's hard to build efficient storage and querying architectures. Materialized views require knowledge of triggers, or the implementation of bottleneck APIs. _Ad hoc_ caches are often wrong, are almost never formally designed (do you want a write-back, write-through, or write-around cache? Do you know the difference?), and often aren't reusable. The average developer, faced with a SQL database, has little choice but to build a simple table that tries to meet every need.\n\n\n## Comparison to DataScript\n\nDataScript asks the question: \"What if creating a database were as cheap as creating a Hashmap?\"\n\nMentat is not interested in that. Instead, it's strongly interested in persistence and performance, with very little interest in immutable databases/databases as values or throwaway use.\n\nOne might say that Mentat's question is: \"What if an SQLite database could store arbitrary relations, for arbitrary consumers, without them having to coordinate an up-front storage-level schema?\"\n\n(Note that [domain-level schemas are very valuable](http://martinfowler.com/articles/schemaless/).)\n\nAnother possible question would be: \"What if we could bake some of the concepts of [CQRS and event sourcing](http://www.baeldung.com/cqrs-event-sourced-architecture-resources) into a persistent relational store, such that the transaction log itself were of value to queries?\"\n\nSome thought has been given to how databases as values — long-term references to a snapshot of the store at an instant in time — could work in this model. It's not impossible; it simply has different performance characteristics.\n\nJust like DataScript, Mentat speaks Datalog for querying and takes additions and retractions as input to a transaction.\n\nUnlike DataScript, Mentat exposes free-text indexing, thanks to SQLite.\n\n\n## Comparison to Datomic\n\nDatomic is a server-side, enterprise-grade data storage system. Datomic has a beautiful conceptual model. It's intended to be backed by a storage cluster, in which it keeps index chunks forever. Index chunks are replicated to peers, allowing it to run queries at the edges. Writes are serialized through a transactor.\n\nMany of these design decisions are inapplicable to deployed desktop software; indeed, the use of multiple JVM processes makes Datomic's use in a small desktop app, or a mobile device, prohibitive.\n\nMentat was designed for embedding, initially in an experimental Electron app ([Tofino](https://github.com/mozilla/tofino)). It is less concerned with exposing consistent database states outside transaction boundaries, because that's less important here, and dropping some of these requirements allows us to leverage SQLite itself.\n\n\n## Comparison to SQLite\n\nSQLite is a traditional SQL database in most respects: schemas conflate semantic, structural, and datatype concerns, as described above; the main interface with the database is human-first textual queries; sparse and graph-structured data are 'unnatural', if not always inefficient; experimenting with and evolving data models are error-prone and complicated activities; and so on.\n\nMentat aims to offer many of the advantages of SQLite — single-file use, embeddability, and good performance — while building a more relaxed, reusable, and expressive data model on top.\n\n---\n\n## Contributing\n\nPlease note that this project is released with a Contributor Code of Conduct.\nBy participating in this project you agree to abide by its terms.\n\nSee [CONTRIBUTING.md](CONTRIBUTING.md) for further notes.\n\nThis project is very new, so we'll probably revise these guidelines. Please\ncomment on an issue before putting significant effort in if you'd like to\ncontribute.\n\n---\n\n## Building\n\nYou first need to clone the project.  To build and test the project, we are using [Cargo](https://crates.io/install).\n\nTo build all of the crates in the project use:\n\n````\ncargo build\n````\n\nTo run tests use:\n\n````\n# Run tests for everything.\ncargo test --all\n\n# Run tests for just the query-algebrizer folder (specify the crate, not the folder),\n# printing debug output.\ncargo test -p mentat_query_algebrizer -- --nocapture\n````\n\nFor most `cargo` commands you can pass the `-p` argument to run the command just on that package. So, `cargo build -p mentat_query_algebrizer` will build just the \"query-algebrizer\" folder.\n\n## What are all of these crates?\n\nWe use multiple sub-crates for Mentat for four reasons:\n\n1. To improve incremental build times.\n2. To encourage encapsulation; writing `extern crate` feels worse than just `use mod`.\n3. To simplify the creation of targets that don't use certain features: _e.g._, a build with no syncing, or with no query system.\n4. To allow for reuse (_e.g._, the EDN parser is essentially a separate library).\n\nSo what are they?\n\n### Building blocks\n\n#### `edn`\n\nOur EDN parser. It uses `rust-peg` to parse [EDN](https://github.com/edn-format/edn), which is Clojure/Datomic's richer alternative to JSON. `edn`'s dependencies are all either for representing rich values (`chrono`, `uuid`, `ordered-float`) or for parsing (`serde`, `peg`).\n\nIn addition, this crate turns a stream of EDN values into a representation suitable to be transacted.\n\n#### `mentat_core`\n\nThis is the lowest-level Mentat crate. It collects together the following things:\n\n- Fundamental domain-specific data structures like `ValueType` and `TypedValue`.\n- Fundamental SQL-related linkages like `SQLValueType`. These encode the mapping between Mentat's types and values and their representation in our SQLite format.\n- Conversion to and from EDN types (_e.g._, `edn::Keyword` to `TypedValue::Keyword`).\n- Common utilities (some in the `util` module, and others that should be moved there or broken out) like `Either`, `InternSet`, and `RcCounter`.\n- Reusable lazy namespaced keywords (_e.g._, `DB_TYPE_DOUBLE`) that are used by `mentat_db` and EDN serialization of core structs.\n\n### Types\n\n#### `mentat_query`\n\nThis crate defines the structs and enums that are the output of the query parser and used by the translator and algebrizer. `SrcVar`, `NonIntegerConstant`, `FnArg`… these all live here.\n\n#### `mentat_query_sql`\n\nSimilarly, this crate defines an abstract representation of a SQL query as understood by Mentat. This bridges between Mentat's types (_e.g._, `TypedValue`) and SQL concepts (`ColumnOrExpression`, `GroupBy`). It's produced by the algebrizer and consumed by the translator.\n\n### Query processing\n\n#### `mentat_query_algebrizer`\n\nThis is the biggest piece of the query engine. It takes a parsed query, which at this point is _independent of a database_, and combines it with the current state of the schema and data. This involves translating keywords into attributes, abstract values into concrete values with a known type, and producing an `AlgebraicQuery`, which is a representation of how a query's Datalog semantics can be satisfied as SQL table joins and constraints over Mentat's SQL schema. An algebrized query is tightly coupled with both the disk schema and the vocabulary present in the store when the work is done.\n\n#### `mentat_query_projector`\n\nA Datalog query _projects_ some of the variables in the query into data structures in the output. This crate takes an algebrized query and a projection list and figures out how to get values out of the running SQL query and into the right format for the consumer.\n\n#### `mentat_query_translator`\n\nThis crate works with all of the above to turn the output of the algebrizer and projector into the data structures defined in `mentat_query_sql`.\n\n#### `mentat_sql`\n\nThis simple crate turns those data structures into SQL text and bindings that can later be executed by `rusqlite`.\n\n### The data layer: `mentat_db`\n\nThis is a big one: it implements the core storage logic on top of SQLite. This crate is responsible for bootstrapping new databases, transacting new data, maintaining the attribute cache, and building and updating in-memory representations of the storage schema.\n\n### The main crate\n\nThe top-level main crate of Mentat assembles these component crates into something useful. It wraps up a connection to a database file and the associated metadata into a `Store`, and encapsulates an in-progress transaction (`InProgress`). It provides modules for programmatically writing (`entity_builder.rs`) and managing vocabulary (`vocabulary.rs`).\n\n### Syncing\n\nSync code lives, for [referential reasons](https://engineering.linkedin.com/distributed-systems/log-what-every-software-engineer-should-know-about-real-time-datas-unifying), in a crate named `tolstoy`. This code is a work in progress; current state is a proof-of-concept implementation which largely relies on the internal transactor to make progress in most cases and comes with a basic support for timelines. See [Tolstoy's documentation](https://github.com/mozilla/mentat/tree/master/tolstoy/README.md) for details.\n\n### The command-line interface\n\nThis is under `tools/cli`. It's essentially an external consumer of the main `mentat` crate. This code is ugly, but it mostly works.\n\n---\n\n## SQLite dependencies\n\nMentat uses partial indices, which are available in SQLite 3.8.0 and higher. It relies on correlation between aggregate and non-aggregate columns in the output, which was added in SQLite 3.7.11.\n\nIt also uses FTS4, which is [a compile time option](http://www.sqlite.org/fts3.html#section_2).\n\nBy default, Mentat specifies the `\"bundled\"` feature for `rusqlite`, which uses a relatively recent\nversion of SQLite. If you want to link against the system version of SQLite, omit `\"bundled_sqlite3\"`\nfrom Mentat's features.\n\n```toml\n[dependencies.mentat]\nversion = \"0.6\"\n# System sqlite is known to be new.\ndefault-features = false\n```\n\n---\n\n## License\n\nProject Mentat is currently licensed under the Apache License v2.0. See the `LICENSE` file for details.\n"
+        },
+        {
+          "name": "automation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "db-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "db",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "edn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ffi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fixtures",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "public-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-algebrizer-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-algebrizer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-projector-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-projector",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-pull-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-pull",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "query-sql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sdks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sql-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tolstoy-traits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tolstoy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "transaction",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736709264133,
+    "page": 602,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "google/argh",
+      "stars": 1713,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.078125,
+          "content": "**/*.rs.bk\n*.swp\n/Cargo.lock\n/argh_derive/target/\n/argh_shared/target/\n/target/\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.0712890625,
+          "content": "# How to Contribute\n\nWe'd love to accept your patches and contributions to this project. There are\njust a few small guidelines you need to follow.\n\n## Contributor License Agreement\n\nContributions to this project must be accompanied by a Contributor License\nAgreement. You (or your employer) retain the copyright to your contribution;\nthis simply gives us permission to use and redistribute your contributions as\npart of the project. Head over to <https://cla.developers.google.com/> to see\nyour current agreements on file or to sign a new one.\n\nYou generally only need to submit a CLA once, so if you've already submitted one\n(even if it was for a different project), you probably don't need to do it\nagain.\n\n## Code reviews\n\nAll submissions, including submissions by project members, require review. We\nuse GitHub pull requests for this purpose. Consult\n[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more\ninformation on using pull requests.\n\n## Community Guidelines\n\nThis project follows [Google's Open Source Community\nGuidelines](https://opensource.google/conduct/).\n"
+        },
+        {
+          "name": "Cargo.toml",
+          "type": "blob",
+          "size": 0.5361328125,
+          "content": "[workspace.package]\nversion = \"0.1.13\"\nauthors = [\"Taylor Cramer <cramertj@google.com>\", \"Benjamin Brittain <bwb@google.com>\", \"Erick Tryzelaar <etryzelaar@google.com>\"]\nedition = \"2018\"\nlicense = \"BSD-3-Clause\"\ndescription = \"Derive-based argument parsing optimized for code size\"\nrepository = \"https://github.com/google/argh\"\n\n[workspace]\nmembers = [\n    \"argh\",\n    \"argh_derive\",\n    \"argh_shared\",\n]\n\n[workspace.dependencies]\nargh_shared = { version = \"0.1.13\", path = \"argh_shared\" }\nargh_derive = { version = \"0.1.13\", path = \"argh_derive\" }\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4453125,
+          "content": "Copyright 2019 The Fuchsia Authors. All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n   * Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n   * Redistributions in binary form must reproduce the above\ncopyright notice, this list of conditions and the following disclaimer\nin the documentation and/or other materials provided with the\ndistribution.\n   * Neither the name of Google Inc. nor the names of its\ncontributors may be used to endorse or promote products derived from\nthis software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nOWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8994140625,
+          "content": "# Argh\n**Argh is an opinionated Derive-based argument parser optimized for code size**\n\n[![crates.io](https://img.shields.io/crates/v/argh.svg)](https://crates.io/crates/argh)\n[![license](https://img.shields.io/badge/license-BSD3.0-blue.svg)](https://github.com/google/argh/LICENSE)\n[![docs.rs](https://docs.rs/argh/badge.svg)](https://docs.rs/crate/argh/)\n![Argh](https://github.com/google/argh/workflows/Argh/badge.svg)\n\nDerive-based argument parsing optimized for code size and conformance\nto the Fuchsia commandline tools specification\n\nThe public API of this library consists primarily of the `FromArgs`\nderive and the `from_env` function, which can be used to produce\na top-level `FromArgs` type from the current program's commandline\narguments.\n\n## Basic Example\n\n```rust,no_run\nuse argh::FromArgs;\n\n#[derive(FromArgs)]\n/// Reach new heights.\nstruct GoUp {\n    /// whether or not to jump\n    #[argh(switch, short = 'j')]\n    jump: bool,\n\n    /// how high to go\n    #[argh(option)]\n    height: usize,\n\n    /// an optional nickname for the pilot\n    #[argh(option)]\n    pilot_nickname: Option<String>,\n}\n\nfn main() {\n    let up: GoUp = argh::from_env();\n}\n```\n\n`./some_bin --help` will then output the following:\n\n```\nUsage: cmdname [-j] --height <height> [--pilot-nickname <pilot-nickname>]\n\nReach new heights.\n\nOptions:\n  -j, --jump        whether or not to jump\n  --height          how high to go\n  --pilot-nickname  an optional nickname for the pilot\n  --help, help      display usage information\n```\n\nThe resulting program can then be used in any of these ways:\n- `./some_bin --height 5`\n- `./some_bin -j --height 5`\n- `./some_bin --jump --height 5 --pilot-nickname Wes`\n\nSwitches, like `jump`, are optional and will be set to true if provided.\n\nOptions, like `height` and `pilot_nickname`, can be either required,\noptional, or repeating, depending on whether they are contained in an\n`Option` or a `Vec`. Default values can be provided using the\n`#[argh(default = \"<your_code_here>\")]` attribute, and in this case an\noption is treated as optional.\n\n```rust\nuse argh::FromArgs;\n\nfn default_height() -> usize {\n    5\n}\n\n#[derive(FromArgs)]\n/// Reach new heights.\nstruct GoUp {\n    /// an optional nickname for the pilot\n    #[argh(option)]\n    pilot_nickname: Option<String>,\n\n    /// an optional height\n    #[argh(option, default = \"default_height()\")]\n    height: usize,\n\n    /// an optional direction which is \"up\" by default\n    #[argh(option, default = \"String::from(\\\"only up\\\")\")]\n    direction: String,\n}\n\nfn main() {\n    let up: GoUp = argh::from_env();\n}\n```\n\nCustom option types can be deserialized so long as they implement the\n`FromArgValue` trait (automatically implemented for all `FromStr` types).\nIf more customized parsing is required, you can supply a custom\n`fn(&str) -> Result<T, String>` using the `from_str_fn` attribute:\n\n```rust\nuse argh::FromArgs;\n\n#[derive(FromArgs)]\n/// Goofy thing.\nstruct FiveStruct {\n    /// always five\n    #[argh(option, from_str_fn(always_five))]\n    five: usize,\n}\n\nfn always_five(_value: &str) -> Result<usize, String> {\n    Ok(5)\n}\n```\n\nPositional arguments can be declared using `#[argh(positional)]`.\nThese arguments will be parsed in order of their declaration in\nthe structure:\n\n```rust\nuse argh::FromArgs;\n\n#[derive(FromArgs, PartialEq, Debug)]\n/// A command with positional arguments.\nstruct WithPositional {\n    #[argh(positional)]\n    first: String,\n}\n```\n\nThe last positional argument may include a default, or be wrapped in\n`Option` or `Vec` to indicate an optional or repeating positional argument.\n\nSubcommands are also supported. To use a subcommand, declare a separate\n`FromArgs` type for each subcommand as well as an enum that cases\nover each command:\n\n```rust\nuse argh::FromArgs;\n\n#[derive(FromArgs, PartialEq, Debug)]\n/// Top-level command.\nstruct TopLevel {\n    #[argh(subcommand)]\n    nested: MySubCommandEnum,\n}\n\n#[derive(FromArgs, PartialEq, Debug)]\n#[argh(subcommand)]\nenum MySubCommandEnum {\n    One(SubCommandOne),\n    Two(SubCommandTwo),\n}\n\n#[derive(FromArgs, PartialEq, Debug)]\n/// First subcommand.\n#[argh(subcommand, name = \"one\")]\nstruct SubCommandOne {\n    #[argh(option)]\n    /// how many x\n    x: usize,\n}\n\n#[derive(FromArgs, PartialEq, Debug)]\n/// Second subcommand.\n#[argh(subcommand, name = \"two\")]\nstruct SubCommandTwo {\n    #[argh(switch)]\n    /// whether to fooey\n    fooey: bool,\n}\n```\n\nNOTE: This is not an officially supported Google product.\n\n\n## How to debug the expanded derive macro for `argh`\n\nThe `argh::FromArgs` derive macro can be debugged with the [cargo-expand](https://crates.io/crates/cargo-expand) crate.\n\n### Expand the derive macro in `examples/simple_example.rs`\n\nSee [argh/examples/simple_example.rs](./argh/examples/simple_example.rs) for the example struct we wish to expand.\n\nFirst, install `cargo-expand` by running `cargo install cargo-expand`. Note this requires the nightly build of Rust.\n\nOnce installed, run `cargo expand` with in the `argh` package and you can see the expanded code.\n"
+        },
+        {
+          "name": "argh",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "argh_derive",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "argh_shared",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "code-of-conduct.md",
+          "type": "blob",
+          "size": 3.0947265625,
+          "content": "# Google Open Source Community Guidelines\n\nAt Google, we recognize and celebrate the creativity and collaboration of open\nsource contributors and the diversity of skills, experiences, cultures, and\nopinions they bring to the projects and communities they participate in.\n\nEvery one of Google's open source projects and communities are inclusive\nenvironments, based on treating all individuals respectfully, regardless of\ngender identity and expression, sexual orientation, disabilities,\nneurodiversity, physical appearance, body size, ethnicity, nationality, race,\nage, religion, or similar personal characteristic.\n\nWe value diverse opinions, but we value respectful behavior more.\n\nRespectful behavior includes:\n\n* Being considerate, kind, constructive, and helpful.\n* Not engaging in demeaning, discriminatory, harassing, hateful, sexualized, or\n  physically threatening behavior, speech, and imagery.\n* Not engaging in unwanted physical contact.\n\nSome Google open source projects [may adopt][] an explicit project code of\nconduct, which may have additional detailed expectations for participants. Most\nof those projects will use our [modified Contributor Covenant][].\n\n[may adopt]: https://opensource.google/docs/releasing/preparing/#conduct\n[modified Contributor Covenant]: https://opensource.google/docs/releasing/template/CODE_OF_CONDUCT/\n\n## Resolve peacefully\n\nWe do not believe that all conflict is necessarily bad; healthy debate and\ndisagreement often yields positive results. However, it is never okay to be\ndisrespectful.\n\nIf you see someone behaving disrespectfully, you are encouraged to address the\nbehavior directly with those involved. Many issues can be resolved quickly and\neasily, and this gives people more control over the outcome of their dispute.\nIf you are unable to resolve the matter for any reason, or if the behavior is\nthreatening or harassing, report it. We are dedicated to providing an\nenvironment where participants feel welcome and safe.\n\n## Reporting problems\n\nSome Google open source projects may adopt a project-specific code of conduct.\nIn those cases, a Google employee will be identified as the Project Steward,\nwho will receive and handle reports of code of conduct violations. In the event\nthat a project hasn’t identified a Project Steward, you can report problems by\nemailing opensource@google.com.\n\nWe will investigate every complaint, but you may not receive a direct response.\nWe will use our discretion in determining when and how to follow up on reported\nincidents, which may range from not taking action to permanent expulsion from\nthe project and project-sponsored spaces. We will notify the accused of the\nreport and provide them an opportunity to discuss it before any action is\ntaken. The identity of the reporter will be omitted from the details of the\nreport supplied to the accused. In potentially harmful situations, such as\nongoing harassment or threats to anyone's safety, we may take action without\nnotice.\n\n*This document was adapted from the [IndieWeb Code of Conduct][] and can also\nbe found at <https://opensource.google/conduct/>.*\n\n[IndieWeb Code of Conduct]: https://indieweb.org/code-of-conduct\n"
+        },
+        {
+          "name": "rustfmt.toml",
+          "type": "blob",
+          "size": 0.4404296875,
+          "content": "# Fuchsia Format Style\n# last reviewed: Jan 29, 2019\n\n# Fuchsia uses 2018 edition only\nedition = \"2018\"\n\n# The \"Default\" setting has a heuristic which splits lines too aggresively.\n# We are willing to revisit this setting in future versions of rustfmt.\n# Bugs:\n#   * https://github.com/rust-lang/rustfmt/issues/3119\n#   * https://github.com/rust-lang/rustfmt/issues/3120\nuse_small_heuristics = \"Max\"\n\n# Prevent carriage returns\nnewline_style = \"Unix\"\n"
+        }
+      ]
+    }
+  ]
+}
