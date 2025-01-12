@@ -1,19 +1,26 @@
 import { graphql } from "@octokit/graphql";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
 import type {
   SearchResultItemConnection,
   RateLimit,
   TreeEntry,
   Repository
 } from "@octokit/graphql-schema";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 
 // Using more than one risks data loss, because fileContents are not fetched, if the root is too large, and there is not way, to check this in the query (you can only check total like so size:<10240).
 const CHUNK_SIZE = 1; // Number of repositories per file.
-const DATA_DIR = "data";
+
+// Path constants
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const DATA_DIR = join(__dirname, "data");
 const LOG_FILE = join(DATA_DIR, "error.log");
+const GLOBAL_METADATA_FILE = join(DATA_DIR, "global-metadata.json");
+const METADATA_FILE = join(DATA_DIR, "metadata.json");
 
 if (!GITHUB_TOKEN) {
   throw new Error("Missing required environment variables (GITHUB_TOKEN).");
@@ -81,35 +88,37 @@ type GlobalMetadata = {
 };
 
 async function loadGlobalMetadata(): Promise<GlobalMetadata> {
-  const globalMetadataPath = join(DATA_DIR, 'global-metadata.json');
   try {
-    return JSON.parse(await readFile(globalMetadataPath, 'utf-8'));
+    const file = Bun.file(GLOBAL_METADATA_FILE);
+    if (await file.exists()) {
+      return await file.json();
+    }
   } catch (error) {
-    return {
-      timestamp: Date.now(),
-      currentLanguage: null,
-      currentStarRange: null,
-      completedSegments: []
-    };
+    // If file doesn't exist or is invalid JSON, return default metadata
   }
+  return {
+    timestamp: Date.now(),
+    currentLanguage: null,
+    currentStarRange: null,
+    completedSegments: []
+  };
 }
 
 async function saveGlobalMetadata(metadata: GlobalMetadata) {
-  const globalMetadataPath = join(DATA_DIR, 'global-metadata.json');
-  await writeFile(globalMetadataPath, JSON.stringify(metadata, null, 2));
+  try {
+    await Bun.write(GLOBAL_METADATA_FILE, JSON.stringify(metadata, null, 2), { createPath: true });
+  } catch (error) {
+    await logError('Failed to save global metadata, but continuing:', error);
+  }
 }
 
 async function logError(message: string, error?: any) {
   const timestamp = new Date().toISOString();
   const logMessage = `[${timestamp}] ${message}\n${error ? `Error: ${JSON.stringify(error, null, 2)}\n` : ''}\n`;
 
-  await mkdir(DATA_DIR, { recursive: true });
-
-  const logFile = Bun.file(LOG_FILE);
-  const writer = logFile.writer();
-  writer.write(logMessage);
-  writer.flush();
-  writer.end();
+  const file = Bun.file(LOG_FILE);
+  const existingContent = await file.exists() ? await file.text() : '';
+  await Bun.write(LOG_FILE, existingContent + logMessage, { createPath: true });
 
   console.error(message);
   if (error) console.error(error);
@@ -117,7 +126,7 @@ async function logError(message: string, error?: any) {
 
 async function getLatestChunk(): Promise<ChunkMetadata | null> {
   try {
-    const metadataFile = Bun.file(join(DATA_DIR, 'metadata.json'));
+    const metadataFile = Bun.file(METADATA_FILE);
     if (await metadataFile.exists()) {
       const metadata: ChunkMetadata = await metadataFile.json();
       return {
@@ -136,14 +145,15 @@ async function getLatestChunk(): Promise<ChunkMetadata | null> {
 
 async function saveChunk(repositories: Repositories, metadata: ChunkMetadata, dir: string = DATA_DIR) {
   const filename = `repositories-${metadata.timestamp}-${metadata.page}.json`;
-  const path = join(dir, filename);
-  await writeFile(path, JSON.stringify({ metadata, repositories }, null, 2));
-  console.log(`✅ Saved ${repositories.length} repositories to ${path}`);
-}
+  const fullPath = join(dir, filename);
 
-function isIpAllowlistError(error: any): boolean {
-  return error?.message?.includes('has an IP allow list enabled') ||
-    error?.response?.errors?.some((e: any) => e.message?.includes('has an IP allow list enabled'));
+  try {
+    await Bun.write(fullPath, JSON.stringify({ metadata, repositories }, null, 2), { createPath: true });
+    console.log(`✅ Saved ${repositories.length} repositories to ${filename}`);
+  } catch (error) {
+    console.error('Error details:', error);
+    await logError(`Failed to save chunk to ${fullPath}, but continuing:`, error);
+  }
 }
 
 async function fetchRepositoryData(nameWithOwner: string, withBlobContents: boolean = true) {
@@ -180,20 +190,18 @@ async function fetchRepositoryData(nameWithOwner: string, withBlobContents: bool
 
     return repository;
   } catch (error) {
-    if (isIpAllowlistError(error)) {
-      console.log(`⚠️ Skipping ${nameWithOwner} due to IP allowlist restrictions`);
-      return {
-        defaultBranchRef: {
-          name: 'unknown',
-          target: {
-            tree: {
-              entries: []
-            }
+    await logError(`Error processing ${nameWithOwner}:`, error);
+
+    return {
+      defaultBranchRef: {
+        name: 'unknown',
+        target: {
+          tree: {
+            entries: []
           }
         }
-      };
-    }
-    throw error;
+      }
+    };
   }
 }
 
@@ -263,13 +271,9 @@ async function fetchTopRepositories() {
         search = result.search;
         rateLimit = result.rateLimit;
       } catch (error: any) {
-        if (isIpAllowlistError(error)) {
-          console.log('⚠️ Skipping repositories due to IP allowlist restrictions');
-          // Move to next page
-          cursor = error.response?.data?.search?.pageInfo?.endCursor ?? cursor;
-          continue;
-        }
-        throw error;
+        // Move to next page
+        cursor = error.response?.data?.search?.pageInfo?.endCursor ?? cursor;
+        continue;
       }
 
       // Update pagination variables before processing repositories
@@ -302,20 +306,12 @@ async function fetchTopRepositories() {
             console.log(`✅ Successfully fetched ${repo.nameWithOwner} with blob contents`);
           }
         } catch (error) {
-          if (isIpAllowlistError(error)) {
-            console.log(`⚠️ Skipping ${repo.nameWithOwner} due to IP allowlist restrictions`);
-            continue;
-          }
           await logError(`Failed to fetch ${repo.nameWithOwner} with blob contents, retrying without...`, error);
           try {
             // Retry without blob contents
             fetchedRepo = await fetchRepositoryData(repo.nameWithOwner, false);
             console.log(`✅ Successfully fetched ${repo.nameWithOwner} without blob contents`);
           } catch (retryError) {
-            if (isIpAllowlistError(retryError)) {
-              console.log(`⚠️ Skipping ${repo.nameWithOwner} due to IP allowlist restrictions`);
-              continue;
-            }
             await logError(`Failed to fetch ${repo.nameWithOwner} even without blob contents:`, retryError);
             continue;
           }
@@ -434,51 +430,56 @@ async function fetchTopRepositories() {
     if (currentChunk.length > 0) {
       await saveChunk(currentChunk, metadata);
     }
-    throw error; // Re-throw to trigger the uncaught exception handler
+    // Error has been logged and metadata saved, continue processing
   }
 }
 
 async function fetchLanguagesWithPopularRepos(): Promise<Language[]> {
-  const result: {
-    search: {
-      repositories: Array<{
-        primaryLanguage?: {
-          name: string;
-        } | null;
-      } | null>;
-    };
-  } = await graphqlWithAuth(`
-    query getLanguages {
-      search(
-        query: "stars:>1000 sort:stars-desc"
-        type: REPOSITORY
-        first: 100
-      ) {
-        repositories: nodes {
-          ... on Repository {
-            primaryLanguage {
-              name
+  try {
+    const result: {
+      search: {
+        repositories: Array<{
+          primaryLanguage?: {
+            name: string;
+          } | null;
+        } | null>;
+      };
+    } = await graphqlWithAuth(`
+      query getLanguages {
+        search(
+          query: "stars:>1000 sort:stars-desc"
+          type: REPOSITORY
+          first: 100
+        ) {
+          repositories: nodes {
+            ... on Repository {
+              primaryLanguage {
+                name
+              }
             }
           }
         }
       }
-    }
-  `);
+    `);
 
-  const languages = new Map<string, number>();
+    const languages = new Map<string, number>();
 
-  for (const repo of result.search.repositories) {
-    if (repo?.primaryLanguage?.name) {
-      const count = languages.get(repo.primaryLanguage.name) || 0;
-      languages.set(repo.primaryLanguage.name, count + 1);
+    for (const repo of result.search.repositories) {
+      if (repo?.primaryLanguage?.name) {
+        const count = languages.get(repo.primaryLanguage.name) || 0;
+        languages.set(repo.primaryLanguage.name, count + 1);
+      }
     }
+
+    // Return all languages without filtering, just sort by count
+    return Array.from(languages.entries())
+      .map(([name, count]) => ({ name, repositoryCount: count }))
+      .sort((a, b) => b.repositoryCount - a.repositoryCount)
+      .filter(lang => lang.name !== null);
+  } catch (error) {
+    await logError('Failed to fetch languages, returning empty list:', error);
+    return [];
   }
-
-  // Return all languages without filtering, just sort by count
-  return Array.from(languages.entries())
-    .map(([name, count]) => ({ name, repositoryCount: count }))
-    .sort((a, b) => b.repositoryCount - a.repositoryCount)
-    .filter(lang => lang.name !== null);
 }
 
 async function fetchRepositoriesForLanguageAndStars(
@@ -486,43 +487,72 @@ async function fetchRepositoriesForLanguageAndStars(
   starRange: StarRange,
   cursor: string | null = null
 ): Promise<{ search: SearchResultItemConnection; rateLimit: RateLimit }> {
-  // Wrap language in quotes if it contains spaces
-  const languageQuery = language.includes(' ') ? `"${language}"` : language;
+  try {
+    // Wrap language in quotes if it contains spaces
+    const languageQuery = language.includes(' ') ? `"${language}"` : language;
 
-  return graphqlWithAuth(`
-    query getReposByLanguageAndStars($cursor: String) {
-      search(
-        query: "language:${languageQuery} stars:${starRange.min}..${starRange.max} sort:stars-desc"
-        type: REPOSITORY
-        first: 10
-        after: $cursor
-      ) {
-        nodes {
-          ... on Repository {
-            nameWithOwner
-            stargazerCount
+    return await graphqlWithAuth(`
+      query getReposByLanguageAndStars($cursor: String) {
+        search(
+          query: "language:${languageQuery} stars:${starRange.min}..${starRange.max} sort:stars-desc"
+          type: REPOSITORY
+          first: 10
+          after: $cursor
+        ) {
+          nodes {
+            ... on Repository {
+              nameWithOwner
+              stargazerCount
+            }
+          }
+          pageInfo {
+            hasNextPage
+            endCursor
           }
         }
-        pageInfo {
-          hasNextPage
-          endCursor
+        rateLimit {
+          remaining
+          limit
+          cost
+          resetAt
         }
       }
-      rateLimit {
-        remaining
-        limit
-        cost
-        resetAt
+    `, {
+      cursor
+    });
+  } catch (error) {
+    await logError(`Failed to fetch repositories for ${language} with stars ${starRange.label}:`, error);
+    return {
+      search: {
+        nodes: [],
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+          startCursor: null,
+          endCursor: null
+        },
+        codeCount: 0,
+        discussionCount: 0,
+        issueCount: 0,
+        repositoryCount: 0,
+        userCount: 0,
+        wikiCount: 0
+      },
+      rateLimit: {
+        remaining: 0,
+        limit: 0,
+        cost: 0,
+        resetAt: new Date().toISOString(),
+        nodeCount: 0,
+        used: 0
       }
-    }
-  `, {
-    cursor
-  });
+    };
+  }
 }
 
 async function processLanguageAndStarRange(language: string, starRange: StarRange) {
   // Check if this segment is already completed in global metadata
-  const globalMetadata = await loadGlobalMetadata();
+  let globalMetadata = await loadGlobalMetadata();
   const isCompleted = globalMetadata.completedSegments.some(
     seg => seg.language === language &&
       seg.starRange === starRange.label &&
@@ -534,8 +564,8 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
     return;
   }
 
-  const dir = join(DATA_DIR, language, starRange.label);
-  await mkdir(dir, { recursive: true });
+  const outputDir = join(DATA_DIR, language, starRange.label);
+  const metadataPath = join(outputDir, "metadata.json");
 
   let currentChunk: Repositories = [];
   let hasNextPage = true;
@@ -543,18 +573,27 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
   let page = 1;
 
   // Try to load existing metadata for this language/range
-  const metadataPath = join(dir, 'metadata.json');
+  let metadata: ChunkMetadata | null = null;
   try {
-    const lastMetadata = JSON.parse(await readFile(metadataPath, 'utf-8')) as ChunkMetadata;
-    if (lastMetadata.completionStatus === 'RATE_LIMITED' || lastMetadata.completionStatus === 'IN_PROGRESS') {
-      hasNextPage = lastMetadata.hasNextPage;
-      cursor = lastMetadata.endCursor;
-      page = lastMetadata.page + 1;
-      console.log(`\n📂 Loaded existing metadata for ${language}/${starRange.label}, continuing from:`, {
-        page,
-        cursor,
-        previousStatus: lastMetadata.completionStatus
-      });
+    const file = Bun.file(metadataPath);
+    if (await file.exists()) {
+      try {
+        metadata = await file.json() as ChunkMetadata;
+        if (metadata.completionStatus === 'RATE_LIMITED' || metadata.completionStatus === 'IN_PROGRESS') {
+          hasNextPage = metadata.hasNextPage;
+          cursor = metadata.endCursor;
+          page = metadata.page + 1;
+          console.log(`\n📂 Loaded existing metadata for ${language}/${starRange.label}, continuing from:`, {
+            page,
+            cursor,
+            previousStatus: metadata.completionStatus
+          });
+        }
+      } catch (parseError) {
+        await logError(`Invalid metadata file for ${language}/${starRange.label}, starting fresh:`, parseError);
+      }
+    } else {
+      console.log(`\n📂 Starting fresh for ${language}/${starRange.label}`);
     }
   } catch (error) {
     // No existing metadata or invalid file - start fresh
@@ -614,9 +653,9 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
               endCursor: cursor,
               completionStatus: 'IN_PROGRESS'
             };
-            await saveChunk(currentChunk, metadata, dir);
+            await saveChunk(currentChunk, metadata, outputDir);
             // Save segment metadata after each chunk
-            await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+            await Bun.write(metadataPath, JSON.stringify(metadata, null, 2));
             currentChunk = [];
             page++;
           }
@@ -636,10 +675,10 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
           completionStatus: 'RATE_LIMITED'
         };
         if (currentChunk.length > 0) {
-          await saveChunk(currentChunk, metadata, dir);
+          await saveChunk(currentChunk, metadata, outputDir);
         }
         // Save overall metadata
-        await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+        await Bun.write(metadataPath, JSON.stringify(metadata, null, 2));
         return;
       }
     }
@@ -653,8 +692,8 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
         endCursor: cursor,
         completionStatus: hasNextPage ? 'IN_PROGRESS' : 'COMPLETED'
       };
-      await saveChunk(currentChunk, metadata, dir);
-      await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+      await saveChunk(currentChunk, metadata, outputDir);
+      await Bun.write(metadataPath, JSON.stringify(metadata, null, 2));
     }
 
   } catch (error) {
@@ -668,10 +707,10 @@ async function processLanguageAndStarRange(language: string, starRange: StarRang
       error: error instanceof Error ? error.message : String(error)
     };
     if (currentChunk.length > 0) {
-      await saveChunk(currentChunk, metadata, dir);
+      await saveChunk(currentChunk, metadata, outputDir);
     }
-    await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
-    throw error;
+    await Bun.write(metadataPath, JSON.stringify(metadata, null, 2));
+    await logError('Failed to save metadata, but continuing:', error);
   }
 }
 
@@ -681,7 +720,24 @@ async function main() {
     const languages = await fetchLanguagesWithPopularRepos();
     console.log(`Found ${languages.length} languages with popular repositories`);
 
-    const globalMetadata = await loadGlobalMetadata();
+    let globalMetadata = await loadGlobalMetadata();
+    // Validate global metadata structure
+    if (!globalMetadata || typeof globalMetadata !== 'object') {
+      await logError('Invalid global metadata, starting fresh', globalMetadata);
+      globalMetadata = {
+        timestamp: Date.now(),
+        currentLanguage: null,
+        currentStarRange: null,
+        completedSegments: []
+      };
+    }
+
+    // Ensure completedSegments is an array
+    if (!Array.isArray(globalMetadata.completedSegments)) {
+      await logError('Invalid completedSegments in metadata, resetting', globalMetadata.completedSegments);
+      globalMetadata.completedSegments = [];
+    }
+
     let startFromLanguage = globalMetadata.currentLanguage;
     let startFromRange = globalMetadata.currentStarRange;
     let shouldSkip = startFromLanguage !== null;
