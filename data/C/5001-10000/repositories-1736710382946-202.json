@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "timestamp": 1736710382946,
+    "page": 202,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "palera1n/palera1n",
+      "stars": 5182,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3525390625,
+          "content": "contrib/**\ndep_root/**\n!dep_root/.keep\n!contrib/.keep\ncontrib/\n*.o\ndep_root*.tgz\n.vscode\ncheckra1n*\npayload.c\nsrc/palera1n\n!xxd-embedded.h\nsrc/binpack.dmg\nsrc/ramdisk.dmg\nsrc/ramdisk.dmg.lzma\nsrc/xxd-*.c\n.DS_Store\n!palera1n.1\npalera1n.1.html\nPayload\ndocs/*.html\nbuild\nsrc/*.dmg.c\n.idea\nsrc/stage2/\nsrc/libcheckra1nhelper.dylib*\nsrc/Pongo.bin\nsysroot\ncompile.sh\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.041015625,
+          "content": "Copyright 2023 palera1n team\n\nPermission is hereby granted, free of charge, to any person obtaining a \ncopy of this software and associated documentation files (the \n\"Software\"), to deal in the Software without restriction, including \nwithout limitation the rights to use, copy, modify, merge, publish, \ndistribute, sublicense, and/or sell copies of the Software, and to \npermit persons to whom the Software is furnished to do so, subject to \nthe following conditions:\n\nThe above copyright notice and this permission notice shall be included \nin all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS \nOR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF \nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. \nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY \nCLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, \nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE \nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.724609375,
+          "content": "SRC = $(shell pwd)\nDEP = $(SRC)/dep_root\nSTRIP = strip\nCC ?= cc\nCFLAGS += -isystem $(DEP)/include -I$(SRC)/include -I$(SRC) -D_XOPEN_SOURCE=500\nCFLAGS += -Wall -Wextra -Wno-unused-parameter -DPALERAIN_VERSION=\\\"2.1\\\" -DHAVE_LIBIMOBILEDEVICE\nCFLAGS += -Wno-unused-variable -I$(SRC)/src -std=c99 -pedantic-errors -D_C99_SOURCE -D_POSIX_C_SOURCE=200112L\nLIBS += $(DEP)/lib/libimobiledevice-1.0.a $(DEP)/lib/libirecovery-1.0.a $(DEP)/lib/libusbmuxd-2.0.a\nLIBS += $(DEP)/lib/libimobiledevice-glue-1.0.a $(DEP)/lib/libplist-2.0.a -pthread -lm\nifeq ($(TARGET_OS),)\nTARGET_OS = $(shell uname -s)\nUNAME = $(TARGET_OS)\nelse\nUNAME = $(shell uname -s)\nendif\nifeq ($(TARGET_OS),Darwin)\nCFLAGS += -Wno-nullability-extension\nifeq (,$(findstring version-min=, $(CFLAGS)))\nCFLAGS += -mmacosx-version-min=10.8\nendif\nLDFLAGS += -Wl,-dead_strip\nLIBS += -framework CoreFoundation -framework IOKit\nelse\nCFLAGS += -fdata-sections -ffunction-sections\nLDFLAGS += -Wl,--gc-sections\nendif\nLIBS += $(DEP)/lib/libmbedtls.a $(DEP)/lib/libmbedcrypto.a $(DEP)/lib/libmbedx509.a $(DEP)/lib/libreadline.a\n\nifeq ($(TUI),1)\nifeq ($(TARGET_OS),Linux)\nLIBS += $(DEP)/lib/libgpm.a\nendif\nendif\n\nifeq ($(DEV_BUILD),1)\nCFLAGS += -O0 -g -DDEV_BUILD -fno-omit-frame-pointer\nifeq ($(ASAN),1)\nBUILD_STYLE=ASAN\nCFLAGS += -fsanitize=address,undefined -fsanitize-address-use-after-return=runtime\nelse ifeq ($(TSAN),1)\nBUILD_STYLE=TSAN\nCFLAGS += -fsanitize=thread,undefined\nelse\nBUILD_STYLE = DEVELOPMENT\nendif\nelse\nCFLAGS += -Os -g\nBUILD_STYLE = RELEASE\nendif\nLIBS += -lc\n\nifeq ($(TARGET_OS),Linux)\nifneq ($(shell echo '$(BUILD_STYLE)' | grep -q '[A-Z]\\+SAN' && echo 1),1)\nLDFLAGS += -static -no-pie\nendif\nendif\n\nifneq ($(BAKERAIN_DEVELOPE_R),)\nCFLAGS += -DBAKERAIN_DEVELOPE_R=\"\\\"$(BAKERAIN_DEVELOPE_R)\\\"\"\nendif\n\nBUILD_NUMBER := $(shell git rev-list --count HEAD)\nBUILD_TAG := $(shell git describe --dirty --tags --abbrev=7)\nBUILD_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)\nBUILD_COMMIT := $(shell git rev-parse HEAD)\n\nCFLAGS += -DBUILD_STYLE=\"\\\"$(BUILD_STYLE)\\\"\" -DBUILD_TAG=\"\\\"$(BUILD_TAG)\\\"\"\nCFLAGS += -DBUILD_NUMBER=\"\\\"$(BUILD_NUMBER)\\\"\" -DBUILD_BRANCH=\"\\\"$(BUILD_BRANCH)\\\"\"\nCFLAGS += -DBUILD_COMMIT=\"\\\"$(BUILD_COMMIT)\\\"\"\n\nCPATH =\nLIBRARY_PATH =\n\nexport SRC DEP UNAME CC CFLAGS LDFLAGS LIBS SHELL TARGET_OS DEV_BUILD BUILD_DATE BUILD_TAG BUILD_WHOAMI BUILD_STYLE BUILD_NUMBER BUILD_BRANCH\n\nall: palera1n\n\npalera1n: download-deps\n\t$(MAKE) -C src\n\nclean:\n\t$(MAKE) -C src clean\n\t$(MAKE) -C docs clean\n\ndownload-deps:\n\t$(MAKE) -C src $(patsubst %, resources/%, checkra1n-macos checkra1n-linux-arm64 checkra1n-linux-armel checkra1n-linux-x86 checkra1n-linux-x86_64 checkra1n-kpf-pongo ramdisk.dmg binpack.dmg Pongo.bin)\n\ndocs:\n\t$(MAKE) -C docs\n\ndistclean: clean\n\t$(MAKE) -C src distclean\n\n.PHONY: all palera1n clean docs distclean\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.7626953125,
+          "content": "# palera1n\n[![GitHub Release](https://img.shields.io/github/v/release/palera1n/palera1n?include_prereleases)](https://github.com/palera1n/palera1n/releases)\n[![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/palera1n/palera1n/total)](https://github.com/palera1n/palera1n/releases)\n[![GitHub License](https://img.shields.io/github/license/palera1n/palera1n?color=%23C96FAD)](https://github.com/palera1n/palera1n/blob/main/LICENSE)\n\n\nJailbreak for A8 through A11, T2 devices, on iOS/iPadOS/tvOS 15.0, bridgeOS 5.0 and higher.\n\n\n\n\n| ![Screenshot of macOS Terminal.app](assets/image-1.png)\t| \n|:--:\t\t\t\t\t\t\t\t\t\t\t\t| \n| A screenshot of palera1n being used in a Terminal | \n\n## Device Support\n\n<!--- Mobile --->\n\n| iPhone(s)                 | iPad(s)                        \t\t| iPod(s)   \t\t\t\t\t| Apple TV(s) \t\t\t\t\t|\n|-\t\t\t\t\t\t\t|-\t\t\t\t\t\t\t\t\t\t|-\t\t\t\t\t\t\t\t|-\t\t\t\t\t\t\t\t|\n| iPhone 6s                 | iPad mini 4\t\t\t\t\t\t\t| iPod Touch (7th generation)\t| Apple TV HD                 \t|\n| iPhone 6s Plus            | iPad (5th generation)\t\t\t\t\t|\t\t\t\t\t\t\t\t| Apple TV 4K (1st generation)\t|\n| iPhone SE (2016)          | iPad (6th generation)\t\t\t\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n| iPhone 7                  | iPad (7th generation)\t\t\t\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n| iPhone 7 Plus             | iPad Pro (9.7\")\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n| iPhone 8                  | iPad Pro (12.9\") (1st generation)\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n| iPhone 8 Plus             | iPad Pro (10.5\")\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n| iPhone X                  | iPad Pro (12.9\") (2nd generation)\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n|                           | iPad Air 2\t\t|\t\t\t\t\t\t\t\t|\t\t\t\t\t\t\t\t|\n\n\n> Note that on `A11` (iPhone X, 8, 8 Plus), **you must disable your passcode while in the jailbroken state** (on iOS 16, you need to **reset your device** before proceeding with palera1n).\n\n<!--- T2 --->\n<details>\n<summary>Apple T2 Device Support (click to expand)</summary>\n\n| Apple T2              \t|\n|-\t\t\t\t\t\t\t|\n| Apple T2 iMac20,1         |\n| Apple T2 iMac20,2         |\n| \t\t\t              \t|\n| Apple T2 MacBookAir8,1    |\n| Apple T2 MacBookAir8,2    |\n| Apple T2 MacBookAir9,1    |\n| \t\t\t              \t|\n| Apple T2 MacBookPro15,1   |\n| Apple T2 MacBookPro15,2   |\n| Apple T2 MacBookPro15,3   |\n| Apple T2 MacBookPro15,4   |\n| Apple T2 MacBookPro16,1   |\n| Apple T2 MacBookPro16,2   |\n| Apple T2 MacBookPro16,3   |\n| Apple T2 MacBookPro16,4   |\n| \t\t\t              \t|\n| Apple T2 iMacPro1,1       |\n| Apple T2 Macmini8,1       |\n| Apple T2 MacPro7,1        |\n|\t\t\t              \t|\n| iBridge2,11 (Unknown Mac) |\n| iBridge2,13 (Unknown Mac) |\n\n\n\n</details>\n\n\n## Computer Requirements\n1. **USB-A** cables are recommended to use, USB-C to may have issues with palera1n and getting into DFU mode.\n> Due to USB-C cables having different accessory IDs, your device may not be able to be recognized when using USB-C due to not being able to assert to its USB voltage pin.\n\n2. **Linux or macOS computer**\n> AMD CPUs (not AMD Mobile) have an issue where it causes them to have a very low success rate with checkm8 exploit. It is not recommended that you use them with palera1n.\n\n> USB-C port on Apple Silicon Macs *may* require manual unplugging and replugging of the lightning cable after checkm8 exploit. This problem may be solved by connecting via USB hub, though extensions can vary.\n\n## Usage \n```\nUsage: palera1n [-DEhpvVdsSLRnPI] [-e boot arguments] [-k Pongo image] [-o overlay file] [-r ramdisk file] [-K KPF file] [-i checkra1n file]\n\n\t--version\t\t\t\tPrint version\n\t--force-revert\t\t\t\tRemove jailbreak\n\t-d, --demote\t\t\t\tDemote\n\t-D, --dfuhelper\t\t\t\tExit after entering DFU\n\t-e, --boot-args <boot arguments>\tXNU boot arguments\n\t-E, --enter-recovery\t\t\tEnter recovery mode\n\t-h, --help\t\t\t\tShow this help\n\t-i, --override-checkra1n <file>\t\tOverride checkra1n\n\t-k, --override-pongo <file>\t\tOverride Pongo image\n\t-K, --override-kpf <file>\t\tOverride kernel patchfinder\n\t-L, --jbinit-log-to-file\t\tMake jbinit log to /cores/jbinit.log (can be read from sandbox while jailbroken)\n\t-n, --exit-recovery\t\t\tExit recovery mode\n\t-I, --device-info\t\t\tPrint info about the connected device\n\t-o, --override-overlay <file>\t\tOverride overlay\n\t-p, --pongo-shell\t\t\tBoots to PongoOS shell\n\t-P, --pongo-full\t\t\tBoots to a PongoOS shell with default images already uploaded\n\t-r, --override-ramdisk <file>\t\tOverride ramdisk\n\t-R, --reboot-device\t\t\tReboot connected device in normal mode\n\t-s, --safe-mode\t\t\t\tEnter safe mode\n\t-S, --no-colors\t\t\t\tDisable colors on the command line\n\t-v, --debug-logging\t\t\tEnable debug logging\n\t\t  This option can be repeated for extra verbosity.\n\t-V, --verbose-boot\t\t\tVerbose boot\n\nEnvironmental variables:\n\tTMPDIR\t\ttemporary diretory (path the built-in checkra1n will be extracted to)\n```\n\n## Installing\nVisit https://palera.in\n\n## Disclaimers\nWe are **NOT** responsible for any data loss, or the result of a device being bricked. When using palera1n, the user should accept responsibility if anything happens to their device during the process.\n- If your device is stuck in recovery, please run futurerestore `--exit-recovery`, or use `irecovery -n`, or `palera1n -n`.\n- If you're unable to get out of recovery via these methods please restore with iTunes or Finder.\n- palera1n **will not work** in VirtualBox, VMware or any virtual machine that doesn't support PCI passthrough.\n\n## Troubleshooting\nMake sure you're following the guides provided [here](https://palera.in), also when asking for support make sure you provide full details on your device, such as:\n- iPhone/iPad/iPod/Apple TV\n- iOS Version\n- Passcode enabled?\n- Verbose from palera1n (specifying `-Vv` within palera1n)\n- Panic logs, if panicked then send latest `panic-full` log from your device.\n\nCreate an issue here: https://github.com/palera1n/palera1n/issues/new/choose\n\n## Credits\n\n[All credits for palera1n can be found here](https://palera.in/)\n\nIf proper credit isn't shown please message us or create an issue.\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dep_root",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packaging",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "patches",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

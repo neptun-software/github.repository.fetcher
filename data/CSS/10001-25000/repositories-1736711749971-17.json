@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736711749971,
+    "page": 17,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "h5bp/Effeckt.css",
+      "stars": 10864,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.2529296875,
+          "content": "# EditorConfig is awesome: http://EditorConfig.org\n\n# editorconfig.org\nroot = true\n\n[*]\nindent_style = space\nindent_size = 2\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.md]\ntrim_trailing_whitespace = false\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0869140625,
+          "content": ".grunt\n/.sass-cache/\ndist\nnode_modules/\n/tmp/\n.DS_Store\nnpm-debug.log\nbower_components/\n\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 5.07421875,
+          "content": "module.exports = function(grunt) {\n\n  // Load NPM Tasks\n  // https://github.com/shootaroo/jit-grunt\n  require('jit-grunt')(grunt);\n\n  grunt.initConfig({\n    pkg: grunt.file.readJSON( 'package.json' ),\n\n    // Copied from Bootstrap\n    banner: '/*!\\n' +\n            ' * Effeckt v<%= pkg.version %>\\n' +\n            ' */\\n',\n    jqueryCheck: 'if (typeof jQuery === \\'undefined\\') { throw new Error(\\'Effeckt\\\\\\'s JavaScript requires jQuery\\') }\\n\\n',\n\n    // == Grunt Dev Update\n    // https://npmjs.org/package/grunt-dev-update\n    // http://pgilad.github.io/grunt-dev-update\n    devUpdate: {\n      main: {\n        options: {\n          reportUpdated: false, // Report updated dependencies: 'false' | 'true'\n          updateType   : \"force\" // 'force'|'report'|'prompt'\n        }\n      }\n    },\n\n    watch: {\n      scss: {\n        files: ['scss/**/*.scss'],\n        tasks: 'scss'\n      },\n      html: {\n        files: ['src/**/*.hbs'],\n        tasks: 'html'\n      },\n      js: {\n        files: ['js/**/*.js'],\n        tasks: 'js'\n      },\n      livereload: {\n        options: {\n          livereload: true\n        },\n        files: [\n          'dist/**/*.html',\n          'dist/assets/css/{,*/}*.css',\n          'dist/assets/js/{,*/}*.js'\n        ]\n      }\n    },\n\n    sass: {\n      build: {\n        files : [\n          {\n            src : ['**/*.scss', '!**/_*.scss'],\n            cwd : 'scss',\n            dest : 'css',\n            ext : '.css',\n            expand : true\n          }\n        ],\n        options : {\n          style : 'expanded'\n        }\n      }\n    },\n\n    // https://github.com/nDmitry/grunt-autoprefixer\n    autoprefixer: {\n      build: {\n        options: {\n          browsers: ['last 2 versions', '> 1%']\n        },\n        files: [\n          {\n            src : ['**/*.css'],\n            cwd : 'css',\n            dest : 'css',\n            expand : true\n          }\n        ]\n      }\n    },\n\n    connect: {\n      server: {\n        options: {\n          port: 9001,\n          protocol: 'http',\n          hostname: 'localhost',\n          base: './dist/',  // '.' operates from the root of your Gruntfile, otherwise -> 'Users/user-name/www-directory/website-directory'\n          keepalive: false, // set to false to work side by side w/watch task.\n          livereload: true,\n          open: true\n        }\n      }\n    },\n\n    assemble: {\n      options: {\n        flatten: true,\n        layout: 'layout.hbs',\n        layoutdir: 'src/templates/layouts',\n        assets: 'dist/assets',\n        partials: ['src/templates/pages/*.hbs', 'src/templates/parts/*.hbs']\n      },\n      demo: {\n        options: {\n          data: ['src/data/*.{json,yml}']\n        },\n        files: {\n          'dist/': ['src/templates/pages/*.hbs']\n        }\n      }\n    },\n\n    copy: {\n      demo: {\n        files: [\n          { expand: true, cwd: './css', src: ['./**/*.*'], dest: 'dist/assets/css' },\n          { expand: true, cwd: './js', src: ['./**/*.*'], dest: 'dist/assets/js' },\n          { expand: true, flatten: true, cwd: './bower_components/jQuery', src:['./dist/*.min.*'], dest: 'dist/assets/js/libs/' },\n          { expand: true, flatten: true, cwd: './bower_components/modernizr', src:['./modernizr.js'], dest: 'dist/assets/js/libs/' }\n        ]\n      },\n      css: {\n        files: [\n          { expand: true, cwd: './css', src: ['./**/*.*'], dest: 'dist/assets/css' }\n        ]\n      },\n      js: {\n        files: [\n          { expand: true, flatten: true, cwd: './bower_components/jQuery', src: ['./dist/*.min.*'], dest: 'dist/assets/js/libs/' },\n          { expand: true, flatten: true, cwd: './bower_components/modernizr', src: ['./modernizr.js'], dest: 'dist/assets/js/libs/' },\n          { expand: true, cwd: './js', src: ['./**/*.*'], dest: 'dist/assets/js' }\n        ]\n      }\n    },\n\n    concat: {\n      options: {\n        banner: '<%= banner %>\\n<%= jqueryCheck %>',\n        stripBanners: false\n      },\n      bootstrap: {\n        src: [\n          'js/modules/core.js',\n          'js/modules/buttons.js',\n          'js/modules/captions.js',\n          'js/modules/list-items.js',\n          'js/modules/list-scroll.js',\n          'js/modules/modals.js',\n          'js/modules/off-screen-nav.js',\n          'js/modules/page-transition.js',\n          'js/modules/positional-modals.js',\n          'js/modules/tabs.js'\n        ],\n        dest: 'dist/assets/js/<%= pkg.name %>.js'\n      }\n    },\n\n    'gh-pages': {\n      options: {\n        base: 'dist'\n      },\n      forked: {\n        options: {\n          base: 'dist'\n        },\n        src: ['**/*']\n      },\n      remote: {\n        options: {\n          base: 'dist',\n          repo: 'https://github.com/h5bp/Effeckt.css'\n        },\n        src: ['**/*']\n      }\n    }\n\n  });\n\n  grunt.registerTask('update', ['devUpdate']);\n  grunt.registerTask('default', ['sass', 'autoprefixer', 'assemble', 'copy']);\n  grunt.registerTask('scss', ['sass', 'autoprefixer', 'copy:css']);\n  grunt.registerTask('html', ['assemble']);\n  grunt.registerTask('js', ['copy:js', 'concat']);\n  grunt.registerTask('dev', ['connect', 'watch']);\n  grunt.registerTask('demo', ['copy:demo', 'assemble:demo']);\n  grunt.registerTask('deploy', ['gh-pages:remote']);\n};\n"
+        },
+        {
+          "name": "License.md",
+          "type": "blob",
+          "size": 1.09765625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013-2015 Contributors to https://github.com/h5bp/Effeckt.css/\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.5380859375,
+          "content": "{\n  \"name\": \"Effeckt.css\",\n  \"version\": \"0.5.0\",\n  \"homepage\": \"https://github.com/h5bp/Effeckt.css\",\n  \"authors\": [\n    \"h5bp\",\n    \"github contributors\"\n  ],\n  \"description\": \"A Performant Transitions and Animations Library\",\n  \"moduleType\": [\n    \"globals\"\n  ],\n  \"keywords\": [\n    \"effeckt\",\n    \"css\",\n    \"animations\",\n    \"css3\",\n    \"jquery\"\n  ],\n  \"license\": \"MIT\",\n  \"ignore\": [\n    \"**/.*\",\n    \"node_modules\",\n    \"bower_components\",\n    \"test\",\n    \"tests\"\n  ],\n  \"dependencies\": {\n    \"jQuery\": \"~2.1.4\",\n    \"modernizr\": \"~2.8.3\"\n  }\n}\n"
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.490234375,
+          "content": "{\n  \"name\": \"Effeckt\",\n  \"version\": \"0.5.0\",\n  \"devDependencies\": {\n    \"assemble\": \"^0.4.42\",\n    \"autoprefixer\": \"^3.1.0\",\n    \"grunt\": \"^0.4.5\",\n    \"grunt-autoprefixer\": \"^1.0.1\",\n    \"grunt-contrib-concat\": \"^0.5.0\",\n    \"grunt-contrib-connect\": \"^0.8.0\",\n    \"grunt-contrib-copy\": \"^0.6.0\",\n    \"grunt-contrib-watch\": \"^0.6.1\",\n    \"grunt-dev-update\": \"^0.9.0\",\n    \"grunt-gh-pages\": \"^0.9.1\",\n    \"grunt-sass\": \"^0.14.2\",\n    \"jit-grunt\": \"^0.8.0\"\n  },\n  \"engines\": {\n    \"node\": \">=0.10\"\n  }\n}\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 3.568359375,
+          "content": "# This repo is archived\n\n\nEffeckt.css\n===========\n\n\n**A Performant Transitions and Animations Library** : [http://h5bp.github.io/Effeckt.css](http://h5bp.github.io/Effeckt.css)\n\nEver notice how small flourishes and subtle transitions dramatically increases the value of the experience you enjoy with an app or site?\n\nDesigning and developing UIs for the mobile web is tricky, but it's extremely difficult to do that while delivering something that performs at 60fps. The best opportunities to getting jank-free transitions on phones/tablets are CSS transition and keyframe animation based, especially tapping into hardware-accelerated transforms and opacity changes.\n\n@daneden did really nice work with [Animate.css](http://daneden.me/animate/) but I think the web would benefit if we could take that work to the next level. There's already been fantastic experiments and demos exploring CSS-based transitions, but it's distributed all over.\n\nOriginally started at [h5bp/lazyweb-requests#122](https://github.com/h5bp/lazyweb-requests/issues/122)\n\n#### Effeckt Trailer\n\n<a href=\"http://youtu.be/Qc40YDFA4Bg\">![image](https://f.cloud.github.com/assets/39191/725426/aa3af38c-e067-11e2-82e4-269086cb845d.png)</a>\n\n## Examples To Add\n\n* [tympanus.net/Development/ModalWindowEffects/](http://tympanus.net/Development/ModalWindowEffects/)\n* [tympanus.net/Development/PageTransitions/](http://tympanus.net/Development/PageTransitions/)\n* [tympanus.net/Development/PFold/index2.html](http://tympanus.net/Development/PFold/index2.html)\n* [leaverou.github.io/animatable/](http://leaverou.github.io/animatable/)\n* [lab.hakim.se/ladda/](http://lab.hakim.se/ladda/)\n* [lab.hakim.se/kontext/](http://lab.hakim.se/kontext/)\n* [lab.hakim.se/avgrund/](http://lab.hakim.se/avgrund/)\n* [lab.hakim.se/meny/](http://lab.hakim.se/meny/)\n\nBecause there are so many, I expect we could **group things by role**:\n\n* button/touch effects\n* state transition\n* modal/notification transition\n* attention attractors\n\n## Goals\n\n1. Provide a minimal UI. Only use style hooks for transitions and animations.\n1. Designer-curated set of classy and reasonable effects. (no [`easeInBounce`](http://easings.net/#easeInBounce))\n1. Establish browser support guidelines (e.g. Android 2.3 would gracefully degrade)\n1. CSS performance regression testing (a la [bench.topcoat.io](http://bench.topcoat.io))\n1. Deliver jank-free *60fps* performance on target browsers/devices\n1. If a particular effect cannot deliver target performance (hey `blur()` css filter), it cannot be included.\n1. Guidelines on what to avoid when styling these affected elements (avoid expensive CSS)\n1. Deliver a builder so users can pull only the CSS they need.\n1. There is no hover on the mobile web, so any hover-based effects would be excluded or have a tap-based equivalent.\n\n## Action\n\n* If you know other transition/animation based demos/experiments that make sense to include here, file a ticket.\n* If you're interested in helping to define the API, let's hear it! File a ticket.\n* A web-based builder is a must. A command-line builder isn't important for this.\n\n## Getting Started\n\n- [https://github.com/h5bp/Effeckt.css/wiki/Getting-Started](https://github.com/h5bp/Effeckt.css/wiki/Getting-Started)\n\n## Code Style Guide\n\n- [https://github.com/h5bp/Effeckt.css/wiki/Code-Style-Guide](https://github.com/h5bp/Effeckt.css/wiki/Code-Style-Guide)\n\n## General Inquiries & Support\n\n- Effeckt.css Mailing List [https://groups.google.com/d/forum/effeckt](https://groups.google.com/d/forum/effeckt)\n\n## Bug Reports & Feature Requests\n\n- [http://github.com/h5bp/Effeckt.css/issues](https://github.com/h5bp/Effeckt.css/issues)\n"
+        },
+        {
+          "name": "scss",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

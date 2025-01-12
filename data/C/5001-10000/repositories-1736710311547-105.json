@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "timestamp": 1736710311547,
+    "page": 105,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "SanderMertens/flecs",
+      "stars": 6632,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".bazelignore",
+          "type": "blob",
+          "size": 0.01953125,
+          "content": "examples/build/bazel"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.1708984375,
+          "content": "root = true\n\n[*]\ncharset = utf-8\nindent_style = space\nindent_size  = 4\nend_of_line  = lf\ninsert_final_newline = true\ntrim_trailing_whitespace = false\n\n[*.yml]\nindent_size = 2\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0712890625,
+          "content": "# Auto detect text files and perform LF normalization\n* text=auto eol=lf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1298828125,
+          "content": ".DS_Store\nbin\n.bake_cache\n.vscode\ngcov\n.idea\n*.pdb\ndeps\ncmake-build-debug\nbazel-*\n**/CMakeFiles/*\n.vs\nout\ndocs/html\nMODULE.bazel.lock"
+        },
+        {
+          "name": "BUILD",
+          "type": "blob",
+          "size": 0.271484375,
+          "content": "cc_library(\n    name = \"flecs\",\n    visibility = [\"//visibility:public\"],\n    defines = [\"flecs_EXPORTS\"],\n\n    srcs = glob([\"src/**/*.c\", \"src/**/*.h\", \"src/**/*.inl\"]),\n    hdrs = glob([\"include/**/*.h\", \"include/**/*.hpp\", \"include/**/*.inl\"]),\n    includes = [\"include\"],\n)\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 2.8466796875,
+          "content": "cmake_minimum_required(VERSION 3.5)\ncmake_policy(SET CMP0063 NEW)\n\nproject(flecs LANGUAGES C)\n\noption(FLECS_STATIC \"Build static flecs lib\" ON)\noption(FLECS_SHARED \"Build shared flecs lib\" ON)\noption(FLECS_PIC \"Compile static flecs lib with position independent code (PIC)\" ON)\noption(FLECS_TESTS \"Build flecs tests\" OFF)\n\ninclude(cmake/target_default_compile_warnings.cmake)\ninclude(cmake/target_default_compile_options.cmake)\n\n# Automatically generate the same folder structure in Visual Studio as we have on disk\nmacro(GroupSources curdir)\n\tfile(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)\n\tforeach(child ${children})\n\t\tif(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})\n\t\t\tGroupSources(${curdir}/${child})\n\t\telse()\n\t\t\tstring(REPLACE \"/\" \"\\\\\" groupname ${curdir})\n            source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})\n\t\tendif()\n\tendforeach()\nendmacro()\n\nfile(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/. ${PROJECT_SOURCE_DIR}/./*)\nforeach(child ${children})\n\tif(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})\n\t\tGroupSources(${child})\n\tendif()\nendforeach()\n\nfile(GLOB_RECURSE INC include/*.h include/*.hpp)\nfile(GLOB_RECURSE SRC src/*.c)\n\nset(FLECS_TARGETS \"\")\n\nmacro(add_flecs_target TARGET CONFIG)\n    add_library(${TARGET} ${CONFIG} ${INC} ${SRC})\n    add_library(flecs::${TARGET} ALIAS ${TARGET})\n\n    target_default_compile_options_c(${TARGET})\n    target_default_compile_warnings_c(${TARGET})\n\n    if(WIN32)\n        target_link_libraries(${TARGET} wsock32 ws2_32)\n    endif()\n    if (CMAKE_SYSTEM_NAME STREQUAL \"Linux\")\n        target_link_libraries(${TARGET} pthread)\n    endif()\n\n    if(FLECS_PIC)\n        set_property(TARGET ${TARGET} PROPERTY POSITION_INDEPENDENT_CODE ON)\n    endif()\n\n    target_include_directories(${TARGET} PUBLIC\n        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>\n        $<INSTALL_INTERFACE:include>)\n\n    list(APPEND FLECS_TARGETS ${TARGET})\nendmacro()\n\nif(FLECS_SHARED)\n    add_flecs_target(flecs SHARED)\nendif()\n\nif(FLECS_STATIC)\n    add_flecs_target(flecs_static STATIC)\n    target_compile_definitions(flecs_static PUBLIC flecs_STATIC)\nendif()\n\nif(FLECS_TESTS)\n    enable_testing()\n    add_subdirectory(test)\nendif()\n\nmessage(STATUS \"Targets: ${FLECS_TARGETS}\")\n\n# define the install steps\ninclude(GNUInstallDirs)\ninstall(DIRECTORY \"${PROJECT_SOURCE_DIR}/include/\"\n        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}\n        FILES_MATCHING\n        PATTERN \"*.h\"\n        PATTERN \"*.hpp\"\n        PATTERN \"*.inl\")\n\ninstall(TARGETS ${FLECS_TARGETS}\n        EXPORT flecs-export\n        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}\n        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}\n        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})\n\ninstall(EXPORT flecs-export\n        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flecs\n        NAMESPACE flecs::\n        FILE flecs-config.cmake)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.1044921875,
+          "content": "MIT License\n\nCopyright (c) 2019 Sander Mertens\n\nPortions Copyright (c) Meta Platforms, Inc. and affiliates\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "MODULE.bazel",
+          "type": "blob",
+          "size": 1.66015625,
+          "content": "\"A fast entity component system (ECS) for C & C++\"\nmodule(name = \"flecs\")\n\ngit_repository = use_repo_rule(\"@bazel_tools//tools/build_defs/repo:git.bzl\", \"git_repository\")\n\ngit_repository(\n    name = \"bake\",\n    remote = \"https://github.com/SanderMertens/bake.git\",\n    commit = \"10c02123d6e3e200578128d73c3fa3bb996dff4f\",\n    build_file_content = \"\"\"\ncc_library(\n    name = \"driver-test\",\n    visibility = [\"//visibility:public\"],\n    deps = [\":util\", \":bake\"],\n    defines = [\"__BAKE__\", \"bake_test_EXPORTS\"],\n\n    srcs = glob([\"drivers/test/src/**/*.c\"]),\n    hdrs = glob([\"drivers/test/include/**/*.h\"]),\n    includes = [\"drivers/test/include\"],\n)\n\ncc_library(\n    name = \"bake\",\n    visibility = [\"//visibility:public\"],\n    deps = [\":util\"],\n\n    srcs = glob([\"src/*.c\", \"src/*.h\"]),\n    hdrs = glob([\"include/*.h\", \"include/bake/*.h\"]),\n    includes = [\"include\"],\n)\n\ncc_library(\n    name = \"util\",\n    visibility = [\"//visibility:public\"],\n    defines = [\"__BAKE__\", \"_XOPEN_SOURCE=600\", \"bake_util_EXPORTS\", \"UT_IMPL\"],\n\n    linkopts = select({\n        \"@bazel_tools//src/conditions:windows\": [\"Dbghelp.lib\", \"Shell32.lib\", \"Shlwapi.lib\"],\n        \"//conditions:default\": [\"-lrt -lpthread -ldl\"],\n    }),\n\n    srcs = glob([\"util/src/*.c\"]) + select({\n        \"@bazel_tools//src/conditions:windows\": glob([\"util/src/win/*.c\"]),\n        \"//conditions:default\": glob([\"util/src/posix/*.c\"]),\n    }),\n    hdrs = glob([\"util/include/*.h\", \"util/include/bake-util/*.h\"]) + select({\n        \"@bazel_tools//src/conditions:windows\": glob([\"util/include/bake-util/win/*.h\"]),\n        \"//conditions:default\": glob([\"util/include/bake-util/posix/*.h\"]),\n    }),\n    includes = [\"util/include\"],\n)\n\"\"\",\n)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.525390625,
+          "content": "![flecs](docs/img/logo.png)\n\n[![Version](https://img.shields.io/github/v/release/sandermertens/flecs?include_prereleases&style=for-the-badge)](https://github.com/SanderMertens/flecs/releases)\n[![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)](https://github.com/SanderMertens/flecs/blob/master/LICENSE)\n[![Documentation](https://img.shields.io/badge/docs-flecs-blue?style=for-the-badge&color=blue)](https://www.flecs.dev/flecs/md_docs_2Docs.html)\n[![actions](https://img.shields.io/github/actions/workflow/status/SanderMertens/flecs/ci.yml?branch=master&style=for-the-badge)](https://github.com/SanderMertens/flecs/actions?query=workflow%3ACI)\n[![Discord Chat](https://img.shields.io/discord/633826290415435777.svg?style=for-the-badge&color=%235a64f6)](https://discord.gg/BEzP5Rgrrp)\n\nFlecs is a fast and lightweight Entity Component System that lets you build games and simulations with millions of entities ([join the Discord!](https://discord.gg/BEzP5Rgrrp)). Here are some of the framework's highlights:\n\n- Fast and [portable](#language-bindings) zero dependency [C99 API](https://www.flecs.dev/flecs/group__c.html)\n- Modern type-safe [C++11 API](https://www.flecs.dev/flecs/group__cpp.html) that doesn't use STL containers\n- First open source ECS with full support for [Entity Relationships](https://www.flecs.dev/flecs/md_docs_2Relationships.html)!\n- Fast native support for [hierarchies](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-childof-relationship) and [prefabs](https://www.flecs.dev/flecs/md_docs_2Relationships.html#the-isa-relationship)\n- Code base that builds in less than 5 seconds\n- Runs [in the browser](https://flecs.dev/city) without modifications with emscripten\n- Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame\n- Automatic component registration that works out of the box across shared libraries/DLLs\n- Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)\n- Run games on multiple CPU cores with a fast lockless scheduler\n- Verified on all major compilers and platforms with [CI](https://github.com/SanderMertens/flecs/actions) running more than 8000 tests\n- Integrated [reflection framework](https://www.flecs.dev/flecs/group__c__addons__meta.html) with [JSON serializer](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/basics_json) and support for [runtime components](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/runtime_component)\n- [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components\n- Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/component_inheritance)\n- [Statistics addon](https://www.flecs.dev/flecs/group__c__addons__stats.html) for profiling ECS performance\n- A web-based UI for monitoring & controlling your apps:\n\n[![Flecs Explorer](docs/img/explorer.png)](https://flecs.dev/explorer)\n\nTo support the project, give it a star 🌟 !\n\n## What is an Entity Component System?\nECS is a way of organizing code and data that lets you build games that are larger, more complex and are easier to extend. Something is called an ECS when it:\n- Has _entities_ that uniquely identify objects in a game\n- Has _components_ which are datatypes that can be added to entities\n- Has _systems_ which are functions that run for all entities matching a component _query_\n\nFor more information, check the [ECS FAQ](https://github.com/SanderMertens/ecs-faq)!\n\n## Show me the code!\nC99 example:\n```c\ntypedef struct {\n  float x, y;\n} Position, Velocity;\n\nvoid Move(ecs_iter_t *it) {\n  Position *p = ecs_field(it, Position, 0);\n  Velocity *v = ecs_field(it, Velocity, 1);\n\n  for (int i = 0; i < it->count; i++) {\n    p[i].x += v[i].x;\n    p[i].y += v[i].y;\n  }\n}\n\nint main(int argc, char *argv[]) {\n  ecs_world_t *ecs = ecs_init();\n\n  ECS_COMPONENT(ecs, Position);\n  ECS_COMPONENT(ecs, Velocity);\n\n  ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);\n\n  ecs_entity_t e = ecs_insert(ecs, \n    ecs_value(Position, {10, 20}),\n    ecs_value(Velocity, {1, 2}));\n\n  while (ecs_progress(ecs, 0)) { }\n}\n```\n\nSame example in C++11:\n\n```cpp\nstruct Position {\n  float x, y;\n};\n\nstruct Velocity {\n  float x, y;\n};\n\nint main(int argc, char *argv[]) {\n  flecs::world ecs;\n\n  ecs.system<Position, const Velocity>()\n    .each([](Position& p, const Velocity& v) {\n      p.x += v.x;\n      p.y += v.y;\n    });\n\n  auto e = ecs.entity()\n    .insert([](Position& p, Velocity& v) {\n      p = {10, 20};\n      v = {1, 2};\n    });\n\n  while (ecs.progress()) { }\n}\n```\n\n## Projects using Flecs\nIf you have a project you'd like to share, let me know on [Discord](https://discord.gg/BEzP5Rgrrp)!\n\n### [Hytale](https://hytale.com/)\n[![Hytale](docs/img/projects/hytale.png)](https://hytale.com/)\n\n> We knew that we wanted to build Hytale around an Entity-Component-System (ECS). When we analyzed the options, FLECS rose to the top. FLECS provides the backbone of the Hytale Game Engine. Its flexibility has allowed us to build highly varied gameplay while supporting our vision for empowering Creators.\n\n-- Dann Webster, Hypixel studios\n\n### Tempest Rising\n[![Tempest Rising](docs/img/projects/tempest_rising.png)](https://store.steampowered.com/app/1486920/Tempest_Rising/)\n\n### Territory Control 2\n[![image](docs/img/projects/territory_control.jpg)](https://store.steampowered.com/app/690290/Territory_Control_2/)\n\n### Resistance is Brutal\n[![image](docs/img/projects/resistance_is_brutal.jpg)](https://store.steampowered.com/app/3378140/Resistance_Is_Brutal/)\n\n### Age of Respair\n[![image](docs/img/projects/age_of_respair.png)](https://store.steampowered.com/app/3164360/Age_of_Respair/)\n\n### The Forge\n[![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)\n\n### Extermination Shock\n[![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)\n\n### Tome Tumble Tournament\n[![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)\n\n### Hyperion Minecraft Server\n[![image](docs/img/projects/hyperion.png)](https://github.com/andrewgazelka/hyperion)\n\n### Sol Survivor\n[![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)\n\n### Equilibrium Engine\n[![image](docs/img/projects/equilibrium_engine.png)](https://github.com/clibequilibrium/EquilibriumEngine)\n\n### After Sun\n[![image](docs/img/projects/after_sun.png)](https://github.com/foxnne/aftersun)\n\n### Flecs Demo's\nhttps://github.com/SanderMertens/tower_defense\n[![Tower Defense](docs/img/projects/tower_defense.png)](https://www.flecs.dev/tower_defense/etc)\n\nhttps://github.com/flecs-hub/city\n[![City](docs/img/projects/city.png)](https://www.flecs.dev/city)\n\n## Flecs Hub\n[Flecs Hub](https://github.com/flecs-hub) is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.\n\nModule      | Description\n------------|------------------\n[flecs.components.cglm](https://github.com/flecs-hub/flecs-components-cglm) | Component registration for cglm (math) types\n[flecs.components.input](https://github.com/flecs-hub/flecs-components-input) | Components that describe keyboard and mouse input\n[flecs.components.transform](https://github.com/flecs-hub/flecs-components-transform) | Components that describe position, rotation and scale\n[flecs.components.physics](https://github.com/flecs-hub/flecs-components-physics) | Components that describe physics and movement\n[flecs.components.geometry](https://github.com/flecs-hub/flecs-components-geometry) | Components that describe geometry\n[flecs.components.graphics](https://github.com/flecs-hub/flecs-components-graphics) | Components used for computer graphics\n[flecs.components.gui](https://github.com/flecs-hub/flecs-components-gui) | Components used to describe GUI components\n[flecs.systems.transform](https://github.com/flecs-hub/flecs-systems-transform) | Hierarchical transforms for scene graphs\n[flecs.systems.physics](https://github.com/flecs-hub/flecs-systems-physics) | Systems for moving objects and collision detection\n[flecs.systems.sokol](https://github.com/flecs-hub/flecs-systems-sokol) | Sokol-based renderer\n[flecs.game](https://github.com/flecs-hub/flecs-game) | Generic game systems, like a camera controller\n\n## Language bindings\nThe following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!\n- C#:\n  - [BeanCheeseBurrito/Flecs.NET](https://github.com/BeanCheeseBurrito/Flecs.NET)\n- Rust:\n  - [Flecs-Rust](https://github.com/Indra-db/Flecs-Rust)\n  - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)\n  - [flecs-rs](https://github.com/jazzay/flecs-rs)\n- Zig:\n  - [michal-z/zig-gamedev](https://github.com/michal-z/zig-gamedev/tree/main/libs/zflecs)\n  - [foxnne/zig-flecs](https://github.com/foxnne/zig-flecs)\n  - [prime31/zig-flecs](https://github.com/prime31/zig-flecs)\n- Lua:\n  - [sro5h/flecs-luajit](https://github.com/sro5h/flecs-luajit)\n  - [flecs-hub/flecs-lua](https://github.com/flecs-hub/flecs-lua)\n"
+        },
+        {
+          "name": "WORKSPACE",
+          "type": "blob",
+          "size": 1.4833984375,
+          "content": "load(\"@bazel_tools//tools/build_defs/repo:git.bzl\", \"new_git_repository\")\n\nnew_git_repository(\n    name = \"bake\",\n    remote = \"git@github.com:SanderMertens/bake.git\",\n    commit = \"cfc90745f9daa7b7fba80f229af18cdd5029b066\",\n    shallow_since = \"1614835160 -0800\",\n\n    build_file_content = \"\"\"\ncc_library(\n    name = \"driver-test\",\n    visibility = [\"//visibility:public\"],\n    deps = [\":util\", \":bake\"],\n\n    srcs = glob([\"drivers/test/src/**/*.c\"]),\n    hdrs = glob([\"drivers/test/include/**/*.h\"]),\n    includes = [\"drivers/test/include\"],\n)\n\ncc_library(\n    name = \"bake\",\n    visibility = [\"//visibility:public\"],\n    deps = [\":util\"],\n\n    srcs = glob([\"src/*.c\", \"src/*.h\"]),\n    hdrs = glob([\"include/*.h\", \"include/bake/*.h\"]),\n    includes = [\"include\"],\n)\n\ncc_library(\n    name = \"util\",\n    visibility = [\"//visibility:public\"],\n    defines = [\"__BAKE__\", \"_XOPEN_SOURCE=600\"],\n\n    linkopts = select({\n        \"@bazel_tools//src/conditions:windows\": [],\n        \"//conditions:default\": [\"-lrt -lpthread -ldl\"],\n    }),\n\n    srcs = glob([\"util/src/*.c\"]) + select({\n        \"@bazel_tools//src/conditions:windows\": glob([\"util/src/win/*.c\"]),\n        \"//conditions:default\": glob([\"util/src/posix/*.c\"]),\n    }),\n    hdrs = glob([\"util/include/*.h\", \"util/include/bake-util/*.h\"]) + select({\n        \"@bazel_tools//src/conditions:windows\": glob([\"util/include/bake-util/win/*.h\"]),\n        \"//conditions:default\": glob([\"util/include/bake-util/posix/*.h\"]),\n    }),\n    includes = [\"util/include\"],\n)\n\"\"\"\n)\n"
+        },
+        {
+          "name": "WORKSPACE.bzlmod",
+          "type": "blob",
+          "size": 0.0458984375,
+          "content": "# Overrides WORKSPACE when building with bzlmod"
+        },
+        {
+          "name": "_typos.toml",
+          "type": "blob",
+          "size": 0.517578125,
+          "content": "files.extend-exclude = [\"distr/*\", \"test/script/src/Fuzzing.c\"]\n\n# typos can't handle \"2nd\" as a word (yet?)\ndefault.extend-ignore-identifiers-re = [\"_2nd\"]\n\n[default.extend-words]\nser = \"ser\" # serialization\nthr = \"thr\" # thread\n\n[default.extend-identifiers]\nba = \"ba\"           # block_allocator\necs_eis = \"ecs_eis\" # entity index store (entity_index.h)\nnumer = \"numer\"     # numerator (posix_impl.inl)\not = \"ot\"           # Opaque Type or Other Table\nFo = \"Fo\"           # used in test cases/examples\nUE4 = \"UE4\"\nPNGs = \"PNGs\"\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "codecov.yaml",
+          "type": "blob",
+          "size": 0.2705078125,
+          "content": "codecov:\n  notify:\n    require_ci_to_pass: no\n\ncoverage:\n  precision: 2\n  round: down\n  range: \"70...100\"\n\n  status:\n    project: yes\n    patch: yes\n    changes: no\n\nparsers:\n  gcov:\n    branch_detection:\n      conditional: yes\n      loop: yes\n      method: no\n      macro: no\n"
+        },
+        {
+          "name": "distr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "meson.build",
+          "type": "blob",
+          "size": 5.5029296875,
+          "content": "project('flecs', 'c', license : 'mit', default_options : ['c_std=c99'])\n\nflecs_args = []\n\nif get_option('default_library') == 'static'\n    flecs_args = '-Dflecs_STATIC'\nendif\n\nflecs_inc = include_directories('include')\n\nflecs_deps = [\n    dependency('threads')\n]\n\ncc = meson.get_compiler('c')\n\nif host_machine.system() == 'windows'\n    flecs_deps += cc.find_library('ws2_32') # Required for http addon\nendif\n\nflecs_src = files(\n    'src/addons/alerts.c',\n    'src/addons/app.c',\n    'src/addons/doc.c',\n    'src/addons/flecs_cpp.c',\n    'src/addons/http.c',\n    'src/addons/journal.c',\n    'src/addons/json/deserialize_value.c',\n    'src/addons/json/deserialize.c',\n    'src/addons/json/json.c',\n    'src/addons/json/serialize_entity.c',\n    'src/addons/json/serialize_field_info.c',\n    'src/addons/json/serialize_iter_result_query.c',\n    'src/addons/json/serialize_iter_result_table.c',\n    'src/addons/json/serialize_iter_result.c',\n    'src/addons/json/serialize_iter.c',\n    'src/addons/json/serialize_query_info.c',\n    'src/addons/json/serialize_type_info.c',\n    'src/addons/json/serialize_value.c',\n    'src/addons/json/serialize_world.c',\n    'src/addons/stats/monitor.c',\n    'src/addons/stats/pipeline_monitor.c',\n    'src/addons/stats/stats.c',\n    'src/addons/stats/system_monitor.c',\n    'src/addons/stats/world_monitor.c',\n    'src/addons/stats/world_summary.c',\n    'src/addons/log.c',\n    'src/addons/meta/api.c',\n    'src/addons/meta/definitions.c',\n    'src/addons/meta/meta.c',\n    'src/addons/meta/serialized.c',\n    'src/addons/meta/cursor.c',\n    'src/addons/meta/rtt_lifecycle.c',\n    'src/addons/meta/c_utils.c',\n    'src/addons/metrics.c',\n    'src/addons/module.c',\n    'src/addons/os_api_impl/os_api_impl.c',\n    'src/addons/pipeline/pipeline.c',\n    'src/addons/pipeline/worker.c',\n    'src/addons/rest.c',\n    'src/addons/script/template.c',\n    'src/addons/script/ast.c',\n    'src/addons/script/function.c',\n    'src/addons/script/functions_builtin.c',\n    'src/addons/script/functions_math.c',\n    'src/addons/script/parser.c',\n    'src/addons/script/query_parser.c',\n    'src/addons/script/script.c',\n    'src/addons/script/serialize.c',\n    'src/addons/script/tokenizer.c',\n    'src/addons/script/vars.c',\n    'src/addons/script/visit_check.c',\n    'src/addons/script/visit_eval.c',\n    'src/addons/script/visit_free.c',\n    'src/addons/script/visit_to_str.c',\n    'src/addons/script/visit.c',\n    'src/addons/script/expr/ast.c',\n    'src/addons/script/expr/parser.c',\n    'src/addons/script/expr/stack.c',\n    'src/addons/script/expr/util.c',\n    'src/addons/script/expr/visit_eval.c',\n    'src/addons/script/expr/visit_fold.c',\n    'src/addons/script/expr/visit_free.c',\n    'src/addons/script/expr/visit_to_str.c',\n    'src/addons/script/expr/visit_type.c',\n    'src/addons/system/system.c',\n    'src/addons/timer.c',\n    'src/addons/units.c',\n    'src/datastructures/allocator.c',\n    'src/datastructures/bitset.c',\n    'src/datastructures/block_allocator.c',\n    'src/datastructures/hash.c',\n    'src/datastructures/hashmap.c',\n    'src/datastructures/map.c',\n    'src/datastructures/stack_allocator.c',\n    'src/datastructures/name_index.c',\n    'src/datastructures/sparse.c',\n    'src/datastructures/strbuf.c',\n    'src/datastructures/switch_list.c',\n    'src/datastructures/vec.c',\n    'src/storage/entity_index.c',\n    'src/storage/id_index.c',\n    'src/storage/table.c',\n    'src/storage/table_cache.c',\n    'src/storage/table_graph.c',\n    'src/query/compiler/compiler_term.c',\n    'src/query/compiler/compiler.c',\n    'src/query/engine/cache_iter.c',\n    'src/query/engine/cache_order_by.c',\n    'src/query/engine/cache.c',\n    'src/query/engine/change_detection.c',\n    'src/query/engine/eval_iter.c',\n    'src/query/engine/eval_member.c',\n    'src/query/engine/eval_pred.c',\n    'src/query/engine/eval_toggle.c',\n    'src/query/engine/eval_trav.c',\n    'src/query/engine/eval_union.c',\n    'src/query/engine/eval_up.c',\n    'src/query/engine/eval_utils.c',\n    'src/query/engine/eval.c',\n    'src/query/engine/trav_cache.c',\n    'src/query/engine/trav_down_cache.c',\n    'src/query/engine/trav_up_cache.c',\n    'src/query/engine/trivial_iter.c',\n    'src/query/api.c',\n    'src/query/util.c',\n    'src/query/validator.c',\n    'src/bootstrap.c',\n    'src/each.c',\n    'src/entity_name.c',\n    'src/entity.c',\n    'src/id.c',\n    'src/iter.c',\n    'src/misc.c',\n    'src/observable.c',\n    'src/observer.c',\n    'src/os_api.c',\n    'src/poly.c',\n    'src/stage.c',\n    'src/search.c',\n    'src/value.c',\n    'src/world.c',\n)\n\ninstall_headers('include/flecs.h')\ninstall_subdir('include/flecs', install_dir : get_option('includedir'))\n\nflecs_lib = library('flecs',\n    flecs_src,\n    install : true,\n    c_args : [ '-Dflecs_EXPORTS', flecs_args ],\n    dependencies : flecs_deps,\n    include_directories : flecs_inc,\n    implicit_include_directories : false\n)\n\nflecs_dep = declare_dependency(\n    link_with : flecs_lib,\n    compile_args : flecs_args,\n    dependencies : flecs_deps,\n    include_directories : flecs_inc\n)\n\nopt_helloworld = get_option('build_example').disable_auto_if(meson.is_subproject())\n\nif opt_helloworld.allowed()\n    helloworld_inc = include_directories('examples/c/hello_world/include')\n\n    helloworld_exe = executable('helloworld',\n        'examples/c/hello_world/src/main.c',\n        include_directories : helloworld_inc,\n        implicit_include_directories : false,\n        dependencies : flecs_dep\n)\nendif\n\nif meson.version().version_compare('>= 0.54.0')\n    meson.override_dependency('flecs', flecs_dep)\nendif\n\npkg = import('pkgconfig')\npkg.generate(flecs_lib)\n"
+        },
+        {
+          "name": "meson_options.txt",
+          "type": "blob",
+          "size": 0.1015625,
+          "content": "option('build_example', description : 'build the helloworld example', type : 'feature', value : 'auto')\n"
+        },
+        {
+          "name": "project.json",
+          "type": "blob",
+          "size": 0.908203125,
+          "content": "{\n    \"id\":\"flecs\",\n    \"type\":\"package\",\n    \"value\": {\n        \"author\": \"Sander Mertens\",\n        \"description\": \"Entity Component System written in C99/C++11\",\n        \"amalgamate\": true,\n        \"amalgamate-path\": \"distr\"\n    },\n    \"dependee\": {\n        \"lang.c\": {\n            \"${cfg sanitize}\": {\n                \"defines\": [\"FLECS_SANITIZE\"]\n            }\n        },\n        \"lang.cpp\": {\n            \"${cfg sanitize}\": {\n                \"defines\": [\"FLECS_SANITIZE\"]\n            }\n        }\n    },\n    \"lang.c\": {\n        \"${os linux}\": {\n            \"lib\": [\"rt\", \"pthread\", \"m\"],\n            \"${cfg debug}\": {\n                \"export-symbols\": true\n            },\n            \"${cfg sanitize}\": {\n                \"export-symbols\": true\n            }\n        },\n        \"${os windows}\": {\n            \"lib\": [\"ws2_32\"]\n        },\n        \"${cfg sanitize}\": {\n            \"defines\": [\"FLECS_SANITIZE\"]\n        }\n    }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

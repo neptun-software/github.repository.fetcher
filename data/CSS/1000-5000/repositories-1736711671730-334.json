@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "timestamp": 1736711671730,
+    "page": 334,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "defaultnamehere/verylegit.link",
+      "stars": 1307,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0146484375,
+          "content": "*.pyc\n*.swp\n*~\n"
+        },
+        {
+          "name": "CNAME",
+          "type": "blob",
+          "size": 0.0244140625,
+          "content": "departmentofapproval.com\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.1962890625,
+          "content": "\n# A URL shortener but instead of shortening the URL it makes it look extremely dodgy\n\n### Sample URLs:\n```\ntwitter.com -> win.a.free.ipad.verylegit.link/CT*OMGb=B5+b+)u6)DU882bitcoin.xlsx.pdf\ngoogle.com -> paypal.verylegit.link/8U70*m[uO409index.apk.pem.dmg\nverylegit.link -> click.here.to.get.ripped.in.three.weeks.verylegit.link/ip-camera()698download!downloader.min.css.dmg\n```\n\n### How does it work?\nWhen you give it a URL, a randomy sketchy URL path (the bit after the /) is generated. The mapping between the real URL and the sketchy one is then saved.\nSince only the part after the / matters, you can use any domain you like.\n\n#### Example\n\nAll of these links go to the same place (this page):\n```\nverylegit.link/exploit+411botnet.xlsx.rar.pdf\nwin2003.verylegit.link/exploit+411botnet.xlsx.rar.pdf\n<anything>.verylegit.link/exploit+411botnet.xlsx.rar.pdf\n```\n\n## API\n```\nPOST /sketchify\n{\n    'long_url': 'twitter.com'\n}\n```\nWill return\n```\n   win.a.free.ipad.verylegit.link/CT*OMGb=B5+b+)u6)DU882bitcoin.xlsx.pdf\n\n```\n\nGo for it!\n\n## Questions?\n@ me on twitter: [@mangopdf](https://twitter.com/mangopdf)\n\nThis whole thing was inspired by wanting to give [ShadyURL](http://shadyurl.com) some new and spicy features.\n\n"
+        },
+        {
+          "name": "__init__.py",
+          "type": "blob",
+          "size": 0.0517578125,
+          "content": "\nimport app\n\napp.app.run(debug=True, host=\"0.0.0.0\")\n"
+        },
+        {
+          "name": "app.yaml",
+          "type": "blob",
+          "size": 0.1650390625,
+          "content": "runtime: python27\napi_version: 1\nthreadsafe: true\n\nhandlers:\n- url: /static\n  static_dir: static\n- url: /.*\n  script: main.app\n\nlibraries:\n- name: ssl\n  version: latest\n"
+        },
+        {
+          "name": "appengine_config.py",
+          "type": "blob",
+          "size": 0.1083984375,
+          "content": "\nfrom google.appengine.ext import vendor\n\n# Add any libraries installed in the \"lib\" folder.\nvendor.add('lib')\n"
+        },
+        {
+          "name": "database.py",
+          "type": "blob",
+          "size": 1.857421875,
+          "content": "\nimport sketchify\nimport sketchy_data\nimport random\n\nfrom google.cloud import datastore\n\n\nclass URLStoreModel():\n\n    def __init__(self):\n\n\n        datastore_client = datastore.Client(\n            project=\"verylegitlink\")\n        self.db = datastore_client\n        # self.initial_setup()\n\n    def initial_setup(self):\n        if not self.get_sketchy_url(random.choice(sketchy_data.SAMPLE_LONG_URLS)):\n            for sample_long_url in sketchy_data.SAMPLE_LONG_URLS:\n                self.add(sample_long_url)\n\n    def add(self, long_url):\n        sketchy_url = sketchify.generate_sketchy_url()\n        self.set_url(long_url, sketchy_url)\n\n    def set_url(self, long_url, sketchy_url):\n\n        with self.db.transaction():\n            incomplete_key = self.db.key(\"URL\")\n            url = datastore.Entity(key=incomplete_key)\n            url.update({\n                \"long_url\": long_url,\n                \"sketchy_url\": sketchy_url\n            })\n            self.db.put(url)\n\n        print(\"Setting \" + long_url + \" -> \" + sketchy_url)\n\n    def get_long_url(self, sketchy_url):\n\n        query = self.db.query(kind=\"URL\")\n        query.add_filter(\"sketchy_url\", \"=\", sketchy_url)\n\n        result = list(query.fetch(limit=1))\n\n        # None if we don't have this URL already\n        if not result:\n            print(\"Getting: \" + sketchy_url + \" -> \" + str(result))\n            return None\n\n        long_url = result[0][\"long_url\"]\n        return long_url\n\n    def get_sketchy_url(self, long_url):\n\n        query = self.db.query(kind=\"URL\")\n        query.add_filter(\"long_url\", \"=\", long_url)\n\n        result = list(query.fetch(limit=1))\n\n        print(result)\n        if not result:\n            print(\"Getting: \" + long_url + \" -> None\")\n            return None\n\n        sketchy_url = result[0][\"sketchy_url\"]\n\n        return sketchy_url\n\nif __name__ == \"__main__\":\n    URLStoreModel().initial_setup()\n"
+        },
+        {
+          "name": "main.py",
+          "type": "blob",
+          "size": 2.8154296875,
+          "content": "\nfrom flask import Flask, render_template, request, abort, redirect, url_for\nimport random\nimport urllib\n\nimport database\nimport sketchify\nimport sketchy_data\nimport validate\n\nimport google\n\napp = Flask('heapslegit')\n\ntry:\n    db = database.URLStoreModel()\nexcept google.cloud.exceptions.TooManyRequests:\n    db = None\n\n\n@app.route('/')\ndef index():\n    if db is None:\n        return render_template(\"429.html\"), 429\n\n    sample_long_url = random.choice(sketchy_data.SAMPLE_LONG_URLS)\n    sample_sketchy_extension = db.get_sketchy_url(sample_long_url)\n\n    sample_sketchy_url = \"verylegit.link/\" + sample_sketchy_extension\n    try:\n        referrer = request.referrer\n    except AttributeError:\n        referrer = None\n\n\n    return render_template(\"index.html\",\n                           sample_long_url=sample_long_url,\n                           sample_sketchy_url=sample_sketchy_url,\n                           referrer=referrer\n                          )\n\n\n@app.route('/sketchify', methods=[\"POST\"])\ndef sketchify_url():\n\n    long_url = request.form.to_dict().get(\"long_url\")\n\n    if long_url is None:\n        # TODO A better error code or just not letting users submit empty\n        # forms.\n        return abort(401)\n\n    # So you'd like to submit this URL.\n    # Let's just make sure you're not trying to 360 noscope hack somebody\n    # first.\n    validator = validate.URLValidator(long_url)\n    if not validator.validate_url():\n        return abort(401)\n\n    # Try and just get this URL out of the database I mean it might already be\n    # there might as well go fishing\n    sketchy_url = db.get_sketchy_url(long_url)\n\n    # Okay fine it wasn't there Thanks Obama\n    if sketchy_url is None:\n\n        sketchy_url = sketchify.generate_sketchy_url()\n\n        # Save the URL for later ;)\n        db.set_url(long_url, sketchy_url)\n\n    # Here you go have your url ya nerd\n    return \"{proto}{domain}/{path}\".format(proto=random.choice((\"http://\", \"\")), domain=random.choice(sketchy_data.DOMAINS), path=sketchy_url)\n\n\n@app.route('/<sketchy_extension>', methods=[\"GET\"])\ndef redirect_to_sketchy_url(sketchy_extension):\n\n    # Unencode the URL.\n    sketchy_extension = urllib.unquote(sketchy_extension)\n\n    # Get the long url for this short url.\n    long_url = db.get_long_url(sketchy_extension)\n    print((\"{sketchy_extension} -> {long_url}\".format(sketchy_extension=sketchy_extension,\n                                                      long_url=long_url)))\n    if long_url is None:\n        return abort(404)\n\n    return redirect(url_for(long_url, _external=True))\n\n\n@app.errorhandler(404)\ndef not_found(e):\n    print(\"404: \", request)\n    return render_template(\"404.html\"), 404\n\n@app.errorhandler(429)\n@app.errorhandler(500)\ndef quota_exceeded(e):\n    return render_template(\"429.html\"), 429\n\nif __name__ == '__main__':\n    app.run(host='127.0.0.1', port=8080, debug=True)\n"
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.63671875,
+          "content": "cachetools==2.0.0\ncertifi==2017.4.17\nchardet==3.0.4\nclick==6.7\ndill==0.2.6\nenum34==1.1.6\nFlask==0.12.2\nfuture==0.16.0\nfutures==3.1.1\ngapic-google-cloud-datastore-v1==0.15.3\ngoogle-auth==1.0.1\ngoogle-auth-httplib2==0.0.2\ngoogle-cloud-core==0.24.1\ngoogle-cloud-datastore==1.0.0\ngoogle-gax==0.15.13\ngoogleapis-common-protos==1.5.2\ngrpcio==1.4.0\nhttplib2==0.10.3\nidna==2.5\nitsdangerous==0.24\nJinja2==2.9.6\nMarkupSafe==1.0\noauth2client==3.0.0\nply==3.8\nproto-google-cloud-datastore-v1==0.90.4\nprotobuf==3.3.0\npyasn1==0.2.3\npyasn1-modules==0.0.9\npython-firebase-gae==1.0.1\nrequests==2.18.1\nrsa==3.4.2\nsix==1.10.0\nurllib3==1.21.1\nWebOb==1.6.1\nWerkzeug==0.12.2\n"
+        },
+        {
+          "name": "sketchify.py",
+          "type": "blob",
+          "size": 2.9970703125,
+          "content": "\nimport string\nimport random\n\nimport sketchy_data\n\n\ndef add_random_domain(path):\n    return \"{domain}/{path}\".format(domain=random.choice(sketchy_data.DOMAINS), path=path)\n\n\nRANDOM_STRING_CHARSET = (\n    string.ascii_letters + string.digits + \"+=_-;:.,~!`@*\")\n\nRANDOM_STRING_CHARSET_FIRST_CHAR = (string.ascii_letters + string.digits)\n\ndef generate_random_string(length=10):\n\n    return random.choice(RANDOM_STRING_CHARSET_FIRST_CHAR) + \"\".join((random.choice(RANDOM_STRING_CHARSET) for _ in range(length - 1 )))\n\n\ndef generate_sketchy_url():\n    \"\"\"Example URL: heapslegit.link/ind%3x_x86_x64(free)___mov_7sk%a6-mov-%resume.pdf.jp%eg.exe.pdf.exe\n    This method only generates the bit after the /, since the domain is ignored.\"\"\"\n    # Choose a few random sketchy scary words, removing duplicates in case\n    # there are any.\n    scary_words = set((\n        random.choice(sketchy_data.SCARY_WORDS)\n        for _ in range(random.randint(1, sketchy_data.MAX_NUM_SKETCHY_WORDS))))\n\n    # Choose the filetypes.\n    filetypes = list(set((\n        random.choice(sketchy_data.FILETYPES)\n        for _ in range(random.randint(1, sketchy_data.MAX_NUM_FILETYPES)))))\n\n    # Choose the single ending filetype.\n    ending_filetype = random.choice(sketchy_data.ENDING_FILETYPES)\n\n    # No adjacent duplicates allowed.\n    if filetypes[-1] == ending_filetype:\n        # Replace the last random filetype with something other than the ending\n        # filetype.\n        filetypes[-1] = random.choice(\n            list(set(sketchy_data.FILETYPES) - set(ending_filetype)))\n\n    # Stick weird punctuation between all these weird words.\n    sketchy_filename = [\n        word + random.choice(sketchy_data.DELIMITERS)\n        for word in scary_words]\n\n    # Cut off the extra delimiter we added at the end with this extremely\n    # readable and maintanable line of Python.\n    sketchy_filename[-1] = sketchy_filename[-1][:-1]\n\n    if len(sketchy_filename) > 3:\n        # BUT WE'RE NOT DONE YET, CALL RIGHT NOW AND I'LL TRIPLE THE OFFER.\n        weird_string_indicies = (\n            random.choice(range(len(sketchy_filename) - 3))\n            for _ in range(sketchy_data.MAX_NUM_LETTER_REPLACEMENTS))\n\n        for index in weird_string_indicies:\n            sketchy_filename.insert(\n                index, random.choice(sketchy_data.WEIRD_STRINGS))\n\n    # Sometimes, add a long random string to the beginning.\n    if random.random() < sketchy_data.LONG_RANDOM_STIRNG_CHANCE:\n        sketchy_filename.insert(\n            0, generate_random_string(random.randint(5, 20)))\n\n    # Always add a random number to reduce collisions, halfway through.\n    sketchy_filename.insert(\n        len(sketchy_filename) // 2,\n        str(random.randint(0, sketchy_data.MAX_ANTI_COLLISION_NUMBER)))\n\n    # DYNAMIC TYPING.\n    sketchy_filename = \"\".join(sketchy_filename)\n\n    # Put it all together.\n    sketchy_path = \"{sketchy_filename}.{filetypes}.{ending_filetype}\".format(\n        sketchy_filename=sketchy_filename, filetypes=\".\".join(filetypes), ending_filetype=ending_filetype)\n\n    return sketchy_path\n"
+        },
+        {
+          "name": "sketchy_data.py",
+          "type": "blob",
+          "size": 2.8974609375,
+          "content": "\n# Yeah yeah yeah you're here to look at the gags go on then do it.\nMAX_NUM_SKETCHY_WORDS = 4\nMAX_NUM_FILETYPES = 2\nMAX_NUM_LETTER_REPLACEMENTS = 1\n\n# Chance to include a big ol random string at the beginning, eg\n# OOF8NS3AJXMFJ371J7G2\nLONG_RANDOM_STIRNG_CHANCE = 0.3\n\n# This is good for a million URLs, but not ten million.\nMAX_ANTI_COLLISION_NUMBER = 1000\n\nDOMAINS = (\"verylegitlink.appspot.com\",\n           \"verylegit.link\",\n           \"secure.verylegit.link\",\n           \"webhost000.verylegit.link\",\n           \"very.verylegit.link\",\n           \"not.verylegit.link\",\n           \"ftp.verylegit.link\",\n           \"win2003.verylegit.link\",\n           \"irc.verylegit.link\",\n           \"ctf.verylegit.link\",\n           \"w61.verylegit.link\",\n           \"666.verylegit.link\",\n           \"1337.verylegit.link\",\n           \"paypal.verylegit.link\",\n           \"facebook.verylegit.link\",\n           \"extremely.absolutely.completely.verylegit.link\",\n           \"this.is.a.verylegit.link\",\n           \"hey.look.a.verylegit.link\",\n           \"click.on.this.verylegit.link\",\n           \"win.a.free.ipad.verylegit.link\",\n           \"click.here.to.get.ripped.in.three.weeks.verylegit.link\"\n          )\nSAMPLE_LONG_URLS = (\"google.com\", \"facebook.com\", \"i.imgur.com/OpYDgt3.gif\")\n\nSCARY_WORDS = (\n    \"free\",\n    \"download\",\n    \"torrent\",\n    \"pcspeedup\",\n    \"malware\",\n    \"virus\",\n    \"resume\",\n    \"index\",\n    \"botnet\",\n    \"trojan\",\n    \"ip-stealer\",\n    \"webcam\",\n    \"spambot\",\n    \"spam\",\n    \"spyware\",\n    \"installer\",\n    \"downloader\",\n    \"movie\",\n    \"pccleaner\",\n    \"invoice\",\n    \"notice\",\n    \"bank\",\n    \"moneygram\",\n    \"paypal\",\n    \"cryptolocker\",\n    \"bitcoin\",\n    \"hack\",\n    \"pcmonitor\",\n    \"speedupurpc\",\n    \"java0day\",\n    \"javaexploit\",\n    \"flashexploit\"\n    \"x86\",\n    \"x64\",\n    \"32\",\n    \"64\",\n    \"ip-camera\",\n    \"botnet\",\n    \"password\",\n    \"filehost\",\n    \"install-now\",\n    \"creditcard\",\n    \"email\",\n    \"login\",\n    \"torrent\",\n    \"warez\",\n    \"cracked\",\n    \"ad\",\n    \"mobiads\",\n    \"shockwave-flash\",\n    \"windows-update\",\n    \"windows7\",\n    \"windows8\",\n    \"iphone\",\n    \"free-iphone\",\n    \"speedup\",\n    \"exploit\",\n    \"test\",\n    \"server1\",\n    \"server1337\",\n    \"private-key\"\n)\n\nFILETYPES = (\n    \"mp4\",\n    \"exe\",\n    \"pdf\",\n    \"msi\",\n    \"dmg\",\n    \"apk\",\n    \"jar\",\n    \"swf\",\n    \"malware\",\n    \"virus\",\n    \"zip\",\n    \"rar\",\n    \"png\",\n    \"gif\",\n    \"docx\",\n    \"docm\",\n    \"xlsx\",\n    \"pptx\",\n    \"js\",\n    \"css\",\n    \"min.js\",\n    \"min.css\",\n    \"html\",\n    \"sh\",\n    \"json\",\n    \"pem\",\n    \"gpg\"\n\n)\n\n# Filetypes that the url could end with.\nENDING_FILETYPES = (\n    \"exe\",\n    \"pdf\",\n    \"docm\",\n)\n\n# Strings to put between the sketchy words.\nDELIMITERS = (\n    \"\",\n    \"-\",\n    \"__\",\n    \"_\",\n    \"+\",\n    \"=\",\n    \"$\",\n    \"!\",\n    \"!!\"\n)\n\n# Characters to replace randomly deleted letters.\n# In some ways these are all weird strings.\nWEIRD_STRINGS = (\n    \"0x8c\"\n    \"*\",\n    \";\",\n    \"-\",\n    \">\",\n    \"@\",\n    \"+\"\n)\n"
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "utils.py",
+          "type": "blob",
+          "size": 1.2890625,
+          "content": "import urllib\nimport base64\n\n\ndef firebase_escape(string):\n    \"\"\"'.$[]#/' are not valid Firebase key characters, so we have to \n    not store them before we can store the URL\"\"\"\n    escaped = base64.urlsafe_b64encode(string.encode(\"utf8\")).decode('utf8')\n    return escaped\n\n\ndef firebase_unescape(string):\n    unescaped = base64.urlsafe_b64decode(string.encode(\"utf8\")).decode('utf8')\n    assert firebase_escape(unescaped) == string\n    return unescaped\n\n\ndef escape_string_args(func):\n    def wrapper(*args, **kwargs):\n        escaped_args = []\n        escaped_kwargs = {}\n        if args is not None:\n            escaped_args = [firebase_escape(arg)\n                            if isinstance(arg, str)\n                            else arg\n                            for arg in args]\n        if kwargs is not None:\n            escaped_kwargs = {\n                key: firebase_escape(value)\n                if isinstance(value, str)\n                else value\n                for key, value in kwargs.items()\n            }\n        return func(*escaped_args, **escaped_kwargs)\n    return wrapper\n\n\ndef unescape_output(func, *args, **kwargs):\n    def wrapper(*args, **kwargs):\n        output = func(*args, **kwargs)\n        if isinstance(output, str):\n            return firebase_unescape(output)\n        return output\n"
+        },
+        {
+          "name": "validate.py",
+          "type": "blob",
+          "size": 1.8427734375,
+          "content": "\nimport urlparse\nimport httplib\n\nclass URLValidator():\n    \"\"\"Decides whether or not a URL is welcome as part of this 150% legit service.\"\"\"\n\n    # I'm sure this will be secure enough.\n    ALLOWED_PROTOCOLS = set((\"http\", \"https\", \"\"))\n\n    # .... Really?\n    MAXIMUM_URL_LENGTH = 2083\n\n    def __init__(self, url):\n        if not (url.startswith(\"http://\") or url.startswith(\"https://\")):\n            url = \"http://\" + url\n        self.url = url\n        self.url_parts = urlparse.urlparse(self.url)\n        print(url)\n        print(self.url_parts)\n        self.protocol = self.url_parts.scheme\n\n        # The domain becomes the path if there is no protocol.\n        if self.protocol:\n            self.domain = self.url_parts.netloc\n        else:\n            self.domain = self.url_parts.path\n\n    def validate_url(self):\n        \"\"\"\n        Checks that a URL is in fact a URL and not some other string\n        url: The url to validate\n\n        To add more validation checks, add a method to this class and call it in the all() function in this method.\n        \"\"\"\n\n        return all((self.check_length(), self.check_external(), self.check_protocol(), self.check_dns()))\n\n    def check_length(self):\n        return len(self.url) <= self.MAXIMUM_URL_LENGTH\n\n    def check_protocol(self):\n        \"\"\"Checks that the URL has a protocol that we're willing to obfuscate (http or https or no protocol)\"\"\"\n        # Reject unknown protocols.\n        return self.protocol in self.ALLOWED_PROTOCOLS\n\n    def check_dns(self):\n        \"\"\"\n        Does a DNS lookup on the domain part of the URL to check that it resolves\n        \"\"\"\n        try:\n            httplib.HTTPConnection(self.domain).request(\"GET\", \"/\")\n            return True\n        except gaierror:\n            return False\n\n    def check_external(self):\n        \"\"\"No localhost for you.\"\"\"\n        return self.domain != \"localhost\"\n"
+        }
+      ]
+    }
+  ]
+}

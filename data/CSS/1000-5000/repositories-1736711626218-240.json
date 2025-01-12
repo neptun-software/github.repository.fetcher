@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "timestamp": 1736711626218,
+    "page": 240,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "reworkcss/css",
+      "stars": 1588,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "node_modules\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": "arch:\n - amd64\n - ppc64le\nlanguage: node_js\nnode_js:\n  - \"12.18.2\"\n"
+        },
+        {
+          "name": "History.md",
+          "type": "blob",
+          "size": 1.59375,
+          "content": "2.2.1 / 2015-06-17\n==================\n\n * fix parsing escaped quotes in quoted strings\n\n2.2.0 / 2015-02-18\n==================\n\n * add `parsingErrors` to list errors when parsing with `silent: true`\n * accept EOL characters and all other whitespace characters in `@` rules such\n   as `@media`\n\n2.1.0 / 2014-08-05\n==================\n\n  * change error message format and add `.reason` property to errors\n  * add `inputSourcemaps` option to disable input source map processing\n  * use `inherits` for inheritance (fixes some browsers)\n  * add `sourcemap: 'generator'` option to return the `SourceMapGenerator`\n    object\n\n2.0.0 / 2014-06-18\n==================\n\n  * add non-enumerable parent reference to each node\n  * drop Component(1) support\n  * add support for @custom-media, @host, and @font-face\n  * allow commas inside selector functions\n  * allow empty property values\n  * changed default options.position value to true\n  * remove comments from properties and values\n  * asserts when selectors are missing\n  * added node.position.content property\n  * absorb css-parse and css-stringify libraries\n  * apply original source maps from source files\n\n1.6.1 / 2014-01-02\n==================\n\n  * fix component.json\n\n1.6.0 / 2013-12-21\n==================\n\n  * update deps\n\n1.5.0 / 2013-12-03\n==================\n\n  * update deps\n\n1.1.0 / 2013-04-04\n==================\n\n  * update deps\n\n1.0.7 / 2012-11-21\n==================\n\n  * fix component.json\n\n1.0.4 / 2012-11-15\n==================\n\n  * update css-stringify\n\n1.0.3 / 2012-09-01\n==================\n\n  * add component support\n\n0.0.1 / 2010-01-03\n==================\n\n  * Initial release\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.072265625,
+          "content": "(The MIT License)\n\nCopyright (c) 2012 TJ Holowaychuk <tj@vision-media.ca>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the 'Software'), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 7.6572265625,
+          "content": "# css [![Build Status](https://travis-ci.org/reworkcss/css.svg?branch=master)](https://travis-ci.org/reworkcss/css)\n\nCSS parser / stringifier.\n\n## Installation\n\n    $ npm install css\n\n## Usage\n\n```js\nvar css = require('css');\nvar obj = css.parse('body { font-size: 12px; }', options);\ncss.stringify(obj, options);\n```\n\n## API\n\n### css.parse(code, [options])\n\nAccepts a CSS string and returns an AST `object`.\n\n`options`:\n\n- silent: silently fail on parse errors.\n- source: the path to the file containing `css`. Makes errors and source\n  maps more helpful, by letting them know where code comes from.\n\n### css.stringify(object, [options])\n\nAccepts an AST `object` (as `css.parse` produces) and returns a CSS string.\n\n`options`:\n\n- indent: the string used to indent the output. Defaults to two spaces.\n- compress: omit comments and extraneous whitespace.\n- sourcemap: return a sourcemap along with the CSS output. Using the `source`\n  option of `css.parse` is strongly recommended when creating a source map.\n  Specify `sourcemap: 'generator'` to return the SourceMapGenerator object\n  instead of serializing the source map.\n- inputSourcemaps: (enabled by default, specify `false` to disable) reads any\n  source maps referenced by the input files when generating the output source\n  map. When enabled, file system access may be required for reading the\n  referenced source maps.\n\n### Example\n\n```js\nvar ast = css.parse('body { font-size: 12px; }', { source: 'source.css' });\n\nvar css = css.stringify(ast);\n\nvar result = css.stringify(ast, { sourcemap: true });\nresult.code // string with CSS\nresult.map // source map object\n```\n\n### Errors\n\nErrors thrown during parsing have the following properties:\n\n- message: `String`. The full error message with the source position.\n- reason: `String`. The error message without position.\n- filename: `String` or `undefined`. The value of `options.source` if\n  passed to `css.parse`. Otherwise `undefined`.\n- line: `Integer`.\n- column: `Integer`.\n- source: `String`. The portion of code that couldn't be parsed.\n\nWhen parsing with the `silent` option, errors are listed in the\n`parsingErrors` property of the [`stylesheet`](#stylesheet) node instead\nof being thrown.\n\nIf you create any errors in plugins such as in\n[rework](https://github.com/reworkcss/rework), you __must__ set the same\nproperties for consistency.\n\n## AST\n\nInteractively explore the AST with <http://iamdustan.com/reworkcss_ast_explorer/>.\n\n### Common properties\n\nAll nodes have the following properties.\n\n#### position\n\nInformation about the position in the source string that corresponds to\nthe node.\n\n`Object`:\n\n- start: `Object`:\n  - line: `Number`.\n  - column: `Number`.\n- end: `Object`:\n  - line: `Number`.\n  - column: `Number`.\n- source: `String` or `undefined`. The value of `options.source` if passed to\n  `css.parse`. Otherwise `undefined`.\n- content: `String`. The full source string passed to `css.parse`.\n\nThe line and column numbers are 1-based: The first line is 1 and the first\ncolumn of a line is 1 (not 0).\n\nThe `position` property lets you know from which source file the node comes\nfrom (if available), what that file contains, and what part of that file was\nparsed into the node.\n\n#### type\n\n`String`. The possible values are the ones listed in the Types section below.\n\n#### parent\n\nA reference to the parent node, or `null` if the node has no parent.\n\n### Types\n\nThe available values of `node.type` are listed below, as well as the available\nproperties of each node (other than the common properties listed above.)\n\n#### stylesheet\n\nThe root node returned by `css.parse`.\n\n- stylesheet: `Object`:\n  - rules: `Array` of nodes with the types `rule`, `comment` and any of the\n    at-rule types.\n  - parsingErrors: `Array` of `Error`s. Errors collected during parsing when\n    option `silent` is true.\n\n#### rule\n\n- selectors: `Array` of `String`s. The list of selectors of the rule, split\n  on commas. Each selector is trimmed from whitespace and comments.\n- declarations: `Array` of nodes with the types `declaration` and `comment`.\n\n#### declaration\n\n- property: `String`. The property name, trimmed from whitespace and\n  comments. May not be empty.\n- value: `String`. The value of the property, trimmed from whitespace and\n  comments. Empty values are allowed.\n\n#### comment\n\nA rule-level or declaration-level comment. Comments inside selectors,\nproperties and values etc. are lost.\n\n- comment: `String`. The part between the starting `/*` and the ending `*/`\n  of the comment, including whitespace.\n\n#### charset\n\nThe `@charset` at-rule.\n\n- charset: `String`. The part following `@charset `.\n\n#### custom-media\n\nThe `@custom-media` at-rule.\n\n- name: `String`. The `--`-prefixed name.\n- media: `String`. The part following the name.\n\n#### document\n\nThe `@document` at-rule.\n\n- document: `String`. The part following `@document `.\n- vendor: `String` or `undefined`. The vendor prefix in `@document`, or\n  `undefined` if there is none.\n- rules: `Array` of nodes with the types `rule`, `comment` and any of the\n  at-rule types.\n\n#### font-face\n\nThe `@font-face` at-rule.\n\n- declarations: `Array` of nodes with the types `declaration` and `comment`.\n\n#### host\n\nThe `@host` at-rule.\n\n- rules: `Array` of nodes with the types `rule`, `comment` and any of the\n  at-rule types.\n\n#### import\n\nThe `@import` at-rule.\n\n- import: `String`. The part following `@import `.\n\n#### keyframes\n\nThe `@keyframes` at-rule.\n\n- name: `String`. The name of the keyframes rule.\n- vendor: `String` or `undefined`. The vendor prefix in `@keyframes`, or\n  `undefined` if there is none.\n- keyframes: `Array` of nodes with the types `keyframe` and `comment`.\n\n#### keyframe\n\n- values: `Array` of `String`s. The list of “selectors” of the keyframe rule,\n  split on commas. Each “selector” is trimmed from whitespace.\n- declarations: `Array` of nodes with the types `declaration` and `comment`.\n\n#### media\n\nThe `@media` at-rule.\n\n- media: `String`. The part following `@media `.\n- rules: `Array` of nodes with the types `rule`, `comment` and any of the\n  at-rule types.\n\n#### namespace\n\nThe `@namespace` at-rule.\n\n- namespace: `String`. The part following `@namespace `.\n\n#### page\n\nThe `@page` at-rule.\n\n- selectors: `Array` of `String`s. The list of selectors of the rule, split\n  on commas. Each selector is trimmed from whitespace and comments.\n- declarations: `Array` of nodes with the types `declaration` and `comment`.\n\n#### supports\n\nThe `@supports` at-rule.\n\n- supports: `String`. The part following `@supports `.\n- rules: `Array` of nodes with the types `rule`, `comment` and any of the\n  at-rule types.\n\n### Example\n\nCSS:\n\n```css\nbody {\n  background: #eee;\n  color: #888;\n}\n```\n\nParse tree:\n\n```json\n{\n  \"type\": \"stylesheet\",\n  \"stylesheet\": {\n    \"rules\": [\n      {\n        \"type\": \"rule\",\n        \"selectors\": [\n          \"body\"\n        ],\n        \"declarations\": [\n          {\n            \"type\": \"declaration\",\n            \"property\": \"background\",\n            \"value\": \"#eee\",\n            \"position\": {\n              \"start\": {\n                \"line\": 2,\n                \"column\": 3\n              },\n              \"end\": {\n                \"line\": 2,\n                \"column\": 19\n              }\n            }\n          },\n          {\n            \"type\": \"declaration\",\n            \"property\": \"color\",\n            \"value\": \"#888\",\n            \"position\": {\n              \"start\": {\n                \"line\": 3,\n                \"column\": 3\n              },\n              \"end\": {\n                \"line\": 3,\n                \"column\": 14\n              }\n            }\n          }\n        ],\n        \"position\": {\n          \"start\": {\n            \"line\": 1,\n            \"column\": 1\n          },\n          \"end\": {\n            \"line\": 4,\n            \"column\": 2\n          }\n        }\n      }\n    ]\n  }\n}\n```\n\n## License\n\nMIT\n"
+        },
+        {
+          "name": "benchmark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "generate-tests.js",
+          "type": "blob",
+          "size": 1.5341796875,
+          "content": "// Generates missing output source and AST files for the test cases\n// IMPORTANT: Always verify the generated files when using this!\n\nvar fs = require('fs');\nvar path = require('path');\nvar parse = require('./').parse;\nvar stringify = require('./').stringify;\n\nvar casesDir = path.join(__dirname, 'test', 'cases');\nvar cases = fs.readdirSync(casesDir)\n    .map(function(f) { return path.join(casesDir, f); });\n\ncases.forEach(function(dir) {\n    var inputFile = path.join(dir, 'input.css');\n    if (!fs.existsSync(inputFile))\n        throw new Error('Missing input file ' + inputFile);\n\n    var input = fs.readFileSync(inputFile, 'utf8');\n    var parsed;\n    try {\n        parsed = parse(input, { source: 'input.css' });\n    } catch(e) {\n        console.log('Failed to parse', inputFile);\n        throw e;\n    }\n\n    var outputFile = path.join(dir, 'output.css');\n    if (!fs.existsSync(outputFile)) {\n        console.log('Generating', outputFile);\n        var output = stringify(parsed);\n        fs.writeFileSync(outputFile, output, 'utf8');\n    }\n\n    var compressedFile = path.join(dir, 'compressed.css');\n    if (!fs.existsSync(compressedFile)) {\n        console.log('Generating', compressedFile);\n        var compressed = stringify(parsed, { compress: true });\n        fs.writeFileSync(compressedFile, compressed, 'utf8');\n    }\n\n    var astFile = path.join(dir, 'ast.json');\n    if (!fs.existsSync(astFile)) {\n        console.log('Generating', astFile);\n        var ast = JSON.stringify(parsed, null, '  ');\n        fs.writeFileSync(astFile, ast, 'utf8');\n    }\n});\n"
+        },
+        {
+          "name": "index.js",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "exports.parse = require('./lib/parse');\nexports.stringify = require('./lib/stringify');\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.740234375,
+          "content": "{\n  \"name\": \"css\",\n  \"version\": \"3.0.0\",\n  \"description\": \"CSS parser / stringifier\",\n  \"main\": \"index\",\n  \"files\": [\n    \"index.js\",\n    \"lib\",\n    \"Readme.md\"\n  ],\n  \"dependencies\": {\n    \"inherits\": \"^2.0.4\",\n    \"source-map\": \"^0.6.1\",\n    \"source-map-resolve\": \"^0.6.0\"\n  },\n  \"devDependencies\": {\n    \"mocha\": \"^8.0.1\",\n    \"should\": \"^13.2.3\",\n    \"matcha\": \"^0.7.0\",\n    \"bytes\": \"^3.1.0\"\n  },\n  \"scripts\": {\n    \"benchmark\": \"matcha\",\n    \"test\": \"mocha --require should --reporter spec test/*.js\"\n  },\n  \"author\": \"TJ Holowaychuk <tj@vision-media.ca>\",\n  \"license\": \"MIT\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/reworkcss/css.git\"\n  },\n  \"keywords\": [\n    \"css\",\n    \"parser\",\n    \"stringifier\",\n    \"stylesheet\"\n  ]\n}\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

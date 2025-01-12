@@ -1,0 +1,214 @@
+{
+  "metadata": {
+    "timestamp": 1736711692758,
+    "page": 386,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "stormzhang/stormzhang.github.com",
+      "stars": 1144,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0869140625,
+          "content": "_site/*\n_theme_packages/*\n\nThumbs.db\n.DS_Store\n\n!.gitkeep\n\n.rbenv-version\n.rvmrc\n\n*.swp\n\n"
+        },
+        {
+          "name": "404.html",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "Sorry this page does not exist =(\n"
+        },
+        {
+          "name": "656c4e0af184b96f66702ccc4f2b3255.txt",
+          "type": "blob",
+          "size": 0.03125,
+          "content": "656c4e0af184b96f66702ccc4f2b3255"
+        },
+        {
+          "name": "CNAME",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "stormzhang.com"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.5078125,
+          "content": "## stormzhang的个人博客\n\n基于jekyll的个人博客站点[http://stormzhang.com](http://stormzhang.com)，主题风格本着\"simple is beautiful\"的原则。\n\n## 关于我\n\nAndroid开发者 + Ruby语言爱好者 + Google脑残粉，爱技术， 爱开源， 爱设计， 爱赚钱。互联网中毒症患者，Want to make a good app!\n\n## 联系我\n\n* Github: [stormzhang](https://github.com/stormzhang)\n\n* Weibo: [googdev](http://weibo.com/zhangqi8)\n\n* 知乎: [stormzhang](http://www.zhihu.com/people/stormzhang)"
+        },
+        {
+          "name": "Rakefile",
+          "type": "blob",
+          "size": 10.7421875,
+          "content": "require \"rubygems\"\nrequire 'rake'\nrequire 'yaml'\nrequire 'time'\n\nSOURCE = \".\"\nCONFIG = {\n  'version' => \"0.3.0\",\n  'themes' => File.join(SOURCE, \"_includes\", \"themes\"),\n  'layouts' => File.join(SOURCE, \"_layouts\"),\n  'posts' => File.join(SOURCE, \"_posts\"),\n  'post_ext' => \"html\",\n  'theme_package_version' => \"0.1.0\"\n}\n\n# Path configuration helper\nmodule JB\n  class Path\n    SOURCE = \".\"\n    Paths = {\n      :layouts => \"_layouts\",\n      :themes => \"_includes/themes\",\n      :theme_assets => \"assets/themes\",\n      :theme_packages => \"_theme_packages\",\n      :posts => \"_posts\"\n    }\n    \n    def self.base\n      SOURCE\n    end\n\n    # build a path relative to configured path settings.\n    def self.build(path, opts = {})\n      opts[:root] ||= SOURCE\n      path = \"#{opts[:root]}/#{Paths[path.to_sym]}/#{opts[:node]}\".split(\"/\")\n      path.compact!\n      File.__send__ :join, path\n    end\n  \n  end #Path\nend #JB\n\n# Usage: rake post title=\"A Title\" [date=\"2012-02-09\"] [tags=[tag1, tag2]]\ndesc \"Begin a new post in #{CONFIG['posts']}\"\ntask :post do\n  abort(\"rake aborted: '#{CONFIG['posts']}' directory not found.\") unless FileTest.directory?(CONFIG['posts'])\n  title = ENV[\"title\"] || \"new-post\"\n  tags = ENV[\"tags\"] || \"[]\"\n  slug = title.downcase.strip.gsub(' ', '-').gsub(/[^\\w-]/, '')\n  begin\n    date = (ENV['date'] ? Time.parse(ENV['date']) : Time.now).strftime('%Y-%m-%d')\n  rescue Exception => e\n    puts \"Error - date format must be YYYY-MM-DD, please check you typed it correctly!\"\n    exit -1\n  end\n  filename = File.join(CONFIG['posts'], \"#{date}-#{slug}.#{CONFIG['post_ext']}\")\n  if File.exist?(filename)\n    abort(\"rake aborted!\") if ask(\"#{filename} already exists. Do you want to overwrite?\", ['y', 'n']) == 'n'\n  end\n  \n  puts \"Creating new post: #{filename}\"\n  open(filename, 'w') do |post|\n    post.puts \"---\"\n    post.puts \"layout: post\"\n    post.puts \"keywords: blog\"\n    post.puts \"description: blog\"\n    post.puts \"title: \\\"#{title.gsub(/-/,' ')}\\\"\"\n    post.puts \"categories: [Archive]\"\n    post.puts \"tags: [Archive]\"\n    post.puts 'group: archive'\n    post.puts 'icon: file-alt'\n    post.puts \"---\"\n    post.puts \"{% include codepiano/setup %}\"\n  end\nend # task :post\n\n# Usage: rake page name=\"about.html\"\n# You can also specify a sub-directory path.\n# If you don't specify a file extention we create an index.html at the path specified\ndesc \"Create a new page.\"\ntask :page do\n  name = ENV[\"name\"] || \"new-page.md\"\n  filename = File.join(SOURCE, \"#{name}\")\n  filename = File.join(filename, \"index.html\") if File.extname(filename) == \"\"\n  title = File.basename(filename, File.extname(filename)).gsub(/[\\W\\_]/, \" \").gsub(/\\b\\w/){$&.upcase}\n  if File.exist?(filename)\n    abort(\"rake aborted!\") if ask(\"#{filename} already exists. Do you want to overwrite?\", ['y', 'n']) == 'n'\n  end\n  \n  mkdir_p File.dirname(filename)\n  puts \"Creating new page: #{filename}\"\n  open(filename, 'w') do |post|\n    post.puts \"---\"\n    post.puts \"layout: page\"\n    post.puts \"keywords: blog\"\n    post.puts \"description: blog\"\n    post.puts \"title: \\\"#{title}\\\"\"\n    post.puts 'group: static'\n    post.puts \"---\"\n    post.puts \"{% include codepiano/setup %}\"\n  end\nend # task :page\n\ndesc \"Launch preview environment\"\ntask :preview do\n  system \"jekyll --auto --server\"\nend # task :preview\n\n# Public: Alias - Maintains backwards compatability for theme switching.\ntask :switch_theme => \"theme:switch\"\n\nnamespace :theme do\n  \n  # Public: Switch from one theme to another for your blog.\n  #\n  # name - String, Required. name of the theme you want to switch to.\n  #        The the theme must be installed into your JB framework.\n  #\n  # Examples\n  #\n  #   rake theme:switch name=\"the-program\"\n  #\n  # Returns Success/failure messages.\n  desc \"Switch between Jekyll-bootstrap themes.\"\n  task :switch do\n    theme_name = ENV[\"name\"].to_s\n    theme_path = File.join(CONFIG['themes'], theme_name)\n    settings_file = File.join(theme_path, \"settings.yml\")\n    non_layout_files = [\"settings.yml\"]\n\n    abort(\"rake aborted: name cannot be blank\") if theme_name.empty?\n    abort(\"rake aborted: '#{theme_path}' directory not found.\") unless FileTest.directory?(theme_path)\n    abort(\"rake aborted: '#{CONFIG['layouts']}' directory not found.\") unless FileTest.directory?(CONFIG['layouts'])\n\n    Dir.glob(\"#{theme_path}/*\") do |filename|\n      next if non_layout_files.include?(File.basename(filename).downcase)\n      puts \"Generating '#{theme_name}' layout: #{File.basename(filename)}\"\n\n      open(File.join(CONFIG['layouts'], File.basename(filename)), 'w') do |page|\n        if File.basename(filename, \".html\").downcase == \"default\"\n          page.puts \"---\"\n          page.puts File.read(settings_file) if File.exist?(settings_file)\n          page.puts \"---\"\n        else\n          page.puts \"---\"\n          page.puts \"layout: default\"\n          page.puts \"---\"\n        end \n        page.puts \"{% include codepiano/setup %}\"\n        page.puts \"{% include themes/#{theme_name}/#{File.basename(filename)} %}\" \n      end\n    end\n    \n    puts \"=> Theme successfully switched!\"\n    puts \"=> Reload your web-page to check it out =)\"\n  end # task :switch\n  \n  # Public: Install a theme using the theme packager.\n  # Version 0.1.0 simple 1:1 file matching.\n  #\n  # git  - String, Optional path to the git repository of the theme to be installed.\n  # name - String, Optional name of the theme you want to install.\n  #        Passing name requires that the theme package already exist.\n  #\n  # Examples\n  #\n  #   rake theme:install git=\"https://github.com/jekyllbootstrap/theme-twitter.git\"\n  #   rake theme:install name=\"cool-theme\"\n  #\n  # Returns Success/failure messages.\n  desc \"Install theme\"\n  task :install do\n    if ENV[\"git\"]\n      manifest = theme_from_git_url(ENV[\"git\"])\n      name = manifest[\"name\"]\n    else\n      name = ENV[\"name\"].to_s.downcase\n    end\n\n    packaged_theme_path = JB::Path.build(:theme_packages, :node => name)\n    \n    abort(\"rake aborted!\n      => ERROR: 'name' cannot be blank\") if name.empty?\n    abort(\"rake aborted! \n      => ERROR: '#{packaged_theme_path}' directory not found.\n      => Installable themes can be added via git. You can find some here: http://github.com/jekyllbootstrap\n      => To download+install run: `rake theme:install git='[PUBLIC-CLONE-URL]'`\n      => example : rake theme:install git='git@github.com:jekyllbootstrap/theme-the-program.git'\n    \") unless FileTest.directory?(packaged_theme_path)\n    \n    manifest = verify_manifest(packaged_theme_path)\n    \n    # Get relative paths to packaged theme files\n    # Exclude directories as they'll be recursively created. Exclude meta-data files.\n    packaged_theme_files = []\n    FileUtils.cd(packaged_theme_path) {\n      Dir.glob(\"**/*.*\") { |f| \n        next if ( FileTest.directory?(f) || f =~ /^(manifest|readme|packager)/i )\n        packaged_theme_files << f \n      }\n    }\n    \n    # Mirror each file into the framework making sure to prompt if already exists.\n    packaged_theme_files.each do |filename|\n      file_install_path = File.join(JB::Path.base, filename)\n      if File.exist? file_install_path and ask(\"#{file_install_path} already exists. Do you want to overwrite?\", ['y', 'n']) == 'n'\n        next\n      else\n        mkdir_p File.dirname(file_install_path)\n        cp_r File.join(packaged_theme_path, filename), file_install_path\n      end\n    end\n    \n    puts \"=> #{name} theme has been installed!\"\n    puts \"=> ---\"\n    if ask(\"=> Want to switch themes now?\", ['y', 'n']) == 'y'\n      system(\"rake switch_theme name='#{name}'\")\n    end\n  end\n\n  # Public: Package a theme using the theme packager.\n  # The theme must be structured using valid JB API.\n  # In other words packaging is essentially the reverse of installing.\n  #\n  # name - String, Required name of the theme you want to package.\n  #        \n  # Examples\n  #\n  #   rake theme:package name=\"twitter\"\n  #\n  # Returns Success/failure messages.\n  desc \"Package theme\"\n  task :package do\n    name = ENV[\"name\"].to_s.downcase\n    theme_path = JB::Path.build(:themes, :node => name)\n    asset_path = JB::Path.build(:theme_assets, :node => name)\n\n    abort(\"rake aborted: name cannot be blank\") if name.empty?\n    abort(\"rake aborted: '#{theme_path}' directory not found.\") unless FileTest.directory?(theme_path)\n    abort(\"rake aborted: '#{asset_path}' directory not found.\") unless FileTest.directory?(asset_path)\n    \n    ## Mirror theme's template directory (_includes)\n    packaged_theme_path = JB::Path.build(:themes, :root => JB::Path.build(:theme_packages, :node => name))\n    mkdir_p packaged_theme_path\n    cp_r theme_path, packaged_theme_path\n    \n    ## Mirror theme's asset directory\n    packaged_theme_assets_path = JB::Path.build(:theme_assets, :root => JB::Path.build(:theme_packages, :node => name))\n    mkdir_p packaged_theme_assets_path\n    cp_r asset_path, packaged_theme_assets_path\n\n    ## Log packager version\n    packager = {\"packager\" => {\"version\" => CONFIG[\"theme_package_version\"].to_s } }\n    open(JB::Path.build(:theme_packages, :node => \"#{name}/packager.yml\"), \"w\") do |page|\n      page.puts packager.to_yaml\n    end\n    \n    puts \"=> '#{name}' theme is packaged and available at: #{JB::Path.build(:theme_packages, :node => name)}\"\n  end\n  \nend # end namespace :theme\n\n# Internal: Download and process a theme from a git url.\n# Notice we don't know the name of the theme until we look it up in the manifest.\n# So we'll have to change the folder name once we get the name.\n#\n# url - String, Required url to git repository.\n#        \n# Returns theme manifest hash\ndef theme_from_git_url(url)\n  tmp_path = JB::Path.build(:theme_packages, :node => \"_tmp\")\n  abort(\"rake aborted: system call to git clone failed\") if !system(\"git clone #{url} #{tmp_path}\")\n  manifest = verify_manifest(tmp_path)\n  new_path = JB::Path.build(:theme_packages, :node => manifest[\"name\"])\n  if File.exist?(new_path) && ask(\"=> #{new_path} theme package already exists. Override?\", ['y', 'n']) == 'n'\n    remove_dir(tmp_path)\n    abort(\"rake aborted: '#{manifest[\"name\"]}' already exists as theme package.\")\n  end\n\n  remove_dir(new_path) if File.exist?(new_path)\n  mv(tmp_path, new_path)\n  manifest\nend\n\n# Internal: Process theme package manifest file.\n#\n# theme_path - String, Required. File path to theme package.\n#        \n# Returns theme manifest hash\ndef verify_manifest(theme_path)\n  manifest_path = File.join(theme_path, \"manifest.yml\")\n  manifest_file = File.open( manifest_path )\n  abort(\"rake aborted: repo must contain valid manifest.yml\") unless File.exist? manifest_file\n  manifest = YAML.load( manifest_file )\n  manifest_file.close\n  manifest\nend\n\ndef ask(message, valid_options)\n  if valid_options\n    answer = get_stdin(\"#{message} #{valid_options.to_s.gsub(/\"/, '').gsub(/, /,'/')} \") while !valid_options.include?(answer)\n  else\n    answer = get_stdin(message)\n  end\n  answer\nend\n\ndef get_stdin(message)\n  print message\n  STDIN.gets.chomp\nend\n\n#Load custom rake scripts\nDir['_rake/*.rake'].each { |r| load r }\n"
+        },
+        {
+          "name": "XzMgXM9GW0jp8-_LKZO1u7Fc-sQ.html",
+          "type": "blob",
+          "size": 0.2529296875,
+          "content": "<html>\n    <head>\n        <meta name=\"alexaVerifyID\" content=\"XzMgXM9GW0jp8-_LKZO1u7Fc-sQ\" />\n    </head>\n    <body>\n        <p>Great! The file uploaded properly.  Now click the 'Verify my file' button to\n        complete the process.</p>\n    </body>\n</html>\n"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 3.8876953125,
+          "content": "# This is the default format. \n# For more see: http://jekyllrb.com/docs/permalinks/\npermalink: /:categories/:year/:month/:day/:title/\n\nexclude: [\".rvmrc\", \".rbenv-version\", \"README.md\", \"Rakefile\", \"changelog.md\"]\n# auto: true\nhighlighter: pygments\npaginate: 5\n\ntitle : 做好现在的事儿\ntagline: 爱生活，爱技术，爱科技，爱折腾\nauthor :\n  name : stormzhang\n  description: Android Developer, Google Fans, Like OpenSource\n  email : zhangqi.dev@qq.com\n  github : https://github.com/stormzhang\n  twitter : http://twitter.com/storm4android\n  simple_search: http://google.com/search\n\n# The production_url is only used when full-domain names are needed\n# such as sitemap.txt \n# Most places will/should use BASE_PATH to make the urls\n#\n# If you have set a CNAME (pages.github.com) set your custom domain here.\n# Else if you are pushing to username.github.io, replace with your username.\n# Finally if you are pushing to a GitHub project page, include the project name at the end.\n#\nproduction_url : http://stormzhang.com\n\n# All Jekyll-Bootstrap specific configurations are namespaced into this hash\n#\ncodepiano :\n  version : 0.3.0\n\n  # All links will be namespaced by BASE_PATH if defined.\n  # Links in your website should always be prefixed with {{BASE_PATH}}\n  # however this value will be dynamically changed depending on your deployment situation.\n  #\n  # CNAME (http://yourcustomdomain.com)\n  #   DO NOT SET BASE_PATH \n  #   (urls will be prefixed with \"/\" and work relatively)\n  #\n  # GitHub Pages (http://username.github.io)\n  #   DO NOT SET BASE_PATH \n  #   (urls will be prefixed with \"/\" and work relatively)\n  #\n  # GitHub Project Pages (http://username.github.io/project-name)\n  #\n  #   A GitHub Project site exists in the `gh-pages` branch of one of your repositories.\n  #  REQUIRED! Set BASE_PATH to: http://username.github.io/project-name\n  #\n  # CAUTION:\n  #   - When in Localhost, your site will run from root \"/\" regardless of BASE_PATH\n  #   - Only the following values are falsy: [\"\", null, false]\n  #   - When setting BASE_PATH it must be a valid url.\n  #     This means always setting the protocol (http|https) or prefixing with \"/\"\n  BASE_PATH : false\n\n  # By default, the asset_path is automatically defined relative to BASE_PATH plus the enabled theme.\n  # ex: [BASE_PATH]/assets/themes/[THEME-NAME]\n  #\n  # Override this by defining an absolute path to assets here.\n  # ex: \n  #   http://s3.amazonaws.com/yoursite/themes/watermelon\n  #   /assets\n  #\n  ASSET_PATH : false\n\n  # These paths are to the main pages Jekyll-Bootstrap ships with.\n  # Some JB helpers refer to these paths; change them here if needed.\n  #\n  archive_path: /posts.html\n  categories_path : /categories.html\n  tags_path : /posts.html\n  atom_path : /atom.xml\n  rss_path : /rss.xml\n\n  # Settings for comments helper\n  # Set 'provider' to the comment provider you want to use.\n  # Set 'provider' to false to turn commenting off globally.\n  #\n  comments :\n    provider : disqus\n    disqus :\n      short_name : stormsblog\n   \n  # Settings for analytics helper\n  # Set 'provider' to the analytics provider you want to use.\n  # Set 'provider' to false to turn analytics off globally.\n  #        \n  analytics :\n    provider : custom\n  #  google : \n  #      tracking_id : 'UA-22956003-2'\n\n  # Settings for sharing helper. \n  # Sharing is for things like tweet, plusone, like, reddit buttons etc.\n  # Set 'provider' to the sharing provider you want to use.\n  # Set 'provider' to false to turn sharing off globally.\n  #\n  sharing :\n    provider : false\n    \n  # Settings for all other include helpers can be defined by creating \n  # a hash with key named for the given helper. ex:\n  #\n  #   pages_list :\n  #     provider : \"custom\"   \n  #\n  # Setting any helper's provider to 'custom' will bypass the helper code\n  # and include your custom code. Your custom file must be defined at:\n  #   ./_includes/custom/[HELPER]\n  # where [HELPER] is the name of the helper you are overriding.\n  \n"
+        },
+        {
+          "name": "_includes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_layouts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_plugins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_posts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "about.html",
+          "type": "blob",
+          "size": 2.3046875,
+          "content": "---\nlayout: page\ntitle: 关于\nheader: about me\ngroup: navigation\nindex: 4\n---\n{% include codepiano/setup %}\n\n<h2 id=\"\">关于我</h2>\n\n<ul>\n<li>大众版</li>\n</ul>\n\n<p>Android开发者 + Ruby语言爱好者 + Google脑残粉，爱技术，爱尝鲜，爱开源，爱设计，也爱赚钱！ 热爱并沉溺于移动互联网，Want to make a good app!</p>\n\n<p>如果想更多的了解我，看这里<a href=\"http://stormzhang.com/my-progress\">我的大事记</a></p>\n\n<ul>\n<li>Ruby版</li>\n</ul>\n\n{% highlight ruby %}\nname = 'Storm'\nreal_name = '张奇'\ndescription = 'Android Developer, Google Fans, Love Open Source'\ncompany = '薄荷科技'\n\nsina_weibo = 'googdev'\nemail = 'stormzhang.dev$#mail.com'.gsub('$#', '@')\nblog = 'http://stormzhang.com'\ngithub = 'https://github.com/stormzhang'\n\nwhile true\n  programing\n  reading\n  enjoying\nend\n{% endhighlight %}\n\n<h2 id=\"_2\">联系我</h2>\n\n<ul>\n<li>\n<p>GitHub: <a href=\"https://github.com/stormzhang\">stormzhang</a></p>\n</li>\n\n<li>\n<p>微博: <a href=\"http://weibo.com/zhangqi8\">googdev</a></p>\n</li>\n\n<li>\n<p>知乎: <a href=\"http://www.zhihu.com/people/stormzhang\">stormzhang</a></p>\n</li>\n\n<li>\n<p>微信公众号: AndroidDeveloper (专注Android干货分享)，本博客没有rss订阅，建议关注微信公众号，博客更新或干货分享第一时间推送</p>\n<img src=\"/image/weixinpublic.jpg\" />\n</li>\n<br />\n\n<li>\n<p>打赏我：如果觉得我的博客，或者我的各种分享对您有帮助，不妨支付宝扫描打赏我杯咖啡吧，我将更有动力。</p>\n<img src=\"/image/zhifubao.jpg\" />\n</li>\n\n<br />\n\n<div id=\"comment-hook\">\n<!-- 多说评论框 start -->\n\t<div class=\"ds-thread\" data-thread-key=\"about.html\" data-title=\"{{ page.title }}\" data-url=\"http://stormzhang.com{{ page.url }}\"></div>\n<!-- 多说评论框 end -->\n<!-- 多说公共JS代码 start (一个网页只需插入一次) -->\n<script type=\"text/javascript\">\nvar duoshuoQuery = {short_name:\"stormzhang\"};\n\t(function() {\n\t\tvar ds = document.createElement('script');\n\t\tds.type = 'text/javascript';ds.async = true;\n\t\tds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';\n\t\tds.charset = 'UTF-8';\n\t\t(document.getElementsByTagName('head')[0] \n\t\t || document.getElementsByTagName('body')[0]).appendChild(ds);\n\t})();\n\t</script>\n<!-- 多说公共JS代码 end -->\n</div>\n"
+        },
+        {
+          "name": "apk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "atom.xml",
+          "type": "blob",
+          "size": 0.7880859375,
+          "content": "---\nlayout: null\ntitle : Atom Feed\n---\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\">\n \n <title>{{ site.title }}</title>\n <link href=\"{{ site.production_url }}/{{ site.atom_path }}\" rel=\"self\"/>\n <link href=\"{{ site.production_url }}\"/>\n <updated>{{ site.time | date_to_xmlschema }}</updated>\n <id>{{ site.production_url }}</id>\n <author>\n   <name>{{ site.author.name }}</name>\n   <email>{{ site.author.email }}</email>\n </author>\n\n {% for post in site.posts %}\n <entry>\n   <title>{{ post.title }}</title>\n   <link href=\"{{ site.production_url }}{{ post.url }}\"/>\n   <updated>{{ post.date | date_to_xmlschema }}</updated>\n   <id>{{ site.production_url }}{{ post.id }}</id>\n   <content type=\"html\">{{ post.content | xml_escape }}</content>\n </entry>\n {% endfor %}\n \n</feed>"
+        },
+        {
+          "name": "baidu_verify_03tUU9FrBn.html",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": "03tUU9FrBn"
+        },
+        {
+          "name": "baidu_verify_PGGW8nCqcr.html",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": "PGGW8nCqcr"
+        },
+        {
+          "name": "bdunion.txt",
+          "type": "blob",
+          "size": 0.03125,
+          "content": "ff1ba5a712e87bf5c2ce8f6b1dffcd3c"
+        },
+        {
+          "name": "bhjobs.html",
+          "type": "blob",
+          "size": 3.4091796875,
+          "content": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<title>薄荷网 | 工作机会</title>\n<link rel=\"stylesheet\" href=\"css/qb-style.css\" type=\"text/css\">\n</head>\n\n<body>\n\t\n<a name=\"top\"></a>\n\n<div class=\"head\">\n\t<h1>\n\t  <a href=\"http://www.boohee.com/\"><img src=\"http://s.boohee.cn/images/common/logo.png\">\n\t  </a>\n    </h1>\n</div>\n\n<div class=\"main\">\n\t<div class=\"col2-1\">\n\t\t<div class=\"content\">\n\t\t\t<h3>招聘Android工程师</h3>\n\t\t\t\t\t\t\n\t\t\t<h4>工作地点：上海浦东</h4>\n\n\t\t\t<h4>薪资：面议(依据个人能力8-25w不等)</h4>\n\n\t\t\t<hr>\n\n\t\t\t<h5>我们是</h5>\n\t\t\t<h5>薄荷科技，即上海薄荷信息科技有限公司，是一家帮助女性健康生活、健康减肥的互联网公司。薄荷APP和薄荷网已拥有上千万用户，在APP STORE和安卓各大市场健康健美类应用中，均有不俗的成绩。</h5>\n\t\t\t<ul class=\"ullist\">\n \t\t      <li>在这里，需求，实现，设计都是人人参与讨论</li>\n \t\t      <li>在这里，接触公司核心代码，有机会成长团队核心骨干</li>\n \t\t      <li>在这里，轻松自由，有机会尝试各种先进前沿的技术</li>\n \t\t      <li>在这里，工作环境舒适优雅，更有很多美女共事，男女比例1：2，没错，没有写反。</li>\n \t\t    </ul>\n \t\t    <h5>我们在寻找靠谱的Android工程师</h5>\n\n\t\t\t<hr>\n\n\t\t\t<h5>基本要求:</h5>\n \t\t    <ul class=\"ullist\">\n \t\t      <li>全日制本科及以上学历(虽然我们更看重能力但通过简历筛选效率更高，谅解)</li>\n \t\t      <li>扎实的编程功底，能享受编程乐趣</li>\n \t\t      <li>不错的沟通/表达能力</li>\n \t\t      <li>热爱这个职业！热爱！</li>\n \t\t    </ul>\n\n \t\t    <hr>\n\n\t\t\t<h5>职位描述及要求:</h5>\n \t\t    <ul class=\"ullist\">\n \t\t\t   <li>全日制本科及以上学历，至少一年以上实际Android开发经验</li>\n \t\t\t   <li>至少完整经历过一个移动产品的开发和维护</li>\n \t\t\t   <li>能了解Android框架工作原理，熟悉Android的各种开源组件和Android界面设计规范</li>\n \t\t\t   <li>开发基础良好，理解设计模式，在项目或产品中有很好的设计实践</li>\n \t\t\t   <li>熟悉HTTP 通讯协议，有Restful API使用经验，熟悉JSON数据格式</li>\n \t\t\t   <li>有独立钻研技术的热情和能力，思维敏捷，良好英文阅读能力</li>\n \t\t   \t</ul>\n\n \t\t   \t<hr>\n\n \t\t   \t<h5>加分项:</h5>\n \t\t    <ul class=\"ullist\">\n \t\t\t   <li>1. 有维护至少半年以上的个人博客</li>\n \t\t\t   <li>2. 有开源的Android项目</li>\n \t\t\t   <li>3. 熟悉Unix环境，熟练使用Git</li>\n \t\t\t   <li>4. 熟悉Ruby(大大地加分)或者Python</li>\n \t\t   \t</ul>\n\n \t\t   \t<hr>\n\n \t\t   \t<h5>面试须知:</h5>\n \t\t    <ul class=\"ullist\">\n \t\t\t   <p>请提供你负责的上架App名称和下载地址，在不违反公司机密的条件下携带你自己负责完成的项目的代码，如有Github账户也请一并告知。</p>\n \t\t   \t</ul>\n\t\n \t\t\t<hr>\n\t\t\t\n\t\t\t<p>简历请使用 <mark>PDF格式</mark> 发送至 <a href=\"mailto:zhaopin@boohee.com\"><mark>zhaopin@boohee.com</mark></a> ，邮件标题请写明应聘职位。 期待您的加入！</p>\n\t\t</div>\n\t\t\n\t\t<div class=\"bar\">\n\t\t\t<a href=\"#top\">返回页顶</a>\n\t\t</div>\n\t\t\n\t</div>\n</div>\n\n<div class=\"foot\">\n\t<p>© 2013 boohee.com</p>\n</div>\n\n</body>\n</html>\n\n"
+        },
+        {
+          "name": "categories.html",
+          "type": "blob",
+          "size": 0.9091796875,
+          "content": "---\nlayout: page\ntitle: 分类\nheader: Posts By Category\ngroup: navigation\nindex: 3\n---\n{% include codepiano/setup %}\n<div class=\"tabbable tabs-right row-fluid\">\n  <ul class=\"nav nav-tabs\" id=\"categories-nav\">\n    {% assign site_categories = site.categories %}\n    {% include codepiano/anchor_of_categories %}\n  </ul>\n\n  <div class=\"tab-content\">\n    {% for category in site.categories %} \n    <div class=\"tab-pane\" id=\"{{ category[0] }}-ref\">\n      <ul class=\"posts-list\">\n        {% assign posts_list = category[1] %}  \n        {% include codepiano/posts_of_category %}\n      </ul>\n    </div>\n    {% endfor %}\n  </div>\n\n  <script type=\"text/javascript\">\n    google_ad_client = \"ca-pub-3459740779968123\";\n    google_ad_slot = \"2410348697\";\n    google_ad_width = 728;\n    google_ad_height = 90;\n</script>\n<!-- test -->\n<script type=\"text/javascript\"\nsrc=\"http://pagead2.googlesyndication.com/pagead/show_ads.js\">\n</script>\n</div>\n\n"
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "favicon.ico",
+          "type": "blob",
+          "size": 18.7880859375,
+          "content": null
+        },
+        {
+          "name": "favicon_origin.ico",
+          "type": "blob",
+          "size": 13.056640625,
+          "content": null
+        },
+        {
+          "name": "image",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.md",
+          "type": "blob",
+          "size": 3.1884765625,
+          "content": "---\nlayout: page\ntitle: stormzhang博客精华\nkeywords: stormzhang, storm, android, java, android developer, android开发, android技术分享, performance\ndescription: Focus Android, Love Open Source, Performance Optimization, Coding now\ncategories: [Android]\n---\n{% include codepiano/setup %}\n\n## 每周推荐\n\n[AndroidDeveloper Weekly No.4](http://stormzhang.com/weekly/2016/08/08/android-developer-weekly-no-4/)\n\n[Android开源项目推荐之「网络请求哪家强」](http://stormzhang.com/opensource/2016/08/05/android-open-source-project-recommend2/)\n\n[如何发现优秀的开源项目？](http://stormzhang.com/github/2016/07/28/learn-github-from-zero7/)\n\n[给 Android 初学者的 Gradle 知识普及](http://stormzhang.com/android/2016/07/02/gradle-for-android-beginners/)\n\n\n* 我的微信公众号: AndroidDeveloper「googdev」 (专注Android的原创分享，关注并回复googdev自学Android资料免费获取)\n\n<img src=\"/image/weixinpublic.jpg\" />\n\n## 精品文章系列\n\n[AndroidDeveloper Weekly 系列](http://stormzhang.com/weekly/2016/07/26/android-developer-weekly/)\n\n[从0开始学习 GitHub 系列汇总](http://stormzhang.com/github/2016/06/19/learn-github-from-zero-summary/)\n\n[自学 Android 编程系列](http://stormzhang.com/android/2016/06/10/learn-android-byself/)\n\n[Android Studio 详细教程汇总](http://stormzhang.com/devtools/2015/06/17/android-studio-all)\n\n[靠谱VPN推荐--云梯VPN](http://refyt.com/?r=a9b90a505050781a)\n\n## 微信公众号近期文章\n\n[少年，别再收藏文章了！](http://mp.weixin.qq.com/s?__biz=MzA4NTQwNDcyMA==&mid=2650661932&idx=1&sn=8325f8bd782a376434a5bf69e4f38dee#rd)\n\n[我面试到底问什么？](http://mp.weixin.qq.com/s?__biz=MzA4NTQwNDcyMA==&mid=2650661871&idx=1&sn=158c380826bb9138fdb2976152dc279b#rd)\n\n[自学编程这几点非常重要](http://mp.weixin.qq.com/s?__biz=MzA4NTQwNDcyMA==&mid=2650661865&idx=1&sn=085e2be66714763b5550c54e9253883a#rd)\n\n[公众号历史精品文章汇总](http://mp.weixin.qq.com/s?__biz=MzA4NTQwNDcyMA==&mid=503177922&idx=1&sn=6ef35c039a6564b1cec6343754a6c004&scene=23&srcid=0527Py9mKBRTPAWeo7GkikDO#rd)\n\n<!-- <a href=\"http://m.jianxun.io/event/2?from=stormzhang\"><img src=\"http://www.jianxun.io/ad/20151101/eventno2-stormzhang-banner.png\" /></a> -->\n\n## 我的GitHub开源项目\n\n[9GAG](https://github.com/stormzhang/9GAG)\n\n[CustomLoading](https://github.com/stormzhang/CustomLoading)\n\n[SwipeRefreshLayoutDemo](https://github.com/stormzhang/SwipeRefreshLayoutDemo)\n\n<br />\n\n<div id=\"comment-hook\">\n<!-- 多说评论框 start -->\n\t<div class=\"ds-thread\" data-thread-key=\"88888\" data-title=\"{{ page.title }}\" data-url=\"http://stormzhang.com{{ page.url }}\"></div>\n<!-- 多说评论框 end -->\n<!-- 多说公共JS代码 start (一个网页只需插入一次) -->\n<script type=\"text/javascript\">\nvar duoshuoQuery = {short_name:\"stormzhang\"};\n\t(function() {\n\t\tvar ds = document.createElement('script');\n\t\tds.type = 'text/javascript';ds.async = true;\n\t\tds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';\n\t\tds.charset = 'UTF-8';\n\t\t(document.getElementsByTagName('head')[0] \n\t\t || document.getElementsByTagName('body')[0]).appendChild(ds);\n\t})();\n\t</script>\n<!-- 多说公共JS代码 end -->\n</div>\n"
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "link.html",
+          "type": "blob",
+          "size": 3.5908203125,
+          "content": "---\nlayout: page\ntitle: 好基友\nheader: 我的好基友们\ngroup: navigation\nindex: 5\n---\n\n{% include codepiano/setup %}\n\n<link rel=\"stylesheet\" href=\"http://gank.io//static/stylesheets/skeleton.css\">\n<link rel=\"stylesheet\" href=\"http://gank.io//static/stylesheets/typo.css\">\n<link rel=\"stylesheet\" href=\"http://gank.io//static/stylesheets/archives.css\">\n\n<div class=\"typo\">\n    <div class=\"container content\">\n        \n    <h3 class=\"center\"> 好基友们</h3>\n    <div class=\"row\">\n        <div class=\"friends\">\n            <p>我的好基友们和他们的网站，他们既是 Android 牛人，也是活跃在社区，乐于分享帮助他人，推动技术进步的有为青年。</p>\n\n            <div class=\"partner-logos\">\n                <ul>\n                    <li><a href=\"http://gank.io\"><img\n                            src=\"http://ww1.sinaimg.cn/large/610dc034gw1f1lnnpb9tej203n01sdfn.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://www.codekk.com\"><img\n                            src=\"http://ww4.sinaimg.cn/large/610dc034gw1f1qxobcf1cj203m01sgle.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://www.trinea.cn\"><img\n                            src=\"http://ww2.sinaimg.cn/large/610dc034gw1f1qxpxtcegj203m01sglg.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://www.liaohuqiu.net/\"><img\n                            src=\"http://ww3.sinaimg.cn/large/610dc034gw1f1qxqufzflj203m01s0sl.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://androiddevtools.cn\"><img\n                            src=\"http://ww3.sinaimg.cn/large/610dc034gw1f1qxrl1x8jj203m01s3yb.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://hukai.me\"><img\n                            src=\"http://ww4.sinaimg.cn/large/610dc034gw1f1qxsfc31wj203m01sgle.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://droidyue.com/\"><img\n                            src=\"http://ww1.sinaimg.cn/large/610dc034gw1f1qxt01qc3j203m01s0sj.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://androidweekly.cn/\"><img\n                            src=\"http://ww4.sinaimg.cn/large/610dc034gw1f1qxu6sml5j203m01smx1.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://drakeet.com\"><img\n                            src=\"http://ww3.sinaimg.cn/large/610dc034gw1f1qy7l54lhj203m01sjra.jpg\" alt=\"\"></a></li>\n                    <li><a href=\"http://blog.csdn.net/guolin_blog\"><img\n                    src=\"http://img.blog.csdn.net/20160313203338578\" alt=\"\"></a></li>\n\n                    <li><a href=\"http://gityuan.com/\"><img\n                    src=\"http://gityuan.com/images/friends/gityuan.png\" alt=\"\"></a></li>\n                </ul>\n            </div>\n            <div style=\"clear: both;\"><p>如果你也热爱开发和写作，欢迎<a href=\"mailto:stormzhang.dev@gmail.com\">加入我们</a>! 或者在下面评论。</p></div>\n        </div>\n    </div>\n\n\n<br />\n\n<div id=\"comment-hook\">\n<!-- 多说评论框 start -->\n\t<div class=\"ds-thread\" data-thread-key=\"link.html\" data-title=\"{{ page.title }}\" data-url=\"http://stormzhang.com{{ page.url }}\"></div>\n<!-- 多说评论框 end -->\n<!-- 多说公共JS代码 start (一个网页只需插入一次) -->\n<script type=\"text/javascript\">\nvar duoshuoQuery = {short_name:\"stormzhang\"};\n\t(function() {\n\t\tvar ds = document.createElement('script');\n\t\tds.type = 'text/javascript';ds.async = true;\n\t\tds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';\n\t\tds.charset = 'UTF-8';\n\t\t(document.getElementsByTagName('head')[0] \n\t\t || document.getElementsByTagName('body')[0]).appendChild(ds);\n\t})();\n\t</script>\n<!-- 多说公共JS代码 end -->\n</div>\n"
+        },
+        {
+          "name": "my-progress.md",
+          "type": "blob",
+          "size": 9.568359375,
+          "content": "---\nlayout: page\nkeywords: blog\ndescription: blog\ntitle: \"我的发展\"\ngroup: static\n---\n{% include codepiano/setup %}\n\n我的大事记\n===\n\n* 在知乎上邀请回答[如何自学android编程](http://www.zhihu.com/question/26417244)， 想想一路走来也不容易，那就借这个机会回忆下一路走过的弯路，给那些准备走这行的人一些正能量。\n\n* 2014年10月2日，农历九月初九，结束了7年的爱情生涯，终于我们结婚啦！特此写篇博客以作纪念.[我们结婚啦](http://stormzhang.github.io/others/2014/09/10/we-get-married/)\n\n* 2014年8月13日，收到了一封来自Facebook Android Team的邮件邀请，邮件内容见[这篇微博](http://weibo.com/2942550243/BihHsgkkm?mod=weibotime)突然觉得人生真是充满了惊喜，每一天的坚持努力付出总能有所收获。还有什么比被这种世界顶级互联网公司认可你的能力更重要的么？\n\n* 2014年7月18日，写了篇[Android学习之路](http://stormzhang.github.io/android/2014/07/07/learn-android-from-rookie/),在微博上引起非常大的反响，先后被各种IT界公众账号、BAT的工程师们、甚至一些CEO、创始人、投资人等等大V转发，也上了码农周刊、伯乐在线、CDSN、SegmentFault等，非常惊讶，仿佛刮起了一阵全民学Android的风...\n\n* 2014年6月10日，由于觉得没有充足的时间，拒绝了慕课网讲师的签约邀请。\n\n* 2014年5月27日，薄荷Android客户端360手机助手单渠道突破200w。\n\n* 2014年5月13日，注册成为Google Play开发者，花了我25$，为此专门去办了一张Visa信用卡，自此算是成为了一名真正的Android开发者。\n\n* 2014年4月22日，9GAG开源不到一周的时间，被eoe官方微博推荐并邀请希望成为eoe社区的版主，上了github trending榜，同时被9Gag官方Android开发人员在Facebook上分享，一时间微博、github粉丝涨了不少，同时收到各种私信、邮件的工作邀请，从没有过这种成就感，真心有点心花怒放, 飘飘然的感觉！\n\n* 2014年4月16日，开源[9GAG](https://github.com/stormzhang/9GAG)Android客户端，亲自实践了下真正的REST Client，并利用最新的IDE，最新的技术，最新的特性以及一些最流行的开源库来Make A Good App! 后续有时间会持续增加一些新的特性。\n\n* 2014年3月20日，薄荷Android版App累计用户突破200w。\n\n* 2014年3月8日，对薄荷App整体的设计以及架构进行了思考与建议，并写了一篇博客，地址在这里：[再看薄荷](http://stormzhang.github.io/android/2014/03/08/review-boohee-architecture/)。\n\n* 2014年2月，薄荷app功能上基本成型，涉及社交、工具、服务、电商、个人中心五大模块，算是一个大中型的项目了。\n\n* 2014年1月，在Github上开源了另一个小Demo--[AndroidVolley](https://github.com/stormzhang/AndroidVolley),开源这个项目的最初目的是为了学习下Google官方推出的网络通信库Volley。\n\n* 2013年12月，把博客迁移到Jekyll，换了一种简约的主题，也就是现在的模样：[http://stormzhang.github.io/](http://stormzhang.github.io/)。\n\n* 2013年12月，Android版的app在功能上终于和iOS保持一致，并且推出半年时间的薄荷Android版累积用户突破100W。\n\n* 2013年11月，入手Nexus 5，其实主要原因是自己已经发展成了G粉，入手Google的手机还可以尝鲜体验最新的Android 4.4 KitKat系统。目前为止，用了Nexus 5，再也不想用其他手机了。\n\n* 2013年10月，入手iPhone 5S,两个原因：一是我女朋友该换手机了，之前的oppo用了4、5年了，二是体验下iPhone上的app，和Android平台上的app总结下优劣。\n\n* 2013年10月，在Github上开源了自己的一个小项目--[CustomLoading](https://github.com/stormzhang/CustomLoading), 荣幸被收录在了23code的网站和app上，最初的原因是自己在新手的时候完全不懂如何做Loading，索性就做了这个小Demo，希望能给新手们一些思路。\n\n* 2013年9月，薄荷在Android端推出收费的食谱服务，上线一月之后收入追平累积了一年多之久的iOS收入，这也让公司对Android用户的付费意愿产生了新的认识。\n\n* 2013年8月，薄荷更新新版本被小米市场首页推荐一周，单日下载量近2W，这也让包括我在内的公司上下认识到Android的潜力。\n\n* 2013年7月，发布一个月的Android版突破了10W大关，这是公司上下都没有预料到的。\n\n* 2013年6月，一个多月的开发，终于发布了v1.0版本--薄荷爱瘦身，便是目前“薄荷”的前身，自此薄荷的Android市场才算刚刚起步。\n\n* 2013年5月，Android份额近乎疯狂的增长，公司不得不开始注意Android市场，于是公司打算推出Android版app，作为公司的唯一Android开发人员毫无疑问接受了挑战，重新设计了app架构，放弃刚刚上手的Ruby，回归Android，回归移动互联网。\n\n* 2013年4月，忍痛花了1W大洋入手了13寸RMBP，从此算是真正的抛弃Win平台做开发，而再也不用折腾Linux了，把精力放在主要的Ruby和Android上，从此开发效率大大的提升，Ruby下跑Rspec测试代码简直是飞速，妈妈再也不会担心我的机器会卡顿了，自此我会认为Mac是开发人员必备。\n\n* 2013年3月，和薄荷的另一位出色的Ruby工程师合作完成了一个Rails项目--MC Server，为薄荷iOS客户端提供api server以及后台管理。\n\n* 2013年1月，独立完成了自己第一个Rails项目--Task，主要是薄荷的任务系统，为iOS版本的app端系统api以及相应的后台管理系统。项目虽小，但却是自己在Ruby On Rails方面能力的证明。\n\n* 2012年12月，在Github上搭建了自己的个人博客，基于Octopress主题，计划坚持记录下自己在技术方面的学习总结。\n\n* 2012年11月，自认为这段时间是我的人生低谷，没有什么开发基础入手学习Ruby，学习Rails，第一次接触Linux系统，熟悉Linux命令，学习各种从没接触过的概念：RVM，Bundle，Git，MySql，Nginx，Passenger，Rspec。承受着巨大的压力，这段时间几乎每天都是做最后一班车回去，到家的时候基本是12点...但庆幸的是我熬过来了。\n\n* 2012年9月2日，注册了Github账号，第一次接触到了开源世界，虽然那时候根本不知Github为何物。\n\n* 2012年9月，由于公司在Android端没有看到前途，于是准备暂停Android业务，薄荷在征求了我的意见之后准备让我转投Ruby方向，着手做Ruby On Rails的开发，当时的想法是：学习点后端知识，以及动态语言，对今后的发展总没有坏处，但自己在内心却一直没有放弃Android。\n\n* 2012年9月，完成了一款从iOS移植过来的app--减肥食物库，在当时也是公司主打的app之一，主要包括食物热量查询，卡路里计算器，运动热量消耗等功能。此app只更新了1.2版，之后便搁浅，目前已经下架！\n\n* 2012年7月初，完成了第一个在薄荷的项目，一款针对联想智能电视SDK适配的app，主要是播放健美操视频，记录消耗卡路里，摄像头预览等功能。由于联想智能电视的销售不佳，此app也没有取得什么好的成绩。\n\n* 2012年5月14日，入职薄荷信息科技，职位：Android工程师，也是薄荷唯一的Android工程师。\n\n* 2012年4月24日，从山诺离职。原因是自己想一心一意做Android，而在山诺的大部分时间其实还是在测试工作上。\n\n* 2012年3月，在经过自己业余时间对Android以及Java的摸打滚爬之后，为公司完成了第一个Android项目，一个为美国医务人员学习西班牙语的词典，现在看来从功能到代码都很简陋，但在当时可是了不起的成就，也坚定了自己转行做Android开发的决心。\n\n* 2011年12月，在经过了C#, Objective C语言的尝试之后，决定选择开始崭露头角的移动互联网方向，至于为什么没有选择iPhone开发，因为当时没钱买Mac。至今依然认为当初选择移动互联网方向是明智之举。\n\n* 2011年11月，准备学习编程转行开发，那时的原因很简单：因为开发比测试挣的多，最起码当时在山诺是这样。自此之后才算是真正的接触编程。\n\n* 2011年10月，为了更好的测试web系统，学习了一些web基本知识，如html，css，javascript。\n\n* 2011年8月24日，入职上海山诺信息科技有限公司，一家小型的美企，主要方向在.NET，职位：测试工程师。\n\n* 2011年7月，正式毕业后来到了上海，寻找自己的方向。\n\n* 2011年4月，处于毕业迷茫季，带着几个好哥们来到上海参加了51Testing的软件测试培训班，注定要来到上海发展。\n\n* 2007年9月，在安徽工业大学开启大学之路，专业：信息与计算科学（偏数学）。\n\n<br />\n\n<div id=\"comment-hook\">\n<!-- 多说评论框 start -->\n\t<div class=\"ds-thread\" data-thread-key=\"my-progress\" data-title=\"{{ page.title }}\" data-url=\"http://stormzhang.com{{ page.url }}\"></div>\n<!-- 多说评论框 end -->\n<!-- 多说公共JS代码 start (一个网页只需插入一次) -->\n<script type=\"text/javascript\">\nvar duoshuoQuery = {short_name:\"stormzhang\"};\n\t(function() {\n\t\tvar ds = document.createElement('script');\n\t\tds.type = 'text/javascript';ds.async = true;\n\t\tds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';\n\t\tds.charset = 'UTF-8';\n\t\t(document.getElementsByTagName('head')[0] \n\t\t || document.getElementsByTagName('body')[0]).appendChild(ds);\n\t})();\n\t</script>\n<!-- 多说公共JS代码 end -->\n</div>"
+        },
+        {
+          "name": "posts.html",
+          "type": "blob",
+          "size": 0.4736328125,
+          "content": "---\nlayout: page\ntitle: 文章\nheader: Post Archive\ngroup: navigation\nindex: 1\n---\n{% include codepiano/setup %}\n\n<table class=\"table table-striped table-bordered\" id=\"post-data\">\n  <thead>\n    <th class=\"post-date\"><i class=\"icon-calendar\"></i> 日期</th>\n    <th class=\"post-url\"><i class=\"icon-bookmark\"></i> 标题</th>\n    <th class=\"post-tags\"><i class=\"icon-tags\"></i> 标签</th>\n  </thead>\n  {% assign posts_list = site.posts %}\n  {% include codepiano/posts_table %}\n</table>"
+        },
+        {
+          "name": "resume.md",
+          "type": "blob",
+          "size": 0.43359375,
+          "content": "---\nlayout: my_page\nkeywords: resume\ndescription: resume\ntitle: \"My Resume\"\ngroup: static\n---\n\n{% highlight ruby %}\nname = 'Storm'\nreal_name = '张奇'\n\ncompany = '薄荷信息科技'\ntitle = '软件工程师'\nskills = 'android, java, ruby, git, sql'\n\nemail = 'zhangqi.dev$#qq.com'.gsub('$#', '@')\nblog = 'http://stormzhang.github.io'\ngithub = 'https://github.com/stormzhang'\n\nwhile true\n  programing\n  reading\n  enjoying\nend\n{% endhighlight %}"
+        },
+        {
+          "name": "root.txt",
+          "type": "blob",
+          "size": 0.03125,
+          "content": "c1556ed15b2aa3363fe2b3da538f22bc"
+        },
+        {
+          "name": "rss.xml",
+          "type": "blob",
+          "size": 0.9033203125,
+          "content": "---\nlayout: null\ntitle : RSS Feed\n---\n\n<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n<rss version=\"2.0\">\n<channel>\n        <title>{{ site.title }}</title>\n        <description>{{ site.title }} - {{ site.author.name }}</description>\n        <link>{{ site.production_url }}{{ site.rss_path }}</link>\n        <link>{{ site.production_url }}</link>\n        <lastBuildDate>{{ site.time | date_to_xmlschema }}</lastBuildDate>\n        <pubDate>{{ site.time | date_to_xmlschema }}</pubDate>\n        <ttl>1800</ttl>\n\n{% for post in site.posts %}\n        <item>\n                <title>{{ post.title }}</title>\n                <description>{{ post.content | xml_escape }}</description>\n                <link>{{ site.production_url }}{{ post.url }}</link>\n                <guid>{{ site.production_url }}{{ post.id }}</guid>\n                <pubDate>{{ post.date | date_to_xmlschema }}</pubDate>\n        </item>\n{% endfor %}\n\n</channel>\n</rss>\n"
+        },
+        {
+          "name": "sitemap.txt",
+          "type": "blob",
+          "size": 0.234375,
+          "content": "---\n# Remember to set production_url in your _config.yml file!\ntitle : Sitemap\n---\n{% for page in site.pages %}\n{{site.production_url}}{{ page.url }}{% endfor %}\n{% for post in site.posts %}\n{{site.production_url}}{{ post.url }}{% endfor %}"
+        },
+        {
+          "name": "timeline.html",
+          "type": "blob",
+          "size": 0.4697265625,
+          "content": "---\nlayout: page\ntitle: 时间线\nheader: Posts By Time\ngroup: navigation\nindex: 2\n---\n{% include codepiano/setup %}\n\n<div class=\"row-fluid typo\">\n  <div class=\"span9\" >\n    {% assign posts_list = site.posts %}  \n    {% include codepiano/timeline %}\n  </div>\n  <div id=\"time-list-nav\" class=\"span3\">\n    <ul id=\"time-list-ul\" class=\"nav nav-tabs nav-stacked time-list affix\">\n      {% include codepiano/time_list %}\n      {% assign posts_list = nil %}\n    </ul>\n  </div>\n</div>\n\n\n\n"
+        }
+      ]
+    }
+  ]
+}

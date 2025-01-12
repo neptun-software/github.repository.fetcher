@@ -1,0 +1,123 @@
+{
+  "metadata": {
+    "timestamp": 1736710272828,
+    "page": 36,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "erincatto/box2d",
+      "stars": 8496,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".clang-format",
+          "type": "blob",
+          "size": 1.0576171875,
+          "content": "# Reference: https://clang.llvm.org/docs/ClangFormatStyleOptions.html\n# /c/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/bin\n# https://clang-format-configurator.site/\n# default values:\n# https://github.com/llvm/llvm-project/blob/main/clang/lib/Format/Format.cpp\n---\nLanguage: Cpp\nBasedOnStyle: Microsoft\n\n# BreakBeforeBraces: Allman \nBreakBeforeBraces: Custom\nBraceWrapping:\n  AfterCaseLabel: true\n  AfterUnion: true\n  BeforeWhile: true\n# BreakBeforeBinaryOperators: All\n\nColumnLimit: 130\nPointerAlignment: Left\nUseTab: Always\nBreakConstructorInitializers: BeforeComma\n\nInsertNewlineAtEOF: true\nIncludeBlocks: Regroup\n\nIncludeCategories:\n  - Regex:           '^\"(box2d\\/)'\n    Priority:        2\n  - Regex:           '^<.*'\n    Priority:        3\n  - Regex:           '^\".*'\n    Priority:        1\n\nIndentExternBlock: NoIndent\nIndentCaseLabels: true\n#IndentPPDirectives: None\nIndentAccessModifiers: false\nAccessModifierOffset: -4\n\n# AlignArrayOfStructures: Left\n# AlignAfterOpenBracket: BlockIndent\n\nSpacesInParens: Custom\nSpacesInParensOptions:\n  Other: true\n  "
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.091796875,
+          "content": "* text=auto\n\n*.c text\n*.cpp text\n*.h text\n*.md text\n*.txt text\n*.sh text eol=lf\n\n*.ttf binary\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.09375,
+          "content": "build/\nimgui.ini\nsettings.ini\n.vscode/\n.vs/\n.cap\n.DS_Store\nCMakeUserPresets.json\n.cache/\n.idea/\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 5.4580078125,
+          "content": "﻿cmake_minimum_required(VERSION 3.22)\ninclude(FetchContent)\ninclude(CMakeDependentOption)\n\nproject(box2d\n\tVERSION 3.1.0\n\tDESCRIPTION \"A 2D physics engine for games\"\n\tHOMEPAGE_URL \"https://box2d.org\"\n\tLANGUAGES C CXX\n)\n\n# stuff to help debug cmake\n# message(STATUS \"cmake tool chain: ${CMAKE_TOOLCHAIN_FILE}\")\n# message(STATUS \"cmake source dir: ${CMAKE_SOURCE_DIR}\")\n# message(STATUS \"library postfix: ${CMAKE_DEBUG_POSTFIX}\")\nmessage(STATUS \"CMake C compiler: ${CMAKE_C_COMPILER_ID}\")\nmessage(STATUS \"CMake C++ compiler: ${CMAKE_CXX_COMPILER_ID}\")\nmessage(STATUS \"CMake system name: ${CMAKE_SYSTEM_NAME}\")\nmessage(STATUS \"CMake host system processor: ${CMAKE_HOST_SYSTEM_PROCESSOR}\")\n\n# static link\nset(CMAKE_MSVC_RUNTIME_LIBRARY \"MultiThreaded$<$<CONFIG:Debug>:Debug>\")\n\nif (MSVC OR APPLE)\n\toption(BOX2D_SANITIZE \"Enable sanitizers for some builds\" OFF)\n\tif(BOX2D_SANITIZE)\n\t\tmessage(STATUS \"Box2D Sanitize\")\n\t\t# sanitizers need to apply to all compiled libraries to work well\n\t\tif(MSVC)\n\t\t\t# address sanitizer only in the debug build\n\t\t\tadd_compile_options(\"$<$<CONFIG:Debug>:/fsanitize=address>\")\n\t\t\tadd_link_options(\"$<$<CONFIG:Debug>:/INCREMENTAL:NO>\")\n\t\telseif(APPLE)\n\t\t\t# more sanitizers on Apple clang\n\t\t\t# add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)\n\t\t\tadd_compile_options(-fsanitize=address -fsanitize-address-use-after-scope -fsanitize=undefined)\n\t\t\tadd_link_options(-fsanitize=address -fsanitize-address-use-after-scope -fsanitize=undefined)\n\t\tendif()\n\telse()\n\t\tif(MSVC)\n\t\t\t# enable hot reloading\n\t\t\tadd_compile_options(\"$<$<CONFIG:Debug>:/ZI>\")\n\t\t\tadd_link_options(\"$<$<CONFIG:Debug>:/INCREMENTAL>\")\n\t\tendif()\n\tendif()\nendif()\n\n# Deterministic math\n# https://box2d.org/posts/2024/08/determinism/\nif (MINGW OR APPLE OR UNIX)\n\tadd_compile_options(-ffp-contract=off)\nendif()\n\noption(BOX2D_ENABLE_SIMD \"Enable SIMD math (faster)\" ON)\n\nif(CMAKE_SYSTEM_PROCESSOR MATCHES \"x86_64|AMD64\")\n\tcmake_dependent_option(BOX2D_AVX2 \"Enable AVX2\" OFF \"BOX2D_ENABLE_SIMD\" OFF)\nendif()\n\nif(PROJECT_IS_TOP_LEVEL)\n\t# Needed for samples.exe to find box2d.dll\n\t# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/bin\")\n\tset(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/bin\")\nendif()\n\n# C++17 needed for imgui\nset(CMAKE_CXX_STANDARD 17)\nset(CMAKE_COMPILE_WARNING_AS_ERROR ON)\n\nset(CMAKE_EXPORT_COMPILE_COMMANDS ON)\nset_property(GLOBAL PROPERTY USE_FOLDERS ON)\nset(CMAKE_VERBOSE_MAKEFILE ON)\n\nadd_subdirectory(src)\n\n# This hides samples, test, and doxygen from apps that use box2d via FetchContent\nif(PROJECT_IS_TOP_LEVEL)\n\toption(BOX2D_SAMPLES \"Build the Box2D samples\" ON)\n\toption(BOX2D_BENCHMARKS \"Build the Box2D benchmarks\" OFF)\n\toption(BOX2D_DOCS \"Build the Box2D documentation\" OFF)\n\toption(BOX2D_PROFILE \"Enable profiling with Tracy\" OFF)\n\toption(BOX2D_VALIDATE \"Enable heavy validation\" ON)\n\toption(BOX2D_UNIT_TESTS \"Build the Box2D unit tests\" ON)\n\n\tinclude(GNUInstallDirs)\n\n\tinstall(\n\t\tDIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}/include/box2d\"\n\t\tDESTINATION ${CMAKE_INSTALL_INCLUDEDIR}\n\t)\n\n\tif(MSVC AND WIN32)\n\t\t# Enable edit and continue only in debug due to perf hit in release\n\t\t# add_link_options($<$<CONFIG:Debug>:/INCREMENTAL>)\n\t\t# add_compile_options($<$<CONFIG:Debug>:/ZI>)\n\t\t# add_compile_options(/fsanitize=address)\n\t\t# set(CMAKE_CXX_FLAGS_RELWITHDEBINFO \"/GS- /Gy /O2 /Oi /Ot\")\n\t\t# set(CMAKE_CXX_FLAGS_RELEASE \"/GS- /Gy /O2 /Oi /Ot\")\n\t\t# set(CMAKE_C_FLAGS_RELWITHDEBINFO \"/GS- /Gy /O2 /Oi /Ot\")\n\t\t# set(CMAKE_C_FLAGS_RELEASE \"/GS- /Gy /O2 /Oi /Ot\")\n\tendif()\n\n\t# enkiTS is used by all the test apps, but not directly by the Box2D library\n\tif(BOX2D_UNIT_TESTS OR BOX2D_SAMPLES OR BOX2D_BENCHMARKS)\n\t\tSET(ENKITS_BUILD_EXAMPLES OFF CACHE BOOL \"Build enkiTS examples\")\n\n\t\t# Emscripten pthread support for enkiTS\n\t\tif(EMSCRIPTEN)\n\t\t\tset(EMSCRIPTEN_PTHREADS_COMPILER_FLAGS \"-pthread -s USE_PTHREADS=1\")\n\t\t\tset(EMSCRIPTEN_PTHREADS_LINKER_FLAGS \"${EMSCRIPTEN_PTHREADS_COMPILER_FLAGS} -s ALLOW_MEMORY_GROWTH\")\n\t\t\tstring(APPEND CMAKE_C_FLAGS \" ${EMSCRIPTEN_PTHREADS_COMPILER_FLAGS}\")\n\t\t\tstring(APPEND CMAKE_CXX_FLAGS \" ${EMSCRIPTEN_PTHREADS_COMPILER_FLAGS}\")\n\t\t\tstring(APPEND CMAKE_EXE_LINKER_FLAGS \" ${EMSCRIPTEN_PTHREADS_LINKER_FLAGS}\")\n\t\tendif()\n\n\t\t# Used in tests and samples\n\t\tFetchContent_Declare(\n\t\t\tenkits\n\t\t\tGIT_REPOSITORY https://github.com/dougbinks/enkiTS.git\n\t\t\tGIT_TAG master\n\t\t\tGIT_SHALLOW TRUE\n\t\t\tGIT_PROGRESS TRUE\n\t\t)\n\t\tFetchContent_MakeAvailable(enkits)\n\n\t\tadd_subdirectory(shared)\n\tendif()\n\n\t# Tests need static linkage because they test internal Box2D functions\n\tif(NOT BUILD_SHARED_LIBS AND BOX2D_UNIT_TESTS)\n\t\tmessage(STATUS \"Adding Box2D unit tests\")\n\t\tadd_subdirectory(test)\n\t\tset_target_properties(test PROPERTIES XCODE_GENERATE_SCHEME TRUE)\n\telse()\n\t\tmessage(STATUS \"Skipping Box2D unit tests\")\n\tendif()\n\n\tif(BOX2D_SAMPLES)\n\t\tadd_subdirectory(samples)\n\n\t\t# default startup project for Visual Studio\n\t\tif(MSVC)\n\t\t\tset_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT samples)\n\t\t\tset_property(TARGET samples PROPERTY VS_DEBUGGER_WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}\")\n\t\tendif()\n\n\t\tif(APPLE)\n\t\t\tset_target_properties(samples PROPERTIES\n\t\t\t\tXCODE_GENERATE_SCHEME TRUE\n\t\t\t\tXCODE_SCHEME_WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}\")\n\t\tendif()\n\tendif()\n\n\tif(BOX2D_BENCHMARKS)\n\t\tadd_subdirectory(benchmark)\n\t\tset_target_properties(benchmark PROPERTIES XCODE_GENERATE_SCHEME TRUE)\n\tendif()\n\n\tif(BOX2D_DOCS)\n\t\tadd_subdirectory(docs)\n\tendif()\nendif()\n\n# # Building on clang in windows\n# cmake -S .. -B . -G \"Visual Studio 17 2022\" -A x64 -T ClangCL\n# https://clang.llvm.org/docs/UsersManual.html#clang-cl\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0419921875,
+          "content": "MIT License\n\nCopyright (c) 2022 Erin Catto\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.076171875,
+          "content": "![Box2D Logo](https://box2d.org/images/logo.svg)\n\n# Build Status\n[![Build Status](https://github.com/erincatto/box2d/actions/workflows/build.yml/badge.svg)](https://github.com/erincatto/box2d/actions)\n\n# Box2D \nBox2D is a 2D physics engine for games.\n\n[![Box2D Version 3.0 Release Demo](https://img.youtube.com/vi/dAoM-xjOWtA/0.jpg)](https://www.youtube.com/watch?v=dAoM-xjOWtA)\n\n## Features\n\n### Collision\n- Continuous collision detection\n- Contact events and sensors\n- Convex polygons, capsules, circles, rounded polygons, segments, and chains\n- Multiple shapes per body\n- Collision filtering\n- Ray casts, shape casts, and overlap queries\n\n### Physics\n- Robust _Soft Step_ rigid body solver\n- Continuous physics for fast translations and rotations\n- Island based sleep\n- Revolute, prismatic, distance, mouse joint, weld, and wheel joints\n- Joint limits, motors, springs, and friction\n- Joint and contact forces\n- Body movement events and sleep notification\n\n### System\n- Data-oriented design\n- Written in portable C17\n- Extensive multithreading and SIMD\n\n### Samples\n- OpenGL with GLFW and enkiTS\n- Graphical user interface with imgui\n- Many samples to demonstrate features and performance\n\n## Building\n- Install [CMake](https://cmake.org/)\n- Ensure CMake is in the user `PATH`\n- Visual Studio: run `build.bat` from the command prompt\n- Otherwise: run `build.sh` from a bash shell\n- Results are in the build sub-folder\n- On Windows you can open box2d.sln\n\n## Building for Xcode\n- Install [CMake](https://cmake.org)\n- Add Cmake to the path in .zprofile (the default Terminal shell is zsh)\n    - export PATH=\"/Applications/CMake.app/Contents/bin:$PATH\"\n- mkdir build\n- cd build\n- cmake -G Xcode ..\n- open box2d.xcodeproj\n- Select the samples scheme\n- Edit the scheme to set a custom working directory to the box2d directory\n- You can now build and run the samples\n\n## Compatibility\nThe Box2D library and samples build and run on Windows, Linux, and Mac.\n\nBox2D should be built on recent versions of clang and gcc. You will need the latest Visual Studio version for C11 atomics to compile (17.8.3+).\n\nAVX2 CPU support is assumed on x64. You can turn this off in the CMake options and use SSE2 instead. There are some compatibility issues with very old CPUs.\n\n## Documentation\n- [Manual](https://box2d.org/documentation/)\n- [Migration Guide](https://github.com/erincatto/box2d/blob/main/docs/migration.md)\n\n## Community\n- [Discord](https://discord.gg/NKYgCBP)\n\n## Contributing\nPlease do not submit pull requests. Instead, please file an issue for bugs or feature requests. For support, please visit the Discord server.\n\n# Giving Feedback\nPlease file an issue or start a chat on discord.\n\n## License\nBox2D is developed by Erin Catto and uses the [MIT license](https://en.wikipedia.org/wiki/MIT_License).\n\n## Sponsorship\nSupport development of Box2D through [Github Sponsors](https://github.com/sponsors/erincatto).\n\nPlease consider starring this repository and subscribing to my [YouTube channel](https://www.youtube.com/@erin_catto).\n\n## Ports, wrappers, and bindings\n- https://github.com/EnokViking/Box2DBeef\n- https://github.com/HolyBlackCat/box2cpp\n"
+        },
+        {
+          "name": "benchmark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.bat",
+          "type": "blob",
+          "size": 0.1337890625,
+          "content": "rem Use this batch file to build box2d for Visual Studio\nrmdir /s /q build\nmkdir build\ncd build\ncmake ..\ncmake --build .\nstart box2d.sln\n"
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.294921875,
+          "content": "#!/usr/bin/env bash\n\n# Use this to build box2d on any system with a bash shell\nrm -rf build\nmkdir build\ncd build\n\n# I haven't been able to get Wayland working on WSL but X11 works.\n# https://www.glfw.org/docs/latest/compile.html\ncmake -DBOX2D_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=OFF ..\ncmake --build .\n"
+        },
+        {
+          "name": "build_emscripten.sh",
+          "type": "blob",
+          "size": 0.2509765625,
+          "content": "#!/usr/bin/env bash\n\n# source emsdk_env.sh\n\n# Use this to build box2d on any system with a bash shell\nrm -rf build\nmkdir build\ncd build\nemcmake cmake -DBOX2D_VALIDATE=OFF -DBOX2D_UNIT_TESTS=ON -DBOX2D_SAMPLES=OFF -DCMAKE_BUILD_TYPE=Debug ..\ncmake --build .\n"
+        },
+        {
+          "name": "deploy_docs.sh",
+          "type": "blob",
+          "size": 0.109375,
+          "content": "#!/usr/bin/env bash\n\n# Copies documentation to blog\ncp -R build/docs/html/. ../box2d_blog/public/documentation/\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extern",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "samples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shared",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

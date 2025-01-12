@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736711693360,
+    "page": 388,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "benschwarz/gallery-css",
+      "stars": 1137,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".csslintrc",
+          "type": "blob",
+          "size": 0.0693359375,
+          "content": "{\n  \"adjoining-classes\": false,\n  \"compatible-vendor-prefixes\": false\n}"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1396484375,
+          "content": ".DS_Store\n\nlib-cov\n*.seed\n*.log\n*.csv\n*.dat\n*.out\n*.pid\n*.gz\n\npids\nlogs\nresults\n\nnpm-debug.log\nnode_modules\n\n.bower.json\n\n*.sass_cache\n*.scssc\n"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 2.7236328125,
+          "content": "/*global module:false*/\nmodule.exports = function(grunt) {\n  var tilde = require('tilde-expansion'),\n      s3Credentials;\n\n  try {\n    tilde('~/.gallery-css-s3-credentials', function ( path ) {\n      s3Credentials = grunt.file.readJSON( path );\n    });\n  } catch(e) {\n    console.log('no credentials found in ~/.gallery-css-s3-credentials.', 'Deployment won\\'t be possible until amended');\n    s3Credentials = {\n      key: '',\n      secret: ''\n    }\n  }\n\n  // Project configuration.\n  grunt.initConfig({\n    pkg: grunt.file.readJSON('package.json'),\n\n    clean: ['dist/*.css'],\n    watch: {\n      files: ['sass/*.scss', 'index.html'],\n      tasks: ['sass']\n    },\n    sass: {\n      main: {\n        options: {\n          style: 'expanded',\n          precision: 1\n        },\n        files: {\n          'dist/<%= pkg.name %>.css': 'sass/<%= pkg.name %>.build.scss'\n        }\n      },\n      theme: {\n        options: {\n          style: 'expanded'\n        },\n        files: {\n          'dist/<%= pkg.name %>.theme.css': 'sass/<%= pkg.name %>.theme.scss'\n        }\n      }\n    },\n    csslint: {\n      options: {\n        csslintrc: '.csslintrc'\n      },\n      dist: {\n        src: ['dist/*.css']\n      }\n    },\n    recess: {\n      dist: {\n        options: {\n          noOverqualifying: false\n        },\n        src: ['dist/<%= pkg.name %>.css', 'dist/<%= pkg.name %>.theme.css']\n      }\n    },\n    autoprefixer: {\n      build: {\n        options: {\n          browsers: ['last 2 versions', '> 1%']\n        },\n        files: [\n          {\n            src : ['**/*.css', '!**/*prefixed.css'],\n            cwd : 'dist',\n            dest : 'dist',\n            ext : '.prefixed.css',\n            expand : true\n          }\n        ]\n      }\n    },\n    cssmin: {\n      unprefixed: {\n        src: 'dist/<%= pkg.name %>.css',\n        dest: 'dist/<%= pkg.name %>.min.css'\n      },\n      prefixed: {\n        src: 'dist/<%= pkg.name %>.prefixed.css',\n        dest: 'dist/<%= pkg.name %>.prefixed.min.css'\n      }\n    },\n    s3: {\n      options: {\n        key: s3Credentials.key,\n        secret: s3Credentials.secret,\n        bucket: 'gallery-css',\n        access: 'public-read'\n      },\n      dist: {\n        upload: [\n          {\n            src: 'dist/*.css',\n            dest: './'\n          }\n        ]\n      }\n    },\n    connect: {\n      server: {\n        options: {\n          port: 3000,\n          base: './'\n        }\n      }\n    }\n  });\n\n  // Default task.\n  grunt.registerTask('default', ['clean', 'sass', 'autoprefixer', 'csslint', 'recess', 'cssmin']);\n\n  // Use for development\n  grunt.registerTask('dev', ['connect', 'watch']);\n\n  // S3 credentials required to run this\n  grunt.registerTask('release', ['default', 's3']);\n\n  require('matchdep').filterDev('grunt-*').forEach(grunt.loadNpmTasks);\n};\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.029296875,
+          "content": "Copyright (c) 2012 Ben Schwarz\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.1552734375,
+          "content": "# Gallery.css\n\nGallery.css is *all* CSS. Think: Simple, maintainable and understandable galleries without the use of Javascript. \n\n_What? No script!? Why?_ — Gallery css started as an experiment to build interactive, fluid componentry without the need for jQuery, or a jQuery carousel script. Use this library, or don't — either way, hopefully you'll learn from the techniques used within. \n\n## Installation\n\nThe preferred method to install gallery-css is by using Bower, a package manager for front-end components.\n\n`bower install gallery-css`\n\nOtherwise, if you want to keep it simple, check the [dist directory](/dist).\n\n## Getting started\n\nYou've got a couple options with how you'd like to use gallery.css:\n\n\t* Without autoplaying animation\n\t* With autoplaying animation\n\t* With or without browser prefixes\n\nRead the [getting started guide](http://benschwarz.github.io/gallery-css#getting-started), or checkout the [examples](/examples)\n\n## How does it work? \n\n[![Gallery CSS screencast: Building advanced web componentry using only CSS](http://0.germanforblack.com/poster.png_20130506_153359.jpg)](http://benschwarz.github.io/gallery-css)\n\nI've [prepared a screencast](http://benschwarz.github.io/gallery-css) that will take you through how to build something like Gallery-css from scratch, theres tonnes of tiny details that I learnt myself while building it. Its $15, you'll learn and it'll help me keep building for the web. How good is that? \n\n## Browser support\n\n<table width=\"100%\" style=\"text-align: center;\">\n  <thead>\n    <tr>\n      <td>Safari</td>\n      <td>Firefox</td>\n      <td>Chrome</td>\n      <td>IE8</td>\n      <td>IE9</td>\n      <td>IE10</td>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>✔</td>\n      <td>✔</td>\n      <td>✔</td>\n      <td>✖†</td>\n      <td>✔</td>\n      <td>✔</td>\n    </tr>\n  </tbody>\n</table>\n\n† [Absolutely possible](examples/ie-8) using a variety of JS selector shims, although not recommended.\n\n## Build instructions\n\nGallery CSS is built using [grunt](http://gruntjs.com) & RubySASS.\n\nYou'll need:\n\n* Ruby (and sass - `gem install sass`)\n* Run `npm install` from the root directory.\n* To run a build, you'll simply need to run `grunt`.\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.2626953125,
+          "content": "{\n  \"name\": \"gallery\",\n  \"repo\": \"benschwarz/gallery-css\",\n  \"version\": \"1.0.0\",\n  \"main\": [\n    \"dist/gallery.css\",\n    \"dist/gallery.min.css\",\n    \"dist/gallery.prefixed.css\",\n    \"dist/gallery.prefixed.min.css\",\n    \"dist/gallery.theme.css\"\n  ],\n  \"license\": \"MIT\"\n}"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.5048828125,
+          "content": "{\n  \"name\": \"gallery\",\n  \"version\": \"1.0.2\",\n  \"devDependencies\": {\n    \"grunt\": \"0.4.1\",\n    \"grunt-contrib-cssmin\": \"0.4.1\",\n    \"grunt-contrib-csslint\": \"0.1.2\",\n    \"grunt-contrib-sass\": \"0.7.3\",\n    \"grunt-contrib-watch\": \"0.3.1\",\n    \"grunt-recess\": \"~0.3.1\",\n    \"grunt-s3\": \"~0.2.0-alpha\",\n    \"tilde-expansion\": \"0.0.0\",\n    \"matchdep\": \"~0.1.2\",\n    \"grunt-contrib-connect\": \"~0.3.0\",\n    \"autoprefixer\": \"~0.5.20130629\",\n    \"grunt-autoprefixer\": \"~0.1.20130615\",\n    \"grunt-contrib-clean\": \"~0.4.1\"\n  }\n}\n"
+        },
+        {
+          "name": "sass",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

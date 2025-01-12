@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "timestamp": 1736710381215,
+    "page": 198,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mjolnirapp/mjolnir",
+      "stars": 5203,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.267578125,
+          "content": "# Xcode\n.DS_Store\nbuild/\n*.pbxuser\n!default.pbxuser\n*.mode1v3\n!default.mode1v3\n*.mode2v3\n!default.mode2v3\n*.perspectivev3\n!default.perspectivev3\n*.xcworkspace\n!default.xcworkspace\nxcuserdata\nprofile\n*.moved-aside\nDerivedData\n.idea/\n\n/Mjolnir.app\n/Mjolnir*.zip\n/Mjolnir*.tgz\n"
+        },
+        {
+          "name": "CHANGES.md",
+          "type": "blob",
+          "size": 0.5595703125,
+          "content": "### 0.3.1\n\n- Renamed global `mj` to `mjolnir`\n\n### 0.3\n\n- The UI has changed drastically. Expect nothing to be in the same\n  place or look the same. Pretend it's a brand new app.\n- Extensions are now handled by LuaRocks instead of by the app itself.\n- The \"core\" namespace has been renamed to \"mj\".\n- The 'mj.window' module now ships with the 'mj.application' LuaRocks\n  package since they depend on each other.\n- `mj.screen:frame_without_dock_or_menu()` is now called `mj.screen:frame()`\n- `mj.screen:frame_including_dock_and_menu()` is now called `mj.screen:fullframe()`\n"
+        },
+        {
+          "name": "Code_of_Conduct.md",
+          "type": "blob",
+          "size": 0.0791015625,
+          "content": "# Contributor Code of Conduct\n\n1. Don't make me have to add more things to this.\n"
+        },
+        {
+          "name": "LATESTVERSION",
+          "type": "blob",
+          "size": 0.1455078125,
+          "content": "0.4.3\nhttps://github.com/sdegutis/mjolnir/releases/download/0.4.3/Mjolnir-0.4.3.tgz\nMCwCFG1Wl/1LRJC9MYi/pON1hHGG7iWNAhRqAwvqHNuTZw0tcqf98ZrFx/Wo/Q==\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.7763671875,
+          "content": "VERSION = $(shell defaults read `pwd`/Mjolnir/Mjolnir-Info CFBundleVersion)\nAPPFILE = Mjolnir.app\nTGZFILE = Mjolnir-$(VERSION).tgz\nZIPFILE = Mjolnir-$(VERSION).zip\nVERSIONFILE = LATESTVERSION\n\nrelease: $(TGZFILE) $(ZIPFILE) $(VERSIONFILE)\n\n$(APPFILE): $(shell find Mjolnir -type f)\n\trm -rf $@\n\txcodebuild clean build > /dev/null\n\tcp -R build/Release/Mjolnir.app $@\n\n$(TGZFILE): $(APPFILE)\n\ttar -czf $@ $<\n\n$(ZIPFILE): $(APPFILE)\n\tzip -qr $@ $<\n\n$(VERSIONFILE): $(TGZFILE)\n\ttest -n \"$(KEYFILE)\"\n\techo $(VERSION) > $@\n\techo https://github.com/sdegutis/mjolnir/releases/download/$(VERSION)/Mjolnir-$(VERSION).tgz >> $@\n\topenssl dgst -sha1 -binary < $(TGZFILE) | openssl dgst -dss1 -sign $(KEYFILE) | openssl enc -base64 >> $@\n\nclean:\n\trm -rf $(APPFILE) $(TGZFILE) $(ZIPFILE)\n\n.PHONY: release clean\n"
+        },
+        {
+          "name": "Mjolnir.xcodeproj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Mjolnir",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 10.5283203125,
+          "content": "# Mjolnir\n\n<img src=\"https://raw.githubusercontent.com/mjolnirapp/mjolnir/master/Mjolnir/Images.xcassets/AppIcon.appiconset/icon_128x128.png\" alt=\"Mjolnir logo\" title=\"Mjolnir logo\" align=\"right\" width=\"64\" height=\"64\"/>\n\n*Lightweight automation and productivity power-tool for OS X*\n\n* Current version:  Mjolnir 1.0.1\n* Requires:         OS X 10.12 or higher\n\n## What is Mjolnir?\n\nMjolnir is an OS X app that lets you automate common tasks using the\nlanguage Lua. At its core, it doesn't actually do anything besides\nload up a Lua environment; the real power lies in all the useful\nmodules that you can install.\n\nYou write a \"config\", which just means `~/.mjolnir/init.lua`. This\nfile, along with whatever modules it requires, have full access to the\nbuilt-in `mjolnir` module, and all Lua modules that you have installed\n(e.g. from LuaRocks or any way you want to install them).\n\n## Try it out\n\n1. Download [the latest release](https://github.com/mjolnirapp/mjolnir/releases/latest), unzip, right-click `Mjolnir.app`, choose \"Open\". Or, install it with [Homebrew](https://brew.sh/):\n\n   ~~~bash\n   $ brew install --cask mjolnir\n   ~~~\n\n2. Install Lua into /usr/local e.g. from [Homebrew](http://brew.sh/), and then install LuaRocks:\n\n   ~~~bash\n   $ brew update\n   $ brew install lua\n   $ brew install luarocks\n   ~~~\n\n3. Install some modules from this list: https://luarocks.org/search?q=mjolnir\n\n   ~~~bash\n   $ luarocks install mjolnir.hotkey\n   $ luarocks install mjolnir.application\n   ~~~\n\n   Note: you don't need to install every module, since some of them have lower-level ones as dependencies, e.g. installing mjolnir-hotkey automatically installs mjolnir-keycodes, etc.\n\n4. Create `~/.mjolnir/init.lua`, and at the top, require the modules you installed, e.g. like this:\n\n   ~~~lua\n   local application = require \"mjolnir.application\"\n   local hotkey = require \"mjolnir.hotkey\"\n   local window = require \"mjolnir.window\"\n   local fnutils = require \"mjolnir.fnutils\"\n   ~~~\n\n   NOTE: The `mjolnir.window` module comes with `mjolnir.application`,\n         so you don't need to (and can't) install it separately. Also,\n         `mjolnir.fnutils` is already installed as a dependency of the\n         other modules, so you don't need to explicitly install it.\n\n5. Start writing some fun stuff!\n\n   ~~~lua\n   hotkey.bind({\"cmd\", \"alt\", \"ctrl\"}, \"D\", function()\n      local win = window.focusedwindow()\n      local f = win:frame()\n      f.x = f.x + 10\n      win:setframe(f)\n   end)\n   ~~~\n   \n6. Reload config using `mjolnir.reload()` in the console.\n\n## Uninstalling\n\nIf for any reason you want to undo everything in the above steps, do:\n\n~~~bash\n$ luarocks purge --tree=/usr/local\n$ brew uninstall lua luarocks\n$ rm ~/.luarocks/config.lua\n~~~\n\n## Installing to $HOME\n\nIf you run `luarocks --local install ...` instead of `luarocks\ninstall ...`, it will install to `~/.luarocks/` instead of\n`/usr/local`. Update your `package.path` and `package.cpath`\naccordingly, as noted in the FAQ.\n\n## Finding modules\n\nCheck out https://luarocks.org/search?q=mjolnir for a list of\npublished Mjolnir modules.\n\nNotable modules:\n\n- `mjolnir.hotkey` for creating global hotkeys\n- `mjolnir.application` for inspecting and manipulating running OS X applications and windows\n- `mjolnir.alert` for showing on-screen messages\n\n## Documentation\n\nMjolnir and mjolnir-modules use [Dash](http://kapeli.com/dash) for\ndocumentation. You can install Mjolnir's docset from the User\nContributed section of the Downloads tab in Dash's Preferences\nwindow. It should generally update on its own.\n\n## Publishing modules\n\nWrote an awesome module, and want to share with the world? Check out\nthe `sample-plugin` subdirectory.\n\nWhen it's published, please announce it on our mailing list :)\n\nAvoid the temptation to reformat the Repos page in the wiki. It uses\na strict format that's needed by the documentation generator.\n\n## Principles\n\nDevelopment of Mjolnir.app and the core Mjolnir modules follow these\nprinciples:\n\n1. They must be stable. The app should never crash. You should only\n   ever have to launch it once, and it should stay running until you\n   quit. Period.\n\n2. They must be lightweight. They should never do anything that drains\n   your computer's battery. They should never poll for anything. They\n   should use as little RAM as possible. Everything they do should\n   feel instant and snappy, never sluggish or delayed.\n\n3. They should be completely transparent. There should be no surprises\n   in how it's behaving, or what's being executed and when. Everything\n   should be fully predictable.\n\n4. They must not be bloated. The app and core modules must always\n   adhere to the minimalist philosophy, no excuses. Everything else\n   can be a separate Lua module.\n\n## FAQ\n\n1. **Add Spaces support!**\n\n   Not a question. But anyway, there are no public *or* private APIs\n   to manage Spaces in OS X 10.9 or 10.10, there are only private APIs\n   that work in 10.8. No open source project has been able to crack\n   this problem yet, not just us.\n\n2. **Does LuaRocks have a way to upgrade modules automatically?**\n\n   Sadly no. But it can be done manually by removing a module and\n   re-installing it. I'm hoping maybe one day some enthusiastic\n   Mjolnir users can jump in and improve the tooling around this. ;)\n\n3. **I'm getting an error like this: \"attempt to index field 'win' (a nil value)\"**\n\n   Disable and re-enable accessibility. It may look enabled, but do it\n   anyway. (This is an OS X bug, not a Mjolnir bug.)\n\n4. **I don't have things in /usr/local, so I can't load modules!**\n\n   Add the path to `package.path` and `package.cpath` in your\n   init-file. For example, if you're using Boxen, add this:\n\n   ~~~lua\n   package.path = package.path .. ';/opt/boxen/homebrew/share/lua/5.3/?.lua'\n   package.cpath = package.cpath .. ';/opt/boxen/homebrew/lib/lua/5.3/?.so'\n   ~~~\n\n## Mjolnir vs. other apps\n\n1. **Hydra, Phoenix, or Zephyros?**\n\n   Those are my old apps. Mjolnir is their spiritual successor.\n\n2. **Slate**\n\n   They're both programmer-centric with somewhat similar goals but\n   different approaches. Mjolnir is more modularized, Slate is more\n   all-in-one. Try them both and see which one suits you better.\n\n3. **Spectacle, Moom, SizeUp, Divvy**\n\n   Mjolnir is intended for programmers who want to write programs that\n   customize their environment. It's not intended to be a drag-n-drop\n   solution; it's meant to allow you to write your own personalized\n   productivity enhancement suite to keep and to use long-term.\n\n4. **Hammerspoon**\n\n   [Hammerspoon](https://github.com/hammerspoon) is a fork of Mjolnir (get it? a \"fork and/or spoon\" of Mjolnir aka. Thor's \"hammer\"? :) ). It was created to turn Mjolnir back into an all-in-one application, for those who prefer that over a completely decentralized module system with a bare-bones core (kind of like the debate of monolithic kernel vs microkernel). It's actively maintained, like literally there's commit activity every week.\n\n## Community\n\nOur [mailing list](https://groups.google.com/forum/#!forum/mjolnir-io)\nis a fine place to share ideas, and follow releases and announcements.\n\nWe also have a shrinking IRC channel on freenode, #mjolnir.\n\n## Credits and Thanks\n\nMjolnir is developed by Steven Degutis with the help of\n[various contributors](https://github.com/sdegutis/mjolnir/graphs/contributors).\n\nSpecial thanks, in no special order:\n\n- @Habbie for his constant help and support ever since the moment I\n  first jumped into #lua and said \"anyone wanna try out an OS X window\n  manager scriptable in Lua?\" and being the first person to join our\n  IRC channel and for helping with nearly every Lua question I had\n\n- @cmsj, @Keithbsmiley, @BrianGilbert, @muescha, @chdiza, @asmagill,\n  @splintax, @arxanas, and @DomT4 for all their help and support\n\n- @jasonm23 for writing, not one, not two, but *three* app icons for\n  this project\n\n- @jhgg for contributing so many awesome modules to the project\n\n- @kapeli for his patience with my constant Dash questions and PRs\n\n- Everyone else who has helped who I've probably forgotten: thanks for\n  all your help!\n\n- Everyone who has donated: thank you so much for your support!\n\nSee the in-app About panel for the open source licenses for the\nsoftware Mjolnir uses internally (basically just Lua's license).\n\n## Changes\n\n**NOTE:** When upgrading, System Preferences will *pretend* like\n  Mjolnir's accessibility is enabled, showing a checked checkbox. But\n  in fact, you'll still need to be disable and re-enable it. This is a\n  bug in OS X.\n\n### 0.4.3\n\n- Removed donation requests\n\n### 0.4.{0,1,2}\n\n- Default implementation of `mjolnir.showerror(err)` now opens the console and focuses Mjolnir\n- There's a new variable, `mjolnir.configdir = \"~/.mjolnir/\"` for users and modules to coordinate\n- New `mjolnir.focus()` function to make Mjolnir the focused app\n- The original `print` function is now stored in `mjolnir.rawprint` (rather than `mjolnir.print`, to disambiguate it)\n- New `mjolnir.openconsole()` function to open console (and bring Mjolnir to front)\n\n### 0.3.1\n\n- Renamed global `mj` to `mjolnir`\n\n### 0.3\n\n- The UI has changed drastically. Expect nothing to be in the same\n  place or look the same. Pretend it's a brand new app.\n- Modules are now handled by LuaRocks instead of by the app itself.\n- The \"core\" namespace has been renamed to \"mj\".\n- The 'mj.window' module now ships with the 'mj.application' LuaRocks\n  package since they depend on each other.\n- `mj.screen:frame_without_dock_or_menu()` is now called `mj.screen:frame()`\n- `mj.screen:frame_including_dock_and_menu()` is now called `mj.screen:fullframe()`\n\n## License\n\n> Released under MIT license.\n>\n> Copyright (c) 2014 Steven Degutis\n>\n> Permission is hereby granted, free of charge, to any person obtaining a copy\n> of this software and associated documentation files (the \"Software\"), to deal\n> in the Software without restriction, including without limitation the rights\n> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n> copies of the Software, and to permit persons to whom the Software is\n> furnished to do so, subject to the following conditions:\n>\n> The above copyright notice and this permission notice shall be included in\n> all copies or substantial portions of the Software.\n>\n> THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n> THE SOFTWARE.\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mods",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sample-plugin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshots",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

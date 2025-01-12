@@ -1,0 +1,52 @@
+{
+  "metadata": {
+    "timestamp": 1736710310932,
+    "page": 104,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "koekeishiya/skhd",
+      "stars": 6649,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "bin/\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.0556640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2017 Åsmund Vikane\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.009765625,
+          "content": "**skhd** is a simple hotkey daemon for macOS that focuses on responsiveness and performance.\nHotkeys are defined in a text file through a simple DSL. **skhd** is able to hotload its config file, meaning that hotkeys can be edited and updated live while **skhd** is running.\n\n**skhd** uses a pid-file to make sure that only one instance is running at any moment in time. This also allows for the ability to trigger\na manual reload of the config file by invoking `skhd --reload` at any time while an instance of **skhd** is running. The pid-file is saved\nas `/tmp/skhd_$USER.pid` and so the user that is running **skhd** must have write permission to said path.\nWhen running as a service (through launchd) log files can be found at `/tmp/skhd_$USER.out.log` and `/tmp/skhd_$USER.err.log`.\n\nlist of features\n\n| feature                    | skhd |\n|:--------------------------:|:----:|\n| hotload config file        | [x]  |\n| hotkey passthrough         | [x]  |\n| modal hotkey-system        | [x]  |\n| application specific hotkey| [x]  |\n| blacklist applications     | [x]  |\n| use media-keys as hotkey   | [x]  |\n| synthesize a key-press     | [x]  |\n\n### Install\n\nThe first time **skhd** is ran, it will request access to the accessibility API.\n\nAfter access has been granted, the application must be restarted.\n\n*Secure Keyboard Entry* must be disabled for **skhd** to receive key-events.\n\n**Homebrew**:\n\nRequires xcode-8 command-line tools.\n\n      brew install koekeishiya/formulae/skhd\n      skhd --start-service\n\n**Source**:\n\nRequires xcode-8 command-line tools.\n\n      git clone https://github.com/koekeishiya/skhd\n      make install      # release version\n      make              # debug version\n\n### Usage\n\n```\n--install-service: Install launchd service file into ~/Library/LaunchAgents/com.koekeishiya.skhd.plist\n    skhd --install-service\n\n--uninstall-service: Remove launchd service file ~/Library/LaunchAgents/com.koekeishiya.skhd.plist\n    skhd --uninstall-service\n\n--start-service: Run skhd as a service through launchd\n    skhd --start-service\n\n--restart-service: Restart skhd service\n    skhd --restart-service\n\n--stop-service: Stop skhd service from running\n    skhd --stop-service\n\n-V | --verbose: Output debug information\n    skhd -V\n\n-P | --profile: Output profiling information\n    skhd -P\n\n-v | --version: Print version number to stdout\n    skhd -v\n\n-c | --config: Specify location of config file\n    skhd -c ~/.skhdrc\n\n-o | --observe: Output keycode and modifiers of event. Ctrl+C to quit\n    skhd -o\n\n-r | --reload: Signal a running instance of skhd to reload its config file\n    skhd -r\n\n-h | --no-hotload: Disable system for hotloading config file\n    skhd -h\n\n-k | --key: Synthesize a keypress (same syntax as when defining a hotkey)\n    skhd -k \"shift + alt - 7\"\n\n-t | --text: Synthesize a line of text\n    skhd -t \"hello, worldシ\"\n```\n\n### Configuration\n\nThe default configuration file is located at one of the following places (in order):\n\n - `$XDG_CONFIG_HOME/skhd/skhdrc`\n - `$HOME/.config/skhd/skhdrc`\n - `$HOME/.skhdrc`\n\nA different location can be specified with the *--config | -c* argument.\n\nA sample config is available [here](https://github.com/koekeishiya/skhd/blob/master/examples/skhdrc)\n\nA list of all built-in modifier and literal keywords can be found [here](https://github.com/koekeishiya/skhd/issues/1)\n\nA hotkey is written according to the following rules:\n```\nhotkey       = <mode> '<' <action> | <action>\n\nmode         = 'name of mode' | <mode> ',' <mode>\n\naction       = <keysym> '[' <proc_map_lst> ']' | <keysym> '->' '[' <proc_map_lst> ']'\n               <keysym> ':' <command>          | <keysym> '->' ':' <command>\n               <keysym> ';' <mode>             | <keysym> '->' ';' <mode>\n\nkeysym       = <mod> '-' <key> | <key>\n\nmod          = 'modifier keyword' | <mod> '+' <mod>\n\nkey          = <literal> | <keycode>\n\nliteral      = 'single letter or built-in keyword'\n\nkeycode      = 'apple keyboard kVK_<Key> values (0x3C)'\n\nproc_map_lst = * <proc_map>\n\nproc_map     = <string> ':' <command> | <string>     '~' |\n               '*'      ':' <command> | '*'          '~'\n\nstring       = '\"' 'sequence of characters' '\"'\n\ncommand      = command is executed through '$SHELL -c' and\n               follows valid shell syntax. if the $SHELL environment\n               variable is not set, it will default to '/bin/bash'.\n               when bash is used, the ';' delimeter can be specified\n               to chain commands.\n\n               to allow a command to extend into multiple lines,\n               prepend '\\' at the end of the previous line.\n\n               an EOL character signifies the end of the bind.\n\n->           = keypress is not consumed by skhd\n\n*            = matches every application not specified in <proc_map_lst>\n\n~            = application is unbound and keypress is forwarded per usual, when specified in a <proc_map>\n```\n\nA mode is declared according to the following rules:\n```\n\nmode_decl = '::' <name> '@' ':' <command> | '::' <name> ':' <command> |\n            '::' <name> '@'               | '::' <name>\n\nname      = desired name for this mode,\n\n@         = capture keypresses regardless of being bound to an action\n\ncommand  = command is executed through '$SHELL -c' and\n           follows valid shell syntax. if the $SHELL environment\n           variable is not set, it will default to '/bin/bash'.\n           when bash is used, the ';' delimeter can be specified\n           to chain commands.\n\n           to allow a command to extend into multiple lines,\n           prepend '\\' at the end of the previous line.\n\n           an EOL character signifies the end of the bind.\n```\n\nGeneral options that configure the behaviour of **skhd**:\n```\n# specify a file that should be included as an additional config-file.\n# treated as an absolutepath if the filename begins with '/' otherwise\n# the file is relative to the path of the config-file it was loaded from.\n\n.load \"/Users/Koe/.config/partial_skhdrc\"\n.load \"partial_skhdrc\"\n\n# prevents skhd from monitoring events for listed processes.\n\n.blacklist [\n    \"terminal\"\n    \"qutebrowser\"\n    \"kitty\"\n    \"google chrome\"\n]\n```\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "makefile",
+          "type": "blob",
+          "size": 0.4365234375,
+          "content": "FRAMEWORKS     = -framework Cocoa -framework Carbon -framework CoreServices\nBUILD_PATH     = ./bin\nBUILD_FLAGS    = -std=c99 -Wall -g -O0\nSKHD_SRC       = ./src/skhd.c\nBINS           = $(BUILD_PATH)/skhd\n\n.PHONY: all clean install\n\nall: clean $(BINS)\n\ninstall: BUILD_FLAGS=-std=c99 -Wall -O2\ninstall: clean $(BINS)\n\nclean:\n\trm -rf $(BUILD_PATH)\n\n$(BUILD_PATH)/skhd: $(SKHD_SRC)\n\tmkdir -p $(BUILD_PATH)\n\tclang $^ $(BUILD_FLAGS) $(FRAMEWORKS) -o $@\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

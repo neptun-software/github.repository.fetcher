@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "timestamp": 1736711547986,
+    "page": 61,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "handong1587/handong1587.github.io",
+      "stars": 3126,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2490234375,
+          "content": "*.iml\n.idea/\n.idea/scopes/scope_settings.xml\n.idea/workspace.xml\n.ipr\n.iws\n*~\n~*\n*.diff\n*.patch\n*.bak\n.DS_Store\nThumbs.db\n.project\n.*proj\n*.swp\n*.swo\n*.pyc\n*.pyo\nbuild\nnode_modules\n_site\nsea-modules\n.cache\n\nGemfile.lock\nbower_components\nnode_modules\nbuild"
+        },
+        {
+          "name": "Gemfile",
+          "type": "blob",
+          "size": 0.173828125,
+          "content": "source 'https://rubygems.org'\n#gem 'jekyll-lunr-js-search', '~> 3.1'\ngem 'kramdown'\ngem 'nokogiri'\ngem 'therubyracer'\ngem 'jekyll-paginate'\ngem 'rouge'\ngem 'jekyll-watch'\ngemspec"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0439453125,
+          "content": "MIT License\n\nCopyright (c) 2019  handong1587\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.2265625,
+          "content": "This github blog theme is forked from [zJiaJun](https://github.com/zJiaJun).\n\nI use this repo to organise interesting papers, projects, websites, blogs and my reading/study notes.\n\nFeel free to send pull requests or open issues :-)\n"
+        },
+        {
+          "name": "Rakefile",
+          "type": "blob",
+          "size": 1.9140625,
+          "content": "require 'rake'\nrequire 'uglifier'\nrequire 'fileutils'\n\ntask :default => :build\n\ndesc \"Ensures all dependent JS libraries are installed and builds the gem.\"\ntask :build_gem => :build do\n  exec(\"gem build jekyll-lunr-js-search.gemspec\")\nend\n\ntask :build => [\n  :bower_update,\n  :create_build_dir,\n  :copy_jekyll_plugin,\n  :concat_js,\n  :minify_js]\n\ntask :bower_update do\n  abort \"Please ensure bower is installed: npm install -g bower\" unless system('bower install')\nend\n\ntask :create_build_dir do\n  Dir.mkdir('build') unless Dir.exists?('build')\nend\n\ntask :copy_jekyll_plugin do\n  lunr_version = File.read(\"bower_components/lunr.js/VERSION\").strip\n  open(\"build/jekyll_lunr_js_search.rb\", \"w\") do |concat|\n    Dir.glob(\"lib/jekyll_lunr_js_search/*.rb\") do |file|\n      ruby = File.read(file).sub(/LUNR_VERSION = .*$/, \"LUNR_VERSION = \\\"#{lunr_version}\\\"\")\n      concat.puts ruby\n    end\n  end\nend\n\ntask :concat_js do\n  files = [\n    'bower_components/jquery/dist/jquery.js',\n    'bower_components/mustache/mustache.js',\n    'bower_components/date.format/date.format.js',\n    'bower_components/uri.js/src/URI.js',\n    'bower_components/lunr.js/lunr.min.js',\n    'javascript/jquery.lunr.search.js'\n  ]\n\n  File.open('build/search.js', 'w') do |file|\n    file.write(files.inject('') { |data, file|\n      data << File.read(file)\n    })\n  end\n\n  # Lunr is stored separately so we can use it for index generation\n  FileUtils.cp('bower_components/lunr.js/lunr.min.js', 'build/lunr.min.js')\nend\n\ntask :minify_js do\n  minified, map = Uglifier.new.compile(File.read('build/search.js'))\n  File.open('build/search.min.js', 'w') do |file|\n    file.puts minified\n  end\nend\n\ntask :minify_js_map do\n  minified, map = Uglifier.new.compile_with_map(File.read('build/search.js'))\n  File.open('build/search.js.map', 'w') { |file| file.write(map) }\n  File.open('build/search.min.js', 'w') do |file|\n    file.puts minified\n    file.write \"//# sourceMappingURL=search.js.map\"\n  end\nend"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 2.9755859375,
+          "content": "# Where things are\nsource:       .\ndestination:  ./_site\nplugins_dir:  ./_plugins\nlayouts_dir:  ./_layouts\npaginate:     8\n\n# Handling Reading\nsafe:         false\ninclude:      [\".htaccess\"]\nexclude:      []\nkeep_files:   [\".git\", \".svn\"]\nencoding:     \"utf-8\"\nmarkdown_ext: \"markdown,mkdown,mkdn,mkd,md\"\ntextile_ext:  \"textile\"\n\n#gems:         ['jekyll-paginate', 'jekyll-lunr-js-search']\ngems:         ['jekyll-paginate']\n\n# Filtering Content\nshow_drafts:  null\nlimit_posts:  0\nfuture:       true\nunpublished:  false\n\n# Conversion\nmarkdown:     kramdown\nhighlighter:  rouge\nlsi:          false\nexcerpt_separator: \"\\n\\n\"\ntoc_levels:   1..3 # TOC # 2015/11/29\n\n# Serving\ndetach:       false\nport:         4000\nhost:         127.0.0.1\nbaseurl:      \"\" # does not include hostname\n\n# Outputting\npermalink:     date\npaginate_path: /page:num\ntimezone:      null\n\n#Site config\ntitle: handong1587\ndescription: handong1587's blog\nkeywords: Deep Learning\nurl: https://handong1587.github.io\nfeed: /atom.xml\nfavicon: /images/shortcut.jpg\n\n#Nav config\nnav:\n  - text: HOME\n    url: /index.html\n  - text: CATEGORIES\n    url: /categories.html\n  - text: ARCHIVES\n    url: /archives.html\n  - text: LINKS\n    url: /links.html\n  - text: SEARCH\n    url: /search.html\n  - text: ABOUT ME\n    url: /about.html\n\n#Author config\nauthor:\n    name: handong1587\n    email: handong1587@gmail.com\n    imageLink: /images/header2.jpg\n    simpleIntro: Hi world~\n    detailIntro:\n      <p>I am working as machine learning/deep learning engineer.</p>\n      <p>This blog is used to organise interesting papers, projects, websites, blogs and my reading/study notes.</p>\n      <p>Feel free to send PRs or open issues to help maintain this blog&#58; https://github.com/handong1587/handong1587.github.io</p>\n      <p></p>\n\n#You can choose your icon by http://fortawesome.github.io/Font-Awesome/icons/#brand\nfollow:\n  - class: icon-rss\n    url: /atom.xml\n  - class: icon-weibo\n    url: http://weibo.com/\n  - class: icon-facebook\n    url: https://www.facebook.com/\n  - class: icon-github-alt\n    url: https://github.com/handong1587/\n  - class: icon-twitter\n    url: https://www.twitter.com/\n  - class: icon-google-plus\n    url: https://plus.google.com/116595571760191938657/about\n\n#Links\ncustomLinks:\n  - item:\n    - text: Caffe on github\n      url: https://github.com/BVLC/caffe\n    - text: Deep Learning Tutorials\n      url: http://deeplearning.net/tutorial/\n    - text: Deep Learning Reading List\n      url: http://deeplearning.net/reading-list/\n    message: About Deep Learning\n  - item:\n    - text: 爱可可-爱生活\n      url: http://weibo.com/fly51fly\n    message: Resources\n\ngoogleAnaly:\n  config: false\n  id: UA-58146229-1\n\n#baidu tongji\nbaiduTongji:\n  config: true\n  id:  9144251ce5a4f4019de4bc601b9b490b\n\n#comment config\ndisqus:\n  config: true\n  id: handong1587\n\nduoshuo:\n  config: false\n  id: null\n\n#baidu share config\nbaiduShare:\n  config: false\n\n# lunr search\nlunr_search:\n  excludes: [rss.xml, atom.xml]\n  stopwords: \"stopwords.txt\"\n  min_length: 3\n  js_dir: \"javascript\"\n"
+        },
+        {
+          "name": "_layouts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_plugins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_posts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "about.html",
+          "type": "blob",
+          "size": 1.048828125,
+          "content": "---\nlayout: default\ntitle: About\ncomment: true\nkeywords: Contact\n---\n\n<div class=\"article\">\n    <h3 class=\"title\">{{ page.title }}</h3>\n    <div class=\"about\">\n\n        <div class=\"about-text\">\n            <p>{{ site.author.simpleIntro }}</p>\n            {{ site.author.detailIntro }}\n        </div>\n        <div class=\"about-image\">\n            <img src=\"{{ site.author.imageLink }}\" />\n        </div>\n    </div>\n    <div class=\"fn-clear\"></div>\n    <div class=\"social\">\n        {% for link in site.follow %}\n        <a href=\"{{ link.url }}\" target=\"_blank\"><i class=\"{{ link.class }}\"></i></a>\n        {% endfor %}\n    </div>\n    <div class=\"fn-clear\"></div>\n    <div class=\"contact\">\n        <a href=\"mailto:{{ site.author.email }}\">{{ site.author.email }}</a>\n    </div>\n    <div class=\"comment\">\n        {% if site.disqus.config %}\n        <div id=\"disqus_thread\"></div>\n        {% else %}\n            {% if site.duoshuo.config %}\n            <div class=\"ds-thread\" data-thread-key=\"{{ page.title }}\"></div>\n            {% endif %}\n        {% endif %}\n    </div>\n</div>"
+        },
+        {
+          "name": "archives.html",
+          "type": "blob",
+          "size": 0.7216796875,
+          "content": "---\nlayout: default\ntitle: Archives\nkeywords: Archives\n---\n<div class=\"article\">\n    <h3 class=\"title\">{{ page.title }}</h3>\n    {% capture post_year1 %}{{ 'now' | date: '%Y' }}{% endcapture %}\n    <ul class=\"article-year\" data-year=\"{{ post_year1 }}\">\n        {% for post in site.posts %}\n            {% capture post_year2 %}{{ post.date | date: '%Y' }}{% endcapture %}\n            {% if post_year1 != post_year2 %}\n                {% assign post_year1 = post_year2 %}\n    </ul>\n    <ul class=\"article-year\" data-year=\"{{ post_year1 }}\">\n            {% endif %}\n        <li class=\"fn-clear\"><span>{{ post.date |  date: '%b %d' }}</span><a href=\"{{site.url}}{{ post.url }}\">{{ post.title }}</a></li>\n        {% endfor %}\n    </ul>\n</div>\n\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "atom.xml",
+          "type": "blob",
+          "size": 0.814453125,
+          "content": "---\nlayout: null\n---\n<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\">\n\n   <title>{{ site.title }}</title>\n   <link href=\"{{ site.url }}{{ site.feed }}\" rel=\"self\" type=\"application/atom+xml\"/>\n   <link href=\"{{ site.url }}\" rel=\"alternate\" type=\"text/html\" />\n   <updated>{{ site.time | date_to_xmlschema }}</updated>\n   <id>{{ site.url }}</id>\n   <author>\n     <name>{{ site.author.name }}</name>\n     <email>{{ site.author.email }}</email>\n   </author>\n\n   {% for post in site.posts limit:10 %}\n   <entry>\n     <title>{{ post.title }}</title>\n     <link href=\"{{ site.url }}{{ post.url }}\"/>\n     <updated>{{ post.date | date_to_xmlschema }}</updated>\n     <id>{{ site.url }}{{ post.id }}</id>\n     <content type=\"html\">{{ post.content | xml_escape }}</content>\n   </entry>\n   {% endfor %}\n\n</feed>\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.6005859375,
+          "content": "{\n  \"name\": \"jekyll-lunr-js-search\",\n  \"version\": \"0.0.1\",\n  \"homepage\": \"https://github.com/slashdotdash/jekyll-lunr-js-search\",\n  \"authors\": [\n    \"Ben Smith <ben@10consulting.com>\"\n  ],\n  \"description\": \"Jekyll + lunr.js = Static websites with powerful full-text search using JavaScript.\",\n  \"keywords\": [\n    \"jekyll\",\n    \"lunr\",\n    \"search\"\n  ],\n  \"license\": \"MIT\",\n  \"ignore\": [\n    \"**/.*\",\n    \"node_modules\",\n    \"bower_components\",\n    \"build\"\n  ],\n  \"dependencies\": {\n    \"date.format\": \"~1.2.3\",\n    \"jquery\": \"~2.1.0\",\n    \"lunr.js\": \"~0.4.5\",\n    \"mustache\": \"~0.8.1\",\n    \"uri.js\": \"~1.12.0\"\n  }\n}\n"
+        },
+        {
+          "name": "categories.html",
+          "type": "blob",
+          "size": 1.021484375,
+          "content": "---\nlayout: default\ntitle: Categories\nkeywords: Categories\n---\n<div class=\"article\">\n    <h3 class=\"title\">{{ page.title }}</h3>\n    <ul class=\"categories\">\n    {% assign categories_list = site.categories %}\n    {% for category in categories_list %}\n        <li class=\"categories-item\"><a href=\"{{ BASE_PATH }}{{ site.JB.categories_path }}#{{ category[0] }}-ref\">\n            {{ category[0] | join: \"/\" }}\n        </a></li>\n    {% endfor %}\n    </ul>\n\n<div class=\"article\">\n{% for category in site.categories %} \n  <h2  class=\"article-year\" id=\"{{ category[0] }}-ref\" data-year=\"&diams;\">{{ category[0] | join: \"/\" }}</h2>\n  <ul style=\"list-style: none\">\n    {% assign pages_list = category[1] %}  \n    {% for node in pages_list %}\n      {% if node.title != null %}\n        {% if group == null or group == node.group %}\n            <li style=\"background:#F2EEEC; padding:5px; margin:3px 0\"><a href=\"{{ BASE_PATH }}{{node.url}}\">{{node.title}}</a></li>\n        {% endif %}\n      {% endif %}\n    {% endfor %}\n   \n  </ul>\n{% endfor %}\n</div>\n</div>\n"
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "drafts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "google4ce86ff54159afee.html",
+          "type": "blob",
+          "size": 0.0517578125,
+          "content": "google-site-verification: google4ce86ff54159afee.html"
+        },
+        {
+          "name": "handong1587.github.io.gemspec",
+          "type": "blob",
+          "size": 0.4775390625,
+          "content": "Gem::Specification.new do |s|\n  s.name          = 'handong1587.github.io'\n  s.version       = '0.0.1'\n  s.licenses      = ['MIT']\n  s.summary       = 'handong1587\\'s github-pages site with jekyll plugins'\n  s.description   = 'This blog is used to organise interesting papers, projects, websites, blogs and my reading/study notes.'\n  s.authors       = ['handong1587']\n  s.email         = 'handong1587@gmail.com'\n  s.homepage      = 'https://github.com/handong1587/handong1587.github.io'\nend"
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 1.248046875,
+          "content": "---\nlayout: default\ntitle: handong1587's blog\nkeywords: Deep Learning/Machine Learning\n---\n{% for post in paginator.posts %}\n    <div class=\"article\">\n        <h3 class=\"title\"><a href=\"{{ site.url }}{{ post.url }}\" title=\"{{ post.title }}\">{{ post.title }}</a></h3>\n        <article class=\"rexp\">\n            <p>{{ post.excerpt }}</p>\n        </article>\n        <a href=\"{{ site.url }}{{ post.url }}\" class=\"more\"><i class=\"icon-link\"></i></a>\n        <div class=\"info\">\n            <span class=\"info-title\"><i class=\"icon-calendar\"></i> Published: </span>\n            <span class=\"info-date\">{{ post.date | date_to_string }}</span>\n        </div>\n    </div>\n{% endfor %}\n{% if paginator.total_pages > 1 %}\n    <nav class=\"pagination fn-clear\">\n        <span class=\"pagination-icon\"><i class=\" icon-copy\"></i></span>\n        <ul class=\"pagination-list\">\n            {% for page in (1..paginator.total_pages) %}\n                {% if page == paginator.page %}\n                    <li class=\"current\"><a href=\"javascript:void(0);\">{{ page }}</a></li>\n                {% else %}\n                    <li><a href=\"{{ site.url }}/{%if page > 1 %}page{{ page }}/{% endif %}\">{{ page }}</a></li>\n                {% endif %}\n            {% endfor %}\n        </ul>\n    </nav>\n{% endif %}"
+        },
+        {
+          "name": "javascript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "links.html",
+          "type": "blob",
+          "size": 0.7861328125,
+          "content": "---\nlayout: default\ntitle: Links\ncomment: true\nkeywords: Links\n---\n\n<div class=\"article\">\n    <h3 class=\"title\">{{ page.title }}</h3>\n    <div class=\"links\">\n        {% for i in site.customLinks %}\n        <h4 class=\"links-category fn-clear\">{{ i.message }}</h4>\n        <ul class=\"links-list fn-clear\">\n                {% for link in i.item %}\n                <li><a href=\"{{ link.url }}\" target=\"_blank\">{{ link.text }}</a></li>\n                {% endfor %}\n        </ul>\n        {% endfor %}\n    </div>\n    <div class=\"comment\">\n        {% if site.disqus.config %}\n        <div id=\"disqus_thread\"></div>\n        {% else %}\n            {% if site.duoshuo.config %}\n            <div class=\"ds-thread\" data-thread-key=\"{{ page.title }}\"></div>\n            {% endif %}\n        {% endif %}\n    </div>\n</div>"
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pgp.txt",
+          "type": "blob",
+          "size": 1.7197265625,
+          "content": "-----BEGIN PGP PUBLIC KEY BLOCK-----\nVersion: GnuPG v1.4.11 (Darwin)\n\nmQENBE9e0pIBCADXib13PNjCbKH0dbCGMRDNDtg1Fp75t/jr7lqJE8C9B5XlrAXb\nO1uScvzRUt+myNyEhk21lA8KmTR0f1up84frxdTV7H4evePWbYbKigVu5zKKAvnG\nhGPnxtAslxvB/0fV1s+1IFpIG2VADHTaJ3ESyXR21S3tx9Uca3WQ9H2Jq32ur0Ox\neCvRD1Tu8/YXLtOi3oyZZssqy7L9NpYOCZG7mQunds7LGSfz8ucWLlgUunV3seHB\nR0CUSYccphRAfrtr4lPbb9RXrXNVKtcoHbiDnSnzayjcghvjQuPDyca09fJDO4nk\nNlUlJmc0Pgcc4eFcCAnuVIR8RamGZ/+0gZDBABEBAAG0Q1RvbSBQcmVzdG9uLVdl\ncm5lciAoQ29mb3VuZGVyICYgQ1RPLCBHaXRIdWIsIEluYy4pIDx0b21AZ2l0aHVi\nLmNvbT6JATgEEwECACIFAk9e0pICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheA\nAAoJEKphtGN5qvflqU4H/jAxh8YMwbSWgnilFbhYPoYL+jPyY74pA/fNSYcTy7qH\n5vVNfImuQ94oyQZosq85J1jXT1ln/liQzdbdKTt36HQDGTSyRJD2FfVUmFMYtC8B\nIR+RpaCqNdboZPxZcmuFSERqjv1xEyc+9tAlsMg+T8CwpDUft2OgS46SyMcVZ0dh\nG56zrZAR/x/ZapxrIfAzRj6CSunJEa82BCvgkzI8X8BsMdiEFT5A02wrFCA7qbDv\n+197SiV0Ishv2m5WeU/qGIUsps3TLgeyZnyiqYKQZcIFBhZ0PR+WQRbw2Ct7Yefz\nb8wcT6if8mZGZrGOBJorCZe50AUKHkaS+JoPXzGexIC5AQ0ET17SkgEIALvtGjPp\nVx87cC1nkcd3iRpv+/02wb5u/KiQqa0qmW3u3wcKTVlk58ZLhNxDqH/l+ClzhKpb\nnb6c3hCkLF9te1royibkJGlb83YAJLDJM3a389Sd1vfgFNk7POdSgZ72EPzGiUnn\no8cZRXPhThbuL0D6ZA3oUfW23VVt+3oh3ieF9cnhaPL/d+te9lfvypt6BERdzoYp\nJF4bWl0MN0GALW5lH0AkoEYBM7kLyWqEqB1wie4xEsh9cRbx5e5KCJFD6JyT9g80\nHUDJyJV9D6SEIU2lyqBnVSuRE16jmAEZuUqhldpZocNtmrF0JF5evciYPnJrULD2\nYTepopzPXCGAqdUAEQEAAYkBHwQYAQIACQUCT17SkgIbDAAKCRCqYbRjear35SKk\nCACpmJXhORU12Sjmyfpgs4z+t1kGbuaRvJl18llZ3T2mzxs1mDV1uTZ7eVc+af+e\nHkhEaIVO35By6sg4Y2xV8cW+J+YKUpGTKoUVqb0tLn2R/xJx1hbQUle3rOlfOCO3\ndHclvXzYAsRGwMpOj8idu8Q8yUH2FncRU7iCxmkgxtp6/tPo06z9ZYsAM1DyELcj\nY2jJ57A8urwkbRCBXGJnAYCM70MPXPKuxheL3mDPHHgE5aUWc4BQH9Oz4PWeuVGB\nZGjzDtHLzltuWZQXURNk3nklDG84AZ8SLMxMlNvYqfwVqhLld7rQkncjH8/kkUxJ\njrpwB041z2lIc22q/ZDsctSM\n=vrTm\n-----END PGP PUBLIC KEY BLOCK-----\n"
+        },
+        {
+          "name": "search.html",
+          "type": "blob",
+          "size": 1.7509765625,
+          "content": "---\nlayout: default\ntitle: Search\nkeywords: Search\n---\n\n<div class=\"article\">\n    <h3 class=\"title\">{{ page.title }}</h3>\n    <script src=\"/javascript/search.min.js\" type=\"text/javascript\" charset=\"utf-8\"></script>\n    <div class=\"search\">\n        <form action=\"/search\" method=\"get\">\n        <input type=\"text\" id=\"search-query\" name=\"q\" placeholder=\"Search\" autocomplete=\"off\">\n        </form>\n    </div>\n    \n    <section id=\"search-results\" style=\"display: none;\">\n        <p>Search results</p>\n        <div class=\"entries\">\n        </div>\n    </section>\n\n    {% raw %}\n    <script id=\"search-results-template\" type=\"text/mustache\">\n        {{#entries}}\n            <article>\n                <h3>\n                    {{#date}}<small><time datetime=\"{{pubdate}}\" pubdate>{{displaydate}}</time></small>{{/date}}\n                    <a href=\"{{url}}\">{{title}}</a>\n                </h3>\n                {{#is_post}}\n                <ul>\n                    {{#tags}}<li>{{.}} </li>{{/tags}}\n                </ul>\n                {{/is_post}}\n            </article>\n        {{/entries}}\n    </script>\n    {% endraw %}\n\n    <script type=\"text/javascript\">\n        $(function() {\n            $('#search-query').lunrSearch({\n                indexUrl  : '/javascript/index.json',   // url for the .json file containing search index data\n                results   : '#search-results',          // selector for containing search results element\n                template  : '#search-results-template', // selector for Mustache.js template\n                titleMsg  : '<h1>Search results<h1>',   // message attached in front of results (can be empty)\n                emptyMsg  : '<p>Nothing found.</p>'     // shown message if search returns no results\n            });\n        });\n    </script>\n</div>"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "metadata": {
+    "timestamp": 1736711668483,
+    "page": 326,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "w-digital-scanner/w12scan",
+      "stars": 1337,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.2080078125,
+          "content": "# Byte-compiled / optimized / DLL files\n__pycache__/\n*.py[cod]\n*$py.class\n\n# C extensions\n*.so\n\n# Distribution / packaging\n.Python\nbuild/\ndevelop-eggs/\ndist/\ndownloads/\neggs/\n.eggs/\nlib64/\nparts/\nsdist/\nvar/\nwheels/\n*.egg-info/\n.installed.cfg\n*.egg\nMANIFEST\n\n# PyInstaller\n#  Usually these files are written by a python script from a template\n#  before PyInstaller builds the exe, so as to inject date/other infos into it.\n*.manifest\n*.spec\n\n# Installer logs\npip-log.txt\npip-delete-this-directory.txt\n\n# Unit test / coverage reports\nhtmlcov/\n.tox/\n.coverage\n.coverage.*\n.cache\nnosetests.xml\ncoverage.xml\n*.cover\n.hypothesis/\n.pytest_cache/\n\n# Translations\n*.mo\n*.pot\n\n# Django stuff:\n*.log\nlocal_settings.py\ndb.sqlite3\n\n# Flask stuff:\ninstance/\n.webassets-cache\n\n# Scrapy stuff:\n.scrapy\n\n# Sphinx documentation\ndocs/_build/\n\n# PyBuilder\ntarget/\n\n# Jupyter Notebook\n.ipynb_checkpoints\n\n# pyenv\n.python-version\n\n# celery beat schedule file\ncelerybeat-schedule\n\n# SageMath parsed files\n*.sage.py\n\n# Environments\n.env\n.venv\nenv/\nvenv/\nENV/\nenv.bak/\nvenv.bak/\n\n# Spyder project settings\n.spyderproject\n.spyproject\n\n# Rope project settings\n.ropeproject\n\n# mkdocs documentation\n/site\n\n# mypy\n.mypy_cache/\n.idea/\n.DS_Store\nw12scan.db\nmigrations/"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.962890625,
+          "content": "FROM alpine:3.7\nMAINTAINER w8ay@qq.com\n\nRUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories\nRUN set -x \\\n    && apk update \\\n    && apk add python3-dev \\\n    && apk add bash \\\n    && apk add tzdata \\\n    && apk add gcc \\\n    && apk add gettext \\\n    && apk add libc-dev \\\n    && apk add linux-headers \\\n    && apk add nginx \\\n    && cp -r -f /usr/share/zoneinfo/Hongkong /etc/localtime \\\n    && mkdir -p /opt/w12scan \\\n    && mkdir -p /run/nginx\n\nCOPY . /opt/w12scan\n\nRUN set -x \\\n    && cp /opt/w12scan/dockerconf/w12scan_nginx.conf /etc/nginx/conf.d/w12scan_nginx.conf \\\n    && pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r /opt/w12scan/requirements.txt \\\n    && chmod a+x /opt/w12scan/dockerconf/start.sh \\\n    && apk del gcc \\\n    && apk del libc-dev \\\n    && apk del linux-headers \\\n    && rm -f /var/cache/apk/*\n\nWORKDIR /opt/w12scan\nENTRYPOINT [\"/opt/w12scan/dockerconf/start.sh\"]\n\nEXPOSE 8000\nCMD [\"/usr/bin/tail\", \"-f\", \"/dev/null\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2019 boyhack\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README-EN.md",
+          "type": "blob",
+          "size": 3.2451171875,
+          "content": "# w12scan\n\nW12scan is a network asset discovery engine that can automatically aggregate related assets for analysis and use. W12scan is also my graduation design. :)\n\nHere is a web source program and the scanning end is at [w12scan-client](https://github.com/boy-hack/w12scan-client).\n\n[![w12scan](./doc/w12scan-preview.png)](https://x.hacking8.com/content/uploadfile/201902/w12scan-preview-3.mp4)\n\n## Thinking\nBased on python3 + django + elasticsearch + redis.\n\n![w12scan](doc/w12scan.jpg)\n\n## Feature\n\n### Web\n* Search syntax\n    * Search for cms, service, titles, country regions, etc., to quickly find relevant targets.\n        - title=“abc” # Search from the title\n        - header=“abc” # Search from http header\n        - body=“123” # Search from body text\n        - url = “*.baidu.com” # Search for subdomains of baidu.com\n        - ip = ‘1.1.1.1’ # Search from IP,support `'192.168.1.0/24'` and `'192.168.1.*'`\n        - port = ‘80’ # Search form port \n        - app = ’nginx’ # Search application\n        - country = ‘cn’ # Search from country\n        - service = ‘mysql’ # Search from service\n        - bug = 'xx' # Search from Vulnerability\n* Custom assert\n    * By customizing a company-related domain name or ip asset, w12scan will automatically help you find the corresponding asset target. When you browse the target, there is a prominent logo to remind you of the target's ownership.\n* Automatic association\n    * Enter the target details. If the target is ip, all domain names on the ip and the c class will be automatically associated. If the target is a domain name, the adjacent station, segment c and subdomain are automatically associated.\n* Multi-node management\n    * WEB will check the status of the node every few minutes and you can see the number of node scans and the node scan log.\n* Task restful\n    * W12Scan provides an interface to add tasks and you can add it on the WEB side or integrate it in any software.\n\n### Scanning end\n* Poc\n    * Call the latest poc script online via [airbug](https://github.com/boy-hack/airbug).\n* Built-in scan script\n    * Common vulnerability verification service built into the scanner.\n* Scanning\n    * Use masscan，nmap，wappalyzer，w11scan.\n* Easy to distribute\n    * This is taken into account in the design of the program architecture. It is very easy to distribute and run the scan terminal directly on another machine. It also can be distributed based on docker, celery service.\n\n## Installation\nQuickly build an environment with docker\n```bash\ngit clone https://github.com/boy-hack/w12scan\ncd w12scan\ndocker-compose up -d\n```\nWait a moment to visit `http://127.0.0.1:8000`.\nDefault account `boyhack:boyhack`.\n\n### Some Issues\n1. For Windows, you need to pay attention to https://github.com/boy-hack/w12scan/issues/12 (thanks @Hotsunrize).  \n2. Q:How to install distributed A:[Deployment](./doc/DEPLOYMENT1.md)\n\n### Links\n- [设计论文](./doc/网络资产发现引擎的设计.docx)\n- [如何构建一个网络空间搜索引擎-W12Scan-WEB篇](https://x.hacking8.com/post-340.html)\n- [如何在本机搭建W12Scan](https://x.hacking8.com/post-342.html)\n\n## Legal\nThis program is mainly used to collect network data for analysis and research. Please follow the relevant local laws before using this program.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.548828125,
+          "content": "# w12scan\nw12scan是一款网络资产发现引擎，通过WEB接口下发任务，w12scan会自动将相关的资产聚合在一起方便分析使用。w12scan也是我的毕业设计。\n\nw12scan分为WEB端（用于展示显示数据）和Client端（用于搜索相关资产数据）。\n\n这里是web端的开源程序，client端在[https://github.com/boy-hack/w12scan-client](https://github.com/boy-hack/w12scan-client)\n\n一个视频了解W12SCAN\n[![w12scan](./doc/w12scan-preview.png)](https://x.hacking8.com/content/uploadfile/201903/uper_video_1556034118929372.mp4)\n\n\n## 设计思想\n基于python3 + django + elasticsearch + redis(去重+web与client通信中间件)，使用WEB API添加扫描目标，扫描完成后会在WEB端展示。\n\n![w12scan](doc/w12scan.jpg)\n\n## 特点\n\n### WEB端\n* 强大的搜索语法\n    * 通过搜索语法可搜索cms，服务名称，标题，国家地区等等，能够迅速找到相关目标。\n        - title=“abc” # 从标题中搜索\n        - header=“abc” # 从http头搜索\n        - body=“123” # 从body搜索\n        - url = “*.baidu.com” # 搜索baidu.com的子域名，`*号是通配符`\n        - ip = ‘1.1.1.1’ # 搜索IP，支持CIDR`'192.168.1.0/24'`和通配符搜索`'192.168.1.*'`\n        - port = ‘80’ # 搜索端口\n        - app = ’nginx’ # 搜索组件\n        - country = ‘cn’ # 搜索国家\n        - service = ‘mysql’ # 搜索服务\n        - bug = 'xx' # 搜索存在的某个漏洞\n* 自定义资产配置\n    * 通过自定义某公司相关域名或ip资产，w12scan会自动帮你找到对应的资产目标，当你浏览该目标时，有醒目的标识提醒你该目标的归属。\n* 自动关联\n    * 进入目标详情，若目标为ip，则会自动关联该ip上的所有域名和该c段上的所有域名。若目标为域名，则自动关联旁站，c段和子域名。\n* 多节点管理\n    * WEB端会每隔几分钟检测一次节点的运行状况，你可以看到节点扫描的数量以及节点扫描日志。\n* 任务restful\n    * 提供添加任务的接口，你可以在WEB端添加或者在任何软件中集成该接口。\n\n### 扫描端(Client)端\n* 及时的poc验证\n    * 通过对接[airbug](https://github.com/boy-hack/airbug)接口api，在线调用最新的poc验证脚本，airbug保证了漏洞更新的及时性，你也可以fork airbug项目后自行添加poc规则。\n* 验证性攻击\n    * 扫描端内置有常见的漏洞验证服务，每扫描一次网址，都会运行这些服务，结果最终会反馈到w12scan的WEB端展现。\n* 扫描与识别\n    * 端口扫描使用masscan，端口识别使用nmap，web应用识别调用wappalyzer和精简版的w11scan（指纹识别）\n* 容易的分布式\n    * 在程序架构设计就考虑到了这一点，扫描端只接受任务，最后的结果只和WEB端进行交互，所以在分布式上十分容易，直接在另一台机器上运行扫描端即可。能基于docker进行分布式，也能很方便集成celery服务。\n\n## 安装\n基于docker一键部署\n```bash\nmkdir ~/w12scan-data/db   # 该目录保存w12scan存储结果\nmkdir ~/w12scan-data/data # 该目录保存es存储的结果\ngit clone https://github.com/boy-hack/w12scan\ncd w12scan\ndocker-compose up -d\n```\n等待一段时间后访问`http://127.0.0.1:8000`\n默认用户名密码`boyhack:boyhack`\n### 数据存储\n- 可修改`docker-compose.yml`，搜索`~/w12scan-data/db`或`~/w12scan-data/data`来修改存储的位置\n\n### 相关问题\n1. 为了保持高可用，请至少准备8G4H服务器进行测试(ES耗费内存)，如果服务器不满足这些要求，需要自行向dockerfile中es数据库添加`- \"ES_JAVA_OPTS=-Xms2048m -Xmx2048m\"`来指定内存，但这样不保证高可用\n2. 在Windows上安装，需要注意`.sh`文件格式问题 https://github.com/boy-hack/w12scan/issues/12 (感谢 @Hotsunrize).  \n3. Q:如何分布式部署？A:[部署方案](./doc/DEPLOYMENT1.md)\n4. Q:启动后搜索数为0？A:需要添加扫描目标\n5. 不要边扫描边搜索，elastisearch在插入数据时会作分析，分词等等操作（此时效率不高），如果在此时搜索可能会返回503，建议扫描完毕后在进行搜索。(后期会使用数据迁移解决)\n\n### 相关链接\n- [设计论文](./doc/网络资产发现引擎的设计.docx)\n- [如何构建一个网络空间搜索引擎-W12Scan-WEB篇](https://x.hacking8.com/post-340.html)\n- [如何在本机搭建W12Scan](https://x.hacking8.com/post-342.html)\n\n## 法律\n本程序主要用于收集网络数据用于分析研究。在使用该程序之前请遵守当地相关法律进行。\n"
+        },
+        {
+          "name": "Server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "application",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "config.py",
+          "type": "blob",
+          "size": 0.802734375,
+          "content": "#!/usr/bin/env python3\n# -*- coding: utf-8 -*-\n# @Time    : 2019/1/28 3:22 PM\n# @Author  : w8ay\n# @File    : config.py\nimport os\n\nW12SCAN_VERSION = '0.3'\n\n# Client端与Server端通信的口令\nAUTH_POST_KEY = \"hello-w12scan!\"\n\n# Elasticsearch 服务器,测试用,实际部署依据环境变量传入\nELASTICSEARCH_HOSTS = [os.environ.get(\"ELASTICSEARCH_HOSTS\", default='127.0.0.1:9200')]\n\n# Elasticsearch 验证密码\nELASTICSEARCH_AUTH = os.environ.get(\"ELASTICSEARCH_AUTH\", default=None)\nif ELASTICSEARCH_AUTH:\n    user, passwd = ELASTICSEARCH_AUTH.split(\":\")\n    ELASTICSEARCH_AUTH = (user, passwd)\n\n# Reids服务器\nREDIS_HOST = os.environ.get(\"REDIS_HOST\", default='127.0.0.1:6379')\nREDIS_PASSWORD = os.environ.get(\"REDIS_PASSWORD\", default='')\n\n# WEB 任务量统计按'day'、'mouth'、'year'\nSTATIC_TASKS = 'day'\n"
+        },
+        {
+          "name": "db",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.7744140625,
+          "content": "version: '2'\nservices:\n\n  web:\n    build: .\n    ports:\n     - \"8000:8000\"\n    environment:\n      ELASTICSEARCH_HOSTS: elasticsearch:9200\n      REDIS_HOST: redis:6379\n    depends_on:\n      - redis\n      - elasticsearch\n    volumes:\n      - ~/w12scan-data/db:/opt/w12scan/db\n  client:\n    image: boyhack/w12scan-client:latest\n    environment:\n      WEB_INTERFACE: http://web:8000\n      REDIS_HOST: redis:6379\n      NODE_NAME: \"w12scan_w8ay\"\n    depends_on:\n      - web\n  redis:\n    image: redis:5.0.3-stretch\n    restart: always\n    expose:\n      - \"6379\"\n  elasticsearch:\n    image: elasticsearch:5.6-alpine\n    environment:\n      - cluster.name=docker-cluster\n      - bootstrap.memory_lock=true\n    expose:\n      - \"9200\"\n    volumes:\n      - ~/w12scan-data/data:/usr/share/elasticsearch/data\n"
+        },
+        {
+          "name": "dockerconf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "locale",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "manage.py",
+          "type": "blob",
+          "size": 0.78515625,
+          "content": "#!/usr/bin/env python\nimport os\nimport sys\n\nif __name__ == \"__main__\":\n    os.environ.setdefault(\"DJANGO_SETTINGS_MODULE\", \"Server.settings\")\n    try:\n        from django.core.management import execute_from_command_line\n    except ImportError:\n        # The above import may fail for some other reason. Ensure that the\n        # issue is really that Django is missing to avoid masking other\n        # exceptions on Python 2.\n        try:\n            import django\n        except ImportError:\n            raise ImportError(\n                \"Couldn't import Django. Are you sure it's installed and \"\n                \"available on your PYTHONPATH environment variable? Did you \"\n                \"forget to activate a virtual environment?\"\n            )\n        raise\n    execute_from_command_line(sys.argv)\n"
+        },
+        {
+          "name": "pipeline",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.2685546875,
+          "content": "certifi==2018.11.29\nchardet==3.0.4\ndjango>=2.1.6\nelasticsearch==6.3.1\nelasticsearch-dsl==6.3.1\ngeoip2==2.9.0\nHackRequests==1.1\nidna==2.8\nmaxminddb==1.4.1\npython-dateutil==2.7.5\npytz==2018.7\nredis==3.1.0\nrequests==2.21.0\nsix==1.12.0\ntld==0.9.2\nurllib3==1.24.2\ngunicorn==19.9.0"
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

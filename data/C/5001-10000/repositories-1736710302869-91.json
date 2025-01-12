@@ -1,0 +1,79 @@
+{
+  "metadata": {
+    "timestamp": 1736710302869,
+    "page": 91,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "orangeduck/Cello",
+      "stars": 6894,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0107421875,
+          "content": "text=auto\r\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.8154296875,
+          "content": "# Main\r\n*.log\r\n*~\r\n*.libs\r\n*.o\r\n*.la\r\n*.so*\r\n*.a\r\n*.lo\r\n*.dll\r\n*.exe\r\n*.gz\r\n*.class\r\n\r\n# Tests\r\ntest.bin\r\ntest.txt\r\ntest.exe\r\ntest\r\n\r\n# Benchmarking\r\nprofile.txt\r\n\r\n# Dist\r\nlibCello*\r\n\r\n# VIM related\r\n.clang_complete\r\n\r\n# benchmark programs\r\nbenchmarks/Dict/dict_c\r\nbenchmarks/Dict/dict_cello\r\nbenchmarks/Dict/dict_cpp\r\nbenchmarks/ext/genint\r\nbenchmarks/GC/gc_c\r\nbenchmarks/GC/gc_cello\r\nbenchmarks/GC/gc_cpp\r\nbenchmarks/List/list_c\r\nbenchmarks/List/list_cello\r\nbenchmarks/List/list_cpp\r\nbenchmarks/Map/map_c\r\nbenchmarks/Map/map_cello\r\nbenchmarks/Map/map_cpp\r\nbenchmarks/Matmul/matmul_c\r\nbenchmarks/Matmul/matmul_cello\r\nbenchmarks/Matmul/matmul_cpp\r\nbenchmarks/Nbodies/nbodies_c\r\nbenchmarks/Nbodies/nbodies_cello\r\nbenchmarks/Nbodies/nbodies_cpp\r\nbenchmarks/Sudoku/sudoku_c\r\nbenchmarks/Sudoku/sudoku_cello\r\nbenchmarks/Sudoku/sudoku_cpp\r\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.5,
+          "content": "Licensed Under BSD\n\nCopyright (c) 2012, Daniel Holden\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met: \n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer. \n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution. \n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\nThe views and conclusions contained in the software and documentation are those\nof the authors and should not be interpreted as representing official policies, \neither expressed or implied, of the FreeBSD Project."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 4.1015625,
+          "content": "CC ?= gcc\nAR ?= ar\n\nVERSION = 2.1.0\nPACKAGE = libCello-$(VERSION)\n\nBINDIR = ${PREFIX}/bin\nINCDIR = ${PREFIX}/include\nLIBDIR = ${PREFIX}/lib\n\nSRC := $(wildcard src/*.c)\nOBJ := $(addprefix obj/,$(notdir $(SRC:.c=.o)))\n\nTESTS := $(wildcard tests/*.c)\nTESTS_OBJ := $(addprefix obj/,$(notdir $(TESTS:.c=.o)))\n\nEXAMPLES := $(wildcard examples/*.c)\nEXAMPLES_OBJ := $(addprefix obj/,$(notdir $(EXAMPLES:.c=.o)))\nEXAMPLES_EXE := $(EXAMPLES:.c=)\n\nCFLAGS = -I ./include -std=gnu99 -Wall -Wno-unused -g -ggdb\n\nPLATFORM := $(shell uname)\nCOMPILER := $(shell $(CC) -v 2>&1 )\n\nifeq ($(findstring CYGWIN,$(PLATFORM)),CYGWIN)\n\tPREFIX ?= /usr/local\n\t\n\tDYNAMIC = libCello.so\n\tSTATIC = libCello.a\n\tLIBS = -lpthread -lm\n\t\n\tifneq (,$(wildcard ${LIBDIR}/libdbghelp.a))\n\t\tLIBS += -lDbgHelp\n\telse\n\t\tCFLAGS += -DCELLO_NSTRACE\n\tendif\n  \n\tINSTALL_LIB = mkdir -p ${LIBDIR} && cp -f ${STATIC} ${LIBDIR}/$(STATIC)\n\tINSTALL_INC = mkdir -p ${INCDIR} && cp -r include/Cello.h ${INCDIR}\n\tUNINSTALL_LIB = rm -f ${LIBDIR}/$(STATIC)\n\tUNINSTALL_INC = rm -f ${INCDIR}/Cello.h\nelse ifeq ($(findstring MINGW,$(PLATFORM)),MINGW)\n\t# MSYS2\n\tifeq ($(findstring MINGW32,$(MSYSTEM)),MINGW32)\n\t\tCC = i686-w64-mingw32-gcc\n\t\tPREFIX ?= /mingw32\n\telse ifeq ($(findstring MINGW64,$(MSYSTEM)),MINGW64)\n\t\tCC = x86_64-w64-mingw32-gcc\n\t\tPREFIX ?= /mingw64\n\telse ifeq ($(findstring MSYS,$(MSYSTEM)),MSYS)\n\t\tCC = gcc\n\t\tPREFIX ?= /usr\n\telse\n\t\t# MinGW64 mingw-builds\n\t\tprefix ?= c:/mingw64/x86_64-w64-mingw32\n\tendif\n\n\tDYNAMIC = libCello.dll\n\tSTATIC = libCello.a\n  \n\tifneq (,$(wildcard ${LIBDIR}/libdbghelp.a))\n\t\tLIBS += -lDbgHelp\n\telse\n\t\tCFLAGS += -DCELLO_NSTRACE\n\tendif\n\t\n\tINSTALL_LIB = cp $(STATIC) $(LIBDIR)/$(STATIC); cp $(DYNAMIC) $(BINDIR)/$(DYNAMIC)\n\tINSTALL_INC = cp -r include/Cello.h $(INCDIR)\n\tUNINSTALL_LIB = rm -f ${LIBDIR}/$(STATIC); rm -f ${BINDIR}/$(DYNAMIC)\n\tUNINSTALL_INC = rm -f ${INCDIR}/Cello.h\nelse ifeq ($(findstring FreeBSD,$(PLATFORM)),FreeBSD)\n\tPREFIX ?= /usr/local\n\n\tDYNAMIC = libCello.so\n\tSTATIC = libCello.a\n\tLIBS = -lpthread -lm\n\n\tCFLAGS += -fPIC\n\n\tifneq (,$(wildcard ${LIBDIR}/libexecinfo.a))\n\t\tLIBS += -lexecinfo\n\t\tLFLAGS += -rdynamic\n\telse\n\t\tCFLAGS += -DCELLO_NSTRACE\n\tendif\n  \n\tINSTALL_LIB = mkdir -p ${LIBDIR} && cp -f ${STATIC} ${LIBDIR}/$(STATIC)\n\tINSTALL_INC = mkdir -p ${INCDIR} && cp -r include/Cello.h ${INCDIR}\n\tUNINSTALL_LIB = rm -f ${LIBDIR}/$(STATIC)\n\tUNINSTALL_INC = rm -f ${INCDIR}/Cello.h\nelse\n\tPREFIX ?= /usr/local\n\n\tDYNAMIC = libCello.so\n\tSTATIC = libCello.a\n\tLIBS = -lpthread -lm\n\n\tCFLAGS += -fPIC\n  \n\tifneq (,$(wildcard ${LIBDIR}/libexecinfo.a))\n\t\tLIBS += -lexecinfo\n\t\tLFLAGS += -rdynamic\n\telse\n\t\tCFLAGS += -DCELLO_NSTRACE\n\tendif\n  \n\tINSTALL_LIB = mkdir -p ${LIBDIR} && cp -f ${STATIC} ${LIBDIR}/$(STATIC)\n\tINSTALL_INC = mkdir -p ${INCDIR} && cp -r include/Cello.h ${INCDIR}\n\tUNINSTALL_LIB = rm -f ${LIBDIR}/$(STATIC)\n\tUNINSTALL_INC = rm -f ${INCDIR}/Cello.h\nendif\n\n# Libraries\n\nall: $(DYNAMIC) $(STATIC)\n\n$(DYNAMIC): $(OBJ)\n\t$(CC) $(OBJ) -shared $(LFLAGS) $(LIBS) -o $@\n\n$(STATIC): $(OBJ)\n\t$(AR) rcs $@ $(OBJ)\n\nobj/%.o: src/%.c include/Cello.h | obj\n\t$(CC) $< -c $(CFLAGS) -o $@\n\nobj:\n\tmkdir -p obj\n\n# Tests\n\ncheck: CFLAGS += -Werror -g -ggdb\ncheck: $(TESTS_OBJ) $(STATIC)\n\t$(CC) $(TESTS_OBJ) $(STATIC) $(LIBS) $(LFLAGS) -o ./tests/test\n\t./tests/test\n\trm -f ./tests/test.bin ./tests/test.txt\n\nobj/%.o: tests/%.c | obj\n\t$(CC) $< -c $(CFLAGS) -o $@\n\n# Benchmarks\nifeq ($(findstring Darwin,$(PLATFORM)),Darwin)\nbench: CFLAGS += -DCELLO_NDEBUG -O3\nbench: clean $(STATIC)\n\tcd benchmarks; ./benchmark.sh; cd ../\nelse\nbench: CFLAGS += -DCELLO_NDEBUG -pg -O3\nbench: clean $(STATIC)\n\tcd benchmarks; ./benchmark; cd ../\nendif\n\n# Examples\n\nexamples: $(EXAMPLES_EXE)\n\nexamples/%: CFLAGS += -Werror\nexamples/%: examples/%.c $(STATIC) | obj\n\t$(CC) $< $(STATIC) $(CFLAGS) $(LIBS) $(LFLAGS) -o $@\n\n# Dist\n\ndist: all | $(PACKAGE)\n\tcp -R examples include src tests LICENSE.md Makefile README.md $(PACKAGE)\n\ttar -czf $(PACKAGE).tar.gz $(PACKAGE) --exclude='*.exe' --exclude='*.pdb'\n\n$(PACKAGE):\n\tmkdir -p $(PACKAGE)\n\n# Clean\n\nclean:\n\trm -f $(OBJ) $(TESTS_OBJ) $(EXAMPLES_OBJ) $(STATIC) $(DYNAMIC) tests/test\n\n# Install\n\ninstall: all\n\t$(INSTALL_LIB)\n\t$(INSTALL_INC)\n\t\n# Uninstall\n\nuninstall:\n\t$(UNINSTALL_LIB)\n\t$(UNINSTALL_INC)\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8701171875,
+          "content": "Cello\n=====\n\n__Cello__ is a _library_ that brings higher level programming to C.\n\nBy acting as a _modern_, _powerful_ runtime system Cello makes many things easy \nthat were previously impractical or awkward in C such as:\n\n* __Generic Data Structures__\n* __Polymorphic Functions__\n* __Interfaces / Type Classes__\n* __Constructors / Destructors__\n* __Optional Garbage Collection__\n* __Exceptions__\n* __Reflection__\n\nAnd because Cello works seamlessly alongside standard C you get all the other \nbenefits such as great performance, powerful tooling, and extensive \nlibraries.\n\nExamples\n--------\n\n```c\n#include \"Cello.h\"\n\nint main(int argc, char** argv) {\n\n  /* Stack objects are created using \"$\" */\n  var i0 = $(Int, 5);\n  var i1 = $(Int, 3);\n  var i2 = $(Int, 4);\n\n  /* Heap objects are created using \"new\" */\n  var items = new(Array, Int, i0, i1, i2);\n  \n  /* Collections can be looped over */\n  foreach (item in items) {\n    print(\"Object %$ is of type %$\\n\",\n      item, type_of(item));\n  }\n  \n  /* Heap objects destructed via Garbage Collection */\n  return 0;\n}\n```\n\n```c\n#include \"Cello.h\"\n\nint main(int argc, char** argv) {\n  \n  /* Shorthand $ can be used for basic types */\n  var prices = new(Table, String, Int);\n  set(prices, $S(\"Apple\"),  $I(12)); \n  set(prices, $S(\"Banana\"), $I( 6)); \n  set(prices, $S(\"Pear\"),   $I(55)); \n\n  /* Tables also support iteration */\n  foreach (key in prices) {\n    var val = get(prices, key);\n    print(\"Price of %$ is %$\\n\", key, val);\n  }\n  \n  return 0;\n}\n```\n\nArticles\n--------\n\nLearning Resources:\n\n* [Installation](http://libcello.org/learn/installation)\n* [Cello World](http://libcello.org/learn/cello-world)\n* [Quickstart](http://libcello.org/learn/quickstart)\n* [Common Queries / Pitfalls](http://libcello.org/learn/queries-and-pitfalls)\n\nArticles about its creation and internal workings:\n\n* [Best Improvements of Cello 2.0](http://libcello.org/learn/best-improvements-of-cello-2.0)\n* [A Fat Pointer Library](http://libcello.org/learn/a-fat-pointer-library)\n* [Cello vs C++ vs ObjC](http://libcello.org/learn/cello-vs-cpp-vs-objc)\n* [Benchmarks](http://libcello.org/learn/benchmarks)\n* [Garbage Collection](http://libcello.org/learn/garbage-collection)\n\n\nMore Examples\n-------------\n\n```c\n#include \"Cello.h\"\n\nint main(int argc, char** argv) {\n\n  var items = new(Array, Int, \n    $I( 8), $I( 5), $I(20), \n    $I(15), $I(16), $I(98));\n\n  /* Iterate over indices using \"range\" */\n  foreach (i in range($I(len(items)))) {\n    print(\"Item Range %i is %i\\n\", i, get(items, i));\n  }\n\n  /* Iterate over every other item with \"slice\" */ \n  foreach (item in slice(items, _, _, $I(2))) {\n    print(\"Item Slice %i\\n\", item);\n  }\n  \n  return 0;\n}\n```\n    \n```c\n#include \"Cello.h\"\n\n/* Define a normal C structure */\nstruct Point {\n  float x, y;\n};\n\n/* Make it compatible with Cello */\nvar Point = Cello(Point);\n\nint main(int argc, char** argv) {\n  \n  /* Create on Stack or Heap */\n  var p0 = $(Point, 0.0, 1.0);\n  var p1 = new(Point, $(Point, 0.0, 2.0));\n  \n  /* It can be shown, compared, hashed, etc...\n  **\n  ** p0: <'Point' At 0x000000000022FC58>\n  ** p1: <'Point' At 0x00000000004C7CC8>\n  ** cmp: 1\n  ** hash: 2849275892l\n  */ \n  print(\"p0: %$\\np1: %$\\ncmp: %i\\nhash: %ul\\n\",\n    p0, p1, $I(cmp(p0, p1)), $I(hash(p0)));\n  \n  /* And collected by the GC when out of scope */\n  return 0;\n}\n```\n\nF.A.Q\n-----\n\n* __Why does this exist?__\n\nI made Cello as a fun experiment to see what C looks like hacked to its limits. \nAs well as being a powerful library and toolkit, it should be interesting to \nthose who want to explore what is possible in C.\n\n* __How does it work?__\n\nI recommend reading \n[A Fat Pointer Library](http://libcello.org/learn/a-fat-pointer-library) to get an \noverview of how Cello works. You can also peek at the source code, which I'm \ntold is fairly readable, or ask me any questions you like via e-mail.\n\n* __Can it be used in Production?__\n\nIt might be better to try Cello out on a hobby project first. Cello does aim to \nbe _production ready_, but because it is a hack it has its fair share of \noddities and pitfalls, and if you are working in a team, or to a deadline, \nthere is much better tooling, support and community for languages such as C++.\n\n* __Is anyone using Cello?__\n\nPeople have experimented with it, but there is no high profile project I know \nof that uses it. Cello is too big and scary a dependency for new C projects if \nthey want to be portable and easy to maintain.\n\n* __Can I get involved?__\n\nYes! That would be great. If you do anything with Cello I'd love to know, you \ncan e-mail me at `contact@theorangeduck.com`, or help with the development at \nthe [Cello github repo](https://github.com/orangeduck/libCello). Contributions \nare very welcome.\n\n* __Who are you?__\n\nHello! I'm Daniel Holden. You many know me from a \n[book I wrote](http://www.buildyourownlisp.com/) or my \n[personal website](http://theorangeduck.com/). I also have a rarely updated \n[twitter account](https://twitter.com/anorangeduck).\n"
+        },
+        {
+          "name": "TODO.md",
+          "type": "blob",
+          "size": 0.2294921875,
+          "content": "Cello 2.0\n=========\n\nCello REPL\n==========\n\n* REPL\n  - Python prototype\n  - Parse CPP and extract defines.\n  - Parse Syntax tree and extract type/variable declarations\n  - Record those in permanent storage which is added to every file\n"
+        },
+        {
+          "name": "benchmarks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

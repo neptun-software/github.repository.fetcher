@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "timestamp": 1736711670594,
+    "page": 331,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wintercn/dog-fucked-zhihu",
+      "stars": 1321,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.14453125,
+          "content": "狗日的知乎插件————退出知乎好帮手——狗日的知乎，备份自己的答案，取消所有点赞，批量替换所有答案\n"
+        },
+        {
+          "name": "backup.js",
+          "type": "blob",
+          "size": 2.3671875,
+          "content": "//此脚本只能在知乎个人页面使用\n//用Chrome浏览器打开知乎个人页面，右键点击网页，选择\"审查元素\"，再在弹出的控制台粘贴以下代码:\n\nwindow.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;\n\nfunction getFileSystem(type, size) {\n    return new Promise(function(resolve,reject){\n        requestFileSystem(type, size, resolve);\n    });\n}\n\nfunction getFile(dir, name, params) {\n    return new Promise(function(resolve,reject){\n        dir.getFile(name,params,resolve);\n    });\n}\n\nfunction writeFile(file, content, type) {\n    return new Promise(function(resolve,reject){\n        file.createWriter(function(writer){\n            writer.addEventListener(\"error\",function(){},false);\n            writer.addEventListener(\"writeend\",function(){\n                writer.removeEventListener(\"writeend\",arguments.callee,false);\n                writer.truncate(writer.position)\n                \n                resolve();\n            },false);\n\n            writer.write(new Blob(content), {type: type});\n        })\n    });\n}\n\nfunction getAnswers(){\n    return new Promise(function(resolve,reject){\n        var h = setInterval(function(){\n            if(document.querySelectorAll('.zu-button-more').length) {\n                document.querySelectorAll('.zu-button-more')[0].click();\n            } else {\n                clearInterval(h);\n                var answers = Array.prototype.slice.call($('.question_link')).filter(function(e){return e.previousSibling.textContent.match(/回答了问题/)}).map(function(e){return e.outerHTML + '<br/><br/>' + e.parentNode.nextSibling.nextSibling.children[3].children[0].value + '<hr/>'})\n                resolve(answers)\n            }\n        },500)\n    })\n}\n\n\n\n\nvar answers;\n\ngetAnswers().then(function(){\n    answers = arguments[0];\n    return getFileSystem(window.TEMPORARY, 50*1024*1024);\n}).then(function(fs){\n    return getFile(fs.root,'answers.html',{create:true});\n}).then(function(file){\n    return writeFile(file,answers,'text/html');\n}).then(function(){\n    console.log(\"filesystem:http://\"+window.location.hostname+\"/temporary/answers.html\");\n    var downloadbtn = document.createElement('a');\n    document.body.appendChild(downloadbtn);\n    downloadbtn.download = \"answsers.html\";\n    downloadbtn.href = (\"filesystem:http://\"+window.location.hostname+\"/temporary/answers.html\");\n    downloadbtn.click();\n});\n"
+        },
+        {
+          "name": "boism.js",
+          "type": "blob",
+          "size": 2.1640625,
+          "content": "//仅在个人动态页有效\nfunction getAnswers(){\n    return new Promise(function(resolve, reject){\n        var oldHeight = 0;\n        var h = setInterval(function(){\n            if(document.querySelectorAll('.zu-button-more').length) {\n                oldHeight = document.body.scrollHeight;\n                document.body.scrollTop = document.body.scrollHeight;\n            } else {\n                clearInterval(h);\n                console.log(document.querySelectorAll('.feed-item'))\n                //resolve(answers)\n            }\n        },2000)\n    })\n}\n\n//仅在问题页有效\nfunction getToken(){\n    return new Promise((resolve, reject) => {\n        var request = new XMLHttpRequest();\n        request.open(\"GET\", location.href, true);\n        request.send(null);\n        request.onload = e => {\n            var tmp = document.createElement('div');\n            tmp.innerHTML = request.responseText.match(/data\\-state\\=\\\"([^\\\"]*)/)[1];\n            resolve(JSON.parse(tmp.innerText).token.carCompose)\n        }\n    })\n}\n\nfunction addTopic(token, name){\n    return new Promise((resolve, reject) => {\n        var request = new XMLHttpRequest();\n        request.open(\"POST\", \"https://www.zhihu.com/api/v4/topics\", true);\n        request.setRequestHeader(\"accept\", \"application/json, text/plain, */*\");\n        request.setRequestHeader(\"content-type\", \"application/json\");\n        request.setRequestHeader(\"authorization\", \"Bearer \" + token);\n        request.send(JSON.stringify({name: name}));\n        request.onload = e => {\n            resolve(request.responseText)\n        }\n    })\n}\n\nfunction sleep(t) {\n    return new Promise((resolve, reject) => {\n        setTimeout(resolve, t);\n    })\n}\nfunction random(str) {\n    var chars = str.split('');\n    for(var i = 0; i < chars.length; i++) {\n        chars[i] += ['\\uFEFF','\\u200C','\\u200D'][Math.random()*3 | 0] \n        chars[i] += ['\\uFEFF','\\u200C','\\u200D'][Math.random()*3 | 0] \n        chars[i] += ['\\uFEFF','\\u200C','\\u200D'][Math.random()*3 | 0] \n    }\n    return chars.join('');\n}\nasync function run() {\n    var token = await getToken();\n    while(true) {\n        await sleep(3000);\n        await addTopic(token, random(\"勃学\"));\n    }\n}\nrun();\n"
+        },
+        {
+          "name": "design.md",
+          "type": "blob",
+          "size": 0.6337890625,
+          "content": "\n## 修改（只支持post）：\nhttp://www.zhihu.com/answer/content\n\n参数：\n\n* id: 知乎的每一答案，皆有resourceid，作为修改、读取、和删除答案的标识。这个id存储于答案div的data-resourceid属性。\n* content:<内容>\n* field_name:应该是写死为content\n* _xsrf:不知道干啥用，应该是用户登录凭据，从页面隐藏的name为_xsrf的输入框中取得\n\n\n\n## 删除：\nhttp://www.zhihu.com/answer/remove\n\n## 读取内容：\nhttp://www.zhihu.com/draft/get?qid=<resourceid>\n\n返回结果：\n\n* r 不知道干啥用，常年为0\n* msg 答案内容\n\n如：\n\nhttp://www.zhihu.com/draft/get?qid=4296931\n\n"
+        },
+        {
+          "name": "logo-mini.jpg",
+          "type": "blob",
+          "size": 21.037109375,
+          "content": null
+        },
+        {
+          "name": "logo.jpg",
+          "type": "blob",
+          "size": 36.8388671875,
+          "content": null
+        },
+        {
+          "name": "logo.psd",
+          "type": "blob",
+          "size": 42.978515625,
+          "content": null
+        },
+        {
+          "name": "update.js",
+          "type": "blob",
+          "size": 3.236328125,
+          "content": "//此脚本只能在知乎个人页面使用\n//用Chrome浏览器打开知乎个人页面，右键点击网页，选择\"审查元素\"，再在弹出的控制台粘贴以下代码:\n\n\nwindow.requestFileSystem = window.requestFileSystem || window.webkitRequestFileSystem;\n\nfunction getAnswerIds(){\n    return new Promise(function(resolve,reject){\n        var h = setInterval(function(){\n            if( document.querySelectorAll('.zu-button-more').length) {\n                document.querySelectorAll('.zu-button-more')[0].click();\n            } else {\n                clearInterval(h);\n                resolve(Array.prototype.slice.call($('.question_link')).filter(function(e){return e.previousSibling.textContent.match(/回答了问题/)}).map(function(e){return e.parentNode.nextSibling.nextSibling.children[3].dataset['resourceid']}));\n            }\n        },500)\n    })\n}\n\nfunction updateAnswer(id,content){\n    return new Promise(function(resolve,reject){\n        var fd = new FormData();\n\n        fd.append(\"id\", id);\n        fd.append(\"content\", content);\n        fd.append('field_name', 'content');\n        fd.append('_xsrf', document.getElementsByName('_xsrf')[0].value);\n     \n        var request = new XMLHttpRequest();\n        request.open('post','http://www.zhihu.com/answer/content',true);\n        request.send(fd);\n        request.addEventListener('readystatechange',function(e){\n            if(request.readyState === 4) {\n                if(request.status === 200) {\n                    resolve(request.responseText);\n                } else {\n                    reject(request);\n                }\n            }\n        })\n    })\n}\n\nfunction wait(duration) {\n    return new Promise(function(resolve, reject) {\n        setTimeout(resolve,duration);\n    })\n}\n\nfunction random(str) {\n    var chars = str.split('');\n    \n    for(var i = 0; i < chars.length; i++) {\n        chars[i] += ['\\uFEFF','\\u200C','\\u200D'][Math.random()*3 | 0] \n    }\n    return chars.join('');\n}\n\n\ngetAnswerIds().then(function(ids){\n    var i = 0;\n    void function(){ // this is a promise loop\n        if(i<ids.length) {\n            wait(10000).then(function(){ return updateAnswer(ids[i++],\n                random('因为知乎哔~的友善度策略，本人已经决定离开知乎，所有答案由') \n                + '<a data-hash=\"ec03b8e839a6fb763e1b8113455362db\" href=\"/people/winter-25\" class=\"member_mention\" data-editable=\"true\" data-title=\"@winter\">@winter</a>  ' \n                + random('开发的插件\"更好的知乎\"') \n                + '（<a href=\"https://github.com/wintercn/dog-fucked-zhihu\" data-editable=\"true\" data-title=\"wintercn/dog-fucked-zhihu · GitHub\" class=\"\">wintercn/dog-fucked-zhihu · GitHub</a>）删除。'\n                + random('winter全部的答案的备份可以在')\n                + '<a href=\"https://gist.github.com/wintercn/f3d349fd3daadc9e1bb1\" data-editable=\"true\" data-title=\"github.com 的页面\">https://gist.github.com/wintercn/f3d349fd3daadc9e1bb1</a>&nbsp;找到<br><div><img class=\"\" data-original=\"http://pic4.zhimg.com/748d340e7796ec8d92ad423f68f43a40_b.jpg\" title=\"点击查看原图\" src=\"http://pic4.zhimg.com/748d340e7796ec8d92ad423f68f43a40_b.jpg\" data-rawwidth=\"50\" data-rawheight=\"50\"><br><br></div></div>');}).then(arguments.callee);\n        }\n    }();\n})"
+        },
+        {
+          "name": "狗日的知乎",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

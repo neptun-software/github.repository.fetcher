@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736711615030,
+    "page": 211,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lmgonzalves/segment",
+      "stars": 1739,
+      "defaultBranch": "gh-pages",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.01953125,
+          "content": "node_modules/\n.idea/"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.068359375,
+          "content": "node_modules/\n.idea/\ncss/\njs/\nscss/\nindex.html\nfavicon.ico\ngulpfile.js"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 lmgonzalves\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.89453125,
+          "content": "# Segment\n\nA JavaScript library to draw and animate SVG path strokes.\n\nSee the [DEMO](http://lmgonzalves.github.io/segment).\n\nRead [this article](http://lmgonzalves.github.io/2015/10/26/animating-svg-path-segments/) to understand how it works.\n\n## Basic usage\n\n**HTML**\n\nAdd the segment script, and define a `path` somewhere.\n\n```html\n<script src=\"https://cdnjs.cloudflare.com/ajax/libs/segment-js/1.1.3/segment.js\"></script>\n\n<svg>\n  <path id=\"my-path\" ...>\n</svg>\n```\n\n**JavaScript**\n\nInitialize a new `Segment` with the `path`. Then draw a segment of stroke every time you want with: `.draw(begin, end, duration, options)`.\n\n```js\nvar myPath = document.getElementById(\"my-path\"),\n    segment = new Segment(myPath);\n\nsegment.draw(\"25%\", \"75% - 10\", 1);\n```\n\n## Install with NPM\n\n```\nnpm install segment-js\n```\n\n## Constructor\n\nThe `Segment` constructor asks for 4 parameters:\n\n- path: DOM element to draw.\n- begin (optional, default `0`): Length to start drawing the stroke.\n- end (optional, default `100%`): Length to finish drawing the stroke.\n- circular (optional, default `false`): Allow `begin` and `end` values less than 0 and greater than 100%.\n\n## Method `draw(begin, end, duration, options)`\n\n| Name       | Type     | Default | Description |\n|------------|----------|---------|-------------|\n|`begin`     | string   | 0       | Path length to start drawing. |\n|`end`       | string   | 100%    | Path length to finish drawing. |\n|`duration`  | float    | 0       | Duration (in seconds) of the animation. |\n|`options`   | object   | null    | Options for animation in object notation. |\n\nNote that `begin` and `end` can be negative values and can be written in any of these ways:\n\n- floatValue\n- percent\n- percent + floatValue\n- percent - floatValue\n\n### All possible `options` for `draw` method\n\n| Name       | Type     | Default | Description |\n|------------|----------|---------|-------------|\n|`delay`     | float    | 0       | Waiting time (in seconds) to start drawing. |\n|`easing`    | function | linear  | Easing function (normalized). I highly recommend [d3-ease](https://github.com/d3/d3-ease). |\n|`circular`  | boolean  | false   | If `true`, when the stroke reaches the end of the path it will resume at the beginning. The same applies in the opposite direction. |\n|`callback`  | function | null    | Function to call when the animation is done. |\n\n**Example**\n\n```js\nfunction cubicIn(t) {\n    return t * t * t;\n}\n\nfunction done() {\n    alert(\"Done!\");\n}\n\nsegment.draw(\"-25%\", \"75% - 10\", 1, {delay: 0.5, easing: cubicIn, circular: true, callback: done});\n```\n\n## Animating with another library\n\nIt's possible to animate the path stroke using another JavaScript library, like [GSAP](http://greensock.com/gsap). `Segments` offers a method called `strokeDasharray` that is useful for this issue.\nHere is an example using TweenLite (with CSSPlugin).\n\n```js\nTweenLite.to(path, 1, { strokeDasharray: segment.strokeDasharray(begin, end) });\n```\n"
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "favicon.ico",
+          "type": "blob",
+          "size": 1.123046875,
+          "content": null
+        },
+        {
+          "name": "gulpfile.js",
+          "type": "blob",
+          "size": 1.3994140625,
+          "content": "var gulp = require('gulp'),\n    browserSync = require('browser-sync'),\n    sass = require('gulp-sass'),\n    prefix = require('gulp-autoprefixer'),\n    uglify = require('gulp-uglify'),\n    rename = require('gulp-rename'),\n    insert = require('gulp-insert');\n\n/**\n * Static server\n */\ngulp.task('serve', ['sass', 'dist'], function(){\n    browserSync.init({\n        server: {\n            baseDir: \"./\"\n        },\n        open: false,\n        online: false,\n        notify: false\n    });\n\n    gulp.watch('scss/*.scss', ['sass']);\n    gulp.watch('dist/segment.js', ['dist']);\n    gulp.watch(['index.html', 'js/*']).on('change', browserSync.reload);\n});\n\n/**\n * Compile files from scss into css\n */\ngulp.task('sass', function(){\n    return gulp.src('scss/demo.scss')\n        .pipe(sass({\n            outputStyle: 'compressed',\n            includePaths: ['scss'],\n            onError: browserSync.notify\n        }))\n        .pipe(prefix(['last 5 versions'], {cascade: true}))\n        .pipe(gulp.dest('css'))\n        .pipe(browserSync.reload({stream:true}));\n});\n\n/**\n * Create distributable versions\n */\ngulp.task('dist', function(){\n    return gulp.src('js/segment.js')\n        .pipe(gulp.dest('dist'))\n        .pipe(uglify({preserveComments: 'some'}))\n        .pipe(rename({suffix: '.min'}))\n        .pipe(gulp.dest('dist'))\n        .pipe(browserSync.reload({stream:true}));\n});\n\n/**\n * Default task\n */\ngulp.task('default', ['serve']);\n"
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 6.5810546875,
+          "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\" />\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge,chrome=1\">\n    <title>Segment</title>\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <meta name=\"description\" content=\"A little JavaScript class (without dependencies) to draw and animate SVG path strokes\" />\n    <link rel=\"shortcut icon\" href=\"favicon.ico\">\n\n    <!-- CSS -->\n    <link rel=\"stylesheet\" href=\"css/demo.css\">\n\n    <!-- JS -->\n    <script src=\"js/d3-ease.v1.min.js\"></script>\n    <script src=\"js/highlight.pack.js\"></script>\n    <script>hljs.initHighlightingOnLoad();</script>\n    <script src=\"dist/segment.min.js\"></script>\n</head>\n<body>\n\n<div class=\"container\">\n    <div>\n        <h1>Segment</h1>\n        <div class=\"description\">A JavaScript library to draw and animate SVG path strokes</div>\n        <div class=\"description\"><a href=\"https://github.com/lmgonzalves/segment\" target=\"_blank\">Available on GitHub</a> under <a href=\"https://github.com/lmgonzalves/segment/blob/gh-pages/LICENSE\" target=\"_blank\">MIT licence</a></div>\n        <button id=\"random\" class=\"bordered\">Random</button>\n        <div class=\"svg-container\">\n            <svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 474 200\">\n                <path d=\"M10 100 C 40 200, 130 200, 160 100 S 280 0, 310 100 S 430 200, 460 100\" stroke=\"rgba(0, 0, 0, 0.2)\" stroke-width=\"1px\" fill=\"transparent\"/>\n                <path id=\"path\" d=\"M10 100 C 40 200, 130 200, 160 100 S 280 0, 310 100 S 430 200, 460 100\" stroke=\"#2980b9\" stroke-width=\"10px\" fill=\"transparent\"/>\n            </svg>\n        </div>\n    </div>\n    <div class=\"demo-code\">\n        <div class=\"code-snippet\">\n            segment.draw(\n            <div class=\"selectable\">\n                <label for=\"begin\"></label>\n                <select name=\"begin\" id=\"begin\">\n                    <option value=\"0\">0</option>\n                    <option value=\"100\">100</option>\n                    <option value=\"25% + 50\">25% + 50</option>\n                    <option value=\"50% - 50\">50% - 50</option>\n                    <option value=\"50%\">50%</option>\n                </select>\n                <span class=\"tooltip\">Segment begin</span>\n            </div>\n            ,\n            <div class=\"selectable\">\n                <label for=\"end\"></label>\n                <select name=\"end\" id=\"end\">\n                    <option value=\"50%\">50%</option>\n                    <option value=\"400\">400</option>\n                    <option value=\"50% + 50\">50% + 50</option>\n                    <option value=\"75% - 50\">75% - 50</option>\n                    <option value=\"100%\" selected=\"selected\">100%</option>\n                </select>\n                <span class=\"tooltip\">Segment end</span>\n            </div>\n            ,\n            <div class=\"selectable\">\n                <label for=\"duration\"></label>\n                <select name=\"duration\" id=\"duration\">\n                    <option value=\"0.5\">0.5</option>\n                    <option value=\"1\" selected=\"selected\">1</option>\n                    <option value=\"1.5\">1.5</option>\n                    <option value=\"2\">2</option>\n                    <option value=\"3\">3</option>\n                </select>\n                <span class=\"tooltip\">Duration</span>\n            </div>\n            ,\n            {easing:\n            <div class=\"selectable\">\n                <label for=\"easing\"></label>\n                <select name=\"easing\" id=\"easing\">\n                    <option value=\"easeLinear\">linear</option>\n                    <option value=\"easeQuadIn\">quad_in</option>\n                    <option value=\"easeQuadOut\">quad_out</option>\n                    <option value=\"easeQuadInOut\">quad_in_out</option>\n                    <option value=\"easeCubicIn\">cubic_in</option>\n                    <option value=\"easeCubicOut\" selected=\"selected\">cubic_out</option>\n                    <option value=\"easeCubicInOut\">cubic_in_out</option>\n                    <option value=\"easeSinIn\">sin_in</option>\n                    <option value=\"easeSinOut\">sin_out</option>\n                    <option value=\"easeSinInOut\">sin_in_out</option>\n                    <option value=\"easeExpIn\">exp_in</option>\n                    <option value=\"easeExpOut\">exp_out</option>\n                    <option value=\"easeExpInOut\">exp_in_out</option>\n                    <option value=\"easeCircleIn\">circle_in</option>\n                    <option value=\"easeCircleOut\">circle_out</option>\n                    <option value=\"easeCircleInOut\">circle_in_out</option>\n                    <option value=\"easeBounceIn\">bounce_in</option>\n                    <option value=\"easeBounceOut\">bounce_out</option>\n                    <option value=\"easeBounceInOut\">bounce_in_out</option>\n                    <option value=\"easeBackIn\">back_in</option>\n                    <option value=\"easeBackOut\">back_out</option>\n                    <option value=\"easeBackInOut\">back_in_out</option>\n                    <option value=\"easeElasticIn\">elastic_in</option>\n                    <option value=\"easeElasticOut\">elastic_out</option>\n                    <option value=\"easeElasticInOut\">elastic_in_out</option>\n                </select>\n                <span class=\"tooltip\">Easing function</span>\n            </div>\n            }\n            );\n        </div>\n    </div>\n    <div>\n        <button id=\"draw\">Draw</button>\n    </div>\n    <div>\n        <h2>Basic usage</h2>\n        <h4>HTML</h4>\n\n        <p>Add the segment script (less than 2kb), and define a <code class=\"inline-code\">path</code> somewhere.</p>\n\n<pre><code class=\"html\">&lt;script src=\"/dist/segment.min.js\"&gt;&lt;/script&gt;\n\n&lt;svg&gt;\n    &lt;path id=\"my-path\" ...&gt;\n&lt;/svg&gt;</code></pre>\n\n        <h4>JavaScript</h4>\n\n        <p>Initialize a new <code class=\"inline-code\">Segment</code> with the <code class=\"inline-code\">path</code>. Then draw a segment of stroke every time you want with: <code class=\"inline-code\">.draw(begin, end, duration, options)</code>.</p>\n\n<pre><code class=\"javascript\">var myPath = document.getElementById(\"my-path\"),\n    segment = new Segment(myPath);\n\nsegment.draw(\"25%\", \"75% - 10\", 1);</code></pre>\n\n    </div>\n    <div>\n        <a href=\"https://github.com/lmgonzalves/segment\" target=\"_blank\" class=\"documentation-link\">More documentation</a>\n    </div>\n    <div>\n        <h2>Credits</h2>\n        <p>The easing functions used in this demo belong to the excellent library <a href=\"https://github.com/d3/d3-ease\" target=\"_blank\">d3-ease</a>.</p>\n    </div>\n</div>\n\n<footer>made with ♥ by <a href=\"https://lmgonzalves.com/\">lmgonzalves</a></footer>\n\n<script src=\"js/demo.js\"></script>\n</body>\n</html>\n"
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.7587890625,
+          "content": "{\n  \"name\": \"segment-js\",\n  \"version\": \"1.1.3\",\n  \"description\": \"A JavaScript library to draw and animate SVG path strokes\",\n  \"main\": \"dist/segment.js\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/lmgonzalves/segment.git\"\n  },\n  \"keywords\": [\n    \"svg\",\n    \"path\",\n    \"stroke\",\n    \"animation\"\n  ],\n  \"author\": \"lmgonzalves\",\n  \"license\": \"MIT\",\n  \"bugs\": {\n    \"url\": \"https://github.com/lmgonzalves/segment/issues\"\n  },\n  \"homepage\": \"https://github.com/lmgonzalves/segment\",\n  \"engine\": {\n    \"node\": \">=0.10.22\"\n  },\n  \"devDependencies\": {\n    \"gulp\": \"^3.8.8\",\n    \"gulp-sass\": \"^0.7.3\",\n    \"gulp-autoprefixer\": \"1.0.0\",\n    \"gulp-uglify\": \"^0.3.1\",\n    \"browser-sync\": \"^1.3.7\",\n    \"gulp-rename\": \"~1.2.2\",\n    \"gulp-insert\": \"~0.5.0\"\n  }\n}\n"
+        },
+        {
+          "name": "scss",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

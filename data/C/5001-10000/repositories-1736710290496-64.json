@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736710290496,
+    "page": 64,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mit-pdos/xv6-riscv",
+      "stars": 7451,
+      "defaultBranch": "riscv",
+      "files": [
+        {
+          "name": ".dir-locals.el",
+          "type": "blob",
+          "size": 0.083984375,
+          "content": "((c-mode\n  (indent-tabs-mode . nil)\n  (c-file-style . \"bsd\")\n  (c-basic-offset . 2)))\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.2421875,
+          "content": "; https://editorconfig.org\n\nroot = true\n\n[*]\nend_of_line = lf\ninsert_final_newline = true\nindent_style = space\nindent_size = 4\n\n[*.{c,h}]\nindent_size = 2\n\n[*.S]\nindent_size = 8\n\n[*.ld]\nindent_size = 2\n\n[Makefile]\nindent_style = tab\nindent_size = 8\n"
+        },
+        {
+          "name": ".gdbinit.tmpl-riscv",
+          "type": "blob",
+          "size": 0.1669921875,
+          "content": "set confirm off\nset architecture riscv:rv64\ntarget remote 127.0.0.1:1234\nsymbol-file kernel/kernel\nset disassemble-next-line auto\nset riscv use-compressed-breakpoints yes\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1337890625,
+          "content": "*~\n_*\n*.o\n*.d\n*.asm\n*.sym\n*.img\nvectors.S\nbootblock\nentryother\ninitcode\ninitcode.out\nkernelmemfs\nmkfs\nkernel/kernel\nuser/usys.S\n.gdbinit\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.146484375,
+          "content": "The xv6 software is:\n\nCopyright (c) 2006-2024 Frans Kaashoek, Robert Morris, Russ Cox,\n                        Massachusetts Institute of Technology\n\nPermission is hereby granted, free of charge, to any person obtaining\na copy of this software and associated documentation files (the\n\"Software\"), to deal in the Software without restriction, including\nwithout limitation the rights to use, copy, modify, merge, publish,\ndistribute, sublicense, and/or sell copies of the Software, and to\npermit persons to whom the Software is furnished to do so, subject to\nthe following conditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE\nLIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION\nOF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 5.02734375,
+          "content": "K=kernel\nU=user\n\nOBJS = \\\n  $K/entry.o \\\n  $K/start.o \\\n  $K/console.o \\\n  $K/printf.o \\\n  $K/uart.o \\\n  $K/kalloc.o \\\n  $K/spinlock.o \\\n  $K/string.o \\\n  $K/main.o \\\n  $K/vm.o \\\n  $K/proc.o \\\n  $K/swtch.o \\\n  $K/trampoline.o \\\n  $K/trap.o \\\n  $K/syscall.o \\\n  $K/sysproc.o \\\n  $K/bio.o \\\n  $K/fs.o \\\n  $K/log.o \\\n  $K/sleeplock.o \\\n  $K/file.o \\\n  $K/pipe.o \\\n  $K/exec.o \\\n  $K/sysfile.o \\\n  $K/kernelvec.o \\\n  $K/plic.o \\\n  $K/virtio_disk.o\n\n# riscv64-unknown-elf- or riscv64-linux-gnu-\n# perhaps in /opt/riscv/bin\n#TOOLPREFIX = \n\n# Try to infer the correct TOOLPREFIX if not set\nifndef TOOLPREFIX\nTOOLPREFIX := $(shell if riscv64-unknown-elf-objdump -i 2>&1 | grep 'elf64-big' >/dev/null 2>&1; \\\n\tthen echo 'riscv64-unknown-elf-'; \\\n\telif riscv64-linux-gnu-objdump -i 2>&1 | grep 'elf64-big' >/dev/null 2>&1; \\\n\tthen echo 'riscv64-linux-gnu-'; \\\n\telif riscv64-unknown-linux-gnu-objdump -i 2>&1 | grep 'elf64-big' >/dev/null 2>&1; \\\n\tthen echo 'riscv64-unknown-linux-gnu-'; \\\n\telse echo \"***\" 1>&2; \\\n\techo \"*** Error: Couldn't find a riscv64 version of GCC/binutils.\" 1>&2; \\\n\techo \"*** To turn off this error, run 'gmake TOOLPREFIX= ...'.\" 1>&2; \\\n\techo \"***\" 1>&2; exit 1; fi)\nendif\n\nQEMU = qemu-system-riscv64\n\nCC = $(TOOLPREFIX)gcc\nAS = $(TOOLPREFIX)gas\nLD = $(TOOLPREFIX)ld\nOBJCOPY = $(TOOLPREFIX)objcopy\nOBJDUMP = $(TOOLPREFIX)objdump\n\nCFLAGS = -Wall -Werror -O -fno-omit-frame-pointer -ggdb -gdwarf-2\nCFLAGS += -MD\nCFLAGS += -mcmodel=medany\n# CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax\nCFLAGS += -fno-common -nostdlib\nCFLAGS += -fno-builtin-strncpy -fno-builtin-strncmp -fno-builtin-strlen -fno-builtin-memset\nCFLAGS += -fno-builtin-memmove -fno-builtin-memcmp -fno-builtin-log -fno-builtin-bzero\nCFLAGS += -fno-builtin-strchr -fno-builtin-exit -fno-builtin-malloc -fno-builtin-putc\nCFLAGS += -fno-builtin-free\nCFLAGS += -fno-builtin-memcpy -Wno-main\nCFLAGS += -fno-builtin-printf -fno-builtin-fprintf -fno-builtin-vprintf\nCFLAGS += -I.\nCFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)\n\n# Disable PIE when possible (for Ubuntu 16.10 toolchain)\nifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)\nCFLAGS += -fno-pie -no-pie\nendif\nifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]nopie'),)\nCFLAGS += -fno-pie -nopie\nendif\n\nLDFLAGS = -z max-page-size=4096\n\n$K/kernel: $(OBJS) $K/kernel.ld $U/initcode\n\t$(LD) $(LDFLAGS) -T $K/kernel.ld -o $K/kernel $(OBJS) \n\t$(OBJDUMP) -S $K/kernel > $K/kernel.asm\n\t$(OBJDUMP) -t $K/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $K/kernel.sym\n\n$U/initcode: $U/initcode.S\n\t$(CC) $(CFLAGS) -march=rv64g -nostdinc -I. -Ikernel -c $U/initcode.S -o $U/initcode.o\n\t$(LD) $(LDFLAGS) -N -e start -Ttext 0 -o $U/initcode.out $U/initcode.o\n\t$(OBJCOPY) -S -O binary $U/initcode.out $U/initcode\n\t$(OBJDUMP) -S $U/initcode.o > $U/initcode.asm\n\ntags: $(OBJS) _init\n\tetags *.S *.c\n\nULIB = $U/ulib.o $U/usys.o $U/printf.o $U/umalloc.o\n\n_%: %.o $(ULIB)\n\t$(LD) $(LDFLAGS) -T $U/user.ld -o $@ $^\n\t$(OBJDUMP) -S $@ > $*.asm\n\t$(OBJDUMP) -t $@ | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $*.sym\n\n$U/usys.S : $U/usys.pl\n\tperl $U/usys.pl > $U/usys.S\n\n$U/usys.o : $U/usys.S\n\t$(CC) $(CFLAGS) -c -o $U/usys.o $U/usys.S\n\n$U/_forktest: $U/forktest.o $(ULIB)\n\t# forktest has less library code linked in - needs to be small\n\t# in order to be able to max out the proc table.\n\t$(LD) $(LDFLAGS) -N -e main -Ttext 0 -o $U/_forktest $U/forktest.o $U/ulib.o $U/usys.o\n\t$(OBJDUMP) -S $U/_forktest > $U/forktest.asm\n\nmkfs/mkfs: mkfs/mkfs.c $K/fs.h $K/param.h\n\tgcc -Werror -Wall -I. -o mkfs/mkfs mkfs/mkfs.c\n\n# Prevent deletion of intermediate files, e.g. cat.o, after first build, so\n# that disk image changes after first build are persistent until clean.  More\n# details:\n# http://www.gnu.org/software/make/manual/html_node/Chained-Rules.html\n.PRECIOUS: %.o\n\nUPROGS=\\\n\t$U/_cat\\\n\t$U/_echo\\\n\t$U/_forktest\\\n\t$U/_grep\\\n\t$U/_init\\\n\t$U/_kill\\\n\t$U/_ln\\\n\t$U/_ls\\\n\t$U/_mkdir\\\n\t$U/_rm\\\n\t$U/_sh\\\n\t$U/_stressfs\\\n\t$U/_usertests\\\n\t$U/_grind\\\n\t$U/_wc\\\n\t$U/_zombie\\\n\nfs.img: mkfs/mkfs README $(UPROGS)\n\tmkfs/mkfs fs.img README $(UPROGS)\n\n-include kernel/*.d user/*.d\n\nclean: \n\trm -f *.tex *.dvi *.idx *.aux *.log *.ind *.ilg \\\n\t*/*.o */*.d */*.asm */*.sym \\\n\t$U/initcode $U/initcode.out $K/kernel fs.img \\\n\tmkfs/mkfs .gdbinit \\\n        $U/usys.S \\\n\t$(UPROGS)\n\n# try to generate a unique GDB port\nGDBPORT = $(shell expr `id -u` % 5000 + 25000)\n# QEMU's gdb stub command line changed in 0.11\nQEMUGDB = $(shell if $(QEMU) -help | grep -q '^-gdb'; \\\n\tthen echo \"-gdb tcp::$(GDBPORT)\"; \\\n\telse echo \"-s -p $(GDBPORT)\"; fi)\nifndef CPUS\nCPUS := 3\nendif\n\nQEMUOPTS = -machine virt -bios none -kernel $K/kernel -m 128M -smp $(CPUS) -nographic\nQEMUOPTS += -global virtio-mmio.force-legacy=false\nQEMUOPTS += -drive file=fs.img,if=none,format=raw,id=x0\nQEMUOPTS += -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0\n\nqemu: $K/kernel fs.img\n\t$(QEMU) $(QEMUOPTS)\n\n.gdbinit: .gdbinit.tmpl-riscv\n\tsed \"s/:1234/:$(GDBPORT)/\" < $^ > $@\n\nqemu-gdb: $K/kernel .gdbinit fs.img\n\t@echo \"*** Now run 'gdb' in another window.\" 1>&2\n\t$(QEMU) $(QEMUOPTS) -S $(QEMUGDB)\n\n"
+        },
+        {
+          "name": "README",
+          "type": "blob",
+          "size": 2.23828125,
+          "content": "xv6 is a re-implementation of Dennis Ritchie's and Ken Thompson's Unix\nVersion 6 (v6).  xv6 loosely follows the structure and style of v6,\nbut is implemented for a modern RISC-V multiprocessor using ANSI C.\n\nACKNOWLEDGMENTS\n\nxv6 is inspired by John Lions's Commentary on UNIX 6th Edition (Peer\nto Peer Communications; ISBN: 1-57398-013-7; 1st edition (June 14,\n2000)).  See also https://pdos.csail.mit.edu/6.1810/, which provides\npointers to on-line resources for v6.\n\nThe following people have made contributions: Russ Cox (context switching,\nlocking), Cliff Frey (MP), Xiao Yu (MP), Nickolai Zeldovich, and Austin\nClements.\n\nWe are also grateful for the bug reports and patches contributed by\nTakahiro Aoyagi, Marcelo Arroyo, Silas Boyd-Wickizer, Anton Burtsev,\ncarlclone, Ian Chen, Dan Cross, Cody Cutler, Mike CAT, Tej Chajed,\nAsami Doi,Wenyang Duan, eyalz800, Nelson Elhage, Saar Ettinger, Alice\nFerrazzi, Nathaniel Filardo, flespark, Peter Froehlich, Yakir Goaron,\nShivam Handa, Matt Harvey, Bryan Henry, jaichenhengjie, Jim Huang,\nMatúš Jókay, John Jolly, Alexander Kapshuk, Anders Kaseorg, kehao95,\nWolfgang Keller, Jungwoo Kim, Jonathan Kimmitt, Eddie Kohler, Vadim\nKolontsov, Austin Liew, l0stman, Pavan Maddamsetti, Imbar Marinescu,\nYandong Mao, Matan Shabtay, Hitoshi Mitake, Carmi Merimovich, Mark\nMorrissey, mtasm, Joel Nider, Hayato Ohhashi, OptimisticSide,\nphosphagos, Harry Porter, Greg Price, RayAndrew, Jude Rich, segfault,\nAyan Shafqat, Eldar Sehayek, Yongming Shen, Fumiya Shigemitsu, snoire,\nTaojie, Cam Tenny, tyfkda, Warren Toomey, Stephen Tu, Alissa Tung,\nRafael Ubal, Amane Uehara, Pablo Ventura, Xi Wang, WaheedHafez,\nKeiichi Watanabe, Lucas Wolf, Nicolas Wolovick, wxdao, Grant Wu, x653,\nJindong Zhang, Icenowy Zheng, ZhUyU1997, and Zou Chang Wei.\n\nERROR REPORTS\n\nPlease send errors and suggestions to Frans Kaashoek and Robert Morris\n(kaashoek,rtm@mit.edu).  The main purpose of xv6 is as a teaching\noperating system for MIT's 6.1810, so we are more interested in\nsimplifications and clarifications than new features.\n\nBUILDING AND RUNNING XV6\n\nYou will need a RISC-V \"newlib\" tool chain from\nhttps://github.com/riscv/riscv-gnu-toolchain, and qemu compiled for\nriscv64-softmmu.  Once they are installed, and in your shell\nsearch path, you can run \"make qemu\".\n"
+        },
+        {
+          "name": "kernel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mkfs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "user",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

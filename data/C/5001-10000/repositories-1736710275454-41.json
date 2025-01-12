@@ -1,0 +1,113 @@
+{
+  "metadata": {
+    "timestamp": 1736710275454,
+    "page": 41,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tsl0922/ttyd",
+      "stars": 8354,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".clang-format",
+          "type": "blob",
+          "size": 0.08984375,
+          "content": "BasedOnStyle: Google\nLanguage: Cpp\nColumnLimit: 120\nIndentWidth: 2\nTabWidth: 2\nUseTab: Never"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.029296875,
+          "content": "src/html.h linguist-generated\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.4541015625,
+          "content": "# Prerequisites\n*.d\n\n# Object files\n*.o\n*.ko\n*.obj\n*.elf\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Libraries\n*.lib\n*.a\n*.la\n*.lo\n\n# Shared objects (inc. Windows DLLs)\n*.dll\n*.so\n*.so.*\n*.dylib\n\n# Executables\n*.exe\n*.out\n*.app\n*.i*86\n*.x86_64\n*.hex\n\n# Debug files\n*.dSYM/\n*.su\n\n# Cmake files\nCMakeCache.txt\nCMakeFiles\nCMakeScripts\ncmake_install.cmake\ninstall_manifest.txt\nCTestTestfile.cmake\nbuild\n\n# Clion files\n.idea/\n\n# VSCode files\n.vscode/\n\n# Project files\n!init.d\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 3.2802734375,
+          "content": "cmake_minimum_required(VERSION 3.12.0)\n\nlist(APPEND CMAKE_MODULE_PATH \"${CMAKE_CURRENT_SOURCE_DIR}/cmake\")\n\nproject(ttyd VERSION 1.7.7 LANGUAGES C)\n\nset(TTYD_VERSION \"${PROJECT_VERSION}\")\n\ninclude(GetGitVersion)\nget_git_version(GIT_VERSION SEM_VER)\nget_git_head(GIT_COMMIT)\nif(\"${SEM_VER}\" VERSION_GREATER \"${TTYD_VERSION}\")\n    set(TTYD_VERSION \"${SEM_VER}\")\nendif()\nif(NOT \"${GIT_COMMIT}\" STREQUAL \"\")\n    set(TTYD_VERSION \"${TTYD_VERSION}-${GIT_COMMIT}\")\nendif()\n\nset(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -D_GNU_SOURCE\")\nif(CMAKE_VERSION VERSION_LESS \"3.1\")\n    if (\"${CMAKE_C_COMPILER_ID}\" STREQUAL \"GNU\")\n        set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -std=gnu99\")\n    else()\n        set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -std=c99\")\n    endif()\nelse()\n    set(CMAKE_C_STANDARD 99)\nendif()\n\nset(SOURCE_FILES src/utils.c src/pty.c src/protocol.c src/http.c src/server.c)\n\ninclude(FindPackageHandleStandardArgs)\n\nfind_path(LIBUV_INCLUDE_DIR NAMES uv.h)\nfind_library(LIBUV_LIBRARY NAMES uv libuv)\nfind_package_handle_standard_args(LIBUV REQUIRED_VARS LIBUV_LIBRARY LIBUV_INCLUDE_DIR)\nmark_as_advanced(LIBUV_INCLUDE_DIR LIBUV_LIBRARY)\nif(LIBUV_FOUND)\n    SET(LIBUV_INCLUDE_DIRS \"${LIBUV_INCLUDE_DIR}\")\n    SET(LIBUV_LIBRARIES \"${LIBUV_LIBRARY}\")\nendif()\n\nfind_path(JSON-C_INCLUDE_DIR NAMES json.h PATH_SUFFIXES json-c)\nfind_library(JSON-C_LIBRARY NAMES json-c)\nfind_package_handle_standard_args(JSON-C REQUIRED_VARS JSON-C_LIBRARY JSON-C_INCLUDE_DIR)\nmark_as_advanced(JSON-C_INCLUDE_DIR JSON-C_LIBRARY)\nif(JSON-C_FOUND)\n    SET(JSON-C_INCLUDE_DIRS \"${JSON-C_INCLUDE_DIR}\")\n    SET(JSON-C_LIBRARIES \"${JSON-C_LIBRARY}\")\nendif()\n\nfind_package(ZLIB REQUIRED)\nfind_package(Libwebsockets 3.2.0 REQUIRED)\n\nset(INCLUDE_DIRS ${ZLIB_INCLUDE_DIR} ${LIBWEBSOCKETS_INCLUDE_DIRS} ${JSON-C_INCLUDE_DIRS} ${LIBUV_INCLUDE_DIRS})\nset(LINK_LIBS ${ZLIB_LIBRARIES} ${LIBWEBSOCKETS_LIBRARIES} ${JSON-C_LIBRARIES} ${LIBUV_LIBRARIES})\n\nset (CMAKE_REQUIRED_INCLUDES ${INCLUDE_DIRS})\ninclude(CheckSymbolExists)\ncheck_symbol_exists(LWS_WITH_LIBUV \"lws_config.h\" LWS_WITH_LIBUV)\ncheck_symbol_exists(LWS_OPENSSL_SUPPORT \"lws_config.h\" LWS_OPENSSL_ENABLED)\ncheck_symbol_exists(LWS_WITH_MBEDTLS \"lws_config.h\" LWS_MBEDTLS_ENABLED)\nif(NOT LWS_WITH_LIBUV)\n    message(FATAL_ERROR \"libwebsockets was not build with libuv support (-DLWS_WITH_LIBUV=ON)\")\nendif()\nif(LWS_OPENSSL_ENABLED AND NOT LWS_MBEDTLS_ENABLED)\n    find_package(OpenSSL REQUIRED)\n    list(APPEND INCLUDE_DIRS ${OPENSSL_INCLUDE_DIR})\n    list(APPEND LINK_LIBS ${OPENSSL_LIBRARIES})\nendif()\n\nif(WIN32)\n    list(APPEND LINK_LIBS shell32 ws2_32)\n    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/app.rc.in ${CMAKE_CURRENT_BINARY_DIR}/app.rc @ONLY)\n    list(APPEND SOURCE_FILES ${CMAKE_CURRENT_BINARY_DIR}/app.rc)\nelse()\n    find_library(LIBUTIL NAMES util)\n    if(LIBUTIL)\n        list(APPEND LINK_LIBS util)\n    endif()\nendif()\n\nadd_executable(${PROJECT_NAME} ${SOURCE_FILES})\ntarget_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIRS})\ntarget_link_libraries(${PROJECT_NAME} ${LINK_LIBS})\ntarget_compile_definitions(${PROJECT_NAME} PUBLIC\n    TTYD_VERSION=\"${TTYD_VERSION}\"\n    $<$<PLATFORM_ID:Windows>:_WIN32_WINNT=0xa00 WINVER=0xa00>\n)\n\ninclude(GNUInstallDirs)\n\ninstall(TARGETS ${PROJECT_NAME} DESTINATION \"${CMAKE_INSTALL_BINDIR}\" COMPONENT prog)\ninstall(FILES man/ttyd.1 DESTINATION \"${CMAKE_INSTALL_MANDIR}/man1\" COMPONENT doc)\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.2939453125,
+          "content": "FROM ubuntu:20.04\n\nARG TARGETARCH\n\n# Dependencies\nRUN apt-get update && apt-get install -y --no-install-recommends tini && rm -rf /var/lib/apt/lists/*\n\n# Application\nCOPY ./dist/${TARGETARCH}/ttyd /usr/bin/ttyd\n\nEXPOSE 7681\nWORKDIR /root\n\nENTRYPOINT [\"/usr/bin/tini\", \"--\"]\nCMD [\"ttyd\", \"-W\", \"bash\"]\n"
+        },
+        {
+          "name": "Dockerfile.alpine",
+          "type": "blob",
+          "size": 0.21875,
+          "content": "FROM alpine\n\nARG TARGETARCH\n\n# Dependencies\nRUN apk add --no-cache bash tini\n\n# Application\nCOPY ./dist/${TARGETARCH}/ttyd /usr/bin/ttyd\n\nEXPOSE 7681\nWORKDIR /root\n\nENTRYPOINT [\"/sbin/tini\", \"--\"]\nCMD [\"ttyd\", \"-W\", \"bash\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.068359375,
+          "content": "MIT License\n\nCopyright (c) 2016-2022 Shuanglei Tao <tsl0922@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.873046875,
+          "content": "![backend](https://github.com/tsl0922/ttyd/workflows/backend/badge.svg)\n![frontend](https://github.com/tsl0922/ttyd/workflows/frontend/badge.svg)\n[![GitHub Releases](https://img.shields.io/github/downloads/tsl0922/ttyd/total)](https://github.com/tsl0922/ttyd/releases)\n[![Docker Pulls](https://img.shields.io/docker/pulls/tsl0922/ttyd)](https://hub.docker.com/r/tsl0922/ttyd)\n[![Packaging status](https://repology.org/badge/tiny-repos/ttyd.svg)](https://repology.org/project/ttyd/versions)\n![GitHub](https://img.shields.io/github/license/tsl0922/ttyd)\n\n# ttyd - Share your terminal over the web\n\nttyd is a simple command-line tool for sharing terminal over the web.\n\n![screenshot](https://github.com/tsl0922/ttyd/raw/main/screenshot.gif)\n\n# Features\n\n- Built on top of [libuv](https://libuv.org) and [WebGL2](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API) for speed\n- Fully-featured terminal with [CJK](https://en.wikipedia.org/wiki/CJK_characters) and IME support\n- [ZMODEM](https://en.wikipedia.org/wiki/ZMODEM) ([lrzsz](https://ohse.de/uwe/software/lrzsz.html)) / [trzsz](https://trzsz.github.io) file transfer support\n- [Sixel](https://en.wikipedia.org/wiki/Sixel) image output support ([img2sixel](https://saitoha.github.io/libsixel) / [lsix](https://github.com/hackerb9/lsix))\n- SSL support based on [OpenSSL](https://www.openssl.org) / [Mbed TLS](https://github.com/Mbed-TLS/mbedtls)\n- Run any custom command with options\n- Basic authentication support and many other custom options\n- Cross platform: macOS, Linux, FreeBSD/OpenBSD, [OpenWrt](https://openwrt.org), Windows\n\n> ❤ Special thanks to [JetBrains](https://www.jetbrains.com/?from=ttyd) for sponsoring the opensource license to this project.\n\n# Installation\n\n## Install on macOS\n\n- Install with [Homebrew](http://brew.sh): `brew install ttyd`\n- Install with [MacPorts](https://www.macports.org): `sudo port install ttyd`\n\n## Install on Linux\n\n- Binary version (recommended): download from the [releases](https://github.com/tsl0922/ttyd/releases) page\n- Install with [Homebrew](https://docs.brew.sh/Homebrew-on-Linux) : `brew install ttyd`\n- Install the snap: `sudo snap install ttyd --classic`\n- Build from source (debian/ubuntu):\n    ```bash\n    sudo apt-get update\n    sudo apt-get install -y build-essential cmake git libjson-c-dev libwebsockets-dev\n    git clone https://github.com/tsl0922/ttyd.git\n    cd ttyd && mkdir build && cd build\n    cmake ..\n    make && sudo make install\n    ```\n    You may also need to compile/install [libwebsockets](https://libwebsockets.org) from source if the `libwebsockets-dev` package is outdated.\n- Install on OpenWrt: `opkg install ttyd`\n- Install on Gentoo: clone the [repo](https://bitbucket.org/mgpagano/ttyd/src/master) and follow the directions [here](https://wiki.gentoo.org/wiki/Custom_repository#Creating_a_local_repository).\n\n## Install on Windows\n\n- Binary version (recommended): download from the [releases](https://github.com/tsl0922/ttyd/releases) page\n- Install with [WinGet](https://github.com/microsoft/winget-cli): `winget install tsl0922.ttyd`\n- Install with [Scoop](https://scoop.sh/#/apps?q=ttyd&s=2&d=1&o=true): `scoop install ttyd`\n- [Compile on Windows](https://github.com/tsl0922/ttyd/wiki/Compile-on-Windows)\n\n# Usage\n\n## Command-line Options\n\n```\nUSAGE:\n    ttyd [options] <command> [<arguments...>]\n\nOPTIONS:\n    -p, --port              Port to listen (default: 7681, use `0` for random port)\n    -i, --interface         Network interface to bind (eg: eth0), or UNIX domain socket path (eg: /var/run/ttyd.sock)\n    -U, --socket-owner      User owner of the UNIX domain socket file, when enabled (eg: user:group)\n    -c, --credential        Credential for basic authentication (format: username:password)\n    -H, --auth-header       HTTP Header name for auth proxy, this will configure ttyd to let a HTTP reverse proxy handle authentication\n    -u, --uid               User id to run with\n    -g, --gid               Group id to run with\n    -s, --signal            Signal to send to the command when exit it (default: 1, SIGHUP)\n    -w, --cwd               Working directory to be set for the child program\n    -a, --url-arg           Allow client to send command line arguments in URL (eg: http://localhost:7681?arg=foo&arg=bar)\n    -W, --writable          Allow clients to write to the TTY (readonly by default)\n    -t, --client-option     Send option to client (format: key=value), repeat to add more options\n    -T, --terminal-type     Terminal type to report, default: xterm-256color\n    -O, --check-origin      Do not allow websocket connection from different origin\n    -m, --max-clients       Maximum clients to support (default: 0, no limit)\n    -o, --once              Accept only one client and exit on disconnection\n    -q, --exit-no-conn      Exit on all clients disconnection\n    -B, --browser           Open terminal with the default system browser\n    -I, --index             Custom index.html path\n    -b, --base-path         Expected base path for requests coming from a reverse proxy (eg: /mounted/here, max length: 128)\n    -P, --ping-interval     Websocket ping interval(sec) (default: 5)\n    -6, --ipv6              Enable IPv6 support\n    -S, --ssl               Enable SSL\n    -C, --ssl-cert          SSL certificate file path\n    -K, --ssl-key           SSL key file path\n    -A, --ssl-ca            SSL CA file path for client certificate verification\n    -d, --debug             Set log level (default: 7)\n    -v, --version           Print the version and exit\n    -h, --help              Print this text and exit\n```\n\nRead the example usage on the [wiki](https://github.com/tsl0922/ttyd/wiki/Example-Usage).\n\n## Browser Support\n\nModern browsers, See [Browser Support](https://github.com/xtermjs/xterm.js#browser-support).\n\n## Alternatives\n\n* [Wetty](https://github.com/krishnasrinivas/wetty): [Node](https://nodejs.org) based web terminal (SSH/login)\n* [GoTTY](https://github.com/yudai/gotty): [Go](https://golang.org) based web terminal\n"
+        },
+        {
+          "name": "app.rc.in",
+          "type": "blob",
+          "size": 0.9423828125,
+          "content": "#include <winver.h>\n\n#define VERSION @PROJECT_VERSION_MAJOR@,@PROJECT_VERSION_MINOR@,@PROJECT_VERSION_PATCH@,0\n#define VERSION_STR \"@PROJECT_VERSION_MAJOR@.@PROJECT_VERSION_MINOR@.@PROJECT_VERSION_PATCH@.0\\0\"\n\nVS_VERSION_INFO VERSIONINFO\n FILEVERSION VERSION\n PRODUCTVERSION VERSION\n FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK\n FILEFLAGS      0\n FILEOS         VOS__WINDOWS32\n FILETYPE       VFT_DLL\nBEGIN\n    BLOCK \"StringFileInfo\"\n    BEGIN\n        BLOCK \"040904b0\"\n        BEGIN\n            VALUE \"FileDescription\", \"ttyd\\0\"\n            VALUE \"ProductName\", \"ttyd\\0\"\n            VALUE \"ProductVersion\", VERSION_STR\n            VALUE \"FileVersion\", VERSION_STR\n            VALUE \"InternalName\", \"ttyd\\0\"\n            VALUE \"OriginalFilename\", \"ttyd.exe\\0\"\n            VALUE \"LegalCopyright\", \"Copyright (C) 2016-2022 Shuanglei Tao\\0\"\n        VALUE \"Comment\", \"\\0\"\n        END\n    END\n    BLOCK \"VarFileInfo\"\n    BEGIN\n        VALUE \"Translation\", 0x409, 1200\n    END\nEND\n"
+        },
+        {
+          "name": "cmake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "man",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screenshot.gif",
+          "type": "blob",
+          "size": 125.1201171875,
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "snap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

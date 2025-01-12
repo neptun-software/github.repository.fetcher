@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736711679588,
+    "page": 357,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "sbstjn/noduino",
+      "stars": 1231,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0234375,
+          "content": "node_modules/\n.DS_Store\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0693359375,
+          "content": "[submodule \"duino\"]\n\tpath = duino\n\turl = git@github.com:semu/duino.git\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.150390625,
+          "content": "# Noduino\n\nWelcome to the awesome Noduino project! All information is available at:\n\n[http://sbstjn.github.io/noduino/](http://sbstjn.github.io/noduino/)\n"
+        },
+        {
+          "name": "duino",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "examples.snippet",
+          "type": "blob",
+          "size": 1.3076171875,
+          "content": "###basics\n$ > ls /dev | grep usb\ncrw-rw-rw-   1 root       wheel      18,  17 24 Feb 22:54 cu.usbmodem1d11\ncrw-rw-rw-   1 root       wheel      18,  16 24 Feb 22:00 tty.usbmodem1d11\n\n###node\n$ > git clone git://github.com/semu/noduino.git\n$ > cd noduino\n$ > git submodule update --init\n$ > npm install\n$ > node srv.web.js\n\nListening on http://localhost:8080\n\n###connect\nvar Noduino = new NoduinoObj({debug: true, host: 'http://localhost:8090'}, Connector);\nNoduino.connect(function(err, board) {\n  if (err) { return console.log(err); }\n\n  console.log('Connected to board');\n});\n\n###toggleLED\nvar Noduino = new NoduinoObj({debug: true, host: 'http://localhost:8090'}, Connector);\nNoduino.connect(function(err, board) {\n  if (err) { return console.log(err); }\n  board.withLED({pin: 13}, function(err, LED) {\n    if (err) { return console.log(err); }\n\n    LED.blink(250);\n    LED.on('on', function() {\n      console.log('LED is on!');\n    });\n  });\n});\n\n###listenButton\nvar Noduino = new NoduinoObj({debug: true, host: 'http://localhost:8090'}, Connector);\nNoduino.connect(function(err, board) {\n  if (err) { return console.log(err); }\n  board.withButton({pin: 13}, function(err, Button) {\n    if (err) { return console.log(err); }\n\n    Button.on('push', function() {\n      console.log('Button pushed');\n    });\n\n    Button.push();\n  });\n});\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.3681640625,
+          "content": "{\n  \"author\": \"Sebastian Müller <c@semu.mp>\",\n  \"name\": \"noduino\",\n  \"description\": \"Arduino framework for fuck*ng mad scientists\",\n  \"version\": \"0.0.1\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/semu/noduino.git\"\n  },\n  \"dependencies\": {\n    \"serialport\": \"*\",\n    \"colors\": \"*\",\n    \"kickstart\": \"*\",\n    \"socket.io\": \"*\",\n    \"requirejs\": \"*\"\n  }\n}\n"
+        },
+        {
+          "name": "public",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "srv.app.js",
+          "type": "blob",
+          "size": 2.015625,
+          "content": "/**\n * srv.app.js – Handling HTTP:80 Requests\n * This file is part of noduino (c) 2012 Sebastian Müller <c@semu.mp>\n *\n * @package     noduino\n * @author      Sebastian Müller <c@semu.mp>\n * @license     MIT License – http://www.opensource.org/licenses/mit-license.php \n * @url         https://github.com/semu/noduino\n */\n \ndefine(['kickstart', 'module', 'path', 'fs'], function (kickstart, module, path, fs) {\n  var args = process.argv.splice(2);\n\n  var hostname = args[0] || 'localhost';\n  var port = args[1] || 8080;\n  var host = hostname + ':' + port;\n\n  var kickstart = kickstart.withConfig({'name': hostname, 'port': port, 'path': './'});\n  var srv = kickstart.srv();\n  \n  /**\n   * Load file with example snippets\n   */\n  var fileContents = fs.readFileSync('./examples.snippet'),\n    sections = (fileContents + '').split('###'),\n    examples = {};\n  for (var i = 0; i < sections.length; i++) {\n    var tmp = sections[i].split(\"\\n\"),\n      key = tmp.shift();\n    tmp.pop();\n    examples[key] = tmp.join(\"\\n\");\n  }\n\n  /** \n   * Catch request for serving home page\n   */\n  srv.all('/', function(req, res) {\n    res.render('home', {hostname: hostname, jsApp: 'main', active: 'home', title: 'noduino', 'examples': examples});\n  });\n\n  /** \n   * Catch request for Getting Started page\n   */\n  srv.all('/getting-started.html', function(req, res) {\n    res.render('getting-started', {hostname: hostname, jsApp: 'none', active: 'getting-started', title: 'noduino', 'examples': examples});\n  });\n\n  /** \n   * Catch request for serving walkLED example page\n   */\n  srv.all('/example-walkLED.html', function(req, res) {\n    res.render('example-walkLED', {hostname: hostname, jsApp: 'walkLED', active: 'examples', title: 'noduino', 'examples': examples});\n  });\n  \n  /**\n   * Catch request for serving motor example\n   */\n  srv.all('/example-motor.html', function(req, res) {\n    res.render('example-motor', {hostname: hostname, jsApp: 'motor', active: 'examples', title: 'noduino', 'examples': examples});\n  });\n\n  return {'kickstart': kickstart, 'srv': srv};\n});\n"
+        },
+        {
+          "name": "srv.socket.js",
+          "type": "blob",
+          "size": 3.13671875,
+          "content": "/**\n * srv.web.js – Handling Socket.IO Requests\n * This file is part of noduino (c) 2012 Sebastian Müller <c@semu.mp>\n *\n * @package     noduino\n * @author      Sebastian Müller <c@semu.mp>\n * @license     MIT License – http://www.opensource.org/licenses/mit-license.php \n * @url         https://github.com/semu/noduino\n */\n \ndefine(['socket.io', 'public/scripts/libs/Noduino', 'public/scripts/libs/Noduino.Serial', 'public/scripts/libs/Logger'], function(io, Noduino, Connector, Logger) {\n  \n  /**\n   * Define SocketHandler\n   * @param object socket Socket.IO\n   */\n  var SocketHandler = function(socket) {\n    this.sockets  = {};\n    this.arduinos = {};\n    this.handler  = socket.listen(8090);\n    this.handler.set('origin', '*');\n    this.pinCache = {};\n    \n    this.bindings();\n  };\n  \n  /**\n   * Get selected Arduino\n   */\n  SocketHandler.prototype.current = function() {\n    return this.arduinos[0];\n  };\n  \n  /**\n   * Connect Bindings\n   */\n  SocketHandler.prototype.bindings = function() {\n    var io = this.handler, that = this;\n\n    io.sockets.on('connection', function(socket) {\n      that.sockets[socket.id] = socket;\n\n      /**\n       * Incoming Serial Request\n       */\n      that.sockets[socket.id].on('serial', function(data) {\n        switch (data.type) {\n          case 'write':\n            that.current().write(data.write);\n            break;\n          case 'analogRead':\n            var curPin = data.pin;\n            that.current().watchAnalogIn({'pin': data.pin}, function(m) {\n              if (!m.pin || m.pin == null || m.pin == NaN) {\n                return; }\n              \n              if (m.state != that.pinCache[m.pin] && curPin == m.pin) {\n                socket.emit('response', {'type': 'analogRead', 'pin': m.pin, 'value': m.state});\n                that.pinCache[m.pin] = m.state;\n              }\n            });\n          break;\n          case 'digitalRead':\n            var curPin = data.pin;\n            that.current().watchDigitalIn({'pin': data.pin}, function(m) {\n              if (!m.pin || m.pin == null || m.pin == NaN) {\n                return; }\n              \n              if (m.state != that.pinCache[m.pin] && curPin == m.pin) {\n                socket.emit('response', {'type': 'digitalRead', 'pin': m.pin, 'value': m.state});\n                that.pinCache[m.pin] = m.state;\n              }\n            });\n          break;\n        }\n      });\n\n      /**\n       * Connect to Arduino\n       */      \n      that.sockets[socket.id].on('board.connect', function(data) {\n        if (that.current() && that.current().connected == true) {\n          return socket.emit('response', {'msg': 'board.connect', 'response': 'ready'}); }\n        \n        that.arduinos[0] = new Noduino({'debug': true}, Connector, Logger);\n        that.current().connect(function(err, board) {\n          that.current().connected = false;\n          if (err) { return socket.emit('response', {'msg': 'board.connect', 'response': 'failed'}); }\n          \n          that.current().connected = true;\n          return socket.emit('response', {'msg': 'board.connect', 'response': 'ready'});\n        });\n      });\n    });\n  };\n\n  return new SocketHandler(io, Noduino, Connector, Logger);\n});"
+        },
+        {
+          "name": "srv.web.js",
+          "type": "blob",
+          "size": 0.6259765625,
+          "content": "/**\n * srv.web.js – Load HTTP Handler and Socket Bridge\n * This file is part of noduino (c) 2012 Sebastian Müller <c@semu.mp>\n *\n * @package     noduino\n * @author      Sebastian Müller <c@semu.mp>\n * @license     MIT License – http://www.opensource.org/licenses/mit-license.php \n * @url         https://github.com/semu/noduino\n */\n \nvar requirejs = require('requirejs');\nrequirejs.config({nodeRequire: require});\n\nrequirejs(['./srv.app', './srv.socket'],function(app, io) {\n  var kickstart = app.kickstart, \n    router = kickstart.listen();\n  console.log(\"Listening on http://%s:%d\", kickstart.conf().name, router.address().port);\n});"
+        },
+        {
+          "name": "views",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
