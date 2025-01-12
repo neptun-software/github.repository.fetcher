@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "timestamp": 1736711285606,
+    "page": 13,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mhart/alpine-node",
+      "stars": 2451,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.0029296875,
+          "content": "**\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "Copyright 2020 Michael Hart (michael.hart.au@gmail.com)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.380859375,
+          "content": "# Deprecated\n\nThis project is now in archive mode. Please use the official Node.js Alpine images at:\n\nhttps://github.com/nodejs/docker-node#nodealpine\n\nMinimal Node.js Docker Images\n-----------------------------\n\nVersions v16.4.2, v14.17.3, v12.22.3, v10.24.1, v8.17.0, v6.17.1, v4.9.1, v0.12.18 and v0.10.48 –\nbuilt on [Alpine Linux](https://alpinelinux.org/).\n\nAll versions use the one [mhart/alpine-node](https://hub.docker.com/r/mhart/alpine-node/) repository,\nbut each version aligns with the following tags (ie, `mhart/alpine-node:<tag>`). The sizes are for the\n*unpacked* images as reported by Docker – compressed sizes are about 1/3 of these:\n\n- Full install built with npm and yarn:\n  - `latest`, `16`, `16.4`, `16.4.2` – 108 MB (npm 7.19.1, yarn 1.22.10)\n  - `14`, `14.17`, `14.17.3` – 109 MB (npm 6.14.13, yarn 1.22.10)\n  - `12`, `12.22`, `12.22.3` – 80.4 MB (npm 6.14.13, yarn 1.22.10)\n  - `10`, `10.24`, `10.24.1` – 73.1 MB (npm 6.14.12, yarn 1.22.10)\n  - `8`, `8.17`, `8.17.0` – 67.8 MB (npm 6.14.11, yarn 1.22.10)\n- Full install build with npm:\n  - `6`, `6.17`, `6.17.1` – 49 MB (npm 3.10.10)\n  - `4`, `4.9`, `4.9.1` – 35.2 MB (npm 2.15.12)\n  - `0.12`, `0.12.18` – 32.4 MB (npm 2.15.12)\n  - `0.10`, `0.10.48` – 27.8 MB (npm 2.15.12)\n- Slim install with no npm or yarn:\n  - `slim`, `slim-16`, `slim-16.4`, `slim-16.4.2` – 78.1 MB\n  - `slim-14`, `slim-14.17`, `slim-14.17.3` – 73.9 MB\n  - `slim-12`, `slim-12.22`, `slim-12.22.3` – 46.9 MB\n  - `slim-10`, `slim-10.24`, `slim-10.24.1` – 41.3 MB\n  - `slim-8`, `slim-8.17`, `slim-8.17.0` – 37.2 MB\n  - `slim-6`, `slim-6.17`, `slim-6.17.1` – 32.5 MB\n\nExamples\n--------\n\n```console\n$ docker run --rm mhart/alpine-node:14 node --version\nv14.17.3\n\n$ docker run --rm mhart/alpine-node:12 node --version\nv12.22.3\n\n$ docker run --rm mhart/alpine-node:14 npm --version\n6.14.13\n\n$ docker run --rm mhart/alpine-node:14 yarn --version\n1.22.10\n\n$ docker run --rm mhart/alpine-node:slim-14 node --version\nv14.17.3\n\n$ docker run --rm mhart/alpine-node:slim-12 node --version\nv12.22.3\n```\n\nExample Dockerfile for your own Node.js project\n-----------------------------------------------\n\nIf you're doing your `npm install`/`npm ci` or `yarn install` from your\n`Dockerfile`, then you'll probably want to add `node_modules` to your\n`.dockerignore` file first, so that it doesn't get sent to the docker daemon.\n\nFor the smallest builds, use a multi-stage build – where you install your\nmodules using the full install image, but then create your app using the slim\nimage – this can reduce the size of your final image by ~35MB or so.\n\n```Dockerfile\n# This stage installs our modules\nFROM mhart/alpine-node:12\nWORKDIR /app\nCOPY package.json package-lock.json ./\n\n# If you have native dependencies, you'll need extra tools\n# RUN apk add --no-cache make gcc g++ python3\n\nRUN npm ci --prod\n\n# Then we copy over the modules from above onto a `slim` image\nFROM mhart/alpine-node:slim-12\n\n# If possible, run your container using `docker run --init`\n# Otherwise, you can use `tini`:\n# RUN apk add --no-cache tini\n# ENTRYPOINT [\"/sbin/tini\", \"--\"]\n\nWORKDIR /app\nCOPY --from=0 /app .\nCOPY . .\nCMD [\"node\", \"index.js\"]\n```\n\nIf you can't do multi-stage builds, then you can just do everything on a \"full\ninstall\" image:\n\n```Dockerfile\nFROM mhart/alpine-node:12\n\n# If possible, run your container using `docker run --init`\n# Otherwise, you can use `tini`:\n# RUN apk add --no-cache tini\n# ENTRYPOINT [\"/sbin/tini\", \"--\"]\n\nWORKDIR /app\nCOPY . .\n\n# If you have native dependencies, you'll need extra tools\n# RUN apk add --no-cache make gcc g++ python3\n\nRUN npm ci --prod\n\nCMD [\"node\", \"index.js\"]\n```\n\nCaveats\n-------\n\nAs Alpine Linux uses musl, you may run into some issues with environments\nexpecting glibc-like behavior – especially if you try to use binaries compiled\nwith glibc. You should recompile these binaries to use musl (compiling on\nAlpine is probably the easiest way to do this).\n\nIf you get an error similar to `error loading shared library\nld-linux-x86-64.so.2`, it may be that you have dependencies relying on libc –\nyou can try to fix this by adding `RUN apk add --no-cache libc6-compat` or\n`RUN ln -s /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2` to your\n`Dockerfile`.\n\nInspired by:\n\n- https://github.com/alpinelinux/aports/blob/454db196/main/nodejs/APKBUILD\n- https://github.com/alpinelinux/aports/blob/454db196/main/libuv/APKBUILD\n- https://hub.docker.com/r/ficusio/nodejs-base/~/dockerfile/\n"
+        },
+        {
+          "name": "build-slim.sh",
+          "type": "blob",
+          "size": 0.16015625,
+          "content": "#/bin/sh\n\ndocker build --squash \\\n  -t mhart/alpine-node:slim-12.22.3 \\\n  -t mhart/alpine-node:slim-12.22 \\\n  -t mhart/alpine-node:slim-12 \\\n  -f slim.dockerfile .\n"
+        },
+        {
+          "name": "build-tools.sh",
+          "type": "blob",
+          "size": 0.1533203125,
+          "content": "#/bin/sh\n\ndocker build --pull --squash \\\n  -t mhart/alpine-node:12.22.3 \\\n  -t mhart/alpine-node:12.22 \\\n  -t mhart/alpine-node:12 \\\n  -f tools.dockerfile .\n"
+        },
+        {
+          "name": "build.dockerfile",
+          "type": "blob",
+          "size": 3.2080078125,
+          "content": "# FROM alpine:3.7\n# ENV VERSION=v10.24.1 NPM_VERSION=6 YARN_VERSION=v1.22.10 NODE_BUILD_PYTHON=python\n\nFROM alpine:3.9\nENV VERSION=v12.22.3 NPM_VERSION=6 YARN_VERSION=v1.22.10 NODE_BUILD_PYTHON=python\n\n# FROM alpine:3.11\n# ENV VERSION=v14.17.3 NPM_VERSION=6 YARN_VERSION=v1.22.10 NODE_BUILD_PYTHON=python3\n\n# FROM alpine:3.13\n# ENV VERSION=v16.4.2 NPM_VERSION=7 YARN_VERSION=v1.22.10 NODE_BUILD_PYTHON=python3\n\nRUN apk upgrade --no-cache -U && \\\n  apk add --no-cache curl make gcc g++ ${NODE_BUILD_PYTHON} linux-headers binutils-gold gnupg libstdc++\n\nRUN for server in hkps://keys.openpgp.org ipv4.pool.sks-keyservers.net keyserver.pgp.com ha.pool.sks-keyservers.net; do \\\n    gpg --keyserver $server --recv-keys \\\n      4ED778F539E3634C779C87C6D7062848A1AB005C \\\n      94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \\\n      74F12602B6F1C4E913FAA37AD3A89613643B6201 \\\n      71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \\\n      8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600 \\\n      C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8 \\\n      C82FA3AE1CBEDC6BE46B9360C43CEC45C17AB93C \\\n      DD8F2338BAE7501E3DD5AC78C273792F7D83545D \\\n      A48C2BEE680E841632CD4E44F07496B3EB3C1762 \\\n      108F52B48DB57BB0CC439B2997B01419BD92F80A \\\n      B9E2F5981AA6E0CD28160D9FF13993A75599653C && break; \\\n  done\n\nRUN curl -sfSLO https://nodejs.org/dist/${VERSION}/node-${VERSION}.tar.xz && \\\n  curl -sfSL https://nodejs.org/dist/${VERSION}/SHASUMS256.txt.asc | gpg -d -o SHASUMS256.txt && \\\n  grep \" node-${VERSION}.tar.xz\\$\" SHASUMS256.txt | sha256sum -c | grep ': OK$' && \\\n  tar -xf node-${VERSION}.tar.xz && \\\n  cd node-${VERSION} && \\\n  ./configure --prefix=/usr ${CONFIG_FLAGS} && \\\n  make -j$(getconf _NPROCESSORS_ONLN) && \\\n  make install\n\nRUN if [ -z \"$CONFIG_FLAGS\" ]; then \\\n    if [ -n \"$NPM_VERSION\" ]; then \\\n      npm install -g npm@${NPM_VERSION}; \\\n    fi; \\\n    find /usr/lib/node_modules/npm -type d \\( -name test -o -name .bin \\) | xargs rm -rf; \\\n    if [ -n \"$YARN_VERSION\" ]; then \\\n      for server in hkps://keys.openpgp.org ipv4.pool.sks-keyservers.net keyserver.pgp.com ha.pool.sks-keyservers.net; do \\\n        gpg --keyserver $server --recv-keys \\\n          6A010C5166006599AA17F08146C2130DFD2497F5 && break; \\\n      done && \\\n      curl -sfSL -O https://github.com/yarnpkg/yarn/releases/download/${YARN_VERSION}/yarn-${YARN_VERSION}.tar.gz -O https://github.com/yarnpkg/yarn/releases/download/${YARN_VERSION}/yarn-${YARN_VERSION}.tar.gz.asc && \\\n      gpg --batch --verify yarn-${YARN_VERSION}.tar.gz.asc yarn-${YARN_VERSION}.tar.gz && \\\n      mkdir /usr/local/share/yarn && \\\n      tar -xf yarn-${YARN_VERSION}.tar.gz -C /usr/local/share/yarn --strip 1 && \\\n      ln -s /usr/local/share/yarn/bin/yarn /usr/local/bin/ && \\\n      ln -s /usr/local/share/yarn/bin/yarnpkg /usr/local/bin/ && \\\n      rm yarn-${YARN_VERSION}.tar.gz*; \\\n    fi; \\\n  fi\n\nRUN apk del curl make gcc g++ ${NODE_BUILD_PYTHON} linux-headers binutils-gold gnupg ${DEL_PKGS} && \\\n  rm -rf ${RM_DIRS} /node-${VERSION}* /SHASUMS256.txt /tmp/* \\\n    /usr/share/man/* /usr/share/doc /root/.npm /root/.node-gyp /root/.config \\\n    /usr/lib/node_modules/npm/man /usr/lib/node_modules/npm/doc /usr/lib/node_modules/npm/docs \\\n    /usr/lib/node_modules/npm/html /usr/lib/node_modules/npm/scripts && \\\n  { rm -rf /root/.gnupg || true; }\n"
+        },
+        {
+          "name": "build.sh",
+          "type": "blob",
+          "size": 0.1591796875,
+          "content": "#/bin/sh\n\ndocker build --pull --squash \\\n  -t mhart/alpine-node:12.22.3 \\\n  -t mhart/alpine-node:12.22 \\\n  -t mhart/alpine-node:12 \\\n  -f extract.dockerfile \\\n  .\n"
+        },
+        {
+          "name": "extract.dockerfile",
+          "type": "blob",
+          "size": 1.9873046875,
+          "content": "FROM alpine:3.9\nENV VERSION=v12.22.3 NPM_VERSION=6 YARN_VERSION=v1.22.10\n\n# FROM alpine:3.11\n# ENV VERSION=v14.17.3 NPM_VERSION=6 YARN_VERSION=v1.22.10\n\n# FROM alpine:3.13\n# ENV VERSION=v16.4.2 NPM_VERSION=7 YARN_VERSION=v1.22.10\n\nRUN apk upgrade --no-cache -U && \\\n  apk add --no-cache curl gnupg libstdc++\n\nRUN curl -sfSLO https://unofficial-builds.nodejs.org/download/release/${VERSION}/node-${VERSION}-linux-x64-musl.tar.xz && \\\n  curl -sfSLO https://unofficial-builds.nodejs.org/download/release/${VERSION}/SHASUMS256.txt && \\\n  grep \" node-${VERSION}-linux-x64-musl.tar.xz\\$\" SHASUMS256.txt | sha256sum -c | grep ': OK$' && \\\n  tar -xf node-${VERSION}-linux-x64-musl.tar.xz -C /usr --strip 1 && \\\n  rm node-${VERSION}-linux-x64-musl.tar.xz\n\nRUN npm install -g npm@${NPM_VERSION} && \\\n  find /usr/lib/node_modules/npm -type d \\( -name test -o -name .bin \\) | xargs rm -rf\n\nRUN for server in hkps://keys.openpgp.org ipv4.pool.sks-keyservers.net keyserver.pgp.com ha.pool.sks-keyservers.net; do \\\n    gpg --keyserver $server --recv-keys \\\n      6A010C5166006599AA17F08146C2130DFD2497F5 && break; \\\n  done && \\\n  curl -sfSL -O https://github.com/yarnpkg/yarn/releases/download/${YARN_VERSION}/yarn-${YARN_VERSION}.tar.gz -O https://github.com/yarnpkg/yarn/releases/download/${YARN_VERSION}/yarn-${YARN_VERSION}.tar.gz.asc && \\\n  gpg --batch --verify yarn-${YARN_VERSION}.tar.gz.asc yarn-${YARN_VERSION}.tar.gz && \\\n  mkdir /usr/local/share/yarn && \\\n  tar -xf yarn-${YARN_VERSION}.tar.gz -C /usr/local/share/yarn --strip 1 && \\\n  ln -s /usr/local/share/yarn/bin/yarn /usr/local/bin/ && \\\n  ln -s /usr/local/share/yarn/bin/yarnpkg /usr/local/bin/ && \\\n  rm yarn-${YARN_VERSION}.tar.gz*\n\nRUN apk del curl gnupg && \\\n  rm -rf /SHASUMS256.txt /tmp/* \\\n    /usr/share/man/* /usr/share/doc /root/.npm /root/.node-gyp /root/.config \\\n    /usr/lib/node_modules/npm/man /usr/lib/node_modules/npm/doc /usr/lib/node_modules/npm/docs \\\n    /usr/lib/node_modules/npm/html /usr/lib/node_modules/npm/scripts && \\\n  { rm -rf /root/.gnupg || true; }\n"
+        },
+        {
+          "name": "publish.sh",
+          "type": "blob",
+          "size": 0.166015625,
+          "content": "#/bin/sh\n\nfor tag in 12.22.3 12.22 12 slim-12.22.3 slim-12.22 slim-12; do\n  git tag -f $tag\n  git push -f origin $tag\n  docker push mhart/alpine-node:$tag\ndone\n\ngit push\n"
+        },
+        {
+          "name": "slim.dockerfile",
+          "type": "blob",
+          "size": 0.3876953125,
+          "content": "# FROM mhart/alpine-node:8\n# FROM alpine:3.6\n\n# FROM mhart/alpine-node:10\n# FROM alpine:3.7\n\nFROM mhart/alpine-node:12\nFROM alpine:3.9\n\n# FROM mhart/alpine-node:14\n# FROM alpine:3.11\n\n# FROM mhart/alpine-node:16\n# FROM alpine:3.13\n\nCOPY --from=0 /usr/bin/node /usr/bin/\n\nRUN apk upgrade --no-cache -U && \\\n  apk add --no-cache binutils libstdc++ && \\\n  strip /usr/bin/node && \\\n  apk del binutils\n"
+        },
+        {
+          "name": "tools.dockerfile",
+          "type": "blob",
+          "size": 1.998046875,
+          "content": "# FROM mhart/alpine-node:8\n# FROM alpine:3.6\n# ENV NPM_VERSION=6 YARN_VERSION=v1.22.10\n\n# FROM mhart/alpine-node:10\n# FROM alpine:3.7\n# ENV NPM_VERSION=6 YARN_VERSION=v1.22.10\n\nFROM mhart/alpine-node:12\nFROM alpine:3.9\nENV NPM_VERSION=6 YARN_VERSION=v1.22.10\n\n# FROM mhart/alpine-node:14\n# FROM alpine:3.11\n# ENV NPM_VERSION=6 YARN_VERSION=v1.22.10\n\n# FROM mhart/alpine-node:16\n# FROM alpine:3.13\n# ENV NPM_VERSION=7 YARN_VERSION=v1.22.10\n\nCOPY --from=0 /usr/bin/node /usr/bin/\nCOPY --from=0 /usr/lib/node_modules /tmp/node_modules\nCOPY --from=0 /usr/include/node /usr/include/node\nCOPY --from=0 /usr/share/systemtap/tapset/node.stp /usr/share/systemtap/tapset/\n\nRUN apk upgrade --no-cache -U && \\\n  apk add --no-cache curl gnupg libstdc++\nRUN /tmp/node_modules/npm/bin/npm-cli.js install -g npm@${NPM_VERSION} && \\\n  find /usr/lib/node_modules/npm -type d \\( -name test -o -name .bin \\) | xargs rm -rf\nRUN for server in hkps://keys.openpgp.org ipv4.pool.sks-keyservers.net keyserver.pgp.com ha.pool.sks-keyservers.net; do \\\n    gpg --keyserver $server --recv-keys \\\n      6A010C5166006599AA17F08146C2130DFD2497F5 && break; \\\n  done\nRUN curl -sfSL -O https://github.com/yarnpkg/yarn/releases/download/${YARN_VERSION}/yarn-${YARN_VERSION}.tar.gz -O https://github.com/yarnpkg/yarn/releases/download/${YARN_VERSION}/yarn-${YARN_VERSION}.tar.gz.asc && \\\n  gpg --batch --verify yarn-${YARN_VERSION}.tar.gz.asc yarn-${YARN_VERSION}.tar.gz && \\\n  rm -rf /usr/local/share/yarn && \\\n  mkdir /usr/local/share/yarn && \\\n  tar -xf yarn-${YARN_VERSION}.tar.gz -C /usr/local/share/yarn --strip 1 && \\\n  ln -sf /usr/local/share/yarn/bin/yarn /usr/local/bin/ && \\\n  ln -sf /usr/local/share/yarn/bin/yarnpkg /usr/local/bin/\nRUN apk del curl gnupg\nRUN rm -rf *.tar.gz* /tmp/* \\\n    /usr/share/man/* /usr/share/doc /root/.npm /root/.node-gyp /root/.config \\\n    /usr/lib/node_modules/npm/man /usr/lib/node_modules/npm/doc /usr/lib/node_modules/npm/docs \\\n    /usr/lib/node_modules/npm/html /usr/lib/node_modules/npm/scripts && \\\n  { rm -rf /root/.gnupg || true; }\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736709601135,
+    "page": 15,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ftlabs/fastclick",
+      "stars": 18639,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "~$*\n.DS_Store\nThumbs.db\nDesktop.ini\nbuild\n"
+        },
+        {
+          "name": ".npmignore",
+          "type": "blob",
+          "size": 0.0703125,
+          "content": ".gitignore\n.npmignore\nbower.json\ncomponent.json\nexamples\nMakefile\ntests\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2014 The Financial Times Ltd.\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.7314453125,
+          "content": "SHELL := /bin/bash\n\nQS=compilation_level=SIMPLE_OPTIMIZATIONS&output_format=text\nURL=http://closure-compiler.appspot.com/compile\nCODE=js_code@lib/fastclick.js\n\nCHECK=\\033[32m✔\\033[39m\n\nbuild/fastclick.min.js: lib/fastclick.js\n\t@mkdir -p build\n\t@echo -n \"Building build/fastclick.min.js...                  \"\n\t@curl --silent --show-error --data-urlencode \"${CODE}\" --data \"${QS}&output_info=compiled_code\" ${URL} -o build/fastclick.min.js\n\t@echo -e \"${CHECK} Done\"\n\t@echo -n \"Getting compression stats...                        \"\n\t@echo -e \"${CHECK} Done\\n\\n\" \"`curl --silent --show-error --data-urlencode \"${CODE}\" --data \"${QS}&output_info=statistics\" ${URL}`\"\n\t@echo ${STATS}\n\ntest:\n\tjshint -v lib/*.js\n\nclean:\n\trm -rf build\n\n.PHONY: clean test\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.0517578125,
+          "content": "# FastClick #\n\nFastClick is a simple, easy-to-use library for eliminating the 300ms delay between a physical tap and the firing of a `click` event on mobile browsers. The aim is to make your application feel less laggy and more responsive while avoiding any interference with your current logic.\n\nFastClick is developed by [FT Labs](http://labs.ft.com/), part of the Financial Times.\n\n*Note: As of late 2015 most mobile browsers - notably Chrome and Safari - no longer have a 300ms touch delay, so fastclick offers no benefit on newer browsers, and risks introducing [bugs](https://github.com/ftlabs/fastclick/issues) into your application. Consider carefully whether you really need to use it.*\n\n[Explication en français](http://maxime.sh/2013/02/supprimer-le-lag-des-clics-sur-mobile-avec-fastclick/).\n\n[日本語で説明](https://developer.mozilla.org/ja/docs/Mozilla/Firefox_OS/Apps/Tips_and_techniques#Make_events_immediate)。\n\n## Why does the delay exist? ##\n\nAccording to [Google](https://developers.google.com/mobile/articles/fast_buttons):\n\n> ...mobile browsers will wait approximately 300ms from the time that you tap the button to fire the click event. The reason for this is that the browser is waiting to see if you are actually performing a double tap.\n\n## Compatibility ##\n\nThe library has been deployed as part of the [FT Web App](http://app.ft.com/) and is tried and tested on the following mobile browsers:\n\n* Mobile Safari on iOS 3 and upwards\n* Chrome on iOS 5 and upwards\n* Chrome on Android (ICS)\n* Opera Mobile 11.5 and upwards\n* Android Browser since Android 2\n* PlayBook OS 1 and upwards\n\n## When it isn't needed ##\n\nFastClick doesn't attach any listeners on desktop browsers.\n\nChrome 32+ on Android with `width=device-width` in the [viewport meta tag](https://developer.mozilla.org/en-US/docs/Mobile/Viewport_meta_tag) doesn't have a 300ms delay, therefore listeners aren't attached.\n\n```html\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n```\n\nSame goes for Chrome on Android (all versions) with `user-scalable=no` in the viewport meta tag. But be aware that `user-scalable=no` also disables pinch zooming, which may be an accessibility concern.\n\nFor IE11+, you can use `touch-action: manipulation;` to disable double-tap-to-zoom on certain elements (like links and buttons).  For IE10 use `-ms-touch-action: manipulation`.\n\n## Usage ##\n\nInclude fastclick.js in your JavaScript bundle or add it to your HTML page like this:\n\n```html\n<script type='application/javascript' src='/path/to/fastclick.js'></script>\n```\n\nThe script must be loaded prior to instantiating FastClick on any element of the page.\n\nTo instantiate FastClick on the `body`, which is the recommended method of use:\n\n```js\nif ('addEventListener' in document) {\n\tdocument.addEventListener('DOMContentLoaded', function() {\n\t\tFastClick.attach(document.body);\n\t}, false);\n}\n```\n\nOr, if you're using jQuery:\n\n```js\n$(function() {\n\tFastClick.attach(document.body);\n});\n```\n\nIf you're using Browserify or another CommonJS-style module system, the `FastClick.attach` function will be returned when you call `require('fastclick')`. As a result, the easiest way to use FastClick with these loaders is as follows:\n\n```js\nvar attachFastClick = require('fastclick');\nattachFastClick(document.body);\n```\n\n### Minified ###\n\nRun `make` to build a minified version of FastClick using the Closure Compiler REST API. The minified file is saved to `build/fastclick.min.js` or you can [download a pre-minified version](https://origami-build.ft.com/bundles/js?modules=fastclick).\n\nNote: the pre-minified version is built using [our build service](http://origami.ft.com/docs/developer-guide/build-service/) which exposes the `FastClick` object through `Origami.fastclick` and will have the Browserify/CommonJS API (see above).\n\n```js\nvar attachFastClick = Origami.fastclick;\nattachFastClick(document.body);\n```\n\n### AMD ###\n\nFastClick has AMD (Asynchronous Module Definition) support. This allows it to be lazy-loaded with an AMD loader, such as [RequireJS](http://requirejs.org/). Note that when using the AMD style require, the full `FastClick` object will be returned, _not_ `FastClick.attach`\n\n```js\nvar FastClick = require('fastclick');\nFastClick.attach(document.body, options);\n```\n\n### Package managers ###\n\nYou can install FastClick using [Component](https://github.com/component/component), [npm](https://npmjs.org/package/fastclick) or [Bower](http://bower.io/).\n\nFor Ruby, there's a third-party gem called [fastclick-rails](http://rubygems.org/gems/fastclick-rails). For .NET there's a [NuGet package](http://nuget.org/packages/FastClick).\n\n## Advanced ##\n\n### Ignore certain elements with `needsclick` ###\n\nSometimes you need FastClick to ignore certain elements. You can do this easily by adding the `needsclick` class.\n```html\n<a class=\"needsclick\">Ignored by FastClick</a>\n```\n\n#### Use case 1: non-synthetic click required ####\n\nInternally, FastClick uses `document.createEvent` to fire a synthetic `click` event as soon as `touchend` is fired by the browser. It then suppresses the additional `click` event created by the browser after that. In some cases, the non-synthetic `click` event created by the browser is required, as described in the [triggering focus example](http://ftlabs.github.com/fastclick/examples/focus.html).\n\nThis is where the `needsclick` class comes in. Add the class to any element that requires a non-synthetic click.\n\n#### Use case 2: Twitter Bootstrap 2.2.2 dropdowns ####\n\nAnother example of when to use the `needsclick` class is with dropdowns in Twitter Bootstrap 2.2.2. Bootstrap add its own `touchstart` listener for dropdowns, so you want to tell FastClick to ignore those. If you don't, touch devices will automatically close the dropdown as soon as it is clicked, because both FastClick and Bootstrap execute the synthetic click, one opens the dropdown, the second closes it immediately after.\n\n```html\n<a class=\"dropdown-toggle needsclick\" data-toggle=\"dropdown\">Dropdown</a>\n```\n\n## Examples ##\n\nFastClick is designed to cope with many different browser oddities. Here are some examples to illustrate this:\n\n* [basic use](http://ftlabs.github.com/fastclick/examples/layer.html) showing the increase in perceived responsiveness\n* [triggering focus](http://ftlabs.github.com/fastclick/examples/focus.html) on an input element from a `click` handler\n* [input element](http://ftlabs.github.com/fastclick/examples/input.html) which never receives clicks but gets fast focus\n\n## Tests ##\n\nThere are no automated tests. The files in `tests/` are manual reduced test cases. We've had a think about how best to test these cases, but they tend to be very browser/device specific and sometimes subjective which means it's not so trivial to test.\n\n## Credits and collaboration ##\n\nFastClick is maintained by [Rowan Beentje](http://twitter.com/rowanbeentje), [Matthew Caruana Galizia](http://twitter.com/mcaruanagalizia) and [Matthew Andrews](http://twitter.com/andrewsmatt) at [FT Labs](http://labs.ft.com). All open source code released by FT Labs is licenced under the MIT licence. We welcome comments, feedback and suggestions.  Please feel free to raise an issue or pull request.\n"
+        },
+        {
+          "name": "bower.json",
+          "type": "blob",
+          "size": 0.189453125,
+          "content": "{\n  \"name\": \"fastclick\",\n  \"license\": \"MIT\",\n  \"main\": \"lib/fastclick.js\",\n  \"ignore\": [\n    \"**/.*\",\n    \"component.json\",\n    \"package.json\",\n    \"Makefile\",\n    \"tests\",\n    \"examples\"\n  ]\n}\n"
+        },
+        {
+          "name": "component.json",
+          "type": "blob",
+          "size": 0.27734375,
+          "content": "{\n\t\"name\": \"fastclick\",\n\t\"repo\": \"ftlabs/fastclick\",\n\t\"description\": \"Polyfill to remove click delays on browsers with touch UIs.\",\n\t\"version\": \"1.0.3\",\n\t\"main\": \"lib/fastclick.js\",\n\t\"scripts\": [\n\t\t\"lib/fastclick.js\"\n\t],\n\t\"ignore\": [\n\t\t\"examples/\",\n\t\t\"tests/\"\n\t],\n\t\"license\": \"MIT\"\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.9345703125,
+          "content": "{\n  \"name\": \"fastclick\",\n  \"version\": \"1.0.6\",\n  \"description\": \"Polyfill to remove click delays on browsers with touch UIs.\",\n  \"maintainers\": [\n    {\n      \"name\": \"Matthew Caruana Galizia\",\n      \"email\": \"m@m.cg\",\n      \"url\": \"http://m.cg/\"\n    }\n  ],\n  \"author\": {\n    \"name\": \"Rowan Beentje\",\n    \"email\": \"rowan.beentje@ft.com\"\n  },\n  \"contributors\": [\n    {\n      \"name\": \"Rowan Beentje\",\n      \"email\": \"rowan.beentje@ft.com\"\n    },\n    {\n      \"name\": \"Matthew Caruana Galizia\",\n      \"email\": \"m@m.cg\"\n    }\n  ],\n  \"main\": \"lib/fastclick.js\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git://github.com/ftlabs/fastclick.git\"\n  },\n  \"keywords\": [\n    \"fastclick\",\n    \"mobile\",\n    \"touch\",\n    \"tap\",\n    \"click\",\n    \"delay\"\n  ],\n  \"licenses\": [\n    {\n      \"type\": \"MIT\",\n      \"url\": \"http://opensource.org/licenses/MIT\"\n    }\n  ],\n  \"implements\": [\n    \"CommonJS/Modules/1.0\"\n  ],\n  \"homepage\": \"https://github.com/ftlabs/fastclick\"\n}\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

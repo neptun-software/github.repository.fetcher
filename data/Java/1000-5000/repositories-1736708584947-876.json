@@ -1,0 +1,61 @@
+{
+  "metadata": {
+    "timestamp": 1736708584947,
+    "page": 876,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "luxiaoxun/NettyRpc",
+      "stars": 2391,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 1.19921875,
+          "content": "# .gitignore for intellij,java,maven,windows,osx\n\n### Intellij ###\n.idea\n.idea_modules/\n/out/\noutput/\n\n####eclipse#######\n.project\n.classpath\n.settings\n\n### log ###\nlogs/\nlog/\n*.log\n\n*.iws\n*.iml\n\n### Java ###\n*.class\n\n# Mobile Tools for Java (J2ME)\n.mtj.tmp/\n\n# Package Files #\n*.jar\n*.war\n*.ear\n\n# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml\nhs_err_pid*\n\n### Maven ###\ntarget/\npom.xml.tag\npom.xml.releaseBackup\npom.xml.versionsBackup\npom.xml.next\nrelease.properties\ndependency-reduced-pom.xml\nbuildNumber.properties\n.mvn/timing.properties\n\n### Windows ###\n# Windows image file caches\nThumbs.db\nehthumbs.db\n\n# Folder config file\nDesktop.ini\n\n# Recycle Bin used on file shares\n$RECYCLE.BIN/\n\n# Windows Installer files\n*.cab\n*.msi\n*.msm\n*.msp\n\n# Windows shortcuts\n*.lnk\n\n### OSX ###\n*~\n.DS_Store\n.AppleDouble\n.LSOverride\n\n# Icon must end with two \\r\nIcon\n\n# Thumbnails\n._*\n\n# Files that might appear in the root of a volume\n.DocumentRevisions-V100\n.fseventsd\n.Spotlight-V100\n.TemporaryItems\n.Trashes\n.VolumeIcon.icns\n\n# Directories potentially created on remote AFP share\n.AppleDB\n.AppleDesktop\nNetwork Trash Folder\nTemporary Items\n.apdisk\n\n### Commitizen ###\nnode_modules/\npackage.json\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.3720703125,
+          "content": "# NettyRpc\nAn RPC framework based on Netty, ZooKeeper and Spring  \n中文详情：[Chinese Details](http://www.cnblogs.com/luxiaoxun/p/5272384.html)\n### Features:\n* Simple code and framework\n* Service registry/discovery support by ZooKeeper\n* High availability, load balance and failover\n* Support different load balance strategy\n* Support asynchronous/synchronous call\n* Support different versions of service\n* Support different serializer/deserializer\n* Dead TCP connection detecting with heartbeat\n### Design:\n![design](https://github.com/luxiaoxun/NettyRpc/blob/master/picture/NettyRpc-design.png)\n### How to use (netty-rpc-test)\n1. Define an interface:\n    ```  \n    public interface HelloService { \n        String hello(String name); \n        String hello(Person person);\n    }\n    ```  \n2. Implement the interface with annotation @NettyRpcService:\n    ```  \n    @NettyRpcService(HelloService.class, version = \"1.0\")\n    public class HelloServiceImpl implements HelloService {\n        public HelloServiceImpl(){}\n\t\n        @Override\n        public String hello(String name) {\n            return \"Hello \" + name;\n        }\n\n        @Override\n        public String hello(Person person) {\n            return \"Hello \" + person.getFirstName() + \" \" + person.getLastName();\n        }\n    }\n    ```  \n3. Run zookeeper\n\n   For example: zookeeper is running on 127.0.0.1:2181\n\n4. Start server:\n   1. Start server with spring config: RpcServerBootstrap\n   2. Start server without spring config: RpcServerBootstrap2\n\n5. Call the service:\n    1. Use the client:\n    ```  \n   \tfinal RpcClient rpcClient = new RpcClient(\"127.0.0.1:2181\");\n   \t\t\n   \t// Sync call\n   \tHelloService helloService = rpcClient.createService(HelloService.class, \"1.0\");\n   \tString result = helloService.hello(\"World\");\n   \t\t\n   \t// Async call\n   \tRpcService client = rpcClient.createAsyncService(HelloService.class, \"2.0\");\n   \tRPCFuture helloFuture = client.call(\"hello\", \"World\");\n   \tString result = (String) helloFuture.get(3000, TimeUnit.MILLISECONDS);\n\t``` \n    2. Use annotation @RpcAutowired:\n    ``` \n    public class Baz implements Foo {\n        @RpcAutowired(version = \"1.0\")\n        private HelloService helloService1;\n           \n        @RpcAutowired(version = \"2.0\")\n        private HelloService helloService2;\n           \n        @Override\n        public String say(String s) {\n            return helloService1.hello(s);\n        }\n    }\n    ``` "
+        },
+        {
+          "name": "netty-rpc-client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "netty-rpc-common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "netty-rpc-server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "netty-rpc-test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "picture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pom.xml",
+          "type": "blob",
+          "size": 5.3232421875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project xmlns=\"http://maven.apache.org/POM/4.0.0\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd\">\n    <modelVersion>4.0.0</modelVersion>\n\n    <groupId>com.netty.rpc</groupId>\n    <artifactId>NettyRpc</artifactId>\n    <packaging>pom</packaging>\n    <version>1.0-SNAPSHOT</version>\n    <modules>\n        <module>netty-rpc-server</module>\n        <module>netty-rpc-client</module>\n        <module>netty-rpc-common</module>\n        <module>netty-rpc-test</module>\n    </modules>\n\n    <properties>\n        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>\n        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>\n        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>\n        <spring.version>5.2.22.RELEASE</spring.version>\n        <jackson.version>2.14.0</jackson.version>\n        <curator.version>2.13.0</curator.version>\n        <guava.version>32.0.0-jre</guava.version>\n        <netty.version>4.1.42.Final</netty.version>\n        <protostuff.version>1.0.8</protostuff.version>\n        <hessian.version>4.0.63</hessian.version>\n        <kryo.version>4.0.2</kryo.version>\n    </properties>\n\n    <dependencies>\n        <!-- JUnit -->\n        <dependency>\n            <groupId>junit</groupId>\n            <artifactId>junit</artifactId>\n            <version>4.13.1</version>\n            <scope>test</scope>\n        </dependency>\n\n        <!-- SLF4J -->\n        <dependency>\n            <groupId>org.slf4j</groupId>\n            <artifactId>slf4j-log4j12</artifactId>\n            <version>1.7.7</version>\n        </dependency>\n\n        <!-- Spring -->\n        <dependency>\n            <groupId>org.springframework</groupId>\n            <artifactId>spring-context</artifactId>\n            <version>${spring.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>org.springframework</groupId>\n            <artifactId>spring-test</artifactId>\n            <version>${spring.version}</version>\n            <scope>test</scope>\n        </dependency>\n\n        <!-- Netty -->\n        <dependency>\n            <groupId>io.netty</groupId>\n            <artifactId>netty-all</artifactId>\n            <version>${netty.version}</version>\n        </dependency>\n\n        <dependency>\n            <groupId>com.google.guava</groupId>\n            <artifactId>guava</artifactId>\n            <version>${guava.version}</version>\n        </dependency>\n\n        <!-- Protostuff -->\n        <dependency>\n            <groupId>com.dyuproject.protostuff</groupId>\n            <artifactId>protostuff-core</artifactId>\n            <version>${protostuff.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>com.dyuproject.protostuff</groupId>\n            <artifactId>protostuff-runtime</artifactId>\n            <version>${protostuff.version}</version>\n        </dependency>\n\n        <!-- hessian -->\n        <dependency>\n            <groupId>com.caucho</groupId>\n            <artifactId>hessian</artifactId>\n            <version>${hessian.version}</version>\n        </dependency>\n\n        <!-- kryo -->\n        <dependency>\n            <groupId>com.esotericsoftware</groupId>\n            <artifactId>kryo</artifactId>\n            <version>${kryo.version}</version>\n        </dependency>\n\n        <!-- curator -->\n        <dependency>\n            <groupId>org.apache.curator</groupId>\n            <artifactId>curator-framework</artifactId>\n            <version>${curator.version}</version>\n        </dependency>\n        <!-- curator recipes -->\n        <dependency>\n            <groupId>org.apache.curator</groupId>\n            <artifactId>curator-recipes</artifactId>\n            <version>${curator.version}</version>\n        </dependency>\n\n        <!-- Apache Commons Collections -->\n        <dependency>\n            <groupId>org.apache.commons</groupId>\n            <artifactId>commons-collections4</artifactId>\n            <version>4.1</version>\n        </dependency>\n\n        <!-- Objenesis -->\n        <dependency>\n            <groupId>org.objenesis</groupId>\n            <artifactId>objenesis</artifactId>\n            <version>2.1</version>\n        </dependency>\n\n        <!-- CGLib -->\n        <dependency>\n            <groupId>cglib</groupId>\n            <artifactId>cglib</artifactId>\n            <version>3.1</version>\n        </dependency>\n\n        <!-- jackson -->\n        <dependency>\n            <groupId>com.fasterxml.jackson.core</groupId>\n            <artifactId>jackson-databind</artifactId>\n            <version>${jackson.version}</version>\n        </dependency>\n        <dependency>\n            <groupId>com.fasterxml.jackson.core</groupId>\n            <artifactId>jackson-core</artifactId>\n            <version>${jackson.version}</version>\n        </dependency>\n\n    </dependencies>\n\n    <build>\n        <plugins>\n            <plugin>\n                <groupId>org.apache.maven.plugins</groupId>\n                <artifactId>maven-compiler-plugin</artifactId>\n                <version>3.2</version>\n                <configuration>\n                    <source>1.8</source>\n                    <target>1.8</target>\n                    <encoding>UTF-8</encoding>\n                    <skip>true</skip>\n                </configuration>\n            </plugin>\n        </plugins>\n    </build>\n\n</project>\n"
+        }
+      ]
+    }
+  ]
+}

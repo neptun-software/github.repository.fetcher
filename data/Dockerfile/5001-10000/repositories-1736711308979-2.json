@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "timestamp": 1736711308979,
+    "page": 2,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjQ=",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hiifeng/V2ray-for-Doprax",
+      "stars": 8413,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.30859375,
+          "content": "FROM nginx:mainline-alpine-slim\nMAINTAINER ifeng <https://t.me/HiaiFeng>\nEXPOSE 80\nUSER root\n\nRUN apk update && apk add --no-cache supervisor wget unzip curl\n\n# 定义 UUID 及 伪装路径,请自行修改.(注意:伪装路径以 / 符号开始,为避免不必要的麻烦,请不要使用特殊符号.)\nENV UUID de04add9-5c68-8bab-950c-08cd5320df18\nENV VMESS_WSPATH /vmess\nENV VLESS_WSPATH /vless\n\nCOPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf\nCOPY nginx.conf /etc/nginx/nginx.conf\n\nRUN mkdir /etc/v2ray /usr/local/v2ray\nCOPY config.json /etc/v2ray/\nCOPY entrypoint.sh /usr/local/v2ray/\n\n# 感谢 fscarmen 大佬提供 Dockerfile 层优化方案\nRUN wget -q -O /tmp/v2ray-linux-64.zip https://github.com/v2fly/v2ray-core/releases/download/v4.45.0/v2ray-linux-64.zip && \\\n    unzip -d /usr/local/v2ray /tmp/v2ray-linux-64.zip v2ray  && \\\n    wget -q -O /usr/local/v2ray/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat && \\\n    wget -q -O /usr/local/v2ray/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat && \\\n    chmod a+x /usr/local/v2ray/entrypoint.sh && \\\n    apk del wget unzip  && \\\n    rm -rf /tmp/v2ray-linux-64.zip && \\\n    rm -rf /var/cache/apk/* && \\\n    rm -rf /tmp/*\n    \nENTRYPOINT [ \"/usr/local/v2ray/entrypoint.sh\" ]\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.8291015625,
+          "content": "# V2ray for Doprax\nCreate By ifeng<br>\nWeb Site: https://www.hicairo.com <br>\nTelegram: https://t.me/HiaiFeng <br>\n\n# 简介：\n本项目用于在 Doprax.com 免费服务上部署 V2ray ，采用的方案为 Nginx + WebSocket + VMess/VLess + TLS。速度与 Replit 相比较慢，但是官方宣传不限流量，服务启动后永不停机。\n\n# 注意事项：\n<p><b><li>请勿滥用，账号封禁风险自负。</li></b></p>\n<p><b><li>部署完成如发现不能上网，请检查域名是否被墙，可使用 Cloudflare CDN 解决。</li></b></p>\n\n# 部署：\n<p>1、登录自己的 GitHub 账号后 Fork 该项目。</p>\n<p>2、注册 <a href=\"https://www.doprax.com/signup/\">Doprax.com</a> 账号登录后 Import 该项目。</p>\n<p>详细使用方案请参考：https://www.hicairo.com/post/55.html</p>\n\n# 使用方法：\n<p>1、服务器端配置</p>\n<p>请使用 <a href=\"https://www.v2fly.org/awesome/tools.html\">第三方工具</a> 生成一个新的 UUID 。在 Doprax.com 登录后依次点击左侧菜单中的 Main ,窗口右侧的 Edit source code ，选择 Dockerfile 文件，编辑 UUID 及伪装地址信息保存后重启服务。</p>\n<img src=\"https://hicairo.com/zb_users/upload/2022/12/202212291672276227538571.webp\">\n<pre class=\"notranslate\"><code># 用新生成的 UUID 替换 de04add9-5c68-8bab-950c-08cd5320df18\nENV UUID de04add9-5c68-8bab-950c-08cd5320df18\n# VMESS_WSPATH / VLESS_WSPATH 两个常量分别定义了 Vmess/VLess 的伪装路径，\n# 请分别修改内容中的vmess或vless。注意：伪装路径以 / 符号开始,为避免不必要的麻烦，请不要使用特殊符号.\nENV VMESS_WSPATH /vmess\nENV VLESS_WSPATH /vless\n</code></pre>\n\n<p>2、客户端配置</p>\n<p>节点客户端配置需要手动进行，下面以 V2rayN 为例。\n<p>下图为 VMess 配置示意图，请修改标示内容，其他设置与图片中显示一致。</p>\n<img src=\"https://www.hicairo.com/zb_users/upload/2022/12/202212291672276258394161.webp\">\n<p>下图为 VLess 配置示意图，请修改标示内容，其他设置与图片中显示一致。</p>\n<img src=\"https://www.hicairo.com/zb_users/upload/2022/12/202212291672276274474231.webp\">\n\n# 反馈与交流：\n<p>在使用过程中，如果遇到问题，请使用Telegram与我联系。（ https://t.me/HiaiFeng ）</p>\n<p>大家好，Doprax 非常关注用户使用体验。Hemen 先生及他的团队，为 Doprax 社区创建了 Discord 服务，如果您在使用过程中，遇到 Doprax 平台的相关问题或对平台有一些建议，请使用如下链接与官方联系。\n\nHello everyone! Doprax pays great attention to user experience. Mr. Hemen and his team have created a Discord service for the Doprax community. If you encounter any problems or have any suggestions related to the Doprax platform during use, please contact the official using the link below.\n\nhttps://discord.gg/pFnGwTuXjk</p>\n"
+        },
+        {
+          "name": "compose.yml",
+          "type": "blob",
+          "size": 0.3662109375,
+          "content": "# uffizzi.com 项目由Misaka大佬全网首发（ https://github.com/Misaka-blog/xray-for-uffizzi ），感谢御坂分享 uffizzi.com 容器。\n# uffizzi.com 项目速度时快时慢，不稳定，推荐配合 Cloudflare CDN 使用。\nx-uffizzi:\n  ingress:\n    service: v2ray-for-uffizzi.com\n    port: 80\nservices:\n  v2ray-for-uffizzi.com:\n    build: .\n    restart: always\n"
+        },
+        {
+          "name": "config.json",
+          "type": "blob",
+          "size": 0.7626953125,
+          "content": "{\n\t\"log\": {\n\t\t\"access\": \"/dev/null\",\n\t\t\"error\": \"/dev/null\",\n\t\t\"loglevel\": \"warning\"\n\t},\n\t\"inbounds\": [{\n\t\t\t\"port\": 10000,\n\t\t\t\"listen\": \"127.0.0.1\",\n\t\t\t\"protocol\": \"vmess\",\n\t\t\t\"settings\": {\n\t\t\t\t\"clients\": [{\n\t\t\t\t\t\"id\": \"UUID\",\n\t\t\t\t\t\"alterId\": 0\n\t\t\t\t}]\n\t\t\t},\n\t\t\t\"streamSettings\": {\n\t\t\t\t\"network\": \"ws\",\n\t\t\t\t\"wsSettings\": {\n\t\t\t\t\t\"path\": \"VMESS_WSPATH\"\n\t\t\t\t}\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"port\": 20000,\n\t\t\t\"listen\": \"127.0.0.1\",\n\t\t\t\"protocol\": \"vless\",\n\t\t\t\"settings\": {\n\t\t\t\t\"clients\": [{\n\t\t\t\t\t\"id\": \"UUID\"\n\t\t\t\t}],\n\t\t\t\t\"decryption\": \"none\"\n\t\t\t},\n\t\t\t\"streamSettings\": {\n\t\t\t\t\"network\": \"ws\",\n\t\t\t\t\"wsSettings\": {\n\t\t\t\t\t\"path\": \"VLESS_WSPATH\"\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t],\n\t\"outbounds\": [{\n\t\t\"protocol\": \"freedom\",\n\t\t\"settings\": {}\n\t}],\n\t\"dns\": {\n\t\t\"server\": [\n\t\t\t\"8.8.8.8\",\n\t\t\t\"8.8.4.4\",\n\t\t\t\"localhost\"\n\t\t]\n\t}\n}\n"
+        },
+        {
+          "name": "entrypoint.sh",
+          "type": "blob",
+          "size": 0.5478515625,
+          "content": "#!/bin/sh\n# Create By ifeng\n# Web Site:https://www.hicairo.com\n# Telegram:https://t.me/HiaiFeng\n\nsed -i \"s#UUID#$UUID#g;s#VMESS_WSPATH#$VMESS_WSPATH#g;s#VLESS_WSPATH#$VLESS_WSPATH#g\" /etc/v2ray/config.json\nsed -i \"s#VMESS_WSPATH#$VMESS_WSPATH#g;s#VLESS_WSPATH#$VLESS_WSPATH#g\" /etc/nginx/nginx.conf\n# exec \"$@\"\n\n# 请删掉下一行最前面的 # 号，同时将这行代码中的域名替换成 Replit 为你项目分配的域名。\n#while true ;do curl https://xx.xx.repl.co; sleep 300; done &\n\n/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf\n"
+        },
+        {
+          "name": "example.txt",
+          "type": "blob",
+          "size": 0.494140625,
+          "content": "vless://de04add9-5c68-8bab-950c-08cd5320df18@localhost:443?encryption=none&security=tls&type=ws&path=%2Fvless#paas_vless\r\n\r\nvmess://ew0KICAidiI6ICIyIiwNCiAgInBzIjogInBhYXNfdm1lc3MiLA0KICAiYWRkIjogImxvY2FsaG9zdCIsDQogICJwb3J0IjogIjQ0MyIsDQogICJpZCI6ICJkZTA0YWRkOS01YzY4LThiYWItOTUwYy0wOGNkNTMyMGRmMTgiLA0KICAiYWlkIjogIjAiLA0KICAic2N5IjogImF1dG8iLA0KICAibmV0IjogIndzIiwNCiAgInR5cGUiOiAibm9uZSIsDQogICJob3N0IjogIiIsDQogICJwYXRoIjogIi92bWVzcyIsDQogICJ0bHMiOiAidGxzIiwNCiAgInNuaSI6ICIiLA0KICAiYWxwbiI6ICIiDQp9\r\n"
+        },
+        {
+          "name": "nginx.conf",
+          "type": "blob",
+          "size": 1.583984375,
+          "content": "\nuser  nginx;\nworker_processes  auto;\n\nerror_log  /var/log/nginx/error.log notice;\npid        /var/run/nginx.pid;\n\n\nevents {\n    worker_connections  1024;\n}\n\n\nhttp {\n    include       /etc/nginx/mime.types;\n    default_type  application/octet-stream;\n\n    log_format  main  '$remote_addr - $remote_user [$time_local] \"$request\" '\n                      '$status $body_bytes_sent \"$http_referer\" '\n                      '\"$http_user_agent\" \"$http_x_forwarded_for\"';\n\n    access_log  /var/log/nginx/access.log  main;\n\n    sendfile        on;\n    #tcp_nopush     on;\n\n    keepalive_timeout  65;\n\n    #gzip  on;\n\n    #include /etc/nginx/conf.d/*.conf;\n\t\n\tserver {\n\t\tlisten               80 default_server;\n\t\tlisten               [::]:80 default_server;\n\n\t\tserver_name          _;\n\t\tcharset              utf-8;\n\t\troot                 html;\n\n\t\tlocation / {\n\t\t\troot   /usr/share/nginx/html;\n\t\t\tindex  index.html index.htm;\n\t\t}\n\n\t\tlocation VMESS_WSPATH {\n\t\t\tproxy_redirect off;\n\t\t\tproxy_pass http://127.0.0.1:10000;\n\t\t\tproxy_http_version 1.1;\n\t\t\tproxy_set_header Upgrade $http_upgrade;\n\t\t\tproxy_set_header Connection upgrade;\n\t\t\tproxy_set_header Host $http_host;\n\t\t\t#proxy_set_header X-Real-IP $remote_addr;\n\t\t\t#proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\t\t}\n\n\t\tlocation VLESS_WSPATH {\n\t\t\tproxy_redirect off;\n\t\t\tproxy_pass http://127.0.0.1:20000;\n\t\t\tproxy_http_version 1.1;\n\t\t\tproxy_set_header Upgrade $http_upgrade;\n\t\t\tproxy_set_header Connection upgrade;\n\t\t\tproxy_set_header Host $http_host;\n\t\t\t#proxy_set_header X-Real-IP $remote_addr;\n\t\t\t#proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n\t\t}\n\t}\n}\n"
+        },
+        {
+          "name": "supervisord.conf",
+          "type": "blob",
+          "size": 0.8564453125,
+          "content": "# Create By ifeng\n# Web Site:https://www.hicairo.com\n# Telegram:https://t.me/HiaiFeng\n\n[supervisord]\nnodaemon=true\nlogfile=/var/log/supervisord.log\npidfile=/run/supervisord.pid\n\n[program:v2ray]\ncommand=/usr/local/v2ray/v2ray -config=/etc/v2ray/config.json\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nredirect_stderr=true\nautorestart=false\nstartretries=0\n\n[program:nginx]\ncommand=nginx -g 'daemon off;'\nstdout_logfile=/dev/stdout\nstdout_logfile_maxbytes=0\nredirect_stderr=true\nautorestart=false\nstartretries=0\n\n# The below configure can be applied when Docker orchestrator like Docker Swarm or K8S is used.\n# By default, supervisor will attempt to restart a failed process.\n# Refer to http://supervisord.org/configuration.html for more info.\n#[eventlistener:processes]\n#command=stop-supervisor.sh\n#events=PROCESS_STATE_STOPPED, PROCESS_STATE_EXITED, PROCESS_STATE_FATAL"
+        }
+      ]
+    }
+  ]
+}

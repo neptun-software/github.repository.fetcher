@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "timestamp": 1736711274782,
+    "page": 4,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ThinkDevelop/Free-SS-SSR",
+      "stars": 3493,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "20190823174906.png",
+          "type": "blob",
+          "size": 33.2080078125,
+          "content": null
+        },
+        {
+          "name": "Docker.md",
+          "type": "blob",
+          "size": 0.21484375,
+          "content": "\n#### Docker版SS客户端\n\nDockerfile在[Dockerfile](Dockerfile)。\n\n运行指令\n```\ndocker build -t youneed-ss .\ndocker run -it --rm -p 1080:1080 -p 8118:8118 youneed-ss\n```\n1080是socks5代理，8118是http代理。\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 2.2021484375,
+          "content": "FROM alpine:3.10\nRUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && apk add --no-cache nodejs npm privoxy\nRUN wget -O - https://github.com/shadowsocks/shadowsocks-rust/releases/download/v1.7.0/shadowsocks-v1.7.0-nightly.x86_64-unknown-linux-musl.tar.xz | tar -xJv -C /usr/local/bin sslocal\nRUN cd /usr/local/bin && npm i cloudscraper@4 jsdom@15 request@2 --registry=https://registry.npm.taobao.org && \\\n  echo -e \"#!/usr/bin/env node\\nrequire('cloudscraper').get('https://www.flywind.ml/free-ss').then((x)=>{let document=new (require('jsdom').JSDOM)(x).window.document;console.log(JSON.stringify({local_address:'0.0.0.0',local_port:1080,servers:Array.from(document.querySelectorAll('#post-box > div > section > table > tbody > tr')).map((x)=>Array.from(x.children).map((x)=>x.innerHTML)).map((x)=>({address:x[0],port:Number(x[1]),password:x[2],method:x[3],country:x[5]})).filter((x)=>x.method!=='aes-128-ctr')}));},console.error)\" > /usr/local/bin/genss && \\\n  chmod +x /usr/local/bin/genss\nRUN echo -e \"\\\nuser-manual /usr/share/doc/privoxy/user-manual/\\n\\\nconfdir /etc/privoxy\\n\\\nlogdir /var/log/privoxy\\n\\\nactionsfile match-all.action # Actions that are applied to all sites and maybe overruled later on.\\n\\\nactionsfile default.action   # Main actions file\\n\\\nactionsfile user.action      # User customizations\\n\\\nfilterfile default.filter\\n\\\nfilterfile user.filter      # User customizations\\n\\\nlogfile privoxy.log\\n\\\nforward-socks5 / 127.0.0.1:1080 .\\n\\\nlisten-address  0.0.0.0:8118\\n\\\ntoggle  1\\n\\\nenable-remote-toggle  0\\n\\\nenable-remote-http-toggle  0\\n\\\nenable-edit-actions 0\\n\\\nenforce-blocks 0\\n\\\nbuffer-limit 4096\\n\\\nenable-proxy-authentication-forwarding 0\\n\\\nforwarded-connect-retries  0\\n\\\naccept-intercepted-requests 0\\n\\\nallow-cgi-request-crunching 0\\n\\\nsplit-large-forms 0\\n\\\nkeep-alive-timeout 5\\n\\\ntolerate-pipelining 1\\n\\\nsocket-timeout 300\\n\\\n\" > /etc/privoxy/config\nRUN echo -e \"#!/bin/sh\\n/usr/local/bin/genss>~/ss.json\\n/usr/sbin/privoxy /etc/privoxy/config\\n/usr/local/bin/sslocal -c ~/ss.json\" > /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh\n\nRUN apk del npm alpine-keys apk-tools && rm -fr /root/ /etc/apk/\n\nUSER privoxy\n\nEXPOSE 1080\nEXPOSE 8118\n\nENTRYPOINT [\"/docker-entrypoint.sh\"]\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.9990234375,
+          "content": "# Free-SS-SSR\n\n谢谢大家一直以来的支持:blush:，为了方便统一维护，本项目已迁移到：[www.youneed.win](https://www.youneed.win)\n\n历史提交中的很多账号仍然能够使用，大家也可以继续查找使用。\n\n如有任何问题，欢迎在issues中交流。\n\n### Docker版客户端\n\n见[Docker.md](Docker.md)\n\n### :palm_tree: [SS账号](https://www.youneed.win/free-ss)\n\n### :deciduous_tree: [SSR账号](https://www.youneed.win/free-ssr)\n\n### :palm_tree: [V2Ray账号](https://www.youneed.win/free-v2ray)\n\n所有账号均来自互联网，非盈利目的，仅供大家交流学习使用，请勿用于非法用途:sos:。\n\n服务器有点垃圾，偶尔不能访问时，可以提issue或发邮件:email:。\n\n------\n**2019.09.23更新**\n\n主域名[www.youneed.win](https://www.youneed.win)被和谐。\n\n### :heavy_check_mark: 继续访问主域名[www.youneed.win](https://www.youneed.win)方法\n\n> * 目录：C:/Windows/System32/drivers/etc，用记事本打开host文件\n> * 在最后添加并保存：104.31.74.55 youneed.win\n> * 在最后添加并保存：104.31.74.55 www.youneed.win\n> * 进入命令行(win+R 输入cmd回车)，执行：ipconfig /flushdns\n> * 重新刷新页面即可,如失效请还原host并用代理访问\n\n最终如图：\n\n![host文件](https://raw.githubusercontent.com/dxxzst/Free-SS-SSR/master/20190823174906.png)\n\n也可以用火狐浏览器并启用DNS-Over-HTTPS。[设置方法参考](https://www.cccitu.com/3913.html)\n\n或者Android Pie及以上版本启用DNS-Over-TLS。[设置方法参考](https://developers.cloudflare.com/1.1.1.1/setting-up-1.1.1.1/android/)\n\n[若本项目对您有所帮助，欢迎Star](https://github.com/dxxzst/Free-SS-SSR)\n\n------\n**2020.06.14更新**\n如果以上host修改后，仍然访问较慢或者无访问，可以在以下网段自选IP：\n\n通移动推荐节点：\n\n104.23.240.0-104.23.243.254\n\n电信推荐节点：\n\n162.159.208.4-162.159.208.103\n\n162.159.209.4-162.159.209.103\n\n162.159.210.4-162.159.210.103\n\n162.159.211.4-162.159.211.103\n"
+        }
+      ]
+    }
+  ]
+}

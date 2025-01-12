@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "timestamp": 1736711285137,
+    "page": 11,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dunglas/symfony-docker",
+      "stars": 2680,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.4453125,
+          "content": "**/*.log\n**/*.md\n**/*.php~\n**/*.dist.php\n**/*.dist\n**/*.cache\n**/._*\n**/.dockerignore\n**/.DS_Store\n**/.git/\n**/.gitattributes\n**/.gitignore\n**/.gitmodules\n**/compose.*.yaml\n**/compose.*.yml\n**/compose.yaml\n**/compose.yml\n**/docker-compose.*.yaml\n**/docker-compose.*.yml\n**/docker-compose.yaml\n**/docker-compose.yml\n**/Dockerfile\n**/Thumbs.db\n.github/\ndocs/\npublic/bundles/\ntests/\nvar/\nvendor/\n.editorconfig\n.env.*.local\n.env.local\n.env.local.php\n.env.test\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.8740234375,
+          "content": "# EditorConfig helps developers define and maintain consistent\n# coding styles between different editors and IDEs\n# editorconfig.org\n\nroot = true\n\n[*]\n# Change these settings to your own preference\nindent_style = space\nindent_size = 4\n\n# We recommend you to keep these unchanged\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.{js,html,ts,tsx}]\nindent_size = 2\n\n[*.json]\nindent_size = 2\n\n[*.md]\ntrim_trailing_whitespace = false\n\n[*.sh]\nindent_style = tab\n\n[*.xml.dist]\nindent_style = space\nindent_size = 4\n\n[*.{yaml,yml}]\ntrim_trailing_whitespace = false\n\n[.github/workflows/*.yml]\nindent_size = 2\n\n[.gitmodules]\nindent_style = tab\n\n[.php_cs.dist]\nindent_style = space\nindent_size = 4\n\n[composer.json]\nindent_size = 4\n\n[{compose,docker-compose}.*.{yaml,yml}]\nindent_size = 2\n\n[*.*Dockerfile]\nindent_style = tab\n\n[*.*Caddyfile]\nindent_style = tab\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.2822265625,
+          "content": "* text=auto eol=lf\n\n*.conf text eol=lf\n*.html text eol=lf\n*.ini text eol=lf\n*.js text eol=lf\n*.json text eol=lf\n*.md text eol=lf\n*.php text eol=lf\n*.sh text eol=lf\n*.yaml text eol=lf\n*.yml text eol=lf\nbin/console text eol=lf\ncomposer.lock text eol=lf merge=ours\n\n*.ico binary\n*.png binary\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 2.4326171875,
+          "content": "#syntax=docker/dockerfile:1\n\n# Versions\nFROM dunglas/frankenphp:1-php8.3 AS frankenphp_upstream\n\n# The different stages of this Dockerfile are meant to be built into separate images\n# https://docs.docker.com/develop/develop-images/multistage-build/#stop-at-a-specific-build-stage\n# https://docs.docker.com/compose/compose-file/#target\n\n\n# Base FrankenPHP image\nFROM frankenphp_upstream AS frankenphp_base\n\nWORKDIR /app\n\nVOLUME /app/var/\n\n# persistent / runtime deps\n# hadolint ignore=DL3008\nRUN apt-get update && apt-get install -y --no-install-recommends \\\n\tacl \\\n\tfile \\\n\tgettext \\\n\tgit \\\n\t&& rm -rf /var/lib/apt/lists/*\n\nRUN set -eux; \\\n\tinstall-php-extensions \\\n\t\t@composer \\\n\t\tapcu \\\n\t\tintl \\\n\t\topcache \\\n\t\tzip \\\n\t;\n\n# https://getcomposer.org/doc/03-cli.md#composer-allow-superuser\nENV COMPOSER_ALLOW_SUPERUSER=1\n\nENV PHP_INI_SCAN_DIR=\":$PHP_INI_DIR/app.conf.d\"\n\n###> recipes ###\n###< recipes ###\n\nCOPY --link frankenphp/conf.d/10-app.ini $PHP_INI_DIR/app.conf.d/\nCOPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint\nCOPY --link frankenphp/Caddyfile /etc/caddy/Caddyfile\n\nENTRYPOINT [\"docker-entrypoint\"]\n\nHEALTHCHECK --start-period=60s CMD curl -f http://localhost:2019/metrics || exit 1\nCMD [ \"frankenphp\", \"run\", \"--config\", \"/etc/caddy/Caddyfile\" ]\n\n# Dev FrankenPHP image\nFROM frankenphp_base AS frankenphp_dev\n\nENV APP_ENV=dev XDEBUG_MODE=off\n\nRUN mv \"$PHP_INI_DIR/php.ini-development\" \"$PHP_INI_DIR/php.ini\"\n\nRUN set -eux; \\\n\tinstall-php-extensions \\\n\t\txdebug \\\n\t;\n\nCOPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/\n\nCMD [ \"frankenphp\", \"run\", \"--config\", \"/etc/caddy/Caddyfile\", \"--watch\" ]\n\n# Prod FrankenPHP image\nFROM frankenphp_base AS frankenphp_prod\n\nENV APP_ENV=prod\nENV FRANKENPHP_CONFIG=\"import worker.Caddyfile\"\n\nRUN mv \"$PHP_INI_DIR/php.ini-production\" \"$PHP_INI_DIR/php.ini\"\n\nCOPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/\nCOPY --link frankenphp/worker.Caddyfile /etc/caddy/worker.Caddyfile\n\n# prevent the reinstallation of vendors at every changes in the source code\nCOPY --link composer.* symfony.* ./\nRUN set -eux; \\\n\tcomposer install --no-cache --prefer-dist --no-dev --no-autoloader --no-scripts --no-progress\n\n# copy sources\nCOPY --link . ./\nRUN rm -Rf frankenphp/\n\nRUN set -eux; \\\n\tmkdir -p var/cache var/log; \\\n\tcomposer dump-autoload --classmap-authoritative --no-dev; \\\n\tcomposer dump-env prod; \\\n\tcomposer run-script --no-dev post-install-cmd; \\\n\tchmod +x bin/console; sync;\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.2666015625,
+          "content": "# Symfony Docker\n\nA [Docker](https://www.docker.com/)-based installer and runtime for the [Symfony](https://symfony.com) web framework,\nwith [FrankenPHP](https://frankenphp.dev) and [Caddy](https://caddyserver.com/) inside!\n\n![CI](https://github.com/dunglas/symfony-docker/workflows/CI/badge.svg)\n\n## Getting Started\n\n1. If not already done, [install Docker Compose](https://docs.docker.com/compose/install/) (v2.10+)\n2. Run `docker compose build --no-cache` to build fresh images\n3. Run `docker compose up --pull always -d --wait` to set up and start a fresh Symfony project\n4. Open `https://localhost` in your favorite web browser and [accept the auto-generated TLS certificate](https://stackoverflow.com/a/15076602/1352334)\n5. Run `docker compose down --remove-orphans` to stop the Docker containers.\n\n## Features\n\n* Production, development and CI ready\n* Just 1 service by default\n* Blazing-fast performance thanks to [the worker mode of FrankenPHP](https://github.com/dunglas/frankenphp/blob/main/docs/worker.md) (automatically enabled in prod mode)\n* [Installation of extra Docker Compose services](docs/extra-services.md) with Symfony Flex\n* Automatic HTTPS (in dev and prod)\n* HTTP/3 and [Early Hints](https://symfony.com/blog/new-in-symfony-6-3-early-hints) support\n* Real-time messaging thanks to a built-in [Mercure hub](https://symfony.com/doc/current/mercure.html)\n* [Vulcain](https://vulcain.rocks) support\n* Native [XDebug](docs/xdebug.md) integration\n* Super-readable configuration\n\n**Enjoy!**\n\n## Docs\n\n1. [Options available](docs/options.md)\n2. [Using Symfony Docker with an existing project](docs/existing-project.md)\n3. [Support for extra services](docs/extra-services.md)\n4. [Deploying in production](docs/production.md)\n5. [Debugging with Xdebug](docs/xdebug.md)\n6. [TLS Certificates](docs/tls.md)\n7. [Using MySQL instead of PostgreSQL](docs/mysql.md)\n8. [Using Alpine Linux instead of Debian](docs/alpine.md)\n9. [Using a Makefile](docs/makefile.md)\n10. [Updating the template](docs/updating.md)\n11. [Troubleshooting](docs/troubleshooting.md)\n\n## License\n\nSymfony Docker is available under the MIT License.\n\n## Credits\n\nCreated by [Kévin Dunglas](https://dunglas.dev), co-maintained by [Maxime Helias](https://twitter.com/maxhelias) and sponsored by [Les-Tilleuls.coop](https://les-tilleuls.coop).\n"
+        },
+        {
+          "name": "compose.override.yaml",
+          "type": "blob",
+          "size": 0.80078125,
+          "content": "# Development environment override\nservices:\n  php:\n    build:\n      context: .\n      target: frankenphp_dev\n    volumes:\n      - ./:/app\n      - ./frankenphp/Caddyfile:/etc/caddy/Caddyfile:ro\n      - ./frankenphp/conf.d/20-app.dev.ini:/usr/local/etc/php/app.conf.d/20-app.dev.ini:ro\n      # If you develop on Mac or Windows you can remove the vendor/ directory\n      #  from the bind-mount for better performance by enabling the next line:\n      #- /app/vendor\n    environment:\n      MERCURE_EXTRA_DIRECTIVES: demo\n      # See https://xdebug.org/docs/all_settings#mode\n      XDEBUG_MODE: \"${XDEBUG_MODE:-off}\"\n    extra_hosts:\n      # Ensure that host.docker.internal is correctly defined on Linux\n      - host.docker.internal:host-gateway\n    tty: true\n\n###> symfony/mercure-bundle ###\n###< symfony/mercure-bundle ###\n"
+        },
+        {
+          "name": "compose.prod.yaml",
+          "type": "blob",
+          "size": 0.2744140625,
+          "content": "# Production environment override\nservices:\n  php:\n    build:\n      context: .\n      target: frankenphp_prod\n    environment:\n      APP_SECRET: ${APP_SECRET}\n      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}\n      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET}\n"
+        },
+        {
+          "name": "compose.yaml",
+          "type": "blob",
+          "size": 1.7529296875,
+          "content": "services:\n  php:\n    image: ${IMAGES_PREFIX:-}app-php\n    restart: unless-stopped\n    environment:\n      SERVER_NAME: ${SERVER_NAME:-localhost}, php:80\n      MERCURE_PUBLISHER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}\n      MERCURE_SUBSCRIBER_JWT_KEY: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}\n      # Run \"composer require symfony/orm-pack\" to install and configure Doctrine ORM\n      DATABASE_URL: postgresql://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-!ChangeMe!}@database:5432/${POSTGRES_DB:-app}?serverVersion=${POSTGRES_VERSION:-15}&charset=${POSTGRES_CHARSET:-utf8}\n      # Run \"composer require symfony/mercure-bundle\" to install and configure the Mercure integration\n      MERCURE_URL: ${CADDY_MERCURE_URL:-http://php/.well-known/mercure}\n      MERCURE_PUBLIC_URL: ${CADDY_MERCURE_PUBLIC_URL:-https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}/.well-known/mercure}\n      MERCURE_JWT_SECRET: ${CADDY_MERCURE_JWT_SECRET:-!ChangeThisMercureHubJWTSecretKey!}\n      # The two next lines can be removed after initial installation\n      SYMFONY_VERSION: ${SYMFONY_VERSION:-}\n      STABILITY: ${STABILITY:-stable}\n    volumes:\n      - caddy_data:/data\n      - caddy_config:/config\n    ports:\n      # HTTP\n      - target: 80\n        published: ${HTTP_PORT:-80}\n        protocol: tcp\n      # HTTPS\n      - target: 443\n        published: ${HTTPS_PORT:-443}\n        protocol: tcp\n      # HTTP/3\n      - target: 443\n        published: ${HTTP3_PORT:-443}\n        protocol: udp\n\n# Mercure is installed as a Caddy module, prevent the Flex recipe from installing another service\n###> symfony/mercure-bundle ###\n###< symfony/mercure-bundle ###\n\nvolumes:\n  caddy_data:\n  caddy_config:\n###> symfony/mercure-bundle ###\n###< symfony/mercure-bundle ###\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "frankenphp",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

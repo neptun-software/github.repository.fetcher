@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736711299153,
+    "page": 46,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "maxpou/docker-symfony",
+      "stars": 1306,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".env.dist",
+          "type": "blob",
+          "size": 0.2177734375,
+          "content": "# Symfony application's path (absolute or relative)\nSYMFONY_APP_PATH=../path/to/symfony/folder\n\n# MySQL\nMYSQL_ROOT_PASSWORD=root\nMYSQL_DATABASE=mydb\nMYSQL_USER=user\nMYSQL_PASSWORD=userpass\n\n# Timezone\nTIMEZONE=Europe/Paris\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": "/logs\n/.data\n.env\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.5087890625,
+          "content": "sudo: required\n\nenv:\n  DOCKER_COMPOSE_VERSION: 1.8.1\n\nservices:\n  - docker\n\nbefore_install:\n  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose\n  - chmod +x docker-compose\n  - sudo mv docker-compose /usr/local/bin\n  - docker-compose -v\n  - docker -v\n  # symfony application folder\n  - mkdir symfony\n  - cp .env.dist .env\n  - cat docker-compose.yml\n\nscript:\n  - docker-compose build\n  - docker-compose up -d\n  - docker-compose ps\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.056640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2016 Maxence POUTORD\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.5966796875,
+          "content": "# Docker Symfony (PHP7-FPM - NGINX - MySQL - ELK)\n\n[![Build Status](https://travis-ci.org/maxpou/docker-symfony.svg?branch=master)](https://travis-ci.org/maxpou/docker-symfony)\n\n![](doc/schema.png)\n\nDocker-symfony gives you everything you need for developing Symfony application. This complete stack run with docker and [docker-compose (1.7 or higher)](https://docs.docker.com/compose/).\n\n## Installation\n\n1. Create a `.env` from the `.env.dist` file. Adapt it according to your symfony application\n\n    ```bash\n    cp .env.dist .env\n    ```\n\n\n2. Build/run containers with (with and without detached mode)\n\n    ```bash\n    $ docker-compose build\n    $ docker-compose up -d\n    ```\n\n3. Update your system host file (add symfony.local)\n\n    ```bash\n    # UNIX only: get containers IP address and update host (replace IP according to your configuration) (on Windows, edit C:\\Windows\\System32\\drivers\\etc\\hosts)\n    $ sudo echo $(docker network inspect bridge | grep Gateway | grep -o -E '([0-9]{1,3}\\.){3}[0-9]{1,3}') \"symfony.local\" >> /etc/hosts\n    ```\n\n    **Note:** For **OS X**, please take a look [here](https://docs.docker.com/docker-for-mac/networking/) and for **Windows** read [this](https://docs.docker.com/docker-for-windows/#/step-4-explore-the-application-and-run-examples) (4th step).\n\n4. Prepare Symfony app\n    1. Update app/config/parameters.yml\n\n        ```yml\n        # path/to/your/symfony-project/app/config/parameters.yml\n        parameters:\n            database_host: db\n        ```\n\n    2. Composer install & create database\n\n        ```bash\n        $ docker-compose exec php bash\n        $ composer install\n        # Symfony2\n        $ sf doctrine:database:create\n        $ sf doctrine:schema:update --force\n        # Only if you have `doctrine/doctrine-fixtures-bundle` installed\n        $ sf doctrine:fixtures:load --no-interaction\n        # Symfony3\n        $ sf3 doctrine:database:create\n        $ sf3 doctrine:schema:update --force\n        # Only if you have `doctrine/doctrine-fixtures-bundle` installed\n        $ sf3 doctrine:fixtures:load --no-interaction\n        ```\n\n5. Enjoy :-)\n\n## Usage\n\nJust run `docker-compose up -d`, then:\n\n* Symfony app: visit [symfony.local](http://symfony.local)  \n* Symfony dev mode: visit [symfony.local/app_dev.php](http://symfony.local/app_dev.php)  \n* Logs (Kibana): [symfony.local:81](http://symfony.local:81)\n* Logs (files location): logs/nginx and logs/symfony\n\n## Customize\n\nIf you want to add optionnals containers like Redis, PHPMyAdmin... take a look on [doc/custom.md](doc/custom.md).\n\n## How it works?\n\nHave a look at the `docker-compose.yml` file, here are the `docker-compose` built images:\n\n* `db`: This is the MySQL database container,\n* `php`: This is the PHP-FPM container in which the application volume is mounted,\n* `nginx`: This is the Nginx webserver container in which application volume is mounted too,\n* `elk`: This is a ELK stack container which uses Logstash to collect logs, send them into Elasticsearch and visualize them with Kibana.\n\nThis results in the following running containers:\n\n```bash\n$ docker-compose ps\n           Name                          Command               State              Ports            \n--------------------------------------------------------------------------------------------------\ndockersymfony_db_1            /entrypoint.sh mysqld            Up      0.0.0.0:3306->3306/tcp      \ndockersymfony_elk_1           /usr/bin/supervisord -n -c ...   Up      0.0.0.0:81->80/tcp          \ndockersymfony_nginx_1         nginx                            Up      443/tcp, 0.0.0.0:80->80/tcp\ndockersymfony_php_1           php-fpm                          Up      0.0.0.0:9000->9000/tcp      \n```\n\n## Useful commands\n\n```bash\n# bash commands\n$ docker-compose exec php bash\n\n# Composer (e.g. composer update)\n$ docker-compose exec php composer update\n\n# SF commands (Tips: there is an alias inside php container)\n$ docker-compose exec php php /var/www/symfony/app/console cache:clear # Symfony2\n$ docker-compose exec php php /var/www/symfony/bin/console cache:clear # Symfony3\n# Same command by using alias\n$ docker-compose exec php bash\n$ sf cache:clear\n\n# Retrieve an IP Address (here for the nginx container)\n$ docker inspect --format '{{ .NetworkSettings.Networks.dockersymfony_default.IPAddress }}' $(docker ps -f name=nginx -q)\n$ docker inspect $(docker ps -f name=nginx -q) | grep IPAddress\n\n# MySQL commands\n$ docker-compose exec db mysql -uroot -p\"root\"\n\n# F***ing cache/logs folder\n$ sudo chmod -R 777 app/cache app/logs # Symfony2\n$ sudo chmod -R 777 var/cache var/logs var/sessions # Symfony3\n\n# Check CPU consumption\n$ docker stats $(docker inspect -f \"{{ .Name }}\" $(docker ps -q))\n\n# Delete all containers\n$ docker rm $(docker ps -aq)\n\n# Delete all images\n$ docker rmi $(docker images -q)\n```\n\n## FAQ\n\n* Got this error: `ERROR: Couldn't connect to Docker daemon at http+docker://localunixsocket - is it running?\nIf it's at a non-standard location, specify the URL with the DOCKER_HOST environment variable.` ?  \nRun `docker-compose up -d` instead.\n\n* Permission problem? See [this doc (Setting up Permission)](http://symfony.com/doc/current/book/installation.html#checking-symfony-application-configuration-and-setup)\n\n* How to config Xdebug?\nXdebug is configured out of the box!\nJust config your IDE to connect port  `9001` and id key `PHPSTORM`\n\n## Contributing\n\nFirst of all, **thank you** for contributing ♥  \nIf you find any typo/misconfiguration/... please send me a PR or open an issue. You can also ping me on [twitter](https://twitter.com/_maxpou).  \nAlso, while creating your Pull Request on GitHub, please write a description which gives the context and/or explains why you are creating it.\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.951171875,
+          "content": "version: '2'\n\nservices:\n    db:\n        image: mysql\n        volumes:\n            - \"./.data/db:/var/lib/mysql\"\n        environment:\n            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}\n            MYSQL_DATABASE: ${MYSQL_DATABASE}\n            MYSQL_USER: ${MYSQL_USER}\n            MYSQL_PASSWORD: ${MYSQL_PASSWORD}\n    php:\n        build:\n            context: php7-fpm\n            args:\n                TIMEZONE: ${TIMEZONE}\n        volumes:\n            - ${SYMFONY_APP_PATH}:/var/www/symfony\n            - ./logs/symfony:/var/www/symfony/app/logs\n    nginx:\n        build: nginx\n        ports:\n            - 80:80\n        volumes_from:\n            - php\n        volumes:\n            - ./logs/nginx/:/var/log/nginx\n    elk:\n        image: willdurand/elk\n        ports:\n            - 81:80\n        volumes:\n            - ./elk/logstash:/etc/logstash\n            - ./elk/logstash/patterns:/opt/logstash/patterns\n        volumes_from:\n            - php\n            - nginx\n"
+        },
+        {
+          "name": "elk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nginx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "php7-fpm",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

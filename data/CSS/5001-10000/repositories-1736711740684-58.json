@@ -1,0 +1,105 @@
+{
+  "metadata": {
+    "timestamp": 1736711740684,
+    "page": 58,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "popcorn-time/popcorn-app",
+      "stars": 5181,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.291015625,
+          "content": "lib-cov\n*.seed\n*.log\n*.csv\n*.dat\n*.out\n*.pid\n*.gz\n\n.idea/\n\nnode_modules/\n\nbuild/\n\npids\nlogs\nresults\n\nnpm-debug.log\n\napp.nw\n\n.sass-cache\n*-ck.js\n*.srt\n*.DS_Store\n\njs/vendor/config.js\ndist/windows/Install Popcorn Time.exe\ndist/mac/Popcorn Time.app/\ndist/mac/Popcorn Time.zip\n\n\n# vim swap files\n*.swp\n"
+        },
+        {
+          "name": "Config.rb",
+          "type": "blob",
+          "size": 0.05859375,
+          "content": "relative_assets = true\ncss_dir = 'css'\nline_comments = false"
+        },
+        {
+          "name": "Gruntfile.js",
+          "type": "blob",
+          "size": 2.7568359375,
+          "content": "module.exports = function(grunt) {\n  var buildPlatforms = parseBuildPlatforms(grunt.option('platforms'));\n\n  grunt.initConfig({\n    compass: {\n      dist: {\n        files: {\n          'css/app.css': 'sass/app.scss'\n        }\n      }\n    },\n    watch: {\n      files: ['sass/**/*.scss'],\n      tasks: ['sass'],\n      options: {\n        livereload: true\n      }\n    },\n    nodewebkit: {\n      options: {\n        version: '0.9.2',\n        build_dir: './build', // Where the build version of my node-webkit app is saved\n        mac_icns: './images/popcorntime.icns', // Path to the Mac icon file\n        mac: buildPlatforms.mac,\n        win: buildPlatforms.win,\n        linux32: buildPlatforms.linux32,\n        linux64: buildPlatforms.linux64\n      },\n      src: ['./css/**', './fonts/**', './images/**', './js/**', './language/**', './node_modules/**', '!./node_modules/grunt*/**', './rc/**', './Config.rb', './index.html', './package.json', './README.md' ] // Your node-webkit app './**/*'\n    },\n    copy: {\n      main: {\n        files: [\n          {\n            src: 'libraries/win/ffmpegsumo.dll',\n            dest: 'build/releases/Popcorn-Time/win/Popcorn-Time/ffmpegsumo.dll',\n            flatten: true\n          },\n          {\n            src: 'libraries/mac/ffmpegsumo.so',\n            dest: 'build/releases/Popcorn-Time/mac/Popcorn-Time.app/Contents/Frameworks/node-webkit Framework.framework/Libraries/ffmpegsumo.so',\n            flatten: true\n          },\n          {\n            src: 'libraries/linux64/libffmpegsumo.so',\n            dest: 'build/releases/Popcorn-Time/linux64/Popcorn-Time/libffmpegsumo.so',\n            flatten: true\n          }\n        ]\n      }\n    }\n  });\n\n  grunt.loadNpmTasks('grunt-contrib-compass');\n  grunt.loadNpmTasks('grunt-contrib-watch');\n  grunt.loadNpmTasks('grunt-contrib-copy');\n  grunt.loadNpmTasks('grunt-node-webkit-builder');\n\n  grunt.registerTask('css', ['compass']);\n  grunt.registerTask('default', ['compass']);\n  grunt.registerTask('nodewkbuild', ['nodewebkit', 'copy']);\n\n\n};\n\nvar parseBuildPlatforms = function(argumentPlatform) {\n  // this will make it build no platform when the platform option is specified\n  // without a value which makes argumentPlatform into a boolean\n  var inputPlatforms = argumentPlatform || process.platform + \";\" + process.arch;\n\n  // Do some scrubbing to make it easier to match in the regexes bellow\n  inputPlatforms = inputPlatforms.replace(\"darwin\", \"mac\");\n  inputPlatforms = inputPlatforms.replace(/;ia|;x|;arm/, \"\");\n\n  var buildAll = /^all$/.test(inputPlatforms);\n\n  var buildPlatforms = {\n    mac: /mac/.test(inputPlatforms) || buildAll,\n    win: /win/.test(inputPlatforms) || buildAll,\n    linux32: /linux32/.test(inputPlatforms) || buildAll,\n    linux64: /linux64/.test(inputPlatforms) || buildAll\n  };\n\n  return buildPlatforms;\n}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.89453125,
+          "content": "#Popcorn time [![Dependency Status](https://david-dm.org/popcorn-time/popcorn-app.png?theme=shields.io)](https://david-dm.org/popcorn-time/popcorn-time)\n\n# [Goodbye](https://medium.com/p/93f890b8c9f4)\n**Update** *15 March 2014* : Sorry friends, but we removed issue tracking because it was being used to link elsewhere.\n\n## Idea\n\nTo allow any computer user to watch movies easily streaming from torrents, without any particular knowledge.\n\n![Demo Screenshot](http://getpopcornti.me/images/how-ui.png)\n\n### Status\n\nUnder development (RC1) for Mac OSX - Windows - Linux.\n \n### APIs\n\n**Currently used:**\n- ~~[RottenTomatoes](http://developer.rottentomatoes.com) for movies metadata.~~\n- ~~[PirateBay](http://thepiratebay.se/browse/207/0/7/0) Recent popular movies list.~~\n- [YIFY](http://yts.re/api) movie torrents API.\n- [OpenSubtitles](http://trac.opensubtitles.org/projects/opensubtitles/wiki/XMLRPC) for subtitles\n- [TheMovieDB](http://www.themoviedb.org/) for movies metadata.\n\n**In discussion:**\n- [SubtitleSeeker](http://www.api.subtitleseeker.com/About/Api-Search/) for subtitles.\n\n\n## Building\n\n### Dependencies\n\nYou will need nodejs and grunt:\n\n    $ npm install -g grunt-cli\n\n### Build\n\nInstall the node modules:\n\n    $ npm install\n\nBuild with:\n\n    $ grunt nodewkbuild\n\nBy default it will build for your current platform however you can control that\nby specifying a comma separated list of platforms in the `platforms` option to\ngrunt:\n\n    $ grunt nodewkbuild --platforms=linux32,linux64,mac,win\n\nYou can also build for all platforms with:\n\n    $ grunt nodewkbuild --platforms=all\n\n## Any problem?\n\n### Regarding superagent dependency\nDue to [wrong browser verification](https://github.com/visionmedia/superagent/issues/95) on a dependency, this hard fix must be applied.\nReplace `node_modules/moviedb/node_modules/superagent/index.js` contents with:\n```javascript\n// if (typeof window != 'undefined') {\n//   module.exports = require('./lib/superagent');\n// } else if (process.env.SUPERAGENT_COV) {\n//   module.exports = require('./lib-cov/node');\n// } else {\n  module.exports = require('./lib/node');\n// }\n```\n\n### Regarding Video, MP4 H264 Playback\n- Info: https://github.com/rogerwang/node-webkit/wiki/Support-mp3-and-h264-in-video-and-audio-tag\n- Needed to build a custom build of node-webkit that adds h264 support (or you can download ready-to-go builds from https://file.ac/s4Lt3Vo6rls/)\n- Alternatively, we can replace a .so and .dll file from the correspondent Chrome build to node-webkit and node-webkit.exe\n\n\n## Development\n- Run `compass watch` in Terminal for CSS compiling and listen to future changes.\n- [How to build with SublimeText](https://github.com/rogerwang/node-webkit/wiki/Debugging-with-Sublime-Text-2-and-3)\n- Currently Gaze to watch all files and reload the app is disabled due to memory leaks and unstability.\n- Run node-webkit from the root directory with --debug to enable debugging mode like so ```node-webkit . --debug```\n"
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fonts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.html",
+          "type": "blob",
+          "size": 7.55859375,
+          "content": "<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <script>window.__startTime = (new Date()*1);</script>\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"css/app.css\">\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"js/vendor/video-js/video-js.css\">\n\n  </head>\n  <body>\n\n    <header id=\"header\"></header>\n\n    <script id=\"header-tpl\" type=\"text/x-template\">\n        <nav class=\"btn-set <%= process.platform %>\">\n\n          <% _.each(buttons, function(button) { %>\n            <button class=\"btn-os <%= button %>\"></button>\n          <% }); %>\n        </nav>\n\n        <nav class=\"btn-set fs-<%= process.platform %>\">\n          <button class=\"btn-os fullscreen\"></button>\n        </nav>\n        <h1>Popcorn Time</h1>\n    </script>\n\n    <div id=\"notification\"></div>\n\n    <div id=\"catalog-select\">\n      <div class=\"search\">\n        <input type=\"text\" placeholder=\"Search\" data-translate=\"search\" />\n        <i class=\"fa fa-search\"></i>\n      </div>\n\n      <h4 data-translate=\"movies\">Movies</h4>\n      <ul class=\"categories\">\n\n      </ul>\n    </div>\n\n    <section class=\"container\">\n      <sidebar class=\"hidden\"></sidebar>\n    </section>\n\n    <script id=\"sidebar-tpl\" type=\"text/x-template\">\n      <div class=\"play\">\n        <div class=\"backdrop-image\" style=\"background-image:url(<%= this.model.get('backdrop') %>);\"></div>\n\n        <div class=\"movie-detail\">\n          <div class=\"closer\"><img src=\"/images/close.svg\" width=\"50\"></div>\n          <div class=\"poster-cont\">\n            <div class=\"poster-inner\">\n              <div class=\"poster\">\n            <img class=\"big-poster\" src=\"<%= bigImage %>\" alt=\"<%= title %>\" />\n          </div>\n\n              <ul class=\"movie-config\">\n              <% if (this.model.get('quality') && this.model.get('torrents')) { %>\n                <li class=\"options quality-cont\">\n                  <h4><%= i18n.__('quality') %></h4>\n                  <% if (this.model.get('torrents')[\"720p\"] && this.model.get('torrents')[\"1080p\"]) { %>\n                    <div class=\"quality switch white\">\n                      <input type=\"radio\" name=\"switch\" id=\"switch-off\"<% if (this.model.get('quality') === '720p') { %> checked<% } %>>\n                      <input type=\"radio\" name=\"switch\" id=\"switch-on\"<% if (this.model.get('quality') === '1080p') { %> checked<% } %>>\n                      <label for=\"switch-off\">720p</label>\n                      <label for=\"switch-on\">1080p</label>\n                      <span class=\"toggle\"></span>\n                    </div>\n                  <% } else { %>\n                    <span class=\"quality-off\"><%= quality %></span>\n                  <% } %>\n                </li>\n              <% } %>\n              </ul>\n            </div>\n          </div>\n\n          <div class=\"side-content\">\n            <div class=\"title\">\n              <h2><%= title %></h2>\n\n              <ul class=\"movie-quick-info\">\n                <li>\n                  <%= year %>\n                </li>\n                <li>\n                  <% if (this.model.get('runtime')) { %>\n                    <span class=\"duration\"><%= runtime %> <%= i18n.__('durationUnit') %></span>\n                  <% } %>\n                </li>\n              </ul>\n\n              <i data-placement=\"left\" data-toggle=\"tooltip\" title=\"<%= health %> health\" class=\"health <%= health %> fa fa-flash\"></i>\n\n              <% var p_rating = this.model.get('voteAverage') ? this.model.get('voteAverage').toFixed(1) : 0.0 %>\n              <div class=\"rating\">\n                <ul class=\"votes\" title=\"<%= p_rating %> / 10\">\n                  <% p_rating = Math.round(p_rating) / 2; // Roundoff number to nearest 0.5 %>\n                  <% for (var i = 1; i <= Math.floor(p_rating); i++) { %>\n                    <i class=\"fa fa-star\"></i>\n                  <% }; %>\n                  <% if (p_rating % 1 > 0) { %>\n                    <i class=\"fa fa-star-half-o\"></i>\n                  <% }; %>\n                  <% for (var i = Math.ceil(p_rating); i < 5; i++) { %>\n                    <i class=\"fa fa-star-o\"></i>\n                  <% }; %>\n                </ul>\n              </div>\n            </div>\n\n            <p><%= synopsis %></p>\n\n            <% if ( ! _.isEmpty(subtitles) ) { %>\n            <div class=\"subtitles-list\">\n              <h4><%= i18n.__('subtitledIn') %></h4>\n\n              <ul>\n                <% if (typeof subtitles !== 'undefined') { %>\n                  <li>\n                    <% for (var i = 0, keys = _.keys(subtitles), l = keys.length; i < l; ++i) { %>\n                      <span class=\"flag flag-<%= keys[i] %>\" title=\"<%= i18n.__(keys[i]) %>\"></span>\n                    <% } %>\n                  </li>\n                <% } %>\n              </ul>\n            </div>\n            <% } %>\n\n            <% if (this.model.get('torrents')) { %>\n              <a href=\"\" class=\"p_tooltip play-button\"><%= i18n.__('watchItNow') %></a>\n            <% } %>\n          </div>\n        </div>\n      </div>\n    </script>\n\n    <div class=\"popcorn-load hidden\">\n      <div class=\"wrapper\">\n        <span class=\"spinner\"></span>\n        <span class=\"text\"></span>\n        <div class=\"progressbar\"><div class=\"progress\"></div></div>\n        <div class=\"progressinfo\"></div>\n      </div>\n      <a href=\"javascript:;\" class=\"btn-close\"><img src=\"/images/close.svg\" width=\"50\" /></a>\n    </div>\n\n    <div id=\"video-container\"></div>\n\n    <div class=\"popcorn-disclaimer hidden\">\n      <div class=\"wrapper\">\n        <span class=\"text\" data-translate=\"legalDisclaimer\"></span>\n        <span class=\"text\" data-translate=\"legalDisclaimerResponsible\"></span>\n        <br/>\n        <a class=\"btn confirmation quit\" data-translate=\"legalDisclaimerCancel\"></a>\n        <a class=\"btn confirmation continue\" data-translate=\"legalDisclaimerAccept\"></a>\n      </div>\n    </div>\n\n\n    <!-- Basic Dependencies -->\n    <script src=\"js/vendor/jquery-2.1.0.min.js\"></script>\n    <script src=\"js/vendor/underscore.js\"></script>\n    <script src=\"js/vendor/backbone-1.1.0.js\"></script>\n    <script src=\"js/vendor/marionette.1.6.4.js\"></script>\n    <script src=\"js/vendor/bootstrap-tooltip.min.js\"></script>\n\n    <!-- Settings Module and API Keys -->\n    <script src=\"js/vendor/settings.js\"></script>\n    <script src=\"js/vendor/config.js\"></script>\n\n    <!-- App Initialization -->\n    <script src=\"js/app.js\"></script>\n    <script src=\"js/language.js\"></script>\n    <script src=\"js/tracking.js\"></script>\n    <script src=\"js/updater.js\"></script>\n\n    <!-- UI and UI-related Initialization -->\n    <script src=\"js/frontend/ui.js\"></script>\n    <script src=\"js/frontend/player.js\"></script>\n\n    <!-- Data Sources -->\n    <script src=\"js/frontend/providers/torrents.js\"></script>\n\n    <!-- Backbone Models, Views and Controllers -->\n    <script src=\"js/frontend/models/movie.js\"></script>\n    <script src=\"js/frontend/views/page.js\"></script>\n    <script src=\"js/frontend/views/listview.js\"></script>\n    <script src=\"js/frontend/views/movie.js\"></script>\n    <script src=\"js/frontend/views/sidebar.js\"></script>\n    <script src=\"js/frontend/controllers/home.js\"></script>\n    <script src=\"js/frontend/controllers/search.js\"></script>\n    <script src=\"js/frontend/controllers/filter.js\"></script>\n    <script src=\"js/frontend/router.js\"></script>\n\n    <!-- Remote Control -->\n    <script src=\"rc/index.js\"></script>\n\n    <!-- Other Dependencies -->\n    <script src=\"js/vendor/video-js/video.dev.js\"></script>\n    <script src=\"js/vendor/videojsplugins.js\"></script>\n    <script src=\"js/vendor/dragwindow.js\"></script>\n\n    <script>userTracking.event('App Start', 'Ready - '+Settings.get('version'),  (Math.round(((new Date()*1) - __startTime) / 100) * 100) +'ms' ).send();</script>\n  </body>\n</html>\n"
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "language",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libraries",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 2.26953125,
+          "content": "{\n  \"name\": \"Popcorn-Time\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/popcorn-time/popcorn-app.git\"\n  },\n  \"main\": \"app://host/index.html\",\n  \"version\": \"0.2.0\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/popcorn-time/popcorn-app\"\n  },\n  \"window\": {\n    \"title\": \"Popcorn Time\",\n    \"icon\": \"images/icon.png\",\n    \"toolbar\": false,\n    \"frame\": false,\n    \"width\": 962,\n    \"height\": 600,\n    \"min_width\": 962,\n    \"min_height\": 600,\n    \"resizable\": true\n  },\n  \"dependencies\": {\n    \"adm-zip\" : \"git+https://github.com/gpt-modules/adm-zip.git\",\n    \"cheerio\" : \"git+https://github.com/gpt-modules/cheerio.git\",\n    \"clivas\" : \"git+https://github.com/gpt-modules/clivas.git\",\n    \"i18n\" : \"git+https://github.com/gpt-modules/i18n-node.git\",\n    \"iconv-lite\" : \"git+https://github.com/gpt-modules/iconv-lite.git\",\n    \"jschardet\" : \"git+https://github.com/gpt-modules/jschardet.git\",\n    \"moviedb\" : \"git+https://github.com/gpt-modules/moviedb.git\",\n    \"network-address\" : \"git+https://github.com/gpt-modules/network-address.git\",\n    \"node-uuid\" : \"git+https://github.com/gpt-modules/node-uuid.git\",\n    \"numeral\" : \"git+https://github.com/gpt-modules/numeral-js.git\",\n    \"popcornflix\" : \"git+https://github.com/popcorn-time/popcornflix.git\",\n    \"request\" : \"git+https://github.com/gpt-modules/request.git\",\n    \"universal-analytics\" : \"git+https://github.com/gpt-modules/universal-analytics.git\",\n    \"url\" : \"git+https://github.com/gpt-modules/url.git\",\n    \"xmlrpc\" : \"git+https://github.com/gpt-modules/node-xmlrpc.git\",\n    \"socket.io\": \"git+https://github.com/gpt-modules/socket.io.git\",\n    \"express\": \"git+https://github.com/gpt-modules/express.git\",\n    \"ip\": \"git+https://github.com/gpt-modules/node-ip.git\"\n  },\n  \"devDependencies\": {\n    \"grunt\": \"git+https://github.com/gpt-modules/grunt.git\",\n    \"grunt-node-webkit-builder\": \"git+https://github.com/gpt-modules/grunt-node-webkit-builder.git\",\n    \"grunt-contrib-sass\": \"git+https://github.com/gpt-modules/grunt-contrib-sass.git\",\n    \"grunt-contrib-watch\": \"git+https://github.com/gpt-modules/grunt-contrib-watch.git\",\n    \"grunt-contrib-compass\": \"git+https://github.com/gpt-modules/grunt-contrib-compass.git\",\n    \"grunt-contrib-copy\": \"git+https://github.com/gpt-modules/grunt-contrib-copy.git\"\n  }\n}\n"
+        },
+        {
+          "name": "rc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sass",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.txt",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        }
+      ]
+    }
+  ]
+}

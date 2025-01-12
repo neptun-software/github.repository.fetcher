@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736710648340,
+    "page": 23,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "2d-inc/HistoryOfEverything",
+      "stars": 6517,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.037109375,
+          "content": "/app/android/key.properties\n.DS_Store\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.2451171875,
+          "content": "[submodule \"dependencies/Nima-Flutter\"]\n\tpath = dependencies/Nima-Flutter\n\turl = https://github.com/2d-inc/Nima-Flutter.git\n[submodule \"dependencies/Flare-Flutter\"]\n\tpath = dependencies/Flare-Flutter\n\turl = https://github.com/2d-inc/Flare-Flutter.git\n"
+        },
+        {
+          "name": ".vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2018 2D, Inc\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.029296875,
+          "content": "# The History of Everything\n\n<img align=\"right\" src=\"https://cdn.2dimensions.com/1_Start.gif\" height=\"400\">\n\nThe History of Everything is a vertical timeline that allows you to navigate, explore, and compare events from the Big Bang to the birth of the Internet. Events are beautifully illustrated and animated.\n\nThe concept for this app was inspired by the Kurzgesagt video, [Time: The History & Future of Everything](https://www.youtube.com/watch?v=5TbUxGZtwGI).\n\nThe app was built with [Flutter](https://flutter.io/) by [2Dimensions](https://www.2dimensions.com) and it's available on [Android](https://play.google.com/store/apps/details?id=com.twodimensions.timeline) and [iOS](https://itunes.apple.com/us/app/the-history-of-everything/id1441257460).\n\n## Usage\n\nMake sure you have Flutter installed on your local machine. For more instructions on how to install flutter, look [here](https://flutter.io/docs/get-started/install).\n```\ngit clone https://github.com/2d-inc/HistoryOfEverything.git\ncd HistoryOfEverything/app\ngit submodule init\ngit submodule update\nflutter run\n```\n\n## Overview\n<img align=\"right\" src=\"https://cdn.2dimensions.com/2_Scroll.gif\" height=\"400\">\n\nThe app consists of three main views:\n\n1. **Main Menu** - /app/lib/main_menu<br />\nThis is the initial view for the app when it opens up. It shows a search bar on top, three menu sections for each major time era, and three buttons on the bottom for accessing favorites, sharing a link to the store, and the about page.<br />\n\n2. **Timeline** - /app/lib/timeline<br />\nThis view is displayed when an item from the menu is selected: the user is presented with a vertical timeline. It can be scrolled up and down, zoomed in and out. <br/>\nWhen an event is in view, a bubble will be shown on screen with a custom animated widget right next to it. By tapping on either, the user can access the ArticlePage.\n\n3. **ArticlePage** - /app/lib/article<br />\nThe ArticlePage displays the event animation, together with a full description of the event.<br/>\n\n## Animated Widgets\n\n<img align=\"right\" src=\"https://cdn.2dimensions.com/3_Amelia.gif\" height=\"400\">\n\nThis relies heavily on the animations built on [2dimensions](https://www.2dimensions.com) and they are seamlessly integrated with Flutter by using the [Flare](https://pub.dartlang.org/packages/flare_flutter) and [Nima](https://pub.dartlang.org/packages/nima) libraries.\n\nOne of Flutter's biggest strengths is its flexibility, because it exposes the architecture of its components, which can be built entirely from scratch: it's possible to create custom widgets out of the SDK's most basic elements. \n\nAn example can be found in /app/lib/article/timeline_entry_widget.dart <br/>\nThis file contains two classes:<br/>\n- `TimelineEntryWidget` that extends `LeafRenderObjectWidget`\n- VignetteRenderObject that extends `RenderBox`\n\n## LeafRenderObjectWidget\n\nThis class ([docs](https://docs.flutter.io/flutter/widgets/LeafRenderObjectWidget-class.html)) is a `Widget`: it can be inserted in any widget tree without any other default component: \n\n```\nContainer(\n  child: TimelineEntryWidget(\n        isActive: true,\n        timelineEntry: widget.article,\n        interactOffset: _interactOffset\n    )\n)\n```\n\nThis snippet is used in /app/lib/article/article_widget.dart\n\nThe `LeafRenderObjectWidget` is responsible for having a constructor and encapsulating the values that the `RenderObject` needs.\n\nThe following two overrides are also fundamental:\n- `createRenderObject()` <br />\nInstantiates the actual `RenderObject` in the Widget Tree;\n- `updateRenderObject()` <br />\nAny change to the parameters that are passed to the Widget can be reflected also on the UI, if needed. Updating a `RenderObject` will cause the object to redraw.\n\n## RenderObject\n\nAs specified in the [docs](https://docs.flutter.io/flutter/rendering/RenderObject-class.html), this is an object in the render tree, and it defines what and how its creator Widget will paint on the screen.\n\nThe key override here is `paint()`:<br />\n&nbsp;&nbsp;&nbsp;&nbsp;the current `PaintingContext` exposes the `canvas`, and this class can draw, taking full advantage of the exposed API. <br />\nThe [Flare library](https://pub.dartlang.org/packages/flare_flutter), granted access to the `canvas`, draws the animation.<br/>\nTo have the animation reproduce correctly, it's also necessary to call `advance(elapsed)` on the current `FlutterActor` each frame. Moreover, the current `ActorAnimation` requires that the function `apply(time)` is called on it to display it's correct interpolated values.<br/>\nThis is all made possible by relying on Flutter's `SchedulerBinding.scheduleFrameCallback()`.\n\nThis is just a brief overview of how the Flare widgets can be customized for every experience.\n\n## License\nAll the animations in the `/assets` folder are distributed under the **CC-BY** license.\n\nAll the articles in `assets/articles` are from [Wikipedia](https://www.wikipedia.org/), and are thus distributed under the **GNU Free Documentation License**.\n\nThe rest of the repository's code and contents are distributed under the **MIT** license as specified in [LICENSE](LICENSE).\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dependencies",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

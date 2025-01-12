@@ -1,0 +1,1476 @@
+{
+  "metadata": {
+    "timestamp": 1736709588923,
+    "page": 125,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "web-platform-tests/wpt",
+      "stars": 5111,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".azure-pipelines.yml",
+          "type": "blob",
+          "size": 17.2890625,
+          "content": "# This is the configuration file for Azure Pipelines, used to run tests on\n# macOS and Windows. Documentation to help understand this setup:\n# https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema\n# https://docs.microsoft.com/en-us/azure/devops/pipelines/build/triggers\n# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/multiple-phases\n# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates\n# https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables\n# https://docs.microsoft.com/en-us/azure/devops/pipelines/tasks/index\n#\n# In addition to this configuration file, some setup in the Azure DevOps\n# project is required:\n#  - The \"Build pull requests from forks of this repository\" setting must be\n#    enabled: https://docs.microsoft.com/en-us/azure/devops/pipelines/repos/github#validate-contributions-from-forks\n\ntrigger:\n# These are all the branches referenced in the jobs that follow.\n- epochs/daily\n- epochs/three_hourly\n- triggers/edge_stable\n- triggers/edge_dev\n- triggers/edge_canary\n- triggers/wktr_preview\n\n# Set safaridriver_diagnose to true to enable safaridriver diagnostics. The\n# logs won't appear in `./wpt run` output but will be uploaded as an artifact.\nvariables:\n  safaridriver_diagnose: false\n\njobs:\n# The affected tests jobs are unconditional for speed, as most PRs have one or\n# more affected tests: https://github.com/web-platform-tests/wpt/issues/13936.\n- job: affected_safari_preview\n  displayName: 'affected tests: Safari Technology Preview'\n  condition: eq(variables['Build.Reason'], 'PullRequest')\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/affected_tests.yml\n    parameters:\n      artifactName: 'safari-preview-affected-tests'\n- template: tools/ci/azure/fyi_hook.yml\n  parameters:\n    dependsOn: affected_safari_preview\n    artifactName: safari-preview-affected-tests\n\n- job: affected_without_changes_safari_preview\n  displayName: 'affected tests without changes: Safari Technology Preview'\n  condition: eq(variables['Build.Reason'], 'PullRequest')\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/affected_tests.yml\n    parameters:\n      checkoutCommit: 'HEAD^1'\n      affectedRange: 'HEAD@{1}'\n      artifactName: 'safari-preview-affected-tests-without-changes'\n- template: tools/ci/azure/fyi_hook.yml\n  parameters:\n    dependsOn: affected_without_changes_safari_preview\n    artifactName: safari-preview-affected-tests-without-changes\n\n# The decision jobs runs `./wpt test-jobs` to determine which jobs to run,\n# and all following jobs wait for it to finish and depend on its output.\n- job: decision\n  displayName: './wpt test-jobs'\n  condition: eq(variables['Build.Reason'], 'PullRequest')\n  pool:\n    vmImage: 'ubuntu-20.04'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/checkout.yml\n  - script: |\n      set -eux -o pipefail\n      git fetch --depth 50 --quiet origin master\n      ./wpt test-jobs | while read job; do\n        echo \"$job\"\n        echo \"##vso[task.setvariable variable=$job;isOutput=true]true\";\n      done\n    name: test_jobs\n    displayName: 'Run ./wpt test-jobs'\n\n- job: infrastructure_mac\n  displayName: 'infrastructure/ tests: macOS'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wptrunner_infrastructure']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/install_fonts.yml\n  - template: tools/ci/azure/install_certs.yml\n  - template: tools/ci/azure/color_profile.yml\n  - template: tools/ci/azure/install_safari.yml\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - script: |\n      set -eux -o pipefail\n      export SYSTEM_VERSION_COMPAT=0\n      ./wpt run --yes --no-manifest-update --manifest MANIFEST.json --metadata infrastructure/metadata/ --log-mach - --log-mach-level info  --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_macos_safari.json --channel preview safari infrastructure/\n    condition: succeededOrFailed()\n    displayName: 'Run tests (Safari Technology Preview)'\n  - task: PublishBuildArtifacts@1\n    condition: succeededOrFailed()\n    displayName: 'Publish results'\n    inputs:\n      artifactName: 'infrastructure-results'\n  - template: tools/ci/azure/publish_logs.yml\n  - template: tools/ci/azure/sysdiagnose.yml\n\n- job: tools_unittest_mac_py38\n  displayName: 'tools/ unittests: macOS + Python 3.8'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.tools_unittest']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.8'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/\n      toxenv: py38\n\n- job: tools_unittest_mac_py311\n  displayName: 'tools/ unittests: macOS + Python 3.12'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.tools_unittest']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/\n      toxenv: py311\n\n- job: wptrunner_unittest_mac_py38\n  displayName: 'tools/wptrunner/ unittests: macOS + Python 3.8'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.8'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wptrunner/\n      toxenv: py38\n\n- job: wptrunner_unittest_mac_py311\n  displayName: 'tools/wptrunner/ unittests: macOS + Python 3.12'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wptrunner/\n      toxenv: py311\n\n- job: wpt_integration_mac_py38\n  displayName: 'tools/wpt/ tests: macOS + Python 3.8'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wpt_integration']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  # full checkout required\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.8'\n  - template: tools/ci/azure/install_chrome.yml\n  - template: tools/ci/azure/install_firefox.yml\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wpt/\n      toxenv: py38\n\n- job: wpt_integration_mac_py311\n  displayName: 'tools/wpt/ tests: macOS + Python 3.12'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wpt_integration']\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  # full checkout required\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/install_chrome.yml\n  - template: tools/ci/azure/install_firefox.yml\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wpt/\n      toxenv: py311\n\n- job: tools_unittest_win_py38\n  displayName: 'tools/ unittests: Windows + Python 3.8'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.tools_unittest']\n  pool:\n    vmImage: 'windows-2019'\n  variables:\n    HYPOTHESIS_PROFILE: ci\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.8'\n      addToPath: false\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/\n      toxenv: py38\n\n- job: tools_unittest_win_py311\n  displayName: 'tools/ unittests: Windows + Python 3.12'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.tools_unittest']\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n      addToPath: false\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/\n      toxenv: py311\n\n- job: wptrunner_unittest_win_py38\n  displayName: 'tools/wptrunner/ unittests: Windows + Python 3.8'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.8'\n      addToPath: false\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wptrunner/\n      toxenv: py38\n\n- job: wptrunner_unittest_win_py311\n  displayName: 'tools/wptrunner/ unittests: Windows + Python 3.12'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wptrunner_unittest']\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n      addToPath: false\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wptrunner/\n      toxenv: py311\n\n- job: wpt_integration_win_py38\n  displayName: 'tools/wpt/ tests: Windows + Python 3.8'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wpt_integration']\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  # full checkout required\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.8'\n  # currently just using the outdated Chrome/Firefox on the VM rather than\n  # figuring out how to install Chrome Dev channel on Windows\n  # - template: tools/ci/azure/install_chrome.yml\n  # - template: tools/ci/azure/install_firefox.yml\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wpt/\n      toxenv: py38\n\n- job: wpt_integration_win_py311\n  displayName: 'tools/wpt/ tests: Windows + Python 3.12'\n  dependsOn: decision\n  condition: dependencies.decision.outputs['test_jobs.wpt_integration']\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  # full checkout required\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  # currently just using the outdated Chrome/Firefox on the VM rather than\n  # figuring out how to install Chrome Dev channel on Windows\n  # - template: tools/ci/azure/install_chrome.yml\n  # - template: tools/ci/azure/install_firefox.yml\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - template: tools/ci/azure/tox_pytest.yml\n    parameters:\n      directory: tools/wpt/\n      toxenv: py311\n\n- job: results_edge_stable\n  displayName: 'all tests: Edge Stable'\n  condition: |\n    or(eq(variables['Build.SourceBranch'], 'refs/heads/epochs/daily'),\n       eq(variables['Build.SourceBranch'], 'refs/heads/triggers/edge_stable'),\n       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge_stable']))\n  strategy:\n    parallel: 8 # chosen to make runtime ~2h\n  timeoutInMinutes: 180\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/system_info.yml\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/install_certs.yml\n  - template: tools/ci/azure/install_edge.yml\n    parameters:\n      channel: stable\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - script: python ./wpt run --yes --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --install-fonts --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --log-mach - --log-mach-level info --channel stable edge\n    displayName: 'Run tests (Edge Stable)'\n  - task: PublishBuildArtifacts@1\n    displayName: 'Publish results'\n    inputs:\n      artifactName: 'edge-stable-results'\n  - template: tools/ci/azure/publish_logs.yml\n  - template: tools/ci/azure/sysdiagnose.yml\n- template: tools/ci/azure/fyi_hook.yml\n  parameters:\n    dependsOn: results_edge_stable\n    artifactName: edge-stable-results\n\n- job: results_edge_dev\n  displayName: 'all tests: Edge Dev'\n  condition: |\n    or(eq(variables['Build.SourceBranch'], 'refs/heads/epochs/three_hourly'),\n       eq(variables['Build.SourceBranch'], 'refs/heads/triggers/edge_dev'),\n       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge_dev']))\n  strategy:\n    parallel: 8 # chosen to make runtime ~2h\n  timeoutInMinutes: 180\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/system_info.yml\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/install_certs.yml\n  - template: tools/ci/azure/install_edge.yml\n    parameters:\n      channel: dev\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - script: python ./wpt run --yes --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --install-fonts --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --log-mach - --log-mach-level info --channel dev edge\n    displayName: 'Run tests (Edge Dev)'\n  - task: PublishBuildArtifacts@1\n    displayName: 'Publish results'\n    inputs:\n      artifactName: 'edge-dev-results'\n  - template: tools/ci/azure/publish_logs.yml\n  - template: tools/ci/azure/sysdiagnose.yml\n- template: tools/ci/azure/fyi_hook.yml\n  parameters:\n    dependsOn: results_edge_dev\n    artifactName: edge-dev-results\n\n- job: results_edge_canary\n  displayName: 'all tests: Edge Canary'\n  condition: |\n    or(eq(variables['Build.SourceBranch'], 'refs/heads/epochs/weekly'),\n       eq(variables['Build.SourceBranch'], 'refs/heads/triggers/edge_canary'),\n       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_edge_canary']))\n  strategy:\n    parallel: 8 # chosen to make runtime ~2h\n  timeoutInMinutes: 180\n  pool:\n    vmImage: 'windows-2019'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/install_certs.yml\n  - template: tools/ci/azure/install_edge.yml\n    parameters:\n      channel: canary\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - script: python ./wpt run --yes --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --install-fonts --this-chunk $(System.JobPositionInPhase) --total-chunks $(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --log-mach - --log-mach-level info --channel canary edge\n    displayName: 'Run tests (Edge Canary)'\n  - task: PublishBuildArtifacts@1\n    displayName: 'Publish results'\n    inputs:\n      artifactName: 'edge-canary-results'\n  - template: tools/ci/azure/publish_logs.yml\n  - template: tools/ci/azure/sysdiagnose.yml\n- template: tools/ci/azure/fyi_hook.yml\n  parameters:\n    dependsOn: results_edge_canary\n    artifactName: edge-canary-results\n\n- job: results_wktr_preview\n  displayName: 'all tests: WebKitTestRunner'\n  condition: |\n    or(eq(variables['Build.SourceBranch'], 'refs/heads/triggers/wktr_preview'),\n       and(eq(variables['Build.Reason'], 'Manual'), variables['run_all_wktr_preview']))\n  strategy:\n    parallel: 8 # chosen to make runtime ~2h\n  timeoutInMinutes: 180\n  pool:\n    vmImage: 'macOS-14'\n  steps:\n  - task: UsePythonVersion@0\n    inputs:\n      versionSpec: '3.12'\n  - template: tools/ci/azure/checkout.yml\n  - template: tools/ci/azure/install_certs.yml\n  - template: tools/ci/azure/color_profile.yml\n  - template: tools/ci/azure/update_hosts.yml\n  - template: tools/ci/azure/update_manifest.yml\n  - script: |\n      set -eux -o pipefail\n      export SYSTEM_VERSION_COMPAT=0\n      ./wpt run --no-manifest-update --no-restart-on-unexpected --no-fail-on-unexpected --this-chunk=$(System.JobPositionInPhase) --total-chunks=$(System.TotalJobsInPhase) --chunk-type hash --log-wptreport $(Build.ArtifactStagingDirectory)/wpt_report_$(System.JobPositionInPhase).json --log-wptscreenshot $(Build.ArtifactStagingDirectory)/wpt_screenshot_$(System.JobPositionInPhase).txt --log-mach - --log-mach-level info --channel experimental --install-browser --yes wktr\n    displayName: 'Run tests'\n  - task: PublishBuildArtifacts@1\n    displayName: 'Publish results'\n    inputs:\n      artifactName: 'wktr-preview-results'\n  - template: tools/ci/azure/publish_logs.yml\n  - template: tools/ci/azure/sysdiagnose.yml\n- template: tools/ci/azure/fyi_hook.yml\n  parameters:\n    dependsOn: results_wktr_preview\n    artifactName: wktr-preview-results\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.013671875,
+          "content": "*       -text\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.810546875,
+          "content": "# Python\n*.py[co]\n.cache/\n.coverage*\n.mypy_cache/\n.pytest_cache/\n.tox/\n.virtualenv/\n_venv*/\n_virtualenv/\n\n# Node\nnode_modules/\n\n# WPT repo stuff\n.wptcache/\n/MANIFEST.json\n/_certs\n/config.json\n# The default manifest location when running infrastructure tests locally with\n# `--metadata=infrastructure/metadata`.\n/infrastructure/metadata/MANIFEST.json\n\n# Files generated when regenerating pre-generated certs\n/tools/certs/0*.pem\n/tools/certs/index.txt*\n/tools/certs/serial*\n\n# Various OS/editor specific files\n*#\n*.orig\n*.rej\n*.svn\n*.sw[po]\n*.xcodeproj\n*Thumbs.db\n*~\n.DS_Store\n.directory*\n.idea/\n.vscode/\n\\#*\nscratch\n\n# Testsuite-specific rules\n/conformance-checkers/vnu.jar\n/cors/resources/log.txt\n/css/build-temp\n/css/dist\n/css/dist_last\n/url/tools/IdnaTestV2.txt\n/webaudio/idl/*\n\n# w3c-test.org PR-branch mirroring\n/submissions/\n"
+        },
+        {
+          "name": ".mailmap",
+          "type": "blob",
+          "size": 0.21875,
+          "content": "# People who've changed name:\n\n# Sam Sneddon:\nSam Sneddon <me@gsnedders.com>\nSam Sneddon <me@gsnedders.com> <geoffers@gmail.com>\n\n# Theresa O'Connor:\nTheresa O'Connor <eoconnor@apple.com>\nTheresa O'Connor <hober0@gmail.com>\n"
+        },
+        {
+          "name": ".taskcluster.yml",
+          "type": "blob",
+          "size": 3.1748046875,
+          "content": "version: 1\nreporting: checks-v1\npolicy:\n  pullRequests: public\ntasks:\n  $let:\n    run_task:\n      $if: 'tasks_for == \"github-push\"'\n      then:\n        $if: 'event.ref in [\"refs/heads/master\", \"refs/heads/epochs/daily\", \"refs/heads/epochs/weekly\", \"refs/heads/triggers/chrome_stable\", \"refs/heads/triggers/chrome_beta\", \"refs/heads/triggers/chrome_canary\", \"refs/heads/triggers/chrome_dev\", \"refs/heads/triggers/chrome_nightly\", \"refs/heads/triggers/firefox_stable\", \"refs/heads/triggers/firefox_beta\", \"refs/heads/triggers/firefox_nightly\", \"refs/heads/triggers/firefox_android_nightly\", \"refs/heads/triggers/webkitgtk_minibrowser_stable\", \"refs/heads/triggers/webkitgtk_minibrowser_beta\", \"refs/heads/triggers/webkitgtk_minibrowser_nightly\", \"refs/heads/triggers/servo_nightly\"]'\n        then: true\n        else: false\n      else:\n        $if: 'tasks_for == \"github-pull-request\"'\n        then:\n          $if: 'event.action in [\"opened\", \"reopened\", \"synchronize\"]'\n          then: true\n          else: false\n        else: false\n  in:\n    - $if: run_task\n      then:\n        $let:\n          event_str: {$json: {$eval: event}}\n          scopes:\n            $if: 'tasks_for == \"github-push\"'\n            then:\n              $let:\n                branch:\n                  $if: \"event.ref[:11] == 'refs/heads/'\"\n                  then: \"${event.ref[11:]}\"\n                  else: \"${event.ref}\"\n              in: \"assume:repo:github.com/${event.repository.full_name}:branch:${branch}\"\n            else: \"assume:repo:github.com/${event.repository.full_name}:pull-request\"\n          rev:\n            $if: 'tasks_for == \"github-pull-request\"'\n            then: \"refs/pull/${event.number}/merge\"\n            else: \"${event.after}\"\n          owner:\n            $if: 'tasks_for == \"github-push\"'\n            then:\n              $if: 'event.pusher.email'\n              then:\n                $if: '\"@\" in event.pusher.email'\n                then: ${event.pusher.email}\n                else: web-platform-tests@users.noreply.github.com\n              else: web-platform-tests@users.noreply.github.com\n            else: web-platform-tests@users.noreply.github.com\n        in:\n          created: {$fromNow: ''}\n          deadline: {$fromNow: '24 hours'}\n          provisionerId: proj-wpt\n          workerType: ci\n          metadata:\n            name: \"wpt-decision-task\"\n            description: \"The task that creates all of the other tasks in the task graph\"\n            owner: ${owner}\n            source: ${event.repository.clone_url}\n          payload:\n            image: ghcr.io/web-platform-tests/wpt:1\n            maxRunTime: 7200\n            artifacts:\n              public/results:\n                path: /home/test/artifacts\n                type: directory\n            command:\n              - /bin/bash\n              - --login\n              - -c\n              - set -ex;\n                ~/start.sh\n                  ${event.repository.clone_url}\n                  ${rev};\n                cd ~/web-platform-tests;\n                ./wpt tc-decision --tasks-path=/home/test/artifacts/tasks.json\n            features :\n              taskclusterProxy: true\n          scopes:\n            - ${scopes}\n          extra:\n            github_event: \"${event_str}\"\n\n"
+        },
+        {
+          "name": ".well-known",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CODEOWNERS",
+          "type": "blob",
+          "size": 0.5751953125,
+          "content": "# Require review for changes that often need an RFC\n/resources/testdriver* @web-platform-tests/wpt-core-team\n/resources/testharness* @web-platform-tests/wpt-core-team\n\n# Prevent accidentally touching tools/third_party\n/tools/third_party/ @web-platform-tests/wpt-core-team\n\n# Require a review for Dockerfile\ntools/docker/Dockerfile @web-platform-tests/wpt-core-team @web-platform-tests/admins\n.taskcluster.yml @web-platform-tests/wpt-core-team @web-platform-tests/admins\n\n# Prevent accidentally touching wasm/core which is updated by a workflow\nwasm/core/ @web-platform-tests/wpt-core-team\n"
+        },
+        {
+          "name": "CODE_OF_CONDUCT.md",
+          "type": "blob",
+          "size": 5.634765625,
+          "content": "# Code of Conduct\n\nContact: a moderator ([see below](#moderators)), or a member of the WPT\ncommunity that you feel you can trust.\n\n## Our Pledge\n\nWe as members, contributors, and leaders pledge to make participation in our\ncommunity a harassment-free experience for everyone, regardless of age, body\nsize, visible or invisible disability, ethnicity, sex characteristics, gender\nidentity and expression, level of experience, education, socio-economic status,\nnationality, personal appearance, race, religion, sexual identity and\norientation, or any other dimension of diversity.\n\nWe pledge to act and interact in ways that contribute to an open, welcoming,\ndiverse, inclusive, and healthy community.\n\n## Our Standards\n\nExamples of behavior that contributes to a positive environment for our\ncommunity include:\n\n* Demonstrating empathy and kindness toward other people\n* Being respectful of differing opinions, viewpoints, and experiences\n* Giving and gracefully accepting constructive feedback\n* Accepting responsibility and apologizing to those affected by our mistakes,\n  and learning from the experience\n* Focusing on what is best not just for us as individuals, but for the\n  overall community\n\nExamples of unacceptable behavior include:\n\n* The use of sexualized language or imagery, and sexual attention or\n  advances of any kind\n* Trolling, insulting or derogatory comments, and personal or political attacks\n* Public or private harassment\n* Publishing others' private information, such as a physical or email\n  address, without their explicit permission\n* Other conduct which could reasonably be considered inappropriate in a\n  professional setting\n\n## Enforcement Responsibilities\n\nModerators are responsible for clarifying and enforcing our standards of\nacceptable behavior and will take appropriate and fair corrective action in\nresponse to any behavior that they deem inappropriate, threatening, offensive,\nor harmful.\n\nModerators have the right and responsibility to remove, edit, or reject\ncomments, commits, code, wiki edits, issues, and other contributions that are\nnot aligned to this Code of Conduct, and will communicate reasons for moderation\ndecisions when appropriate.\n\nModerators are held to a higher standard than other community members. If a\nmoderator creates an inappropriate situation, they should expect less leeway\nthan others.\n\n## Scope\n\nThis Code of Conduct applies within all community spaces, and also\napplies when an individual is officially representing the community in\npublic spaces.  Examples of representing our community include\nthe official Matrix channel (wpt:matrix.org); GitHub repositories under\nthe web-platform-tests organization; and the public-test-infra@w3.org\nmailing list.\n\nThere may arise situations where both the WPT code of conduct and that of\nanother organization (such as the WHATWG or W3C) may apply.\nFor example, a WPT-focused meeting at\n[TPAC](https://www.w3.org/2002/09/TPOverview.html) would involve both the WPT\ncode of conduct and the [W3C code of ethics and professional\nconduct](https://www.w3.org/Consortium/cepc/).\nIn such situations we operate under all code of conducts involved.\nIf you are placed in a situation where you feel this is inappropriate (e.g. if\nyou believe the code of conducts involved contradict one another), please\ncontact a [moderator](#moderators).\n\n## Enforcement\n\nInstances of abusive, harassing, or otherwise unacceptable behavior may be\nreported to the [moderators](#moderators).\nAll complaints will be reviewed and investigated promptly and fairly.\n\nAll moderators are obligated to respect the privacy and security of the\nreporter of any incident.\n\nModerators will recuse themselves if they are directly involved in a report of\na code of conduct violation.\n\n## Enforcement Guidelines\n\nModerators will follow these Community Impact Guidelines in determining\nthe consequences for any action they deem in violation of this Code of Conduct.\nThese are not a consecutive set of steps; a single incident may be sufficient\nenough to proceed straight to a temporary ban, for example.\n\n### 1. Warning\n\n**Community Impact**: A violation through a single incident or series\nof actions.\n\n**Consequence**: A warning with consequences for continued behavior, providing\nclarity around the nature of the violation and an explanation of why the\nbehavior was inappropriate. A public apology may be requested.\n\n### 2. Temporary Ban\n\n**Community Impact**: A serious violation of community standards, including\nsustained inappropriate behavior.\n\n**Consequence**: A temporary ban from any sort of interaction or public\ncommunication with the community for a specified period of time. No public or\nprivate interaction with the people involved, including unsolicited interaction\nwith those enforcing the Code of Conduct, is allowed during this period.\nViolating these terms may lead to a permanent ban.\n\n### 3. Permanent Ban\n\n**Community Impact**: Demonstrating a pattern of violation of community\nstandards, including sustained inappropriate behavior,  harassment of an\nindividual, or aggression toward or disparagement of classes of individuals.\n\n**Consequence**: A permanent ban from any sort of public interaction within\nthe community.\n\n## Moderators\n\nThis section lists the current moderators and how to reach them.\n\n* Nina Satragno - [nso@google.com](mailto:nso@google.com). Languages: English, Spanish.\n* Boaz Sender - [boaz@bocoup.com](mailto:boaz@bocoup.com). Languages: English, Hebrew.\n* Jory Burson - [jory@bocoup.education](mailto:jory@bocoup.education). Languages: English (fluent), Spanish (conversational).\n\n## Attribution\n\nThis Code of Conduct is adapted from the Contributor Covenant,\nversion 2.0, available at\nhttps://www.contributor-covenant.org/version/2/0/code_of_conduct.html.\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.2568359375,
+          "content": "All contributions are licensed under the terms of the [3-Clause BSD License](LICENSE.md).\n\nDocumentation\n-------------\n\nSee [web-platform-tests.org](https://web-platform-tests.org/).\n\nCode of Conduct\n---------------\n\nSee [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).\n"
+        },
+        {
+          "name": "FileAPI",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "IndexedDB",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.46484375,
+          "content": "# The 3-Clause BSD License\n\nCopyright © web-platform-tests contributors\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.7490234375,
+          "content": "The web-platform-tests Project\n==============================\n\n[![Taskcluster CI Status](https://community-tc.services.mozilla.com/api/github/v1/repository/web-platform-tests/wpt/master/badge.svg)](https://community-tc.services.mozilla.com/api/github/v1/repository/web-platform-tests/wpt/master/latest) [![documentation](https://github.com/web-platform-tests/wpt/workflows/documentation/badge.svg)](https://github.com/web-platform-tests/wpt/actions?query=workflow%3Adocumentation+branch%3Amaster) [![manifest](https://github.com/web-platform-tests/wpt/workflows/manifest/badge.svg)](https://github.com/web-platform-tests/wpt/actions?query=workflow%3Amanifest+branch%3Amaster) [![Python 3](https://pyup.io/repos/github/web-platform-tests/wpt/python-3-shield.svg)](https://pyup.io/repos/github/web-platform-tests/wpt/)\n\nThe web-platform-tests Project is a cross-browser test suite for the\nWeb-platform stack. Writing tests in a way that allows them to be run in all\nbrowsers gives browser projects confidence that they are shipping software that\nis compatible with other implementations, and that later implementations will\nbe compatible with their implementations. This in turn gives Web\nauthors/developers confidence that they can actually rely on the Web platform\nto deliver on the promise of working across browsers and devices without\nneeding extra layers of abstraction to paper over the gaps left by\nspecification editors and implementors.\n\nThe most important sources of information and activity are:\n\n- [github.com/web-platform-tests/wpt](https://github.com/web-platform-tests/wpt):\n  the canonical location of the project's source code revision history and the\n  discussion forum for changes to the code\n- [web-platform-tests.org](https://web-platform-tests.org): the documentation\n  website; details how to set up the project, how to write tests, how to give\n  and receive peer review, how to serve as an administrator, and more\n- [wpt.live](https://wpt.live): a public deployment of the test suite,\n  allowing anyone to run the tests by visiting from an\n  Internet-enabled browser of their choice\n- [wpt.fyi](https://wpt.fyi): an archive of test results collected from an\n  array of web browsers on a regular basis\n- [Real-time chat room](https://app.element.io/#/room/#wpt:matrix.org): the\n  `wpt:matrix.org` matrix channel; includes participants located\n  around the world, but busiest during the European working day.\n- [Mailing list](https://lists.w3.org/Archives/Public/public-test-infra/): a\n  public and low-traffic discussion list\n- [RFCs](https://github.com/web-platform-tests/rfcs): a repo for requesting\n  comments on substantial changes that would impact other stakeholders or\n  users; people who work on WPT infra are encouraged to watch the repo.\n\n**If you'd like clarification about anything**, don't hesitate to ask in the\nchat room or on the mailing list.\n\nSetting Up the Repo\n===================\n\nClone or otherwise get https://github.com/web-platform-tests/wpt.\n\nNote: because of the frequent creation and deletion of branches in this\nrepo, it is recommended to \"prune\" stale branches when fetching updates,\ni.e. use `git pull --prune` (or `git fetch -p && git merge`).\n\nRunning the Tests\n=================\n\nSee the [documentation website](https://web-platform-tests.org/running-tests/)\nand in particular the\n[system setup for running tests locally](https://web-platform-tests.org/running-tests/from-local-system.html#system-setup).\n\nCommand Line Tools\n==================\n\nThe `wpt` command provides a frontend to a variety of tools for\nworking with and running web-platform-tests. Some of the most useful\ncommands are:\n\n* `wpt serve` - For starting the wpt http server\n* `wpt run` - For running tests in a browser\n* `wpt lint` - For running the lint against all tests\n* `wpt manifest` - For updating or generating a `MANIFEST.json` test manifest\n* `wpt install` - For installing the latest release of a browser or\n  webdriver server on the local machine.\n* `wpt serve-wave` - For starting the wpt http server and the WAVE test runner.\nFor more details on how to use the WAVE test runner see the [documentation](./tools/wave/docs/usage/usage.md).\n\n<span id=\"windows-notes\">Windows Notes</span>\n=============================================\n\nOn Windows `wpt` commands must be prefixed with `python` or the path\nto the python binary (if `python` is not in your `%PATH%`).\n\n```bash\npython wpt [command]\n```\n\nAlternatively, you may also use\n[Bash on Ubuntu on Windows](https://msdn.microsoft.com/en-us/commandline/wsl/about)\nin the Windows 10 Anniversary Update build, then access your windows\npartition from there to launch `wpt` commands.\n\nPlease make sure git and your text editor do not automatically convert\nline endings, as it will cause lint errors. For git, please set\n`git config core.autocrlf false` in your working tree.\n\nPublication\n===========\n\nThe master branch is automatically synced to [wpt.live](https://wpt.live/) and\n[w3c-test.org](https://w3c-test.org/).\n\nContributing\n============\n\nSave the Web, Write Some Tests!\n\nAbsolutely everyone is welcome to contribute to test development. No\ntest is too small or too simple, especially if it corresponds to\nsomething for which you've noted an interoperability bug in a browser.\n\nThe way to contribute is just as usual:\n\n* Fork this repository (and make sure you're still relatively in sync\n  with it if you forked a while ago).\n* Create a branch for your changes:\n  `git checkout -b topic`.\n* Make your changes.\n* Run `./wpt lint` as described above.\n* Commit locally and push that to your repo.\n* Create a pull request based on the above.\n\nIssues with web-platform-tests\n------------------------------\n\nIf you spot an issue with a test and are not comfortable providing a\npull request per above to fix it, please\n[file a new issue](https://github.com/web-platform-tests/wpt/issues/new).\nThank you!\n"
+        },
+        {
+          "name": "WebCryptoAPI",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "accelerometer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "accessibility",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "accname",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "acid",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ai",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ambient-light",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "animation-worklet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "annotation-model",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "annotation-protocol",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "annotation-vocab",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "apng",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "appmanifest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "attribution-reporting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "audio-output",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "autoplay-policy-detection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "avif",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "background-fetch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "background-sync",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "badging",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "battery-status",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "beacon",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bluetooth",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "browsing-topics",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "captured-mouse-events",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clear-site-data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "client-hints",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clipboard-apis",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "close-watcher",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "compat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "compression",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "compute-pressure",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "conformance-checkers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "console",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "contacts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "content-dpr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "content-index",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "content-security-policy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "contenteditable",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cookie-deprecation-label",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cookie-store",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cookies",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "core-aam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cors",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "credential-management",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "css",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "custom-elements",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "delegated-ink",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "density-size-correction",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "deprecation-reporting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "device-memory",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "device-posture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "digital-credentials",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "direct-sockets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "document-picture-in-picture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "document-policy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dom",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "domparsing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "domxpath",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dpub-aam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dpub-aria",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ecmascript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "editing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "element-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "encoding-detection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "encoding",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "encrypted-media",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "entries-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "event-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "eventsource",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "eyedropper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "feature-policy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fedcm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fenced-frame",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fetch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "file-system-access",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fledge",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "focus",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "font-access",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fonts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "forced-colors-mode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fullscreen",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gamepad",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "generic-sensor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "geolocation-sensor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "geolocation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "graphics-aam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "graphics-aria",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gyroscope",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hr-time",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html-aam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html-longdesc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html-media-capture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "https-upgrades",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "idle-detection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "imagebitmap-renderingcontext",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "images",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "import-maps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "inert",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "infrastructure",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "input-device-capabilities",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "input-events",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "installedapp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "interfaces",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "intersection-observer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "intervention-reporting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "is-input-pending",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jpegxl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "js-self-profiling",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "js",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "keyboard-lock",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "keyboard-map",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "largest-contentful-paint",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "layout-instability",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lifecycle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lint.ignore",
+          "type": "blob",
+          "size": 48.1220703125,
+          "content": "# File containing allowlist for lint errors\n# Format is:\n# ERROR TYPE:file/name/pattern[:line number]\n# e.g.\n# TRAILING WHITESPACE:example/file.html:128\n# to allow trailing whitespace on example/file.html line 128\n\n## Whitespace rules that we can't enforce yet ##\n\nINDENT TABS: conformance-checkers/*\nINDENT TABS: encoding/legacy*/*\n\nTRAILING WHITESPACE: html/canvas/tools/current-work-canvas.xhtml\nTRAILING WHITESPACE: conformance-checkers/*\nTRAILING WHITESPACE: html/syntax/xmldecl/support/no-version-or-space-or-trailing-question-trailing-body-single-quotes-spaces-and-line-breaks-around-equals.htm\nTRAILING WHITESPACE: html/syntax/xmldecl/support/no-version-or-space-or-trailing-question-trailing-body-single-quotes-spaces-and-line-breaks-around-equals-trail.htm\n\n## File types that should never be checked ##\n\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.adts\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.pdf\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.jpg\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.jxl\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.png\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.gif\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.wav\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.mp3\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.m4a\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.mov\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.oga\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.ogg\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.ogv\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.webm\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.mp4\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.m4v\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.otf\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.ttf\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.TTF\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.ttc\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.woff\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.woff2\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.eot\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.sfd\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.swf\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.ani\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.cur\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.ico\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.wasm\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.bmp\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.sxg\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.wbn\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.avif\nTRAILING WHITESPACE, INDENT TABS, CR AT EOL: *.annexb\n\n## .gitignore\nW3C-TEST.ORG: .gitignore\n\n## Documentation ##\n\nW3C-TEST.ORG: README.md\nW3C-TEST.ORG: */README.md\nW3C-TEST.ORG: docs/*\nWEB-PLATFORM.TEST:*/README.md\nWEB-PLATFORM.TEST:docs/*\nCR AT EOL, INDENT TABS:docs/make.bat\nINDENT TABS:docs/Makefile\n\n## Helper scripts ##\n\nPRINT STATEMENT: */tools/*\n\n## Deliberate copies of Ahem ##\n# The allowed copy\nAHEM COPY: fonts/Ahem.ttf\n\n# None of these are actually Ahem\nAHEM COPY: fonts/ahem-extra/AHEM_*.TTF\n\n## Test exclusions ##\n\n# Intentional use of CRLF\nCR AT EOL: cors/resources/cors-headers.asis\nCR AT EOL: fetch/h1-parsing/resources/blue-with-0x00-in-a-header.asis\nCR AT EOL: html/semantics/forms/the-textarea-element/multiline-placeholder-cr.html\nCR AT EOL: html/semantics/forms/the-textarea-element/multiline-placeholder-crlf.html\nCR AT EOL: html/semantics/forms/the-input-element/multiline-placeholder-cr.html\nCR AT EOL: html/semantics/forms/the-input-element/multiline-placeholder-crlf.html\nCR AT EOL: webvtt/parsing/file-parsing/tests/support/newlines.vtt\nCR AT EOL: css/css-text/ellisize-rtl-text-crash.html\nCR AT EOL: html/syntax/charset/after-head-after-1kb-crlf.html\nCR AT EOL: html/syntax/charset/after-head-in-1kb-crlf.html\n\n# Intentional use of tabs\nINDENT TABS: html/canvas/element/canvas-host/2d.canvas.host.size.attributes.parse.whitespace.html\nINDENT TABS: webvtt/parsing/file-parsing/tests/support/header-tab.vtt\nINDENT TABS: webvtt/parsing/file-parsing/tests/support/whitespace-chars.vtt\n\n## Intentional use of trailing whitespace\nTRAILING WHITESPACE: server-timing/resources/parsing/*\nTRAILING WHITESPACE: webvtt/parsing/file-parsing/support/*.vtt\nTRAILING WHITESPACE: webvtt/parsing/file-parsing/tests/support/*.vtt\nTRAILING WHITESPACE: xhr/resources/headers-some-are-empty.asis\nTRAILING WHITESPACE: content-security-policy/support/manifest.json\n\n# Intentional use of print statements\nPRINT STATEMENT: dom/nodes/Document-createElement-namespace-tests/generate.py\nPRINT STATEMENT: encrypted-media/polyfill/make-polyfill-tests.py\nPRINT STATEMENT: resources/test/conftest.py\nPRINT STATEMENT: webdriver/tests/support/helpers.py\n\n# semi-legitimate use of console.*\nCONSOLE: console/*\nCONSOLE: common/gc.js\nCONSOLE: resources/check-layout-th.js\nCONSOLE: resources/chromium/*\nCONSOLE: resources/testharness.js\nCONSOLE: content-security-policy/inheritance/blob-inherits-from-meta-http-equiv-with-invalid-characters.html\nCONSOLE: service-workers/service-worker/resources/navigation-redirect-other-origin.html\nCONSOLE: service-workers/service-worker/navigation-redirect.https.html\nCONSOLE: service-workers/service-worker/resources/clients-get-other-origin.html\nCONSOLE: webrtc/tools/*\nCONSOLE: webaudio/resources/audit.js:41\n\n# Intentional use of console.*\nCONSOLE: infrastructure/webdriver/bidi/subscription.html\nCONSOLE: infrastructure/webdriver/bidi/subscription.window.js\n\n# use of console in a public library - annotation-model ensures\n# it is not actually used\nCONSOLE: annotation-model/scripts/ajv.min.js\nCONSOLE: annotation-model/scripts/showdown.min.js\nCR AT EOL: annotation-model/scripts/showdown.min.js\n\n# Helper files that aren't valid XML\nPARSE-FAILED: acid/acid3/empty.xml\nPARSE-FAILED: dom/nodes/Document-createElement-namespace-tests/empty.svg\nPARSE-FAILED: dom/nodes/Document-createElement-namespace-tests/empty.xhtml\nPARSE-FAILED: dom/nodes/Document-createElement-namespace-tests/empty.xml\nPARSE-FAILED: dom/nodes/Document-createElement-namespace-tests/minimal_html.svg\nPARSE-FAILED: dom/nodes/Document-createElement-namespace-tests/minimal_html.xhtml\nPARSE-FAILED: dom/nodes/Document-createElement-namespace-tests/minimal_html.xml\nPARSE-FAILED: custom-elements/xhtml-crash.xhtml\n\n# setTimeout usage (should probably mostly be fixed)\nSET TIMEOUT: *-manual.*\nSET TIMEOUT: annotation-model/scripts/ajv.min.js\nSET TIMEOUT: apng/animated-png-timeout.html\nSET TIMEOUT: avif/animated-avif-timeout.html\nSET TIMEOUT: cookies/resources/testharness-helpers.js\nSET TIMEOUT: common/reftest-wait.js\nSET TIMEOUT: compute-pressure/resources/support-iframe.html\nSET TIMEOUT: conformance-checkers/*\nSET TIMEOUT: content-security-policy/*\nSET TIMEOUT: css/compositing/opacity-and-transform-animation-crash.html\nSET TIMEOUT: css/css-contain/contain-body-overflow-002.html\nSET TIMEOUT: css/css-display/display-contents-shadow-dom-1.html\nSET TIMEOUT: css/CSS2/normal-flow/crashtests/block-in-inline-ax-crash.html\nSET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-001.html\nSET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-002.html\nSET TIMEOUT: css/selectors/selector-placeholder-shown-type-change-003.html\nSET TIMEOUT: css/selectors/selector-read-write-type-change-002.html\nSET TIMEOUT: css/selectors/selector-required-type-change-002.html\nSET TIMEOUT: css/selectors/invalidation/dir-pseudo-class-in-has.html\nSET TIMEOUT: css/selectors/invalidation/lang-pseudo-class-in-has-document-element.html\nSET TIMEOUT: css/selectors/invalidation/lang-pseudo-class-in-has-xhtml.xhtml\nSET TIMEOUT: css/selectors/invalidation/lang-pseudo-class-in-has.html\nSET TIMEOUT: custom-elements/scoped-registry/scoped-registry-define-upgrade-criteria.tentative.html\nSET TIMEOUT: encrypted-media/polyfill/chrome-polyfill.js\nSET TIMEOUT: encrypted-media/polyfill/clearkey-polyfill.js\nSET TIMEOUT: encrypted-media/scripts/playback-temporary-events.js\nSET TIMEOUT: fedcm/support/fedcm-iframe.html\nSET TIMEOUT: fedcm/support/fedcm/disconnect-iframe.html\nSET TIMEOUT: fetch/fetch-later/resources/fetch-later-helper.js\nSET TIMEOUT: fetch/metadata/resources/helper.sub.js\nSET TIMEOUT: fetch/metadata/resources/message-opener.html\nSET TIMEOUT: fenced-frame/resources/history-length-fenced-navigations-replace-do-not-contribute-to-joint-inner.html\nSET TIMEOUT: fenced-frame/resources/utils.js\nSET TIMEOUT: focus/support/iframe-focus-with-different-site-intermediate-frame-outer.sub.html\nSET TIMEOUT: focus/support/iframe-focus-with-different-site-intermediate-frame-middle.sub.html\nSET TIMEOUT: focus/support/iframe-contentwindow-focus-with-different-site-intermediate-frame-outer.sub.html\nSET TIMEOUT: focus/support/iframe-contentwindow-focus-with-different-site-intermediate-frame-middle.sub.html\nSET TIMEOUT: focus/support/iframe-focuses-parent-different-site-inner.html\nSET TIMEOUT: focus/support/iframe-focuses-parent-same-site-inner.html\nSET TIMEOUT: generic-sensor/resources/iframe_sensor_handler.html\nSET TIMEOUT: html/browsers/browsing-the-web/back-forward-cache/resources/inflight-fetch-helper.js\nSET TIMEOUT: html/browsers/browsing-the-web/history-traversal/*\nSET TIMEOUT: html/browsers/browsing-the-web/navigating-across-documents/*\nSET TIMEOUT: html/browsers/browsing-the-web/scroll-to-fragid/*\nSET TIMEOUT: html/browsers/browsing-the-web/unloading-documents/*\nSET TIMEOUT: html/browsers/history/the-history-interface/*\nSET TIMEOUT: html/browsers/history/the-location-interface/*\nSET TIMEOUT: html/browsers/history/the-session-history-of-browsing-contexts/*\nSET TIMEOUT: html/browsers/offline/*\nSET TIMEOUT: html/browsers/the-window-object/*\nSET TIMEOUT: html/cross-origin-opener-policy/resources/fully-loaded.js\nSET TIMEOUT: html/editing/dnd/*\nSET TIMEOUT: html/semantics/embedded-content/media-elements/track/track-element/crashtests/*\nSET TIMEOUT: html/semantics/embedded-content/the-iframe-element/*\nSET TIMEOUT: html/semantics/embedded-content/the-img-element/*\nSET TIMEOUT: html/semantics/embedded-content/the-object-element/object-param-url.html\nSET TIMEOUT: html/semantics/embedded-content/the-object-element/object-param-url-ref.html\nSET TIMEOUT: html/semantics/forms/textfieldselection/select-event.html\nSET TIMEOUT: html/semantics/scripting-1/the-script-element/*\nSET TIMEOUT: html/webappapis/dynamic-markup-insertion/opening-the-input-stream/0*\nSET TIMEOUT: html/webappapis/dynamic-markup-insertion/opening-the-input-stream/resources/history-frame.html\nSET TIMEOUT: html/webappapis/dynamic-markup-insertion/opening-the-input-stream/resources/url-entry-document-timer-frame.html\nSET TIMEOUT: html/webappapis/dynamic-markup-insertion/opening-the-input-stream/tasks.window.js\nSET TIMEOUT: html/webappapis/scripting/event-loops/*\nSET TIMEOUT: html/webappapis/scripting/events/event-handler-processing-algorithm-error/*\nSET TIMEOUT: html/webappapis/scripting/processing-model-2/*\nSET TIMEOUT: IndexedDB/*\nSET TIMEOUT: infrastructure/*\nSET TIMEOUT: intersection-observer/resources/*\nSET TIMEOUT: intersection-observer/target-in-different-window.html\nSET TIMEOUT: js-self-profiling/resources/profiling-script.js\nSET TIMEOUT: measure-memory/*\nSET TIMEOUT: media-source/mediasource-util.js\nSET TIMEOUT: media-source/URL-createObjectURL-revoke.html\nSET TIMEOUT: mixed-content/generic/sanity-checker.js\nSET TIMEOUT: navigation-api/navigation-history-entry/entries-after-bfcache-in-iframe.html\nSET TIMEOUT: navigation-timing/*\nSET TIMEOUT: old-tests/submission/Microsoft/history/history_000.htm\nSET TIMEOUT: paint-timing/resources/subframe-painting.html\nSET TIMEOUT: performance-timeline/resources/navigation-id-detached-frame-page.html\nSET TIMEOUT: png/apng/acTL-plays-one.html\nSET TIMEOUT: png/apng/acTL-plays-two.html\nSET TIMEOUT: png/apng/fdAT-split-basic.html\nSET TIMEOUT: png/apng/fdAT-split-zero-length.html\nSET TIMEOUT: png/apng/fcTL-acTL-ordering.html\nSET TIMEOUT: png/apng/fcTL-blend-over-repeatedly.html\nSET TIMEOUT: png/apng/fcTL-blend-over-solid.html\nSET TIMEOUT: png/apng/fcTL-blend-source-nearly-transparent.html\nSET TIMEOUT: png/apng/fcTL-blend-source-solid.html\nSET TIMEOUT: png/apng/fcTL-blend-source-transparent.html\nSET TIMEOUT: png/apng/fcTL-dispose-background-final.html\nSET TIMEOUT: png/apng/fcTL-dispose-background.html\nSET TIMEOUT: png/apng/fcTL-dispose-before-region-background.html\nSET TIMEOUT: png/apng/fcTL-dispose-in-region-background.html\nSET TIMEOUT: png/apng/fcTL-dispose-in-region-none.html\nSET TIMEOUT: png/apng/fcTL-dispose-in-region-previous.html\nSET TIMEOUT: png/apng/fcTL-dispose-none.html\nSET TIMEOUT: png/apng/fcTL-dispose-previous-final.html\nSET TIMEOUT: png/apng/fcTL-dispose-previous-first.html\nSET TIMEOUT: png/apng/fcTL-dispose-previous.html\nSET TIMEOUT: png/apng/fdAT-16bit.html\nSET TIMEOUT: png/apng/fDAT-inherits-cICP.html\nSET TIMEOUT: png/apng/fdAT-1bit-PLTE-tRNS.html\nSET TIMEOUT: png/apng/fdAT-1bit-PLTE.html\nSET TIMEOUT: png/apng/fdAT-2bit-PLTE-tRNS.html\nSET TIMEOUT: png/apng/fdAT-8bit-gray-alpha.html\nSET TIMEOUT: png/apng/fdAT-8bit-gray.html\nSET TIMEOUT: png/apng/first-frame-IDAT.html\nSET TIMEOUT: png/apng/first-frame-not-IDAT.html\nSET TIMEOUT: png/apng/tester-check.html\nSET TIMEOUT: portals/resources/portals-adopt-predecessor-portal.html\nSET TIMEOUT: preload/single-download-preload.html\nSET TIMEOUT: preload/resources/slow-exec.js\nSET TIMEOUT: print/crashtests/reload-crash.html\nSET TIMEOUT: resize-observer/resources/iframe.html\nSET TIMEOUT: resource-timing/resources/nested-contexts.js\nSET TIMEOUT: reporting/resources/first-csp-report.https.sub.html\nSET TIMEOUT: reporting/resources/second-csp-report.https.sub.html\nSET TIMEOUT: scheduler/tentative/yield/yield-inherit-across-promises.any.js\nSET TIMEOUT: scheduler/tentative/yield/yield-priority-timers.any.js\nSET TIMEOUT: secure-contexts/basic-popup-and-iframe-tests.https.js\nSET TIMEOUT: service-workers/cache-storage/cache-abort.https.any.js\nSET TIMEOUT: service-workers/service-worker/activation.https.html\nSET TIMEOUT: service-workers/service-worker/fetch-frame-resource.https.html\nSET TIMEOUT: service-workers/service-worker/fetch-request-redirect.https.html\nSET TIMEOUT: service-workers/service-worker/fetch-waits-for-activate.https.html\nSET TIMEOUT: service-workers/service-worker/postMessage-client-worker.js\nSET TIMEOUT: service-workers/service-worker/update-recovery.https.html\nSET TIMEOUT: service-workers/service-worker/resources/controlled-frame-postMessage.html\nSET TIMEOUT: service-workers/service-worker/resources/controlled-worker-late-postMessage.js\nSET TIMEOUT: service-workers/service-worker/resources/controlled-worker-postMessage.js\nSET TIMEOUT: service-workers/service-worker/resources/extendable-event-async-waituntil.js\nSET TIMEOUT: service-workers/service-worker/resources/fetch-event-async-respond-with-worker.js\nSET TIMEOUT: service-workers/service-worker/resources/fetch-event-test-worker.js\nSET TIMEOUT: service-workers/service-worker/resources/opaque-response-being-preloaded-xhr.html\nSET TIMEOUT: service-workers/service-worker/resources/opaque-response-preloaded-xhr.html\nSET TIMEOUT: service-workers/service-worker/resources/performance-timeline-worker.js\nSET TIMEOUT: service-workers/service-worker/resources/resource-timing-worker.js\nSET TIMEOUT: shadow-dom/Document-prototype-currentScript.html\nSET TIMEOUT: shadow-dom/scroll-to-the-fragment-in-shadow-tree.html\nSET TIMEOUT: shadow-dom/slotchange-event.html\nSET TIMEOUT: trusted-types/support/block-string-assignment-to-DOMWindowTimers-setTimeout-setInterval.js\nSET TIMEOUT: trusted-types/support/DOMWindowTimers-setTimeout-setInterval.js\nSET TIMEOUT: user-timing/*\nSET TIMEOUT: web-animations/crashtests/reparent-animating-element-002.html\nSET TIMEOUT: web-animations/timing-model/animations/*\nSET TIMEOUT: web-locks/crashtests/after-worker-termination.https.html\nSET TIMEOUT: webaudio/the-audio-api/the-mediaelementaudiosourcenode-interface/mediaElementAudioSourceToScriptProcessorTest.html\nSET TIMEOUT: webauthn/*timeout.https.html\nSET TIMEOUT: webdriver/*\nSET TIMEOUT: webmessaging/*\nSET TIMEOUT: webrtc-encoded-transform/script-metadata-transform-worker.js\nSET TIMEOUT: webrtc-encoded-transform/script-transform-generateKeyFrame.js\nSET TIMEOUT: webrtc-encoded-transform/script-transform-sendKeyFrameRequest.js\nSET TIMEOUT: webstorage/eventTestHarness.js\nSET TIMEOUT: webvtt/*\nSET TIMEOUT: workers/*\nSET TIMEOUT: xhr/resources/init.htm\nSET TIMEOUT: xhr/resources/xmlhttprequest-timeout.js\nSET TIMEOUT: fenced-frame/resolve-to-config-promise.https.html\nSET TIMEOUT: partitioned-popins/partitioned-popins.partitions.tentative.https.window.js\n\n# generate_tests implementation and sample usage\nGENERATE_TESTS: resources/test/tests/functional/generate-callback.html\nGENERATE_TESTS: resources/testharness.js\n\n# generate_tests usage (should be got rid of)\nGENERATE_TESTS: html/canvas/element/drawing-images-to-the-canvas/*\nGENERATE_TESTS: html/canvas/element/manual/drawing-images-to-the-canvas/*\nGENERATE_TESTS: css/css-shapes/shape-outside/values/*\nGENERATE_TESTS: css/css-tables/bounding-box-computation-1.html\nGENERATE_TESTS: css/css-tables/bounding-box-computation-2.html\nGENERATE_TESTS: css/css-tables/bounding-box-computation-3.html\nGENERATE_TESTS: css/css-tables/caption-side-1.html\nGENERATE_TESTS: css/css-tables/fixed-layout-1.html\nGENERATE_TESTS: css/css-tables/fixed-layout-2.html\nGENERATE_TESTS: css/css-tables/height-distribution/computing-row-measure-0.html\nGENERATE_TESTS: css/css-tables/height-distribution/computing-row-measure-1.html\nGENERATE_TESTS: css/css-tables/height-distribution/percentage-sizing-of-table-cell-children.html\nGENERATE_TESTS: css/css-tables/html-to-css-mapping-1.html\nGENERATE_TESTS: css/css-tables/html-to-css-mapping-2.html\nGENERATE_TESTS: css/css-tables/html5-table-formatting-1.html\nGENERATE_TESTS: css/css-tables/html5-table-formatting-2.html\nGENERATE_TESTS: css/css-tables/html5-table-formatting-3.html\nGENERATE_TESTS: css/css-tables/html5-table-formatting-fixed-layout-1.html\nGENERATE_TESTS: css/css-tables/table-model-fixup-2.html\nGENERATE_TESTS: css/css-tables/table-model-fixup.html\nGENERATE_TESTS: css/css-tables/visibility-collapse-col-001.html\nGENERATE_TESTS: css/css-tables/visibility-collapse-row-001.html\nGENERATE_TESTS: css/css-tables/width-distribution/computing-column-measure-0.html\nGENERATE_TESTS: css/css-tables/width-distribution/computing-column-measure-1.html\nGENERATE_TESTS: css/css-tables/width-distribution/computing-table-width-0.html\nGENERATE_TESTS: css/css-tables/width-distribution/computing-table-width-1.html\nGENERATE_TESTS: css/css-tables/width-distribution/distribution-algo-1.html\nGENERATE_TESTS: css/css-tables/width-distribution/distribution-algo-2.html\nGENERATE_TESTS: css/css-tables/width-distribution/distribution-algo-min-content-guess.html\nGENERATE_TESTS: css/css-tables/width-distribution/distribution-algo-min-content-percent-guess.html\nGENERATE_TESTS: css/css-tables/width-distribution/distribution-algo-min-content-specified-guess.1.html\nGENERATE_TESTS: css/css-tables/width-distribution/distribution-algo-min-content-specified-guess.html\nGENERATE_TESTS: dom/nodes/case.js\nGENERATE_TESTS: dom/ranges/Range-cloneRange.html\nGENERATE_TESTS: dom/ranges/Range-collapse.html\nGENERATE_TESTS: dom/ranges/Range-mutations.js\nGENERATE_TESTS: dom/ranges/Range-selectNode.html\nGENERATE_TESTS: dom/ranges/Range-set.html\nGENERATE_TESTS: dom/traversal/TreeWalker.html\nGENERATE_TESTS: domparsing/createContextualFragment.html\nGENERATE_TESTS: mediacapture-image/MediaStreamTrack-applyConstraints-reject.https.html\nGENERATE_TESTS: mediacapture-image/MediaStreamTrack-getCapabilities.https.html\nGENERATE_TESTS: mediacapture-image/MediaStreamTrack-getConstraints.https.html\nGENERATE_TESTS: mediacapture-image/MediaStreamTrack-getSettings.https.html\nGENERATE_TESTS: mediacapture-image/takePhoto-reject.html\nGENERATE_TESTS: html/semantics/scripting-1/the-template-element/template-element/template-as-a-descendant.html\nGENERATE_TESTS: html/syntax/parsing/Document.getElementsByTagName-foreign-01.html\nGENERATE_TESTS: html/syntax/parsing/template/clearing-the-stack-back-to-a-given-context/clearing-stack-back-to-a-table-body-context.html\nGENERATE_TESTS: html/syntax/parsing/template/clearing-the-stack-back-to-a-given-context/clearing-stack-back-to-a-table-context.html\nGENERATE_TESTS: html/syntax/parsing/template/clearing-the-stack-back-to-a-given-context/clearing-stack-back-to-a-table-row-context.html\nGENERATE_TESTS: html/syntax/parsing/template/creating-an-element-for-the-token/template-owner-document.html\nGENERATE_TESTS: html/syntax/serializing-html-fragments/serializing.html\nGENERATE_TESTS: html/webappapis/atob/base64.any.js\nGENERATE_TESTS: mediacapture-fromelement/capture.html\nGENERATE_TESTS: mediacapture-fromelement/creation.html\nGENERATE_TESTS: mediacapture-fromelement/ended.html\nGENERATE_TESTS: html/canvas/offscreen/manual/filter/offscreencanvas.filter.html\nGENERATE_TESTS: pointerevents/pointerevent_constructor.html\nGENERATE_TESTS: pointerevents/pointerevent_constructor.https.html\nGENERATE_TESTS: pointerevents/extension/pointerevent_constructor.html\nGENERATE_TESTS: selection/collapse.js\nGENERATE_TESTS: shadow-dom/leaktests/html-collection.html\nGENERATE_TESTS: shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/dom-tree-accessors-001.html\nGENERATE_TESTS: shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/ownerdocument-002.html\nGENERATE_TESTS: shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/window-named-properties-002.html\nGENERATE_TESTS: shadow-dom/untriaged/shadow-trees/upper-boundary-encapsulation/window-named-properties-003.html\n\n# Intentional use of setTimeout\nSET TIMEOUT: common/security-features/resources/common.sub.js\nSET TIMEOUT: common/dispatcher/dispatcher.js\nSET TIMEOUT: css/css-fonts/font-display/font-display.html\nSET TIMEOUT: css/css-fonts/font-display/font-display-change.html\nSET TIMEOUT: css/css-fonts/font-display/font-display-change-ref.html\nSET TIMEOUT: css/css-fonts/font-display/font-display-feature-policy-01.tentative.html\nSET TIMEOUT: css/css-fonts/font-display/font-display-feature-policy-02.tentative.html\nSET TIMEOUT: css/css-fonts/font-display/font-display-preload.html\nSET TIMEOUT: css/css-view-transitions/no-painting-while-render-blocked.html\nSET TIMEOUT: document-policy/font-display/override-to-optional.tentative.html\nSET TIMEOUT: feature-policy/experimental-features/resources/focus-without-user-activation-iframe-tentative.html\nSET TIMEOUT: permissions-policy/experimental-features/resources/focus-without-user-activation-iframe-tentative.html\nSET TIMEOUT: html/browsers/windows/auxiliary-browsing-contexts/resources/close-opener.html\nSET TIMEOUT: html/cross-origin-embedder-policy/resources/reporting-worker.js\nSET TIMEOUT: html/cross-origin-opener-policy/navigate-to-aboutblank.https.html\nSET TIMEOUT: html/cross-origin-opener-policy/navigate-top-to-aboutblank.https.html\nSET TIMEOUT: html/dom/documents/dom-tree-accessors/Document.currentScript.html\nSET TIMEOUT: html/webappapis/dynamic-markup-insertion/opening-the-input-stream/crbug-583445-regression.window.js\nSET TIMEOUT: html/webappapis/timers/*\nSET TIMEOUT: portals/history/resources/portal-harness.js\nSET TIMEOUT: requestidlecallback/deadline-after-expired-timer.html\nSET TIMEOUT: resources/*\nSET TIMEOUT: scheduler/tentative/current-task-signal-async-abort.any.js\nSET TIMEOUT: scheduler/tentative/current-task-signal-async-priority.any.js\nSET TIMEOUT: speculation-rules/prerender/resources/activation-start.html\nSET TIMEOUT: speculation-rules/prerender/resources/prerender-response-code.html\nSET TIMEOUT: speculation-rules/prerender/resources/prerender-while-prerender-outer.html\nSET TIMEOUT: speculation-rules/prerender/resources/deferred-promise-utils.js\nSET TIMEOUT: speculation-rules/prerender/resources/session-history-harness.js\nSET TIMEOUT: speculation-rules/prerender/resources/utils.js\nSET TIMEOUT: speculation-rules/prerender/resources/request-picture-in-picture.html\nSET TIMEOUT: speculation-rules/prerender/resources/media-autoplay-attribute.html\nSET TIMEOUT: speculation-rules/prerender/resources/media-play.html\nSET TIMEOUT: html/browsers/browsing-the-web/back-forward-cache/timers.html\nSET TIMEOUT: dom/abort/crashtests/timeout-close.html\nSET TIMEOUT: storage-access-api/storage-access-beyond-cookies.locks.sub.https.window.js\n\n# setTimeout use in reftests\nSET TIMEOUT: acid/acid3/test.html\n\n# Third party code\n*: resources/webidl2/*\n*: tools/*\n*: */third_party/*\n\n# .gitignore files in child directories\n*: cors/resources/.gitignore\n*: css/.gitignore\n*: css/css-writing-modes/tools/generators/.gitignore\n*: resources/.gitignore\n*: webaudio/.gitignore\n\n## Third party data files\nTRAILING WHITESPACE: resources/chromium/*\n\n## Test plans and implementation reports\n*: css/*/test-plan/*\n\n## Things we don't have enabled yet\nOPEN-NO-MODE: css/*\nPRINT STATEMENT: css/*\nCONTENT-VISUAL: css/*\nCONTENT-MANUAL: css/*\n\n## Whitespace rules that we can't enforce yet\nINDENT TABS: css/compositing/*\nINDENT TABS: css/CSS2/*\nINDENT TABS: css/css-backgrounds/*\nINDENT TABS: css/css-color/*\nINDENT TABS: css/css-conditional/*\nINDENT TABS: css/css-flexbox/*\nINDENT TABS: css/css-fonts/*\nINDENT TABS: css/css-images/support/1x1-green.svg\nINDENT TABS: css/css-masking/*\nINDENT TABS: css/css-multicol/*\nINDENT TABS: css/css-page/*\nINDENT TABS: css/css-round-display/*\nINDENT TABS: css/css-text/*\nINDENT TABS: css/css-text-decor/*\nINDENT TABS: css/css-transforms/*\nINDENT TABS: css/css-ui/*\nINDENT TABS: css/css-values/*\nINDENT TABS: css/css-writing-modes/*\nINDENT TABS: css/filter-effects/*\nINDENT TABS: css/mediaqueries/*\nINDENT TABS: css/selectors/*\nINDENT TABS: css/WOFF2/*\n\n\n## Things we're stopping from getting worse\nCONSOLE: css/css-shapes/shape-outside/supported-shapes/support/test-utils.js\nCONSOLE: css/css-values/viewport-units-css2-001.html\nCONSOLE: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001*.html\nCONSOLE: css/css-writing-modes/tools/generators/template.html\nCONSOLE: bluetooth/characteristic/readValue/characteristic-is-removed.https.window.js\n\nTRAILING WHITESPACE: css/css-fonts/support/fonts/gsubtest-lookup3.ufo/features.fea\n\nSET TIMEOUT: css/compositing/mix-blend-mode/mix-blend-mode-parent-with-3D-transform-and-transition.html\nSET TIMEOUT: css/compositing/mix-blend-mode/mix-blend-mode-sibling-with-3D-transform-and-transition.html\nSET TIMEOUT: css/css-transitions/events-007.html\nSET TIMEOUT: css/css-transitions/support/generalParallelTest.js\nSET TIMEOUT: css/css-transitions/support/runParallelAsyncHarness.js\nSET TIMEOUT: css/css-transitions/transitioncancel-001.html\nSET TIMEOUT: css/css-values/reference/vh-update-and-transition-in-subframe-ref.html\nSET TIMEOUT: css/css-values/reference/vh-update-and-transition-in-subframe-iframe-ref.html\nSET TIMEOUT: css/css-values/vh-update-and-transition-in-subframe.html\nSET TIMEOUT: css/css-values/vh-update-and-transition-in-subframe-iframe.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001a.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001b.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001c.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001d.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001e.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001f.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001g.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001h.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001i.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001j.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001k.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001l.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001m.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001n.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001o.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001p.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001q.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001r.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001s.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001t.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001u.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001v.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001w.html\nSET TIMEOUT: css/css-writing-modes/orthogonal-parent-shrink-to-fit-001x.html\nSET TIMEOUT: css/css-writing-modes/support/text-orientation.js\nSET TIMEOUT: css/css-writing-modes/tools/generators/template.html\nSET TIMEOUT: css/CSS2/backgrounds/background-root-101.xht\nSET TIMEOUT: css/CSS2/backgrounds/background-root-102.xht\nSET TIMEOUT: css/CSS2/backgrounds/background-root-103.xht\nSET TIMEOUT: css/CSS2/floats-clear/floats-137.xht\nSET TIMEOUT: css/CSS2/generated-content/counter-increment-000.xht\nSET TIMEOUT: css/CSS2/generated-content/counter-increment-001.xht\nSET TIMEOUT: css/CSS2/generated-content/counter-increment-002.xht\nSET TIMEOUT: css/CSS2/generated-content/counter-reset-000.xht\nSET TIMEOUT: css/CSS2/generated-content/counter-reset-001.xht\nSET TIMEOUT: css/CSS2/generated-content/counter-reset-002.xht\nSET TIMEOUT: css/CSS2/selectors/dom-hover-001.xht\nSET TIMEOUT: css/CSS2/selectors/dom-hover-002.xht\nSET TIMEOUT: css/CSS2/tables/tables-102.xht\nSET TIMEOUT: css/mediaqueries/min-width-tables-001.html\nSET TIMEOUT: css/css-text/crashtests/rendering-rtl-bidi-override-crash.html\nSET TIMEOUT: css/css-backgrounds/color-mix-currentcolor-border-repaint-parent.html\nSET TIMEOUT: svg/painting/currentcolor-fill-stroke-repaint.html\nSET TIMEOUT: resource-timing/resources/run-async-tasks-promise.js\n\n# CSS tests that used to be at the top level and weren't subject to lints\nMISSING-LINK: css/css-fonts/matching/fixed-stretch-style-over-weight.html\nMISSING-LINK: css/css-fonts/matching/stretch-distance-over-weight-distance.html\nMISSING-LINK: css/css-fonts/matching/style-ranges-over-weight-direction.html\nMISSING-LINK: css/css-fonts/variations/font-parse-numeric-stretch-style-weight.html\nMISSING-LINK: css/css-fonts/variations/variable-box-font.html\nMISSING-LINK: css/css-fonts/variations/variable-gpos-m2b.html\nMISSING-LINK: css/css-fonts/variations/variable-gsub.html\nMISSING-LINK: css/css-scroll-anchoring/abspos-containing-block-outside-scroller.html\nMISSING-LINK: css/css-scroll-anchoring/abspos-contributes-to-static-parent-bounds.html\nMISSING-LINK: css/css-scroll-anchoring/ancestor-change-heuristic.html\nMISSING-LINK: css/css-scroll-anchoring/anchor-updates-after-explicit-scroll.html\nMISSING-LINK: css/css-scroll-anchoring/anchoring-with-bounds-clamping-div.html\nMISSING-LINK: css/css-scroll-anchoring/anchoring-with-bounds-clamping.html\nMISSING-LINK: css/css-scroll-anchoring/anonymous-block-box.html\nMISSING-LINK: css/css-scroll-anchoring/basic.html\nMISSING-LINK: css/css-scroll-anchoring/clipped-scrollers-skipped.html\nMISSING-LINK: css/css-scroll-anchoring/descend-into-container-with-float.html\nMISSING-LINK: css/css-scroll-anchoring/descend-into-container-with-overflow.html\nMISSING-LINK: css/css-scroll-anchoring/exclude-fixed-position.html\nMISSING-LINK: css/css-scroll-anchoring/inline-block.html\nMISSING-LINK: css/css-scroll-anchoring/negative-layout-overflow.html\nMISSING-LINK: css/css-scroll-anchoring/opt-out.html\nMISSING-LINK: css/css-scroll-anchoring/position-change-heuristic.html\nMISSING-LINK: css/css-scroll-anchoring/start-edge-in-block-layout-direction.html\nMISSING-LINK: css/css-scroll-anchoring/subtree-exclusion.html\nMISSING-LINK: css/css-scroll-anchoring/wrapped-text.html\nMISSING-LINK: css/css-typed-om/CSSMatrixComponent-DOMMatrix-mutable.html\nMISSING-LINK: css/css-typed-om/declared-styleMap-accepts-inherit.html\nMISSING-LINK: css/cssom-view/DOMRectList.html\nMISSING-LINK: css/cssom-view/elementFromPoint-002.html\nMISSING-LINK: css/cssom-view/elementFromPoint-003.html\nMISSING-LINK: css/cssom-view/elementFromPoint.html\nMISSING-LINK: css/cssom-view/elementScroll.html\nMISSING-LINK: css/cssom-view/elementsFromPoint-iframes.html\nMISSING-LINK: css/cssom-view/elementsFromPoint-invalid-cases.html\nMISSING-LINK: css/cssom-view/elementsFromPoint-shadowroot.html\nMISSING-LINK: css/cssom-view/elementsFromPoint-simple.html\nMISSING-LINK: css/cssom-view/elementsFromPoint-svg.html\nMISSING-LINK: css/cssom-view/elementsFromPoint-table.html\nMISSING-LINK: css/cssom-view/elementsFromPoint.html\nMISSING-LINK: css/cssom-view/historical.html\nMISSING-LINK: css/cssom-view/HTMLBody-ScrollArea_quirksmode.html\nMISSING-LINK: css/cssom-view/mouseEvent.html\nMISSING-LINK: css/cssom-view/negativeMargins.html\nMISSING-LINK: css/cssom-view/offsetTopLeftInScrollableParent.html\nMISSING-LINK: css/cssom-view/scrolling-no-browsing-context.html\nMISSING-LINK: css/cssom-view/scrolling-quirks-vs-nonquirks.html\nMISSING-LINK: css/cssom-view/scrollingElement.html\nMISSING-LINK: css/cssom-view/scrollIntoView-shadow.html\nMISSING-LINK: css/cssom-view/scrollIntoView-smooth.html\nMISSING-LINK: css/cssom-view/scrollTop-display-change.html\n\n# TODO https://github.com/web-platform-tests/wpt/issues/5770\nMISSING-LINK: css/css-highlight-api/idlharness.window.js\nMISSING-LINK: css/css-highlight-api/historical.window.js\nMISSING-LINK: css/cssom/cssstyledeclaration-csstext-setter.window.js\nMISSING-LINK: css/geometry/*.worker.js\nMISSING-LINK: css/geometry/*.any.js\nMISSING-LINK: css/filter-effects/*.any.js\n\n# Tests that use WebKit/Blink testing APIs\nLAYOUTTESTS APIS: import-maps/data-driven/resources/test-helper-iframe.js\nLAYOUTTESTS APIS: resources/chromium/enable-hyperlink-auditing.js\nLAYOUTTESTS APIS: resources/chromium/webxr-test.js\nLAYOUTTESTS APIS: webxr/resources/webxr_util.js\n\n# Signed Exchange files have hard-coded URLs in the certUrl field\nWEB-PLATFORM.TEST:signed-exchange/resources/*.sxg\nWEB-PLATFORM.TEST:signed-exchange/resources/generate-test-sxgs.sh\n\n# Web Bundle files have hard-coded URLs\nWEB-PLATFORM.TEST:web-bundle/resources/*.har\nWEB-PLATFORM.TEST:web-bundle/resources/generate-test-wbns.sh\nWEB-PLATFORM.TEST:web-bundle/resources/nested/*.wbn\nWEB-PLATFORM.TEST:web-bundle/resources/wbn/*.wbn\nWEB-PLATFORM.TEST:web-bundle/subresource-loading/*.html\nWEB-PLATFORM.TEST:web-bundle/subresource-loading/resources/*.js\n\n# The /.well-known/shared-stored/trusted-origins file uses hard-coded hosts\nWEB-PLATFORM.TEST:shared-storage/resources/trusted-origins.py\n\n# Tests that depend on resources in /gen/ in Chromium:\n# https://github.com/web-platform-tests/wpt/issues/16455\n# Please consult with ecosystem-infra@chromium.org before adding more.\nMISSING DEPENDENCY: credential-management/support/otpcredential-helper.js\nMISSING DEPENDENCY: fedcm/support/fedcm-mock.js\nMISSING DEPENDENCY: resources/chromium/content-index-helpers.js\nMISSING DEPENDENCY: resources/chromium/contacts_manager_mock.js\nMISSING DEPENDENCY: resources/chromium/web-bluetooth-test.js\nMISSING DEPENDENCY: resources/chromium/webusb-test.js\nMISSING DEPENDENCY: resources/chromium/fake-serial.js\nMISSING DEPENDENCY: resources/chromium/fake-hid.js\nMISSING DEPENDENCY: resources/chromium/mock-battery-monitor.js\nMISSING DEPENDENCY: resources/chromium/mock-barcodedetection.js\nMISSING DEPENDENCY: resources/chromium/mock-facedetection.js\nMISSING DEPENDENCY: resources/chromium/mock-idle-detection.js\nMISSING DEPENDENCY: resources/chromium/mock-imagecapture.js\nMISSING DEPENDENCY: resources/chromium/mock-managed-config.js\nMISSING DEPENDENCY: resources/chromium/mock-subapps.js\nMISSING DEPENDENCY: resources/chromium/mock-textdetection.js\nMISSING DEPENDENCY: resources/chromium/nfc-mock.js\nMISSING DEPENDENCY: resources/chromium/webxr-test.js\n\n# Tests that are false positives for using Ahem as a system font\nAHEM SYSTEM FONT: acid/acid3/test.html\nAHEM SYSTEM FONT: resource-timing/font-timestamps.html\nAHEM SYSTEM FONT: resource-timing/initiator-type/style.html\nAHEM SYSTEM FONT: resource-timing/resources/iframe-reload-TAO.sub.html\nAHEM SYSTEM FONT: html/canvas/element/text/2d.text.measure.fontBoundingBox.ahem.html\nAHEM SYSTEM FONT: css/css-font-loading/fontface-override-descriptors.html\nAHEM SYSTEM FONT: css/css-font-loading/fontface-size-adjust-descriptor.html\nAHEM SYSTEM FONT: css/css-font-loading/fontface-size-adjust-descriptor-ref.html\nAHEM SYSTEM FONT: css/css-fonts/ascent-descent-override.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-012.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-012-ref.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-013.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-013-ref.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-014.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-014-ref.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-metrics-override.html\nAHEM SYSTEM FONT: css/css-fonts/font-size-adjust-metrics-override-ref.html\nAHEM SYSTEM FONT: css/css-fonts/line-gap-override.html\nAHEM SYSTEM FONT: css/css-fonts/parsing/font-size-adjust-computed.html\nAHEM SYSTEM FONT: css/css-fonts/size-adjust-unicode-range-system-fallback.html\nAHEM SYSTEM FONT: html/dom/render-blocking/remove-attr-unblocks-rendering.optional.html\nAHEM SYSTEM FONT: html/dom/render-blocking/remove-element-unblocks-rendering.optional.html\n\n# TODO: The following should be deleted along with the Ahem web font cleanup\n# PR (https://github.com/web-platform-tests/wpt/pull/18702)\nAHEM SYSTEM FONT: infrastructure/assumptions/ahem-ref.html\nAHEM SYSTEM FONT: infrastructure/assumptions/ahem.html\n\n# Existing crashtests using testharness\nTESTHARNESS-IN-OTHER-TYPE: accessibility/crashtests/computed-node-checked.html\nTESTHARNESS-IN-OTHER-TYPE: css/CSS2/floats-clear/adjoining-float-new-fc-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/CSS2/floats/floats-saturated-position-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/CSS2/linebox/video-needs-layout-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-break/break-before-with-no-fragmentation-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-multicol/abspos-in-multicol-with-spanner-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-multicol/extremely-tall-multicol-with-extremely-tall-child-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-multicol/with-custom-layout-on-same-element-crash.https.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-overflow/outline-with-opacity-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-overflow/shrink-to-fit-auto-overflow-relayout-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-position/position-absolute-in-inline-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-pseudo/first-letter-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-pseudo/first-line-first-letter-insert-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-shapes/shape-outside/supported-shapes/polygon/shape-outside-polygon-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-tables/visibility-collapse-colspan-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-tables/visibility-collapse-rowspan-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-text/overflow-wrap/overflow-wrap-break-word-long-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-text/overflow-wrap/overflow-wrap-break-word-white-space-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-text/text-indent/text-indent-long-line-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-text/white-space/nowrap-wbr-and-space-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-text/white-space/pre-line-br-with-whitespace-child-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-text/white-space/pre-with-whitespace-crash.html\nTESTHARNESS-IN-OTHER-TYPE: css/css-writing-modes/bidi-inline-fragment-crash.html\nTESTHARNESS-IN-OTHER-TYPE: dom/svg-insert-crash.html\nTESTHARNESS-IN-OTHER-TYPE: editing/run/first-letter-crossing-engine-boundary-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/canvas/element/manual/wide-gamut-canvas/imagedata-no-color-settings-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/semantics/embedded-content/the-object-element/block-object-with-ruby-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/semantics/forms/the-input-element/time-datalist-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/semantics/forms/the-input-element/type-change-file-to-text-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/semantics/interactive-elements/the-details-element/display-table-with-rt-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/semantics/interactive-elements/the-summary-element/display-table-with-rt-crash.html\nTESTHARNESS-IN-OTHER-TYPE: html/semantics/text-level-semantics/the-ruby-element/rt-without-ruby-crash.html\nTESTHARNESS-IN-OTHER-TYPE: portals/portals-no-frame-crash.html\nTESTHARNESS-IN-OTHER-TYPE: quirks/table-replaced-descendant-percentage-height-crash.html\nTESTHARNESS-IN-OTHER-TYPE: scroll-animations/scroll-timelines/null-scroll-source-crash.html\nTESTHARNESS-IN-OTHER-TYPE: svg/extensibility/foreignObject/foreign-object-circular-filter-reference-crash.html\nTESTHARNESS-IN-OTHER-TYPE: svg/extensibility/foreignObject/foreign-object-under-clip-path-crash.html\nTESTHARNESS-IN-OTHER-TYPE: svg/extensibility/foreignObject/foreign-object-under-defs-crash.html\nTESTHARNESS-IN-OTHER-TYPE: svg/svg-in-svg/svg-in-svg-circular-filter-reference-crash.html\n\n# Adding the testharnessreport.js script causes the test to never complete.\nMISSING-TESTHARNESSREPORT: accessibility/crashtests/computed-node-checked.html\n\n# Existing manual tests with references\nREFERENCE-IN-OTHER-TYPE: css/CSS2/backgrounds/background-root-012a.xht\nREFERENCE-IN-OTHER-TYPE: css/CSS2/backgrounds/background-root-013a.xht\nREFERENCE-IN-OTHER-TYPE: css/CSS2/backgrounds/background-root-014a.xht\nREFERENCE-IN-OTHER-TYPE: css/CSS2/cascade/html-precedence-004.xht\nREFERENCE-IN-OTHER-TYPE: css/css-flexbox/css-flexbox-height-animation-stretch.html\nREFERENCE-IN-OTHER-TYPE: css/css-transforms/css-transform-scale-001-manual.html\n\n# Needs control of page size\nREFERENCE-IN-OTHER-TYPE: css/css-multicol/moz-multicol3-column-balancing-break-inside-avoid-1.html\n\nPRINT STATEMENT: webdriver/tests/bidi/browsing_context/print/*\nPRINT STATEMENT: webdriver/tests/classic/print/*\nPRINT STATEMENT: webdriver/tests/support/fixtures_bidi.py\n\nDUPLICATE-BASENAME-PATH: acid/acid3/empty.html\nDUPLICATE-BASENAME-PATH: acid/acid3/empty.xml\nDUPLICATE-BASENAME-PATH: dom/nodes/Document-createElement-namespace-tests/*\nDUPLICATE-BASENAME-PATH: dom/nodes/ParentNode-querySelector-All-content.html\nDUPLICATE-BASENAME-PATH: dom/nodes/ParentNode-querySelector-All-content.xht\nDUPLICATE-BASENAME-PATH: svg/struct/reftests/reference/green-100x100.html\nDUPLICATE-BASENAME-PATH: svg/struct/reftests/reference/green-100x100.svg\n\nSET TIMEOUT: mediacapture-insertable-streams/MediaStreamTrackProcessor-video.https.html\n\n# This is a subresource which cannot use step_timeout without becoming a test\n# itself. See https://github.com/web-platform-tests/wpt/issues/16933\nSET TIMEOUT: scroll-to-text-fragment/iframe-target.html\n\n# Ported crashtests from Mozilla\nSET TIMEOUT: editing/crashtests/backcolor-in-nested-editing-host-td-from-DOMAttrModified.html\nSET TIMEOUT: editing/crashtests/contenteditable-will-be-blurred-by-focus-event-listener.html\nSET TIMEOUT: editing/crashtests/delete-content-in-no-data-object.html\nSET TIMEOUT: editing/crashtests/designMode-document-will-be-blurred-by-focus-event-listener.html\nSET TIMEOUT: editing/crashtests/indent-outdent-after-closing-editable-dialog-element.html\nSET TIMEOUT: editing/crashtests/inserthtml-after-temporarily-removing-document-element.html\nSET TIMEOUT: editing/crashtests/inserthtml-in-text-adopted-to-other-document.html\nSET TIMEOUT: editing/crashtests/insertorderedlist-in-text-adopted-to-other-document.html\nSET TIMEOUT: editing/crashtests/make-editable-div-inline-and-set-contenteditable-of-input-to-false.html\nSET TIMEOUT: editing/crashtests/outdent-across-svg-boundary.html\nSET TIMEOUT: editing/crashtests/textarea-will-be-blurred-by-focus-event-listener.html\nSET TIMEOUT: mathml/crashtests/mozilla/*\nSET TIMEOUT: selection/crashtests/selection-modify-line-boundary-around-empty-details.html\nPARSE-FAILED: mathml/crashtests/mozilla/289180-1.xml\n\n# Invalid HTML syntax /> on non-void elements\nHTML INVALID SYNTAX: acid/*\nHTML INVALID SYNTAX: conformance-checkers/*\nHTML INVALID SYNTAX: css/css-scoping/shadow-cascade-order-001.html\nHTML INVALID SYNTAX: dom/nodes/Document-createElement-namespace.html\nHTML INVALID SYNTAX: dom/nodes/Node-lookupNamespaceURI.html\nHTML INVALID SYNTAX: dom/nodes/Node-normalize.html\nHTML INVALID SYNTAX: domparsing/DOMParser-parseFromString-xml-doctype.html\nHTML INVALID SYNTAX: domparsing/DOMParser-parseFromString-xml-parsererror.html\nHTML INVALID SYNTAX: domparsing/XMLSerializer-serializeToString.html\nHTML INVALID SYNTAX: html/canvas/element/manual/unclosed-canvas-4.htm\nHTML INVALID SYNTAX: html/syntax/parsing/unclosed-svg-script.html\nHTML INVALID SYNTAX: mathml/crashtests/mozilla/411603-1.html\nHTML INVALID SYNTAX: quirks/percentage-height-calculation.html\nHTML INVALID SYNTAX: trusted-types/TrustedTypePolicyFactory-getAttributeType-namespace.html\n\n# Tests that incorrectly include `testdriver.js`, which isn't supported for some\n# test types.\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-IndexedDB-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-getUniqueId-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-isSameEntry-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-BroadcastChannel-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-Error-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-MessagePort-frames-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-MessagePort-windows-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-MessagePort-workers-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-frames-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-windows-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-postMessage-workers-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemBaseHandle-remove-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-getDirectoryHandle-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-getFileHandle-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-iteration-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-move-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-partitioned-manual.https.tentative.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-removeEntry-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemDirectoryHandle-resolve-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemFileHandle-create-sync-access-handle-manual.https.tentative.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemFileHandle-getFile-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemFileHandle-move-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemFileHandle-partitioned-manual.https.tentative.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemWritableFileStream-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemWritableFileStream-piped-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/local_FileSystemWritableFileStream-write-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/showDirectoryPicker-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/showOpenFilePicker-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: file-system-access/showSaveFilePicker-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: mediacapture-streams/MediaStreamTrack-end-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: payment-handler/change-payment-method-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: payment-handler/change-shipping-address-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: payment-handler/change-shipping-option-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: payment-handler/payment-request-event-manual.https.html\nTESTDRIVER-IN-UNSUPPORTED-TYPE: payment-handler/supports-shipping-contact-delegation-manual.https.html\n\n# Tests automatically imported from the WebAssembly/spec repository that should be removed after getting fixed upstream.\nSET TIMEOUT: wasm/core/js/harness/testharness.js\nASSERT_THROWS: wasm/core/js/harness/testharness.js\nGENERATE_TESTS: wasm/core/js/harness/testharness.js\nPROMISE_REJECTS: wasm/core/js/harness/testharness.js\n"
+        },
+        {
+          "name": "loading",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "long-animation-frame",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "longtask-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "magnetometer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "managed",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mathml",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "measure-memory",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "media-capabilities",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "media-playback-quality",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "media-source",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "media",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-extensions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-fromelement",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-handle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-image",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-insertable-streams",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-record",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-region",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediacapture-streams",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mediasession",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "merchant-validation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mimesniff",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mixed-content",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mst-content-hint",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nav-tracking-mitigations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "navigation-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "navigation-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "netinfo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "network-error-logging",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "notifications",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "old-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "orientation-event",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "orientation-sensor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "page-lifecycle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "page-visibility",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "paint-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "parakeet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "partitioned-popins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "payment-handler",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "payment-method-basic-card",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "payment-method-id",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "payment-request",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "performance-timeline",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "periodic-background-sync",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "permissions-policy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "permissions-request",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "permissions-revoke",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "permissions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "picture-in-picture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "png",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pointerevents",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pointerlock",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "preload",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "presentation-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "print",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "private-aggregation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "private-click-measurement",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "proximity",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "push-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "quirks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "referrer-policy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "remote-playback",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "reporting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requestidlecallback",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resize-observer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resource-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sanitizer-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "savedata",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scheduler",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screen-capture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screen-details",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screen-orientation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "screen-wake-lock",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scroll-animations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scroll-to-text-fragment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "secure-contexts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "secure-payment-confirmation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "selection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "serial",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "service-workers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shadow-dom",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shape-detection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shared-storage-selecturl-limit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shared-storage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "signed-exchange",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "soft-navigation-heuristics",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "speculation-rules",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "speech-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "storage-access-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "storage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "streams",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "subapps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "subresource-integrity",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "svg-aam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "svg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "timing-entrytypes-registry",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "top-level-storage-access-api",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "touch-events",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "trust-tokens",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "trusted-types",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ua-client-hints",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "uievents",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "upgrade-insecure-requests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "url",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "urlpattern",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "user-timing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vibration",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "video-rvfc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "viewport",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "virtual-keyboard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "visual-viewport",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wai-aria",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wasm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web-animations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web-bundle",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web-locks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web-nfc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web-otp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "web-share",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webaudio",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webauthn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webcodecs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webdriver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webgl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webgpu",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webhid",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webidl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webmessaging",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webmidi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webnn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-encoded-transform",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-extensions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-ice",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-identity",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-priority",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-stats",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc-svc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webrtc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "websockets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webstorage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webtransport",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webusb",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webvr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webvtt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webxr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "window-management",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "workers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "worklets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wpt",
+          "type": "blob",
+          "size": 0.224609375,
+          "content": "#!/usr/bin/env python3\n\nif __name__ == \"__main__\":\n    import sys\n    if sys.version_info < (3, 8):\n        sys.stderr.write(\"wpt requires Python 3.8 or higher\\n\")\n        sys.exit(1)\n\n    from tools.wpt import wpt\n    wpt.main()\n"
+        },
+        {
+          "name": "wpt.py",
+          "type": "blob",
+          "size": 0.3134765625,
+          "content": "# This file exists to allow `python wpt <command>` to work on Windows:\n# https://github.com/web-platform-tests/wpt/pull/6907 and\n# https://github.com/web-platform-tests/wpt/issues/23095\nimport os\nabspath = os.path.abspath(__file__)\nos.chdir(os.path.dirname(abspath))\nexec(compile(open(\"wpt\", \"r\").read(), \"wpt\", 'exec'))\n"
+        },
+        {
+          "name": "x-frame-options",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "xhr",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

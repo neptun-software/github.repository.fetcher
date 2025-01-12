@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736711296513,
+    "page": 40,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "TrafeX/docker-php-nginx",
+      "stars": 1395,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.8837890625,
+          "content": "# Contributing to this project\nI love your input! I want to make contributing to this project as easy and transparent as possible.\n\n## Report bugs using Github's [issues](https://github.com/TrafeX/docker-php-nginx/issues)\nGitHub issues is used to track public bugs.\nReport a bug by [opening a new issue](https://github.com/TrafeX/docker-php-nginx/issues/new); it's that easy!\n\n### What to include in an issue?\n- A quick summary and/or background\n- Steps to reproduce\n    - Include what version of the image you are using\n    - Add the `Dockerfile` if you made any changes\n    - Include the command you used to run the container\n- What you expected would happen\n- What actually happens\n- Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)\n\n## License\nBy contributing, you agree that your contributions will be licensed under its [MIT License](./LICENSE).\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.634765625,
+          "content": "ARG ALPINE_VERSION=3.21\nFROM alpine:${ALPINE_VERSION}\nLABEL Maintainer=\"Tim de Pater <code@trafex.nl>\"\nLABEL Description=\"Lightweight container with Nginx 1.26 & PHP 8.4 based on Alpine Linux.\"\n# Setup document root\nWORKDIR /var/www/html\n\n# Install packages and remove default server definition\nRUN apk add --no-cache \\\n  curl \\\n  nginx \\\n  php84 \\\n  php84-ctype \\\n  php84-curl \\\n  php84-dom \\\n  php84-fileinfo \\\n  php84-fpm \\\n  php84-gd \\\n  php84-intl \\\n  php84-mbstring \\\n  php84-mysqli \\\n  php84-opcache \\\n  php84-openssl \\\n  php84-phar \\\n  php84-session \\\n  php84-tokenizer \\\n  php84-xml \\\n  php84-xmlreader \\\n  php84-xmlwriter \\\n  supervisor\n\n# Configure nginx - http\nCOPY config/nginx.conf /etc/nginx/nginx.conf\n# Configure nginx - default server\nCOPY config/conf.d /etc/nginx/conf.d/\n\n# Configure PHP-FPM\nENV PHP_INI_DIR /etc/php84\nCOPY config/fpm-pool.conf ${PHP_INI_DIR}/php-fpm.d/www.conf\nCOPY config/php.ini ${PHP_INI_DIR}/conf.d/custom.ini\n\n# Configure supervisord\nCOPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf\n\n# Make sure files/folders needed by the processes are accessable when they run under the nobody user\nRUN chown -R nobody:nobody /var/www/html /run /var/lib/nginx /var/log/nginx\n\n# Switch to use a non-root user from here on\nUSER nobody\n\n# Add application\nCOPY --chown=nobody src/ /var/www/html/\n\n# Expose the port nginx is reachable on\nEXPOSE 8080\n\n# Let supervisord start nginx & php-fpm\nCMD [\"/usr/bin/supervisord\", \"-c\", \"/etc/supervisor/conf.d/supervisord.conf\"]\n\n# Configure a healthcheck to validate that everything is up&running\nHEALTHCHECK --timeout=10s CMD curl --silent --fail http://127.0.0.1:8080/fpm-ping || exit 1\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0439453125,
+          "content": "MIT License\n\nCopyright (c) 2018 Tim de Pater\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.53125,
+          "content": "# Docker PHP-FPM 8.4 & Nginx 1.26 on Alpine Linux\nExample PHP-FPM 8.4 & Nginx 1.26 container image for Docker, built on [Alpine Linux](https://www.alpinelinux.org/).\n\nRepository: https://github.com/TrafeX/docker-php-nginx\n\n\n* Built on the lightweight and secure Alpine Linux distribution\n* Multi-platform, supporting AMD4, ARMv6, ARMv7, ARM64\n* Very small Docker image size (+/-40MB)\n* Uses PHP 8.4 for the best performance, low CPU usage & memory footprint\n* Optimized for 100 concurrent users\n* Optimized to only use resources when there's traffic (by using PHP-FPM's `on-demand` process manager)\n* The services Nginx, PHP-FPM and supervisord run under a non-privileged user (nobody) to make it more secure\n* The logs of all the services are redirected to the output of the Docker container (visible with `docker logs -f <container name>`)\n* Follows the KISS principle (Keep It Simple, Stupid) to make it easy to understand and adjust the image to your needs\n\n[![Docker Pulls](https://img.shields.io/docker/pulls/trafex/php-nginx.svg)](https://hub.docker.com/r/trafex/php-nginx/)\n![nginx 1.26](https://img.shields.io/badge/nginx-1.26-brightgreen.svg)\n![php 8.4](https://img.shields.io/badge/php-8.4-brightgreen.svg)\n![License MIT](https://img.shields.io/badge/license-MIT-blue.svg)\n\n## [![Trafex Consultancy](https://timdepater.com/logo/mini-logo.png)](https://timdepater.com?mtm_campaign=github)\nI can help you with [Containerization, Kubernetes, Monitoring, Infrastructure as Code and other DevOps challenges](https://timdepater.com/?mtm_campaign=github).\n\n\n## Goal of this project\nThe goal of this container image is to provide an example for running Nginx and PHP-FPM in a container which follows\nthe best practices and is easy to understand and modify to your needs.\n\n## Usage\n\nStart the Docker container:\n\n    docker run -p 80:8080 trafex/php-nginx\n\nSee the PHP info on http://localhost, or the static html page on http://localhost/test.html\n\nOr mount your own code to be served by PHP-FPM & Nginx\n\n    docker run -p 80:8080 -v ~/my-codebase:/var/www/html trafex/php-nginx\n\n## Versioning\nMajor or minor changes are always published as a [release](https://github.com/TrafeX/docker-php-nginx/releases) with correspondending changelogs.\nThe `latest` tag is automatically updated weekly to include the latests patches from Alpine Linux.\n\n## Configuration\nIn [config/](config/) you'll find the default configuration files for Nginx, PHP and PHP-FPM.\nIf you want to extend or customize that you can do so by mounting a configuration file in the correct folder;\n\nNginx configuration:\n\n    docker run -v \"`pwd`/nginx-server.conf:/etc/nginx/conf.d/server.conf\" trafex/php-nginx\n\nPHP configuration:\n\n    docker run -v \"`pwd`/php-setting.ini:/etc/php84/conf.d/settings.ini\" trafex/php-nginx\n\nPHP-FPM configuration:\n\n    docker run -v \"`pwd`/php-fpm-settings.conf:/etc/php84/php-fpm.d/server.conf\" trafex/php-nginx\n\n_Note; Because `-v` requires an absolute path I've added `pwd` in the example to return the absolute path to the current directory_\n\n## Documentation and examples\nTo modify this container to your specific needs please see the following examples;\n\n* [Adding xdebug support](https://github.com/TrafeX/docker-php-nginx/blob/master/docs/xdebug-support.md)\n* [Adding composer](https://github.com/TrafeX/docker-php-nginx/blob/master/docs/composer-support.md)\n* [Getting the real IP of the client behind a load balancer](https://github.com/TrafeX/docker-php-nginx/blob/master/docs/real-ip-behind-loadbalancer.md)\n* [Sending e-mails](https://github.com/TrafeX/docker-php-nginx/blob/master/docs/sending-emails.md)"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 0.376953125,
+          "content": "# Security Policy\n\n## Supported Versions\nOnly the latest version will be supported and receive security updates.\n\n| Version | Supported          |\n| ------- | ------------------ |\n| 3.x.x   | :white_check_mark: |\n| 2.x.x   | :x:                |\n| 1.x.x   | :x:                |\n\n## Reporting a Vulnerability\nFound a potential vulnerability? Report it by e-mail on security@trafex.nl.\n\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.test.yml",
+          "type": "blob",
+          "size": 0.2109375,
+          "content": "services:\n  app:\n    image: ${IMAGE_NAME}:${IMAGE_TAG}\n    build: .\n  sut:\n    image: alpine:3.21\n    depends_on:\n      - app\n    command: /tmp/run_tests.sh\n    volumes:\n      - \"./run_tests.sh:/tmp/run_tests.sh:ro\"\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run_tests.sh",
+          "type": "blob",
+          "size": 0.09375,
+          "content": "#!/usr/bin/env sh\napk --no-cache add curl\ncurl --silent --fail http://app:8080 | grep 'PHP 8.4'\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,219 @@
+{
+  "metadata": {
+    "timestamp": 1736708500979,
+    "page": 695,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "thombergs/code-examples",
+      "stars": 2666,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0458984375,
+          "content": "**/.idea/\n**/*.iml\n**/.DS_Store\n**/.terraform\n\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.28125,
+          "content": "before_install:\n - chmod +x build-all.sh\n - |\n   if ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(.md)|^(LICENSE)'\n   then\n     echo \"Not running CI since only docs were changed.\"\n     exit\n   fi\n\ninstall: skip\n\nscript:\n  - ./build-all.sh\n\nlanguage: java\n\njdk:\n  - oraclejdk13"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0439453125,
+          "content": "MIT License\n\nCopyright (c) 2017 Tom Hombergs\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.4560546875,
+          "content": "# Example Code Repository\n\n[![CI](https://github.com/thombergs/code-examples/workflows/CI/badge.svg)](https://github.com/thombergs/code-examples/actions?query=workflow%3ACI)\n\nThis repo contains example projects which show how to use different (not only) Java technologies.\nThe examples are usually accompanied by a blog post on [https://reflectoring.io](https://reflectoring.io).\n\nSee the READMEs in each subdirectory of this repo for more information on each module."
+        },
+        {
+          "name": "apache-http-client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "archunit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "aws",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build-all.sh",
+          "type": "blob",
+          "size": 7.9013671875,
+          "content": "#!/bin/bash\n\nMODULE=$1\nMAIN_DIR=$PWD\n\nbuild_gradle_module() {\n  MODULE_PATH=$1\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ BUILDING MODULE $MODULE_PATH\"\n  echo \"+++\"\n  cd $MODULE_PATH && {\n    chmod +x gradlew\n    ./gradlew build\n    if [ $? -ne 0 ]\n    then\n      echo \"\"\n      echo \"+++\"\n      echo \"+++ BUILDING MODULE $MODULE_PATH FAILED\"\n      echo \"+++\"\n      exit 1\n    else\n      echo \"\"\n      echo \"+++\"\n      echo \"+++ BUILDING MODULE $MODULE_PATH SUCCESSFUL\"\n      echo \"+++\"\n    fi\n    cd $MAIN_DIR\n  }\n}\n\nrun_gradle_task() {\n  MODULE_PATH=$1\n  TASK_NAME=$2\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ RUNNING GRADLE TASK $MODULE_PATH : $TASK_NAME\"\n  echo \"+++\"\n  cd $MODULE_PATH && {\n    chmod +x gradlew\n    ./gradlew $TASK_NAME\n    if [ $? -ne 0 ]\n    then\n      echo \"\"\n      echo \"+++\"\n      echo \"+++ GRADLE TASK $MODULE_PATH : $TASK_NAME FAILED\"\n      echo \"+++\"\n      exit 1\n    else\n      echo \"\"\n      echo \"+++\"\n      echo \"+++ GRADLE TASK $MODULE_PATH : $TASK_NAME SUCCESSFUL\"\n      echo \"+++\"\n    fi\n    cd $MAIN_DIR\n  }\n}\n\nbuild_maven_module() {\n  MODULE_PATH=$1\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ BUILDING MODULE $MODULE_PATH\"\n  echo \"+++\"\n  cd $MODULE_PATH && {\n    chmod +x mvnw\n    ./mvnw package\n    if [ $? -ne 0 ]\n    then\n      echo \"\"\n      echo \"+++\"\n      echo \"+++ BUILDING MODULE $MODULE_PATH FAILED\"\n      echo \"+++\"\n      exit 1\n    else\n      echo \"\"\n      echo \"+++\"\n      echo \"+++ BUILDING MODULE $MODULE_PATH SUCCESSFUL\"\n      echo \"+++\"\n    fi\n    cd $MAIN_DIR\n  }\n}\n\n\nif [[ \"$MODULE\" == \"module7\" ]]\nthen\n  # ADD NEW MODULES HERE\n  # (add new modules above the rest so you get quicker feedback if it fails)\n  build maven_module \"aws/spring-cloud-aws-s3\"\n  build maven_module \"aws/spring-cloud-sns-sqs-pubsub\"\n  build maven_module \"apache-http-client\"\n  build maven_module \"archunit\"\n  build maven_module \"aws/structured-logging-cw\"\n  build_gradle_module \"kotlin/coroutines\"\n  build_maven_module \"core-java/streams/data-streams\"\n  build maven_module \"aws/kinesis\"\n  build maven_module \"aws/sqs\"\n  build_maven_module \"core-java/annotation-processing/introduction-to-annotations\"\n\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 7 SUCCESSFUL\"\n  echo \"+++\"\nfi\n\n\nif [[ \"$MODULE\" == \"module6\" ]]\nthen\n  build maven_module \"core-java/records\"\n  build_maven_module \"spring-boot/spring-boot-app-info\"\n  build_maven_module \"spring-boot/spring-boot-null-safe-annotations\"\n  build maven_module \"aws/cdkv2\"\n  build_maven_module \"immutables\"\n  build maven_module \"core-java/collectionops\"\n  build maven_module \"spring-boot/resttemplate\"\n  build_maven_module \"spring-cloud/tracing\"\n  build_maven_module \"core-java/versions\"\n  build maven_module \"java-hashes\"\n  build maven_module \"http-clients\"\n  build maven_module \"spring-boot/spring-boot-i18n\"\n  build_maven_module \"testing/assertJ\"\n  build maven_module \"spring-boot/spring-boot-scheduler\"\n  build maven_module \"aws/springcloudwatch\"\n  build maven_module \"aws/springcloudses\"\n  build maven_module \"spring-boot/spring-boot-camel\"\n  build_maven_module \"logging/structured-logging\"\n  build_maven_module \"spring-boot/zero-downtime\"\n  build_maven_module \"resilience4j/springboot-resilience4j\"\n  build_maven_module \"spring-boot/feature-flags\"\n  build_gradle_module \"aws/spring-cloud-caching-redis\"\n  build_maven_module \"logging/spring-boot\"\n  build_maven_module \"logging/logback\"\n  build_maven_module \"logging/log4j\"\n  \n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 6 SUCCESSFUL\"\n  echo \"+++\"\nfi\n\nif [[ \"$MODULE\" == \"module5\" ]]\nthen\n  build_maven_module \"spring-boot/beginners-guide\"\n  build_maven_module \"aws/aws-dynamodb\"\n  build_maven_module \"spring-boot/spring-boot-testconfiguration\"\n  build_maven_module \"aws/springcloudrds\"\n  build_maven_module \"aws/springcloudsqs\"\n  build_maven_module \"spring-boot/spring-boot-actuator\"\n  build_maven_module \"mockito\"\n  build_maven_module \"core-java/service-provider-interface\"\n  build_gradle_module \"spring-boot/hazelcast/hazelcast-embedded-cache\"\n  build_gradle_module \"spring-boot/hazelcast/hazelcast-client-server\"\n  build_maven_module \"core-java/heapdump\"\n  build_gradle_module \"aws/s3\"\n  build_maven_module \"graphql\"\n  build_gradle_module \"spring-boot/exception-handling\"\n  build_maven_module \"spring-boot/spring-boot-elasticsearch\"\n  build_gradle_module \"spring-boot/spring-boot-mocking-modules\"\n  build_gradle_module \"spring-boot/specification\"\n  build_gradle_module \"spring-boot/hibernate-search\"\n  build_maven_module \"core-java/streams/fileswithstreams\"\n  build_maven_module \"spring-boot/spring-boot-health-check\"\n  build_maven_module \"spring-boot/spring-boot-logging-2\"\n  build_maven_module \"spring-boot/spring-boot-docker\"\n  build_maven_module \"spring-boot/spring-component-scanning\"\n  build_gradle_module \"spring-boot/devtools-demo\"\n  build_gradle_module \"spring-boot/cache\"\n  build_gradle_module \"spring-boot/bean-lifecycle\"\n  build_gradle_module \"spring-boot/request-response/client\"\n  build_gradle_module \"spring-boot/request-response/server\"\n\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 5 SUCCESSFUL\"\n  echo \"+++\"\nfi\n\n\nif [[ \"$MODULE\" == \"module1\" ]]\nthen\n  build_maven_module \"spring-boot/spring-boot-cookie-demo\"\n  build_maven_module \"spring-boot/spring-boot-kafka\"\n  build_gradle_module \"spring-boot/spring-boot-springdoc\"\n  build_maven_module \"spring-boot/dependency-injection\"\n  build_maven_module \"spring-boot/spring-boot-openapi\"\n  build_maven_module \"spring-boot/data-migration/liquibase\"\n  build_gradle_module \"spring-boot/boundaries\"\n  build_gradle_module \"spring-boot/argumentresolver\"\n  build_gradle_module \"spring-boot/data-migration/flyway\"\n  run_gradle_task \"spring-boot/thymeleaf-vue\" \"clean npmInstall build\"\n  build_gradle_module \"spring-boot/conditionals\"\n  build_gradle_module \"spring-boot/configuration\"\n\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 1 SUCCESSFUL\"\n  echo \"+++\"\nfi\n\nif [[ \"$MODULE\" == \"module2\" ]]\nthen\n  build_gradle_module \"solid/isp\"\n  build_maven_module \"solid/lsp\"\n  build_maven_module \"resilience4j/retry\"\n  build_maven_module \"resilience4j/ratelimiter\"\n  build_maven_module \"resilience4j/timelimiter\"\n  build_maven_module \"resilience4j/bulkhead\"\n  build_maven_module \"resilience4j/circuitbreaker\"\n  build_maven_module \"openfeign/openfeign-client-intro\"\n  build_gradle_module \"spring-data/spring-data-jdbc-converter\"\n  build_gradle_module \"reactive\"\n  build_gradle_module \"junit/assumptions\"\n  build_maven_module \"junit/junit5/junit5\"\n  build_maven_module \"junit/junit5/functional-interfaces\"\n  build_gradle_module \"logging\"\n  build_gradle_module \"pact/pact-feign-consumer\"\n\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 2 SUCCESSFUL\"\n  echo \"+++\"\nfi\n\nif [[ \"$MODULE\" == \"module3\" ]]\nthen\n  build_maven_module \"aws/localstack\"\n  build_gradle_module \"pact/pact-spring-provider\"\n  build_gradle_module \"patterns\"\n  build_gradle_module \"spring-cloud/feign-with-spring-data-rest\"\n  build_gradle_module \"spring-cloud/sleuth-downstream-service\"\n  build_gradle_module \"spring-cloud/sleuth-upstream-service\"\n  build_gradle_module \"spring-cloud/spring-cloud-contract-provider\" # has to run before consumer\n  build_gradle_module \"spring-cloud/spring-cloud-contract-consumer\"\n  build_gradle_module \"spring-data/spring-data-rest-associations\"\n  build_gradle_module \"spring-data/spring-data-rest-springfox\"\n  build_gradle_module \"tools/jacoco\"\n\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 3 SUCCESSFUL\"\n  echo \"+++\"\nfi\n\nif [[ \"$MODULE\" == \"module4\" ]]\nthen\n  build_gradle_module \"spring-boot/mocking\"\n  build_gradle_module \"spring-boot/modular\"\n  build_gradle_module \"spring-boot/paging\"\n  build_gradle_module \"spring-boot/rabbitmq-event-brokering\"\n  build_gradle_module \"spring-boot/spring-boot-logging\"\n  build_gradle_module \"spring-boot/spring-boot-testing\"\n  build_gradle_module \"spring-boot/starter\"\n  build_gradle_module \"spring-boot/startup\"\n  build_gradle_module \"spring-boot/static\"\n  build_gradle_module \"spring-boot/validation\"\n  build_gradle_module \"spring-boot/profiles\"\n  build_gradle_module \"spring-boot/password-encoding\"\n  build_gradle_module \"spring-boot/testcontainers\"\n\n  echo \"\"\n  echo \"+++\"\n  echo \"+++ MODULE 4 SUCCESSFUL\"\n  echo \"+++\"\nfi\n"
+        },
+        {
+          "name": "core-java",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cors",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "csrf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "graphql",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "http-clients",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "immutables",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "java-hashes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "junit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kotlin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "logging",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mapstruct",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mockito",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "node",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nodejs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "openfeign",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pact",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "patterns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pull_request_template.md",
+          "type": "blob",
+          "size": 1.283203125,
+          "content": "Please review the changes you did in this PR and check these points to make sure that the code examples are of high quality:\n\n- [ ] the source branch for this PR is NOT the master branch of your fork (please create a dedicated branch for the PR)\n- [ ] the PR doesn't contain code that is irrelevant to the topic of the article\n- [ ] the PR doesn't contain any other files that are irrelevant to the topic of the article\n- [ ] the PR contains a README.md file that explains in a sentence or two what the code example is about and links to the article on reflectoring.io (if you added to an existing module, please add the link to the existing README.md file)\n- [ ] the code is covered with tests where it makes sense\n- [ ] if you have created a new Maven or Gradle module, please add it to the CI build (search for \"# ADD NEW MODULES HERE\" in `build-all.sh`)\n- [ ] used the latest Gradle or Maven version\n- [ ] used Java 11 or later \n- [ ] the [GitHub Actions build](https://github.com/thombergs/code-examples/actions?query=workflow%3ACI) is successful for your PR branch\n\n**Feel free to raise the PR even if the checklist hasn't been worked through, yet**. But please only flag it to be reviewed after going through the checklist above.\n\nAlso feel free to reach out if you have any trouble with any of the steps.\n\n"
+        },
+        {
+          "name": "reactive",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resilience4j",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "solid",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-boot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-cloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-reactive-architecture",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-security-jwt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-security",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spring-webflux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "testing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1100 @@
+{
+  "metadata": {
+    "timestamp": 1736711316307,
+    "page": 2,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjU=",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jessfraz/dockerfiles",
+      "stars": 13749,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.30078125,
+          "content": "###Linux###\n\n*~\n\n# KDE directory preferences\n.directory\n\n\n###OSX###\n\n.DS_Store\n.AppleDouble\n.LSOverride\n\n# Icon must ends with two \\r.\nIcon\n\n\n# Thumbnails\n._*\n\n# Files that might appear on external disk\n.Spotlight-V100\n.Trashes\n\nznc/conf/\n\n*.swp\n*.swo\n\nitunes/iTunesSetup.exe\nyubikey/\nkiwi-builder/artifacts\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.056640625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2017 Jessie Frazelle\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.7080078125,
+          "content": ".PHONY: build\nbuild: ## Builds all the dockerfiles in the repository.\n\t@$(CURDIR)/build-all.sh\n\n.PHONY: latest-versions\nlatest-versions: ## Checks all the latest versions of the Dockerfile contents.\n\t@$(CURDIR)/latest-versions.sh\n\ncheck_defined = \\\n\t\t\t\t$(strip $(foreach 1,$1, \\\n\t\t\t\t$(call __check_defined,$1,$(strip $(value 2)))))\n__check_defined = \\\n\t\t\t\t  $(if $(value $1),, \\\n\t\t\t\t  $(error Undefined $1$(if $2, ($2))$(if $(value @), \\\n\t\t\t\t  required by target `$@')))\n\n.PHONY: run\nrun: ## Run a Dockerfile from the command at the top of the file (ex. DIR=telnet).\n\t@:$(call check_defined, DIR, directory of the Dockefile)\n\t@$(CURDIR)/run.sh \"$(DIR)\"\n\nREGISTRY := r.j3ss.co\n.PHONY: image\nimage: ## Build a Dockerfile (ex. DIR=telnet).\n\t@:$(call check_defined, DIR, directory of the Dockefile)\n\tdocker build --rm --force-rm -t $(REGISTRY)/$(subst /,:,$(patsubst %/,%,$(DIR))) ./$(DIR)\n\n.PHONY: test\ntest: dockerfiles shellcheck ## Runs the tests on the repository.\n\n.PHONY: dockerfiles\ndockerfiles: ## Tests the changes to the Dockerfiles build.\n\t@$(CURDIR)/test.sh\n\n# if this session isn't interactive, then we don't want to allocate a\n# TTY, which would fail, but if it is interactive, we do want to attach\n# so that the user can send e.g. ^C through.\nINTERACTIVE := $(shell [ -t 0 ] && echo 1 || echo 0)\nifeq ($(INTERACTIVE), 1)\n\tDOCKER_FLAGS += -t\nendif\n\n.PHONY: shellcheck\nshellcheck: ## Runs the shellcheck tests on the scripts.\n\tdocker run --rm -i $(DOCKER_FLAGS) \\\n\t\t--name df-shellcheck \\\n\t\t-v $(CURDIR):/usr/src:ro \\\n\t\t--workdir /usr/src \\\n\t\tr.j3ss.co/shellcheck ./shellcheck.sh\n\n.PHONY: help\nhelp:\n\t@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = \":.*?## \"}; {printf \"\\033[36m%-30s\\033[0m %s\\n\", $$1, $$2}'\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.794921875,
+          "content": "## dockerfiles\n\n[![make test](https://github.com/jessfraz/dockerfiles/workflows/make%20test/badge.svg)](https://github.com/jessfraz/dockerfiles/actions?query=workflow%3A%22make+test%22+branch%3Amaster)\n\nThis is a repo to hold various Dockerfiles for images I create.\n\n\n**Table of Contents**\n\n<!-- toc -->\n\n- [About](#about)\n- [Resources](#resources)\n  * [My dotfiles](#my-dotfiles)\n- [Contributing](#contributing)\n  * [Using the `Makefile`](#using-the-makefile)\n\n<!-- tocstop -->\n\n## About\n\nAlmost all of these live on dockerhub under [jess](https://hub.docker.com/u/jess/).\nBecause you cannot use notary with autobuilds on dockerhub I also build these\ncontinuously on a private registry at [r.j3ss.co](https://r.j3ss.co/) for public download. (You're\nwelcome.)\n\n## Resources\n\n### My dotfiles\n\nYou may also want to checkout my [dotfiles](https://github.com/jessfraz/dotfiles), specifically the aliases for all these files which are here: [github.com/jessfraz/dotfiles/blob/master/.dockerfunc](https://github.com/jessfraz/dotfiles/blob/master/.dockerfunc).\n\n## Contributing\n\nI try to make sure each Dockerfile has a command at the top to document running it,\nif a file you are looking at does not have a command, please\npull request it!\n\n\n### Using the `Makefile`\n\n```\n$ make help\nbuild                          Builds all the dockerfiles in the repository.\ndockerfiles                    Tests the changes to the Dockerfiles build.\nimage                          Build a Dockerfile (ex. DIR=telnet).\nlatest-versions                Checks all the latest versions of the Dockerfile contents.\nrun                            Run a Dockerfile from the command at the top of the file (ex. DIR=telnet).\nshellcheck                     Runs the shellcheck tests on the scripts.\ntest                           Runs the tests on the repository.\n```\n"
+        },
+        {
+          "name": "ab",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "afterthedeadline",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "android-tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ansible",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "apt-file",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "aspell",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "atom",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "audacity",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "awscli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "azure-cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bashrc",
+          "type": "blob",
+          "size": 1.314453125,
+          "content": "#!/bin/bash\n\ncommand_not_found_handle () {\n\t# Check if there is a container image with that name\n\tif ! docker inspect --format '{{ .Author }}' \"$1\" >&/dev/null; then\n\t\techo \"$0: $1: command not found\"\n\t\treturn\n\tfi\n\n\t# Check that it's really the name of the image, not a prefix\n\tif docker inspect --format '{{ .Id }}' \"$1\" | grep -q \"^$1\" ;then\n\t\techo \"$0: $1: command not found\"\n\t\treturn\n\tfi\n\n\t# Add a bunch of (optional) devices\n\t# (Don't add them unconditionally: if they don't exist, it\n\t# would prevent the container from starting)\n\tDEVICES=\n\tfor DEV in /dev/kvm /dev/ttyUSB* /dev/dri/* /dev/snd/*; do\n\t\tif [ -b \"$DEV\" ] || [ -c \"$DEV\" ]; then\n\t\t\tDEVICES=\"$DEVICES --device $DEV:$DEV\"\n\t\tfi\n\tdone\n\n\t# And a few (optional) files\n\t# (Here again, they don't always exist everywhere)\n\tVOLUMES=\n\tfor VOL in /tmp/.X11-unix /run/user; do\n\t\tif [ -e \"$VOL\" ]; then\n\t\t\tVOLUMES=\"$VOLUMES --volume $VOL:$VOL\"\n\t\tfi\n\tdone\n\n\t# Check if we are on a tty to decide whether to allocate one\n\tDASHT=\n\ttty -s && DASHT=-t\n\n\t# shellcheck disable=SC2086\n\t# shellcheck disable=SC2046\n\tdocker run $DASHT -i -u $(whoami) -w \"$HOME\" \\\n\t\t$(env | cut -d= -f1 | awk '{print \"-e\", $1}') \\\n\t\t$DOCKERFILES_RUN_FLAGS \\\n\t\t$DEVICES \\\n\t\t$VOLUMES \\\n\t\t-v /etc/passwd:/etc/passwd:ro \\\n\t\t-v /etc/group:/etc/group:ro \\\n\t\t-v /etc/localtime:/etc/localtime:ro \\\n\t\t-v /home:/home \\\n\t\t\"$@\"\n}\n"
+        },
+        {
+          "name": "bcc",
+          "type": "blob",
+          "size": 0.0087890625,
+          "content": "bcc-tools"
+        },
+        {
+          "name": "bcc-tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "beeswithmachineguns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bpftrace",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "brok",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "browsh",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build-all.sh",
+          "type": "blob",
+          "size": 2.1669921875,
+          "content": "#!/bin/bash\nset -e\nset -o pipefail\n\nSCRIPT=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\" && pwd)/$(basename \"${BASH_SOURCE[0]}\")\"\nREPO_URL=\"${REPO_URL:-r.j3ss.co}\"\nJOBS=${JOBS:-2}\n\nERRORS=\"$(pwd)/errors\"\n\nbuild_and_push(){\n\tbase=$1\n\tsuite=$2\n\tbuild_dir=$3\n\n\techo \"Building ${REPO_URL}/${base}:${suite} for context ${build_dir}\"\n\tdocker build --rm --force-rm -t \"${REPO_URL}/${base}:${suite}\" \"${build_dir}\" || return 1\n\n\t# on successful build, push the image\n\techo \"                       ---                                   \"\n\techo \"Successfully built ${base}:${suite} with context ${build_dir}\"\n\techo \"                       ---                                   \"\n\n\t# try push a few times because notary server sometimes returns 401 for\n\t# absolutely no reason\n\tn=0\n\tuntil [ $n -ge 5 ]; do\n\t\tdocker push --disable-content-trust=false \"${REPO_URL}/${base}:${suite}\" && break\n\t\techo \"Try #$n failed... sleeping for 15 seconds\"\n\t\tn=$((n+1))\n\t\tsleep 15\n\tdone\n\n\t# also push the tag latest for \"stable\" (chrome), \"tools\" (wireguard) or \"3.5\" tags for zookeeper\n\tif [[ \"$suite\" == \"stable\" ]] || [[ \"$suite\" == \"3.6\" ]] || [[ \"$suite\" == \"tools\" ]]; then\n\t\tdocker tag \"${REPO_URL}/${base}:${suite}\" \"${REPO_URL}/${base}:latest\"\n\t\tdocker push --disable-content-trust=false \"${REPO_URL}/${base}:latest\"\n\tfi\n}\n\ndofile() {\n\tf=$1\n\timage=${f%Dockerfile}\n\tbase=${image%%\\/*}\n\tbuild_dir=$(dirname \"$f\")\n\tsuite=${build_dir##*\\/}\n\n\tif [[ -z \"$suite\" ]] || [[ \"$suite\" == \"$base\" ]]; then\n\t\tsuite=latest\n\tfi\n\n\t{\n\t\t$SCRIPT build_and_push \"${base}\" \"${suite}\" \"${build_dir}\"\n\t} || {\n\t# add to errors\n\techo \"${base}:${suite}\" >> \"$ERRORS\"\n}\necho\necho\n}\n\nmain(){\n\t# get the dockerfiles\n\tIFS=$'\\n'\n\tmapfile -t files < <(find -L . -iname '*Dockerfile' | sed 's|./||' | sort)\n\tunset IFS\n\n\t# build all dockerfiles\n\techo \"Running in parallel with ${JOBS} jobs.\"\n\tparallel --tag --verbose --ungroup -j\"${JOBS}\" \"$SCRIPT\" dofile \"{1}\" ::: \"${files[@]}\"\n\n\tif [[ ! -f \"$ERRORS\" ]]; then\n\t\techo \"No errors, hooray!\"\n\telse\n\t\techo \"[ERROR] Some images did not build correctly, see below.\" >&2\n\t\techo \"These images failed: $(cat \"$ERRORS\")\" >&2\n\t\texit 1\n\tfi\n}\n\nrun(){\n\targs=$*\n\tf=$1\n\n\tif [[ \"$f\" == \"\" ]]; then\n\t\tmain \"$args\"\n\telse\n\t\t$args\n\tfi\n}\n\nrun \"$@\"\n"
+        },
+        {
+          "name": "buttslock",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cathode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "certbot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cf-reset-cache",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cfssl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "checkup",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cheese",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "chrome",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "chromium",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clair",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cli53",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "clisp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cloudapp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "consul",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "coredns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "couchpotato",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cura",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "curl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dcos-cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "debootstrap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "distcc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doctor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dunnet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "evince",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "figma-wine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "firefox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fleet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fontforge",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fontpatcher",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "foss-heartbeat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "freeradius",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gcalcli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gcc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gcloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "geary",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ghostscript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gimp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "github-dev",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gitiles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gitserver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gitsome",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gixy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "glxgears",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gmail-britta",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gnuplot",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "golinks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gparted",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "guetzli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hollywood",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "htop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "htpasswd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "httpbin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "httpie",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "iceweasel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "imagemagick",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "imagemin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "inkscape",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "irssi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "john",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jq",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "k8scan",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "keepass2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "keepassxc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kernel-builder",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kicad",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kvm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "latest-versions.sh",
+          "type": "blob",
+          "size": 4.494140625,
+          "content": "#!/bin/bash\n# This script gets the latest GitHub releases for the specified projects.\n\nif [[ -z \"$GITHUB_TOKEN\" ]]; then\n\techo \"Set the GITHUB_TOKEN env variable.\"\n\texit 1\nfi\n\nURI=https://api.github.com\nAPI_VERSION=v3\nAPI_HEADER=\"Accept: application/vnd.github.${API_VERSION}+json\"\nAUTH_HEADER=\"Authorization: token ${GITHUB_TOKEN}\"\n\nget_latest() {\n\tlocal repo=$1\n\n\tlocal resp\n\tresp=$(curl -sSL -H \"${AUTH_HEADER}\" -H \"${API_HEADER}\" \"${URI}/repos/${repo}/releases\")\n\tif [[ \"$repo\" != \"Radarr/Radarr\" ]]; then\n\t\tresp=$(echo \"$resp\" | jq --raw-output '[.[] | select(.prerelease == false)]')\n\tfi\n\tlocal tag\n\ttag=$(echo \"$resp\" | jq -e --raw-output .[0].tag_name)\n\tlocal name\n\tname=$(echo \"$resp\" | jq -e --raw-output .[0].name)\n\n\tif [[ \"$tag\" == \"null\" ]]; then\n\t\t# get the latest tag\n\t\tresp=$(curl -sSL -H \"${AUTH_HEADER}\" -H \"${API_HEADER}\" \"${URI}/repos/${repo}/tags\")\n\t\ttag=$(echo \"$resp\" | jq -e --raw-output .[0].name)\n\t\ttag=${tag#release-}\n\tfi\n\n\tif [[ \"$name\" == \"null\" ]] || [[ \"$name\" == \"\" ]]; then\n\t\tname=\"-\"\n\tfi\n\n\tlocal dir=${repo#*/}\n\n\tif [[ \"$dir\" == \"CouchPotatoServer\" ]]; then\n\t\tdir=\"couchpotato\"\n\telif [[ \"$dir\" == \"cri-o\" ]]; then\n\t\tdir=\"crio\"\n\telif [[ \"$dir\" == \"byte-unixbench\" ]]; then\n\t\tdir=\"unixbench\"\n\telif [[ \"$dir\" == \"Tautulli\" ]]; then\n\t\tdir=\"plexpy\"\n\telif [[ \"$dir\" == \"zookeeper\" ]]; then\n\t\tdir=\"zookeeper/3.6\"\n\telif [[ \"$dir\" == \"oauth2_proxy\" ]]; then\n\t\tdir=\"oauth2-proxy\"\n\tfi\n\n\t# Change to upper case for grep\n\tlocal udir\n\tudir=$(echo $dir | awk '{print toupper($0)}')\n\t# Replace dashes (-) with underscores (_)\n\tudir=${udir//-/_}\n\tudir=${udir%/*}\n\n\tif [[ \"$dir\" == \"wireguard-tools\" ]]; then\n\t\tdir=\"wireguard/install\"\n\t\tudir=\"WIREGUARD_TOOLS\"\n\telif [[ \"$dir\" == \"wireguard-linux-compat\" ]]; then\n\t\tdir=\"wireguard/install\"\n\t\tudir=\"WIREGUARD\"\n\tfi\n\n\tlocal current\n\tif [[ ! -d \"$dir\" ]]; then\n\t\t# If the directory does not exist, then grep all for it\n\t\tcurrent=$(grep -m 1 \"${udir}_VERSION\" -- **/Dockerfile | head -n 1 | awk '{print $(NF)}')\n\telse\n\t\tcurrent=$(grep -m 1 \"${udir}_VERSION\" \"${dir}/Dockerfile\" | awk '{print $(NF)}')\n\tfi\n\n\n\tcompare \"$name\" \"$dir\" \"$tag\" \"$current\" \"https://github.com/${repo}/releases\"\n}\n\nget_latest_unifi() {\n\tlocal latest current\n\tlatest=$(curl -sSL http://www.ubnt.com/downloads/unifi/debian/dists/cloudkey-stable/ubiquiti/binary-armhf/Packages \\\n\t\t| awk 'BEGIN {FS=\"\\n\"; RS=\"\";} /^Package: unifi/' \\\n\t\t| awk '/^Version:/ {print $2}' \\\n\t\t| cut -d- -f1)\n\n\tcurrent=$(grep -m 1 UNIFI_VERSION unifi/Dockerfile | tr '\"' ' ' | awk '{print $(NF)}')\n\n\tcompare unifi unifi \"$latest\" \"$current\" https://www.ubnt.com/download/unifi\n}\n\ncompare() {\n\tlocal name=\"$1\" dir=\"$2\" tag=\"$3\" current=\"$4\" releases=\"$5\"\n\tignore_dirs=( \"mc\" \"zookeeper/3.6\" )\n\n\tif [[ \"$tag\" =~ $current ]] || [[ \"$name\" =~ $current ]] || [[ \"$current\" =~ $tag ]] || [[ \"$current\" == \"master\" ]]; then\n\t\techo -e \"\\\\e[36m${dir}:\\\\e[39m current ${current} | ${tag} | ${name}\"\n\telse\n\t\t# add to the bad versions\n\t\tif [[ ! \" ${ignore_dirs[*]} \" =~  ${dir}  ]]; then\n\t\t\tbad_versions+=( \"${dir}\" )\n\t\tfi\n\t\techo -e \"\\\\e[31m${dir}:\\\\e[39m current ${current} | ${tag} | ${name} | ${releases}\"\n\tfi\n}\n\nprojects=(\n\tiovisor/bcc\n\tiovisor/bpftrace\n\tbrowsh-org/browsh\n\tcertbot/certbot\n\tcloudflare/cfssl\n\tquay/clair\n\thashicorp/consul\n\tcoredns/coredns\n\tCouchPotato/CouchPotatoServer\n\tcurl/curl\n\tkolide/fleet\n\tGoogleCloudPlatform/cloud-sdk-docker\n\tgoogle/gitiles\n\tgoogle/guetzli\n\tirssi/irssi\n\tcryptodotis/irssi-otr\n\tkeepassxreboot/keepassxc\n\trobertdavidgraham/masscan\n\tMidnightCommander/mc\n\tzyedidia/micro\n\tmitmproxy/mitmproxy\n\thashicorp/nomad\n\tnzbget/nzbget\n\tpusher/oauth2_proxy\n\tfacebook/osquery\n\thashicorp/packer\n\tTautulli/Tautulli\n\tperkeep/perkeep\n\tpomerium/pomerium\n\tpowershell/powershell\n\tRadarr/Radarr\n\tcesanta/docker_auth\n\tricochet-im/ricochet\n\treverse-shell/routersploit\n\trstudio/rstudio\n\ttarsnap/tarsnap\n\tnginx/nginx\n\tsimplresty/ngx_devel_kit\n\topenresty/luajit2\n\topenresty/lua-cjson\n\topenresty/lua-nginx-module\n\tleev/ngx_http_geoip2_module\n\tmaxmind/libmaxminddb\n\topenresty/lua-resty-core\n\topenresty/lua-resty-lrucache\n\thashicorp/terraform\n\tkdlucas/byte-unixbench\n\tmitchellh/vagrant\n\thashicorp/vault\n\tcontainrrr/watchtower\n\twireguard/wireguard-tools\n\twireguard/wireguard-linux-compat\n\tznc/znc\n\tapache/zookeeper\n\ttianon/gosu\n)\n\nother_projects=(\n\tunifi\n)\n\nbad_versions=()\n\nmain() {\n\t# shellcheck disable=SC2068\n\tfor p in ${projects[@]}; do\n\t\tget_latest \"$p\"\n\tdone\n\t# shellcheck disable=SC2068\n\tfor p in ${other_projects[@]}; do\n\t\tget_latest_\"$p\"\n\tdone\n\n\tif [[ ${#bad_versions[@]} -ne 0 ]]; then\n\t\techo\n\t\techo \"These Dockerfiles are not up to date: ${bad_versions[*]}\" >&2\n\t\texit 1\n\tfi\n}\n\nmain\n"
+        },
+        {
+          "name": "libreoffice",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libvirt-client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lilyterm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "linapple",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lkp-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lpass",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lynx",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mailgun",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mars",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "masscan",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mdp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "micro",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mitmproxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mpd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mpsyt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mutt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ncmpc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "neoman",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nerdy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "netcat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nginx-extras",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nmap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "no_new_privs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "node-sonos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nomad",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "notify-osd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nzbget",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "oauth2-proxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "openbmc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "openscad",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "openvpn",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "osquery",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pandoc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "parrot-live",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pdp-10",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "perkeep",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pivman",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "plex-home-theater",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "plexpy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pms",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pomerium",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "postfix",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "powershell-azure",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "powershell",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "privoxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "protocol",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pulseaudio",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "radarr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rainbowstream",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rdesktop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "registry-auth",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "remmina",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requestbin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ricochet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "routersploit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rstudio",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rt-tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "run.sh",
+          "type": "blob",
+          "size": 0.8115234375,
+          "content": "#!/bin/bash\n#\n# This script allows you to launch several images\n# from this repository once they're built.\n#\n# Make sure you add the `docker run` command\n# in the header of the Dockerfile so the script\n# can find it and execute it.\n#\n# Use pulseaudio/Dockerfile and skype/Dockerfile as examples.\nset -e\nset -o pipefail\n\nif [[ $# -eq 0 ]]; then\n\techo \"Usage: $0 [--test] image1 image2 ...\"\n\texit 1\nfi\n\nif [[ \"$1\" = \"--test\" ]]; then\n\tTEST=1\n\tshift\nfi\n\nfor name in \"$@\"; do\n\tif [[ ! -d \"$name\" ]]; then\n\t\techo \"Unable to find container configuration with name: $name\"\n\t\texit 1\n\tfi\n\n\tscript=$(sed -n '/docker run/,/^#$/p' \"$name/Dockerfile\" | head -n -1 | sed \"s/#//\" | sed \"s#\\\\\\\\##\" | tr '\\n' ' ' | sed \"s/\\$@//\" | sed 's/\"\"//')\n\techo \"Running: $script\"\n\n\tif [ $TEST ]; then\n\t\techo \"$script\"\n\telse\n\t\teval \"$script\"\n\tfi\n\n\tshift\ndone\n"
+        },
+        {
+          "name": "runc-rootless",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "s3cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scudcloud",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shellcheck.sh",
+          "type": "blob",
+          "size": 0.4599609375,
+          "content": "#!/bin/bash\nset -e\nset -o pipefail\n\nERRORS=()\n\n# find all executables and run `shellcheck`\nfor f in $(find . -type f -not -iwholename '*.git*' -not -name \"Dockerfile\" | sort -u); do\n\tif file \"$f\" | grep --quiet shell; then\n\t\t{\n\t\t\tshellcheck \"$f\" && echo \"[OK]: sucessfully linted $f\"\n\t\t} || {\n\t\t\t# add to errors\n\t\t\tERRORS+=(\"$f\")\n\t\t}\n\tfi\ndone\n\nif [ ${#ERRORS[@]} -eq 0 ]; then\n\techo \"No errors, hooray\"\nelse\n\techo \"These files failed shellcheck: ${ERRORS[*]}\"\n\texit 1\nfi\n"
+        },
+        {
+          "name": "shellcheck",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shorewall",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sickbeard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "skype",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "slack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "slapd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sonarr",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spotify-wine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "spotify",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "strace",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "stress",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sublime-text-3",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "t",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tarsnap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "telize",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "telnet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "termboy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "terraform",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.sh",
+          "type": "blob",
+          "size": 1.2822265625,
+          "content": "#!/bin/bash\nset -e\nset -o pipefail\n\n# this is kind of an expensive check, so let's not do this twice if we\n# are running more than one validate bundlescript\nVALIDATE_REPO='https://github.com/jessfraz/dockerfiles.git'\nVALIDATE_BRANCH='master'\n\nVALIDATE_HEAD=\"$(git rev-parse --verify HEAD)\"\n\ngit fetch -q \"$VALIDATE_REPO\" \"refs/heads/$VALIDATE_BRANCH\"\nVALIDATE_UPSTREAM=\"$(git rev-parse --verify FETCH_HEAD)\"\n\nVALIDATE_COMMIT_DIFF=\"$VALIDATE_UPSTREAM...$VALIDATE_HEAD\"\n\nvalidate_diff() {\n\tif [ \"$VALIDATE_UPSTREAM\" != \"$VALIDATE_HEAD\" ]; then\n\t\tgit diff \"$VALIDATE_COMMIT_DIFF\" \"$@\"\n\telse\n\t\tgit diff HEAD~ \"$@\"\n\tfi\n}\n\n# get the dockerfiles changed\nIFS=$'\\n'\n# shellcheck disable=SC2207\nfiles=( $(validate_diff --name-only -- '*Dockerfile') )\nunset IFS\n\n# build the changed dockerfiles\n# shellcheck disable=SC2068\nfor f in ${files[@]}; do\n\tif ! [[ -e \"$f\" ]]; then\n\t\tcontinue\n\tfi\n\n\tbuild_dir=$(dirname \"$f\")\n\tbase=\"${build_dir%%\\/*}\"\n\tsuite=\"${build_dir##$base}\"\n\tsuite=\"${suite##\\/}\"\n\n\tif [[ -z \"$suite\" ]]; then\n\t\tsuite=latest\n\tfi\n\n\t(\n\tset -x\n\tdocker build -t \"${base}:${suite}\" \"${build_dir}\"\n\t)\n\n\techo \"                       ---                                   \"\n\techo \"Successfully built ${base}:${suite} with context ${build_dir}\"\n\techo \"                       ---                                   \"\ndone\n"
+        },
+        {
+          "name": "tetris",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "texlive",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tor-browser",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tor-proxy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tor-relay",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tor-router",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "traceroute",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "transfer-sh",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "transmission-ui",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "transmission",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "travis",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "troff",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "unifi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "unixbench",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vagrant",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vault",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "viewdocs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "virt-viewer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "virtualbox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vlc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vscode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wargames",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "watchtower",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wee-slack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "weechat-matrix",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "weechat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wg",
+          "type": "blob",
+          "size": 0.0087890625,
+          "content": "wireguard"
+        },
+        {
+          "name": "wine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wireguard",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wireshark",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wrk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ykman",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ykpersonalize",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "yubico-piv-tool",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "znc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zookeeper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zoom-us",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zsh",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,302 @@
+{
+  "metadata": {
+    "timestamp": 1736711305402,
+    "page": 61,
+    "hasNextPage": false,
+    "endCursor": "Y3Vyc29yOjY4",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tianon/dockerfiles",
+      "stars": 1099,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.041015625,
+          "content": "Dockerfile*  linguist-language=Dockerfile\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.017578125,
+          "content": "/.jq-template.awk\n"
+        },
+        {
+          "name": ".gsl-common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".libs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.03125,
+          "content": "The Expat/MIT License\n\nPermission is hereby granted, free of charge, to any person obtaining a\ncopy of this software and associated documentation files (the \"Software\"),\nto deal in the Software without restriction, including without limitation\nthe rights to use, copy, modify, merge, publish, distribute, sublicense,\nand/or sell copies of the Software, and to permit persons to whom the \nSoftware is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in \nall copies or substantial portions of the Software. \n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR \nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, \nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL \nTHE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER \nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING \nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER \nDEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.294921875,
+          "content": "# Tianon's Dockerfiles\n\n[![Build Status](https://github.com/tianon/dockerfiles/workflows/GitHub%20CI/badge.svg)](https://github.com/tianon/dockerfiles/actions?query=workflow%3A%22GitHub+CI%22)\n\nThis is a collection of both miscellaneous development experiments and images I rely on for various things.\n"
+        },
+        {
+          "name": "apply-templates.sh",
+          "type": "blob",
+          "size": 1.716796875,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\njqt=\"$(dirname \"$BASH_SOURCE\")\"\njqt=\"$jqt/.jq-template.awk\"\nif [ -n \"${BASHBREW_SCRIPTS:-}\" ]; then\n\tjqt=\"$BASHBREW_SCRIPTS/jq-template.awk\"\nelif [ \"$BASH_SOURCE\" -nt \"$jqt\" ]; then\n\t# https://github.com/docker-library/bashbrew/blob/master/scripts/jq-template.awk\n\tjqtNew=\"$jqt.new.$$\" # using a (unique) \".new\" file so this is safe to run concurrently\n\twget -qO \"$jqtNew\" 'https://github.com/docker-library/bashbrew/raw/1da7341a79651d28fbcc3d14b9176593c4231942/scripts/jq-template.awk'\n\tmv -f \"$jqtNew\" \"$jqt\"\nfi\njqt=\"$(readlink -ve \"$jqt\")\"\n\nif [ \"$#\" -eq 0 ]; then\n\tdirs=\"$(find -type f -name versions.json -exec bash -Eeuo pipefail -c 'for d; do dir=\"$(dirname \"${d#./}\")\"; printf \" %q\" \"$dir\"; done' -- '{}' +)\"\n\teval \"set -- $dirs\"\nfi\nif [ \"$#\" -eq 0 ]; then\n\techo >&2 \"error: failed to find any 'versions.json' files!\"\n\texit 1\nfi\n\ngenerated_warning() {\n\tcat <<-EOH\n\t\t#\n\t\t# NOTE: THIS DOCKERFILE IS GENERATED VIA \"apply-templates.sh\"\n\t\t#\n\t\t# PLEASE DO NOT EDIT IT DIRECTLY.\n\t\t#\n\n\tEOH\n}\n\nfor dir; do\n\texport dir\n\n\ttemplate=\"$dir\"\n\twhile [ ! -s \"$template/Dockerfile.template\" ]; do\n\t\tif [ \"$template\" = '.' ]; then\n\t\t\techo >&2 \"error: failed to find template for '$dir'!\"\n\t\t\texit 1\n\t\tfi\n\t\ttemplate=\"$(dirname \"$template\")\"\n\tdone\n\n\tvariants=\"$(jq -r '.variants // [\"\"] | map(@sh) | join(\" \")' \"$dir/versions.json\")\"\n\teval \"variants=( $variants )\"\n\n\ttext=\"$dir\"\n\tif [ \"$dir\" != \"$template\" ]; then\n\t\ttext+=\" ($template)\"\n\tfi\n\ttemplate=\"$template/Dockerfile.template\"\n\n\tfor variant in \"${variants[@]}\"; do\n\t\texport variant\n\n\t\techo \"processing $text${variant:+\" variant '$variant'\"} ...\"\n\n\t\t(\n\t\t\tcd \"$dir\"\n\t\t\tgenerated_warning\n\t\t\tgawk -f \"$jqt\"\n\t\t) < \"$template\" > \"$dir/Dockerfile${variant:+\".$variant\"}\"\n\tdone\ndone\n"
+        },
+        {
+          "name": "backblaze-b2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "beets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "buildkit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "containerd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "coredns",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cygwin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "diffoscope",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-desktop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-master",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "exim4",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "firefox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gitlab",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gsl-libs.sh",
+          "type": "blob",
+          "size": 3.4111328125,
+          "content": "#!/bin/bash\nset -Eeuo pipefail\n\n: \"${dockerfile:=Dockerfile}\"\n: \"${variantAppendOrder:=postfix}\" # \"postfix\" or \"prefix\" (\"tianon/foo:1.2.3-bar\" vs \"tianon/foo:bar-1.2.3\")\ndeclare -a extraCommitFiles\n\n# get the most recent commit which modified any of \"$@\"\nfileCommit() {\n\tgit log -1 --format='format:%H' HEAD -- \"$@\"\n}\n\n# get the most recent commit which modified \"$1/Dockerfile\" or any file COPY'd from \"$1/Dockerfile\"\ndirCommit() {\n\tlocal dir=\"$1\"; shift\n\t(\n\t\tcd \"$dir\"\n\t\tlocal files\n\t\tfiles=\"$(git show HEAD:\"./$dockerfile\" | awk '\n\t\t\ttoupper($1) == \"COPY\" {\n\t\t\t\tfor (i = 2; i < NF; i++) {\n\t\t\t\t\tif ($i ~ /^--from=/) {\n\t\t\t\t\t\tnext\n\t\t\t\t\t}\n\t\t\t\t\tprint $i\n\t\t\t\t}\n\t\t\t}\n\t\t')\"\n\t\tfileCommit \"$dockerfile\" $files \"${extraCommitFiles[@]}\"\n\t)\n}\n\n# prints \"$2$1$3$1...$N\"\njoin() {\n\tlocal sep=\"$1\"; shift\n\tlocal out; printf -v out \"${sep//%/%%}%s\" \"$@\"\n\techo \"${out#$sep}\"\n}\n\nglobalEntry() {\n\tcat <<-EOH\n\t\tMaintainers: Tianon Gravi <tianon@tianon.xyz> (@tianon)\n\t\tGitRepo: https://github.com/${2:-tianon}/${1:-dockerfiles}.git\n\tEOH\n}\n\ntagsEntry() {\n\tlocal dir=\"$1\"; shift\n\tlocal tags=( \"$@\" )\n\n\tlocal commit; commit=\"$(dirCommit \"$dir\")\"\n\n\tcat <<-EOE\n\n\t\tTags: $(join ', ' \"${tags[@]}\")\n\t\tGitCommit: $commit\n\tEOE\n\tif [ \"$dir\" != '.' ]; then\n\t\techo \"Directory: $dir\"\n\tfi\n\tif [ \"$dockerfile\" != 'Dockerfile' ]; then\n\t\techo \"File: $dockerfile\"\n\tfi\n}\n\n_versionAliasesHelper() {\n\tlocal fullVersion=\"$1\"; shift\n\n\t# replace \"~\" with \"-\"\n\tlocal tilde='~'\n\tfullVersion=\"${fullVersion//$tilde/-}\"\n\n\t# remove any leading \"v\"\n\tfullVersion=\"${fullVersion#v}\"\n\n\tversionAliases=()\n\twhile [ \"${fullVersion%[.-]*}\" != \"$fullVersion\" ]; do\n\t\tversionAliases+=( \"$fullVersion\" )\n\t\tfullVersion=\"${fullVersion%[.-]*}\"\n\tdone\n\tversionAliases+=( \"$fullVersion\" )\n}\n\nversionedTagsEntry() {\n\tlocal dir=\"$1\"; shift\n\tlocal fullVersion=\"$1\"; shift\n\tlocal aliases=( \"$@\" )\n\n\t_versionAliasesHelper \"$fullVersion\"\n\tversionAliases+=( \"${aliases[@]}\" )\n\n\ttagsEntry \"$dir\" \"${versionAliases[@]}\"\n}\n\n_versionEnvHelper() {\n\tlocal dir=\"$1\"; shift\n\tlocal fullVersionEnv=\"$1\"; shift\n\n\tlocal commit=\"$(dirCommit \"$dir\")\"\n\tlocal fullVersion=\"$(git -C \"$dir\" show \"$commit\":\"./$dockerfile\" | awk '$1 == \"ENV\" && $2 == \"'\"$fullVersionEnv\"'\" { print $3; exit }')\"\n\t[ -n \"$fullVersion\" ]\n\n\techo \"$fullVersion\"\n}\n\nversionedEnvTagsEntry() {\n\tlocal dir=\"$1\"; shift\n\tlocal fullVersionEnv=\"$1\"; shift\n\tlocal aliases=( \"$@\" )\n\n\tlocal fullVersion; fullVersion=\"$(_versionEnvHelper \"$dir\" \"$fullVersionEnv\")\"\n\t[ -n \"$fullVersion\" ]\n\n\tversionedTagsEntry \"$dir\" \"$fullVersion\" \"${aliases[@]}\"\n}\n\n# for variants whose version number comes from the variant Dockerfile (openjdk:alpine)\nversionedVariantEntry() {\n\tlocal dir=\"$1\"; shift\n\tlocal variant=\"$1\"; shift\n\tlocal fullVersion=\"$1\"; shift\n\tlocal aliases=( \"$@\" )\n\n\t_versionAliasesHelper \"$fullVersion\"\n\n\tif [ \"$variantAppendOrder\" = 'postfix' ]; then\n\t\tvariantAliases=( \"${versionAliases[@]/%/-$variant}\" )\n\telse\n\t\tvariantAliases=( \"${versionAliases[@]/#/$variant-}\" )\n\tfi\n\t#variantAliases=( \"${variantAliases[@]//latest-/}\" )\n\tvariantAliases+=( \"${aliases[@]}\" )\n\n\ttagsEntry \"$dir\" \"${variantAliases[@]}\"\n}\n\n# for variants whose version number comes from the variant Dockerfile (openjdk:alpine)\nversionedEnvVariantEntry() {\n\tlocal dir=\"$1\"; shift\n\tlocal variant=\"$1\"; shift\n\tlocal fullVersionEnv=\"$1\"; shift\n\tlocal aliases=( \"$@\" )\n\n\tlocal fullVersion; fullVersion=\"$(_versionEnvHelper \"$dir\" \"$fullVersionEnv\")\"\n\t[ -n \"$fullVersion\" ]\n\n\tversionedVariantEntry \"$dir\" \"$variant\" \"$fullVersion\" \"${aliases[@]}\"\n}\n"
+        },
+        {
+          "name": "handbrake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hell-win",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "infosiftr-moby",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "jenkins",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lutris",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "makemkv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "microsoft-edge",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mojo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mutt-gmail",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "network-toolbox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "nolibc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "parallel.sh",
+          "type": "blob",
+          "size": 0.603515625,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\nscript=\"$1\"\n[ -x \"$script\" ]\nshift\n\ncase \"$script\" in\n\t/* | */*) ;;\n\t*) script=\"./$script\" ;;\nesac\n\nif [ \"$#\" -eq 0 ]; then\n\tdirs=\"$(find -type f -name versions.json -exec bash -Eeuo pipefail -c 'for d; do dir=\"$(dirname \"${d#./}\")\"; printf \" %q\" \"$dir\"; done' -- '{}' +)\"\n\teval \"set -- $dirs\"\nfi\nif [ \"$#\" -eq 0 ]; then\n\techo >&2 \"error: failed to find any 'versions.json' files!\"\n\texit 1\nfi\n\nnproc=\"$(nproc)\"\nxargs <<<\"$*\" -rtn1 -P \"$nproc\" \"$script\"\n# TODO \"$*\" here irks me -- I would love to do something cleaner (although it's mostly fine for the use case of this script)\n"
+        },
+        {
+          "name": "perl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "plex",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "prometheus",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rtl-433",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rtorrent",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "signal-desktop",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "slack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sleeping-beauty",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "speedtest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "steam",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tailscale",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tinygo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "toybox",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "true",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "update.sh",
+          "type": "blob",
+          "size": 0.1533203125,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\ndir=\"$(readlink -ve \"$BASH_SOURCE\")\"\ndir=\"$(dirname \"$dir\")\"\n\n\"$dir/versions.sh\" \"$@\"\n\"$dir/apply-templates.sh\" \"$@\"\n"
+        },
+        {
+          "name": "versions.sh",
+          "type": "blob",
+          "size": 0.73046875,
+          "content": "#!/usr/bin/env bash\nset -Eeuo pipefail\n\nif [ \"$#\" -eq 0 ]; then\n\tdirs=\"$(find -type f -name versions.json -exec bash -Eeuo pipefail -c 'for d; do dir=\"$(dirname \"${d#./}\")\"; printf \" %q\" \"$dir\"; done' -- '{}' +)\"\n\teval \"set -- $dirs\"\nfi\nif [ \"$#\" -eq 0 ]; then\n\techo >&2 \"error: failed to find any 'versions.json' files!\"\n\texit 1\nfi\n\nfor dir; do\n\texport dir\n\n\tscript=\"$dir\"\n\twhile [ ! -x \"$script/versions.sh\" ]; do\n\t\tif [ \"$script\" = '.' ]; then\n\t\t\techo >&2 \"error: failed to find script for '$dir'!\"\n\t\t\texit 1\n\t\tfi\n\t\tscript=\"$(dirname \"$script\")\"\n\tdone\n\n\ttext=\"$dir\"\n\tif [ \"$dir\" != \"$script\" ]; then\n\t\ttext+=\" ($script)\"\n\tfi\n\techo \"processing $text ...\"\n\n\tscript=\"$(readlink -ve \"$script/versions.sh\")\"\n\t(\n\t\tcd \"$dir\"\n\t\tsource \"$script\"\n\t)\ndone\n"
+        },
+        {
+          "name": "vultr-cli",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "weechat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wine",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ymlfmt",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zoom",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

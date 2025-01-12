@@ -1,0 +1,46 @@
+{
+  "metadata": {
+    "timestamp": 1736711298912,
+    "page": 45,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rails/docked",
+      "stars": 1310,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.248046875,
+          "content": "ARG RUBY_VERSION=3.3.0\n\nFROM ruby:$RUBY_VERSION-slim\n\n# Install dependencies\nRUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git\n\n# Ensure node.js 20 is available for apt-get\nARG NODE_MAJOR=20\nRUN apt-get update && \\\n    mkdir -p /etc/apt/keyrings && \\\n    curl --fail --silent --show-error --location https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \\\n    echo \"deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main\" | tee /etc/apt/sources.list.d/nodesource.list\n\n# Install node and yarn\nRUN apt-get update -qq && apt-get install -y nodejs && npm install -g yarn\n\n# Mount $PWD to this workdir\nWORKDIR /rails\n\n# Ensure gems are installed on a persistent volume and available as bins\n# Make the folder world writable to let the default user install the gems\nRUN mkdir /bundle && chmod -R ugo+rwt /bundle\nVOLUME /bundle\nENV BUNDLE_PATH='/bundle'\nENV PATH=\"/bundle/ruby/$RUBY_VERSION/bin:${PATH}\"\n\n# Install Rails\nRUN gem install rails\n\n# Ensure binding is always 0.0.0.0, even in development, to access server from outside container\nENV BINDING=\"0.0.0.0\"\n\n# Overwrite ruby image's entrypoint to provide open cli\nENTRYPOINT [\"\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0556640625,
+          "content": "MIT License\n\nCopyright (c) 2022 David Heinemeier Hansson\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.14453125,
+          "content": "# Docked Rails CLI\n\nSetting up Rails for the first time with all the dependencies necessary can be daunting for beginners. Docked Rails CLI uses a Docker image to make it much easier, requiring only Docker to be installed.\n\nInstall [Docker](https://www.docker.com/products/docker-desktop/) (and [WSL](https://learn.microsoft.com/en-us/windows/wsl/install) on Windows). Then copy'n'paste into your terminal:\n\n```bash\ndocker volume create ruby-bundle-cache\nalias docked='docker run --rm -it -v ${PWD}:/rails -u $(id -u):$(id -g) -v ruby-bundle-cache:/bundle -p 3000:3000 ghcr.io/rails/cli'\n```\n\nThen create your Rails app:\n\n```bash\ndocked rails new weblog\ncd weblog\ndocked rails generate scaffold post title:string body:text\ndocked rails db:migrate\ndocked rails server\n```\n\nThat's it! Your Rails app is running on `http://localhost:3000/posts`.\n\n## Sidenote\n\n`docked` is not intended to replace a full development setup. It is merely a way for newcomers to quickly get started with Rails. The included dependencies stick to what you need when running `rails new` without additional options. It does not include dependencies for running with PostgreSQL or Redis for example.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

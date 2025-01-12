@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736711285342,
+    "page": 12,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "aschmelyun/docker-compose-laravel",
+      "stars": 2621,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.021484375,
+          "content": "mysql\n.DS_Store\n.idea\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0517578125,
+          "content": "MIT License\n\nCopyright (c) 2020-2021 Andrew Schmelyun\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.8896484375,
+          "content": "# docker-compose-laravel\nA pretty simplified Docker Compose workflow that sets up a LEMP network of containers for local Laravel development. You can view the full article that inspired this repo [here](https://dev.to/aschmelyun/the-beauty-of-docker-for-local-laravel-development-13c0).\n\n## Usage\n\nTo get started, make sure you have [Docker installed](https://docs.docker.com/docker-for-mac/install/) on your system, and then clone this repository.\n\nNext, navigate in your terminal to the directory you cloned this, and spin up the containers for the web server by running `docker-compose up -d --build app`.\n\nAfter that completes, follow the steps from the [src/README.md](src/README.md) file to get your Laravel project added in (or create a new blank one).\n\n**Note**: Your MySQL database host name should be `mysql`, **not** `localhost`. The username and database should both be `homestead` with a password of `secret`. \n\nBringing up the Docker Compose network with `app` instead of just using `up`, ensures that only our site's containers are brought up at the start, instead of all of the command containers as well. The following are built for our web server, with their exposed ports detailed:\n\n- **nginx** - `:80`\n- **mysql** - `:3306`\n- **php** - `:9000`\n- **redis** - `:6379`\n- **mailhog** - `:8025` \n\nThree additional containers are included that handle Composer, NPM, and Artisan commands *without* having to have these platforms installed on your local computer. Use the following command examples from your project root, modifying them to fit your particular use case.\n\n- `docker-compose run --rm composer update`\n- `docker-compose run --rm npm run dev`\n- `docker-compose run --rm artisan migrate`\n\n## Permissions Issues\n\nIf you encounter any issues with filesystem permissions while visiting your application or running a container command, try completing one of the sets of steps below.\n\n**If you are using your server or local environment as the root user:**\n\n- Bring any container(s) down with `docker-compose down`\n- Replace any instance of `php.dockerfile` in the docker-compose.yml file with `php.root.dockerfile`\n- Re-build the containers by running `docker-compose build --no-cache`\n\n**If you are using your server or local environment as a user that is not root:**\n\n- Bring any container(s) down with `docker-compose down`\n- In your terminal, run `export UID=$(id -u)` and then `export GID=$(id -g)`\n- If you see any errors about readonly variables from the above step, you can ignore them and continue\n- Re-build the containers by running `docker-compose build --no-cache`\n\nThen, either bring back up your container network or re-run the command you were trying before, and see if that fixes it.\n\n## Persistent MySQL Storage\n\nBy default, whenever you bring down the Docker network, your MySQL data will be removed after the containers are destroyed. If you would like to have persistent data that remains after bringing containers down and back up, do the following:\n\n1. Create a `mysql` folder in the project root, alongside the `nginx` and `src` folders.\n2. Under the mysql service in your `docker-compose.yml` file, add the following lines:\n\n```\nvolumes:\n  - ./mysql:/var/lib/mysql\n```\n\n## Usage in Production\n\nWhile I originally created this template for local development, it's robust enough to be used in basic Laravel application deployments. The biggest recommendation would be to ensure that HTTPS is enabled by making additions to the `nginx/default.conf` file and utilizing something like [Let's Encrypt](https://hub.docker.com/r/linuxserver/letsencrypt) to produce an SSL certificate.\n\n## Compiling Assets\n\nThis configuration should be able to compile assets with both [laravel mix](https://laravel-mix.com/) and [vite](https://vitejs.dev/). In order to get started, you first need to add ` --host 0.0.0.0` after the end of your relevant dev command in `package.json`. So for example, with a Laravel project using Vite, you should see:\n\n```json\n\"scripts\": {\n  \"dev\": \"vite --host 0.0.0.0\",\n  \"build\": \"vite build\"\n},\n```\n\nThen, run the following commands to install your dependencies and start the dev server:\n\n- `docker-compose run --rm npm install`\n- `docker-compose run --rm --service-ports npm run dev`\n\nAfter that, you should be able to use `@vite` directives to enable hot-module reloading on your local Laravel application.\n\nWant to build for production? Simply run `docker-compose run --rm npm run build`.\n\n## MailHog\n\nThe current version of Laravel (9 as of today) uses MailHog as the default application for testing email sending and general SMTP work during local development. Using the provided Docker Hub image, getting an instance set up and ready is simple and straight-forward. The service is included in the `docker-compose.yml` file, and spins up alongside the webserver and database services.\n\nTo see the dashboard and view any emails coming through the system, visit [localhost:8025](http://localhost:8025) after running `docker-compose up -d site`.\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 2.021484375,
+          "content": "version: '3'\n\nnetworks:\n  laravel:\n\n\nservices:\n  app:\n    build:\n      context: ./dockerfiles\n      dockerfile: nginx.dockerfile\n      args:\n        - UID=${UID:-1000}\n        - GID=${GID:-1000}\n    ports:\n      - \"80:80\"\n    volumes:\n      - ./src:/var/www/html:delegated\n    depends_on:\n      - php\n      - redis\n      - mysql\n      - mailhog\n    networks:\n      - laravel\n\n  mysql:\n    image: mariadb:10.6\n    restart: unless-stopped\n    tty: true\n    ports:\n      - \"3306:3306\"\n    environment:\n      MYSQL_DATABASE: homestead\n      MYSQL_USER: homestead\n      MYSQL_PASSWORD: secret\n      MYSQL_ROOT_PASSWORD: secret\n      SERVICE_TAGS: dev\n      SERVICE_NAME: mysql\n    networks:\n      - laravel\n\n  php:\n    build:\n      context: ./dockerfiles\n      dockerfile: php.dockerfile\n      args:\n        - UID=${UID:-1000}\n        - GID=${GID:-1000}\n    ports:\n      - \"9000:9000\"\n    volumes:\n      - ./src:/var/www/html:delegated\n    networks:\n      - laravel\n\n  redis:\n    image: redis:alpine\n    restart: unless-stopped\n    ports:\n      - \"6379:6379\"\n    networks:\n      - laravel\n\n  composer:\n    build:\n      context: ./dockerfiles\n      dockerfile: php.dockerfile\n      args:\n        - UID=${UID:-1000}\n        - GID=${GID:-1000}\n    volumes:\n      - ./src:/var/www/html\n    depends_on:\n      - php\n    entrypoint: [ 'composer', '--ignore-platform-reqs' ]\n    networks:\n      - laravel\n\n  npm:\n    image: node:current-alpine\n    volumes:\n      - ./src:/var/www/html\n    ports:\n      - \"3000:3000\"\n      - \"3001:3001\"\n      - \"5173:5173\"\n    working_dir: /var/www/html\n    entrypoint: [ 'npm' ]\n    networks:\n      - laravel\n\n  artisan:\n    build:\n      context: ./dockerfiles\n      dockerfile: php.dockerfile\n      args:\n        - UID=${UID:-1000}\n        - GID=${GID:-1000}\n    volumes:\n      - ./src:/var/www/html:delegated\n    depends_on:\n      - mysql\n    entrypoint: [ 'php', '/var/www/html/artisan' ]\n    networks:\n      - laravel\n\n  mailhog:\n    image: mailhog/mailhog:latest\n    ports:\n      - \"1025:1025\"\n      - \"8025:8025\"\n    networks:\n      - laravel\n"
+        },
+        {
+          "name": "dockerfiles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
