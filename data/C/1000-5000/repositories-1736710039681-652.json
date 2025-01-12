@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736710039681,
+    "page": 652,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "vmg/sundown",
+      "stars": 2001,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "*.o\nlibsundown.so*\nsundown\nsmartypants\n*.exe\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 0.4716796875,
+          "content": "Contributing to Sundown\r\n=======================\r\n\r\nDo not.\r\n\r\nUnfortunately, Sundown is currently frozen as we're working with the Reddit, StackOverflow and Meteor developers to design a formal Markdown standard and parser that will supersede Sundown in all these websites (and in GitHub, of course). Our goal is to deprecate Sundown altogether before the end of the year.\r\n\r\nThe new parser will be smaller, faster, safer and most importantly, more consistent.\r\n\r\nPlease stay tuned."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.962890625,
+          "content": "# Makefile\n\n# Copyright (c) 2009, Natacha Porté\n#\n# Permission to use, copy, modify, and distribute this software for any\n# purpose with or without fee is hereby granted, provided that the above\n# copyright notice and this permission notice appear in all copies.\n#\n# THE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\n# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\n# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\n# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\n# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\n# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\n# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n\nDEPDIR=depends\n\n# \"Machine-dependant\" options\n#MFLAGS=-fPIC\n\nCFLAGS=-c -g -O3 -fPIC -Wall -Werror -Wsign-compare -Isrc -Ihtml\nLDFLAGS=-g -O3 -Wall -Werror \nCC=gcc\n\n\nSUNDOWN_SRC=\\\n\tsrc/markdown.o \\\n\tsrc/stack.o \\\n\tsrc/buffer.o \\\n\tsrc/autolink.o \\\n\thtml/html.o \\\n\thtml/html_smartypants.o \\\n\thtml/houdini_html_e.o \\\n\thtml/houdini_href_e.o\n\nall:\t\tlibsundown.so sundown smartypants html_blocks\n\n.PHONY:\t\tall clean\n\n# libraries\n\nlibsundown.so:\tlibsundown.so.1\n\tln -f -s $^ $@\n\nlibsundown.so.1: $(SUNDOWN_SRC)\n\t$(CC) $(LDFLAGS) -shared -Wl $^ -o $@\n\n# executables\n\nsundown:\texamples/sundown.o $(SUNDOWN_SRC)\n\t$(CC) $(LDFLAGS) $^ -o $@\n\nsmartypants: examples/smartypants.o $(SUNDOWN_SRC)\n\t$(CC) $(LDFLAGS) $^ -o $@\n\n# perfect hashing\nhtml_blocks: src/html_blocks.h\n\nsrc/html_blocks.h: html_block_names.txt\n\tgperf -N find_block_tag -H hash_block_tag -C -c -E --ignore-case $^ > $@\n\n\n# housekeeping\nclean:\n\trm -f src/*.o html/*.o examples/*.o\n\trm -f libsundown.so libsundown.so.1 sundown smartypants\n\trm -f sundown.exe smartypants.exe\n\trm -rf $(DEPDIR)\n\n\n# dependencies\n\ninclude $(wildcard $(DEPDIR)/*.d)\n\n\n# generic object compilations\n\n%.o:\tsrc/%.c examples/%.c html/%.c\n\t@mkdir -p $(DEPDIR)\n\t@$(CC) -MM $< > $(DEPDIR)/$*.d\n\t$(CC) $(CFLAGS) -o $@ $<\n\n"
+        },
+        {
+          "name": "Makefile.win",
+          "type": "blob",
+          "size": 0.6533203125,
+          "content": "\nCFLAGS=/O2 /EHsc /I\"src/\" /I\"examples\"/ /I\"html\"/\nCC=cl\n\nSUNDOWN_SRC=\\\n\tsrc\\markdown.obj \\\n\tsrc\\stack.obj \\\n\tsrc\\buffer.obj \\\n\tsrc\\autolink.obj \\\n\thtml\\html.obj \\\n\thtml\\html_smartypants.obj \\\n\thtml\\houdini_html_e.obj \\\n\thtml\\houdini_href_e.obj\n\nall: sundown.dll sundown.exe\n\nsundown.dll: $(SUNDOWN_SRC) sundown.def\n\t$(CC) $(SUNDOWN_SRC) sundown.def /link /DLL $(LDFLAGS) /out:$@\n\nsundown.exe: examples\\sundown.obj $(SUNDOWN_SRC)\n\t$(CC) examples\\sundown.obj $(SUNDOWN_SRC) /link $(LDFLAGS) /out:$@\n\n# housekeeping\nclean:\n\tdel $(SUNDOWN_SRC)\n\tdel sundown.dll sundown.exe\n\tdel sundown.exp sundown.lib\n\n# generic object compilations\n\n.c.obj:\n\t$(CC) $(CFLAGS) /c $< /Fo$@\n\n"
+        },
+        {
+          "name": "README.markdown",
+          "type": "blob",
+          "size": 5.115234375,
+          "content": "﻿Sundown\n=======\n\n`Sundown` is a Markdown parser based on the original code of the\n[Upskirt library](http://fossil.instinctive.eu/libupskirt/index) by Natacha Porté.\n\nFeatures\n--------\n\n*\t**Fully standards compliant**\n\n\t`Sundown` passes out of the box the official Markdown v1.0.0 and v1.0.3\n\ttest suites, and has been extensively tested with additional corner cases\n\tto make sure its output is as sane as possible at all times.\n\n*\t**Massive extension support**\n\n\t`Sundown` has optional support for several (unofficial) Markdown extensions,\n\tsuch as non-strict emphasis, fenced code blocks, tables, autolinks,\n\tstrikethrough and more.\n\n*\t**UTF-8 aware**\n\n\t`Sundown` is fully UTF-8 aware, both when parsing the source document and when\n\tgenerating the resulting (X)HTML code.\n\n*\t**Tested & Ready to be used on production**\n\n\t`Sundown` has been extensively security audited, and includes protection against\n\tall possible DOS attacks (stack overflows, out of memory situations, malformed\n\tMarkdown syntax...) and against client attacks through malicious embedded HTML.\n\n\tWe've worked very hard to make `Sundown` never crash or run out of memory\n\tunder *any* input. `Sundown` renders all the Markdown content in GitHub and so\n\tfar hasn't crashed a single time.\n\n*\t**Customizable renderers**\n\n\t`Sundown` is not stuck with XHTML output: the Markdown parser of the library\n\tis decoupled from the renderer, so it's trivial to extend the library with\n\tcustom renderers. A fully functional (X)HTML renderer is included.\n\n*\t**Optimized for speed**\n\n\t`Sundown` is written in C, with a special emphasis on performance. When wrapped\n\ton a dynamic language such as Python or Ruby, it has shown to be up to 40\n\ttimes faster than other native alternatives.\n\n*\t**Zero-dependency**\n\n\t`Sundown` is a zero-dependency library composed of 3 `.c` files and their headers.\n\tNo dependencies, no bullshit. Only standard C99 that builds everywhere.\n\nCredits\n-------\n\n`Sundown` is based on the original Upskirt parser by Natacha Porté, with many additions\nby Vicent Marti (@vmg) and contributions from the following authors:\n\n\tBen Noordhuis, Bruno Michel, Joseph Koshy, Krzysztof Kowalczyk, Samuel Bronson,\n\tShuhei Tanuma\n\nBindings\n--------\n\n`Sundown` is available from other programming languages thanks to these bindings developed\nby our awesome contributors.\n\n- [Redcarpet](https://github.com/vmg/redcarpet) (Ruby)\n- [RobotSkirt](https://github.com/benmills/robotskirt) (Node.js)\n- [Misaka](https://github.com/FSX/misaka) (Python)\n- [ffi-sundown](https://github.com/postmodern/ffi-sundown) (Ruby FFI)\n- [Sundown HS](https://github.com/bitonic/sundown) (Haskell)\n- [Goskirt](https://github.com/madari/goskirt) (Go)\n- [Upskirt.go](https://github.com/buu700/upskirt.go) (Go)\n- [MoonShine](https://github.com/brandonc/moonshine) (.NET)\n- [PHP-Sundown](https://github.com/chobie/php-sundown) (PHP)\n- [Sundown.net](https://github.com/txdv/sundown.net) (.NET)\n\nHelp us\n-------\n\n`Sundown` is all about security. If you find a (potential) security vulnerability in the\nlibrary, or a way to make it crash through malicious input, please report it to us,\neither directly via email or by opening an Issue on GitHub, and help make the web safer\nfor everybody.\n\nUnicode character handling\n--------------------------\n\nGiven that the Markdown spec makes no provision for Unicode character handling, `Sundown`\ntakes a conservative approach towards deciding which extended characters trigger Markdown\nfeatures:\n\n*\tPunctuation characters outside of the U+007F codepoint are not handled as punctuation.\n\tThey are considered as normal, in-word characters for word-boundary checks.\n\n*\tWhitespace characters outside of the U+007F codepoint are not considered as\n\twhitespace. They are considered as normal, in-word characters for word-boundary checks.\n\nInstall\n-------\n\nThere is nothing to install. `Sundown` is composed of 3 `.c` files (`markdown.c`,\n`buffer.c` and `array.c`), so just throw them in your project. Zero-dependency means\nzero-dependency. You might want to include `render/html.c` if you want to use the\nincluded XHTML renderer, or write your own renderer. Either way, it's all fun and joy.\n\nIf you are hardcore, you can use the included `Makefile` to build `Sundown` into a dynamic\nlibrary, or to build the sample `sundown` executable, which is just a commandline\nMarkdown to XHTML parser. (If gcc gives you grief about `-fPIC`, e.g. with MinGW, try\n`make MFLAGS=` instead of just `make`.)\n\nLicense\n-------\n\nPermission to use, copy, modify, and distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n\n<!-- Local Variables: -->\n<!-- fill-column: 89 -->\n<!-- End: -->\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "html_block_names.txt",
+          "type": "blob",
+          "size": 0.1171875,
+          "content": "##\np\ndl\nh1\nh2\nh3\nh4\nh5\nh6\nol\nul\ndel\ndiv\nins\npre\nform\nmath\ntable\nfigure\niframe\nscript\nstyle\nfieldset\nnoscript\nblockquote\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sundown.def",
+          "type": "blob",
+          "size": 0.2490234375,
+          "content": "LIBRARY SUNDOWN\nEXPORTS\n\tsdhtml_renderer\n\tsdhtml_toc_renderer\n\tsdhtml_smartypants\n\tbufgrow\n\tbufnew\n\tbufcstr\n\tbufprefix\n\tbufput \n\tbufputs\n\tbufputc\n\tbufrelease\n\tbufreset\n\tbufslurp\n\tbufprintf\n\tsd_markdown_new\n\tsd_markdown_render\n\tsd_markdown_free\n\tsd_version"
+        }
+      ]
+    }
+  ]
+}

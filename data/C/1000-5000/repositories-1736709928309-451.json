@@ -1,0 +1,54 @@
+{
+  "metadata": {
+    "timestamp": 1736709928309,
+    "page": 451,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cloudwu/coroutine",
+      "stars": 2473,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0595703125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 codingnow.com Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.0771484375,
+          "content": "all : main\n\nmain : main.c coroutine.c\n\tgcc -g -Wall -o $@ $^\n\nclean :\n\trm main\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.5390625,
+          "content": "It's an asymmetric coroutine library (like lua).\n\nYou can use coroutine_open to open a schedule first, and then create coroutine in that schedule. \n\nYou should call coroutine_resume in the thread that you call coroutine_open, and you can't call it in a coroutine in the same schedule.\n\nCoroutines in the same schedule share the stack , so you can create many coroutines without worry about memory.\n\nBut switching context will copy the stack the coroutine used.\n\nRead source for detail.\n\nChinese blog : http://blog.codingnow.com/2012/07/c_coroutine.html"
+        },
+        {
+          "name": "coroutine.c",
+          "type": "blob",
+          "size": 3.7529296875,
+          "content": "#include \"coroutine.h\"\n#include <stdio.h>\n#include <stdlib.h>\n#include <assert.h>\n#include <stddef.h>\n#include <string.h>\n#include <stdint.h>\n\n#if __APPLE__ && __MACH__\n\t#include <sys/ucontext.h>\n#else \n\t#include <ucontext.h>\n#endif \n\n#define STACK_SIZE (1024*1024)\n#define DEFAULT_COROUTINE 16\n\nstruct coroutine;\n\nstruct schedule {\n\tchar stack[STACK_SIZE];\n\tucontext_t main;\n\tint nco;\n\tint cap;\n\tint running;\n\tstruct coroutine **co;\n};\n\nstruct coroutine {\n\tcoroutine_func func;\n\tvoid *ud;\n\tucontext_t ctx;\n\tstruct schedule * sch;\n\tptrdiff_t cap;\n\tptrdiff_t size;\n\tint status;\n\tchar *stack;\n};\n\nstruct coroutine * \n_co_new(struct schedule *S , coroutine_func func, void *ud) {\n\tstruct coroutine * co = malloc(sizeof(*co));\n\tco->func = func;\n\tco->ud = ud;\n\tco->sch = S;\n\tco->cap = 0;\n\tco->size = 0;\n\tco->status = COROUTINE_READY;\n\tco->stack = NULL;\n\treturn co;\n}\n\nvoid\n_co_delete(struct coroutine *co) {\n\tfree(co->stack);\n\tfree(co);\n}\n\nstruct schedule * \ncoroutine_open(void) {\n\tstruct schedule *S = malloc(sizeof(*S));\n\tS->nco = 0;\n\tS->cap = DEFAULT_COROUTINE;\n\tS->running = -1;\n\tS->co = malloc(sizeof(struct coroutine *) * S->cap);\n\tmemset(S->co, 0, sizeof(struct coroutine *) * S->cap);\n\treturn S;\n}\n\nvoid \ncoroutine_close(struct schedule *S) {\n\tint i;\n\tfor (i=0;i<S->cap;i++) {\n\t\tstruct coroutine * co = S->co[i];\n\t\tif (co) {\n\t\t\t_co_delete(co);\n\t\t}\n\t}\n\tfree(S->co);\n\tS->co = NULL;\n\tfree(S);\n}\n\nint \ncoroutine_new(struct schedule *S, coroutine_func func, void *ud) {\n\tstruct coroutine *co = _co_new(S, func , ud);\n\tif (S->nco >= S->cap) {\n\t\tint id = S->cap;\n\t\tS->co = realloc(S->co, S->cap * 2 * sizeof(struct coroutine *));\n\t\tmemset(S->co + S->cap , 0 , sizeof(struct coroutine *) * S->cap);\n\t\tS->co[S->cap] = co;\n\t\tS->cap *= 2;\n\t\t++S->nco;\n\t\treturn id;\n\t} else {\n\t\tint i;\n\t\tfor (i=0;i<S->cap;i++) {\n\t\t\tint id = (i+S->nco) % S->cap;\n\t\t\tif (S->co[id] == NULL) {\n\t\t\t\tS->co[id] = co;\n\t\t\t\t++S->nco;\n\t\t\t\treturn id;\n\t\t\t}\n\t\t}\n\t}\n\tassert(0);\n\treturn -1;\n}\n\nstatic void\nmainfunc(uint32_t low32, uint32_t hi32) {\n\tuintptr_t ptr = (uintptr_t)low32 | ((uintptr_t)hi32 << 32);\n\tstruct schedule *S = (struct schedule *)ptr;\n\tint id = S->running;\n\tstruct coroutine *C = S->co[id];\n\tC->func(S,C->ud);\n\t_co_delete(C);\n\tS->co[id] = NULL;\n\t--S->nco;\n\tS->running = -1;\n}\n\nvoid \ncoroutine_resume(struct schedule * S, int id) {\n\tassert(S->running == -1);\n\tassert(id >=0 && id < S->cap);\n\tstruct coroutine *C = S->co[id];\n\tif (C == NULL)\n\t\treturn;\n\tint status = C->status;\n\tswitch(status) {\n\tcase COROUTINE_READY:\n\t\tgetcontext(&C->ctx);\n\t\tC->ctx.uc_stack.ss_sp = S->stack;\n\t\tC->ctx.uc_stack.ss_size = STACK_SIZE;\n\t\tC->ctx.uc_link = &S->main;\n\t\tS->running = id;\n\t\tC->status = COROUTINE_RUNNING;\n\t\tuintptr_t ptr = (uintptr_t)S;\n\t\tmakecontext(&C->ctx, (void (*)(void)) mainfunc, 2, (uint32_t)ptr, (uint32_t)(ptr>>32));\n\t\tswapcontext(&S->main, &C->ctx);\n\t\tbreak;\n\tcase COROUTINE_SUSPEND:\n\t\tmemcpy(S->stack + STACK_SIZE - C->size, C->stack, C->size);\n\t\tS->running = id;\n\t\tC->status = COROUTINE_RUNNING;\n\t\tswapcontext(&S->main, &C->ctx);\n\t\tbreak;\n\tdefault:\n\t\tassert(0);\n\t}\n}\n\nstatic void\n_save_stack(struct coroutine *C, char *top) {\n\tchar dummy = 0;\n\tassert(top - &dummy <= STACK_SIZE);\n\tif (C->cap < top - &dummy) {\n\t\tfree(C->stack);\n\t\tC->cap = top-&dummy;\n\t\tC->stack = malloc(C->cap);\n\t}\n\tC->size = top - &dummy;\n\tmemcpy(C->stack, &dummy, C->size);\n}\n\nvoid\ncoroutine_yield(struct schedule * S) {\n\tint id = S->running;\n\tassert(id >= 0);\n\tstruct coroutine * C = S->co[id];\n\tassert((char *)&C > S->stack);\n\t_save_stack(C,S->stack + STACK_SIZE);\n\tC->status = COROUTINE_SUSPEND;\n\tS->running = -1;\n\tswapcontext(&C->ctx , &S->main);\n}\n\nint \ncoroutine_status(struct schedule * S, int id) {\n\tassert(id>=0 && id < S->cap);\n\tif (S->co[id] == NULL) {\n\t\treturn COROUTINE_DEAD;\n\t}\n\treturn S->co[id]->status;\n}\n\nint \ncoroutine_running(struct schedule * S) {\n\treturn S->running;\n}\n\n"
+        },
+        {
+          "name": "coroutine.h",
+          "type": "blob",
+          "size": 0.5556640625,
+          "content": "#ifndef C_COROUTINE_H\n#define C_COROUTINE_H\n\n#define COROUTINE_DEAD 0\n#define COROUTINE_READY 1\n#define COROUTINE_RUNNING 2\n#define COROUTINE_SUSPEND 3\n\nstruct schedule;\n\ntypedef void (*coroutine_func)(struct schedule *, void *ud);\n\nstruct schedule * coroutine_open(void);\nvoid coroutine_close(struct schedule *);\n\nint coroutine_new(struct schedule *, coroutine_func, void *ud);\nvoid coroutine_resume(struct schedule *, int id);\nint coroutine_status(struct schedule *, int id);\nint coroutine_running(struct schedule *);\nvoid coroutine_yield(struct schedule *);\n\n#endif\n"
+        },
+        {
+          "name": "main.c",
+          "type": "blob",
+          "size": 0.720703125,
+          "content": "#include \"coroutine.h\"\n#include <stdio.h>\n\nstruct args {\n\tint n;\n};\n\nstatic void\nfoo(struct schedule * S, void *ud) {\n\tstruct args * arg = ud;\n\tint start = arg->n;\n\tint i;\n\tfor (i=0;i<5;i++) {\n\t\tprintf(\"coroutine %d : %d\\n\",coroutine_running(S) , start + i);\n\t\tcoroutine_yield(S);\n\t}\n}\n\nstatic void\ntest(struct schedule *S) {\n\tstruct args arg1 = { 0 };\n\tstruct args arg2 = { 100 };\n\n\tint co1 = coroutine_new(S, foo, &arg1);\n\tint co2 = coroutine_new(S, foo, &arg2);\n\tprintf(\"main start\\n\");\n\twhile (coroutine_status(S,co1) && coroutine_status(S,co2)) {\n\t\tcoroutine_resume(S,co1);\n\t\tcoroutine_resume(S,co2);\n\t} \n\tprintf(\"main end\\n\");\n}\n\nint \nmain() {\n\tstruct schedule * S = coroutine_open();\n\ttest(S);\n\tcoroutine_close(S);\n\t\n\treturn 0;\n}\n\n"
+        }
+      ]
+    }
+  ]
+}

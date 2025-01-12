@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736709869652,
+    "page": 353,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "baskerville/sxhkd",
+      "stars": 2802,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0146484375,
+          "content": "*.o\nsxhkd\ntags\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.26953125,
+          "content": "Copyright (c) 2013, Bastien Dejean\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this\n   list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice,\n   this list of conditions and the following disclaimer in the documentation\n   and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.072265625,
+          "content": "OUT      = sxhkd\nVERCMD  ?= git describe --tags 2> /dev/null\nVERSION := $(shell $(VERCMD) || cat VERSION)\n\nCPPFLAGS += -D_POSIX_C_SOURCE=200112L -DVERSION=\\\"$(VERSION)\\\"\nCFLAGS   += -std=c99 -pedantic -Wall -Wextra\nLDFLAGS  ?=\nLDLIBS    = $(LDFLAGS) -lxcb -lxcb-keysyms\n\nPREFIX    ?= /usr/local\nBINPREFIX ?= $(PREFIX)/bin\nMANPREFIX ?= $(PREFIX)/share/man\nDOCPREFIX ?= $(PREFIX)/share/doc/$(OUT)\n\nall: $(OUT)\n\ndebug: CFLAGS += -O0 -g\ndebug: CPPFLAGS += -DDEBUG\ndebug: $(OUT)\n\nVPATH = src\nOBJ   =\n\ninclude Sourcedeps\n\n$(OBJ): Makefile\n\n$(OUT): $(OBJ)\n\ninstall:\n\tmkdir -p \"$(DESTDIR)$(BINPREFIX)\"\n\tcp -pf $(OUT) \"$(DESTDIR)$(BINPREFIX)\"\n\tmkdir -p \"$(DESTDIR)$(MANPREFIX)\"/man1\n\tcp -p doc/$(OUT).1 \"$(DESTDIR)$(MANPREFIX)\"/man1\n\tmkdir -p \"$(DESTDIR)$(DOCPREFIX)\"\n\tcp -pr examples \"$(DESTDIR)$(DOCPREFIX)\"/examples\n\nuninstall:\n\trm -f \"$(DESTDIR)$(BINPREFIX)\"/$(OUT)\n\trm -f \"$(DESTDIR)$(MANPREFIX)\"/man1/$(OUT).1\n\trm -rf \"$(DESTDIR)$(DOCPREFIX)\"\n\ndoc:\n\ta2x -v -d manpage -f manpage -a revnumber=$(VERSION) doc/$(OUT).1.asciidoc\n\nclean:\n\trm -f $(OBJ) $(OUT)\n\n.PHONY: all debug install uninstall doc clean\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.8134765625,
+          "content": "## Description\n\n*sxhkd* is an X daemon that reacts to input events by executing commands.\n\nIts configuration file is a series of bindings that define the associations between the input events and the commands.\n\nThe format of the configuration file supports a simple notation for mapping multiple shortcuts to multiple commands in parallel.\n\n## Example Bindings\n\n\tXF86Audio{Prev,Next}\n\t\tmpc -q {prev,next}\n\n\t@XF86LaunchA\n\t\tscrot -s -e 'image_viewer $f'\n\n\tsuper + shift + equal\n\t\tsxiv -rt \"$HOME/image\"\n\n\tXF86LaunchB\n\t\txdotool selectwindow | xsel -bi\n\n\tsuper + {h,j,k,l}\n\t\tbspc node -f {west,south,north,east}\n\n\tsuper + alt + {0-9}\n\t\tmpc -q seek {0-9}0%\n\n\tsuper + {alt,ctrl,alt + ctrl} + XF86Eject\n\t\tsudo systemctl {suspend,reboot,poweroff}\n\n\tsuper + {_,shift + }{h,j,k,l}\n\t\tbspc node -{f,s} {west,south,north,east}\n\n\t{_,shift + ,super + }XF86MonBrightness{Down,Up}\n\t\tbright {-1,-10,min,+1,+10,max}\n\n\tsuper + o ; {e,w,m}\n\t\t{gvim,firefox,thunderbird}\n\n\tsuper + alt + control + {h,j,k,l} ; {0-9}\n\t\tbspc node @{west,south,north,east} -r 0.{0-9}\n\n\tsuper + alt + p\n\t\tbspc config focus_follows_pointer {true,false}\n\n\t# Smart resize, will grow or shrink depending on location.\n\t# Will always grow for floating nodes.\n\tsuper + ctrl + alt + {Left,Down,Up,Right}\n\t  n=10; \\\n\t  { d1=left;   d2=right;  dx=-$n; dy=0;   \\\n\t  , d1=bottom; d2=top;    dx=0;   dy=$n;  \\\n\t  , d1=top;    d2=bottom; dx=0;   dy=-$n; \\\n\t  , d1=right;  d2=left;   dx=$n;  dy=0;   \\\n\t  } \\\n\t  bspc node --resize $d1 $dx $dy || bspc node --resize $d2 $dx $dy\n\n## Editor Plugins\n\n### Vim\n- [vim-sxhkdrc](https://github.com/baskerville/vim-sxhkdrc).\n- [sxhkd-vim](https://github.com/kovetskiy/sxhkd-vim).\n\n### VS Code\n- [sxhkdrc-syntax](https://github.com/mosbasik/sxhkdrc-syntax).\n\n### Emacs\n- [sxhkd-mode](https://github.com/xFA25E/sxhkd-mode)\n\n----\n\nFor further information, check the `man` pages.\n"
+        },
+        {
+          "name": "Sourcedeps",
+          "type": "blob",
+          "size": 0.34765625,
+          "content": "grab.o: grab.c grab.h helpers.h parse.h sxhkd.h types.h\nOBJ += grab.o\nhelpers.o: helpers.c helpers.h sxhkd.h types.h\nOBJ += helpers.o\nparse.o: parse.c helpers.h locales.h parse.h sxhkd.h types.h\nOBJ += parse.o\nsxhkd.o: sxhkd.c grab.h helpers.h parse.h sxhkd.h types.h\nOBJ += sxhkd.o\ntypes.o: types.c grab.h helpers.h parse.h sxhkd.h types.h\nOBJ += types.o\n"
+        },
+        {
+          "name": "VERSION",
+          "type": "blob",
+          "size": 0.0048828125,
+          "content": "0.6.2"
+        },
+        {
+          "name": "contrib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

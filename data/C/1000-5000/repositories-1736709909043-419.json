@@ -1,0 +1,150 @@
+{
+  "metadata": {
+    "timestamp": 1736709909043,
+    "page": 419,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dlundquist/sniproxy",
+      "stars": 2586,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2822265625,
+          "content": "a.out\n*.o\n*.cdbs-orig\n.deps\n.dirstamp\n*.swp\n*.swo\n*.gcov\n*.gcda\n*.gcno\n.vimrc\ndepcomp\ncompile\nconfig.guess\nconfig.sub\ncore\nautoscan.log\naclocal.m4\nautom4te.cache\nconfigure\ngmon.out\ninstall-sh\nmissing\nMakefile\nMakefile.in\nconfig.status\nconfig.log\nINSTALL\nsniproxy-*.tar.gz\ntags\ntest-driver\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 2.826171875,
+          "content": "language: c\ncompiler:\n  - clang\n  - gcc\ninstall:\n  - sudo apt-get update\n  - DEBIAN_FRONTEND=noninteractive sudo apt-get install -y apache2-utils cdbs dh-autoreconf devscripts libev-dev libpcre2-dev libudns-dev lintian rpm valgrind\n  - mkdir -p ~/rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}\n  - ./autogen.sh\nscript:\n  - echo \"Running unit and functional tests\"\n  - ./configure\n  - make all check CFLAGS=-Werror\n  - bash -c \"cd tests && sudo ./transparent_proxy_test\"\n  - echo \"Checking for memory leaks\"\n  - bash -c \"cd tests && ./bad_dns_request_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./bad_request_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./connection_reset_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./functional_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./hostname_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./slow_client_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./wildcard_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./bind_source_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./reload_test valgrind --leak-check=full --error-exitcode=1\"\n  - bash -c \"cd tests && ./proxy_header_test valgrind --leak-check=full --error-exitcode=1\"\n  - echo \"Testing Debian package build\"\n  - dpkg-buildpackage -us -uc\n  - echo \"Testing RPM package build\"\n  - make dist\n  - rpmbuild --define \"_sourcedir `pwd`\" -ba --nodeps redhat/sniproxy.spec\n  - echo \"Testing Debian package installation, configuration, and usage\"\n  - lintian --suppress-tags debian-changelog-file-contains-invalid-email-address ../sniproxy_*_`dpkg --print-architecture`.deb\n  - sudo dpkg -i ../sniproxy_*_`dpkg --print-architecture`.deb\n  - sudo perl -pi -e 's/ENABLED=0/ENABLED=1/' /etc/default/sniproxy\n  - echo -e \"user daemon\\n\\npidfile /var/run/sniproxy.pid\\n\\nerror_log {\\n  syslog daemon\\n  priority notice\\n}\\n\\nlisten 80 {\\n  proto http\\n}\\n\\ntable {\\n  localhost *\\n}\" | sudo tee /etc/sniproxy.conf\n  - sudo service sniproxy start\n  - sleep 1; test -e /var/run/sniproxy.pid && ps -up `cat /var/run/sniproxy.pid`\n  - echo \"Testing config reload functionality\"\n  - echo -e \"user daemon\\n\\npidfile /var/run/sniproxy.pid\\n\\nerror_log {\\n  syslog daemon\\n  priority notice\\n}\\n\\nlisten 80 {\\n  proto http\\n}\\n\\nlisten 81 {\\n  proto http\\n}\\n\\ntable {\\n  localhost *\\n}\" | sudo tee /etc/sniproxy.conf\n  - sudo kill -HUP `cat /var/run/sniproxy.pid`\n  - sudo netstat -lptn | egrep ':::81.+/sniproxy'\n  - sudo service sniproxy stop\n  - sudo apt-get remove sniproxy\n  - echo \"Rebuilding without DNS and rerunning unit tests\"\n  - ./configure --disable-dns\n  - make clean all check CFLAGS=\"-Werror -Wno-error=unused-function -Wno-error=unused-parameter\"\n"
+        },
+        {
+          "name": "ARCHITECTURE.md",
+          "type": "blob",
+          "size": 2.2529296875,
+          "content": "\n\n          +---------------+\n          |Config:        |\n          |  config_file  |\n          |  username     |\n          +---------------+\n            |          \\----------\\\n            v                     |\n    +-----------+                 v\n    |Listener:  |+            +-------+             +------------+\n    |  socket   ||            |Table: |+            |Backend:    |+\n    |  protocol ||--has one-->|  name ||--has many->|  pattern*  ||+\n    +-----------+|            +-------+|            |  address   |||\n     +-----------+             +-------+            |  port      |||\n        ^                                           +------------+||\n        |             +-------------+                +------------+|\n        |             |Connection:  |+                +------------+\n        |             |  state      ||+                  ^\n        \\-references--|  listener   |||                  |\n                      |  client     |||                  |\n                      |    socket   |||                  |\n                      |    buffer   |||                  |\n                      |  server     |||--selected from---/\n                      |    socket   |||\n                      |    buffer   |||\n                      +-------------+||\n                       +-------------+|\n                        +-------------+\n\nListeners are listening service ports, each has an associated address, port,\nprotocol and socket. When an incoming connection is accepted on the\nsocket, a new connection object is created. The first packet is inspected\nand the hostname is extracted from the TLS Client Hello or HTTP Request\n(depending on protocol selected). The listener's table is consulted for backend\nmatching the requested hostname - this match may be simple matching strings or\nregular expressions. A second server connection is established to the address\nand port specified by the backend, and the initial packet is forwarded to over\nthis second socket. From this point on, when a packet is received from either\nthe client or server, its contents are buffered and sent through the other\nsocket. When either the client or server closes the socket, the buffer to\nthe other socket is sent and the connection is closed. After both sockets\nhave been closed the connection is removed.\n\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.0380859375,
+          "content": "Dustin Lundquist <dustin@null-ptr.net>\n"
+        },
+        {
+          "name": "COPYING",
+          "type": "blob",
+          "size": 1.3056640625,
+          "content": "Copyright (c) 2011 - 2013, Dustin Lundquist <dustin@null-ptr.net>\n    All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice,\n   this list of conditions and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright\n   notice, this list of conditions and the following disclaimer in the\n   documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\nARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE\nLIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR\nCONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF\nSUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN\nCONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)\nARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGE.\n\n"
+        },
+        {
+          "name": "ChangeLog",
+          "type": "blob",
+          "size": 1.6123046875,
+          "content": "2023-03-16  Dustin Lundquist <dustin@null-ptr.net>\n\t0.6.1 Release\n\n\t* Fix buffer overflow in address module\n\t* Fix tests\n\n2018-12-05  Dustin Lundquist <dustin@null-ptr.net>\n\t0.6.0 Release\n\n\t* PROXY v1 protocol support\n\t* SO_REUSEPORT support on Linux 3.9 and later\n\t* Listener ipv6_only directive to accept only IPv6 connections\n\t* TCP keepalive\n\n2017-04-26  Dustin Lundquist <dustin@null-ptr.net>\n\t0.5.0 Release\n\n\t* Transparent proxy support\n\t* Use accept4() on Linix\n\t* Run as group specified in config\n\n2015-04-07  Dustin Lundquist <dustin@null-ptr.net>\n\t0.4.0 release\n\n\t* Improve DNS resolver:\n\t  Support for AAAA records\n\t  Configuration options\n\t* Global access log\n\t* Man page for sniproxy.conf\n\t* Reject IP literals as hostnames for wildcard backends\n\n2014-09-26  Dustin Lundquist <dustin@null-ptr.net>\n\t0.3.6 release\n\n\t* Improve logging:\n\t  Fix negative connection duration in access log\n\t  Include log rotate script\n\t  Reopen log files on SIGHUP\n\t  Share file handle to same log file between listeners\n\t  Avoid unnecessary reconnection to syslog socket\n\t  Cache timestamp string for current second\n\t* Man page\n\t* Packaging improvements:\n\t  passes lintian and rpm-lint\n\n2014-08-13\tDustin Lundquist <dustin@null-ptr.net>\n\t0.3.5 release\n\n\t* Configuration reloading on SIGHUP\n\t* SSL 2.0 connection handling: do not treat as an error, use fallback\n\taddress if configured.\n\t* Fix buffer_coalesce error\n\t* Spawn privileged child to bind sockets to privileged ports on reload\n\t* Add -V flag to return sniproxy version\n\t* Use libev for timestamps to improve portability\n\t* Include several for BSD compatibility\n\t* Large file support (for log files)\n\n"
+        },
+        {
+          "name": "Makefile.am",
+          "type": "blob",
+          "size": 0.0712890625,
+          "content": "ACLOCAL_AMFLAGS = -I m4\n\nSUBDIRS = src \\\n          man \\\n          tests\n"
+        },
+        {
+          "name": "NEWS",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": "README",
+          "type": "blob",
+          "size": 0.0087890625,
+          "content": "README.md"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.412109375,
+          "content": "SNI Proxy\n=========\n\nProxies incoming HTTP and TLS connections based on the hostname contained in\nthe initial request of the TCP session. This enables HTTPS name-based virtual\nhosting to separate backend servers without installing the private key on the\nproxy machine.\n\nStatus: Deprecated\n------------------\n2023-12-13\n\nWhen I started this project, there wasn't another proxy that filled this niche.\nNow, there are many proxies available to proxy layer-4 based on the TLS SNI\nextension, including Nginx. Additionally, web traffic is evolving: with HTTP/2,\nmultiple hostnames can be multiplexed in a single TCP stream [preventing SNI\nProxy](https://github.com/dlundquist/sniproxy/issues/178) from routing it\ncorrectly based on hostname, and HTTP/3 (QUIC) uses UDP transport. SNI Proxy\njust doesn't support these protocols, and adding support for them would\ncomplicate it significantly. For these reasons, I'm transitioning SNI Proxy to\na deprecated status.\n\nHonestly, this has been the case for last several years, and I hadn't published\nanything to that affect. With CVE-2023-25076 it became clear that this\nsituation needs to be communicated clearly.\n\nIn some cases, SNI Proxy might be a better fit than a more general purpose\nproxy, so I'm not going to abandon the project completely. I'll still monitor\nissues and email requests; however, unless it is a significant security or\nreliablity issue, don't expect a response.\n\nFeatures\n--------\n+ Name-based proxying of HTTPS without decrypting traffic. No keys or\n  certificates required.\n+ Supports both TLS and HTTP protocols.\n+ Supports IPv4, IPv6 and Unix domain sockets for both back-end servers and\n  listeners.\n+ Supports multiple listening sockets per instance.\n+ Supports HAProxy proxy protocol to propagate original source address to\n  back-end servers.\n\nUsage\n-----\n\n    Usage: sniproxy [-c <config>] [-f] [-n <max file descriptor limit>] [-V]\n        -c  configuration file, defaults to /etc/sniproxy.conf\n        -f  run in foreground, do not drop privileges\n        -n  specify file descriptor limit\n        -V  print the version of SNIProxy and exit\n\n\nInstallation\n------------\n\nFor Debian or Fedora based Linux distributions see building packages below.\n\n**Prerequisites**\n\n+ Autotools (autoconf, automake, gettext and libtool)\n+ libev4, libpcre2 (or libpcre) and libudns development headers\n+ Perl and cURL for test suite\n\n**Install**\n\n    ./autogen.sh && ./checonfigure --enable-dns && make check && sudo make install\n\n**Building Debian/Ubuntu package**\n\nThis is the preferred installation method on recent Debian based distributions:\n\n1. Install required packages\n\n        sudo apt-get install autotools-dev cdbs debhelper dh-autoreconf dpkg-dev gettext libev-dev libpcre2-dev libudns-dev pkg-config fakeroot devscripts\n\n2. Build a Debian package\n\n        ./autogen.sh && dpkg-buildpackage\n\n3. Install the resulting package\n\n        sudo dpkg -i ../sniproxy_<version>_<arch>.deb\n\n**Building Fedora/RedHat package**\n\nThis is the preferred installation method for modern Fedora based distributions.\n\n1. Install required packages\n\n        sudo yum install autoconf automake curl gettext-devel libev-devel pcre-devel perl pkgconfig rpm-build udns-devel\n\n2. Build a distribution tarball:\n\n        ./autogen.sh && ./configure --enable-dns && make dist\n\n3. Build a RPM package\n\n        rpmbuild --define \"_sourcedir `pwd`\" -ba redhat/sniproxy.spec\n\n4. Install resulting RPM\n\n        sudo yum install ../sniproxy-<version>.<arch>.rpm\n\nI've used Scientific Linux 6 a fair amount, but I prefer Debian based\ndistributions. RPM builds are tested in Travis-CI on Ubuntu, but not natively.\nThis build process may not follow the current Fedora packaging standards, and\nmay not even work.\n\n***Building on OS X with Homebrew***\n\n1. install dependencies.\n\n        brew install libev pcre udns autoconf automake gettext libtool\n\n2. Read the warning about gettext and force link it so autogen.sh works. We need the GNU gettext for the macro `AC_LIB_HAVE_LINKFLAGS` which isn't present in the default OS X package.\n\n        brew link --force gettext\n\n3. Make it so\n\n        ./autogen.sh && ./configure --enable-dns && make\n\nOS X support is a best effort, and isn't a primary target platform.\n\n\nConfiguration Syntax\n--------------------\n\n    user daemon\n\n    pidfile /tmp/sniproxy.pid\n\n    error_log {\n        syslog daemon\n        priority notice\n    }\n\n    listener 127.0.0.1:443 {\n        protocol tls\n        table TableName\n\n        # Specify a server to use if the initial client request doesn't contain\n        # a hostname\n        fallback 192.0.2.5:443\n    }\n\n    table TableName {\n        # Match exact request hostnames\n        example.com 192.0.2.10:4343\n        # If port is not specified the listener port will be used\n        example.net [2001:DB8::1:10]\n        # Or use regular expression to match\n        .*\\\\.com    [2001:DB8::1:11]:443\n        # Combining regular expression and wildcard will resolve the hostname\n        # client requested and proxy to it\n        .*\\\\.edu    *:443\n    }\n\nDNS Resolution\n--------------\n\nUsing hostnames or wildcard entries in the configuration requires sniproxy to\nbe built with [UDNS](http://www.corpit.ru/mjt/udns.html). SNIProxy will still\nbuild without UDNS, but these features will be unavailable.\n\nUDNS uses a single UDP socket for all queries, so it is recommended you use a\nlocal caching DNS resolver (with a single socket each DNS query is protected by\nspoofing by a single 16 bit query ID, which makes it relatively easy to spoof).\n"
+        },
+        {
+          "name": "TODO",
+          "type": "blob",
+          "size": 0.25,
+          "content": "* ALPN support\n* Improved table backend lookup, currently this is a linear search\n** Considering splitting hostname at label boundaries and search backwards from TLD\n* HTTP or DNS interface for backend servers to determine remote IP and port of connection\n"
+        },
+        {
+          "name": "autogen.sh",
+          "type": "blob",
+          "size": 0.08984375,
+          "content": "#!/bin/sh\n\n./setver.sh\n\nautoreconf --install\nautomake --add-missing --copy > /dev/null 2>&1\n"
+        },
+        {
+          "name": "config.rpath",
+          "type": "blob",
+          "size": 0,
+          "content": ""
+        },
+        {
+          "name": "configure.ac",
+          "type": "blob",
+          "size": 1.15625,
+          "content": "#                                               -*- Autoconf -*-\n# Process this file with autoconf to produce a configure script.\n\nAC_PREREQ([2.71])\nAC_INIT([sniproxy],[0.6.1])\nAM_INIT_AUTOMAKE([subdir-objects])\nAM_SILENT_RULES([yes])\nAC_USE_SYSTEM_EXTENSIONS\n\n# Checks for programs.\nAC_PROG_CC\nAM_PROG_CC_C_O\n\n\n# Checks for libraries.\nAC_CHECK_LIB([ev], [ev_run], [],\n\t     [AC_MSG_ERROR([libev is required])])\nAC_CHECK_LIB([pcre2-8], [pcre2_compile_8], [],\n\t     [AC_CHECK_LIB([pcre], [pcre_exec], [],\n\t\t\t   [AC_MSG_ERROR([libpcre is required])])])\n\nAC_ARG_ENABLE([dns],\n\t      [AS_HELP_STRING([--enable-dns], [Enable DNS resolution])])\n\nAM_CONDITIONAL([DNS_ENABLED], [test \"$enable_dns\"])\n\nAS_IF([test \"$enable_dns\"],\n      [AC_CHECK_LIB([udns], [dns_init])])\n\nAC_ARG_ENABLE([rfc3339-timestamps],\n  [AS_HELP_STRING([--enable-rfc3339-timestamps], [Enable RFC3339 timestamps])],\n  [AC_DEFINE([RFC3339_TIMESTAMP], 1, [RFC3339 timestamps enabled])])\n\nAC_CHECK_FUNCS([accept4])\n\n# Enable large file support (so we can log more than 2GB)\nAC_SYS_LARGEFILE\n\nAC_CONFIG_FILES([Makefile\n                 src/Makefile\n                 man/Makefile\n                 tests/Makefile])\n\nAC_OUTPUT\n"
+        },
+        {
+          "name": "debian",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "m4",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "man",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "redhat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setver.sh",
+          "type": "blob",
+          "size": 0.98828125,
+          "content": "#!/bin/sh\n\nVERSION=0.6.1\n\nSOURCE_DIR=$(dirname $0)\nGIT_DIR=${SOURCE_DIR}/.git\n\ncd ${SOURCE_DIR}\n\nif [ -d ${GIT_DIR} ]; then\n    GIT_VERSION=$(git describe --tags)\n    if [ \"x\" != \"x${GIT_VERSION}\" ]; then\n        if echo ${GIT_VERSION} | grep -q '-'; then\n            VER=$(echo ${GIT_VERSION} | cut -d- -f1)\n            REV=$(echo ${GIT_VERSION} | cut -d- -f2)\n            REF=$(echo ${GIT_VERSION} | cut -d- -f3)\n\n            VERSION=${VER}+git.${REV}.${REF}\n        else\n            # Release version (e.g. 0.3.5)\n            VERSION=${GIT_VERSION}\n            DEBIAN_VERSION=${VERSION}\n            SPEC_VERSION=${VERSION}\n        fi\n    fi\nfi\n\n# Update Autoconf with new version\nsed -i \"s/^\\(AC_INIT(\\[sniproxy\\], \\[\\)[^]]*\\(.\\+\\)$/\\1${VERSION}\\2/\" ${SOURCE_DIR}/configure.ac\n\n# Update redhat/sniproxy.spec with new version\nsed -i \"s/^Version:\\s\\+[^ ]\\+/Version: ${VERSION}/\" ${SOURCE_DIR}/redhat/sniproxy.spec\n\n# Update debian/changelog with new version\ndebchange --newversion ${VERSION} \"New git revision\"\n"
+        },
+        {
+          "name": "sniproxy.conf",
+          "type": "blob",
+          "size": 4.2587890625,
+          "content": "# sniproxy example configuration file\n# lines that start with # are comments\n# lines with only white space are ignored\n\nuser nobody\ngroup nogroup\n\n# PID file, needs to be placed in directory writable by user\npidfile /var/run/sniproxy.pid\n\n# The DNS resolver is required for tables configured using wildcard or hostname\n# targets. If no resolver is specified, the nameserver and search domain are\n# loaded from /etc/resolv.conf.\nresolver {\n    # Specify name server\n    #\n    # NOTE: it is strongly recommended to use a local caching DNS server, since\n    # uDNS and thus SNIProxy only uses single socket to each name server so\n    # each DNS query is only protected by the 16 bit query ID and lacks\n    # additional source port randomization. Additionally no caching is\n    # preformed within SNIProxy, so a local resolver can improve performance.\n    nameserver 127.0.0.1\n\n    # DNS search domain\n    search example.com\n\n    # Specify which type of address to lookup in DNS:\n    #\n    # * ipv4_only   query for IPv4 addresses (default)\n    # * ipv6_only   query for IPv6 addresses\n    # * ipv4_first  query for both IPv4 and IPv6, use IPv4 is present\n    # * ipv6_first  query for both IPv4 and IPv6, use IPv6 is present\n    mode ipv6_first\n}\n\nerror_log {\n    # Log to the daemon syslog facility\n    syslog daemon\n\n    # Alternatively we could log to file\n    #filename /var/log/sniproxy.log\n\n    # Control the verbosity of the log\n    priority notice\n}\n\n# Global access log for all listeners\naccess_log {\n    # Same options as error_log\n    filename /tmp/sniproxy-access.log\n}\n\n# blocks are delimited with {...}\nlisten 80 {\n    proto http\n    table http_hosts\n\n    # Enable SO_REUSEPORT to allow multiple processess to bind to this ip:port pair\n    reuseport no\n\n    # Fallback server to use if we can not parse the client request\n    fallback localhost:8080\n\n    # Specify the source address for outgoing connections.\n    #\n    # Use \"source client\" to enable transparent proxy support. This requires\n    # running sniproxy as root (\"user root\").\n    #\n    # Do not include a port in this address, otherwise you will be limited\n    # to a single connection to each backend server.\n    #\n    # NOTE: binding to a specific address prevents the operating system from\n    # selecting and source address and port optimally and may significantly\n    # reduce the maximum number of simultaneous connections possible.\n    source 192.0.2.10\n\n    # Log the content of bad requests\n    #bad_requests log\n\n    # Override global access log for this listener\n    access_log {\n        # Same options as error_log\n        filename /tmp/sniproxy.log\n    }\n}\n\nlisten [::]:443 {\n    proto tls\n    # controls if this listener will accept IPv4 connections as well on\n    # supported operating systems such as Linux or FreeBSD, but not OpenBSD.\n    ipv6_v6only on\n    table https_hosts\n}\n\nlisten 0.0.0.0 443 {\n    # This listener will only accept IPv4 connections since it is bound to the\n    # IPv4 any address.\n    proto tls\n    table https_hosts\n}\n\nlisten 192.0.2.10:80 {\n    protocol http\n    # this will use default table\n}\n\nlisten [2001:0db8::10]:80 {\n    protocol http\n    # this will use default table\n}\n\nlisten unix:/var/run/proxy.sock {\n    protocol http\n    # this will use default table\n}\n\n# named tables are defined with the table directive\ntable http_hosts {\n    example.com 192.0.2.10:8001\n    example.net 192.0.2.10:8002\n    example.org 192.0.2.10:8003 proxy_protocol\n\n# Each table entry is composed of three parts:\n#\n# pattern:\n# \tvalid Perl-compatible Regular Expression that matches the\n# \thostname\n#\n# target:\n#\t- a DNS name\n#\t- an IP address and TCP port\n#\t- an IP address (will connect to the same port as the listener received the\n#\t  connection)\n#\t- '*' to use the hostname that the client requested\n#\n# pattern\ttarget\n#.*\\.itunes\\.apple\\.com$\t*:443\n#.*\t127.0.0.1:4443\n}\n\n# named tables are defined with the table directive\ntable https_hosts {\n    # When proxying to local sockets you should use different tables since the\n    # local socket server most likely will not detect which protocol is being\n    # used\n    example.org unix:/var/run/server.sock\n}\n\n# if no table specified the default 'default' table is defined\ntable {\n    # If no port is specified the port of the incoming listener is used\n    example.com 192.0.2.10\n    example.net 192.0.2.20\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test-coverage",
+          "type": "blob",
+          "size": 0.4111328125,
+          "content": "#!/bin/bash\n\nfind . -name \\*.gcno -delete\nfind . -name \\*.gcda -delete\nfind . -name \\*.gcov -delete\n\n./configure CFLAGS=\"-fprofile-arcs -ftest-coverage\" && \\\n    make clean all check\n\n# Run additional network dependent tests\npushd tests && \\\n    ./wildcard_test && \\\n    ./hostname_test && \\\n    popd\n\nfind . -name \\*.gcda | while read FILE; do\n    pushd $( dirname ${FILE} )\n    gcov $( basename ${FILE} )\n    popd\ndone\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

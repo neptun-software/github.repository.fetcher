@@ -1,0 +1,45 @@
+{
+  "metadata": {
+    "timestamp": 1736710124731,
+    "page": 766,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tyilo/insert_dylib",
+      "stars": 1819,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": ".DS_Store\nxcuserdata\n*.xccheckout\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.087890625,
+          "content": "insert_dylib\n============\n\nCommand line utility for inserting a dylib load command into a Mach-O binary.\n\nDoes the following (to each arch if the binary is fat):\n\n- Adds a `LC_LOAD_DYLIB` load command to the end of the load commands\n- Increments the mach header's `ncmds` and adjusts its `sizeofcmds`\n- ([Removes code signature if present](#removing-code-signature))\n\nUsage\n-----\n\n```\nUsage: insert_dylib dylib_path binary_path [new_binary_path]\nOption flags: --inplace --weak --overwrite --strip-codesig --no-strip-codesig --all-yes\n```\n\n`insert_dylib` inserts a load command to load the `dylib_path` in `binary_path`.\n\nUnless `--inplace` option is specified, `insert_dylib` will produce a new binary at `new_binary_path`.  \nIf neither `--inplace` nor `new_binary_path` is specified, the output binary will be located at the same location as the input binary with `_patched` prepended to the name.\n\nIf the `--weak` option is specified, `insert_dylib` will insert a `LC_LOAD_WEAK_DYLIB` load command instead of `LC_LOAD_DYLIB`.\n\n### Example\n\n```\n$ cat > test.c\nint main(void) {\n\tprintf(\"Testing\\n\");\n\treturn 0;\r}\n^D\n$ clang test.c -o test &> /dev/null\n$ insert_dylib /usr/lib/libfoo.dylib test\nThe provided dylib path doesn't exist. Continue anyway? [y/n] y\nAdded LC_LOAD_DYLIB to test_patched\n$ ./test\nTesting\n$ ./test_patched\ndyld: Library not loaded: /usr/lib/libfoo.dylib\n  Referenced from: /Users/Tyilo/./test_patched\n  Reason: image not found\nTrace/BPT trap: 5\n```\n\n#### `otool` `diff` between original and patched binary\n```\n$ diff -u <(otool -hl test) <(otool -hl test_patched)\n--- /dev/fd/63\t2014-07-30 04:08:40.000000000 +0200\n+++ /dev/fd/62\t2014-07-30 04:08:40.000000000 +0200\n@@ -1,7 +1,7 @@\n-test:\n+test_patched:\n Mach header\n       magic cputype cpusubtype  caps    filetype ncmds sizeofcmds      flags\n- 0xfeedfacf 16777223          3  0x80          2    16       1296 0x00200085\n+ 0xfeedfacf 16777223          3  0x80          2    17       1344 0x00200085\n Load command 0\n       cmd LC_SEGMENT_64\n   cmdsize 72\n@@ -231,3 +231,10 @@\n   cmdsize 16\n   dataoff 8296\n  datasize 64\n+Load command 16\n+          cmd LC_LOAD_DYLIB\n+      cmdsize 48\n+         name /usr/lib/libfoo.dylib (offset 24)\n+   time stamp 0 Thu Jan  1 01:00:00 1970\n+      current version 0.0.0\n+compatibility version 0.0.0\n```\n\n#### `--weak` option\n\n```\n$ insert_dylib --weak /usr/lib/libfoo.dylib test test_patched2\nThe provided dylib path doesn't exist. Continue anyway? [y/n] y\nAdded LC_LOAD_WEAK_DYLIB to test_patched2\n$ ./test_patched2\nTesting\n```\n\nRemoving code signature\n----\n\nTo remove the code signature it is enough to delete the `LC_CODE_SIGNATURE` load command and fixup the mach header's `ncmds` and `sizeofcmds`, assuming it is the last load command.\n\nHowever if you just do this `codesign_allocate` (used by `codesign` and `ldid`) will fail with the error:\n\n```\n.../codesign_allocate: file not in an order that can be processed (link edit information does not fill the __LINKEDIT segment):\n```\n\nTo fix this `insert_dylib` assumes that the code signature that `LC_CODE_SIGNATURE` is in the end of the `__LINKEDIT` segment and the that the segment is in the end of the architectures slice.\n\nIt then truncate that slice to remove the code signature part of the `__LINKEDIT` segment. It also updates the `LC_SEGMENT` (or `LC_SEGMENT64`) load command for the `__LINKEDIT` segment from the new file size. If the binary is fat we also update the size and we might also move the slice and so the offset should also be updated.\n\nAfter removing the code signature from the `__LINKEDIT` segment, the last thing in that segment is typically the string table. As the code signature seems to be aligned by `0x10`, and so after removing the code signature, nothing points to the padding at the end of the segment, which `codesign_allocate` doesn't like either. To fix this we just increase the size of the string table in the `LC_SYMTAB` command so it also includes the padding.\n\nTodo\n----\n\n- Improved checking for free space to insert the new load command\n- Allow removal of `LC_CODE_SIGNATURE` if it isn't the last load command\n- Remove `__RESTRICT,__restrict` if not enough space (suggesion by dirkg)"
+        },
+        {
+          "name": "insert_dylib.xcodeproj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "insert_dylib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "insert_dylib_tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

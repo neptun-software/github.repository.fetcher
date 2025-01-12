@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736710022376,
+    "page": 626,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "raspberrypi/userland",
+      "stars": 2051,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2412109375,
+          "content": "# Build directory\nbuild/\n\n# Compiled Object files\n*.slo\n*.lo\n*.o\n\n# Compiled Dynamic libraries\n*.so\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n\n*.raw\n*.rgb\n*.bgr\n*.h264\n*.264\n*.yuyv\n*.uyvy\n*.yvyu\n*.vyuy\n*.i420\n*.yuv\n*.jpg\n*.avi\n*.pts\n*.ppm\n*.mkv\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 3.837890625,
+          "content": "cmake_minimum_required(VERSION 2.8)\n\nproject(vmcs_host_apps)\n\nSET(PROJECT_VER_MAJOR 1)\nSET(PROJECT_VER_MINOR 0)\nSET(PROJECT_VER_PATCH 0)\nSET(PROJECT_VER \"${PROJECT_VER_MAJOR}.${PROJECT_VER_MINOR}.${PROJECT_VER_PATCH}\")\nSET(PROJECT_APIVER \"${PROJECT_VER}\")\n\nif(ARM64)\n   set(BUILD_MMAL FALSE)\n   set(BUILD_MMAL_APPS FALSE)\nelse()\n   set(BUILD_MMAL TRUE)\n   set(BUILD_MMAL_APPS TRUE)\nendif()\nset(vmcs_root ${PROJECT_SOURCE_DIR})\nget_filename_component(VIDEOCORE_ROOT . ABSOLUTE)\n\nset(VCOS_PTHREADS_BUILD_SHARED TRUE)\n\ninclude(makefiles/cmake/global_settings.cmake)\ninclude(makefiles/cmake/arm-linux.cmake)\ninclude(makefiles/cmake/vmcs.cmake)\n\nenable_language(ASM)\n\n# Global include paths\ninclude_directories(host_applications/framework)\ninclude_directories(${PROJECT_SOURCE_DIR})\ninclude_directories(interface/vcos/pthreads)\ninclude_directories(interface/vmcs_host/linux)\ninclude_directories(interface/vmcs_host)\ninclude_directories(interface/vmcs_host/khronos)\ninclude_directories(interface/khronos/include)\ninclude_directories(${PROJECT_BINARY_DIR})\ninclude_directories(interface/vchiq_arm)\n#include_directories(tools/inet_transport)\ninclude_directories(host_support/include)\n\n# Global compiler flags\nif(CMAKE_COMPILER_IS_GNUCC)\n   set(CMAKE_C_FLAGS \"${CMAKE_C_FLAGS} -Wno-multichar -Wall -Wno-unused-but-set-variable -fPIC\")\nendif()\n\nadd_definitions(-D_REENTRANT)\nadd_definitions(-DUSE_VCHIQ_ARM -DVCHI_BULK_ALIGN=1 -DVCHI_BULK_GRANULARITY=1)\nadd_definitions(-DOMX_SKIP64BIT)\nadd_definitions(-DEGL_SERVER_DISPMANX)\nadd_definitions(-D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64)\nadd_definitions(-D_GNU_SOURCE)\n\n# do we actually need this?\nadd_definitions(-D__VIDEOCORE4__)\nadd_definitions(-DTV_SUPPORTED_MODE_NO_DEPRECATED)\n\n# add_definitions(-DKHRONOS_CLIENT_LOGGING)\n\n# Check for OpenWF-C value set via command line\nif(KHRONOS_EGL_PLATFORM MATCHES \"openwfc\")\n   add_definitions(-DKHRONOS_EGL_PLATFORM_OPENWFC)\nendif()\n\n# List of subsidiary CMakeLists\nadd_subdirectory(interface/vcos)\nadd_subdirectory(interface/vmcs_host)\nadd_subdirectory(interface/vchiq_arm)\nif(NOT ARM64)\n   add_subdirectory(interface/khronos)\nendif()\n\n#add_subdirectory(opensrc/tools/lua)\nif(BUILD_MMAL)\n   include_directories(interface/mmal)\n   add_subdirectory(interface/mmal)\n   add_subdirectory(containers)\nendif()\n\n# VidTex supports Android and Linux\nif(BUILD_MMAL_APPS)\nadd_subdirectory(host_applications/android/apps/vidtex)\nendif(BUILD_MMAL_APPS)\n\nif(NOT ARM64)\n   add_subdirectory(middleware/openmaxil)\nendif()\n\n# 3d demo code\n#if(NOT ANDROID)\n#   add_subdirectory(thirdparty/applications/demos)\n#   add_subdirectory(opensrc/applications/demos)\n#endif()\n\n#if(ENABLE_3D_TESTS)\n#   add_subdirectory(thirdparty/applications/test)\n#endif()\n\n# FIXME: we should use a pre-packaged version of freetype\n# rather than the one included in the repo.\n#add_subdirectory(opensrc/helpers/freetype)\n#add_subdirectory(${PROJECT_SOURCE_DIR}/opensrc/helpers/fonts/ttf-bitstream-vera)\n\n# VMCS Host Applications\n#add_subdirectory(host_applications/framework)\n\n# add_subdirectory(interface/vchiq/test/win32)\n\n# Apps and libraries supporting Camera Tuning Tool\n#add_subdirectory(tools/inet_transport/linux)\n#add_subdirectory(host_support/vcstandalone)\n\n# add linux apps\nadd_subdirectory(host_applications/linux)\nadd_subdirectory(opensrc/helpers/libfdt)\nadd_subdirectory(helpers/dtoverlay)\n\nset(vmcs_host_apps_VERSION_MAJOR 1)\nset(vmcs_host_apps_VERSION_MINOR 0)\n\ninclude_directories(\"${PROJECT_BINARY_DIR}\")\ninclude(FindPkgConfig QUIET)\nif(PKG_CONFIG_FOUND)\n\t# Produce a pkg-config file\n\tforeach(PCFILE bcm_host.pc brcmegl.pc brcmglesv2.pc brcmvg.pc vcsm.pc mmal.pc)\n\t\tconfigure_file(\"pkgconfig/${PCFILE}.in\" \"${PCFILE}\" @ONLY)\n\t\tinstall(FILES       \"${CMAKE_CURRENT_BINARY_DIR}/${PCFILE}\"\n\t\t\tDESTINATION \"${CMAKE_INSTALL_PREFIX}/lib/pkgconfig\")\n\tendforeach()\nendif()\n# Remove cache entry, if one added by command line\nunset(KHRONOS_EGL_PLATFORM CACHE)\n"
+        },
+        {
+          "name": "LICENCE",
+          "type": "blob",
+          "size": 1.537109375,
+          "content": "Copyright (c) 2012, Broadcom Europe Ltd\nCopyright (c) 2015, Raspberry Pi (Trading) Ltd\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n    * Redistributions of source code must retain the above copyright\n      notice, this list of conditions and the following disclaimer.\n    * Redistributions in binary form must reproduce the above copyright\n      notice, this list of conditions and the following disclaimer in the\n      documentation and/or other materials provided with the distribution.\n    * Neither the name of the copyright holder nor the\n      names of its contributors may be used to endorse or promote products\n      derived from this software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY\nDIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND\nON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.4208984375,
+          "content": "Update\n======\n\nThis repo is ancient and deprecated.\n\nIt largely contains code using proprietary APIs to interface\nto the VideoCore firmware. We have since move to standard linux APIs.\n\nV4L2, DRM/KMS and Mesa are the APIs you should be using.\n\nThe few useful tools from here (dtoverlay, dtmerge, vcmailbox, vcgencmd)\nhave been moved to the raspberrypi/utils repo.\n\nCode from here is no longer installed on latest RPiOS Bookworm images.\n\nIf you are using code from here you should rethink your solution.\n\nConsider this repo closed.\n\n========================\n\nThis repository contains the source code for the ARM side libraries used on Raspberry Pi.\nThese typically are installed in /opt/vc/lib and includes source for the ARM side code to interface to:\nEGL, mmal, GLESv2, vcos, openmaxil, vchiq_arm, bcm_host, WFC, OpenVG.\n\nUse buildme to build. It requires cmake to be installed and an ARM cross compiler. For 32-bit cross compilation it is set up to use this one:\nhttps://github.com/raspberrypi/tools/tree/master/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian\n\nWhilst 64-bit userspace is not officially supported, some of the libraries will work for it. To cross compile, install gcc-aarch64-linux-gnu and g++-aarch64-linux-gnu first. For both native and cross compiles, add the option ```--aarch64``` to the buildme command.\n\nNote that this repository does not contain the source for the edidparser and vcdbg binaries due to licensing restrictions.\n"
+        },
+        {
+          "name": "buildme",
+          "type": "blob",
+          "size": 1.2744140625,
+          "content": "#!/bin/bash\nBUILDTYPE=Release\nARCH=$(uname -m)\nARM64=OFF\nCMAKE_TOOLCHAIN_FILE=../../../makefiles/cmake/toolchains/arm-linux-gnueabihf.cmake\n\nif [ \"$1\" = \"--debug\" ]; then\n\tBUILDTYPE=Debug\n\tshift\nfi\n\nif [ \"$1\" = \"--aarch64\" ]; then\n\tARM64=ON\n\tCMAKE_TOOLCHAIN_FILE=../../../makefiles/cmake/toolchains/aarch64-linux-gnu.cmake\n\tshift\nfi\n\nBUILDSUBDIR=`echo $BUILDTYPE | tr '[A-Z]' '[a-z]'`;\n\nif [ $ARCH = \"armv6l\" ] || [ $ARCH = \"armv7l\" ] || [ $ARCH = \"aarch64\" ]; then\n\t# Native compile on the Raspberry Pi\n\tmkdir -p build/raspberry/$BUILDSUBDIR\n\tpushd build/raspberry/$BUILDSUBDIR\n\tcmake -DCMAKE_BUILD_TYPE=$BUILDTYPE -DARM64=$ARM64 ../../..\n\tif [ $ARCH = \"armv6l\" ]; then\n\t\tmake\n\telse\n\t\tmake -j4\n\tfi\n\tif [ \"$1\" != \"\" ]; then\n\t\tsudo make install DESTDIR=$1\n\telse\n\t\tsudo make install\n\tfi\nelif [ \"$1\" = \"--native\" ]; then\n\t# Build natively on the host\n\tmkdir -p build/native/$BUILDSUBDIR\n\tpushd build/native/$BUILDSUBDIR\n\tcmake -DCMAKE_BUILD_TYPE=$BUILDTYPE ../../..\n\tshift\n\tmake -j `nproc` $*\nelse\n\t# Cross compile on a more capable machine\n\tmkdir -p build/arm-linux/$BUILDSUBDIR\n\tpushd build/arm-linux/$BUILDSUBDIR\n\tcmake -DCMAKE_TOOLCHAIN_FILE=$CMAKE_TOOLCHAIN_FILE -DCMAKE_BUILD_TYPE=$BUILDTYPE -DARM64=$ARM64 ../../..\n\tmake -j `nproc`\n\n\tif [ \"$1\" != \"\" ]; then\n\t\tsudo make install DESTDIR=$1\n\tfi\nfi\npopd\n"
+        },
+        {
+          "name": "containers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "helpers",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "host_applications",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "host_support",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "interface",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "makefiles",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "middleware",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "opensrc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pkgconfig",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vcfw",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vcinclude",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "metadata": {
+    "timestamp": 1736710105270,
+    "page": 729,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjczMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "msysgit/msysgit",
+      "stars": 1869,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0478515625,
+          "content": "msys.bat -crlf\ncmd/*.cmd -crlf\netc/termcap -crlf\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.248046875,
+          "content": "/bin/git*\n/bin/cpio\n/home\nlibexec/git-core\n/share/git-gui\n/share/gitk\n/share/git-core\n/lib/Error.pm\n/lib/Git.pm\n/lib/Git/*.pm\n/lib/Git/SVN/\n/lib/perl5/5.8.8/CPAN/Config.pm*\n/share/gitweb/\n\n# see https://github.com/msysgit/msysgit/wiki/Vagrant\n/.vagrant/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.2568359375,
+          "content": "[submodule \"git\"]\n\tpath = git\n\turl = https://github.com/msysgit/git.git\n[submodule \"html\"]\n\tpath = doc/git/html\n\turl = https://github.com/gitster/git-htmldocs.git\n[submodule \"git-cheetah\"]\n\tpath = src/git-cheetah\n\turl = https://github.com/msysgit/Git-Cheetah.git\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.3232421875,
+          "content": "# Please note!\n\nGit for Windows 1.x was retired on August 18th, 2015, superseded by [Git for Windows 2.x](https://git-for-windows.github.io/). The development environment of Git for Windows 2.x is no longer maintained in a monolithic Git repository but rather as the [Git SDK](https://git-for-windows.github.io/#download-sdk), a friendly fork of [MSys2](https://msys2.github.io/) pre-configured to ease the development of Git for Windows.\n\n# Build environment for Git for Windows 1.x\n\nThis is the build environment -- also known as msysGit -- for [Git for Windows](http://msysgit.github.io/).\n\nThe easiest way is to install it via the [net installer](https://github.com/msysgit/msysgit/releases). This installer will clone our [two](http://github.com/msysgit/msysgit) [repositories](http://github.com/msysgit/git), including all the necessary components to build Git for Windows, and perform an initial build.\n\n# The build environment\n\nmsysGit brings a few components that are required to build Git:\n\n- Bash, a Unix-type command-line shell. Quite a few components of Git itself are still shell scripts. Therefore, Bash is required to execute Git commands (see the output of `cd /git && git ls-files \\*.sh` for a full list).\n- the GNU C Compiler. Since we try to rely only on free software (apart from the Operating System, of course), we think it makes more sense to rely on GCC than on Visual Studio express. Also, it makes the maintenance burden lighter, as [upstream Git](http://github.com/gitster/git) also targets mainly GCC.\n- GNU Make.\n- Perl. Still required for a couple of Git components (see the output of `cd /git && git ls-files \\*.perl`), most notably `git svn`.\n- Tcl/Tk, a scripting language making it easy to implement cross-platform graphical user interfaces. We need this for `gitk` and `git gui`.\n- [cURL](http://curl.haxx.se), a library implementing HTTP and FTP transport.\n- many more libraries.\n- some Unix programs required by the shell scripts in Git.\n\n# The relationship between _msysGit_ and _Git for Windows_\n\n[Git for Windows](https://github.com/msysgit/msysgit/releases) is the software package that installs a minimal environment to run Git on Windows. It comes with a Bash (a Unix-type shell), with a Perl interpreter and with the Git executable and its dependencies.\n\nOn the other hand, msysGit is the software package installing the _build environment_ that can build Git for Windows.  The easiest way is to install it via the [net installer](https://github.com/msysgit/msysgit/releases).\n\n# The difference between MSys and MinGW\n\nThe [MinGW project](http://mingw.org/)'s goal is to provide a way to compile native Windows binaries with no POSIX layer using the GNU C Compiler.\n\nHowever, at least the Bash needs a POSIX layer (most notably due to the absence of the `fork()` call on Windows). Therefore, MSys (the _minimal system_) is thrown in, offering the minimal system necessary to offer Bash (and Perl) functionality on Windows.\n\nConsequently, MSys ships with a POSIX layer (based on an old version of Cygwin) that is only used by the Bash and Perl, but not by anything compiled within that environment.\n\n# Further information\n\nFor more information and documentation, please have a look and enhance our [Wiki](https://github.com/msysgit/msysgit/wiki).\n\nFor code contributions and discussions, please see our [mailing list](http://groups.google.com/group/msysgit).\n"
+        },
+        {
+          "name": "THIS_IS_MSYSGIT",
+          "type": "blob",
+          "size": 0.1259765625,
+          "content": "Do not delete this file! Upstream Git's Makefile is checking for the\r\nexistence of this file and sets some defines accordingly.\r\n"
+        },
+        {
+          "name": "Vagrantfile",
+          "type": "blob",
+          "size": 1.615234375,
+          "content": "# -*- mode: ruby -*-\n# vi: set ft=ruby :\n\n# This Vagrantfile defines the requirements of a Linux development environment\n# to develop/run Git. This environment can be set up conveniently by installing\n# Vagrant and VirtualBox and calling \"vagrant up\" in the Git directory.\n#\n# See https://github.com/msysgit/msysgit/wiki/Vagrant for details.\n\n# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!\nVAGRANTFILE_API_VERSION = \"2\"\n\n$provision = <<PROVISION\napt-get update\napt-get install -y make gcc libexpat-dev libcurl4-openssl-dev gettext tk8.5 libsvn-perl\n\n# clean .profile in case we're re-provisioning\nn=\"$(grep -n 'cd /vagrant' < /home/vagrant/.profile 2> /dev/null |\n\tsed 's/:.*//')\"\ntest -z \"$n\" || {\n\thead -n $(($n-1)) < /home/vagrant/.profile > /tmp/.profile\n\tmv /tmp/.profile /home/vagrant/.profile\n}\n\n# add a nice greeting\ncat >> /home/vagrant/.profile << \\EOF\n\ncd /vagrant/git\nexport PATH=/home/vagrant/bin:$PATH\ncat << \\TOOEOF\n\nWelcome to the Vagrant setup for Git!\n--------------------------------------\n\nTo build & install Git, just execute\n\n\tmake -j NO_PERL_MAKEMAKER=t install\n\nFor more information, see https://github.com/msysgit/msysgit/wiki/Vagrant and\nremember that this project is only as good as you make it.\nTOOEOF\nEOF\n\ncat << EOF\n\nNow that everything is set up, connect to the Vagrant machine with the command:\n\n\tvagrant ssh\n\nEOF\nPROVISION\n\nVagrant.configure(VAGRANTFILE_API_VERSION) do |config|\n  # Start with a 64-bit Ubuntu 12.04 \"Precise Penguin\" box\n  config.vm.box = \"ubuntu\"\n  config.vm.box_url = \"http://files.vagrantup.com/precise64.box\"\n\n  config.vm.provision :shell, :inline => $provision\nend\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cmd",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "etc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "git",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "git-cmd.bat",
+          "type": "blob",
+          "size": 0.5322265625,
+          "content": "@rem Do not use \"echo off\" to not affect any child calls.\r\n@setlocal\r\n\r\n@rem Get the absolute path to the current directory, which is assumed to be the\r\n@rem Git installation root.\r\n@for /F \"delims=\" %%I in (\"%~dp0\") do @set git_install_root=%%~fI\r\n@set PATH=%git_install_root%\\bin;%git_install_root%\\mingw\\bin;%git_install_root%\\cmd;%PATH%\r\n\r\n@if not exist \"%HOME%\" @set HOME=%HOMEDRIVE%%HOMEPATH%\r\n@if not exist \"%HOME%\" @set HOME=%USERPROFILE%\r\n\r\n@set PLINK_PROTOCOL=ssh\r\n@if not defined TERM set TERM=msys\r\n\r\n@cd /d %HOME%\r\n@call %COMSPEC%\r\n"
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "libexec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mingw",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "msys.bat",
+          "type": "blob",
+          "size": 5.6123046875,
+          "content": "@echo off\r\n@setlocal\r\nrem Copyright (C):  2001, 2002  Earnie Boyd\r\nrem   mailto:earnie@users.sf.net\r\nrem This file is part of Minimal SYStem\r\nrem   http://www.mingw.org/msys.shtml\r\nrem\r\nrem File:\t    msys.bat\r\nrem Revision:\t    2.0\r\nrem Revision Date:  April 17th, 2002\r\n\r\nrem ember to set the \"Start in:\" field of the shortcut.\r\nrem A value similar to C:\\msys\\1.0\\bin is what the \"Start in:\" field needs\r\nrem to represent.\r\n\r\nrem this should let run MSYS shell on x64\r\nif \"%PROCESSOR_ARCHITECTURE%\" == \"AMD64\" (\r\n  SET COMSPEC=%WINDIR%\\SysWOW64\\cmd.exe\r\n)\r\n\r\nrem ember value of GOTO: is used to know recursion has happened.\r\nif \"%1\" == \"GOTO:\" goto %2\r\n\r\nrem ember command.com only uses the first eight characters of the label.\r\nset OS_VERSION=\"NT\"\r\ngoto _WindowsNT\r\n\r\nrem ember that we only execute here if we are in command.com.\r\n:_Windows\r\nset OS_VERSION=\"9x\"\r\n\r\nif \"x%COMSPEC%\" == \"x\" set COMSPEC=command.com\r\nstart %COMSPEC% /e:4096 /c %0 GOTO: _Resume %0 %1 %2 %3 %4 %5 %6 %7 %8 %9\r\ngoto EOF\r\n\r\nrem ember that we execute here if we recursed.\r\n:_Resume\r\nfor %%F in (1 2 3) do shift\r\n\r\nrem ember that we get here even in command.com.\r\n:_WindowsNT\r\n\r\nif \"x%MSYSTEM%\" == \"x\" set MSYSTEM=MINGW32\r\nif \"%1\" == \"MSYS\" set MSYSTEM=MSYS\r\n\r\nif NOT \"x%DISPLAY%\" == \"x\" set DISPLAY=\r\n\r\nrem We here assume old behavior, to make sure that older platforms can still use\r\nrem this batch file to start their MSys environment.\r\nset BIN=\"\"\r\nif EXIST bin\\nul set BIN=bin\\\r\nif EXIST %BIN%bash.exe goto startbash\r\nif EXIST %BIN%rxvt.exe goto startrxvt\r\n\r\nrem If we're not on win9x type OSs, lets try a little better at finding bash/rxvt\r\nif \"win%OS_VERSION%\"==\"win9x\" goto failed\r\nset BIN=\"%~dp0bin\\\"\r\nif EXIST %BIN%bash.exe goto startbash\r\nif EXIST %BIN%rxvt.exe goto startrxvt\r\n\r\n:failed\r\necho Cannot find the rxvt.exe or bash.exe binary -- aborting.\r\npause\r\nrem exit 1\r\nrem we skip using exit 1 here, since it will close the console you were working on\r\nrem which probably isn't what you wanted. If the bat file was run from a shortcut\r\nrem the window will still close, like you would expect it to. Sorry, you cant test\r\nrem for exit values anymore, but hey, you can just un-rem the line above then! :-)\r\ngoto EOF\r\n\r\nrem If you don't want to use rxvt then rename the file rxvt.exe to something\r\nrem else.  Then bash.exe will be used instead.\r\n:startrxvt\r\n\r\nrem Setup the default colors for rxvt.\r\nif \"x%MSYSBGCOLOR%\" == \"x\" set MSYSBGCOLOR=White\r\nif \"x%MSYSFGCOLOR%\" == \"x\" set MSYSFGCOLOR=Black\r\nif \"x%MINGW32BGCOLOR%\" == \"x\" set MINGW32BGCOLOR=LightYellow\r\nif \"x%MINGW32FGCOLOR%\" == \"x\" set MINGW32FGCOLOR=Navy\r\nif \"%MSYSTEM%\" == \"MSYS\" set BGCOLOR=%MSYSBGCOLOR%\r\nif \"%MSYSTEM%\" == \"MSYS\" set FGCOLOR=%MSYSFGCOLOR%\r\nif \"%MSYSTEM%\" == \"MINGW32\" set BGCOLOR=%MINGW32BGCOLOR%\r\nif \"%MSYSTEM%\" == \"MINGW32\" set FGCOLOR=%MINGW32FGCOLOR%\r\n\r\nstart %COMSPEC% /c %BIN%rxvt -backspacekey \b -sl 2500 -fg %FGCOLOR% -bg %BGCOLOR% -sr -fn Courier-12 -tn msys -geometry 80x25 -e /bin/bash --login -i\r\nexit\r\n\r\n:startbash\r\ncall %COMSPEC% /c %BIN%bash --login -i\r\n\r\n:EOF\r\n\r\nrem ChangeLog:\r\nrem 2002.03.07  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Move the @echo off to the top.\r\nrem\t* Change the binmode setting to nobinmode.\r\nrem     * Remove the angle brackets around email address to workaround MS\r\nrem\tbuggy command processor.\r\nrem\r\nrem 2002.03.12  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Add filter logic to find rxvt.exe\r\nrem\r\nrem 2002.03.13  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Revert the nobinmode change.\r\nrem\r\nrem 2002.03.20  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem     * Add logic for stating bash.\r\nrem\r\nrem 2002.04.11  Earnie Boyd  mailto;earnie@users.sf.net\r\nrem\t* Add logic for setting MSYSTEM value based on parameter.\r\nrem\r\nrem 2002.04.15  Olivier Gautherot  mailto:olivier_gautherot@mentorg.com\r\nrem\t* Reduce number test conditions for finding an executable.\r\nrem\r\nrem 2002.04.15  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Unset DISPLAY if set before starting shell.\r\nrem\r\nrem 2002.04.16  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Remove use of DEFINED in conditional statments for variables for\r\nrem\tcommand.com support.\r\nrem\t* Add check for nonexistance of USERNAME variable for Win9x support.\r\nrem\r\nrem 2002.04.17  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Add foreground and background color defaults based on MSYSTEM value.\r\nrem\r\nrem 2002.04.22  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* More Win 9x changes.\r\nrem\r\nrem 2002.05.04  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Remove the SET of USERNAME and HOME.\r\nrem\r\nrem 2002.11.18  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Add command.com detection and restart with a larger environment to\r\nrem\tavoid errors on w9x.\r\nrem     Many thanks to Randy W. Sims mailto:RandyS@ThePierianSpring.org.\r\nrem\tSee Randy's response to \"RE: [Mingw-msys] Installation on WindowsME\"\r\nrem\tfrom 11/06/2002 in the archives of mingw-msys@lists.sf.net.\r\nrem\r\nrem 2002.11.19  Paul Garceau  mailto:pgarceau@attbi.com\r\nrem\t* Fix a typo: Change COMPSPEC to COMSPEC.\r\nrem\r\nrem 2002.11.25  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Remove the SET CYGWIN since it doesn't matter any longer.\r\nrem\r\nrem 2003.02.03  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Win9x doesn't like ``EXISTS dir'' so change it to ``EXISTS dir\\nul''.\r\nrem\tThanks to Nicolas Weber mailto:nicolasweber@gmx.de.\r\nrem\r\nrem 2003.03.06  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Add -backspacekey switch to rxvt startup.\r\nrem\t* Move RXVT color setup to startrxvt label\r\nrem\r\nrem 2004.01.30  Earnie Boyd  mailto:earnie@users.sf.net\r\nrem\t* Add -geometry parameter to work around an off by one issue with\r\nrem       the default values.\r\nrem\tThanks to Dave Schuyler mailto:parameter@users.sf.net\r\n"
+        },
+        {
+          "name": "share",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ssl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wine-start.sh",
+          "type": "blob",
+          "size": 0.853515625,
+          "content": "#!/bin/sh\n\nWINECONSOLE=wineconsole\nREBASE=\nwhile test $# -gt 0\ndo\n\tcase \"$1\" in\n\t--no-console)\n\t\tWINECONSOLE=\n\t\t;;\n\t--rebase)\n\t\tREBASE=0x60000000\n\t\t;;\n\t--rebase=*)\n\t\tREBASE=${1#--rebase=}\n\t\t;;\n\t*)\n\t\tbreak\n\t\t;;\n\tesac\n\tshift\ndone\n\nif test $# -gt 0\nthen\n\techo \"Unhandled options: $*\" >&2\n\texit 1\nfi\n\ncat << EOF\nPlease restart with --rebase if you see 'assertion \"!inheap (s)\" failed: ...'\nEOF\n\ndie () {\n\techo \"$*\" >&2\n\texit 1\n}\n\ncd \"$(dirname \"$0\")\" &&\nif test -n \"$REBASE\"\nthen\n\t(cd bin && wine ../mingw/bin/rebase.exe -b \"$REBASE\" msys-1.0.dll) ||\n\tdie \"Could not rebase msys-1.0.dll to $REBASE\"\n\tgit update-index --assume-unchanged bin/msys-1.0.dll ||\n\tcat << EOF\nDid not find a (non-msysGit) git; please run\n\n\tgit update-index --assume-unchanged /bin/msys-1.0.dll\n\nwhen Git was compiled\nEOF\nfi &&\nexec wine $WINECONSOLE bin/bash --login -i ||\necho \"Failure to start Wine!\"\n"
+        }
+      ]
+    }
+  ]
+}

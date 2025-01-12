@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736710117220,
+    "page": 750,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "orangeduck/Corange",
+      "stars": 1850,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.2158203125,
+          "content": "# Set the default behavior, in case people don't have core.autocrlf set.\n* text=auto\n\n# Explicitly declare text files you want to always be normalized and converted\n# to native line endings on checkout.\n*.c text\n*.h text\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1103515625,
+          "content": "corange.dll\r\ncorange.lib\r\ncorange.res\r\nlibcorange.so\r\nlibcorange.a\r\n*~\r\n*.o\r\n*.log\r\n*.exe\nstdout.txt\r\nstderr.txt\n"
+        },
+        {
+          "name": "LICENCE.md",
+          "type": "blob",
+          "size": 2.0263671875,
+          "content": "License\n=======\n\nSource Code\n-----------\n\nAll source code is licensed under BSD\n\nCopyright (c) 2010, Daniel Holden\nAll rights reserved.\n\nCorange is licensed under a basic BSD license.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\nRedistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\nRedistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\n\nAssets\n------\n\nAll demo assets are licensed under Creative Commons 3.0 \n\nhttp://creativecommons.org/licenses/by/3.0/legalcode\n\n\nExceptions\n----------\n\n* Imrod Asset\n  \n  Unsure of license. Best to ask Dmitry Parkin before use - http://www.parkparkin.com/gallery/imrod_dw.html\n\n* Platformer Assets\n\n  + Tiles. Creative Commons - http://opengameart.org/content/side-scrolling-fantasy-themed-game-assets\n  + Coin Sound. Creative Commons - http://opengameart.org/content/completion-sound\n  + Trees. Creative Commons - http://opengameart.org/content/old-frogatto-tile-art-2\n  + Coin. Free for Commercial Use - http://wefunction.com/2008/07/function-free-icon-set/\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.33203125,
+          "content": "CC=gcc\nAR=ar\n\nSRC = $(wildcard src/*.c) $(wildcard src/*/*.c)\nOBJ = $(addprefix obj/,$(notdir $(SRC:.c=.o)))\n\nCFLAGS = -I ./include -std=gnu99 -Wall -Werror -Wno-unused -O3 -g\nLFLAGS = -lSDL2 -lSDL2_mixer -lSDL2_net -shared -g\n\nPLATFORM = $(shell uname)\n\nifeq ($(findstring Linux,$(PLATFORM)),Linux)\n\tDYNAMIC = libcorange.so\n\tSTATIC = libcorange.a\n\tCFLAGS += -fPIC\n\tLFLAGS += -lGL\nendif\n\nifeq ($(findstring Darwin,$(PLATFORM)),Darwin)\n\tDYNAMIC = libcorange.so\n\tSTATIC = libcorange.a\n\tCFLAGS += -fPIC\n\tLFLAGS += -framework OpenGL\nendif\n\nifeq ($(findstring MINGW,$(PLATFORM)),MINGW)\n\tDYNAMIC = corange.dll\n\tSTATIC = libcorange.a\n\tLFLAGS = -lmingw32 -lopengl32 -lSDL2main -lSDL2 -lSDL2_mixer -lSDL2_net -shared -g\n\tOBJ += corange.res\nendif\n\n\nall: $(DYNAMIC) $(STATIC)\n\n$(DYNAMIC): $(OBJ)\n\t$(CC) $(OBJ) $(LFLAGS) -o $@\n\t\n$(STATIC): $(OBJ)\n\t$(AR) rcs $@ $(OBJ)\n\t\nobj/%.o: src/%.c | obj\n\t$(CC) $< -c $(CFLAGS) -o $@\n\nobj/%.o: src/*/%.c | obj\n\t$(CC) $< -c $(CFLAGS) -o $@\n\t\nobj:\n\tmkdir obj\n\t\ncorange.res: corange.rc\n\twindres $< -O coff -o $@\n\t\nclean:\n\trm $(OBJ) $(STATIC) $(DYNAMIC)\n  \ninstall_unix: $(STATIC)\n\tcp $(STATIC) /usr/local/lib/$(STATIC)\n  \ninstall_win32: $(STATIC)\n\tcp $(STATIC) C:/MinGW/lib/$(STATIC)\n  \ninstall_win64: $(STATIC) $(DYNAMIC)\n\tcp $(STATIC) C:/MinGW64/x86_64-w64-mingw32/lib/$(STATIC)\n\tcp $(DYNAMIC) C:/MinGW64/x86_64-w64-mingw32/bin/$(DYNAMIC)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.2783203125,
+          "content": "Corange game engine\r\n===================\r\n\t\r\nVersion 0.8.0\r\n\r\nWritten in Pure C, SDL and OpenGL.\r\n\r\nRunning\r\n-------\r\n\t\r\nCorange is a library, but to take a quick look at some of the things it does you can [Look at some of the Demos](http://www.youtube.com/watch?v=482GxqTWXtA). Warning: Some things shown are from a previous version and may not remain the same in this version.\r\n\t\r\n\r\nCompiling\r\n---------\r\n\t\r\nTo compile on Windows you need MinGW and then you should be able to run \"make\" as usual. You will need to have installed SDL, SDL_Mixer and SDL_Net.\r\n\r\n    make\r\n\r\nTo compile on Linux you need to install SDL2. Then you should run \"make\"\r\n\r\n    sudo apt-get install libsdl2-dev\r\n    sudo apt-get install libsdl2-mixer-dev\r\n    sudo apt-get install libsdl2-net-dev\r\n    make\r\n\r\n\r\nOverview\r\n--------\r\n\r\n* Small, Simple, Powerful, Cross platform\r\n* Clean and easy Asset, UI, Entity management\r\n* Modern Deferred renderer\r\n\r\n\r\nDemos\r\n-----\r\n\r\nI'm a graphics programmer by trade so apologies that most of the demos are graphical apps; they're just what I love!\r\n\r\n* __renderers__ Shows off the various renderers with shaders, shadows, animation etc.\r\n* __metaballs__ Uses OpenCL/OpenGL interop to do Metaball rendering.\r\n* __noise__ Feedback based noise pattern on screen using shader. Can generate tileable perlin noise in software.\r\n* __platformer__ Basic platforming game. Fairly well commented.\r\n* __sea__ Renders a sea-like surface, a ship, and some collision detection.\r\n* __scotland__ Demonstrates terrain system.\r\n* __tessellation__ Demo showing tessellation shaders in OpenGL 4.\r\n\r\n\t\r\nFAQ\r\n---\r\n\r\n* __How is that pronounced?__\r\n\r\n\tRhymes with Purple.\r\n\r\n* __Why not C++?__\r\n\t\r\n\tThere are plenty of C++ engines which do what I've done here and better. Pure C game engines on the other hand are much rarer. Corange provided me an outlet to practice my C skills. Of course if you are just linking to it you can still program your game/executable using C++.\r\n\t\r\n* __What stuff does it do?__\r\n\r\n\tI've used it as a platform for trying out all sorts of techniques and effects. These features are not out-of-the-box or plug-in-and-play, but if you are a developer who has knowledge of what they are, you should be able to utilize what I have written. Some are WIP or rough around the edges.\r\n\t\r\n\tDeferred Rendering / UI Rendering / Text Rendering. Multiple Lights. Post effects. SSAO. Shadow Mapping. Color Correction. Skeletal Animation. Inverse Kinematics. Collision Detection. OpenCL support. Asset / Entity / UI Management. Terrain. File loaders including .dds, .wav, .bmp, .obj, .smd. Maths and Geometry. And More...\r\n\t\r\n* __Can I use this for 2D stuff?__\r\n\t\r\n\tCertainly. Though Corange doesn't provide a 2D renderer for you. That you can write yourself. Believe it or not, making a generalized 2D renderer can be exceedingly complicated when you have to optimise for different sprites, tile sets, dynamic objects and all sorts of other effects. You're better off writing the rendering code application specific.\r\n\t\r\n* __Can I contact you about something?__\r\n\r\n\tYes - `contact@theorangeduck.com`\r\n\r\n  \r\nUsing / Contributing\r\n--------------------\r\n\t\r\nThis is still mainly a personal project and so there are going to be lots of bugs, unfinished features and messy bits of code. The engine is heavily WIP and subject to sweeping changes. It isn't really viable to use without also being part of the project development and in communication with me. Rather than a full game engine like Unity, Corange is more of a framework and gives you access to features at about the same level as XNA.\r\n\r\nI have a big backlog of Work in Progress changes I need to push up to the repository once they get to a reasonable point so if you are interested in those please contact me.\r\n\t\t\r\nSaying that, it is a great excuse to practise your C and I very much welcome help. If the project appeals to you here are a couple of quick things that might help get you started.\r\n\t\t\r\n* First take a look at the demos. These give a brief overview of how Corange can be used. The platformer demo is probably the most commented.\r\n\r\n* There is no real documentation so your first port of call is the header files and your second is the c files. The code has very minimal comments but should be pretty clear most of the time.\r\n\r\n* Corange doesn't hide anything from you. OpenGL and SDL calls are in the namespace so you've got access to the basics. The corange_init and corange_finish functions are fairly short so it is even possible to not call them and only use the components you want.\r\n\r\n* Structs are typedefed without their pointer. The reason for this is a personal choice but there are also quite a few data types which are passed by value on the stack (vectors, matrices, spheres, boxes). I didn't want the notion of these to get confused.\r\n\r\n* Some important parts of the engine are the asset, UI and entity managers. These basically let you access and store assets (models, textures - objects in the file system) and entities (lights, cameras, engine objects) and UI elements. They clean up memory on destruction and let you get pointers from all parts of the code.\r\n\r\n* Corange mangles the namespace pretty badly, taking names such as \"error\", \"warning\", \"vec2\" and \"image\". It isn't a general purpose library. But I've still tried to decouple stuff so it should be possible to extract certain code if you need it.\r\n\r\n"
+        },
+        {
+          "name": "assets_core",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "corange.ico",
+          "type": "blob",
+          "size": 14.732421875,
+          "content": null
+        },
+        {
+          "name": "corange.rc",
+          "type": "blob",
+          "size": 0.5458984375,
+          "content": "icon ICON DISCARDABLE \"./corange.ico\"\n1 VERSIONINFO\nFILEVERSION     0,5,1,0\nPRODUCTVERSION  0,5,1,0\nBEGIN\n  BLOCK \"StringFileInfo\"\n  BEGIN\n    BLOCK \"080904E4\"\n    BEGIN\n      VALUE \"CompanyName\", \"Daniel Holden\"\n      VALUE \"FileDescription\", \"Corange Library\"\n      VALUE \"FileVersion\", \"0.5.1\"\n      VALUE \"InternalName\", \"corange.dll\"\n      VALUE \"LegalCopyright\", \"Daniel Holden\"\n      VALUE \"ProductName\", \"Corange Library\"\n      VALUE \"ProductVersion\", \"0.5.1\"\n    END\n  END\n\n  BLOCK \"VarFileInfo\"\n  BEGIN\n    VALUE \"Translation\", 0x809, 1252\n  END\nEND"
+        },
+        {
+          "name": "demos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

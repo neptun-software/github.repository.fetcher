@@ -1,0 +1,154 @@
+{
+  "metadata": {
+    "timestamp": 1736709912785,
+    "page": 424,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "xdp-project/xdp-tutorial",
+      "stars": 2550,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.669921875,
+          "content": "# Prerequisites\n*.d\n\n# Object files\n*.o\n*.ko\n*.obj\n*.elf\n*.s\n*.ll\n\n# Linker output\n*.ilk\n*.map\n*.exp\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Libraries\n*.lib\n*.a\n*.la\n*.lo\n\n# Shared objects (inc. Windows DLLs)\n*.dll\n*.so\n*.so.*\n*.dylib\n\n# Executables\n*.exe\n*.out\n*.app\n*.i*86\n*.x86_64\n*.hex\n\n# Debug files\n*.dSYM/\n*.su\n*.idb\n*.pdb\n\n# Kernel Module Compile Results\n*.mod*\n*.cmd\n.tmp_versions/\nmodules.order\nModule.symvers\nMkfile.old\ndkms.conf\n\n# Userspace programs\nxdp-loader\nxdp_loader\nxdp_stats\nxdp_pass_user\nxdp_load_and_stats\nxdp_prog_user\naf_xdp_user\n\n# tracing userspace programs\ntrace_load_and_stats\ntrace_load_and_stats\ntrace_read\nxdp_sample_pkts_user\n\n# configure output\nconfig.mk\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.177734375,
+          "content": "[submodule \"lib/libbpf\"]\n\tpath = lib/libbpf\n\turl = https://github.com/libbpf/libbpf\n[submodule \"lib/xdp-tools\"]\n\tpath = lib/xdp-tools\n\turl = https://github.com/xdp-project/xdp-tools\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.072265625,
+          "content": "# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)\n\nifeq (\"$(origin V)\", \"command line\")\nVERBOSE = $(V)\nendif\nifndef VERBOSE\nVERBOSE = 0\nendif\n\nifeq ($(VERBOSE),0)\nMAKEFLAGS += --no-print-directory\nQ = @\nendif\n\nLESSONS = $(wildcard basic*) $(wildcard packet*) $(wildcard tracing??-*)\n# LESSONS += advanced03-AF_XDP\nLESSONS_CLEAN = $(addsuffix _clean,$(LESSONS))\n\n.PHONY: clean clobber distclean $(LESSONS) $(LESSONS_CLEAN)\n\nall: lib $(LESSONS)\nclean: $(LESSONS_CLEAN)\n\t@echo; echo common; $(MAKE) -C common clean\n\t@echo; echo lib; $(MAKE) -C lib clean\n\nlib: config.mk check_submodule\n\t@echo; echo $@; $(MAKE) -C $@\n\n$(LESSONS):\n\t@echo; echo $@; $(MAKE) -C $@\n\n$(LESSONS_CLEAN):\n\t@echo; echo $@; $(MAKE) -C $(subst _clean,,$@) clean\n\nconfig.mk: configure\n\t@sh configure\n\nclobber:\n\t@touch config.mk\n\t$(Q)$(MAKE) clean\n\t$(Q)rm -f config.mk\n\ndistclean:\tclobber\n\ncheck_submodule:\n\t@if [ -d .git ] && `git submodule status lib/libbpf | grep -q '^+'`; then \\\n\t\techo \"\" ;\\\n\t\techo \"** WARNING **: git submodule SHA-1 out-of-sync\" ;\\\n\t\techo \" consider running: git submodule update\"  ;\\\n\t\techo \"\" ;\\\n\tfi\\\n\n"
+        },
+        {
+          "name": "README.org",
+          "type": "blob",
+          "size": 5.4033203125,
+          "content": "# -*- fill-column: 76; -*-\n#+TITLE: XDP Programming Hands-On Tutorial\n#+OPTIONS: ^:nil\n\nThis repository contains a tutorial that aims to introduce you to the basic\nsteps needed to effectively write programs for the eXpress Data Path (XDP)\nsystem in the Linux kernel, which offers high-performance programmable\npacket processing integrated with the kernel.\n\nThe tutorial is composed of a number of lessons, each of which has its own\nrepository. Start with the lessons starting with \"basicXX\", and read the\nREADME.org file in each repository for instructions for that lesson.\n\nKeep reading below for an introduction to XDP and an overview of what you\nwill learn in this tutorial, or jump [[file:basic01-xdp-pass/README.org][straight to the first lesson]].\n\n* Table of Contents                                                     :TOC:\n- [[#introduction][Introduction]]\n- [[#first-step-setup-dependencies][First step: Setup dependencies]]\n- [[#how-the-lessons-are-organised][How the lessons are organised]]\n  - [[#basic-setup-lessons][Basic setup lessons]]\n  - [[#packet-processing-lessons][Packet processing lessons]]\n  - [[#advanced-lessons][Advanced lessons]]\n\n* Introduction\n\nXDP is a part of the upstream Linux kernel, and enables users to install\npacket processing programs into the kernel, that will be executed for each\narriving packet, before the kernel does any other processing on the data.\nThe programs are written in restricted C, and compiled into the eBPF byte\ncode format that is executed and JIT-compiled in the kernel, after being\nverified for safety. This approach offers great flexibility and high\nperformance, and integrates well with the rest of the system. For a general\nintroduction to XDP, read [[https://github.com/xdp-project/xdp-paper/blob/master/xdp-the-express-data-path.pdf][the academic paper (pdf)]], or the [[https://cilium.readthedocs.io/en/latest/bpf/][Cilium BPF\nreference guide]].\n\nThis tutorial aims to be a practical introduction to the different steps\nneeded to successfully write useful programs using the XDP system. We assume\nyou have a basic understanding of Linux networking and how to configure it\nwith the =iproute2= suite of tools, but assume no prior experience with eBPF\nor XDP. Prior programming experience is also helpful: the lessons are all\nwritten in C and they include some basic pointer arithmetic and aliasing.\n\nThe tutorial is a work in progress, and was initially created for use as a\nlive tutorial at the [[https://www.netdevconf.org/0x13/session.html?tutorial-XDP-hands-on][Netdev Conference]] in Prague in March 2019. Since the\nkernel BPF subsystem continues to develop at a rapid pace, this tutorial has\nnot kept up with all developments. However, everything presented here will\nwork with recent kernels, and this tutorial functions as a self-contained\nintroduction that anyone can go through to learn the XDP basics. Input and\ncontributions to advance towards this goal are very welcome; just open\nissues or pull requests in the [[https://github.com/xdp-project/xdp-tutorial/][Github repository]].\n\n* First step: Setup dependencies\n\nBefore you can start completing step in this tutorial, you will need to\ninstall a few dependencies on your system. These are described in\n[[file:setup_dependencies.org]].\n\nWe also provide a helper script that will set up a test environment with\nvirtual interfaces for you to test your code on. This is introduced in the\nbasic lessons, and also has [[file:testenv/README.org][it's own README file]].\n\n* How the lessons are organised\nThe tutorial is organised into a number of lessons; each lesson has its own\nsubdirectory, and the lessons are grouped by category:\n\n- Basic setup (directories starting with basicXX)\n- Packet processing (directories starting with packetXX)\n- Advanced topics (directories starting with advancedXX)\n\nWe recommend you start with the \"basic\" lessons, and follow the lessons in\neach category in numerical order. Read the README.org file in each lesson\ndirectory for instructions on how to complete the lesson.\n\n** Basic setup lessons\nWe recommend you start with these lessons, as they will teach you how to\ncompile and inspect the eBPF programs that will implement your packet\nprocessing code, how to load them into the kernel, and how to inspect the\nstate afterwards. As part of the basic lessons you will also be writing an\neBPF program loader that you will need in subsequent lessons.\n\n** Packet processing lessons\nOnce you have the basics figured out and know how to load programs into the\nkernel, you are ready to start processing some packets. The lessons in the\npacket processing category will teach you about the different steps needed\nto process data packets, including parsing, rewriting, instructing the\nkernel about what to do with the packet after processing, and how to use\nhelpers to access existing kernel functionality.\n\n** Advanced lessons\nAfter having completed the lessons in the basic and packet processing\ncategories, you should be all set to write your first real XDP program that\nwill do useful processing of the packets coming into the system. However,\nthere are some slightly more advanced topics that will probably be useful\nonce you start expanding your program to do more things.\n\nThe topics covered in the advanced lessons include how to make eBPF programs\nin other parts of the kernel interact with your XDP program, passing\nmetadata between programs, best practices for interacting with user space and\nkernel features, and how to run multiple XDP programs on a single interface.\n"
+        },
+        {
+          "name": "advanced01-xdp-tc-interact",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "advanced03-AF_XDP",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "basic-solutions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "basic01-xdp-pass",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "basic02-prog-by-name",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "basic03-map-counter",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "basic04-pinning-maps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "common",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configure",
+          "type": "blob",
+          "size": 7.8583984375,
+          "content": "#!/bin/sh\n# SPDX-License-Identifier: GPL-2.0\n# This is not an autoconf generated configure\n#\n\n# Output file which is input to Makefile\nCONFIG_FINAL=config.mk\nCONFIG=\".${CONFIG}.tmp\"\n\n# Make a temp directory in build tree.\nTMPDIR=$(mktemp -d config.XXXXXX)\ntrap 'status=$?; rm -rf $TMPDIR; rm -f $CONFIG; exit $status' EXIT HUP INT QUIT TERM\n\nSUBMODULE_LIBBPF=0\nARCH_INCLUDES=\n\ncheck_toolchain()\n{\n    local clang_version\n\n    : ${PKG_CONFIG:=pkg-config}\n    : ${CC=gcc}\n    : ${CLANG=clang}\n    : ${LLC=llc}\n    : ${BPFTOOL=bpftool}\n\n    for TOOL in $PKG_CONFIG $CC $CLANG $LLC; do\n        if [ ! $(command -v ${TOOL} 2>/dev/null) ]; then\n            echo \"*** ERROR: Cannot find tool ${TOOL}\" ;\n            exit 1;\n        fi;\n    done\n\n    clang_version=$($CLANG --version | sed -n '/clang version/ s/^.*clang version // p')\n    clang_major_version=$(echo \"$clang_version\" | sed 's/\\..*$//')\n    if [ \"$clang_major_version\" -lt \"11\" ]; then\n        echo \"ERROR: Need clang version >= 11, found $clang_major_version ($clang_version)\"\n        exit 1\n    fi\n\n    ARCH_NAME=$($CC -print-multiarch 2>/dev/null)\n    if [ -z \"$ARCH_INCLUDES\" ] && [ -n \"$ARCH_NAME\" ]; then\n        for dir in $(echo | $CC -Wp,-v -E - 2>&1 | grep '^ '); do\n            local idir\n            idir=\"${dir}/${ARCH_NAME}\"\n            [ -d \"$idir\" ] && ARCH_INCLUDES=\"-I${idir} $ARCH_INCLUDES\"\n        done\n    fi\n\n    echo \"clang: $clang_version\"\n\n    echo \"PKG_CONFIG:=${PKG_CONFIG}\" >>$CONFIG\n    echo \"CC:=${CC}\" >>$CONFIG\n    echo \"CLANG:=${CLANG}\" >>$CONFIG\n    echo \"LLC:=${LLC}\" >>$CONFIG\n    echo \"BPFTOOL:=${BPFTOOL}\" >>$CONFIG\n    echo \"ARCH_INCLUDES:=${ARCH_INCLUDES}\" >>$CONFIG\n}\n\ncheck_elf()\n{\n    if ${PKG_CONFIG} libelf --exists; then\n        echo \"HAVE_ELF:=y\" >>$CONFIG\n        echo \"yes\"\n\n        echo 'CFLAGS += -DHAVE_ELF' `${PKG_CONFIG} libelf --cflags` >> $CONFIG\n        echo 'LDLIBS += ' `${PKG_CONFIG} libelf --libs` >>$CONFIG\n    else\n        echo \"missing - this is required\"\n        return 1\n    fi\n}\n\ncheck_zlib()\n{\n    if ${PKG_CONFIG} zlib --exists; then\n        echo \"HAVE_ZLIB:=y\" >>$CONFIG\n        echo \"yes\"\n\n        echo 'CFLAGS += -DHAVE_ZLIB' `${PKG_CONFIG} zlib --cflags` >> $CONFIG\n        echo 'LDLIBS += ' `${PKG_CONFIG} zlib --libs` >>$CONFIG\n    else\n        echo \"missing - this is required\"\n        return 1\n    fi\n}\n\ncheck_libbpf()\n{\n    local libbpf_err\n\n    if [ \"${FORCE_SUBMODULE_LIBBPF:-0}\" -ne \"1\" ] && ${PKG_CONFIG} libbpf --exists || [ -n \"$LIBBPF_DIR\" ]; then\n\n        if [ -n \"$LIBBPF_DIR\" ]; then\n            LIBBPF_CFLAGS=\"-I${LIBBPF_DIR}/include -L${LIBBPF_DIR}/lib\"\n            LIBBPF_LDLIBS=\"-lbpf\"\n        else\n            LIBBPF_CFLAGS=$(${PKG_CONFIG} libbpf --cflags)\n            LIBBPF_LDLIBS=$(${PKG_CONFIG} libbpf --libs)\n        fi\n\n        cat >$TMPDIR/libbpftest.c <<EOF\n#include <bpf/libbpf.h>\nint main(int argc, char **argv) {\n    void *ptr;\n    DECLARE_LIBBPF_OPTS(bpf_object_open_opts, opts, .pin_root_path = \"/path\");\n    DECLARE_LIBBPF_OPTS(bpf_xdp_set_link_opts, lopts, .old_fd = -1);\n    (void) bpf_object__open_file(\"file\", &opts);\n    (void) bpf_program__name(ptr);\n    (void) bpf_map__set_initial_value(ptr, ptr, 0);\n    (void) bpf_set_link_xdp_fd_opts(0, 0, 0, &lopts);\n    (void) bpf_tc_attach(ptr, ptr);\n    (void) bpf_object__next_program(ptr, ptr);\n    return 0;\n}\nEOF\n\n        libbpf_err=$($CC -o $TMPDIR/libbpftest $TMPDIR/libbpftest.c  $LIBBPF_CFLAGS -lbpf 2>&1)\n        if [ \"$?\" -eq \"0\" ]; then\n            echo \"SYSTEM_LIBBPF:=y\" >>$CONFIG\n            echo 'CFLAGS += ' $LIBBPF_CFLAGS >> $CONFIG\n            echo 'LDLIBS += ' $LIBBPF_LDLIBS >>$CONFIG\n            echo 'OBJECT_LIBBPF = ' >>$CONFIG\n            echo system\n\n            return 0\n        fi\n    else\n        libbpf_err=\"${PKG_CONFIG} couldn't find libbpf\"\n    fi\n\n    if [ \"${FORCE_SYSTEM_LIBBPF:-0}\" -eq \"1\" ]; then\n        echo \"FORCE_SYSTEM_LIBBPF is set, but no usable libbpf found on system\"\n        echo \"error: $libbpf_err\"\n        rm -f \"$CONFIG\"\n        exit 1\n    fi\n\n    echo submodule\n    SUBMODULE_LIBBPF=1\n    echo \"SYSTEM_LIBBPF:=n\" >> $CONFIG\n    echo 'LDLIBS += -l:libbpf.a' >>$CONFIG\n    echo 'OBJECT_LIBBPF = $(LIB_DIR)/install/lib/libbpf.a' >>$CONFIG\n    if ! [ -d \"lib/libbpf/src\" ] && [ -f \".gitmodules\" ] && [ -e \".git\" ]; then\n        git submodule init && git submodule update\n    fi\n\n    echo -n \"ELF support: \"\n    check_elf || exit 1\n\n    echo -n \"zlib support: \"\n    check_zlib || exit 1\n\n    # For the build submodule library we know it does support this API, so we\n    # hard code it. Also due to the fact it's hard to build a test app as\n    # libbpf.a has not been build at configure time.\n    echo \"HAVE_LIBBPF_PERF_BUFFER__CONSUME:=y\" >>\"$CONFIG\"\n}\n\ncheck_bpf_use_errno()\n{\n    local compile_err\n\n    # Clang BPF-progs when compiled with proper -target bpf cause\n    # build dependencies to include <gnu/stubs-32.h> file.\n    #\n    cat >$TMPDIR/bpf_use_errno_test.c <<EOF\n#include <errno.h>\nint dummy(void *ctx) { return 0; }\nEOF\n\n    compile_err=$($CLANG -target bpf ${ARCH_INCLUDES} -c $TMPDIR/bpf_use_errno_test.c -o $TMPDIR/bpf_use_errno_test 2>&1)\n    if [ \"$?\" -ne \"0\" ]; then\n        echo \"*** ERROR - Clang BPF-prog cannot include <errno.h>\"\n        echo \"          - Install missing userspace header file\"\n        echo \"\"\n        echo \"Compile error: $compile_err\"\n        echo \"\"\n        echo \" On Fedora install:\"\n        echo \"   dnf install glibc-devel.i686\"\n        echo \" On Debian install:\"\n        echo \"   apt install libc6-dev-i386\"\n        echo \"\"\n        exit 1\n    fi\n}\n\ncheck_libxdp()\n{\n    if [ \"${FORCE_SUBMODULE_LIBXDP:-0}\" -ne \"1\" ] && ${PKG_CONFIG} libxdp --exists; then\n\n        LIBXDP_CFLAGS=$(${PKG_CONFIG} libxdp --cflags)\n        LIBXDP_LDLIBS=$(${PKG_CONFIG} libxdp --libs)\n        echo \"SYSTEM_LIBXDP:=y\" >>$CONFIG\n        echo 'CFLAGS += ' $LIBXDP_CFLAGS >> $CONFIG\n        echo 'LDLIBS += ' $LIBXDP_LDLIBS >>$CONFIG\n        echo 'OBJECT_LIBXDP = ' >>$CONFIG\n        echo system\n\n        return 0\n    fi\n\n    echo submodule\n    echo \"SYSTEM_LIBXDP:=n\" >> $CONFIG\n    if [ \"$SUBMODULE_LIBBPF\" -eq \"1\" ]; then\n        echo \"Configuring libxdp to use our libbpf submodule\"\n        (export LIBBPF_DIR=\"$(readlink -m lib/libbpf)\" \\\n                LIBBPF_INCLUDE_DIR=\"$(readlink -m lib/install/include)\" \\\n                LIBBPF_UNBUILT=1;\n         cd lib/xdp-tools; EMACS=\"\" ./configure)\n\n        # libxdp.a has to come before libbpf.a so the former can pick up symbols\n        # from the latter\n        sed -i 's/-l:libbpf.a/-l:libxdp.a -l:libbpf.a/' $CONFIG\n    else\n        echo \"Configuring libxdp without our libbpf\"\n        (cd lib/xdp-tools; EMACS=\"\" ./configure)\n\n        echo 'LDLIBS += -l:libxdp.a' >>$CONFIG\n    fi\n\n    echo 'LDFLAGS += -L$(LIB_DIR)/install/lib' >>$CONFIG\n    echo 'OBJECT_LIBXDP = $(LIB_DIR)/install/lib/libxdp.a' >>$CONFIG\n    if ! [ -d \"lib/xdp-tools/lib\" ] && [ -f \".gitmodules\" ] && [ -e \".git\" ]; then\n        git submodule init && git submodule update\n    fi\n}\n\nquiet_config()\n{\n    cat <<EOF\n# user can control verbosity similar to kernel builds (e.g., V=1)\nifeq (\"\\$(origin V)\", \"command line\")\n  VERBOSE = \\$(V)\nendif\nifndef VERBOSE\n  VERBOSE = 0\nendif\nifeq (\\$(VERBOSE),1)\n  Q =\nelse\n  Q = @\nendif\nifeq (\\$(VERBOSE),0)\nMAKEFLAGS += --no-print-directory\nendif\n\n\nifeq (\\$(VERBOSE), 0)\n    QUIET_CC       = @echo '    CC       '\\$@;\n    QUIET_CLANG    = @echo '    CLANG    '\\$@;\n    QUIET_LLC      = @echo '    LLC      '\\$@;\n    QUIET_LINK     = @echo '    LINK     '\\$@;\n    QUIET_INSTALL  = @echo '    INSTALL  '\\$@;\n    QUIET_GEN      = @echo '    GEN      '\\$@;\n    QUIET_COPY     = @echo '    COPY     '\\$@;\nendif\nEOF\n}\n\necho \"# Generated config\" >$CONFIG\nquiet_config >> $CONFIG\n\ncheck_toolchain\n\necho -n \"libbpf support: \"\ncheck_libbpf\necho -n \"libxdp support: \"\ncheck_libxdp\ncheck_bpf_use_errno\n\nif [ -n \"$KERNEL_HEADERS\" ]; then\n    echo \"kernel headers: $KERNEL_HEADERS\"\n    echo \"CFLAGS += -I$KERNEL_HEADERS\" >>$CONFIG\n    echo \"BPF_CFLAGS += -I$KERNEL_HEADERS\" >>$CONFIG\nfi\n\nmv $CONFIG $CONFIG_FINAL\n"
+        },
+        {
+          "name": "experiment01-tailgrow",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packet-solutions",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packet01-parsing",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packet02-rewriting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packet03-redirecting",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup-testlab",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "setup_dependencies.org",
+          "type": "blob",
+          "size": 7.326171875,
+          "content": "# -*- fill-column: 76; -*-\n#+TITLE: Setup dependencies\n#+OPTIONS: ^:nil\n\nBefore you can start completing the steps in this XDP-tutorial, go through\nthis document and install the needed software packages.\n\n* Table of Contents                                                     :TOC:\n- [[#based-on-libxdp-and-libbpf][Based on libxdp and libbpf]]\n  - [[#libbpf-as-git-submodule][libbpf as git-submodule]]\n- [[#dependencies][Dependencies]]\n  - [[#packages-on-fedora][Packages on Fedora]]\n  - [[#packages-on-debianubuntu][Packages on Debian/Ubuntu]]\n  - [[#packages-on-opensuse][Packages on openSUSE]]\n- [[#kernel-headers-dependency][Kernel headers dependency]]\n  - [[#packages-on-fedora-1][Packages on Fedora]]\n  - [[#packages-on-debianubuntu-1][Packages on Debian/Ubuntu]]\n  - [[#packages-on-opensuse-1][Packages on openSUSE]]\n- [[#recommended-tools][Recommended tools]]\n  - [[#packages-on-fedora-2][Packages on Fedora]]\n  - [[#packages-on-ubuntu][Packages on Ubuntu]]\n  - [[#packages-on-debian][Packages on Debian]]\n  - [[#packages-on-opensuse-2][Packages on openSUSE]]\n\n* Based on libxdp and libbpf\n\nThis XDP-tutorial leverages [[https://github.com/xdp-project/xdp-tools/][libxdp]] to load and manage XDP programs. The\nlibxdp library is maintained as part of the [[https://github.com/xdp-project][XDP Project]]. The tutorial also\nleverages [[https://github.com/libbpf/libbpf/][libbpf]] to ease development and loading of BPF programs. The libbpf\nlibrary is part of the kernel tree under [[https://github.com/torvalds/linux/blob/master/tools/lib/bpf/README.rst][tools/lib/bpf]], but Facebook\nengineers maintain a stand-alone build on GitHub under\nhttps://github.com/libbpf/libbpf.\n\n** libxdp and libbpf as git-submodules\n\nThis repository uses both [[https://github.com/xdp-project/xdp-tools/][libxdp]] and [[https://github.com/libbpf/libbpf][libbpf]] as git-submodules.\n\nWe will start by cloning this repository:\n\n#+begin_example\ngit clone --recurse-submodules https://github.com/xdp-project/xdp-tutorial.git\n#+end_example\n\n\nNote: If you missed the --recurse-submodules option in the previous step or you already cloned it earlier without the submodules you can use the following command:\n\n#+begin_example\ngit submodule update --init\n#+end_example\n\nIf you need to add the submodules to your own project, you can use the command:\n\n#+begin_example\ngit submodule add https://github.com/xdp-project/xdp-tools/ xdp-tools\ngit submodule add https://github.com/libbpf/libbpf/ libbpf\n#+end_example\n\n* Dependencies\n\nThe main dependencies are =libxdp=, =libbpf=, =llvm=, =clang= and\n=libelf=. LLVM+clang compiles our restricted-C programs into BPF-byte-code,\nwhich is stored in an ELF object file (=libelf=), that is loaded by =libbpf=\ninto the kernel via the =bpf= syscall. XDP programs are managed by =libxdp=\nwhich implements the XDP multi-dispatch protocol. Some of the lessons also\nuse the =perf= utility to track the kernel behaviour through tracepoints.\n\nThe Makefiles in this repo will try to detect if you are missing some\ndependencies, and give you some pointers.\n\n** Packages on Fedora\n\nOn a machine running the Fedora Linux distribution, install the packages:\n\n#+begin_example\nsudo dnf install clang llvm\nsudo dnf install elfutils-libelf-devel libpcap-devel perf glibc-devel.i686\n#+end_example\n\nNote also that Fedora by default sets a limit on the amount of locked memory\nthe kernel will allow, which can interfere with loading BPF maps. The\n=testenv.sh= script will adjust this for you, but if you're not using that\nyou will probably run into problems. Use this command to raise the limit:\n\n#+begin_example\n  # ulimit -l 1024\n#+end_example\n\nNote that you need to do this in the shell you are using to load programs\n(in particular, it won't work with =sudo=).\n\n** Packages on Debian/Ubuntu\n\nOn Debian and Ubuntu installations, install the dependencies like this:\n\n#+begin_example\nsudo apt install clang llvm libelf-dev libpcap-dev build-essential libc6-dev-i386\n#+end_example\n\nTo install the 'perf' utility, run this on Debian:\n#+begin_example\nsudo apt install linux-perf\n#+end_example\n\nor this on Ubuntu:\n\n#+begin_example\nsudo apt install linux-tools-$(uname -r)\n#+end_example\n\n** Packages on openSUSE\n\nOn a machine running the openSUSE distribution, install the packages:\n\n#+begin_example\nsudo zypper install clang llvm libelf-devel libpcap-devel perf linux-glibc-devel\n#+end_example\n\n* Kernel headers dependency\n\nThe Linux kernel provides a number of header files, which are usually installed\nin =/usr/include/linux=. The different Linux distributions usually provide a\nsoftware package with these headers.\n\nSome of the header files (we depend on) are located in the kernel tree under\ninclude/uapi/linux/ (e.g. include/uapi/linux/bpf.h), but you should not include\nthose files as they go through a conversion process when exported/installed into\ndistros' =/usr/include/linux= directory. In the kernel git tree you can run the\ncommand: =make headers_install= which will create a lot of headers files in\ndirectory \"usr/\".\n\nFor now, this tutorial depends on kernel headers package provided by your\ndistro. We may choose to shadow some of these later.\n\n** Packages on Fedora\n\nOn a machine running the Fedora Linux distribution, install the package:\n#+begin_example\nsudo dnf install kernel-headers\n#+end_example\n\n** Packages on Debian/Ubuntu\n\nOn Debian and Ubuntu installations, install the headers like this\n\n#+begin_example\nsudo apt install linux-headers-$(uname -r)\n#+end_example\n\n** Packages on openSUSE\n\nOn a machine running the openSUSE distribution, install the package:\n\n#+begin_example\nsudo zypper install kernel-devel\n#+end_example\n\n\n* Extra tools\n\nThe =bpftool= is the recommended tool for inspecting BPF programs running on\nyour system. It also offers simple manipulation of eBPF programs and maps.\nThe =bpftool= is part of the Linux kernel tree under [[https://github.com/torvalds/linux/tree/master/tools/bpf/bpftool][tools/bpf/bpftool/]], but\nsome Linux distributions also ship the tool as a software package.\n\nIf you are planning on working through the packet processing examples you\nshould also install tcpdump.\n\n** Packages on Fedora\n\nOn a machine running the Fedora Linux distribution, install package:\n\n#+begin_example\nsudo dnf install bpftool\nsudo dnf install tcpdump\n#+end_example\n\n** Packages on Ubuntu\n\nStarting from Ubuntu 19.10, bpftool can be installed with:\n\n#+begin_example\nsudo apt install linux-tools-common linux-tools-generic\nsudo apt install tcpdump\n#+end_example\n\n(Ubuntu 18.04 LTS also has it, but it is an old and quite limited bpftool\nversion.)\n\n** Packages on Debian\n\nStarting from Debian Bullseye, bpftool can be installed with:\n\n#+begin_example\nsudo apt install bpftool\nsudo apt install tcpdump\n#+end_example\n\n(If you are on Debian Buster, you can get it from [[https://backports.debian.org][buster-backports]].)\n\n** Packages on openSUSE\n\nOn a machine running the openSUSE Tumbleweed distribution, install package:\n\n#+begin_example\nsudo zypper install bpftool\nsudo zypper install tcpdump\n#+end_example\n\n\n* Generate the necessary files\n\nOnce you have installed the dependencies you need genereate the necessary files to follow the exercises.\n\nStart by running ./configure from the root of the repository to make sure every dependency is installed.\n\n#+begin_example\n./configure\n#+end_example\n\nIf there is a missing dependency it should output some error, if not we can continue.\n\nNow run make to generate all the necessary files:\n\n#+begin_example\nmake\n#+end_example\n"
+        },
+        {
+          "name": "testenv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tracing01-xdp-simple",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tracing02-xdp-monitor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tracing03-xdp-debug-print",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tracing04-xdp-tcpdump",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

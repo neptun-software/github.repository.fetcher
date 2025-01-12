@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "timestamp": 1736710078104,
+    "page": 698,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "reorg/pg_repack",
+      "stars": 1920,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1474609375,
+          "content": "# Global excludes across all subdirectories\n*.o\n*.so\n*.bc\nregress/regression.diffs\nregress/regression.out\nregress/results/\ndist/*.zip\nlib/exports.list\n"
+        },
+        {
+          "name": "COPYRIGHT",
+          "type": "blob",
+          "size": 1.623046875,
+          "content": "Portions Copyright (c) 2008-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION\nPortions Copyright (c) 2011, Itagaki Takahiro\nPortions Copyright (c) 2012-2020, The Reorg Development Team\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n    * Redistributions of source code must retain the above copyright notice,\n      this list of conditions and the following disclaimer.\n    * Redistributions in binary form must reproduce the above copyright\n      notice, this list of conditions and the following disclaimer in the\n      documentation and/or other materials provided with the distribution.\n    * Neither the name of the authors nor the names of its contributors may\n      be used to endorse or promote products derived from this software\n      without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\nAND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\nIMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\nOR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "META.json",
+          "type": "blob",
+          "size": 1.3486328125,
+          "content": "{\n   \"name\": \"pg_repack\",\n   \"abstract\": \"PostgreSQL module for data reorganization\",\n   \"description\": \"Reorganize tables in PostgreSQL databases with minimal locks\",\n   \"version\": \"1.5.2\",\n   \"maintainer\": [\n       \"Beena Emerson <memissemerson@gmail.com>\",\n       \"Josh Kupershmidt <schmiddy@gmail.com>\",\n       \"Masahiko Sawada <sawada.mshk@gmail.com>\",\n       \"Daniele Varrazzo <daniele.varrazzo@gmail.com>\",\n       \"Artur Zakirov <zaartur@gmail.com>\",\n       \"Andreas Scherbaum <andreas@scherbaum.la>\"\n    ],\n   \"tags\": [ \"bloat\", \"maintenance\", \"vacuum\", \"cluster\" ],\n   \"release_status\": \"stable\",\n   \"license\": \"bsd\",\n   \"provides\": {\n      \"pg_repack\": {\n         \"file\": \"lib/pg_repack.sql\",\n         \"version\": \"1.5.2\",\n         \"abstract\": \"Reorganize tables in PostgreSQL databases with minimal locks\"\n      }\n   },\n   \"prereqs\": {\n      \"runtime\": {\n         \"requires\": {\n            \"PostgreSQL\": \"9.5.0\"\n         }\n      }\n   },\n   \"resources\": {\n      \"homepage\": \"https://reorg.github.io/pg_repack\",\n      \"bugtracker\": {\n         \"web\": \"https://github.com/reorg/pg_repack/issues\"\n      },\n      \"repository\": {\n          \"url\": \"git://github.com/reorg/pg_repack.git\",\n          \"web\": \"https://github.com/reorg/pg_repack/\",\n          \"type\": \"git\"\n      }\n   },\n   \"meta-spec\": {\n      \"version\": \"1.0.0\",\n      \"url\": \"https://pgxn.org/meta/spec.txt\"\n   }\n}\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.578125,
+          "content": "#\n# pg_repack: Makefile\n#\n#  Portions Copyright (c) 2008-2011, NIPPON TELEGRAPH AND TELEPHONE CORPORATION\n#  Portions Copyright (c) 2011, Itagaki Takahiro\n#  Portions Copyright (c) 2012-2020, The Reorg Development Team\n#\n\nPG_CONFIG ?= pg_config\nEXTENSION = pg_repack\n\n.PHONY: dist/$(EXTENSION)-$(EXTVERSION).zip\n\n# Pull out PostgreSQL version number from pg_config\nVERSION := $(shell $(PG_CONFIG) --version | sed 's/.* \\([[:digit:].]\\{1,\\}\\).*/\\1/')\nifeq (\"$(VERSION)\",\"\")\n$(error pg_config not found)\nendif\n\n# PostgreSQL version as a number, e.g. 9.1.4 -> 901\nINTVERSION := $(shell echo $$(($$(echo $(VERSION).0 | sed 's/\\([[:digit:]]\\{1,\\}\\)\\.\\([[:digit:]]\\{1,\\}\\).*/\\1*100+\\2/'))))\n\n# The version number of the library\nEXTVERSION = $(shell grep '\"version\":' META.json | head -1 \\\n\t| sed -e 's/[ \t]*\"version\":[ \t]*\"\\(.*\\)\",/\\1/')\n\n# NOTE: keep consistent with META.json\nifeq ($(shell echo $$(($(INTVERSION) < 904))),1)\n$(error $(EXTENSION) requires PostgreSQL 9.4 or later. This is $(VERSION))\nendif\n\nSUBDIRS = bin lib regress\n\nall install installdirs uninstall distprep clean distclean maintainer-clean debug:\n\t@for dir in $(SUBDIRS); do \\\n\t\t$(MAKE) -C $$dir $@ || exit; \\\n\tdone\n\n# We'd like check operations to run all the subtests before failing.\ncheck installcheck:\n\t@CHECKERR=0; for dir in $(SUBDIRS); do \\\n\t\t$(MAKE) -C $$dir $@ || CHECKERR=$$?; \\\n\tdone; \\\n\texit $$CHECKERR\n\n# Prepare the package for PGXN submission\npackage: dist dist/$(EXTENSION)-$(EXTVERSION).zip\n\ndist:\n\tmkdir -p dist\n\ndist/$(EXTENSION)-$(EXTVERSION).zip:\n\tgit archive --format zip --prefix=$(EXTENSION)-$(EXTVERSION)/ --output $@ master\n"
+        },
+        {
+          "name": "README.rst",
+          "type": "blob",
+          "size": 2.1396484375,
+          "content": "pg_repack -- Reorganize tables in PostgreSQL databases with minimal locks\n=========================================================================\n\n- Homepage: https://reorg.github.io/pg_repack\n- Download: https://pgxn.org/dist/pg_repack/\n- Development: https://github.com/reorg/pg_repack\n- Bug Report: https://github.com/reorg/pg_repack/issues\n\n|GitHub Actions|\n\n.. |GitHub Actions| image:: https://github.com/reorg/pg_repack/actions/workflows/regression.yml/badge.svg\n   :target: https://github.com/reorg/pg_repack/actions/workflows/regression.yml\n   :alt: Linux build status\n\npg_repack_ is a PostgreSQL extension which lets you remove bloat from\ntables and indexes, and optionally restore the physical order of clustered\nindexes. Unlike CLUSTER_ and `VACUUM FULL`_ it works online, without\nholding an exclusive lock on the processed tables during processing.\npg_repack is efficient to boot, with performance comparable to using\nCLUSTER directly.\n\nPlease check the documentation (in the ``doc`` directory or online_) for\ninstallation and usage instructions.\n\n.. _pg_repack: https://reorg.github.io/pg_repack\n.. _CLUSTER: https://www.postgresql.org/docs/current/static/sql-cluster.html\n.. _VACUUM FULL: VACUUM_\n.. _VACUUM: https://www.postgresql.org/docs/current/static/sql-vacuum.html\n.. _online: pg_repack_\n.. _issue: https://github.com/reorg/pg_repack/issues/23\n\n\nWhat about pg_reorg?\n--------------------\n\npg_repack is a fork of the pg_reorg_ project, which has proven hugely\nsuccessful. Unfortunately new feature development on pg_reorg_ has slowed\nor stopped since late 2011.\n\npg_repack was initially released as a drop-in replacement for pg_reorg,\naddressing some of the shortcomings of the last pg_reorg version (such as\nsupport for PostgreSQL 9.2 and EXTENSION packaging) and known bugs.\n\npg_repack 1.2 introduces further new features (parallel index builds,\nability to rebuild only indexes) and bugfixes. In some cases its behaviour\nmay be different from the 1.1.x release so it shouldn't be considered a\ndrop-in replacement: you are advised to check the documentation__ before\nupgrading from previous versions.\n\n.. __: pg_repack_\n.. _pg_reorg: https://github.com/reorg/pg_reorg\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "msvc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "regress",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

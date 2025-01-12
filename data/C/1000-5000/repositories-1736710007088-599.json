@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736710007088,
+    "page": 599,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "google/ngx_brotli",
+      "stars": 2107,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.087890625,
+          "content": "[submodule \"deps/brotli\"]\n\tpath = deps/brotli\n\turl = https://github.com/google/brotli.git\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.8740234375,
+          "content": "# required for http2 support in curl.\ndist: bionic\nlanguage: c\nsudo: false\nmatrix:\n  include:\n    # unfortunately, gcc-4.9 is dropped in bionic\n    - os: linux\n      addons:\n        apt:\n          sources:\n            - ubuntu-toolchain-r-test\n          packages:\n            - g++-5\n      env:\n         - MATRIX_EVAL=\"CC=gcc-5 && CXX=g++-5\"\n\n    - os: linux\n      addons:\n        apt:\n          sources:\n            - ubuntu-toolchain-r-test\n          packages:\n            - g++-6\n      env:\n        - MATRIX_EVAL=\"CC=gcc-6 && CXX=g++-6\"\n    - os: linux\n      addons:\n        apt:\n          sources:\n            - ubuntu-toolchain-r-test\n          packages:\n            - g++-7\n      env:\n        - MATRIX_EVAL=\"CC=gcc-7 && CXX=g++-7\"\n\n\nscript:\n- script/.travis-compile.sh\n- script/.travis-before-test.sh\n- script/.travis-test.sh\nafter_success:\n- killall nginx\nafter_failure:\n- killall nginx\n\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.431640625,
+          "content": "# Contributing\n\nWant to contribute? Great! First, read this page (including the small print at the end).\n\n### Before you contribute\nBefore we can use your code, you must sign the\n[Google Individual Contributor License Agreement](https://cla.developers.google.com/about/google-individual)\n(CLA), which you can do online. The CLA is necessary mainly because you own the\ncopyright to your changes, even after your contribution becomes part of our\ncodebase, so we need your permission to use and distribute your code. We also\nneed to be sure of various other things—for instance that you'll tell us if you\nknow that your code infringes on other people's patents. You don't have to sign\nthe CLA until after you've submitted your code for review and a member has\napproved it, but you must do it before we can put your code into our codebase.\nBefore you start working on a larger contribution, you should get in touch with\nus first through the issue tracker with your idea so that we can help out and\npossibly guide you. Coordinating up front makes it much easier to avoid\nfrustration later on.\n\n### Code reviews\nAll submissions, including submissions by project members, require review. We\nuse Github pull requests for this purpose.\n\n### The small print\nContributions made by corporations are covered by a different agreement than\nthe one above, the\n[Software Grant and Corporate Contributor License Agreement](https://cla.developers.google.com/about/google-corporate).\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4013671875,
+          "content": "/*\n * Copyright (C) 2002-2015 Igor Sysoev\n * Copyright (C) 2011-2015 Nginx, Inc.\n * Copyright (C) 2015-2019 Google Inc.\n * All rights reserved.\n *\n * Redistribution and use in source and binary forms, with or without\n * modification, are permitted provided that the following conditions\n * are met:\n * 1. Redistributions of source code must retain the above copyright\n *    notice, this list of conditions and the following disclaimer.\n * 2. Redistributions in binary form must reproduce the above copyright\n *    notice, this list of conditions and the following disclaimer in the\n *    documentation and/or other materials provided with the distribution.\n *\n * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND\n * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE\n * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\n * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n * SUCH DAMAGE.\n */\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.001953125,
+          "content": "# ngx_brotli\n\nBrotli is a generic-purpose lossless compression algorithm that compresses data\nusing a combination of a modern variant of the LZ77 algorithm, Huffman coding\nand 2nd order context modeling, with a compression ratio comparable to the best\ncurrently available general-purpose compression methods. It is similar in speed\nwith deflate but offers more dense compression.\n\nngx_brotli is a set of two nginx modules:\n\n- ngx_brotli filter module - used to compress responses on-the-fly,\n- ngx_brotli static module - used to serve pre-compressed files.\n\n\n## Table of Contents\n\n- [Status](#status)\n- [Installation](#installation)\n- [Configuration directives](#configuration-directives)\n  - [`brotli_static`](#brotli_static)\n  - [`brotli`](#brotli)\n  - [`brotli_types`](#brotli_types)\n  - [`brotli_buffers`](#brotli_buffers)\n  - [`brotli_comp_level`](#brotli_comp_level)\n  - [`brotli_window`](#brotli_window)\n  - [`brotli_min_length`](#brotli_min_length)\n- [Variables](#variables)\n  - [`$brotli_ratio`](#brotli_ratio)\n- [Sample configuration](#sample-configuration)\n- [Contributing](#contributing)\n- [License](#license)\n\n## Status\n\nBoth Brotli library and nginx module are under active development.\n\n## Installation\n\n### Statically compiled\n\nCheckout the latest `ngx_brotli` and build the dependencies:\n\n```\ngit clone --recurse-submodules -j8 https://github.com/google/ngx_brotli\ncd ngx_brotli/deps/brotli\nmkdir out && cd out\ncmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_C_FLAGS=\"-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections\" -DCMAKE_CXX_FLAGS=\"-Ofast -m64 -march=native -mtune=native -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections\" -DCMAKE_INSTALL_PREFIX=./installed ..\ncmake --build . --config Release --target brotlienc\ncd ../../../..\n```\n\n\n    $ cd nginx-1.x.x\n    $ export CFLAGS=\"-m64 -march=native -mtune=native -Ofast -flto -funroll-loops -ffunction-sections -fdata-sections -Wl,--gc-sections\"\n    $ export LDFLAGS=\"-m64 -Wl,-s -Wl,-Bsymbolic -Wl,--gc-sections\"\n    $ ./configure --add-module=/path/to/ngx_brotli\n    $ make && make install\n  \nThis will compile the module directly into Nginx.\n\n\n### Dynamically loaded\n\n    $ cd nginx-1.x.x\n    $ ./configure --with-compat --add-dynamic-module=/path/to/ngx_brotli\n    $ make modules\n\nYou will need to use **exactly** the same `./configure` arguments as your Nginx configuration and append `--with-compat --add-dynamic-module=/path/to/ngx_brotli` to the end, otherwise you will get a \"module is not binary compatible\" error on startup. You can run `nginx -V` to get the configuration arguments for your Nginx installation.\n\n`make modules` will result in `ngx_http_brotli_filter_module.so` and `ngx_http_brotli_static_module.so` in the `objs` directory. Copy these to `/usr/lib/nginx/modules/` then add the `load_module` directives to `nginx.conf` (above the http block):\n```nginx\nload_module modules/ngx_http_brotli_filter_module.so;\nload_module modules/ngx_http_brotli_static_module.so;\n```\n\n\n\n## Configuration directives\n\n### `brotli_static`\n\n- **syntax**: `brotli_static on|off|always`\n- **default**: `off`\n- **context**: `http`, `server`, `location`\n\nEnables or disables checking of the existence of pre-compressed files with`.br`\nextension. With the `always` value, pre-compressed file is used in all cases,\nwithout checking if the client supports it.\n\n### `brotli`\n\n- **syntax**: `brotli on|off`\n- **default**: `off`\n- **context**: `http`, `server`, `location`, `if`\n\nEnables or disables on-the-fly compression of responses.\n\n### `brotli_types`\n\n- **syntax**: `brotli_types <mime_type> [..]`\n- **default**: `text/html`\n- **context**: `http`, `server`, `location`\n\nEnables on-the-fly compression of responses for the specified MIME types\nin addition to `text/html`. The special value `*` matches any MIME type.\nResponses with the `text/html` MIME type are always compressed.\n\n### `brotli_buffers`\n\n- **syntax**: `brotli_buffers <number> <size>`\n- **default**: `32 4k|16 8k`\n- **context**: `http`, `server`, `location`\n\n**Deprecated**, ignored.\n\n### `brotli_comp_level`\n\n- **syntax**: `brotli_comp_level <level>`\n- **default**: `6`\n- **context**: `http`, `server`, `location`\n\nSets on-the-fly compression Brotli quality (compression) `level`.\nAcceptable values are in the range from `0` to `11`.\n\n### `brotli_window`\n\n- **syntax**: `brotli_window <size>`\n- **default**: `512k`\n- **context**: `http`, `server`, `location`\n\nSets Brotli window `size`. Acceptable values are `1k`, `2k`, `4k`, `8k`, `16k`,\n`32k`, `64k`, `128k`, `256k`, `512k`, `1m`, `2m`, `4m`, `8m` and `16m`.\n\n### `brotli_min_length`\n\n- **syntax**: `brotli_min_length <length>`\n- **default**: `20`\n- **context**: `http`, `server`, `location`\n\nSets the minimum `length` of a response that will be compressed.\nThe length is determined only from the `Content-Length` response header field.\n\n## Variables\n\n### `$brotli_ratio`\n\nAchieved compression ratio, computed as the ratio between the original\nand compressed response sizes.\n\n## Sample configuration\n\n```\nbrotli on;\nbrotli_comp_level 6;\nbrotli_static on;\nbrotli_types application/atom+xml application/javascript application/json application/vnd.api+json application/rss+xml\n             application/vnd.ms-fontobject application/x-font-opentype application/x-font-truetype\n             application/x-font-ttf application/x-javascript application/xhtml+xml application/xml\n             font/eot font/opentype font/otf font/truetype image/svg+xml image/vnd.microsoft.icon\n             image/x-icon image/x-win-bitmap text/css text/javascript text/plain text/xml;\n```\n\n## Contributing\n\nSee [Contributing](CONTRIBUTING.md).\n\n## License\n\n    Copyright (C) 2002-2015 Igor Sysoev\n    Copyright (C) 2011-2015 Nginx, Inc.\n    Copyright (C) 2015 Google Inc.\n    All rights reserved.\n\n    Redistribution and use in source and binary forms, with or without\n    modification, are permitted provided that the following conditions\n    are met:\n    1. Redistributions of source code must retain the above copyright\n       notice, this list of conditions and the following disclaimer.\n    2. Redistributions in binary form must reproduce the above copyright\n       notice, this list of conditions and the following disclaimer in the\n       documentation and/or other materials provided with the distribution.\n\n    THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND\n    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n    ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE\n    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\n    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n    SUCH DAMAGE.\n"
+        },
+        {
+          "name": "config",
+          "type": "blob",
+          "size": 1.5556640625,
+          "content": "# Copyright (C) 2019 Google Inc.\n# All rights reserved.\n#\n# Redistribution and use in source and binary forms, with or without\n# modification, are permitted provided that the following conditions\n# are met:\n# 1. Redistributions of source code must retain the above copyright\n#    notice, this list of conditions and the following disclaimer.\n# 2. Redistributions in binary form must reproduce the above copyright\n#    notice, this list of conditions and the following disclaimer in the\n#    documentation and/or other materials provided with the distribution.\n#\n# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND\n# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE\n# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\n# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n# SUCH DAMAGE.\n\n# Make sure the module knows it is a submodule.\nngx_addon_name=ngx_brotli\n. $ngx_addon_dir/filter/config\n\n# Make sure the module knows it is a submodule.\nngx_addon_name=ngx_brotli\n. $ngx_addon_dir/static/config\n\n# The final name for reporting.\nngx_addon_name=ngx_brotli\n"
+        },
+        {
+          "name": "deps",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "filter",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "script",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "static",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

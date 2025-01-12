@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "timestamp": 1736710102217,
+    "page": 723,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjczMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ScanNet/ScanNet",
+      "stars": 1874,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0166015625,
+          "content": ".DS_Store\n.idea/\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.087890625,
+          "content": "[submodule \"external/mLib\"]\n\tpath = external/mLib\n\turl = https://github.com/niessner/mLib\n"
+        },
+        {
+          "name": "Alignment",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "AnnotationTools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "BenchmarkScripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Calibrate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CameraParameterEstimation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Converter",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.107421875,
+          "content": "Copyright 2017 \nAngela Dai, Angel X. Chang, Manolis Savva, Maciej Halber, Thomas Funkhouser, Matthias Niessner\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.919921875,
+          "content": "# ScanNet\n\nScanNet is an RGB-D video dataset containing 2.5 million views in more than 1500 scans, annotated with 3D camera poses, surface reconstructions, and instance-level semantic segmentations.\n\n## ScanNet Data\n\nIf you would like to download the ScanNet data, please fill out an agreement to the [ScanNet Terms of Use](http://kaldir.vc.in.tum.de/scannet/ScanNet_TOS.pdf), using your institutional email addresses, and send it to us at scannet@googlegroups.com. \n\nIf you have not received a response within a week, it is likely that your email is bouncing - please check this before sending repeat requests. Please do not reply to the noreply email - your email won't be seen.\n\nPlease check the [changelog](http://www.scan-net.org/changelog) for updates to the data release.\n\n\n### Data Organization\nThe data in ScanNet is organized by RGB-D sequence. Each sequence is stored under a directory with named `scene<spaceId>_<scanId>`, or `scene%04d_%02d`, where each space corresponds to a unique location (0-indexed).  The raw data captured during scanning, camera poses and surface mesh reconstructions, and annotation metadata are all stored together for the given sequence.  The directory has the following structure:\n```shell\n<scanId>\n|-- <scanId>.sens\n    RGB-D sensor stream containing color frames, depth frames, camera poses and other data\n|-- <scanId>_vh_clean.ply\n    High quality reconstructed mesh\n|-- <scanId>_vh_clean_2.ply\n    Cleaned and decimated mesh for semantic annotations\n|-- <scanId>_vh_clean_2.0.010000.segs.json\n    Over-segmentation of annotation mesh\n|-- <scanId>.aggregation.json, <scanId>_vh_clean.aggregation.json\n    Aggregated instance-level semantic annotations on lo-res, hi-res meshes, respectively\n|-- <scanId>_vh_clean_2.0.010000.segs.json, <scanId>_vh_clean.segs.json\n    Over-segmentation of lo-res, hi-res meshes, respectively (referenced by aggregated semantic annotations)\n|-- <scanId>_vh_clean_2.labels.ply\n    Visualization of aggregated semantic segmentation; colored by nyu40 labels (see img/legend; ply property 'label' denotes the nyu40 label id)\n|-- <scanId>_2d-label.zip\n    Raw 2d projections of aggregated annotation labels as 16-bit pngs with ScanNet label ids\n|-- <scanId>_2d-instance.zip\n    Raw 2d projections of aggregated annotation instances as 8-bit pngs\n|-- <scanId>_2d-label-filt.zip\n    Filtered 2d projections of aggregated annotation labels as 16-bit pngs with ScanNet label ids\n|-- <scanId>_2d-instance-filt.zip\n    Filtered 2d projections of aggregated annotation instances as 8-bit pngs\n```\n\n### Data Formats\nThe following are overviews of the data formats used in ScanNet:\n\n**Reconstructed surface mesh file (`*.ply`)**:\nBinary PLY format mesh with +Z axis in upright orientation.\n\n**RGB-D sensor stream (`*.sens`)**:\nCompressed binary format with per-frame color, depth, camera pose and other data.  See [ScanNet C++ Toolkit](#scannet-c-toolkit) for more information and parsing code. See [SensReader/python](SensReader/python) for a very basic python data exporter.\n\n**Surface mesh segmentation file (`*.segs.json`)**:\n```javascript\n{\n  \"params\": {  // segmentation parameters\n   \"kThresh\": \"0.0001\",\n   \"segMinVerts\": \"20\",\n   \"minPoints\": \"750\",\n   \"maxPoints\": \"30000\",\n   \"thinThresh\": \"0.05\",\n   \"flatThresh\": \"0.001\",\n   \"minLength\": \"0.02\",\n   \"maxLength\": \"1\"\n  },\n  \"sceneId\": \"...\",  // id of segmented scene\n  \"segIndices\": [1,1,1,1,3,3,15,15,15,15],  // per-vertex index of mesh segment\n}\n```\n\n**Aggregated semantic annotation file (`*.aggregation.json`)**:\n```javascript\n{\n  \"sceneId\": \"...\",  // id of annotated scene\n  \"appId\": \"...\", // id + version of the tool used to create the annotation\n  \"segGroups\": [\n    {\n      \"id\": 0,\n      \"objectId\": 0,\n      \"segments\": [1,4,3],\n      \"label\": \"couch\"\n    },\n  ],\n  \"segmentsFile\": \"...\" // id of the *.segs.json segmentation file referenced\n}\n```\n[BenchmarkScripts/util_3d.py](BenchmarkScripts/util_3d.py) gives examples to parsing the semantic instance information from the `*.segs.json`, `*.aggregation.json`, and `*_vh_clean_2.ply` mesh file, with example semantic segmentation visualization in [BenchmarkScripts/3d_helpers/visualize_labels_on_mesh.py](BenchmarkScripts/3d_helpers/visualize_labels_on_mesh.py).\n\n**2d annotation projections (`*_2d-label.zip`, `*_2d-instance.zip`, `*_2d-label-filt.zip`, `*_2d-instance-filt.zip`)**:\nProjection of 3d aggregated annotation of a scan into its RGB-D frames, according to the computed camera trajectory. \n\n### ScanNet C++ Toolkit\nTools for working with ScanNet data. [SensReader](SensReader) loads the ScanNet `.sens` data of compressed RGB-D frames, camera intrinsics and extrinsics, and IMU data.\n\n### Camera Parameter Estimation Code\nCode for estimating camera parameters and depth undistortion. Required to compute sensor calibration files which are used by the pipeline server to undistort depth. See [CameraParameterEstimation](CameraParameterEstimation) for details.\n\n### Mesh Segmentation Code\nMesh supersegment computation code which we use to preprocess meshes and prepare for semantic annotation. Refer to [Segmentator](Segmentator) directory for building and using code.\n\n## BundleFusion Reconstruction Code\n\nScanNet uses the [BundleFusion](https://github.com/niessner/BundleFusion) code for reconstruction. Please refer to the BundleFusion repository at https://github.com/niessner/BundleFusion . If you use BundleFusion, please cite the original paper:\n```\n@article{dai2017bundlefusion,\n  title={BundleFusion: Real-time Globally Consistent 3D Reconstruction using On-the-fly Surface Re-integration},\n  author={Dai, Angela and Nie{\\ss}ner, Matthias and Zoll{\\\"o}fer, Michael and Izadi, Shahram and Theobalt, Christian},\n  journal={ACM Transactions on Graphics 2017 (TOG)},\n  year={2017}\n}\n```\n\n## ScanNet Scanner iPad App\n[ScannerApp](ScannerApp) is designed for easy capture of RGB-D sequences using an iPad with attached Structure.io sensor.\n\n## ScanNet Scanner Data Server\n[Server](Server) contains the server code that receives RGB-D sequences from iPads running the Scanner app.\n\n## ScanNet Data Management UI\n[WebUI](WebUI) contains the web-based data management UI used for providing an overview of available scan data and controlling the processing and annotation pipeline.\n\n## ScanNet Semantic Annotation Tools\nCode and documentation for the ScanNet semantic annotation web-based interfaces is provided as part of the [SSTK](https://github.com/smartscenes/sstk) library. Please refer to https://github.com/smartscenes/sstk/wiki/Scan-Annotation-Pipeline for an overview.\n\n## Benchmark Tasks\nWe provide code for several scene understanding benchmarks on ScanNet:\n* 3D object classification\n* 3D object retrieval\n* Semantic voxel labeling\n\nTrain/test splits are given at [Tasks/Benchmark](Tasks/Benchmark).   \nLabel mappings and trained models can be downloaded with the ScanNet data release.\n\nSee [Tasks](Tasks).\n\n### Labels\nThe label mapping file (`scannet-labels.combined.tsv`) in the ScanNet task data release contains mappings from the labels provided in the ScanNet annotations (`id`) to the object category sets of [NYUv2](http://cs.nyu.edu/~silberman/datasets/nyu_depth_v2.html), [ModelNet](http://modelnet.cs.princeton.edu/), [ShapeNet](https://www.shapenet.org/), and [WordNet](https://wordnet.princeton.edu/) synsets. Download with along with the task data (`--task_data`) or by itself (`--label_map`).\n\n## Citation\nIf you use the ScanNet data or code please cite:\n```\n@inproceedings{dai2017scannet,\n    title={ScanNet: Richly-annotated 3D Reconstructions of Indoor Scenes},\n    author={Dai, Angela and Chang, Angel X. and Savva, Manolis and Halber, Maciej and Funkhouser, Thomas and Nie{\\ss}ner, Matthias},\n    booktitle = {Proc. Computer Vision and Pattern Recognition (CVPR), IEEE},\n    year = {2017}\n}\n```\n\n## Help\nIf you have any questions, please contact us at scannet@googlegroups.com\n\n\n## Changelog\n\n## License\nThe data is released under the [ScanNet Terms of Use](http://kaldir.vc.in.tum.de/scannet/ScanNet_TOS.pdf), and the code is released under the MIT license.\n\nCopyright (c) 2017\n"
+        },
+        {
+          "name": "ScannerApp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Segmentator",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "SensReader",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tasks",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "WebUI",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 0.0244140625,
+          "content": "theme: jekyll-theme-slate"
+        },
+        {
+          "name": "external",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "img",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

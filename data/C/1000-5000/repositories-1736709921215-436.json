@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "timestamp": 1736709921215,
+    "page": 436,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "zauonlok/renderer",
+      "stars": 2518,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "*.hdr binary\n*.tga binary\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1142578125,
+          "content": ".DS_Store\nThumbs.db\n\n.idea\n.vscode\n\n*.pyc\n*.zip\nrenderer/*.obj\nscripts/*.hdr\n\nbuild\ncmake-build-*\nrenderer-*\nViewer*\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 4.3642578125,
+          "content": "cmake_minimum_required(VERSION 3.10)\nproject(Renderer LANGUAGES C)\n\n# ==============================================================================\n# Headers and sources\n# ==============================================================================\n\nset(HEADERS\n    renderer/core/api.h\n    renderer/core/camera.h\n    renderer/core/darray.h\n    renderer/core/draw2d.h\n    renderer/core/graphics.h\n    renderer/core/image.h\n    renderer/core/macro.h\n    renderer/core/maths.h\n    renderer/core/mesh.h\n    renderer/core/platform.h\n    renderer/core/private.h\n    renderer/core/scene.h\n    renderer/core/skeleton.h\n    renderer/core/texture.h\n    renderer/scenes/blinn_scenes.h\n    renderer/scenes/pbr_scenes.h\n    renderer/scenes/scene_helper.h\n    renderer/shaders/blinn_shader.h\n    renderer/shaders/cache_helper.h\n    renderer/shaders/pbr_shader.h\n    renderer/shaders/skybox_shader.h\n    renderer/tests/test_blinn.h\n    renderer/tests/test_helper.h\n    renderer/tests/test_pbr.h\n)\nset(SOURCES\n    renderer/core/camera.c\n    renderer/core/darray.c\n    renderer/core/draw2d.c\n    renderer/core/graphics.c\n    renderer/core/image.c\n    renderer/core/maths.c\n    renderer/core/mesh.c\n    renderer/core/private.c\n    renderer/core/scene.c\n    renderer/core/skeleton.c\n    renderer/core/texture.c\n    renderer/scenes/blinn_scenes.c\n    renderer/scenes/pbr_scenes.c\n    renderer/scenes/scene_helper.c\n    renderer/shaders/blinn_shader.c\n    renderer/shaders/cache_helper.c\n    renderer/shaders/pbr_shader.c\n    renderer/shaders/skybox_shader.c\n    renderer/tests/test_blinn.c\n    renderer/tests/test_helper.c\n    renderer/tests/test_pbr.c\n    renderer/main.c\n)\n\nif(WIN32)\n    set(SOURCES ${SOURCES} renderer/platforms/win32.c)\nelseif(APPLE)\n    set(SOURCES ${SOURCES} renderer/platforms/macos.m)\nelse()\n    set(SOURCES ${SOURCES} renderer/platforms/linux.c)\nendif()\n\n# ==============================================================================\n# Target definition\n# ==============================================================================\n\nset(TARGET Viewer)\n\nadd_executable(${TARGET} ${HEADERS} ${SOURCES})\n\n# ==============================================================================\n# Target properties\n# ==============================================================================\n\nset_target_properties(${TARGET} PROPERTIES C_STANDARD 90)\nset_target_properties(${TARGET} PROPERTIES C_EXTENSIONS OFF)\nset_target_properties(${TARGET} PROPERTIES INTERPROCEDURAL_OPTIMIZATION ON)\n\n# ==============================================================================\n# Compile options\n# ==============================================================================\n\nif(MSVC)\n    target_compile_options(${TARGET} PRIVATE /W4 /D_CRT_SECURE_NO_WARNINGS)\n    target_compile_options(${TARGET} PRIVATE /fp:fast)\nelse()\n    target_compile_options(${TARGET} PRIVATE -Wall -Wextra -pedantic)\n    target_compile_options(${TARGET} PRIVATE -ffast-math)\nendif()\n\nif(UNIX AND NOT APPLE)\n    target_compile_options(${TARGET} PRIVATE -D_POSIX_C_SOURCE=200809L)\nendif()\n\n# ==============================================================================\n# Link libraries\n# ==============================================================================\n\nif(WIN32)\n    # nothing to do for now\nelseif(APPLE)\n    target_link_libraries(${TARGET} PRIVATE \"-framework Cocoa\")\nelse()\n    target_link_libraries(${TARGET} PRIVATE m X11)\nendif()\n\n# ==============================================================================\n# Asset files\n# ==============================================================================\n\nset(ASSETS_SRC \"${CMAKE_SOURCE_DIR}/assets\")\nset(ASSETS_DST \"$<TARGET_FILE_DIR:${TARGET}>/assets\")\n\nif(WIN32)\n    set(ASSETS_CMD copy_directory)\n    set(ASSETS_MSG \"Copy assets\")\nelse()\n    set(ASSETS_CMD create_symlink)\n    set(ASSETS_MSG \"Link assets\")\nendif()\n\nadd_custom_command(\n    TARGET ${TARGET} POST_BUILD\n    COMMAND ${CMAKE_COMMAND} -E echo\n    \"${ASSETS_MSG}: ${ASSETS_SRC} to ${ASSETS_DST}\"\n)\nadd_custom_command(\n    TARGET ${TARGET} POST_BUILD\n    COMMAND ${CMAKE_COMMAND} -E ${ASSETS_CMD}\n    \"${ASSETS_SRC}\" \"${ASSETS_DST}\"\n)\n\n# ==============================================================================\n# IDE support\n# ==============================================================================\n\nset_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${TARGET})\nsource_group(TREE \"${CMAKE_SOURCE_DIR}/renderer\" FILES ${HEADERS} ${SOURCES})\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2020 Zhou Le\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.97265625,
+          "content": "# Software Renderer ![](https://github.com/zauonlok/renderer/workflows/Windows/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/macOS/badge.svg) ![](https://github.com/zauonlok/renderer/workflows/Linux/badge.svg)\n\n<img src=\"assets/helmet/screenshot2.png\" width=\"410\"> <img src=\"assets/helmet/screenshot3.png\" width=\"410\">\n<img src=\"assets/drone/screenshot1.gif\" width=\"410\"> <img src=\"assets/drone/screenshot2.gif\" width=\"410\">\n\nThis is a shader-based software renderer written from scratch in C89 with\nminimal dependencies, available for Windows, macOS, and Linux.\n\n## Features\n\n* Cross platform\n* Minimal dependencies\n* Shader based\n* Homogeneous clipping\n* Back-face culling\n* Perspective correct interpolation\n* Depth testing\n* Alpha testing\n* Alpha blending\n* Cubemapped skybox\n* Skeletal animation\n* Tangent space normal mapping\n* Shadow mapping\n* ACES tone mapping\n* Blinn–Phong reflection model\n* Physically based rendering (PBR)\n* Metallic-roughness workflow\n* Specular-glossiness workflow\n* Image-based lighting (IBL)\n* Orbital camera controls\n* PBR material inspector\n\n## Download\n\nPre-built binaries for Windows, macOS, and Linux are available for download\nfrom the [Releases page](https://github.com/zauonlok/renderer/releases).\n\n## Build\n\nTo build the software renderer from source, a C89 compiler and development\nfiles for your window system are required.\n\n### Windows\n\nInstall [Visual Studio](https://visualstudio.microsoft.com/downloads/)\nwith C++ support and run `build_win32.bat`.\n\n### macOS\n\nInstall Command Line Tools for Xcode with the command below and\nrun `build_macos.sh`.\n\n```\nxcode-select --install\n```\n\n### Linux\n\nInstall GCC and Xlib with the following commands and run `build_linux.sh`.\n\n#### Ubuntu / Debian\n\n```\nsudo apt install gcc libx11-dev\n```\n\n#### Fedora / RHEL\n\n```\nsudo dnf install gcc libX11-devel\n```\n\n#### openSUSE / SUSE\n\n```\nsudo zypper install gcc libX11-devel\n```\n\n### Bonus\n\nA `CMakeLists.txt` file is provided for generating project files using\n[CMake](https://cmake.org/) (see examples below).\n\n#### Visual Studio\n\n```\nmkdir build\ncd build\ncmake -G \"Visual Studio 16 2019\" ..\nstart Renderer.sln\n```\n\n#### Xcode\n\n```\nmkdir build\ncd build\ncmake -G Xcode ..\nopen Renderer.xcodeproj\n```\n\n#### Makefile\n\n```\nmkdir build\ncd build\ncmake -G \"Unix Makefiles\" -D CMAKE_BUILD_TYPE=Release ..\nmake\n```\n\n## Usage\n\n### Launch\n\nIf the software renderer is launched without arguments, one of the available\nscenes will be chosen randomly. To display a specific scene (see below),\nadditional arguments should be supplied. The command line syntax is:\n\n```\nViewer [test_name [scene_name]]\n```\n\n### Controls\n\n* Orbit: left mouse button\n* Pan: right mouse button\n* Zoom: mouse wheel\n* Rotate lighting: <kbd>A</kbd> <kbd>D</kbd> <kbd>S</kbd> <kbd>W</kbd>\n* Reset everything: <kbd>Space</kbd>\n\n### Inspector\n\nFor PBR scenes, a material inspector that is very similar to the layers view\nof [Marmoset Viewer](https://marmoset.co/viewer/) is provided. Double click\nto bring it up.\n\n## Screenshots\n\n| Scene                                                                                   | Command                   |\n| --------------------------------------------------------------------------------------- | ------------------------- |\n| [<img src=\"assets/azura/screenshot.png\" width=\"600\">](assets/azura/README.md)           | `Viewer blinn azura`      |\n| [<img src=\"assets/centaur/screenshot.png\" width=\"600\">](assets/centaur/README.md)       | `Viewer blinn centaur`    |\n| [<img src=\"assets/craftsman/screenshot2.gif\" width=\"600\">](assets/craftsman/README.md)  | `Viewer blinn craftsman`  |\n| [<img src=\"assets/elfgirl/screenshot2.png\" width=\"600\">](assets/elfgirl/README.md)      | `Viewer blinn elfgirl`    |\n| [<img src=\"assets/kgirl/screenshot.gif\" width=\"600\">](assets/kgirl/README.md)           | `Viewer blinn kgirl`      |\n| [<img src=\"assets/lighthouse/screenshot.png\" width=\"600\">](assets/lighthouse/README.md) | `Viewer blinn lighthouse` |\n| [<img src=\"assets/mccree/screenshot.png\" width=\"600\">](assets/mccree/README.md)         | `Viewer blinn mccree`     |\n| [<img src=\"assets/nier2b/screenshot.png\" width=\"600\">](assets/nier2b/README.md)         | `Viewer blinn nier2b`     |\n| [<img src=\"assets/phoenix/screenshot.gif\" width=\"600\">](assets/phoenix/README.md)       | `Viewer blinn phoenix`    |\n| [<img src=\"assets/vivi/screenshot.png\" width=\"600\">](assets/vivi/README.md)             | `Viewer blinn vivi`       |\n| [<img src=\"assets/whip/screenshot.gif\" width=\"600\">](assets/whip/README.md)             | `Viewer blinn whip`       |\n| [<img src=\"assets/witch/screenshot.png\" width=\"600\">](assets/witch/README.md)           | `Viewer blinn witch`      |\n| [<img src=\"assets/assassin/screenshot.gif\" width=\"600\">](assets/assassin/README.md)     | `Viewer pbr assassin`     |\n| [<img src=\"assets/buster/screenshot1.gif\" width=\"600\">](assets/buster/README.md)        | `Viewer pbr buster`       |\n| [<img src=\"assets/crab/screenshot.gif\" width=\"600\">](assets/crab/README.md)             | `Viewer pbr crab`         |\n| [<img src=\"assets/dieselpunk/screenshot.png\" width=\"600\">](assets/dieselpunk/README.md) | `Viewer pbr dieselpunk`   |\n| [<img src=\"assets/drone/screenshot1.gif\" width=\"600\">](assets/drone/README.md)          | `Viewer pbr drone`        |\n| [<img src=\"assets/helmet/screenshot1.png\" width=\"600\">](assets/helmet/README.md)        | `Viewer pbr helmet`       |\n| [<img src=\"assets/horse/screenshot.gif\" width=\"600\">](assets/horse/README.md)           | `Viewer pbr horse`        |\n| [<img src=\"assets/junkrat/screenshot.gif\" width=\"600\">](assets/junkrat/README.md)       | `Viewer pbr junkrat`      |\n| [<img src=\"assets/ornitier/screenshot.png\" width=\"600\">](assets/ornitier/README.md)     | `Viewer pbr ornitier`     |\n| [<img src=\"assets/ponycar/screenshot2.png\" width=\"600\">](assets/ponycar/README.md)      | `Viewer pbr ponycar`      |\n| [<img src=\"assets/robot/screenshot.png\" width=\"600\">](assets/robot/README.md)           | `Viewer pbr robot`        |\n| [<img src=\"assets/spruit/screenshot1.png\" width=\"600\">](assets/spruit/README.md)        | `Viewer pbr sphere`       |\n| [<img src=\"assets/workshop/screenshot2.png\" width=\"600\">](assets/workshop/README.md)    | `Viewer pbr spheres`      |\n\n## References\n\n### Rendering pipeline\n\n* [Tiny Renderer](https://github.com/ssloy/tinyrenderer)\n* [OpenGL ES 2.0 Specification](https://www.khronos.org/registry/OpenGL/specs/es/2.0/es_full_spec_2.0.pdf)\n\n### Physically based rendering\n\n* [glTF 2.0 Sample Viewer](https://github.com/KhronosGroup/glTF-Sample-Viewer)\n* [SIGGRAPH 2013 Shading Course](https://blog.selfshadow.com/publications/s2013-shading-course/)\n* [Physically Based Rendering in Filament](https://google.github.io/filament/Filament.html)\n\n### File formats\n\n* [Truevision TGA](http://www.dca.fee.unicamp.br/~martino/disciplinas/ea978/tgaffs.pdf)\n* [Radiance HDR](https://www.graphics.cornell.edu/~bjw/rgbe.html)\n* [Wavefront OBJ](http://www.cs.utah.edu/~boulos/cs3505/obj_spec.pdf)\n* [Khronos glTF](https://github.com/KhronosGroup/glTF/blob/master/specification/2.0/README.md)\n\n### Miscellaneous\n\n* [Homogeneous clipping](http://fabiensanglard.net/polygon_codec/)\n* [Barycentric coordinates](http://blackpawn.com/texts/pointinpoly/)\n* [Perspective correct interpolation](https://www.comp.nus.edu.sg/~lowkl/publications/lowk_persp_interp_techrep.pdf)\n* [Skeletal animation](https://people.rennes.inria.fr/Ludovic.Hoyet/teaching/IMO/05_IMO2016_Skinning.pdf)\n* [Tangent space normal mapping](http://www.terathon.com/code/tangent.html)\n* [Ambient occlusion](http://mentalraytips.blogspot.com/2008/11/joy-of-little-ambience.html)\n* [ACES tone mapping](https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/)\n* [Orbital camera controls](https://github.com/mrdoob/three.js/blob/master/examples/js/controls/OrbitControls.js)\n* [Xlib programming guide](https://web.archive.org/web/20071018025425/http://users.actcom.co.il/~choo/lupg/tutorials/xlib-programming/xlib-programming.html)\n* [Type-safe dynamic array](https://github.com/nothings/stb/blob/master/stretchy_buffer.h)\n\n## License\n\n[MIT License](LICENSE)\n"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 0.14453125,
+          "content": "title: Software Renderer\ndescription: A shader-based software renderer written from scratch in C89\nshow_downloads: false\ntheme: jekyll-theme-cayman\n"
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build_linux.sh",
+          "type": "blob",
+          "size": 0.2587890625,
+          "content": "#!/bin/bash\n\nDEFS=\"-D_POSIX_C_SOURCE=200809L\"\nOPTS=\"-std=c89 -Wall -Wextra -pedantic -O3 -flto -ffast-math\"\nSRCS=\"main.c platforms/linux.c core/*.c scenes/*.c shaders/*.c tests/*.c\"\nLIBS=\"-lm -lX11\"\n\ncd renderer && gcc -o ../Viewer $DEFS $OPTS $SRCS $LIBS && cd ..\n"
+        },
+        {
+          "name": "build_macos.sh",
+          "type": "blob",
+          "size": 0.2294921875,
+          "content": "#!/bin/bash\n\nOPTS=\"-std=c89 -Wall -Wextra -pedantic -O3 -flto -ffast-math\"\nSRCS=\"main.c platforms/macos.m core/*.c scenes/*.c shaders/*.c tests/*.c\"\nLIBS=\"-framework Cocoa\"\n\ncd renderer && clang -o ../Viewer $OPTS $SRCS $LIBS && cd ..\n"
+        },
+        {
+          "name": "build_win32.bat",
+          "type": "blob",
+          "size": 1.1484375,
+          "content": "@echo off\n\nfor /f \"delims=\" %%i in ('tools\\win32\\vswhere -latest -property installationPath') do (\n    set VS000COMNTOOLS=%%i\\Common7\\Tools\\\n)\nfor /f \"delims=\" %%i in ('tools\\win32\\vswhere -latest -property displayName') do (\n    set VS000COMNTITLE=%%i\n)\n\nif defined VS000COMNTOOLS (\n    title %VS000COMNTITLE%\n    call \"%VS000COMNTOOLS%VsDevCmd.bat\" -no_logo -arch=amd64 -host_arch=amd64\n) else if defined VS140COMNTOOLS (\n    title Visual Studio 2015\n    call \"%VS140COMNTOOLS%vsvars32.bat\"\n) else if defined VS120COMNTOOLS (\n    title Visual Studio 2013\n    call \"%VS120COMNTOOLS%vsvars32.bat\"\n) else if defined VS110COMNTOOLS (\n    title Visual Studio 2012\n    call \"%VS110COMNTOOLS%vsvars32.bat\"\n) else if defined VS100COMNTOOLS (\n    title Visual Studio 2010\n    call \"%VS100COMNTOOLS%vsvars32.bat\"\n) else (\n    title Visual Studio None\n    echo Could not find Visual Studio.\n    goto :pause\n)\n\nset DEFS=/D_CRT_SECURE_NO_WARNINGS\nset OPTS=/nologo /W4 /O2 /GL /fp:fast\nset SRCS=main.c platforms/win32.c core/*.c scenes/*.c shaders/*.c tests/*.c\nset LIBS=gdi32.lib user32.lib\n\ncd renderer && cl /Fe../Viewer %DEFS% %OPTS% %SRCS% %LIBS% && del *.obj && cd ..\n\n:pause\npause\n"
+        },
+        {
+          "name": "renderer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

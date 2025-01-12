@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "timestamp": 1736710086180,
+    "page": 711,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "raspberrypi/tools",
+      "stars": 1892,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0068359375,
+          "content": ".*.swp\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.431640625,
+          "content": "# tools\n\nThese toolchains are deprecated.\nThey are outdated and easily available from other sources (e.g. direct from Ubuntu apt).\ne.g.\n```\nsudo apt-get install gcc-arm-linux-gnueabihf\n```\nThere is also an aarch64 version:\n```\nsudo apt-get install gcc-aarch64-linux-gnu\n```\n\nNote: if building for Pi0/1 using `--with-arch=armv6 --with-float=hard --with-fpu=vfp` is recommended\n(and matches the default flags of the toolchains included here).\n"
+        },
+        {
+          "name": "arm-bcm2708",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "armstubs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mkimage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "pkg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sysidk",
+          "type": "blob",
+          "size": 10.2802734375,
+          "content": "#!/bin/bash\n\n# sysidk: System Image Development Kit\n# Potentially stand-alone access to the sysidk scripts and installation\n# management\n\ncmd=\"$0\"\ncmd_dir=\"`dirname -- \"$cmd\"`\"\ncmd_dir=`(cd \"$cmd_dir\">/dev/null;pwd)`\ncmd_name=\"`basename -- $cmd`\"\n\ndir_sysidk=\"$HOME/.sysidk\"\nrc_sysidk=\"sysidk.rc\"\nenv_sysidk=\"sysidk.env\"\ndefault_dir_bin=\"/opt/sysidk/bin\"\ndefault_dir_pkg=\"/var/sysidk\"\ndefault_dir_localbin=\"$dir_sysidk/bin\"\ndefault_dir_localpkg=\"$dir_sysidk/pkg\"\nsysidk_users=users\n\n[ -z \"$DIR_BCM_RELEASES\" ] || default_dir_pkg=\"$DIR_BCM_RELEASES\"\n\nhelp()\n{\n    if [ \"_$1\" = \"_commands\" ]; then\n        sysidk_help_commands\n    else\n        echo \"syntax: <command> <options>\"\n        echo \"        Run a system image development kit command\"\n        echo \"syntax: --help commands\"\n        echo \"        List the <commands>\"\n        echo \"syntax: <command> --help\"\n        echo \"        Help about command\"\n        echo\n        echo \"syntax: --setup [-l] [-b <install_dir>] [-p <pkg_dir>] <scripts package> \"\n        echo \"        Place sysidk scripts in the installation directory\"\n        echo \"        -l   Use local directories - no need to setup with root access\"\n        echo \"        -b   Set binary directory for scripts\"\n        echo \"             ($default_dir_bin by default or \"\n        echo \"              $default_dir_localbin if using -l)\"\n        echo \"        -p   Set directory for storing packages\"\n        echo \"             ($default_dir_pkg by default or \"\n        echo \"              $default_dir_localpkg if using -l)\"\n        echo \"syntax: --add <package>...\"\n        echo \"        Install sysidk packages\"\n        echo \"        (Use 'sysidk sysipk -h' for other package management options)\"\n        echo\n        echo \"syntax: --install [-l] [-b <install_dir>] [-p <pkg_dir>] <scripts package> \"\n        echo \"        Setup (as --setup below) and install sysidk commands into your\"\n        echo \"        shell sessions (on next logon)\"\n        echo \"syntax: --uninstall\"\n        echo \"        Uninstall sysidk commands from your shell sessions (effective\"\n        echo \"        after you next logon)\"\n        echo\n        echo \"syntax: --bindir\"\n        echo \"        Show installed binary directory\"\n        echo \"syntax: --pkgdir\"\n        echo \"        Show installed packages directory\"\n    fi\n}\n\n\ncontent_env()\n{   local scripts=\"$1\"; shift\n    local pkgs=\"$1\"; shift\n    cat <<EOF\n# do no edit - written by $cmd_name --setup\n# this file is intended to be 'source'd by a bourne shell\n# last updated `date`\ndir_bcm_scripts=\"$scripts\"\nDIR_BCM_RELEASES=\"$pkgs\"\nEOF\n    return $?\n}\n\n\ncontent_rc()\n{   cat <<EOF\n# do no edit - written by $cmd_name --setup\n# this file is intended to be 'source'd by a bourne shell during shell startup\n# last updated `date`\nsource \"$dir_sysidk/$env_sysidk\"\nexport DIR_BCM_RELEASES\nif [ -f \"\\$dir_bcm_scripts/bcm_setup\" ]; then\n    source \"\\$dir_bcm_scripts/bcm_setup\"\nfi\nEOF\n    return $?\n}\n\n\nsetup_dir_sysidk()\n{   local do_update=false\n    local rc=0\n\n    [ \"_$1\" = \"_-u\" ] && { do_update=true; shift; }\n\n    if [ ! -d \"$dir_sysidk\" ]; then\n        mkdir \"$dir_sysidk\"\n        do_update=true\n    fi\n\n    if [ ! -d \"$dir_sysidk\" ]; then\n        echo \"$cmd_name: can't set up $dir_sysidk - sorry\"\n        rc=1\n    fi\n\n    return $rc\n}\n\ncheck_have_scripts()\n{   local rc=0\n    if [ -z \"$dir_bcm_scripts\" ]; then\n        echo \"$cmd_name: Sorry - you need to install the scripts\">&2\n        echo \"$cmd_name: use --setup or --install\">&2\n        rc=2\n    elif [ ! -d \"$dir_bcm_scripts\" ]; then\n        echo \"$cmd_name: Your scripts directory doesn't exist - $dir_bcm_scripts\">&2\n        echo \"$cmd_name: try reinstalling using --setup or --install?\">&2\n        rc=1\n    fi\n    return $rc\n}\n\n\ncheck_have_packages()\n{   local rc=0\n    if [ -z \"$DIR_BCM_RELEASES\" ]; then\n        echo \"$cmd_name: Sorry - you need to install the scripts\">&2\n        echo \"$cmd_name: use --setup or --install\">&2\n        rc=2\n    elif [ ! -d \"$DIR_BCM_RELEASES\" ]; then\n        echo \"$cmd_name: Your packages directory doesn't exist - $DIR_BCM_RELEASES\">&2\n        echo \"$cmd_name: try reinstalling using --setup or --install?\">&2\n        rc=1\n    fi\n    return $rc\n}\n\n\nsysidk_help_commands()\n{\n    if setup_dir_sysidk; then\n        [ -r \"$dir_sysidk/$env_sysidk\" ] && . \"$dir_sysidk/$env_sysidk\"\n        if check_have_scripts; then\n            echo \"$cmd_name: Commands\"\n            ls \"$dir_bcm_scripts\" | grep -v \"^lib$\" | xargs -I ^ echo \"    ^\"\n        fi\n    fi\n}\n\n\nsysidk_add()\n{   local rc=0\n\n    if ! PATH=\"$dir_bcm_scripts:$PATH\" type sysipk>/dev/null 2>/dev/null; then\n        echo \"$cmd_name: your installed scripts don't include the 'sysipk' command\">&2\n        echo \"$cmd_name: add the scripts package first?\">&2\n        rc=1\n    else\n        local opts=\n        local pk\n        local type\n        for pk in \"$@\"; do\n            case \"$pk\" in\n                -* | --*) opts=\"$opts $pk\";;\n                *-root-nodata.tgz | *-data-root.tgz | *-root.tgz) type=root;;\n                *-boot.tgz) type=boot;;\n                *-trk.tgz) type=track;;\n                *-bin.tgz) type=scripts;;\n                *) type=unknown;;\n            esac\n            if [ \"$type\" = \"unknown\" ]; then\n                echo \"$cmd_name: sorry - don't recognize the package type of '$pk'\"\n                rc=1\n            elif [ ! -z \"$type\" ]; then\n                # echo \"sysipk $type $opts --install $pk\">&2\n                PATH=\"$dir_bcm_scripts:$PATH\" sysipk $type $opts --install \"$pk\"\n                rc=$?\n            fi\n        done\n    fi    \n    return $rc\n}\n\n\nsysidk_setup()\n{   local scripts=\"$default_dir_bin\"\n    local pkgs=\"$default_dir_pkg\"\n    local rc=0\n    local cmd_sudo=sudo\n\n    if [ \"_$1\" = \"_-l\" -o \"_$1\" = \"_--local\" ]; then\n        cmd_sudo=\n        scripts=\"$default_dir_localbin\"\n        scripts=\"$default_dir_localpkg\"\n    fi\n    [ \"_$1\" = \"_-p\" -o \"_$1\" = \"_--package\" ] && { pkgs=\"$1\"; shift; }\n    [ \"_$1\" = \"_-b\" -o \"_$1\" = \"_--bin\" ] && { scripts=\"$1\"; shift; }\n\n    if [ ! -z \"$cmd_sudo\" ] && \\\n       ! type $cmd_sudo >/dev/null 2>/dev/null; then\n        echo \"$cmd_name: sorry - this scripts needs a '$cmd_sudo' command to execute as root\" >&2\n    elif ! $cmd_sudo mkdir -p \"$scripts\"; then\n        echo \"$cmd_name: can't create a place for your scripts - do you need root access?\">&2\n        rc=1\n    elif ! $cmd_sudo mkdir -p \"$pkgs\"; then\n        echo \"$cmd_name: can't create a place for your packages - $pkgs\">&2\n        rc=2\n    else\n        $cmd_sudo chgrp $sysidk_users \"$pkgs\" \"$scripts\"\n        $cmd_sudo chmod g+rw \"$pkgs\" \"$scripts\"\n        echo \"$cmd_name: creating $dir_sysidk/$env_sysidk\">&2\n        content_env \"$scripts\" \"$pkgs\" > \"$dir_sysidk/$env_sysidk\"\n        echo \"$cmd_name: creating $dir_sysidk/$rc_sysidk\">&2\n        content_rc > \"$dir_sysidk/$rc_sysidk\"\n        rc=$?\n    fi\n    \n    if [ $rc -eq 0 -a $# -gt 0 ]; then\n        local script_pkg=\"$1\"; shift\n        local unpack=\n        \n        case \"$script_pkg\" in\n            *-bin.tgz) unpack=\"-xzf\";;\n            *) ;;\n        esac\n        if [ -z \"$unpack\" ]; then\n            echo \"$cmd_name: scripts package name has unrecognized format\">&2\n            rc=3\n        else\n            echo \"$cmd_name: unpacking scripts into $scripts\">&2\n            tar -C \"$scripts\" $unpack \"$script_pkg\"\n            rc=$?\n        fi\n    fi\n    \n    if [ $rc -eq 0 -a $# -gt 0 ]; then\n        . \"$dir_sysidk/$env_sysidk\"\n        sysidk_add \"$@\"\n        rc=$?\n    fi\n    return $rc \n}\n\n\nsysidk_install()\n{   # update the user's shell RC script to include the scripts on the cmd\n    local remove=false\n    [ \"_$1\" = \"_-d\" ] && { shift; remove=true; }\n    local rc_file=\".bashrc\"\n    local firstline=\"#=== sysidk set-up\"\n    local lastline=\"#=== end of sysidk set-up\"\n    local rc=0\n    local tmp=\"/tmp/${cmd_name}_instrc\"\n\n    case \"$SHELL\" in\n        */bash) rc_file=.bashrc;;\n        */dash) rc_file=.profile;;\n        */sh)   rc_file=.profile;;\n        # *csh)  rc_file=.cshrc;; # not a bourne shell\n        *)      rc_file=.bashrc\n                echo \"$cmd_name: sorry don't recongize your SHELL '$SHELL' - updating $rc_file\">&2\n                ;;\n    esac\n\n    rc_file=\"$HOME/$rc_file\"\n    # rc_file=test.rc\n    echo \"$cmd_name: updating $rc_file\";\n    if [ ! -r \"$rc_file\" ]; then\n        echo \"$cmd_name: you haven't defined a $rc_file shell initialization file!\">&2\n        rc=1\n    elif $remove; then\n        if grep \"^$firstline\" \"$rc_file\" >/dev/null; then\n            sed -itmp -e \"/$firstline/,/$lastline/ d\" \"$rc_file\"\n            rm -f \"$rc_file.tmp\"\n        else\n            echo \"$cmd_name: no installation found in $rc_file\">&2\n        fi\n    else\n        {   echo \"$firstline\"\n            echo \"# (please leave '#===' lines) last updated `date`\"\n            echo \"source \\\"$dir_sysidk/$rc_sysidk\\\"\"\n            echo \"$lastline\"\n        } > $tmp\n        if grep \"^$firstline\" \"$rc_file\" >/dev/null; then\n            sed -itmp -e \"/$lastline/ r $tmp\" \\\n                      -e \"/$firstline/,/$lastline/ d\" \"$rc_file\"\n            rm -f \"$rc_file.tmp\"\n        else\n            # echo \"$cmd_name: appended\"\n            { echo; cat $tmp; } >> \"$rc_file\"\n        fi\n        rm -f \"$tmp\"\n    fi\n    return $rc\n}\n\nrc=0\n\nif [ \"_$1\" = \"_--help\" -o \"_$1\" = \"_-h\" ]; then\n    shift\n    help \"$@\" >&2\n    exit 1\nelif ! setup_dir_sysidk; then\n    exit 1\nfi\n\nif [ \"_$1\" = \"_--install\" -o \\\n     \"_$1\" = \"_--uninstall\" -o \\\n     \"_$1\" = \"_--setup\" ]; then\n    op=\"$1\"\n    shift\n    \n    if  [ \"_$op\" = \"_--install\" ]; then\n        sysidk_setup \"$@\"\n        rc=$?\n        [ $rc -eq 0 ] && {\n            sysidk_install \"$@\"\n            rc=$?\n        }\n    elif [ \"_$op\" = \"_--uninstall\" ]; then\n        sysidk_install -d \"$@\"\n        rc=$?\n    else\n        sysidk_setup \"$@\"\n        rc=$?\n    fi\n    \n    exit $rc\nfi\n\n. \"$dir_sysidk/$env_sysidk\"\n\nif [ \"_$1\" = \"_--add\" -o \"_$1\" = \"_-a\" ]; then\n    shift\n    if check_have_scripts && check_have_packages; then\n        sysidk_add \"$@\"\n        rc=$?\n    else\n        rc=2\n    fi\nelif [ \"_$1\" = \"_--bindir\" -o \"_$1\" = \"_-b\" ]; then\n    echo \"$dir_bcm_scripts\"\n    test ! -z \"$dir_bcm_scripts\"\n    rc=$?\nelif [ \"_$1\" = \"_--pkgdir\" -o \"_$1\" = \"_-p\" ]; then\n    echo \"$DIR_BCM_RELEASES\"\n    test ! -z \"$DIR_BCM_RELEASES\"\n    rc=$?\nelse\n    # run the command without requiring previous installation\n    if check_have_scripts && check_have_packages; then\n        PATH=\"$dir_bcm_scripts:$PATH\" \"$@\"\n        rc=$?\n    else\n        rc=2\n    fi\nfi\n\nexit $rc\n"
+        },
+        {
+          "name": "test_code",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "usbboot",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

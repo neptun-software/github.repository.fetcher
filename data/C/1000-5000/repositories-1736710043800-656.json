@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "timestamp": 1736710043800,
+    "page": 656,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjY2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ejoy/ejoy2d",
+      "stars": 1991,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.224609375,
+          "content": "ios/example/example.xcodeproj/project.xcworkspace/\nios/example/example.xcodeproj/xcuserdata/\nej2d\nej2d.dSYM/*\n*.exe\n*.dll\n*.ilk\nmac/example/example.xcodeproj/xcuserdata\nmac/example/example.xcodeproj/project.xcworkspace/xcuserdata\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 Ejoy.com Inc.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.583984375,
+          "content": ".PHONY : mingw ej2d linux undefined\n\nCFLAGS = -g -Wall -Ilib -Ilib/render -Ilua -D EJOY2D_OS=$(OS) -D FONT_EDGE_HASH\nLDFLAGS :=\n\nRENDER := \\\nlib/render/render.c \\\nlib/render/carray.c \\\nlib/render/log.c\n\nEJOY2D := \\\nlib/shader.c \\\nlib/lshader.c \\\nlib/ejoy2dgame.c \\\nlib/fault.c \\\nlib/screen.c \\\nlib/texture.c \\\nlib/ppm.c \\\nlib/spritepack.c \\\nlib/sprite.c \\\nlib/lsprite.c \\\nlib/matrix.c \\\nlib/lmatrix.c \\\nlib/dfont.c \\\nlib/label.c \\\nlib/particle.c \\\nlib/lparticle.c \\\nlib/scissor.c \\\nlib/renderbuffer.c \\\nlib/lrenderbuffer.c \\\nlib/lgeometry.c\n\nSRC := $(EJOY2D) $(RENDER)\n\nLUASRC := \\\nlua/lapi.c \\\nlua/lauxlib.c \\\nlua/lbaselib.c \\\nlua/lbitlib.c \\\nlua/lcode.c \\\nlua/lcorolib.c \\\nlua/lctype.c \\\nlua/ldblib.c \\\nlua/ldebug.c \\\nlua/ldo.c \\\nlua/ldump.c \\\nlua/lfunc.c \\\nlua/lgc.c \\\nlua/linit.c \\\nlua/liolib.c \\\nlua/llex.c \\\nlua/lmathlib.c \\\nlua/lmem.c \\\nlua/loadlib.c \\\nlua/lobject.c \\\nlua/lopcodes.c \\\nlua/loslib.c \\\nlua/lparser.c \\\nlua/lstate.c \\\nlua/lstring.c \\\nlua/lstrlib.c \\\nlua/ltable.c \\\nlua/ltablib.c \\\nlua/ltm.c \\\nlua/lundump.c \\\nlua/lutf8lib.c \\\nlua/lvm.c \\\nlua/lzio.c\n\nCC=gcc\nUNAME=$(shell uname)\nSYS=$(if $(filter Linux%,$(UNAME)),linux,\\\n\t    $(if $(filter MINGW%,$(UNAME)),mingw,\\\n\t    $(if $(filter Darwin%,$(UNAME)),macosx,\\\n\t        undefined\\\n)))\n\nall: $(SYS)\n\nundefined:\n\t@echo \"I can't guess your platform, please do 'make PLATFORM' where PLATFORM is one of these:\"\n\t@echo \"      linux mingw macosx\"\n\n\nmingw : OS := WINDOWS\nmingw : TARGET := ej2d.exe\nmingw : CFLAGS += -I/usr/include\nmingw : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32\nmingw : SRC += mingw/window.c mingw/winfw.c mingw/winfont.c\n\nmingw : $(SRC) ej2d\n\nwinlib : OS := WINDOWS\nwinlib : TARGET := ejoy2d.dll\nwinlib : CFLAGS += -I/usr/include -I/usr/local/include --shared\nwinlib : LDFLAGS += -L/usr/bin -lgdi32 -lglew32 -lopengl32 -L/usr/local/bin -llua53\nwinlib : SRC += mingw/winfont.c lib/lejoy2dcore.c\n\nwinlib : $(SRC) ej2dlib\n\nej2dlib :\n\t$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LDFLAGS)\n\nlinux : OS := LINUX\nlinux : TARGET := ej2d\nlinux : CFLAGS += -I/usr/include $(shell freetype-config --cflags)\nlinux : LDFLAGS +=  -lGLEW -lGL -lX11 -lfreetype -lm\nlinux : SRC += posix/window.c posix/winfw.c posix/winfont.c\n\nlinux : $(SRC) ej2d\n\nmacosx : CC := clang\nmacosx : OS := MACOSX\nmacosx : TARGET := ej2d\nmacosx : CFLAGS += -I/usr/include $(shell freetype-config --cflags) -D __MACOSX\nmacosx : LDFLAGS += -lglfw3  -framework OpenGL -lfreetype -lm -ldl\nmacosx : SRC += mac/example/example/window.c posix/winfw.c mac/example/example/winfont.c\n\nmacosx : $(SRC) ej2d\n\nej2d :\n\t$(CC) $(CFLAGS) -o $(TARGET) $(SRC) $(LUASRC) $(LDFLAGS)\n\nclean :\n\t-rm -f ej2d.exe\n\t-rm -f ej2d\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.69921875,
+          "content": "EJOY 2D\n=======\n\nMake\n====\n\nFor Windows and msvc\n\n* msvc\\make.bat\n* ej2d examples/ex01.lua to test\n\nFor Windows and mingw32\n\n* Install glew 1.9\n* make or make mingw\n* ej2d examples/ex01.lua to test\n\nFor Linux ,\n\n* Install glew 1.9\n* Install freetype 2\n* make or make linux\n* ./ej2d examples/ex01.lua to test\n\nFor Mac OS ,\n\n* Install glfw3\n* Install freetype 2\n* make or make macosx\n* ./ej2d examples/ex01.lua to test\n\nAPI\n====\n\nhttps://github.com/cloudwu/ejoy2d/blob/master/doc/apicn.md  (work in process , in Chinese)\n\nQuestion?\n=======\n\nPlease read http://blog.codingnow.com/2013/12/ejoy2d.html first (In Chinese) \n\nChinese API document \n\nPut your questions in [Issues](https://github.com/cloudwu/ejoy2d/issues) .\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ejoy2d",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ios",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lua",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mac",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mingw",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "msvc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "posix",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

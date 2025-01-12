@@ -1,0 +1,57 @@
+{
+  "metadata": {
+    "timestamp": 1736709870226,
+    "page": 355,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "stephenfewer/ReflectiveDLLInjection",
+      "stars": 2797,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.236328125,
+          "content": "Release/\nDebug/\nx64/\ndll/Release/\ndll/Debug/\ndll/reflective_dll.vcproj.*.user\ndll/reflective_dll.vcxproj.user\ninject/Release/\ninject/Debug/\ninject/inject.vcproj.*.user\ninject/inject.vcxproj.user\nrdi.ncb\nrdi.suo\nrdi.sdf\nrdi.opensdf\nrdi.v11.suo"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.53125,
+          "content": "Copyright (c) 2011, Stephen Fewer of Harmony Security (www.harmonysecurity.com)\r\nAll rights reserved.\r\n\r\nRedistribution and use in source and binary forms, with or without modification, are permitted \r\nprovided that the following conditions are met:\r\n\r\n    * Redistributions of source code must retain the above copyright notice, this list of \r\nconditions and the following disclaimer.\r\n\r\n    * Redistributions in binary form must reproduce the above copyright notice, this list of \r\nconditions and the following disclaimer in the documentation and/or other materials provided \r\nwith the distribution.\r\n\r\n    * Neither the name of Harmony Security nor the names of its contributors may be used to\r\nendorse or promote products derived from this software without specific prior written permission.\r\n\r\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR \r\nIMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\r\nFITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR \r\nCONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR \r\nCONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR \r\nSERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY \r\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR \r\nOTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE \r\nPOSSIBILITY OF SUCH DAMAGE."
+        },
+        {
+          "name": "Readme.md",
+          "type": "blob",
+          "size": 3.056640625,
+          "content": "About\n=====\n\nReflective DLL injection is a library injection technique in which the concept of reflective programming is employed to perform the loading of a library from memory into a host process. As such the library is responsible for loading itself by implementing a minimal Portable Executable (PE) file loader. It can then govern, with minimal interaction with the host system and process, how it will load and interact with the host.\n\nInjection works from Windows NT4 up to and including Windows 8, running on x86, x64 and ARM where applicable.\n\nOverview\n========\n\nThe process of remotely injecting a library into a process is two fold. Firstly, the library you wish to inject must be written into the address space of the target process (Herein referred to as the host process). Secondly the library must be loaded into that host process in such a way that the library's run time expectations are met, such as resolving its imports or relocating it to a suitable location in memory.\n\nAssuming we have code execution in the host process and the library we wish to inject has been written into an arbitrary location of memory in the host process, Reflective DLL Injection works as follows.\n\n* Execution is passed, either via CreateRemoteThread() or a tiny bootstrap shellcode, to the library's ReflectiveLoader function which is an exported function found in the library's export table.\n* As the library's image will currently exists in an arbitrary location in memory the ReflectiveLoader will first calculate its own image's current location in memory so as to be able to parse its own headers for use later on.\n* The ReflectiveLoader will then parse the host processes kernel32.dll export table in order to calculate the addresses of three functions required by the loader, namely LoadLibraryA, GetProcAddress and VirtualAlloc.\n* The ReflectiveLoader will now allocate a continuous region of memory into which it will proceed to load its own image. The location is not important as the loader will correctly relocate the image later on.\n* The library's headers and sections are loaded into their new locations in memory.\n* The ReflectiveLoader will then process the newly loaded copy of its image's import table, loading any additional library's and resolving their respective imported function addresses.\n* The ReflectiveLoader will then process the newly loaded copy of its image's relocation table.\n* The ReflectiveLoader will then call its newly loaded image's entry point function, DllMain with DLL_PROCESS_ATTACH. The library has now been successfully loaded into memory.\n* Finally the ReflectiveLoader will return execution to the initial bootstrap shellcode which called it, or if it was called via CreateRemoteThread, the thread will terminate.\n\nBuild\n=====\n\nOpen the 'rdi.sln' file in Visual Studio C++ and build the solution in Release mode to make inject.exe and reflective_dll.dll\n\nUsage\n=====\n\nTo test use the inject.exe to inject reflective_dll.dll into a host process via a process id, e.g.:\n\n> inject.exe 1234\n\t\nLicense\n=======\n\nLicensed under a 3 clause BSD license, please see LICENSE.txt for details.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "dll",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "inject",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rdi.sln",
+          "type": "blob",
+          "size": 2.6513671875,
+          "content": "﻿\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n# Visual Studio Express 2012 for Windows Desktop\r\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"inject\", \"inject\\inject.vcxproj\", \"{EEF3FD41-05D8-4A07-8434-EF5D34D76335}\"\r\nEndProject\r\nProject(\"{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}\") = \"reflective_dll\", \"dll\\reflective_dll.vcxproj\", \"{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}\"\r\nEndProject\r\nGlobal\r\n\tGlobalSection(SolutionConfigurationPlatforms) = preSolution\r\n\t\tDebug|ARM = Debug|ARM\r\n\t\tDebug|Win32 = Debug|Win32\r\n\t\tDebug|x64 = Debug|x64\r\n\t\tRelease|ARM = Release|ARM\r\n\t\tRelease|Win32 = Release|Win32\r\n\t\tRelease|x64 = Release|x64\r\n\tEndGlobalSection\r\n\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Debug|ARM.ActiveCfg = Release|ARM\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Debug|ARM.Build.0 = Release|ARM\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Debug|Win32.ActiveCfg = Release|Win32\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Debug|Win32.Build.0 = Release|Win32\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Debug|x64.ActiveCfg = Release|x64\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Debug|x64.Build.0 = Release|x64\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Release|ARM.ActiveCfg = Release|ARM\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Release|ARM.Build.0 = Release|ARM\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Release|Win32.ActiveCfg = Release|Win32\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Release|Win32.Build.0 = Release|Win32\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Release|x64.ActiveCfg = Release|x64\r\n\t\t{EEF3FD41-05D8-4A07-8434-EF5D34D76335}.Release|x64.Build.0 = Release|x64\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Debug|ARM.ActiveCfg = Release|ARM\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Debug|ARM.Build.0 = Release|ARM\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Debug|Win32.ActiveCfg = Release|Win32\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Debug|Win32.Build.0 = Release|Win32\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Debug|x64.ActiveCfg = Release|x64\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Debug|x64.Build.0 = Release|x64\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Release|ARM.ActiveCfg = Release|ARM\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Release|ARM.Build.0 = Release|ARM\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Release|Win32.ActiveCfg = Release|Win32\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Release|Win32.Build.0 = Release|Win32\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Release|x64.ActiveCfg = Release|x64\r\n\t\t{3A371EBD-EEE1-4B2A-88B9-93E7BABE0949}.Release|x64.Build.0 = Release|x64\r\n\tEndGlobalSection\r\n\tGlobalSection(SolutionProperties) = preSolution\r\n\t\tHideSolutionNode = FALSE\r\n\tEndGlobalSection\r\nEndGlobal\r\n"
+        }
+      ]
+    }
+  ]
+}

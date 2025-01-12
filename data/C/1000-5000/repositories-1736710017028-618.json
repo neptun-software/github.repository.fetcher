@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "timestamp": 1736710017028,
+    "page": 618,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bats3c/shad0w",
+      "stars": 2066,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".bridge",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0751953125,
+          "content": "* linguist-vendored\n*.py linguist-vendored=false\n*.c linguist-vendored=false\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0234375,
+          "content": "beacon/build/*\n*.o\n*.pyc"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1103515625,
+          "content": "[submodule \"bin/SharpCollection\"]\n\tpath = bin/SharpCollection\n\turl = https://github.com/Flangvik/SharpCollection\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.40625,
+          "content": "FROM kalilinux/kali-rolling\n \nLABEL maintainer=\"batsec - @_batsec_\"\n\n# https://docs.microsoft.com/en-us/dotnet/core/tools/telemetry#how-to-opt-out\nENV DOTNET_CLI_TELEMETRY_OPTOUT=1  \n\n# Install dependencies as a base container layer before copying full shad0w source\nCOPY ./install.sh ./requirements.txt /root/shad0w/\nWORKDIR /root/shad0w\nRUN ./install.sh\n\nCOPY . /root/shad0w\n\nENTRYPOINT [\"python3\", \"./shad0w.py\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2020 batsec\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.185546875,
+          "content": "all: install_libs\n\ngencerts:\n\t$(shell openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes)\n\ninstall_libs:\n\t$(shell pip3 install -r requirements.txt)"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.03125,
+          "content": "[![Project Status](https://img.shields.io/badge/status-BETA-yellow?style=flat-square)]()\n\n# SHAD0W\n\n<p align=\"center\">\n  <img alt=\"shad0w logo\" src=\"shad0w.png\" />\n</p>\n\nSHAD0W is a modular C2 framework designed to successfully operate on mature environments.\n\nIt uses a range of methods to evade EDR and AV while allowing the operator to continue using tooling and tradecraft they are familiar with. Its powered by Python 3.8 and C, and uses [Donut](https://github.com/TheWover/donut) for payload generation. By using Donut along with the process injection capabilities of SHAD0W, it provides the operator the ability to execute .NET assemblies, DLLs, EXEs, JS, VBS or XSLs fully inside memory. Dynamically resolved syscalls are heavily used to avoid userland API hooking, anti DLL injection to make it harder for EDR to load code into the beacons and official Microsoft mitigation methods to protect spawn processes.\n\nSee the wiki for installation and usage instructions.\n\nMain features of SHAD0W C2:\n- **Built for Docker** - Runs fully inside of Docker allowing cross platform usage\n- **Extremely modular** - Easy to create new modules to interact and task beacons\n- **HTTPS C2 communication** - All traffic between beacons and the C2 are encrypted and transmitted over HTTPS\n- **JSON based protocol** - Custom beacons are able to be built and used with an easy to implement protocol\n- **Live proxy and mirror** - The C2 server is able to mirror any website in real time, relaying all non C2 traffic to that site, making it look less subject when viewed in a web browser\n- **Modern CLI** - The CLI is built on [prompt-toolkit](https://github.com/prompt-toolkit/python-prompt-toolkit)\n\nMain features of SHAD0W beacons:\n- **EXE, PowerShell, shellcode and more** - Beacons can be generated and used in many different formats\n- **Process injection** - Allows the operator to `dllinject`, `migrate`, `shinject` and more\n- **Bypass AV** - Payloads are frequently updated to evade common Anti-Virus products\n- **Highly configurable** - Custom jitters, user agents and more\n- **HTTPS C2 communication** - Traffic to and from the C2 is encrypted via HTTPS\n- **Proxy aware** - All callbacks can use the current system proxy\n\nCurrent Modules:\n- **Elevate** - Built in PrivEsc exploits\n- **Ghost in the Logs** - Disable ETW & Sysmon, more info can be found [here](https://blog.dylan.codes/evading-sysmon-and-windows-event-logging/)\n- **GhostPack** - Binaries compiled nightly via an Azure pipeline. Thanks to [@Flangvik](https://twitter.com/Flangvik)\n- **Mimikatz** - For all your credential theft needs\n- **SharpCollection** - A ton of .NET offensive tools, more info can be found [here](https://github.com/Flangvik/SharpCollection)\n- **SharpSocks** - Reverse SOCKS proxy over HTTPS\n- **StdAPI** - Common commands to interact with the file system\n- **Unmanaged PowerShell** - Contains built in AMSI bypass\n- **Upload and Download** - Easy data exfiltration\n\n## Official Discord\n\n[![Porchetta Industries](https://discordapp.com/api/guilds/736724457258745996/widget.png?style=banner3)](https://discord.gg/ycXRvcD)\n"
+        },
+        {
+          "name": "TODO",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "Compatible with Metasploit callbacks\n"
+        },
+        {
+          "name": "beacon",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "certs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "exploits",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "install.sh",
+          "type": "blob",
+          "size": 0.650390625,
+          "content": "#!/bin/bash\n\n# install stuff we need\napt-get update -y\napt-get install -y python3 python3-pip python3-openssl gcc-mingw-w64 nasm upx binutils wget apt-transport-https procps mono-complete less metasploit-framework\npython3 -m pip install -r /root/shad0w/requirements.txt\n\n# install dotnet\nwget https://packages.microsoft.com/config/ubuntu/16.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb\ndpkg -i /tmp/packages-microsoft-prod.deb\nwget http://ftp.us.debian.org/debian/pool/main/i/icu/libicu57_57.1-6+deb9u4_amd64.deb -O /tmp/libicu57_57.1-6+deb9u4_amd64.deb\ndpkg -i /tmp/libicu57_57.1-6+deb9u4_amd64.deb\napt update -y\napt install dotnet-sdk-2.2 -y\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "modules",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "requirements.txt",
+          "type": "blob",
+          "size": 0.0859375,
+          "content": "cffi\ndonut-shellcode\nflask\npefile\nPrettyTable\nprompt_toolkit\npygments\npyopenssl\nrequests"
+        },
+        {
+          "name": "rules",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shad0w",
+          "type": "blob",
+          "size": 1.0732421875,
+          "content": "#!/bin/bash\n\n# This is a launcher script for shad0w.\n\nif [ -z $1 ]; then\n    exec sudo docker run -v $(pwd):/root/shad0w/.bridge --rm -it shad0w\n    exit\nfi\n\nif [ $1 = \"install\" ]; then\n    cp shad0w /usr/bin/shad0w\n    docker build -t shad0w .\n    exec shad0w\n    exit\nfi\n\nif [ $1 = \"beacon\" ]; then\n    exec sudo docker run -v $(pwd):/root/shad0w/.bridge --rm -it shad0w $@\n    exit\nfi\n\nif [ $1 = \"listen\" ]; then\n    exec sudo docker run -v $(pwd):/root/shad0w/.bridge -p 443:443 -p 80:8080 -p 43334:43334 --rm -it shad0w $@\n    exit\nfi\n\nif [ $1 = \"dev\" ]; then\n    echo \"This option should only be invoked from the base of the shad0w git repo\"\n    echo \"Once you enter the container shell you will be in /root/shad0w dir.\"\n    echo \"To now run shad0w inside container:\"\n    echo \"  # python3.8 shad0w.py [listen <options>] [beacon <options>] [help]\"\n    exec sudo docker run --entrypoint /bin/bash -v $(pwd):/root/shad0w -p 443:443 -p 80:8080 -p 43334:43334 --rm -it shad0w\n    exit\nfi\n\nexec sudo docker run -v $(pwd):/root/shad0w/.bridge -p 443:443 -p 80:8080 -p 43334:43334 --rm -it shad0w $@\n"
+        },
+        {
+          "name": "shad0w.png",
+          "type": "blob",
+          "size": 80.517578125,
+          "content": null
+        },
+        {
+          "name": "shad0w.py",
+          "type": "blob",
+          "size": 7.30859375,
+          "content": "#!/usr/bin/env python3\n\nimport os\nimport sys\nimport ssl\nimport socket\nimport asyncio\nimport argparse\n\nfrom threading import Thread\n\nfrom lib import debug\nfrom lib import banner\nfrom lib import http_server\nfrom lib import console\nfrom lib import encryption\nfrom lib import buildtools\nfrom lib import mirror\nfrom lib import payload_format\nfrom lib import tools\n\n\nclass Shad0wC2(object):\n\n    def __init__(self, args):\n\n        super(Shad0wC2, self).__init__()\n\n        # payload store\n        self.payloads = {}\n\n        # declare all the vitial variables to run.\n        self.addr = (args['address'], args['port'])\n        self.debugv = args['debug']\n        self.sslkey = args['key']\n        self.sslcrt = args['cert']\n\n        # framework variables\n        self.variables = {}\n\n        # set the msf callback size\n        self.variables[\"MsfUriSize\"] = 1337\n\n        # website we can mirror\n        self.mirror = args['mirror']\n\n        # endpoint for modules to callback to\n        self.endpoint = args['endpoint']\n\n        # runtime variables\n        self.beacons = {}\n        self.beacon_count = 0\n        self.current_beacon = None\n\n        # loading screen stuff\n        self.screen_finish = False\n\n        # get the debug/logging stuff ready\n        self.debug = debug.Debug(self.debugv)\n\n        # console class\n        self.console = console.Console(self)\n\n        # super useful\n        self.crypt = encryption\n\n    def start(self):\n\n        # mirror a website if we need to\n        if self.mirror is not None:\n            mirror.mirror_site(self, self.mirror)\n\n        # compile the payloads, this makes execution of modules quicker\n        self.compile_finished = False\n\n        # start the loading banner\n        Thread(target=tools.loading_banner, args=(self,)).start()\n\n        # start to do the compiling\n        asyncio.run(tools.compile_and_store_static(self))\n        asyncio.run(tools.compile_and_store_static_srdi(self))\n\n        # make sure we are in the rootdir\n        os.chdir(\"/root/shad0w\")\n\n        # make sure the loading screen has finished\n        while self.screen_finish != True:\n            pass\n\n        # show the banner\n        banner.Banner()\n\n        # start the http server thread\n        # self.debug.log(\"starting http server thread\")\n        thttp = Thread(target=http_server.run_serv, args=(self,))\n        thttp.daemon = True\n        thttp.start()\n        # asyncio.run(http_server.run_serv(self))\n\n        # start the console\n        asyncio.run(self.console.start())\n        # tconsole = Thread(target=self.console.start)\n        # tconsole.daemon = False\n        # tconsole.start()\n\n\nclass Shad0wBuilder(object):\n\n    def __init__(self, args):\n\n        super(Shad0wBuilder, self).__init__()\n\n        # key variables for the build\n        self.address   = args['address']\n        self.port      = args['port']\n        self.jitter    = args['jitter']\n        self.format    = args['format']\n        self.outfile   = args['out']\n        self.debugv    = args['debug']\n        self.payload   = args['payload']\n        self.no_shrink = args['no_shrink']\n\n        # get the debug/logging stuff ready\n        self.debug   = debug.Debug(self.debugv)\n\n    def build(self):\n\n        # get the variables for the make\n        self.arch, self.platform, self.secure, self.static = buildtools.get_payload_variables(self.payload)\n\n        # copy the correct source files into build directory\n        if self.static is not None:\n            # then we are building a static beacon\n\n            # what type we need?\n            if self.format == \"exe\":\n                buildtools.clone_source_files(asm=True)\n            else:\n                buildtools.clone_source_files(asm=True, rootdir=\"injectable\")\n\n        if self.static is None:\n            # then we are building a stager\n            buildtools.clone_source_files(asm=True, rootdir=\"stager\")\n\n        # change the settings file based on the args we been given\n        buildtools.update_settings_file(self)\n\n        # now we need to run 'make' inside the cloned dir\n        if self.format == \"dll\":\n            buildtools.make_in_clone(arch=self.arch, platform=self.platform, secure=self.secure, static=self.static, debug=self.debugv, modlocation=\"/root/shad0w/beacon/beacon.dll\")\n        else:\n            buildtools.make_in_clone(arch=self.arch, platform=self.platform, secure=self.secure, static=self.static, debug=self.debugv)\n\n        length = payload_format.create(self)\n\n        if length != False:\n            print(\"\\033[1;32m[+]\\033[0m\", f\"Created {self.outfile} ({length} bytes)\")\n\n\nif __name__ == '__main__':\n\n    # sort the first cmd switch to decide weather we beacon or listen\n    parser = argparse.ArgumentParser(prog='shad0w')\n    subparsers = parser.add_subparsers(dest='mode', help='shad0w C2 functions')\n    listen_parser = subparsers.add_parser('listen', help=\"Tell shad0w to listen for connections\")\n    beacon_parser = subparsers.add_parser('beacon', help=\"Tell shad0w to create a beacon\")\n    update_parser = subparsers.add_parser('update', help=\"Update shad0w\")\n\n    listen_parser.add_argument(\"-a\", \"--address\", required=False, default=\"0.0.0.0\", help=\"Address shad0w will listen on (default will be 0.0.0.0)\")\n    listen_parser.add_argument(\"-p\", \"--port\", required=False, default=443, help=\"Port the C2 will bind to (default is 443)\")\n    listen_parser.add_argument(\"-k\", \"--key\", required=False, default=\"certs/key.pem\", help=\"Private key for the HTTPS server\")\n    listen_parser.add_argument(\"-c\", \"--cert\", required=False, default=\"certs/cert.pem\", help=\"Certificate for the HTTPS server\")\n    listen_parser.add_argument(\"-m\", \"--mirror\", required=False, default=None, help=\"Website to mirror for if a client connects to the C2 via a web browser\")\n    listen_parser.add_argument(\"-d\", \"--debug\", required=False, action='store_true', help=\"Start debug mode\")\n    listen_parser.add_argument(\"-e\", \"--endpoint\", required=False, default=None, help=\"The endpoint shad0w modules will callback to\")\n\n    beacon_parser.add_argument(\"-p\", \"--payload\", required=True, help=\"Beacon payload to use\")\n    beacon_parser.add_argument(\"-H\", \"--address\", required=True, help=\"Address the beacon will connect to\")\n    beacon_parser.add_argument(\"-P\", \"--port\", required=False, default=443, help=\"Port the beacon will connect on\")\n    beacon_parser.add_argument(\"-j\", \"--jitter\", required=False, default=1, type=int, help=\"Jitter the beacon should use when connecting back\")\n    beacon_parser.add_argument(\"-f\", \"--format\", required=True, choices=payload_format.formats, help=\"Format to store the beacon payload as\")\n    beacon_parser.add_argument(\"-o\", \"--out\", required=True, help=\"File to store the beacon in\")\n    beacon_parser.add_argument(\"-n\", \"--no-shrink\", required=False, action='store_true', help=\"Leave the file at its final size, do not attempt to shrink it\")\n    beacon_parser.add_argument(\"-d\", \"--debug\", required=False, action='store_true', help=\"Start debug mode\")\n\n    # parse the args\n    args = vars(parser.parse_args())\n\n    # first check if we need to update\n    if args[\"mode\"] == \"update\":\n        print(\"Updating...\")\n        os.system(\"git pull\")\n\n    # set the arguments for the listen\n    if args[\"mode\"] == \"listen\":\n        shad0w = Shad0wC2(args)\n        asyncio.run(shad0w.start())\n\n    # set the arguments for creating the beacon\n    if args[\"mode\"] == \"beacon\":\n        # build the beacon\n        shad0w = Shad0wBuilder(args)\n        shad0w.build()\n"
+        }
+      ]
+    }
+  ]
+}
