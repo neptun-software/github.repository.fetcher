@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736711449476,
+    "page": 263,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "wikihost-opensource/als",
+      "stars": 1234,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.388671875,
+          "content": "**/speedtest-static/*\n**/ip.mmdb\n**/.DS_Store\n**/node_modules\n**/package-lock.json\nui/public/speedtest_worker.js\nbackend/app/webspaces/speedtest-static/*\nmodules/speedtest/*\n!modules/speedtest/speedtest_worker.js\nbackend/app/webspaces/speedtest_worker.js\nbackend/app/webspaces/assets\nbackend/app/webspaces/index.html\nbackend/app/webspaces/favicon.ico\nbackend/app/utilities/speedtest\nbackend/go.work"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1083984375,
+          "content": "backend/app/webspaces/speedtest-static/*\nui/public/speedtest_worker.js\nui/pnpm-lock.yaml\nbackend/embed/ui/\ntmp\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "[submodule \"ui/speedtest\"]\n\tpath = ui/speedtest\n\turl = https://github.com/librespeed/speedtest\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.80078125,
+          "content": "FROM node:lts-alpine as builderNodeJSCache\nADD ui/package.json /app/package.json\nWORKDIR /app\nRUN npm i\n\nFROM node:lts-alpine as builderNodeJS\nADD ui /app\nWORKDIR /app\nCOPY --from=builderNodeJSCache /app/node_modules /app/node_modules\nRUN npm run build \\\n    && chmod -R 650 /app/dist\n\n\nFROM alpine:3 as builderGolang\nADD backend /app\nWORKDIR /app\nCOPY --from=builderNodeJS /app/dist /app/embed/ui\nRUN apk add --no-cache go \n\nRUN go build -o als && \\\n    chmod +x als\n\nFROM alpine:3 as builderEnv\nWORKDIR /app\nADD scripts /app\nRUN sh /app/install-software.sh\nRUN apk add --no-cache \\\n    iperf iperf3 \\\n    mtr \\\n    traceroute \\\n    iputils\nRUN rm -rf /app\n\nFROM alpine:3\nLABEL maintainer=\"samlm0 <update@ifdream.net>\"\nCOPY --from=builderEnv / /\nCOPY --from=builderGolang --chmod=777 /app/als/als /bin/als\n\nCMD /bin/als"
+        },
+        {
+          "name": "Dockerfile.cn",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "FROM node:lts-alpine as builderNodeJSCache\nADD ui/package.json /app/package.json\nWORKDIR /app\nRUN npm i\n\nFROM node:lts-alpine as builderNodeJS\nADD ui /app\nWORKDIR /app\nCOPY --from=builderNodeJSCache /app/node_modules /app/node_modules\nRUN npm run build \\\n    && chmod -R 650 /app/dist\n\n\nFROM alpine:3 as builderGolang\nADD backend /app\nWORKDIR /app\nCOPY --from=builderNodeJS /app/dist /app/embed/ui\nRUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \\\n    apk add --no-cache go && \\\n    go env -w GO111MODULE=on && \\\n    go env -w GOPROXY=https://goproxy.cn,direct\n\nRUN go build -o als && \\\n    chmod +x als\n\nFROM alpine:3 as builderEnv\nWORKDIR /app\nADD scripts /app\nRUN sh /app/install-software.sh\nRUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories && \\\n    apk add --no-cache \\\n    iperf iperf3 \\\n    mtr \\\n    traceroute \\\n    iputils\nRUN rm -rf /app\n\nFROM alpine:3\nLABEL maintainer=\"samlm0 <update@ifdream.net>\"\nCOPY --from=builderEnv / /\nCOPY --from=builderGolang --chmod=777 /app/als/als /bin/als\n\nCMD /bin/als"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "MIT License\n\nCopyright (c) 2022 wikihost-opensource\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.794921875,
+          "content": "[![docker image build](https://github.com/wikihost-opensource/als/actions/workflows/docker-image.yml/badge.svg)](https://github.com/wikihost-opensource/als/actions/workflows/docker-image.yml)\n\n\nLanguage: English | [简体中文](README_zh_CN.md)\n\n# ALS - Another Looking-glass Server\n\n## Quick start\n```\ndocker run -d --name looking-glass --restart always --network host wikihostinc/looking-glass-server\n```\n\n[DEMO](http://lg.hk1-bgp.hkg.50network.com/)\n\nIf you don't want to use Docker , you can use the [compiled server](https://github.com/wikihost-opensource/als/releases)\n\n## Host Requirements\n - RAM: 32MB or more\n\n## How to change config\n```\n# you need pass -e KEY=VALUE to docker command\n# you can find the KEY below the [Image Environment Variables]\n# for example, change the listen port to 8080\ndocker run -d \\\n    --name looking-glass \\\n    -e HTTP_PORT=8080 \\\n    --restart always \\\n    --network host \\\n    wikihostinc/looking-glass-server\n``` \n\n## Environment variable table\n| Key                       | Example                                                                | Default                                                    | Description                                                                             |\n| ------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------- |\n| LISTEN_IP                 | 127.0.0.1                                                              | (all ip)                                                   | which IP address will be listen use                                                     |\n| HTTP_PORT                 | 80                                                                     | 80                                                         | which HTTP port should use                                                              |\n| SPEEDTEST_FILE_LIST       | 100MB 1GB                                                              | 1MB 10MB 100MB 1GB                                         | size of static test files, separate with space                                          |\n| LOCATION                  | \"this is location\"                                                     | (request from http://ipapi.co) | location string                                                                         |\n| PUBLIC_IPV4               | 1.1.1.1                                                                | (fetch from http://ifconfig.co)                            | The IPv4 address of the server                                                          |\n| PUBLIC_IPV6               | fe80::1                                                                | (fetch from http://ifconfig.co)                            | The IPv6 address of the server                                                          |\n| DISPLAY_TRAFFIC           | true                                                                   | true                                                       | Toggle the streaming traffic graph                                                      |\n| ENABLE_SPEEDTEST          | true                                                                   | true                                                       | Toggle the speedtest feature                                                            |\n| UTILITIES_PING            | true                                                                   | true                                                       | Toggle the ping feature                                                                 |\n| UTILITIES_SPEEDTESTDOTNET | true                                                                   | true                                                       | Toggle the speedtest.net feature                                                        |\n| UTILITIES_FAKESHELL       | true                                                                   | true                                                       | Toggle the HTML Shell feature                                                           |\n| UTILITIES_IPERF3          | true                                                                   | true                                                       | Toggle the iperf3 feature                                                               |\n| UTILITIES_IPERF3_PORT_MIN | 30000                                                                  | 30000                                                      | iperf3 listen port range - from                                                         |\n| UTILITIES_IPERF3_PORT_MAX | 31000                                                                  | 31000                                                      | iperf3 listen port range - to                                                           |\n| SPONSOR_MESSAGE           | \"Test message\" or \"/tmp/als_readme.md\" or \"http://some_host/114514.md\" | ''                                                         | Show server sponsor message (support markdown file, required mapping file to container) |\n\n\n## Features\n- [x] HTML 5 Speed Test\n- [x] Ping - IPv4 / IPv6\n- [x] iPerf3 server\n- [x] Streaming traffic graph\n- [x] Speedtest.net Client\n- [x] Online shell box (limited commands)\n- [x] [NextTrace](https://github.com/nxtrace/NTrace-core) Support\n## Thanks to\nhttps://github.com/librespeed/speedtest\n\nhttps://www.jetbrains.com/\n\n## License\n\nCode is licensed under MIT Public License.\n\n* If you wish to support my efforts, keep the \"Powered by WIKIHOST Opensource - ALS\" link intact.\n\n## Star History\n\n[![Star History Chart](https://api.star-history.com/svg?repos=wikihost-opensource/als&type=Date)](https://star-history.com/#wikihost-opensource/als&Date)\n"
+        },
+        {
+          "name": "README_zh_CN.md",
+          "type": "blob",
+          "size": 5.771484375,
+          "content": "[![docker image build](https://github.com/wikihost-opensource/als/actions/workflows/docker-image.yml/badge.svg)](https://github.com/wikihost-opensource/als/actions/workflows/docker-image.yml)\n\n\n语言: [English](README.md) | 简体中文\n\n# ALS - 另一个 Looking-glass 服务器\n\n## 快速开始 (Docker 环境)\n```\ndocker run -d --name looking-glass --restart always --network host wikihostinc/looking-glass-server\n```\n\n[DEMO](http://lg.hk1-bgp.hkg.50network.com/)\n\n如果不想使用 Docker , 您可以使用编译好的[服务器端](https://github.com/wikihost-opensource/als/releases)\n\n## 配置要求\n - 内存: 32MB 或更好\n\n## 如何修改配置\n```\n# 你需要在 docker 命令中传递环境变量设置参数: -e KEY=VALUE\n# 你可以在 环境变量表 中找到 KEY\n# 例如，将监听端口改为 8080\ndocker run -d \\\n    --name looking-glass \\\n    -e HTTP_PORT=8080 \\\n    --restart always \\\n    --network host \\\n    wikihostinc/looking-glass-server\n``` \n\n## 环境变量表\n| Key                       | 示例                                                                | 默认                                                    | 描述                                                                             |\n| ------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------- |\n| LISTEN_IP                 | 127.0.0.1                                                              | (全部  IP)                                                   | 监听在哪一个 IP 上                                                     |\n| HTTP_PORT                 | 80                                                                     | 80                                                         | 监听在哪一个端口上                                                              |\n| SPEEDTEST_FILE_LIST       | 100MB 1GB                                                              | 1MB 10MB 100MB 1GB                                         | 静态文件大小列表, 使用空格隔开                                          |\n| LOCATION                  | \"this is location\"                                                     | (请求 ipapi.co 获取) | 服务器位置的文本                                                                         |\n| PUBLIC_IPV4               | 1.1.1.1                                                                | (从在线获取)                            | 服务器的 IPv4 地址                                                          |\n| PUBLIC_IPV6               | fe80::1                                                                | (从在线获取)                            | 服务器的 IPv6 地址                                                          |\n| DISPLAY_TRAFFIC           | true                                                                   | true                                                       | 实时流量开关                                                      |\n| ENABLE_SPEEDTEST          | true                                                                   | true                                                       | 测速功能开关                                                            |\n| UTILITIES_PING            | true                                                                   | true                                                       | Ping 功能开关                                                                 |\n| UTILITIES_SPEEDTESTDOTNET | true                                                                   | true                                                       | Speedtest.net 功能开关                                                        |\n| UTILITIES_FAKESHELL       | true                                                                   | true                                                       | Shell 功能开关                                                           |\n| UTILITIES_IPERF3          | true                                                                   | true                                                       | iPerf3 服务器功能开关                                                               |\n| UTILITIES_IPERF3_PORT_MIN | 30000                                                                  | 30000                                                      | iPerf3 服务器端口范围 - 开始                                                         |\n| UTILITIES_IPERF3_PORT_MAX | 31000                                                                  | 31000                                                      | iPerf3 服务器端口范围 - 结束                                                           |\n| SPONSOR_MESSAGE           | \"Test message\" or \"/tmp/als_readme.md\" or \"http://some_host/114514.md\" | ''                                                         | 显示节点赞助商信息 (支持 Markdown, 支持 URL/文字/文件 (文件需要映射到容器中, 使用映射后的路径) |\n\n\n## 功能\n- [x] HTML 5 速度测试\n- [x] Ping - IPv4 / IPv6\n- [x] iPerf3 服务器控制\n- [x] 实时网卡流量显示\n- [x] Speedtest.net 客户端\n- [x] 在线 shell 盒子 (限制命令)\n- [x] [NextTrace](https://github.com/nxtrace/NTrace-core) 支持\n## Thanks to\nhttps://github.com/librespeed/speedtest\n\nhttps://www.jetbrains.com/\n\n## License\n\nCode is licensed under MIT Public License.\n\n* If you wish to support my efforts, keep the \"Powered by WIKIHOST Opensource - ALS\" link intact.\n\n## Star History\n\n[![Star History Chart](https://api.star-history.com/svg?repos=wikihost-opensource/als&type=Date)](https://star-history.com/#wikihost-opensource/als&Date)\n"
+        },
+        {
+          "name": "backend",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ui",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
