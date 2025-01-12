@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "timestamp": 1736710159030,
+    "page": 831,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "memononen/nanosvg",
+      "stars": 1728,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.283203125,
+          "content": "## Compiled source #\n*.com\n*.class\n*.dll\n*.exe\n*.o\n*.so\ntest\n\n## Logs and databases #\n*.log\n*.sql\n*.sqlite\n\n## OS generated files #\n.DS_Store\n.DS_Store?\n._*\n.Spotlight-V100\n.Trashes\nehthumbs.db\nThumbs.db\n\n## Build dir\nbuild/*\n\n## Stuff in example\nexample/_*\n\n## xcode specific\n*xcuserdata*\n"
+        },
+        {
+          "name": "CMakeLists.txt",
+          "type": "blob",
+          "size": 1.9873046875,
+          "content": "cmake_minimum_required(VERSION 3.10)\n\nproject(NanoSVG C)\n\n# CMake needs *.c files to do something useful\nconfigure_file(src/nanosvg.h ${CMAKE_CURRENT_BINARY_DIR}/nanosvg.c)\nconfigure_file(src/nanosvgrast.h ${CMAKE_CURRENT_BINARY_DIR}/nanosvgrast.c)\n\nadd_library(nanosvg ${CMAKE_CURRENT_BINARY_DIR}/nanosvg.c)\n\nfind_library(MATH_LIBRARY m) # Business as usual\nif(MATH_LIBRARY)\n    target_link_libraries(nanosvg PUBLIC ${MATH_LIBRARY})\nendif()\n\ntarget_include_directories(nanosvg PUBLIC $<INSTALL_INTERFACE:include/nanosvg>)\ntarget_compile_definitions(nanosvg PRIVATE NANOSVG_IMPLEMENTATION)\n\n# Same for nanosvgrast\nadd_library(nanosvgrast ${CMAKE_CURRENT_BINARY_DIR}/nanosvgrast.c)\ntarget_link_libraries(nanosvgrast PUBLIC nanosvg)\ntarget_include_directories(nanosvgrast PRIVATE src)\ntarget_compile_definitions(nanosvgrast PRIVATE NANOSVGRAST_IMPLEMENTATION)\n\n# Installation and export:\n\ninclude(CMakePackageConfigHelpers)\n\nwrite_basic_package_version_file(\n    \"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake\"\n    VERSION 1.0\n    COMPATIBILITY AnyNewerVersion\n)\n\ninstall(TARGETS nanosvg nanosvgrast\n        EXPORT ${PROJECT_NAME}Targets\n)\n\nexport(EXPORT ${PROJECT_NAME}Targets \n       FILE \"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Targets.cmake\" \n       NAMESPACE ${PROJECT_NAME}::\n)\n\nset(ConfigPackageLocation lib/cmake/${PROJECT_NAME})\n\nconfigure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/Config.cmake.in\n  \"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake\"\n  INSTALL_DESTINATION ${ConfigPackageLocation}\n  NO_CHECK_REQUIRED_COMPONENTS_MACRO\n)\n\ninstall(\n    FILES\n      src/nanosvg.h\n      src/nanosvgrast.h\n    DESTINATION\n      include/nanosvg\n  )\n\ninstall(EXPORT ${PROJECT_NAME}Targets\n  FILE\n    ${PROJECT_NAME}Targets.cmake\n  NAMESPACE\n    ${PROJECT_NAME}::\n  DESTINATION\n    ${ConfigPackageLocation}\n)\n\ninstall(\n  FILES\n    \"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake\"\n    \"${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake\"\n  DESTINATION\n    ${ConfigPackageLocation}\n)"
+        },
+        {
+          "name": "Config.cmake.in",
+          "type": "blob",
+          "size": 0.1416015625,
+          "content": "@PACKAGE_INIT@\n\nif (EXISTS ${CMAKE_CURRENT_LIST_DIR}/NanoSVGTargets.cmake)\n    include(\"${CMAKE_CURRENT_LIST_DIR}/NanoSVGTargets.cmake\")\nendif ()"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 0.859375,
+          "content": "Copyright (c) 2013-14 Mikko Mononen memon@inside.org\r\n\r\nThis software is provided 'as-is', without any express or implied\r\nwarranty.  In no event will the authors be held liable for any damages\r\narising from the use of this software.\r\n\r\nPermission is granted to anyone to use this software for any purpose,\r\nincluding commercial applications, and to alter it and redistribute it\r\nfreely, subject to the following restrictions:\r\n\r\n1. The origin of this software must not be misrepresented; you must not\r\nclaim that you wrote the original software. If you use this software\r\nin a product, an acknowledgment in the product documentation would be\r\nappreciated but is not required.\r\n2. Altered source versions must be plainly marked as such, and must not be\r\nmisrepresented as being the original software.\r\n3. This notice may not be removed or altered from any source distribution.\r\n\r\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.03515625,
+          "content": "*This project is not actively maintained.*\n\nNano SVG\n==========\n\n## Parser\n\n![screenshot of some splines rendered with the sample program](/example/screenshot-1.png?raw=true)\n\nNanoSVG is a simple stupid single-header-file SVG parse. The output of the parser is a list of cubic bezier shapes.\n\nThe library suits well for anything from rendering scalable icons in your editor application to prototyping a game.\n\nNanoSVG supports a wide range of SVG features, but something may be missing, feel free to create a pull request!\n\nThe shapes in the SVG images are transformed by the viewBox and converted to specified units.\nThat is, you should get the same looking data as your designed in your favorite app.\n\nNanoSVG can return the paths in few different units. For example if you want to render an image, you may choose\nto get the paths in pixels, or if you are feeding the data into a CNC-cutter, you may want to use millimeters. \n\nThe units passed to NanoSVG should be one of: 'px', 'pt', 'pc' 'mm', 'cm', or 'in'.\nDPI (dots-per-inch) controls how the unit conversion is done.\n\nIf you don't know or care about the units stuff, \"px\" and 96 should get you going.\n\n## Rasterizer\n\n![screenshot of tiger.svg rendered with NanoSVG rasterizer](/example/screenshot-2.png?raw=true)\n\nThe parser library is accompanied with really simpler SVG rasterizer. Currently it only renders flat filled shapes.\n\nThe intended usage for the rasterizer is to for example bake icons of different size into a texture. The rasterizer is not particular fast or accurate, but it's small and packed in one header file.\n\n\n## Example Usage\n\n``` C\n// Load\nstruct NSVGimage* image;\nimage = nsvgParseFromFile(\"test.svg\", \"px\", 96);\nprintf(\"size: %f x %f\\n\", image->width, image->height);\n// Use...\nfor (shape = image->shapes; shape != NULL; shape = shape->next) {\n\tfor (path = shape->paths; path != NULL; path = path->next) {\n\t\tfor (i = 0; i < path->npts-1; i += 3) {\n\t\t\tfloat* p = &path->pts[i*2];\n\t\t\tdrawCubicBez(p[0],p[1], p[2],p[3], p[4],p[5], p[6],p[7]);\n\t\t}\n\t}\n}\n// Delete\nnsvgDelete(image);\n```\n\n## Using NanoSVG in your project\n\nIn order to use NanoSVG in your own project, just copy nanosvg.h to your project.\nIn one C/C++ define `NANOSVG_IMPLEMENTATION` before including the library to expand the NanoSVG implementation in that file.\nNanoSVG depends on `stdio.h` ,`string.h` and `math.h`, they should be included where the implementation is expanded before including NanoSVG. \n\n``` C\n#include <stdio.h>\n#include <string.h>\n#include <math.h>\n#define NANOSVG_IMPLEMENTATION\t// Expands implementation\n#include \"nanosvg.h\"\n```\n\nBy default, NanoSVG parses only the most common colors. In order to get support for full list of [SVG color keywords](http://www.w3.org/TR/SVG11/types.html#ColorKeywords), define `NANOSVG_ALL_COLOR_KEYWORDS` before expanding the implementation.\n\n``` C\n#include <stdio.h>\n#include <string.h>\n#include <math.h>\n#define NANOSVG_ALL_COLOR_KEYWORDS\t// Include full list of color keywords.\n#define NANOSVG_IMPLEMENTATION\t\t// Expands implementation\n#include \"nanosvg.h\"\n```\n\nAlternatively, you can install the library using CMake and import it into your project using the standard CMake `find_package` command.\n\n```CMake\nadd_executable(myexe main.c)\n\nfind_package(NanoSVG REQUIRED)\n\ntarget_link_libraries(myexe NanoSVG::nanosvg NanoSVG::nanosvgrast)\n```\n\n## Compiling Example Project\n\nIn order to compile the demo project, your will need to install [GLFW](http://www.glfw.org/) to compile.\n\nNanoSVG demo project uses [premake4](http://industriousone.com/premake) to build platform specific projects, now is good time to install it if you don't have it already. To build the example, navigate into the root folder in your favorite terminal, then:\n\n- *OS X*: `premake4 xcode4`\n- *Windows*: `premake4 vs2010`\n- *Linux*: `premake4 gmake`\n\nSee premake4 documentation for full list of supported build file types. The projects will be created in `build` folder. An example of building and running the example on OS X:\n\n```bash\n$ premake4 gmake\n$ cd build/\n$ make\n$ ./example\n```\n\n# License\n\nThe library is licensed under [zlib license](LICENSE.txt)\n"
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "premake4.lua",
+          "type": "blob",
+          "size": 1.3974609375,
+          "content": "\nlocal action = _ACTION or \"\"\n\nsolution \"nanosvg\"\n\tlocation ( \"build\" )\n\tconfigurations { \"Debug\", \"Release\" }\n\tplatforms {\"native\", \"x64\", \"x32\"}\n  \n\tproject \"example1\"\n\t\tkind \"ConsoleApp\"\n\t\tlanguage \"C++\"\n\t\tfiles { \"example/example1.c\", \"example/*.h\", \"src/*.h\" }\n\t\tincludedirs { \"example\", \"src\" }\n\t\ttargetdir(\"build\")\n\t \n\t\tconfiguration { \"linux\" }\n\t\t\t links { \"X11\",\"Xrandr\", \"rt\", \"GL\", \"GLU\", \"pthread\", \"glfw\" }\n\n\t\tconfiguration { \"windows\" }\n\t\t\t links { \"glu32\",\"opengl32\", \"gdi32\", \"winmm\", \"user32\" }\n\n\t\tconfiguration { \"macosx\" }\n\t\t\tlinks { \"glfw3\" }\n\t\t\tlinkoptions { \"-framework OpenGL\", \"-framework Cocoa\", \"-framework IOKit\", \"-framework CoreVideo\" }\n\n\t\tconfiguration \"Debug\"\n\t\t\tdefines { \"DEBUG\" }\n\t\t\tflags { \"Symbols\", \"ExtraWarnings\"}\n\n\t\tconfiguration \"Release\"\n\t\t\tdefines { \"NDEBUG\" }\n\t\t\tflags { \"Optimize\", \"ExtraWarnings\"}    \n\n\tproject \"example2\"\n\t\tkind \"ConsoleApp\"\n\t\tlanguage \"C++\"\n\t\tfiles { \"example/example2.c\", \"example/*.h\", \"src/*.h\" }\n\t\tincludedirs { \"example\", \"src\" }\n\t\ttargetdir(\"build\")\n\t \n\t\tconfiguration { \"linux\" }\n\t\t\t links { \"X11\",\"Xrandr\", \"rt\", \"pthread\" }\n\n\t\tconfiguration { \"windows\" }\n\t\t\t links { \"winmm\", \"user32\" }\n\n\t\tconfiguration { \"macosx\" }\n\t\t\tlinkoptions { \"-framework Cocoa\", \"-framework IOKit\" }\n\n\t\tconfiguration \"Debug\"\n\t\t\tdefines { \"DEBUG\" }\n\t\t\tflags { \"Symbols\", \"ExtraWarnings\"}\n\n\t\tconfiguration \"Release\"\n\t\t\tdefines { \"NDEBUG\" }\n\t\t\tflags { \"Optimize\", \"ExtraWarnings\"}    \n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

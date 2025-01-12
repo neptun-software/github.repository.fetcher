@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "timestamp": 1736710162187,
+    "page": 836,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "cnlohr/mini-rv32ima",
+      "stars": 1726,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2022 CNLohr\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.5107421875,
+          "content": "all : everything\n\nDTC:=buildroot/output/host/bin/dtc\n\nbuildroot :\n\tgit clone https://github.com/cnlohr/buildroot --recurse-submodules --depth 1\n\ntoolchain : buildroot\n\tcp -a configs/custom_kernel_config buildroot/kernel_config\n\tcp -a configs/buildroot_config buildroot/.config\n\tcp -a configs/busybox_config buildroot/busybox_config\n\tcp -a configs/uclibc_config buildroot/uclibc_config\n\tcp -a configs/uclibc_config buildroot/uclibc_config_extra\n\ttrue || cp -a configs/rootfsoverlay/* buildroot/output/target/\n\tmake -C buildroot\n\neverything : toolchain\n\tmake -C hello_linux deploy\n\t#make -C packages/duktapetest deploy\n\tmake -C packages/coremark deploy\n\tcp -a configs/rootfsoverlay/* buildroot/output/target/\n\tmake -C buildroot\n\tmake -C mini-rv32ima testkern\n\ntestdlimage :\n\tmake -C mini-rv32ima testdlimage\n\ntestbare :\n\tmake -C baremetal\n\tmake -C mini-rv32ima testbare\n\ntest_with_qemu :\n\tcd buildroot && output/host/bin/qemu-system-riscv32 -cpu rv32,mmu=false -m 128M -machine virt -nographic -kernel output/images/Image -bios none #-machine dtb=../minimal.dtb \n\n\n##################################################################\n# For Debugging \n####\n\n# SBI doesn't work for some reason?\n#opensbi_firmware : \n#\tmake -C opensbi PLATFORM=../../packages/this_opensbi/platform/riscv_emufun I=../packages/this_opensbi/install B=../packages/this_opensbi/build CROSS_COMPILE=riscv64-unknown-elf- PLATFORM_RISCV_ISA=rv32ima PLATFORM_RISCV_XLEN=32\n#\t# ./mini-rv32ima -i ../opensbi/this_opensbi/platform/riscv_emufun/firmware/fw_payload.bin\n#\t# ../buildroot/output/host/bin/riscv32-buildroot-linux-uclibc-objdump -S ../opensbi/this_opensbi/platform/riscv_emufun/firmware/fw_payload.elf > fw_payload.S\n\n#toolchain_buildrootb : buildroot-2022.02.6\n#\tcp buildroot-2022.02.6-config buildroot-2022.02.6/.config\n#\tcp -a custom_kernel_config buildroot-2022.02.6/kernel_config\n#\tcp riscv_Kconfig buildroot-2022.02.6/output/build/linux-5.15.67/arch/riscv/\n#\tmake -C buildroot-2022.02.6\n\nconfigs/minimal.dtb : configs/minimal.dts $(DTC)\n\t$(DTC) -I dts -O dtb -o $@ $< -S 2048\n\n# Trick for extracting the DTB from \ndtbextract : $(DTC)\n\t# Need \tsudo apt  install device-tree-compiler\n\tcd buildroot && output/host/bin/qemu-system-riscv32 -cpu rv32,mmu=false -m 128M -machine virt -nographic -kernel output/images/Image -bios none -drive file=output/images/rootfs.ext2,format=raw,id=hd0 -device virtio-blk-device,drive=hd0 -machine dumpdtb=../dtb.dtb && cd ..\n\t$(DTC) -I dtb -O dts -o dtb.dts dtb.dtb\n\ntests :\n\tgit clone https://github.com/riscv-software-src/riscv-tests\n\t./configure --prefix=\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.2373046875,
+          "content": "# riscv_emufun (mini-rv32ima)\n\nClick below for the YouTube video introducing this project:\n\n[![Writing a Really Tiny RISC-V Emulator](https://img.youtube.com/vi/YT5vB3UqU_E/0.jpg)](https://www.youtube.com/watch?v=YT5vB3UqU_E) [![But Will It Run Doom?](https://img.youtube.com/vi/uZMNK17VCMU/0.jpg)](https://www.youtube.com/watch?v=uZMNK17VCMU) \n\n## What\n\nmini-rv32ima is a single-file-header, [mini-rv32ima.h](https://github.com/cnlohr/riscv_emufun/blob/master/mini-rv32ima/mini-rv32ima.h), in the [STB Style library](https://github.com/nothings/stb) that:\n * Implements a RISC-V **rv32ima/Zifencei†+Zicsr** (and partial su), with CLINT and MMIO.\n * Is about **400 lines** of actual code.\n * Has **no dependencies**, not even libc.\n * Is **easily extensible**.  So you can easily add CSRs, instructions, MMIO, etc!\n * Is pretty **performant**. (~450 coremark on my laptop, about 1/2 the speed of QEMU)\n * Is human-readable and in **basic C** code.\n * Is \"**incomplete**\" in that it didn't implement the tons of the spec that Linux doesn't (and you shouldn't) use.\n * Is trivially **embeddable** in applications.\n\nIt has a [demo wrapper](https://github.com/cnlohr/riscv_emufun/blob/master/mini-rv32ima/mini-rv32ima.c) that:\n * Implements a CLI, SYSCON, UART, DTB and Kernel image loading.\n * And it only around **250 lines** of code, itself.\n * Compiles down to a **~18kB executable** and only relies on libc.\n\n†: Zifence+RV32A are stubbed.  So, tweaks will need to be made if you want to emulate a multiprocessor system with this emulator.\n\nJust see the `mini-rv32ima` folder.\n\nIt's \"fully functional\" now in that I can run Linux, apps, etc.  Compile flat binaries and drop them in an image.\n\n## Why\n\nI'm working on a really really simple C Risc-V emulator. So simple it doesn't even have an MMU (Memory Management Unit). I have a few goals, they include:\n * Furthering RV32-NOMMU work to improve Linux support for RV32-NOMMU.  (Imagine if we could run Linux on the $1 ESP32-C3)\n * Learning more about RV32 and writing emulators.\n * Being further inspired by @pimaker's amazing work on [Running Linux in a Pixel Shader](https://blog.pimaker.at/texts/rvc1/) and having the sneaking suspicion performance could be even better!\n * Hoping to port it to some weird places.\n * Understand the *most simplistic* system you can run Linux on and trying to push that boundary.\n * Continue to include my [education of people about assembly language](https://www.youtube.com/watch?v=Gelf0AyVGy4).\n\n## How\n\nWindows instructions (Just playing with the image)\n * Clone this repo.\n * Install or have TinyCC.  [Powershell Installer](https://github.com/cntools/Install-TCC) or [Regular Windows Installer](https://github.com/cnlohr/tinycc-win64-installer/releases/tag/v0_0.9.27)\n * Run `winrun.ps` in the `windows` folder.\n\nWSL (For full toolchain and image build:\n * You will need to remove all spaces from your path i.e. `export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/mnt/c/Windows/system32:/snap/bin` and continue the instructions.  P.S. What in the world was Windows thinking, putting a space between \"Program\" and \"Files\"??!?\n\nLinux instructions (both): \n * Clone this repo.\n * Install `git build-essential` and/or whatever other requirements are in place for [buildroot](https://buildroot.org/).\n * `make testdlimage`\n * It automatically downloads the image (~1MB) and runs the emulator.\n * Should be up and running in about 2.5s depending on internet speed.\n\nYou can do in-depth work on Linux by:\n * `make everything`\n\nIf you want to play with the bare metal system, see below, or if you have the toolchain installed, just:\n * `make testbare`\n\nIf you just want to play emdoom, and use the prebuilt image:\n * On Windows, run `windows\\winrundoom.ps1`\n * On Linux, `cd mini-rv32ima`, and type `make testdoom`\n\n## Questions?\n * Why not rv64?\n   * Because then I can't run it as easily in a pixel shader if I ever hope to.\n * Can I add an MMU?\n   * Yes.  It actually probably wouldn't be too difficult.\n * Should I add an MMU?\n   * No.  It is important to further support for nommu systems to empower minimal Risc-V designs!\n\nEverything else: Contact us on my Discord: https://discord.com/invite/CCeyWyZ\n\n## How do I use this in my own project?\n\nYou shoud not need to modify `mini-rv32ima.h`, but instead, use `mini-rv32ima.c` as a template for what you are trying to do in your own project.\n\nYou can override all functionality by defining the following macros. Here are examples of what `mini-rv32ima.c` does with them.  You can see the definition of the functions, or augment their definitions, by altering `mini-rv32ima.c`.\n\n| Macro | Definition / Comment |\n| --- | --- |\n| `MINIRV32WARN( x... )` | `printf( x );` <br> Warnings emitted from mini-rv32ima.h |\n| `MINIRV32_DECORATE` | `static` <br> How to decorate the functions. |\n| `MINI_RV32_RAM_SIZE` | `ram_amt` <br> A variable, how big is system RAM? |\n| `MINIRV32_IMPLEMENTATION` | If using mini-rv32ima.h, need to define this. |\n| `MINIRV32_POSTEXEC( pc, ir, retval )` | `{ if( retval > 0 ) { if( fail_on_all_faults ) { printf( \"FAULT\\n\" ); return 3; } else retval = HandleException( ir, retval ); } }` <br> If you want to execute something every time slice. |\n| `MINIRV32_HANDLE_MEM_STORE_CONTROL( addy, val )` | `if( HandleControlStore( addy, val ) ) return val;` <br> Called on non-RAM memory access. |\n| `MINIRV32_HANDLE_MEM_LOAD_CONTROL( addy, rval )` | `rval = HandleControlLoad( addy );` <br> Called on non-RAM memory access return a value. |\n| `MINIRV32_OTHERCSR_WRITE( csrno, value )` | `HandleOtherCSRWrite( image, csrno, value );` <br> You can use CSRs for control requests. |\n| `MINIRV32_OTHERCSR_READ( csrno, value )` |  `value = HandleOtherCSRRead( image, csrno );` <br> You can use CSRs for control requests. |\n\n## Hopeful goals?\n * Further drive down needed features to run Linux.\n   * Remove need for RV32A extension on systems with only one CPU.\n   * Support for relocatable ELF executables.\n   * Add support for an unreal UART.  One that's **much** simpler than the current 8250 driver.\n * Maybe run this in a pixelshader too!\n * Get opensbi working with this.\n * Be able to \"embed\" rv32 emulators in random projects.\n * Can I use early console to be a full system console?\n * Can I increase the maximum contiguous memory allocatable?\n\n## Special Thanks\n * For @regymm and their [patches to buildroot](https://github.com/regymm/buildroot) and help!\n   * callout: Regymm's [quazisoc project](https://github.com/regymm/quasiSoC/).\n * Buildroot (For being so helpful).\n * @vowstar and their team working on [k210-linux-nommu](https://github.com/vowstar/k210-linux-nommu).\n * This [guide](https://jborza.com/emulation/2020/04/09/riscv-environment.html)\n * [rvcodecjs](https://luplab.gitlab.io/rvcodecjs/) I probably went through over 1,000 codes here.\n * @splinedrive from the [KianV RISC-V noMMU SoC](https://github.com/splinedrive/kianRiscV/tree/master/linux_socs/kianv_harris_mcycle_edition?s=09) project.\n \n## More details\n\nIf you want to build the kernel yourself:\n * `make everything`\n * About 20 minutes.  (Or 4+ hours if you're on [Windows Subsytem for Linux 2](https://github.com/microsoft/WSL/issues/4197))\n * And you should be dropped into a Linux busybox shell with some little tools that were compiled here.\n\n## Emdoom notes\n * Emdoom building is in the `experiments/emdoom` folder\n * You *MUST* build your kernel with `MAX_ORDER` set to >12 in `buildroot/output/build/linux-5.19/include/linux/mmzone.h` if you are building your own image.\n * You CAN use the pre-existing image that is described above.\n * On Windows, it will be very slow.  Not sure why.\n\nIf you want to use bare metal to build your binaries so you don't need buildroot, you can use the rv64 gcc in 32-bit mode built into Ubuntu 20.04 and up.\n```\nsudo apt-get install gcc-multilib gcc-riscv64-unknown-elf make\n```\n\n## Links\n * \"Hackaday Supercon 2022: Charles Lohr - Assembly in 2022: Yes! We Still Use it and Here's Why\" : https://www.youtube.com/watch?v=Gelf0AyVGy4\n \n## Attic\n\n\n## General notes:\n * https://github.com/cnlohr/riscv_emufun/commit/2f09cdeb378dc0215c07eb63f5a6fb43dbbf1871#diff-b48ccd795ae9aced07d022bf010bf9376232c4d78210c3113d90a8d349c59b3dL440\n\n\n(These things don't currently work)\n\n### Building Tests\n\n(This does not work, now)\n```\ncd riscv-tests\nexport CROSS_COMPILE=riscv64-linux-gnu-\nexport PLATFORM_RISCV_XLEN=32\nCC=riscv64-linux-gnu-gcc ./configure\nmake XLEN=32 RISCV_PREFIX=riscv64-unknown-elf- RISCV_GCC_OPTS=\"-g -O1 -march=rv32imaf -mabi=ilp32f -I/usr/include\"\n```\n\n### Building OpenSBI\n\n(This does not currently work!)\n```\ncd opensbi\nexport CROSS_COMPILE=riscv64-unknown-elf-\nexport PLATFORM_RISCV_XLEN=32\nmake\n```\n\n### Extra links\n * Clear outline of CSRs: https://five-embeddev.com/riscv-isa-manual/latest/priv-csrs.html\n * Fonts used in videos: https://audiolink.dev/\n\n### Using custom build\n\nWhere yminpatch is the patch from the mailing list.\n```\nrm -rf buildroot\ngit clone git://git.buildroot.net/buildroot\ncd buildroot\ngit am < ../yminpatch.txt\nmake qemu_riscv32_nommu_virt_defconfig\nmake\n# Or use our configs.\n```\n\nNote: For emdoom you will need to modify include/linux/mmzone.h and change MAX_ORDER to 13.\n\n### Buildroot Notes\n\nAdd this:\nhttps://github.com/cnlohr/buildroot/pull/1/commits/bc890f74354e7e2f2b1cf7715f6ef334ff6ed1b2\n\nUse this:\nhttps://github.com/cnlohr/buildroot/commit/e97714621bfae535d947817e98956b112eb80a75\n\n"
+        },
+        {
+          "name": "attic",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "baremetal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "cachetest",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "configs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "experiments",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "hello_linux",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "mini-rv32ima",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "packages",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "windows",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

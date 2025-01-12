@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736710222637,
+    "page": 944,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "go-gl/glfw",
+      "stars": 1597,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.650390625,
+          "content": "sudo: false\ndist: focal\naddons:\n  apt_packages:\n    - libgl1-mesa-dev\n    - libwayland-bin\n    - xorg-dev\nlanguage: go\ngo:\n  - 1.x\n  - 1.12.x\n  - master\nmatrix:\n  allow_failures:\n    - go: master\n  fast_finish: true\ninstall:\n  - true  # Do nothing. This is needed to prevent default install action \"go get -t -v ./...\" from happening here (we want it to happen inside script step).\nscript:\n  # Fetch upstream and verify code in our repo matches checkout from upstream.\n  - scripts/grab-upstream.sh\n  - git diff\n  - go get -t -v ./v3.3/... ./v3.2/...\n  - diff -n <(echo -n) <(gofmt -d -s .)\n  - go vet ./v3.3/... ./v3.2/...\n  - go test -v -race ./v3.3/... ./v3.2/...\n"
+        },
+        {
+          "name": "AUTHORS",
+          "type": "blob",
+          "size": 0.2509765625,
+          "content": "# This is the official list of glfw3-go authors for copyright purposes.\n\n# Please keep the list sorted.\n\nChampion Pierre\nCoşku Baş\nDmitri Shuralyov\nGeert-Johan Riemer\nJames Gray\nPeter Waller <p@pwaller.net> (github:pwaller)\nRobin Eklind\nStephen Gutekanst\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.4501953125,
+          "content": "Copyright (c) 2012 The glfw3-go Authors. All rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are\nmet:\n\n   * Redistributions of source code must retain the above copyright\nnotice, this list of conditions and the following disclaimer.\n   * Redistributions in binary form must reproduce the above\ncopyright notice, this list of conditions and the following disclaimer\nin the documentation and/or other materials provided with the\ndistribution.\n   * Neither the name of Google Inc. nor the names of its\ncontributors may be used to endorse or promote products derived from\nthis software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR\nA PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT\nOWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,\nSPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,\nDATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\nOF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.404296875,
+          "content": "# GLFW 3.3 for Go [![Build Status](https://travis-ci.org/go-gl/glfw.svg?branch=master)](https://travis-ci.org/go-gl/glfw) [![GoDoc](https://godoc.org/github.com/go-gl/glfw/v3.3/glfw?status.svg)](https://godoc.org/github.com/go-gl/glfw/v3.3/glfw)\n\n## Installation\n\n* GLFW C library source is included and built automatically as part of the Go package. But you need to make sure you have dependencies of GLFW:\n\t* On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.\n\t* On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev` and `xorg-dev` packages.\n\t* On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel libXxf86vm-devel` packages.\n\t* On FreeBSD, you need the package `pkgconf`. To build for X, you also need the package `xorg`; and to build for Wayland, you need the package `wayland`.\n\t* On NetBSD, to build for X, you need the X11 sets installed. These are included in all graphical installs, and can be added to the system with `sysinst(8)` on non-graphical systems. Wayland support is incomplete, due to missing wscons support in upstream GLFW. To attempt to build for Wayland, you need to install the `wayland libepoll-shim` packages and set the environment variable `PKG_CONFIG_PATH=/usr/pkg/libdata/pkgconfig`.\n\t* On OpenBSD, you need the X11 sets. These are installed by default, and can be added from the ramdisk kernel at any time.\n\t* See [here](http://www.glfw.org/docs/latest/compile.html#compile_deps) for full details.\n* Go 1.4+ is required on Windows (otherwise you must use MinGW v4.8.1 exactly, see [Go issue 8811](https://github.com/golang/go/issues/8811)).\n\n```\ngo get -u github.com/go-gl/glfw/v3.3/glfw\n```\n\n### OpenGL ES\n\nIf your target system only provides an OpenGL ES implementation (true for some ARM boards), you need to link against that implementation.\nYou do this by defining the appropriate build tags, e.g.\n\n```\ngo get -u -tags=gles2 github.com/go-gl/glfw/v3.3/glfw\n```\n\nSupported tags are `gles1`, `gles2`, `gles3` and `vulkan`.\nNote that required packages might differ from those listed above; consult your hardware's documentation.\n\n## Usage\n\n```Go\npackage main\n\nimport (\n\t\"runtime\"\n\t\"github.com/go-gl/glfw/v3.3/glfw\"\n)\n\nfunc init() {\n\t// This is needed to arrange that main() runs on main thread.\n\t// See documentation for functions that are only allowed to be called from the main thread.\n\truntime.LockOSThread()\n}\n\nfunc main() {\n\terr := glfw.Init()\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\tdefer glfw.Terminate()\n\n\twindow, err := glfw.CreateWindow(640, 480, \"Testing\", nil, nil)\n\tif err != nil {\n\t\tpanic(err)\n\t}\n\n\twindow.MakeContextCurrent()\n\n\tfor !window.ShouldClose() {\n\t\t// Do OpenGL stuff.\n\t\twindow.SwapBuffers()\n\t\tglfw.PollEvents()\n\t}\n}\n```\n\n## Changelog\n\n### GLFW 3.3 Specific Changes\n- Joystick functions now uses receivers instead of passing the joystick ID as argument.\n- Vulkan methods are intentionally not implemented. `Window.Handle` can be used to create a Vulkan surface via the [this](https://github.com/vulkan-go/vulkan) package.\n\n* Renamed `Window.GLFWWindow` to `Window.Handle`\n* Added function `Window.SetAttrib`.\n* Added function `Window.RequestAttention`.\n* Added function `Window.GetContentScale`.\n* Added function `Window.GetOpacity`.\n* Added function `Window.SetOpacity`.\n* Added function `Window.SetMaximizeCallback`.\n* Added function `Window.SetContentScaleCallback`.\n* Added function `Monitor.GetWorkarea`.\n* Added function `Monitor.GetContentScale`.\n* Added function `Monitor.SetUserPointer`.\n* Added function `Monitor.GetUserPointer`.\n* Added function `InitHint`.\n* Added function `RawMouseMotionSupported`\n* Added function `GetKeyScancode`.\n* Added function `WindowHintString`.\n* Added function `GetClipboardString`.\n* Added function `SetClipboardString`.\n* Added function `Joystick.GetHats`.\n* Added function `Joystick.IsGamepad`.\n* Added function `Joystick.GetGUID`.\n* Added function `Joystick.GetGamepadName`.\n* Added function `Joystick.GetGamepadState`.\n* Added function `Joystick.SetUserPointer`.\n* Added function `Joystick.GetUserPointer`.\n* Added function `UpdateGamepadMappings`.\n* Added function `SetX11SelectionString`.\n* Added function `GetX11SelectionString`.\n* Added gamepad button IDs.\n* Added gamepad axis IDs.\n* Added joystick hat state IDs.\n* Added ModifierKey `ModCapsLock`.\n* Added ModifierKey `ModNumLock`\n* Added InputMode `LockKeyMods`.\n* Added InputMode `RawMouseMotion`.\n* Added hint `Hovered`.\n* Added hint `CenterCursor`.\n* Added hint `TransparentFramebuffer`.\n* Added hint `FocusOnShow`.\n* Added hint `ScaleToMonitor`.\n* Added hint `JoystickHatButtons`.\n* Added hint `CocoaChdirResources`.\n* Added hint `CocoaMenubar`.\n* Added hint `TransparentFramebuffer`.\n* Added hint value `OSMesaContextAPI`.\n* Added hint value `CocoaGraphicsSwitching`.\n* Added hint value `CocoaRetinaFramebuffer`.\n* Added string hint value `CocoaFrameNAME`.\n* Added string hint value `X11ClassName`.\n* Added string hint value `X11InstanceName`.\n* `MonitorEvent` renamed to `PeripheralEvent` for reuse with joystick events.\n* `Joystick.GetButtons` Returns `[]Action` instead of `[]byte`.\n* `SetMonitorCallback` Returns `MonitorCallback`.\n* `Focus` No longer returns an error.\n* `Iconify` No longer returns an error.\n* `Maximize` No longer returns an error.\n* `Restore` No longer returns an error.\n* `GetClipboardString` No longer returns an error.\n\n\n### GLFW 3.2 Specfic Changes\n- Easy `go get` installation. GLFW source code is now included in-repo and compiled in so you don't have to build GLFW on your own and distribute shared libraries. The revision of GLFW C library used is listed in [GLFW_C_REVISION.txt](https://github.com/go-gl/glfw/blob/master/v3.3/glfw/GLFW_C_REVISION.txt) file.\n- The error callback is now set internally. Functions return an error with corresponding code and description (do a type assertion to glfw3.Error for accessing the variables) if the error is recoverable. If not a panic will occur.\n\n* Added function `Window.SetSizeLimits`.\n* Added function `Window.SetAspectRatio`.\n* Added function `Window.SetMonitor`.\n* Added function `Window.Maximize`.\n* Added function `Window.SetIcon`.\n* Added function `Window.Focus`.\n* Added function `GetKeyName`.\n* Added function `VulkanSupported`.\n* Added function `GetTimerValue`.\n* Added function `GetTimerFrequency`.\n* Added function `WaitEventsTimeout`.\n* Added function `SetJoystickCallback`.\n* Added window hint `Maximized`.\n* Added hint `NoAPI`.\n* Added hint `NativeContextAPI`.\n* Added hint `EGLContextAPI`.\n\n\n### GLFW 3.1 Specfic Changes\n* Added type `Cursor`.\n* Added function `Window.SetDropCallback`.\n* Added function `Window.SetCharModsCallback`.\n* Added function `PostEmptyEvent`.\n* Added function `CreateCursor`.\n* Added function `CreateStandardCursor`.\n* Added function `Cursor.Destroy`.\n* Added function `Window.SetCursor`.\n* Added function `Window.GetFrameSize`.\n* Added window hint `Floating`.\n* Added window hint `AutoIconify`.\n* Added window hint `ContextReleaseBehavior`.\n* Added window hint `DoubleBuffer`.\n* Added hint value `AnyReleaseBehavior`.\n* Added hint value `ReleaseBehaviorFlush`.\n* Added hint value `ReleaseBehaviorNone`.\n* Added hint value `DontCare`.\n\n### API changes\n* `Window.Iconify` Returns an error.\n* `Window.Restore` Returns an error.\n* `Init` Returns an error instead of `bool`.\n* `GetJoystickAxes` No longer returns an error.\n* `GetJoystickButtons` No longer returns an error.\n* `GetJoystickName` No longer returns an error.\n* `GetMonitors` No longer returns an error.\n* `GetPrimaryMonitor` No longer returns an error.\n* `Monitor.GetGammaRamp` No longer returns an error.\n* `Monitor.GetVideoMode` No longer returns an error.\n* `Monitor.GetVideoModes` No longer returns an error.\n* `GetCurrentContext` No longer returns an error.\n* `Window.SetCharCallback` Accepts `rune` instead of `uint`.\n* Added type `Error`.\n* Removed `SetErrorCallback`.\n* Removed error code `NotInitialized`.\n* Removed error code `NoCurrentContext`.\n* Removed error code `InvalidEnum`.\n* Removed error code `InvalidValue`.\n* Removed error code `OutOfMemory`.\n* Removed error code `PlatformError`.\n* Removed `KeyBracket`.\n* Renamed `Window.SetCharacterCallback` to `Window.SetCharCallback`.\n* Renamed `Window.GetCursorPosition` to `GetCursorPos`.\n* Renamed `Window.SetCursorPosition` to `SetCursorPos`.\n* Renamed `CursorPositionCallback` to `CursorPosCallback`.\n* Renamed `Window.SetCursorPositionCallback` to `SetCursorPosCallback`.\n* Renamed `VideoMode` to `VidMode`.\n* Renamed `Monitor.GetPosition` to `Monitor.GetPos`.\n* Renamed `Window.GetPosition` to `Window.GetPos`.\n* Renamed `Window.SetPosition` to `Window.SetPos`.\n* Renamed `Window.GetAttribute` to `Window.GetAttrib`.\n* Renamed `Window.SetPositionCallback` to `Window.SetPosCallback`.\n* Renamed `PositionCallback` to `PosCallback`.\n* Ranamed `Cursor` to `CursorMode`.\n* Renamed `StickyKeys` to `StickyKeysMode`.\n* Renamed `StickyMouseButtons` to `StickyMouseButtonsMode`.\n* Renamed `ApiUnavailable` to `APIUnavailable`.\n* Renamed `ClientApi` to `ClientAPI`.\n* Renamed `OpenglForwardCompatible` to `OpenGLForwardCompatible`.\n* Renamed `OpenglDebugContext` to `OpenGLDebugContext`.\n* Renamed `OpenglProfile` to `OpenGLProfile`.\n* Renamed `SrgbCapable` to `SRGBCapable`.\n* Renamed `OpenglApi` to `OpenGLAPI`.\n* Renamed `OpenglEsApi` to `OpenGLESAPI`.\n* Renamed `OpenglAnyProfile` to `OpenGLAnyProfile`.\n* Renamed `OpenglCoreProfile` to `OpenGLCoreProfile`.\n* Renamed `OpenglCompatProfile` to `OpenGLCompatProfile`.\n* Renamed `KeyKp...` to `KeyKP...`.\n"
+        },
+        {
+          "name": "go.mod",
+          "type": "blob",
+          "size": 0.037109375,
+          "content": "module github.com/go-gl/glfw\n\ngo 1.12\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.0",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.3",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

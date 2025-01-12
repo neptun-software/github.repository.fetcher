@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "timestamp": 1736710219046,
+    "page": 936,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "hgpvision/darknet",
+      "stars": 1606,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.419921875,
+          "content": "# Prerequisites\n*.d\n\n# Object files\n*.o\n*.ko\n*.obj\n*.elf\n\n# Linker output\n*.ilk\n*.map\n*.exp\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Libraries\n*.lib\n*.a\n*.la\n*.lo\n\n# Shared objects (inc. Windows DLLs)\n*.dll\n*.so\n*.so.*\n*.dylib\n\n# Executables\n*.exe\n*.out\n*.app\n*.i*86\n*.x86_64\n*.hex\n\n# Debug files\n*.dSYM/\n*.su\n*.idb\n*.pdb\n\n# Kernel Module Compile Results\n*.mod*\n*.cmd\n.tmp_versions/\nmodules.order\nModule.symvers\nMkfile.old\ndkms.conf\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.041015625,
+          "content": "MIT License\n\nCopyright (c) 2017 hgpvision\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.3291015625,
+          "content": "GPU=0\nCUDNN=0\nOPENCV=0\nDEBUG=0\n\nARCH= -gencode arch=compute_20,code=[sm_20,sm_21] \\\n      -gencode arch=compute_30,code=sm_30 \\\n      -gencode arch=compute_35,code=sm_35 \\\n      -gencode arch=compute_50,code=[sm_50,compute_50] \\\n      -gencode arch=compute_52,code=[sm_52,compute_52]\n\n# This is what I use, uncomment if you know your arch and want to specify\n# ARCH=  -gencode arch=compute_52,code=compute_52\n\nVPATH=./src/\nEXEC=darknet\nOBJDIR=./obj/\n\nCC=gcc\nNVCC=nvcc \nOPTS=-Ofast\nLDFLAGS= -lm -pthread \nCOMMON= \nCFLAGS=-Wall -Wfatal-errors \n\nifeq ($(DEBUG), 1) \nOPTS=-O0 -g\nendif\n\nCFLAGS+=$(OPTS)\n\nifeq ($(OPENCV), 1) \nCOMMON+= -DOPENCV\nCFLAGS+= -DOPENCV\nLDFLAGS+= `pkg-config --libs opencv` \nCOMMON+= `pkg-config --cflags opencv` \nendif\n\nifeq ($(GPU), 1) \nCOMMON+= -DGPU -I/usr/local/cuda/include/\nCFLAGS+= -DGPU\nLDFLAGS+= -L/usr/local/cuda/lib64 -lcuda -lcudart -lcublas -lcurand\nendif\n\nifeq ($(CUDNN), 1) \nCOMMON+= -DCUDNN \nCFLAGS+= -DCUDNN\nLDFLAGS+= -lcudnn\nendif\n\nOBJ=gemm.o utils.o cuda.o deconvolutional_layer.o convolutional_layer.o list.o image.o activations.o im2col.o col2im.o blas.o crop_layer.o dropout_layer.o maxpool_layer.o softmax_layer.o data.o matrix.o network.o connected_layer.o cost_layer.o parser.o option_list.o darknet.o detection_layer.o captcha.o route_layer.o writing.o box.o nightmare.o normalization_layer.o avgpool_layer.o coco.o dice.o yolo.o detector.o layer.o compare.o regressor.o classifier.o local_layer.o swag.o shortcut_layer.o activation_layer.o rnn_layer.o gru_layer.o rnn.o rnn_vid.o crnn_layer.o demo.o tag.o cifar.o go.o batchnorm_layer.o art.o region_layer.o reorg_layer.o lsd.o super.o voxel.o tree.o\nifeq ($(GPU), 1) \nLDFLAGS+= -lstdc++ \nOBJ+=convolutional_kernels.o deconvolutional_kernels.o activation_kernels.o im2col_kernels.o col2im_kernels.o blas_kernels.o crop_layer_kernels.o dropout_layer_kernels.o maxpool_layer_kernels.o network_kernels.o avgpool_layer_kernels.o\nendif\n\nOBJS = $(addprefix $(OBJDIR), $(OBJ))\nDEPS = $(wildcard src/*.h) Makefile\n\nall: obj backup results $(EXEC)\n\n$(EXEC): $(OBJS)\n\t$(CC) $(COMMON) $(CFLAGS) $^ -o $@ $(LDFLAGS)\n\n$(OBJDIR)%.o: %.c $(DEPS)\n\t$(CC) $(COMMON) $(CFLAGS) -c $< -o $@\n\n$(OBJDIR)%.o: %.cu $(DEPS)\n\t$(NVCC) $(ARCH) $(COMMON) --compiler-options \"$(CFLAGS)\" -c $< -o $@\n\nobj:\n\tmkdir -p obj\nbackup:\n\tmkdir -p backup\nresults:\n\tmkdir -p results\n\n.PHONY: clean\n\nclean:\n\trm -rf $(OBJS) $(EXEC)\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.619140625,
+          "content": "# darknet\ndarknet是一个较为轻型的完全基于C与CUDA的开源深度学习框架，其主要特点就是容易安装，没有任何依赖项（OpenCV都可以不用），移植性非常好，支持CPU与GPU两种计算方式。\n\n更多信息（包括安装、使用）可以参考：[Darknet: Open Source Neural Networks in C](https://pjreddie.com/darknet/)\n\n# 为什么选择darknet？\n\n相比于TensorFlow来说，darknet并没有那么强大，但这也成了darknet的优势：\n\n1. darknet完全由C语言实现，没有任何依赖项，当然可以使用OpenCV，但只是用其来显示图片、为了更好的可视化；\n\n2. darknet支持CPU（所以没有GPU也不用紧的）与GPU（CUDA/cuDNN，使用GPU当然更块更好了）；\n\n3. 正是因为其较为轻型，没有像TensorFlow那般强大的API，所以给我的感觉就是有另一种味道的灵活性，适合用来研究底层，可以更为方便的从底层对其进行改进与扩展；\n\n4. darknet的实现与caffe的实现存在相似的地方，熟悉了darknet，相信对上手caffe有帮助；\n\n# 本项目目的与状态\n\n目的很简单，研究darknet底层，窥探深度学习框架原理与具体实现，同时巩固C语言编程（所以注释中不单有很多的框架原理/逻辑分析，也有很多语法分析）。目前只完成部分代码（主要是卷积神经网络）的分析，其注释非常详细（可能很多人会觉得罗嗦了：)，那就强忍着吧～），未来会不定期的更新!（忙ing，什么时候会再更呢？）\n\n很希望有相同兴趣的人加入我，一起研究（若有兴趣，欢迎给我发邮件～～）！\n\n# 小小声明\n\n注释中有些地方提及了参考什么什么的，这些多半是指我所作的图表+文字用来帮助理解代码的笔记，原谅我这些笔记还躺在我的电脑里，并没有上传，但不用紧，因为注释真的真的很详细，基本上不用图表也说明清楚了～～\n\n大部分的代码都是本人个人完成的（lonely...），所以难免会有理解错误的地方（可能还不少，害怕ing...），还请多多包涵，若发现与您理解相左的地方，欢迎发邮件给我～～\n\n# 两三点小说明\n\n1. src文件夹中凡是.cu文件，都被我改为.c结尾了（为了一点点方便～），替换之前的文件全被我放在了src/cu文件夹中（没啥用，可以随便删掉～）。如果你没用gpu的话，这没有任何影响，因为没有用gpu就不会用到nvcc编译；但是如果你用gpu的话，还得麻烦你将.c改回.cu，不然编译会出问题的（你可以看一下Makefile文件，.cu文件要用nvcc编译的，要改为.c那就通通用gcc编译了～～）\n\n2. 如果你也愿意解析代码，为其写注释，也可以pull requests给我，我来merge（注释风格如果能够保持一致就最好了～～）\n\n3. Contributors:\n    * [Goffic](https://github.com/Goffic)： 为rnn_layer.c添加了注释\n    * [LamHoCN](https://github.com/LamHoCN)： 修改了一些注释，并提供了一些yolo的应用代码（已push到extension分支中）\n\n# 疑惑求解\n\n1. 始终不明白softmax_layer层反向传播函数backward_softmax_layer()中为什么不用对softmax函数求导？\n\n2. region_layer层前向函数forward_region_layer()在求l.output过程中（也就是第一次使用activate_array函数），为什么只对x,y进行了logistic激活函数处理，而没有对w,h处理（也就是activate_array()函数的第二个参数为什么是2*l.w*l.h，而不是4*l.w*l.h）？还有，region_layer这一层没有训练参数吗？\n\n3. 另外，就是region_layer中cost和delta的计算了，感觉并没有弄懂？\n"
+        },
+        {
+          "name": "cfg",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "data",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "metadata": {
+    "timestamp": 1736710236311,
+    "page": 972,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jamriska/ebsynth",
+      "stars": 1562,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.505859375,
+          "content": "# Ebsynth: A Fast Example-based Image Synthesizer\n\n`ebsynth` is a versatile tool for by-example synthesis of images.\nIt can be used for a variety of image synthesis tasks, including guided\ntexture synthesis, artistic style transfer, content-aware inpainting\nand super-resolution.\n\nThe focus of `ebsynth` is on preserving the fidelity of the source material.\nUnlike other recent approaches, `ebsynth` doesn't rely on neural networks.\nInstead, it uses a state-of-the-art implementation of non-parametric\ntexture synthesis algorithms. Thanks to its patch-based nature, `ebsynth`\nproduces crisp results, which preserve all the fine detail present in the\noriginal image.\n\n## Basic usage\n\n```\nebsynth -style <style.png> -guide <source.png> <target.png> -output <output.png>\n```\n\n## Options\n```\n-style <style.png>\n-guide <source.png> <target.png>\n-weight <value>\n-uniformity <value>\n-patchsize <value>\n-pyramidlevels <number>\n-searchvoteiters <number>\n-patchmatchiters <number>\n-extrapass3x3\n-backend [cpu|cuda]\n```\n\n## Download\n\nPre-built Windows binary can be downloaded from here: [http://jamriska.cz/ebsynth/ebsynth-win64.zip](http://jamriska.cz/ebsynth/ebsynth-win64.zip).\n\n# Examples\n\n## Texture-by-numbers\n\nThe first example shows how to perform a basic guided texture synthesis with `ebsynth`.\nThis use-case was first proposed in the original Image Analogies paper [1], where they\ncalled it 'texture-by-numbers'. We start with a photograph of a natural scene together\nwith its segmentation (e.g., rock is painted green, sky with blue):\n\n<p align='center'>\n  <img src='doc/images/texbynum.jpg'/>\n</p>\n\n```\nebsynth -style source_photo.png -guide source_segment.png target_segment.png -output output.png\n```\n\nNext, we paint a target segmentation by hand, and we ask `ebsynth` to produce\na new 'photograph' that would match it. In the language of style transfer: we want\nto transfer the *style* of the source photograph onto the target segmentation in\na way that would respect the individual segments. The segmentation acts as a *guide*\nfor the synthesis.\n\n## StyLit: Illumination-Guided Stylization of 3D Renderings\n<p align='center'>\n  <img src='doc/images/stylit-teaser.jpg'/>\n</p>\n\nThis example shows how to achieve a non-photorealistic rendering with `ebsynth`.\nIt is based on the work of Fišer et al. [7]. The goal is to render a 3D model like\nan artist would do. Specifically, we want to capture the way how an artist conveys\nthe different illumination effects, like highlights, contact shadows, and indirect\nbounces. To that end, we set up a simple reference scene with an illuminated ball,\nand let the artist draw it in her/his style. We use an off-the-shelf path tracer\nto produce the separate render passes, e.g., full global illumination, just the\ndirect diffuse component, just the indirect bounce, etc. Next, we render the same\nset of passes for the target 3D model and use them as guides for `ebsynth`.\n\n<p align='center'>\n  <img src='doc/images/stylit.jpg'/>\n</p>\n\n```\nebsynth -style source_style.png\n        -guide source_fullgi.png target_fullgi.png -weight 0.66\n        -guide source_dirdif.png target_dirdif.png -weight 0.66\n        -guide source_indirb.png target_indirb.png -weight 0.66\n        -output output.png\n```\n\nCompared to texture-by-numbers, the main difference here is we now have *multiple*\nguiding channels.  Note the guides always come in pairs: source guide first, target\nguide second. For better results, we might want to boost the contribution of guides\nrelative to the style. In the example above, the style has a default weight of 1.0,\nwhile the guide channels have weight of 0.66 each. In sum, the total guide weight\nis 2.0, resulting in 2:1 guide-to-style ratio.\n\n## FaceStyle: Example-based Stylization of Face Portraits\n\n<p align='center'>\n  <img src='doc/images/facestyle-teaser.jpg'/>\n</p>\n\nThis example demonstrates how one can use `ebsynth` to transfer the style of\na portrait painting onto another person's photograph. It is based on the work\nof Fišer et al. [8]. The goal is to reproduce the fine nuances of the source\npainting, while preserving the identity of the target person. I.e., we want\nthe person to still be recognizable after the synthesis.\n\nUnlike with StyLit, in this setting we don't have the reference 3D geometry\nto use as a guide. However, we can exploit the fact that both the source painting\nand the target photo contain a human face, which has a well-defined structure.\nWe will use this structure to infer the necessary guiding information.\n\n<p align='center'>\n  <img src='doc/images/facestyle.jpg'/>\n</p>\n\n```\nebsynth -style source_painting.png\n        -guide source_Gapp.png target_Gapp.png -weight 2.0\n        -guide source_Gseg.png target_Gseg.png -weight 1.5 \n        -guide source_Gpos.png target_Gpos.png -weight 1.5 \n        -output output.png\n```\n\nSpecifically, we detect the facial landmarks in both the target and source images,\nand use them to produce a soft segmentation guide `Gseg`, and a positional guide\n`Gpos`, which is essentially a dense warp field that maps every target pixel to its\ncorresponding position in source. To preserve the person's identity, we use the\nappearance guide `Gapp`, which is a grayscale version of the target photo that was\nequalized to match the luminance of the source painting.\n\n--------------------------------------------------------------------------\n\n## License\n\nThe code is released into the public domain. You can do anything you want with it.\n\nHowever, you should be aware that the code implements the PatchMatch algorithm, which is patented by Adobe (U.S. Patent 8,861,869). Other techniques might be patented as well. It is your responsibility to make sure you're not infringing any patent holders' rights by using this code. \n\n## Citation\n\nIf you find this code useful for your research, please cite:\n\n```\n@misc{Jamriska2018,\n  author = {Jamriska, Ondrej},\n  title = {Ebsynth: Fast Example-based Image Synthesis and Style Transfer},\n  year = {2018},\n  publisher = {GitHub},\n  journal = {GitHub repository},\n  howpublished = {\\url{https://github.com/jamriska/ebsynth}},\n}\n```\n\n## References\n\n1. Image Analogies  \n   Aaron Hertzmann, Chuck Jacobs, Nuria Oliver, Brian Curless, David H. Salesin  \n   In SIGGRAPH 2001 Conference Proceedings, 327–340.  \n2. Texture optimization for example-based synthesis  \n   Vivek Kwatra, Irfan A. Essa, Aaron F. Bobick, Nipun Kwatra  \n   ACM Transactions on Graphics 24, 3 (2005), 795–802.  \n3. Space-Time Completion of Video  \n   Yonatan Wexler, Eli Shechtman, Michal Irani  \n   IEEE Transactions on Pattern Analysis and Machine Intelligence 29, 3 (2007), 463–476.  \n4. PatchMatch: A randomized correspondence algorithm for structural image editing  \n   Connelly Barnes, Eli Shechtman, Adam Finkelstein, Dan B. Goldman  \n   ACM Transactions on Graphics 28, 3 (2009), 24.  \n5. Self Tuning Texture Optimization  \n   Alexandre Kaspar, Boris Neubert, Dani Lischinski, Mark Pauly, Johannes Kopf  \n   Computer Graphics Forum 34, 2 (2015), 349–360.  \n6. LazyFluids: Appearance Transfer for Fluid Animations  \n   Ondřej Jamriška, Jakub Fišer, Paul Asente, Jingwan Lu, Eli Shechtman, Daniel Sýkora  \n   ACM Transactions on Graphics 34, 4 (2015), 92.  \n7. StyLit: Illumination-Guided Example-Based Stylization of 3D Renderings  \n   Jakub Fišer, Ondřej Jamriška, Michal Lukáč, Eli Shechtman, Paul Asente, Jingwan Lu, Daniel Sýkora  \n   ACM Transactions on Graphics 35, 4 (2016), 92.  \n8. Example-Based Synthesis of Stylized Facial Animations  \n   Jakub Fišer, Ondřej Jamriška, David Simons, Eli Shechtman, Jingwan Lu, Paul Asente, Michal Lukáč, Daniel Sýkora  \n   ACM Transactions on Graphics 36, 4 (2017), 155.  \n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build-linux-cpu+cuda.sh",
+          "type": "blob",
+          "size": 0.1923828125,
+          "content": "#!/bin/sh\nnvcc -arch compute_30 src/ebsynth.cpp src/ebsynth_cpu.cpp src/ebsynth_cuda.cu -I\"include\" -DNDEBUG -D__CORRECT_ISO_CPP11_MATH_H_PROTO -O6 -std=c++11 -w -Xcompiler -fopenmp -o bin/ebsynth\n"
+        },
+        {
+          "name": "build-linux-cpu_only.sh",
+          "type": "blob",
+          "size": 0.1298828125,
+          "content": "#!/bin/sh\ng++ src/ebsynth.cpp src/ebsynth_cpu.cpp src/ebsynth_nocuda.cpp -DNDEBUG -O6 -fopenmp -I\"include\" -std=c++11 -o bin/ebsynth\n"
+        },
+        {
+          "name": "build-macos-cpu_only.sh",
+          "type": "blob",
+          "size": 0.125,
+          "content": "#!/bin/sh\nclang++ src/ebsynth.cpp src/ebsynth_cpu.cpp src/ebsynth_nocuda.cpp -DNDEBUG -O3 -I\"include\" -std=c++11 -o bin/ebsynth\n"
+        },
+        {
+          "name": "build-win32-cpu+cuda.bat",
+          "type": "blob",
+          "size": 0.603515625,
+          "content": "@echo off\nsetlocal ENABLEDELAYEDEXPANSION\n\ncall \"vcvarsall.bat\" x86\n\nnvcc -m32 -arch compute_30 src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_cuda.cu -DNDEBUG -O6 -I \"include\" -o \"bin\\ebsynth.exe\" -Xcompiler \"/openmp /fp:fast\" -Xlinker \"/IMPLIB:dummy.lib\" -w || goto error\nnvcc -m32 -arch compute_30 src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_cuda.cu -DNDEBUG -O6 -I \"include\" -o \"bin\\ebsynth.dll\" -Xcompiler \"/openmp /fp:fast\" -Xlinker \"/IMPLIB:lib\\ebsynth.lib\" -shared -DEBSYNTH_API=__declspec(dllexport) -w || goto error\ndel dummy.lib;dummy.exp 2> NUL\ngoto :EOF\n\n:error\necho FAILED\n@%COMSPEC% /C exit 1 >nul\n"
+        },
+        {
+          "name": "build-win32-cpu_only.bat",
+          "type": "blob",
+          "size": 0.5283203125,
+          "content": "@echo off\nsetlocal ENABLEDELAYEDEXPANSION\n\ncall \"vcvarsall.bat\" x86\n\ncl src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_nocuda.cpp /DNDEBUG /O2 /openmp /EHsc /nologo /I\"include\" /Fe\"bin\\ebsynth.exe\" || goto error\ncl src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_nocuda.cpp /DNDEBUG /O2 /openmp /EHsc /nologo /I\"include\" /Fe\"bin\\ebsynth.dll\" /DEBSYNTH_API=\"__declspec(dllexport)\" /link /IMPLIB:\"lib\\ebsynth.lib\" || goto error\ndel ebsynth.obj;ebsynth_cpu.obj;ebsynth_nocuda.obj 2> NUL\ngoto :EOF\n\n:error\necho FAILED\n@%COMSPEC% /C exit 1 >nul\n"
+        },
+        {
+          "name": "build-win64-cpu+cuda.bat",
+          "type": "blob",
+          "size": 0.595703125,
+          "content": "@echo off\nsetlocal ENABLEDELAYEDEXPANSION\n\ncall \"vcvarsall.bat\" amd64\n\nnvcc -arch compute_30 src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_cuda.cu -DNDEBUG -O6 -I \"include\" -o \"bin\\ebsynth.exe\" -Xcompiler \"/openmp /fp:fast\" -Xlinker \"/IMPLIB:dummy.lib\" -w || goto error\nnvcc -arch compute_30 src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_cuda.cu -DNDEBUG -O6 -I \"include\" -o \"bin\\ebsynth.dll\" -Xcompiler \"/openmp /fp:fast\" -Xlinker \"/IMPLIB:lib\\ebsynth.lib\" -shared -DEBSYNTH_API=__declspec(dllexport) -w || goto error\ndel dummy.lib;dummy.exp 2> NUL\ngoto :EOF\n\n:error\necho FAILED\n@%COMSPEC% /C exit 1 >nul\n"
+        },
+        {
+          "name": "build-win64-cpu_only.bat",
+          "type": "blob",
+          "size": 0.5302734375,
+          "content": "@echo off\nsetlocal ENABLEDELAYEDEXPANSION\n\ncall \"vcvarsall.bat\" amd64\n\ncl src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_nocuda.cpp /DNDEBUG /O2 /openmp /EHsc /nologo /I\"include\" /Fe\"bin\\ebsynth.exe\" || goto error\ncl src\\ebsynth.cpp src\\ebsynth_cpu.cpp src\\ebsynth_nocuda.cpp /DNDEBUG /O2 /openmp /EHsc /nologo /I\"include\" /Fe\"bin\\ebsynth.dll\" /DEBSYNTH_API=\"__declspec(dllexport)\" /link /IMPLIB:\"lib\\ebsynth.lib\" || goto error\ndel ebsynth.obj;ebsynth_cpu.obj;ebsynth_nocuda.obj 2> NUL\ngoto :EOF\n\n:error\necho FAILED\n@%COMSPEC% /C exit 1 >nul\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "include",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vcvarsall.bat",
+          "type": "blob",
+          "size": 0.4228515625,
+          "content": "@echo off\n\nfor /f \"usebackq tokens=*\" %%i in (`vswhere -latest -legacy -property installationPath`)    do (set vsdir=%%i)\nfor /f \"usebackq tokens=*\" %%i in (`vswhere -latest -legacy -property installationVersion`) do (set vsver=%%i)\n\nif %vsver% geq 15 (\n  set vcvarsall=\"%vsdir%\\VC\\Auxiliary\\Build\\vcvarsall.bat\"\n) else (\n  set vcvarsall=\"%vsdir%\\VC\\vcvarsall.bat\"\n)\n\necho %vcvarsall%\n\nif exist %vcvarsall% (\n  call %vcvarsall% %*\n)\n"
+        },
+        {
+          "name": "vswhere.exe",
+          "type": "blob",
+          "size": 418.1875,
+          "content": null
+        }
+      ]
+    }
+  ]
+}

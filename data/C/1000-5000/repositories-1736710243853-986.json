@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736710243853,
+    "page": 986,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Mixiaoxiao/Arduino-HomeKit-ESP8266",
+      "stars": 1549,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.064453125,
+          "content": "# Auto detect text files and perform LF normalization\n* text=auto\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.283203125,
+          "content": "# Prerequisites\n*.d\n\n# Compiled Object files\n*.slo\n*.lo\n*.o\n*.obj\n\n# Precompiled Headers\n*.gch\n*.pch\n\n# Compiled Dynamic libraries\n*.so\n*.dylib\n*.dll\n\n# Fortran module files\n*.mod\n*.smod\n\n# Compiled Static libraries\n*.lai\n*.la\n*.a\n*.lib\n\n# Executables\n*.exe\n*.out\n*.app\n\n# Others\n.DS_STORE\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.052734375,
+          "content": "MIT License\n\nCopyright (c) 2020 Mixiaoxiao(谜小小)\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.341796875,
+          "content": "# Arduino HomeKit ESP8266 \n\n\n[中文说明](translations/README_cn.md) | [Português Brasileiro](translations/README-ptbr.md) | [Русский](translations/README-ru.md)\n\n\n## Apple HomeKit accessory server library for ESP8266 Arduino\n\nThis Arduino library is a native Apple HomeKit accessory implementation for the [ESP8266 Arduino core](https://github.com/esp8266/Arduino), and works without any additional bridges.\n\nThis project is mainly based on [esp-homekit](https://github.com/maximkulkin/esp-homekit) for [ESP-OPEN-RTOS](https://github.com/SuperHouse/esp-open-rtos).\n\nI ported the RTOS-based implementation of [esp-homekit](https://github.com/maximkulkin/esp-homekit) to the pure Arduino environment, aimed at easy and fast building project using Arduino IDE (or Eclipse with sloeber, PlatformIO).\n\nEnjoy the \"one-key\" build, \"one-key\" upload, and work to link various other Arduino libraries with Apple HomeKit!\n\nHere is a [discussion](https://github.com/HomeACcessoryKid/Arduino-HomeKit/issues/1) about the RTOS is required for running Apple HomeKit, and this project is a proof of concept that Apple HomeKit can be implemented and work fine without the RTOS.\n\nThis library is built with ESP8266 Arduino Core 2.6.3. Lower versions may compile with errors.\n\nFor ESP32, see [Arduino-HomeKit-ESP32](https://github.com/Mixiaoxiao/Arduino-HomeKit-ESP32). The HomeKit running on ESP32 has a **GREAT PERFORMANCE** which is 10x faster than ESP8266.\n\n## Preview\n\n![Preview](https://raw.github.com/Mixiaoxiao/Arduino-HomeKit-ESP8266/master/extras/preview.jpg) \n\n\n## Setup code of the example sketch\n\n``111-11-111``\n\n\n## Usage\n\n1. Define your accessory in a .c file to enjoy the  convenient \"Macro\" style declaration. You can also define your accessory in a .ino file using C++ code.\n\t```C\n\t\thomekit_accessory_t *accessories[] = ...\n\t\thomekit_server_config_t config = {\n\t\t\t.accessories = accessories,\n\t\t\t.password = \"111-11-111\",\n\t\t\t//.on_event = on_homekit_event, //optional\n\t\t\t//.setupId = \"ABCD\" //optional\n\t\t};\n\t```\n2. In your sketch\n\t```C\n\t\t#include <arduino_homekit_server.h>;\n\t\t\n\t\t//access the config defined in C code\n\t\textern \"C\" homekit_server_config_t config; \n\t\t\n\t\tvoid setup() {\n\t\t\tWiFi.begin(ssid, password);\n\t\t\tarduino_homekit_setup(&config);\n\t\t}\n\t\t\n\t\tvoid loop() {\n\t\t\tarduino_homekit_loop();\n\t\t}\n\t```\nDone.\n\n## Performance\n\nNotice: You should set the ESP8266 CPU to run at 160MHz (at least during the pairing process), to avoid the tcp-socket disconnection from iOS device caused by timeout.\n\n* Preinit: ~9.1s (You can see the accessory on your iOS HOME app after Preinit)\n* Pair Setup Step 1/3: ~0s (The heavy crypto computation is done in Preinit)\n* Pair Setup Step 2/3: ~12.1s \n* Pair Setup Step 3/3: ~0.8s  (The pair-setup is only processed when first paired with iOS device)\n* Pair Verify Step 1/2: ~0.3s\n* Pair Verify Step 2/2: ~0.8s (The Verify Step is required every time iOS connects or reconnects to ESP8266 to establish secure session)\n\nAll pairing process takes ~14s after you input the setup-code on your iPhone. Notice that Preinit require ~9s before you can start to pair.\n\n\n## Heap (memory)\n\nThe heap is critical for ESP8266 with full TCP/IP support. ESP8266 easily crashes when the memory is lower than ~5000.\n\nI tried to make WolfSSL crypto work safely on ESP8266 with better performance and lower memory or a trade-off. See details in next section.\n\nHere are the free heap values of running the example sketch:\n\n* Boot: ~26000\n* Preinit over: ~22000\n* Pairing: ~17000 (or even low when crypto computing)\n* Paired and connected with one iOS device: ~21700\n* Paired and no iOS device connected: ~23400\n\nAfter memory optimization in v1.1.0:\n\n* Boot: ~46000\n* Preinit over: ~41000\n* Pairing: ~37000 (or even low when crypto computing)\n* Paired and connected with one iOS device: ~41700\n* Paired and no iOS device connected: ~43000\n\n\n## WolfSSL\n\n* Based on wolfssl-3.13.0-stable.\n* Clean source code: the unused files are removed.\n* `CURVE25519_SMALL` and `ED25519_SMALL`: ESP8266 can not directly run without `SMALL` defined since the memory is not sufficient. But the NO `SMALL` version is faster. I mark the big `ge_precomp base[32][8]` with PROGMEM to store it in Flash (around 70KB). Also the `ge_double_scalarmult_vartime` can not run caused by lack of heap. I define `ESP_GE_DOUBLE_SCALARMULT_VARTIME_LOWMEM` in `user_settings.h` to use LOWMEM version of `ge_double_scalarmult_vartime` in `ge_low_mem.c`. This is a trade-off of performance and memory. If you want more Flash space, you should define `CURVE25519_SMALL` and `ED25519_SMALL` and undefine `ESP_GE_DOUBLE_SCALARMULT_VARTIME_LOWMEM` in `user_settings.h` (this will lead the Pair Verify Steps to take 1.2s + 0.9s).\n* `integer.c`(big integer operations): `MP_16BIT` and `ESP_FORCE_S_MP_EXPTMOD` are defined for better performance in ESP8266. `ESP_INTEGER_WINSIZE` (value is 3) is defined to avoid crash caused by memory exhaust and the values of {3, 4, 5} are of similar performance.\n\n## Storage\n\n* The pairing data is stored in the `EEPROM` address in ESP8266 Arduino core.\n* This project does not use the `EEPROM` library with data-cache to reduce memory use (directly call flash_read and write). \n* The `EEPROM` is 4096B in ESP8266, this project uses max [0, 1408B).\n* See the comments in `storge.c` and [ESP8266-EEPROM-doc](https://arduino-esp8266.readthedocs.io/en/2.6.3/libraries.html#eeprom).\n* `EEPROM` of [1408, 4096) is safe for you to use. \n* This project do NOT use `FS(file system)`, so you can use `FS` freely.\n\n\n## WatchDog\n\n* There are software and hardware watchdogs in ESP8266 Arduino core. The heavy crypto computing will lead to watchdog reset.\n* There are disable/enable api of software-watchdog in ESP8266 Arduino core.\n* I found the [esp_hw_wdt](https://github.com/ComSuite/esp_hw_wdt) to disable/enable the hardware-watchdog.\n* The two watchdogs are disabled while `Preinit` and `Pair Setup Step 2/3`.\n\n## Recommended settings in IDE\n\n* Module: Generic ESP8266 Module (to enable full settings)\n* FlashSize: at least 470KB for sketch (see `WolfSSL` section if you want a smaller sketch) \n* LwIP Variant: v2 Lower Memory (for lower memory use)\n* Debug Level: None (for lower memory use)\n* Espressif FW: nonos-sdk 2.2.1+119(191122) (which I used to build this project)\n* SSL Support: Basic SSL ciphers (lower ROM use)\n* VTables: Flash (does not matter maybe)\n* Erase Flash: select `All Flash Contents` when you first upload\n* CPU Frequency: 160MHz (must)\n\n## Arduino port\n\n* `ESP8266WiFi` (WiFiServer and WiFiClient) is used for tcp connection.\n* `ESP8266mDNS` is used for advertising (Bonjour) \n\n## Troubleshooting\n\n* Check your serial output with [example_serial_output.txt](https://raw.github.com/Mixiaoxiao/Arduino-HomeKit-ESP8266/master/extras/example_serial_output_v1.1.0.txt)\n\n\n## Change Log\n\n#### v1.4.0\n\n* Add `yield()` while crypto computing, to prevent WiFi disconnection. The idea is from [BbIKTOP-issues80](https://github.com/Yurik72/ESPHap/issues/80#issuecomment-803685175)\n* One new example.\n\n#### v1.3.0\n\n* Small improvements.\n\n#### v1.2.0\n\n* New examples.\n\n#### v1.1.0\n\n* Memory optimization: moved String/byte constants as much as possible to Flash. The `RODATA` section of `bin` is only 4672. Extra ~20K free-heap is available compared with v1.0.1.\n* Upload [ESP8266WiFi_nossl_noleak](https://github.com/Mixiaoxiao/Arduino-HomeKit-ESP8266/tree/master/extras/ESP8266WiFi_nossl_noleak/), a `nossl` and `noleak` version of the official `ESP8266WiFi` library of Arduino Core 2.6.3. Removed all codes of `SSL` to save memory (extra ~3K) since the HomeKit does not require SSL. Fix the memory-leak in `WiFiClinet.stop()` by adding `tcp_abandon(_pcb, 0)` in `stop()`, based on the idea of [esp8266/Arduino/pull/2767](https://github.com/esp8266/Arduino/pull/2767).\n\n#### v1.0.1 \n* Reduce `winsize` from `3` to `2`(same performance) to lower the heap required. Pairing can be done with low free-heap of ~14000.\n* Specify the MDNS runs on the IPAddress of STA to ensure the HomeKit can work with some SoftAP-based WiFi-Config libraries.\n* Rename the `HTTP_METHOD`(s) in `http_parser.h` to avoid multi-definition errors when using `ESP8266WebServer` together.\n\n## Thanks\n* [esp-homekit](https://github.com/maximkulkin/esp-homekit)\n* [esp-homekit-demo](https://github.com/maximkulkin/esp-homekit-demo)\n* [esp_hw_wdt](https://github.com/ComSuite/esp_hw_wdt)\n* [WolfSSL/WolfCrypt](https://www.wolfssl.com/products/wolfcrypt-2/)\n* [cJSON](https://github.com/DaveGamble/cJSON)\n* [cQueue](https://github.com/SMFSW/cQueue)\n\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "extras",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "library.json",
+          "type": "blob",
+          "size": 0.498046875,
+          "content": "{\n  \"name\":\"HomeKit-ESP8266\",\n  \"description\":\"Apple HomeKit accessory server library for the ESP8266 Arduino core.\",\n  \"keywords\":\"homekit,esp8266,esp32,apple homekit\",\n  \"authors\":\n  {\n    \"name\": \"Mixiaoxiao (Wang Bin)\",\n    \"maintainer\": true\n  },\n  \"repository\":\n  {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/Mixiaoxiao/Arduino-HomeKit-ESP8266.git\"\n  },\n  \"version\": \"1.2.0\",\n  \"license\": \"MIT\",\n  \"frameworks\": \"arduino\",\n  \"platforms\": \"espressif8266\",\n  \"build\": {\n    \"libCompatMode\": 2\n  }\n}\n"
+        },
+        {
+          "name": "library.properties",
+          "type": "blob",
+          "size": 0.3447265625,
+          "content": "name=HomeKit-ESP8266\nversion=1.2.0\nauthor=Mixiaoxiao\nmaintainer=Mixiaoxiao\nsentence=Native Apple HomeKit accessory implementation for the ESP8266 Arduino core.\nparagraph=Native Apple HomeKit Accessory Implementation for the ESP8266 Arduino core.\ncategory=Communication\nurl=https://github.com/Mixiaoxiao/Arduino-HomeKit-ESP8266.git\narchitectures=esp8266\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "translations",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

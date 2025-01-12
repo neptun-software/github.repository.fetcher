@@ -1,0 +1,148 @@
+{
+  "metadata": {
+    "timestamp": 1736710155814,
+    "page": 825,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jjgod/mac-dictionary-kit",
+      "stars": 1735,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0673828125,
+          "content": "*.pbxuser\n*.perspectivev3\nzh_CN.lproj/MainMenu.xib\nbuild/\nxcuserdata\n"
+        },
+        {
+          "name": "Base.lproj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DUImageView.h",
+          "type": "blob",
+          "size": 0.2333984375,
+          "content": "//\n//  DUImageView.h\n//  DictUnifier\n//\n//  Created by Jjgod Jiang on 3/11/10.\n//\n\n#import <Cocoa/Cocoa.h>\n#import \"DictUnifierAppDelegate.h\"\n\n@interface DUImageView : NSImageView {\n    IBOutlet DictUnifierAppDelegate *controller;\n}\n\n@end\n"
+        },
+        {
+          "name": "DUImageView.m",
+          "type": "blob",
+          "size": 0.96484375,
+          "content": "//\n//  DUImageView.m\n//  DictUnifier\n//\n//  Created by Jjgod Jiang on 3/11/10.\n//\n\n#import \"DUImageView.h\"\n\n@implementation DUImageView\n\n- (void) awakeFromNib\n{\n    [self registerForDraggedTypes: [NSArray arrayWithObjects: NSPasteboardTypeFileURL, nil]];\n}\n\n- (NSDragOperation) draggingEntered: (id < NSDraggingInfo >) sender\n{\n    NSPasteboard *pboard = [sender draggingPasteboard];\n    NSDragOperation opType = NSDragOperationNone;\n\n    if ([[pboard types] containsObject: NSPasteboardTypeFileURL])\n        opType = NSDragOperationCopy;\n\n    return opType;\n}\n\n- (BOOL) performDragOperation: (id < NSDraggingInfo >) sender\n{\n    NSPasteboard *pboard = [sender draggingPasteboard];\n    BOOL successful = NO;\n\n    if ([[pboard types] containsObject: NSPasteboardTypeFileURL])\n    {\n        NSArray *files = [pboard propertyListForType: NSPasteboardTypeFileURL];\n        [controller startConversion: [files objectAtIndex: 0]];\n        successful = NO;\n    }\n\n    return successful;\n}\n\n@end\n"
+        },
+        {
+          "name": "DUWindow.h",
+          "type": "blob",
+          "size": 0.224609375,
+          "content": "//\n//  DUWindow.h\n//  DictUnifier\n//\n//  Created by Jjgod Jiang on 3/11/10.\n//\n\n#import <Cocoa/Cocoa.h>\n#import \"DictUnifierAppDelegate.h\"\n\n@interface DUWindow : NSWindow {\n    IBOutlet DictUnifierAppDelegate *controller;\n}\n\n@end\n"
+        },
+        {
+          "name": "DUWindow.m",
+          "type": "blob",
+          "size": 0.9560546875,
+          "content": "//\n//  DUWindow.m\n//  DictUnifier\n//\n//  Created by Jjgod Jiang on 3/11/10.\n//\n\n#import \"DUWindow.h\"\n\n@implementation DUWindow\n\n- (void) awakeFromNib\n{\n    [self registerForDraggedTypes: [NSArray arrayWithObjects: NSPasteboardTypeFileURL, nil]];\n}\n\n- (NSDragOperation) draggingEntered: (id < NSDraggingInfo >) sender\n{\n    NSPasteboard *pboard = [sender draggingPasteboard];\n    NSDragOperation opType = NSDragOperationNone;\n\n    if ([[pboard types] containsObject: NSPasteboardTypeFileURL])\n        opType = NSDragOperationCopy;\n\n    return opType;\n}\n\n- (BOOL) performDragOperation: (id < NSDraggingInfo >) sender\n{\n    NSPasteboard *pboard = [sender draggingPasteboard];\n    BOOL successful = NO;\n\n    if ([[pboard types] containsObject: NSPasteboardTypeFileURL])\n    {\n        NSArray *files = [pboard propertyListForType: NSPasteboardTypeFileURL];\n        [controller startConversion: [files objectAtIndex: 0]];\n        successful = NO;\n    }\n\n    return successful;\n}\n\n@end\n"
+        },
+        {
+          "name": "DictUnifier.icns",
+          "type": "blob",
+          "size": 226.072265625,
+          "content": null
+        },
+        {
+          "name": "DictUnifier.xcodeproj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DictUnifierAppDelegate.h",
+          "type": "blob",
+          "size": 0.8671875,
+          "content": "//\n//  DictUnifierAppDelegate.h\n//  DictUnifier\n//\n//  Created by Jjgod Jiang on 3/11/10.\n//  Copyright 2010 Jjgod Jiang. All rights reserved.\n//\n\n#import <Cocoa/Cocoa.h>\n\n@interface DictUnifierAppDelegate : NSObject {\n    IBOutlet NSImageView *dropper;\n    IBOutlet NSTextField *label;\n    IBOutlet NSTextField *nameField;\n    IBOutlet NSProgressIndicator *progressBar;\n    IBOutlet NSButton *button;\n\n    NSString *tempDir;\n    NSString *dictDir;\n    NSString *dictID;\n    NSTask   *buildTask;\n    NSUInteger totalEntries;\n}\n\n@property (retain) NSString *tempDir, *dictDir, *dictID;\n@property (retain) NSTask   *buildTask;\n@property (assign) NSUInteger totalEntries;\n\n- (void) setStatus: (NSString *) str;\n- (void) error: (NSString *) str;\n- (void) startConversion: (NSString *) dictFile;\n- (IBAction) startBuilding: (id) sender;\n- (IBAction) stop: (id) sender;\n- (void) cleanup;\n\n@end\n"
+        },
+        {
+          "name": "DictUnifierAppDelegate.m",
+          "type": "blob",
+          "size": 16.576171875,
+          "content": "//\n//  DictUnifierAppDelegate.m\n//  DictUnifier\n//\n//  Created by Jjgod Jiang on 3/11/10.\n//  Copyright 2010 Jjgod Jiang. All rights reserved.\n//\n\n#import \"DictUnifierAppDelegate.h\"\n\n@implementation DictUnifierAppDelegate\n\n@synthesize tempDir, dictDir, dictID, buildTask, totalEntries;\n\n- (id) init\n{\n    if (self = [super init]) {\n        self.tempDir = [NSTemporaryDirectory() stringByAppendingPathComponent: @\"DictUnifier\"];\n        self.buildTask = nil;\n        self.totalEntries = 1;\n    }\n\n    return self;\n}\n\n- (BOOL) applicationShouldTerminateAfterLastWindowClosed: (id) sender\n{\n    return YES;\n}\n\n- (void) applicationWillTerminate: (id) sender\n{\n    [self stop: sender];\n}\n\n- (void) startConversion: (NSString *) dictFile\n{\n    [self performSelectorInBackground: @selector(startConversionWith:) withObject: dictFile];\n}\n\n- (void) showProgress\n{\n    [dropper setHidden: YES];\n    [progressBar startAnimation: nil];\n    [progressBar setIndeterminate: YES];\n    [progressBar setHidden: NO];\n}\n\n- (void) hideProgress\n{\n    [progressBar stopAnimation: self];\n    [progressBar setHidden: YES];\n}\n\n- (void) setProgress: (double) curr\n{\n    [progressBar setDoubleValue: curr];\n}\n\n- (void) prepareName: (NSArray *) outputArray\n{\n    NSAutoreleasePool *pool = [NSAutoreleasePool new];\n\n    [self hideProgress];\n    [nameField setStringValue: [outputArray objectAtIndex: 0]];\n\n    self.totalEntries = [[outputArray objectAtIndex: 1] integerValue];\n    NSLog(@\"totalEntries = %lu\", self.totalEntries);\n    if (self.totalEntries <= 0)\n        self.totalEntries = 1;\n\n    [self setStatus: NSLocalizedString(@\"Enter a name to start building\", \"\")];\n    [nameField setHidden: NO];\n    [nameField setEnabled: YES];\n\n    [button setAction: @selector(startBuilding:)];\n    [button setTitle: NSLocalizedString(@\"Start\", \"\")];\n    [button setHidden: NO];\n\n    [pool release];\n}\n\n- (void) startConversionWith: (NSString *) dictFile\n{\n    NSLog(@\"startConversionWith: %@\", dictFile);\n\n    NSAutoreleasePool *pool = [NSAutoreleasePool new];\n    NSFileManager *manager = [[NSFileManager alloc] init];\n\n    [self cleanup];\n\n    NSLog(@\"Creating %@\", self.tempDir);\n\n    if (! [manager createDirectoryAtPath: self.tempDir\n             withIntermediateDirectories: YES\n                              attributes: nil\n                                   error: NULL])\n    {\n        NSLog(@\"Failed to create directory %@\", self.tempDir);\n        goto exit;\n    }\n\n    NSLog(@\"dict extension: %@\", [dictFile pathExtension]);\n    NSString *ifoFile = nil;\n\n    if ([[dictFile pathExtension] isEqual: @\"ifo\"])\n        ifoFile = dictFile;\n\n    // Extract that file if it is a bzipped archive\n    else if ([[dictFile pathExtension] isEqual: @\"bz2\"])\n    {\n        NSTask *task = [NSTask launchedTaskWithLaunchPath: @\"/usr/bin/tar\"\n                                                arguments: [NSArray arrayWithObjects:\n                                                            @\"-xjf\", dictFile,\n                                                            @\"-C\", self.tempDir, nil]];\n        [task waitUntilExit];\n\n        if ([task terminationStatus])\n        {\n            NSLog(@\"Failed to untar %@ at %@\", dictFile, self.tempDir);\n            goto exit;\n        }\n\n        NSArray *dirContents = [manager contentsOfDirectoryAtPath: self.tempDir error: NULL];\n        if ([dirContents count])\n        {\n            NSString *extractedPath = [self.tempDir stringByAppendingPathComponent:\n                                       [dirContents objectAtIndex: 0]];\n            dirContents = [manager contentsOfDirectoryAtPath: extractedPath error: NULL];\n            for (NSString *file in dirContents)\n                if ([[file pathExtension] isEqual: @\"ifo\"])\n                    ifoFile = [extractedPath stringByAppendingPathComponent: file];\n        }\n    }\n\n    if (! ifoFile)\n    {\n        NSLog(@\"Failed to find any matching ifo file.\");\n        goto exit;\n    }\n\n    NSLog(@\"ifoFile = %@\", ifoFile);\n    self.dictID = [[[ifoFile lastPathComponent] stringByDeletingPathExtension] retain];\n    NSLog(@\"dictID = %@\", self.dictID);\n\n    self.dictDir = [self.tempDir stringByAppendingPathComponent:\n                    [NSString stringWithFormat: @\"dict-%@\", self.dictID]];\n\n    if (! [manager createDirectoryAtPath: self.dictDir\n             withIntermediateDirectories: YES\n                              attributes: nil\n                                   error: NULL])\n    {\n        NSLog(@\"Failed to create directory %@\", self.dictDir);\n        goto exit;\n    }\n\n    NSBundle *bundle = [NSBundle mainBundle];\n    NSString *templateDir = [[bundle resourcePath] stringByAppendingPathComponent: @\"templates\"];\n    NSArray *dirContents = [manager contentsOfDirectoryAtPath: templateDir error: NULL];\n\n    // Copy all the files under templates directory to temporary dictionary building directory\n    for (NSString *file in dirContents)\n        [manager copyItemAtPath: [templateDir stringByAppendingPathComponent: file]\n                         toPath: [self.dictDir stringByAppendingPathComponent: file]\n                          error: NULL];\n\n    [self showProgress];\n    [self setStatus: [NSString stringWithFormat:\n                        NSLocalizedString(@\"Converting %@...\", \"\"),\n                        [dictFile lastPathComponent]]];\n\n    // Prepare to run the actual conversion utility: sdconv with ifoFile as source file\n    NSTask *task = [[[NSTask alloc] init] autorelease];\n    NSPipe *pipe = [NSPipe pipe];\n\n    [task setLaunchPath: [bundle pathForAuxiliaryExecutable: @\"sdconv\"]];\n    [task setArguments: [NSArray arrayWithObjects:\n                         ifoFile, [self.dictDir stringByAppendingPathComponent: @\"Dictionary.xml\"], nil]];\n    [task setStandardOutput: pipe];\n    [task setStandardError: pipe];\n\n    [task launch];\n    [task waitUntilExit];\n    if ([task terminationStatus])\n    {\n        NSLog(@\"Failed to run sdconv.\");\n        [self error: [NSString stringWithFormat:\n                      NSLocalizedString(@\"Convert %@ failed, abort now.\", \"\"), self.dictID]];\n        [self hideProgress];\n        [dropper setHidden: NO];\n        goto exit;\n    }\n\n    NSFileHandle *handle = [pipe fileHandleForReading];\n    NSString *output = [[[NSString alloc] initWithData: [handle readDataToEndOfFile]\n                                              encoding: NSUTF8StringEncoding] autorelease];\n\n    [self performSelectorOnMainThread: @selector(prepareName:)\n                           withObject: [output componentsSeparatedByString: @\" \"]\n                        waitUntilDone: YES];\n\nexit:\n    [manager release];\n    [pool release];\n}\n\n- (void) showDone\n{\n    [button setHidden: YES];\n    [self hideProgress];\n\n    NSString *imageFile = [[[NSBundle mainBundle] resourcePath]\n                            stringByAppendingPathComponent: @\"done.png\"];\n    NSImage *done = [[NSImage alloc] initWithContentsOfFile: imageFile];\n    [dropper setImage: done];\n    [done release];\n\n    [dropper setHidden: NO];\n    [self setStatus: NSLocalizedString(@\"Done\", \"\")];\n}\n\n- (int) runProgram: (NSString *) program withArguments: (NSArray *) arguments\n{\n    NSTask *task = [NSTask launchedTaskWithLaunchPath: program\n                                            arguments: arguments];\n\n    [task waitUntilExit];\n    return [task terminationStatus];\n}\n\n- (void) taskFileHandleRead: (NSNotification *) notification\n{\n\tNSDictionary *userInfo = [notification userInfo];\n\tint error = [[userInfo objectForKey: @\"NSFileHandleError\"] intValue];\n\n    if (error)\n        NSLog(@\"DictUnifier: error %d.\", error);\n    else\n    {\n\t\tNSData *data = [userInfo objectForKey: NSFileHandleNotificationDataItem];\n\t\tNSUInteger length = [data length];\n        if (length == 0)\n            return;\n\n        NSString *str = [NSString stringWithUTF8String: [data bytes]];\n\n        if ([str hasPrefix: @\"- \"])\n        {\n            NSUInteger start, end;\n            [str getLineStart: &start\n                          end: &end\n                  contentsEnd: NULL\n                     forRange: NSMakeRange(0, 0)];\n            NSString *statusStr = [str substringWithRange: NSMakeRange(start + 2,\n                                                                       end - start - 3)];\n            [self setStatus: NSLocalizedString(statusStr, \"status during dictionary building\")];\n            if ([statusStr rangeOfString: @\"Adding body data\"].location != NSNotFound)\n            {\n                NSString *bodyList = [[self.dictDir stringByAppendingPathComponent: @\"objects\"]\n                                      stringByAppendingPathComponent: @\"entry_body_list.txt\"];\n                while (1)\n                {\n                    if ([[NSFileManager defaultManager] fileExistsAtPath: bodyList])\n                    {\n                        int fd = open([bodyList fileSystemRepresentation], O_RDONLY);\n                        NSLog(@\"Start watching %@\", bodyList);\n                        [progressBar setIndeterminate: NO];\n                        dispatch_queue_t globalQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);\n                        dispatch_source_t fileSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, fd, 0, globalQueue);\n                        dispatch_source_set_cancel_handler(fileSource, ^{ close(fd); } );\n                        dispatch_source_set_event_handler(fileSource, ^{\n                            char buf[1024];\n                            ssize_t len = read(fd, buf, sizeof(buf));\n                            if (len > 0) {\n                                // NSLog(@\"Got data from stdin: %.*s\", len, buf);\n                                ssize_t i;\n                                // scan backwards for the first \\t, it's where the last processed item number ends\n                                for (i = len - 1; i >= 0 && buf[i] != '\\t'; i--)\n                                    ;\n                                // scan backwards to read in the last processed item number\n                                if (i > 0 && buf[i] == '\\t') {\n                                    ssize_t end = i;\n                                    for (i--; i >= 0 && buf[i] != '\\n'; i--)\n                                        ;\n                                    if (buf[i] == '\\n') {\n                                        buf[end] = '\\0';\n                                        char *str = buf + i + 1;\n                                        int curr = 0;\n                                        sscanf(str, \"%d\", &curr);\n                                        [self setProgress: curr * 100.0 / self.totalEntries];\n                                    }\n                                }\n                            }\n                        });\n                        dispatch_resume(fileSource);\n                        break;\n                    } else\n                        sleep(0.5);\n                }\n            }\n        }\n\n        [[notification object] readInBackgroundAndNotify];\n    }\n}\n\n- (void) startBuildingWith: (NSString *) dictName\n{\n    NSAutoreleasePool *pool = [NSAutoreleasePool new];\n    [self setStatus: [NSString stringWithFormat: NSLocalizedString(@\"Building %@...\", \"\"), dictName]];\n\n    NSLog(@\"dictDir = %@\", self.dictDir);\n\n    // Set the name and id strings accordingly for the dictionary to build\n    NSString *plistPath = [self.dictDir stringByAppendingPathComponent: @\"DictInfo.plist\"];\n    NSMutableDictionary *plist = [NSMutableDictionary dictionaryWithContentsOfFile: plistPath];\n\n    [plist setObject: dictName forKey: @\"CFBundleDisplayName\"];\n    [plist setObject: dictName forKey: @\"CFBundleName\"];\n    [plist setObject: [NSString stringWithFormat: @\"com.apple.dictionary.%@\", self.dictID]\n              forKey: @\"CFBundleIdentifier\"];\n\n    [plist writeToFile: plistPath atomically: YES];\n\n    // Construct the arguments to invoke build_dict.sh from Dictionary\n    // Development Kit\n    NSBundle *bundle = [NSBundle mainBundle];\n    NSString *binaryDir = [[bundle resourcePath] stringByAppendingPathComponent: @\"bin\"];\n    NSTask *task = [[[NSTask alloc] init] autorelease];\n    NSPipe *pipe = [NSPipe pipe];\n    NSDictionary *environments = [NSDictionary dictionaryWithObjectsAndKeys:\n                                    @\"en_US.UTF-8\", @\"LANG\",\n                                    binaryDir, @\"DICT_BUILD_TOOL_BIN\", nil];\n    NSMutableArray *arguments = [NSMutableArray arrayWithObjects:self.dictID, @\"Dictionary.xml\",\n                                    @\"Dictionary.css\", @\"DictInfo.plist\", nil];\n\n    // If we have Mac OS X 10.6, use the new (compress) feature provided by Dictionary Development Kit.\n    NSDictionary *version = [NSDictionary dictionaryWithContentsOfFile:@\"/System/Library/CoreServices/SystemVersion.plist\"];\n    NSString *productVersion = [version objectForKey:@\"ProductVersion\"];\n    NSInteger versionMinor = [[[productVersion componentsSeparatedByString:@\".\"] lastObject] integerValue];\n    if (versionMinor >= 6) {\n        [arguments insertObject: @\"-v\" atIndex: 0];\n        [arguments insertObject: versionMinor >= 11 ? @\"10.11\" : @\"10.6\" atIndex: 1];\n        NSLog(@\"%@\", arguments);\n    }\n\n    [task setEnvironment: environments];\n    [task setCurrentDirectoryPath: self.dictDir];\n    [task setLaunchPath: [binaryDir stringByAppendingPathComponent: @\"build_dict.sh\"]];\n    [task setArguments: arguments];\n    [task setStandardOutput: pipe];\n    [task setStandardError: pipe];\n\n    // Read process output in background and update status accordingly\n    NSFileHandle *readHandle = [pipe fileHandleForReading];\n    [[NSNotificationCenter defaultCenter] addObserver: self\n                                             selector: @selector(taskFileHandleRead:)\n                                                 name: NSFileHandleReadCompletionNotification\n                                               object: readHandle];\n    [readHandle readInBackgroundAndNotify];\n    [task launch];\n\n    self.buildTask = task;\n    [task waitUntilExit];\n    self.buildTask = nil;\n\n    NSString *dictBasename = [NSString stringWithFormat: @\"%@.dictionary\", self.dictID];\n    NSString *srcDict = [[self.dictDir stringByAppendingPathComponent: @\"objects\"]\n                         stringByAppendingPathComponent: dictBasename];\n    NSFileManager *manager = [[[NSFileManager alloc] init] autorelease];\n    BOOL isDirectory;\n\n    if (! [task terminationStatus] &&\n        [manager fileExistsAtPath: srcDict isDirectory: &isDirectory] && isDirectory)\n    {\n        NSString *destDir = [@\"~/Library/Dictionaries\" stringByExpandingTildeInPath];\n        NSString *destDict = [destDir stringByAppendingPathComponent: dictBasename];\n\n        [self setStatus: [NSString stringWithFormat:\n                            NSLocalizedString(@\"Installing into %@...\", \"\"), destDir]];\n\n        NSLog(@\"Creating %@\", destDir);\n        [self runProgram: @\"/bin/mkdir\" withArguments: [NSArray arrayWithObjects: @\"-p\", destDir, nil]];\n        NSLog(@\"Removing %@\", destDict);\n        [self runProgram: @\"/bin/rm\" withArguments: [NSArray arrayWithObjects: @\"-rf\", destDict, nil]];\n        NSLog(@\"Installing %@ to %@\", srcDict, destDict);\n        [self runProgram: @\"/usr/bin/ditto\"\n           withArguments: [NSArray arrayWithObjects:\n                           @\"--noextattr\", @\"--norsrc\", srcDict, destDict, nil]];\n        NSLog(@\"Done.\");\n        [self showDone];\n    }\n\n    [self cleanup];\n    [pool release];\n}\n\n- (IBAction) startBuilding: (id) sender\n{\n    [nameField setHidden: YES];\n    [self showProgress];\n\n    [button setAction: @selector(stop:)];\n    [button setTitle: NSLocalizedString(@\"Stop\", \"\")];\n\n    [self performSelectorInBackground: @selector(startBuildingWith:)\n                           withObject: [nameField stringValue]];\n}\n\n- (void) dealloc\n{\n    [buildTask release];\n    [dictID release];\n    [dictDir release];\n    [tempDir release];\n    [super dealloc];\n}\n\n- (void) cleanup\n{\n    BOOL isDirectory;\n    if ([[NSFileManager defaultManager] fileExistsAtPath: self.tempDir\n                                             isDirectory: &isDirectory] && isDirectory)\n    {\n        NSLog(@\"Removing %@\", self.tempDir);\n        NSTask *task = [NSTask launchedTaskWithLaunchPath: @\"/bin/rm\"\n                                                arguments: [NSArray arrayWithObjects:\n                                                            @\"-rf\", self.tempDir, nil]];\n        [task waitUntilExit];\n    }\n}\n\n- (void) setStatus: (NSString *) str\n{\n    [label setStringValue: str];\n}\n\n- (void) error: (NSString *) str\n{\n    [self setStatus: str];\n    [self cleanup];\n}\n\n- (IBAction) stop: (id) sender\n{\n    if (self.buildTask)\n    {\n        [self.buildTask terminate];\n        system(\"killall add_body_record\");\n    }\n\n    [self hideProgress];\n    [button setHidden: YES];\n    [dropper setHidden: NO];\n    [self setStatus: NSLocalizedString(@\"Drop a dictionary file to convert\", \"\")];\n    [self cleanup];\n}\n\n@end\n"
+        },
+        {
+          "name": "DictUnifier_Prefix.pch",
+          "type": "blob",
+          "size": 0.1494140625,
+          "content": "//\n// Prefix header for all source files of the 'DictUnifier' target in the 'DictUnifier' project\n//\n\n#ifdef __OBJC__\n    #import <Cocoa/Cocoa.h>\n#endif\n"
+        },
+        {
+          "name": "English.lproj",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Info.plist",
+          "type": "blob",
+          "size": 0.89453125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n\t<key>CFBundleDevelopmentRegion</key>\n\t<string>English</string>\n\t<key>CFBundleExecutable</key>\n\t<string>${EXECUTABLE_NAME}</string>\n\t<key>CFBundleIconFile</key>\n\t<string>DictUnifier.icns</string>\n\t<key>CFBundleIdentifier</key>\n\t<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>\n\t<key>CFBundleInfoDictionaryVersion</key>\n\t<string>6.0</string>\n\t<key>CFBundleName</key>\n\t<string>${PRODUCT_NAME}</string>\n\t<key>CFBundlePackageType</key>\n\t<string>APPL</string>\n\t<key>CFBundleShortVersionString</key>\n\t<string>2.1</string>\n\t<key>CFBundleSignature</key>\n\t<string>????</string>\n\t<key>CFBundleVersion</key>\n\t<string>5</string>\n\t<key>NSMainNibFile</key>\n\t<string>MainMenu</string>\n\t<key>NSPrincipalClass</key>\n\t<string>NSApplication</string>\n</dict>\n</plist>\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 0.1591796875,
+          "content": "default:\n\txcodebuild -configuration Release\n\ninstall:\n\tsudo xcodebuild install -configuration Release DSTROOT=/ INSTALL_PATH=/Applications DEPLOYMENT_LOCATION=YES\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.4453125,
+          "content": "# Mac Dictionary Kit, a.k.a., DictUnifier\n\nDictionary conversion tool for Mac OS X 10.5 and above.\n\n## Download\n\nDownload it from [GitHub releases, v2.1](https://github.com/jjgod/mac-dictionary-kit/releases/download/v2.1/DictUnifier-2.1.zip).\n\n## Build instructions\n\nInstall static build of glib before trying to build:\n\n    brew install glib --with-static\n\n## TODO\n\n- Remove glib dependency\n- Better dictionary format support\n\nPull requests are welcomed!\n"
+        },
+        {
+          "name": "ddk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "done.png",
+          "type": "blob",
+          "size": 4.798828125,
+          "content": null
+        },
+        {
+          "name": "dropper.png",
+          "type": "blob",
+          "size": 1.0068359375,
+          "content": null
+        },
+        {
+          "name": "main.m",
+          "type": "blob",
+          "size": 0.2421875,
+          "content": "//\n//  main.m\n//  DictUnifier\n//\n//  Created by Jiang Jiang on 3/7/10.\n//  Copyright Jjgod Jiang 2010. All rights reserved.\n//\n\n#import <Cocoa/Cocoa.h>\n\nint main(int argc, char *argv[])\n{\n    return NSApplicationMain(argc, (const char **) argv);\n}\n"
+        },
+        {
+          "name": "scripts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "sdconv",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "zh_CN.lproj",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

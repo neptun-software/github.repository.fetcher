@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "timestamp": 1736710243469,
+    "page": 985,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "rsms/markdown-wasm",
+      "stars": 1550,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.068359375,
+          "content": "/_*\n**/.DS_Store\n/build\n/node_modules\n/test/spec/spec.html\n*.sublime*\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05859375,
+          "content": "Copyright (c) 2019-2020 Rasmus Andersson <https://rsms.me/>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.1689453125,
+          "content": "# markdown-wasm\n\nVery fast Markdown parser & HTML renderer implemented in WebAssembly\n\n- Zero dependencies (31 kB gzipped)\n- Portable & safe (WASM executes in isolated memory and can run almost anywhere)\n- [Simple API](#api)\n- [Very fast](#benchmarks)\n- Based on [md4c](http://github.com/mity/md4c) — compliant to the CommonMark specification\n\n\n## Examples\n\nIn NodeJS, single file with embedded compressed WASM\n\n```js\nconst markdown = require(\"./dist/markdown.node.js\")\nconsole.log(markdown.parse(\"# hello\\n*world*\"))\n```\n\nES module with WASM loaded separately\n\n```js\nimport * as markdown from \"./dist/markdown.es.js\"\nawait markdown.ready\nconsole.log(markdown.parse(\"# hello\\n*world*\"))\n```\n\nWeb browser\n\n```html\n<script src=\"markdown.js\"></script>\n<script>\nwindow[\"markdown\"].ready.then(markdown => {\n  console.log(markdown.parse(\"# hello\\n*world*\"))\n})\n</script>\n```\n\n\n## Install\n\n```\nnpm install markdown-wasm\n```\n\n\n\n## Benchmarks\n\nThe [`test/benchmark`](test/benchmark) directory contain a benchmark suite which you can\nrun yourself. It tests a few popular markdown parser-renderers by parsing & rendering a bunch\nof different sample markdown files.\n\nThe following results were samples on a 2.9 GHz MacBook running macOS 10.15, NodeJS v14.11.0\n\n\n#### Average ops/second\n\nOps/second represents how many times a library is able to parse markdown and render HTML\nduring a second, on average across all sample files.\n\n![](test/benchmark/results/avg-ops-per-sec.svg)\n\n\n#### Average throughput\n\nThroughput is the average amount of markdown data processed during a second while both parsing\nand rendering to HTML. The statistics does not include HTML generated but only bytes of markdown\nsource text parsed.\n\n![](test/benchmark/results/avg-throughput.svg)\n\n\n#### Min–max parse time\n\nThis graph shows the spread between the fastest and slowest parse-and-render operations\nfor each library. Lower numbers are better.\n\n![](test/benchmark/results/minmax-parse-time.svg)\n\nSee [`test/benchmark`](test/benchmark#readme) for more information.\n\n\n## API\n\n```ts\n/**\n * parse reads markdown source at s and converts it to HTML.\n * When output is a byte array, it will be a reference.\n */\nexport function parse(s :Source, o? :ParseOptions & { bytes? :never|false }) :string\nexport function parse(s :Source, o? :ParseOptions & { bytes :true }) :Uint8Array\n\n/** Markdown source code can be provided as a JavaScript string or UTF8 encoded data */\ntype Source = string | ArrayLike<number>\n\n/** Options for the parse function */\nexport interface ParseOptions {\n  /** Customize parsing. Defaults to ParseFlags.DEFAULT */\n  parseFlags? :ParseFlags\n\n  /** Select output format. Defaults to \"html\" */\n  format? : \"html\" | \"xhtml\"\n\n  /**\n   * bytes=true causes parse() to return the result as a Uint8Array instead of a string.\n   *\n   * The returned Uint8Array is only valid until the next call to parse().\n   * If you need to keep the returned data around, call Uint8Array.slice() to make a copy,\n   * as each call to parse() uses the same underlying memory.\n   *\n   * This only provides a performance benefit when you never need to convert the output\n   * to a string. In most cases you're better off leaving this unset or false.\n   */\n  bytes? :boolean\n\n  /** Allow \"javascript:\" in links */\n  allowJSURIs? :boolean\n\n  /**\n   * Optional callback which if provided is called for each code block.\n   * langname holds the \"language tag\", if any, of the block.\n   *\n   * The returned value is inserted into the resulting HTML verbatim, without HTML escaping.\n   * Thus, you should take care of properly escaping any special HTML characters.\n   *\n   * If the function returns null or undefined, or an exception occurs, the body will be\n   * included as-is after going through HTML escaping.\n   *\n   * Note that use of this callback has an adverse impact on performance as it casues\n   * calls and data to be bridged between WASM and JS on every invocation.\n   */\n  onCodeBlock? :(langname :string, body :UTF8Bytes) => Uint8Array|string|null|undefined\n\n  /** @depreceated use \"bytes\" instead (v1.1.1) */\n  asMemoryView? :boolean\n}\n\n/** UTF8Bytes is a Uint8Array representing UTF8 text  */\nexport interface UTF8Bytes extends Uint8Array {\n  /** toString returns a UTF8 decoded string (lazily decoded and cached) */\n  toString() :string\n}\n\n/** Flags that customize Markdown parsing */\nexport enum ParseFlags {\n  /** In TEXT, collapse non-trivial whitespace into single ' ' */ COLLAPSE_WHITESPACE,\n  /** Enable $ and $$ containing LaTeX equations. */              LATEX_MATH_SPANS,\n  /** Disable raw HTML blocks. */                                 NO_HTML_BLOCKS,\n  /** Disable raw HTML (inline). */                               NO_HTML_SPANS,\n  /** Disable indented code blocks. (Only fenced code works.) */  NO_INDENTED_CODE_BLOCKS,\n  /** Do not require space in ATX headers ( ###header ) */        PERMISSIVE_ATX_HEADERS,\n  /** Recognize e-mails as links even without <...> */            PERMISSIVE_EMAIL_AUTO_LINKS,\n  /** Recognize URLs as links even without <...> */               PERMISSIVE_URL_AUTO_LINKS,\n  /** Enable WWW autolinks (without proto; just 'www.') */        PERMISSIVE_WWW_AUTOLINKS,\n  /** Enable strikethrough extension. */                          STRIKETHROUGH,\n  /** Enable tables extension. */                                 TABLES,\n  /** Enable task list extension. */                              TASK_LISTS,\n  /** Enable wiki links extension. */                             WIKI_LINKS,\n  /** Enable underline extension (disables '_' for emphasis) */   UNDERLINE,\n\n  /** Default flags are:\n   *    COLLAPSE_WHITESPACE |\n   *    PERMISSIVE_ATX_HEADERS |\n   *    PERMISSIVE_URL_AUTO_LINKS |\n   *    STRIKETHROUGH |\n   *    TABLES |\n   *    TASK_LISTS\n   */\n  DEFAULT,\n\n  /** Shorthand for NO_HTML_BLOCKS | NO_HTML_SPANS */\n  NO_HTML,\n}\n```\n\nSee [`markdown.d.ts`](markdown.d.ts)\n\n\n## Building from source\n\n```\nnpm install\nnpx wasmc\n```\n\nBuild debug version of markdown into ./build/debug and watch source files:\n\n```\nnpx wasmc -g -w\n```\n\nIf you need special builds, like for example an ES module with embedded WASM,\nedit the `wasmc.js` file and add `module({...})` directives.\n\nExample:\n\n```js\nmodule({ ...m,\n  name:   \"markdown-custom\",\n  out:    outdir + \"/markdown.custom.js\",\n  embed:  true,\n  format: \"es\",\n})\n```\n"
+        },
+        {
+          "name": "dist",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "markdown.d.ts",
+          "type": "blob",
+          "size": 3.6943359375,
+          "content": "/**\n * parse reads markdown source at s and converts it to HTML.\n * When output is a byte array, it will be a reference.\n */\nexport function parse(s :Source, o? :ParseOptions & { bytes? :never|false }) :string\nexport function parse(s :Source, o? :ParseOptions & { bytes :true }) :Uint8Array\n\n/** Markdown source code can be provided as a JavaScript string or UTF8 encoded data */\ntype Source = string | ArrayLike<number>\n\n/** Options for the parse function */\nexport interface ParseOptions {\n  /** Customize parsing. Defaults to ParseFlags.DEFAULT */\n  parseFlags? :ParseFlags\n\n  /** Select output format. Defaults to \"html\" */\n  format? : \"html\" | \"xhtml\"\n\n  /**\n   * bytes=true causes parse() to return the result as a Uint8Array instead of a string.\n   *\n   * The returned Uint8Array is only valid until the next call to parse().\n   * If you need to keep the returned data around, call Uint8Array.slice() to make a copy,\n   * as each call to parse() uses the same underlying memory.\n   *\n   * This only provides a performance benefit when you never need to convert the output\n   * to a string. In most cases you're better off leaving this unset or false.\n   */\n  bytes? :boolean\n\n  /** Allow \"javascript:\" in links */\n  allowJSURIs? :boolean\n\n  /**\n   * Optional callback which if provided is called for each code block.\n   * langname holds the \"language tag\", if any, of the block.\n   *\n   * The returned value is inserted into the resulting HTML verbatim, without HTML escaping.\n   * Thus, you should take care of properly escaping any special HTML characters.\n   *\n   * If the function returns null or undefined, or an exception occurs, the body will be\n   * included as-is after going through HTML escaping.\n   *\n   * Note that use of this callback has an adverse impact on performance as it casues\n   * calls and data to be bridged between WASM and JS on every invocation.\n   */\n  onCodeBlock? :(langname :string, body :UTF8Bytes) => Uint8Array|string|null|undefined\n\n  /** @depreceated use \"bytes\" instead (v1.1.1) */\n  asMemoryView? :boolean\n}\n\n/** UTF8Bytes is a Uint8Array representing UTF8 text  */\nexport interface UTF8Bytes extends Uint8Array {\n  /** toString returns a UTF8 decoded string (lazily decoded and cached) */\n  toString() :string\n}\n\n/** Flags that customize Markdown parsing */\nexport enum ParseFlags {\n  /** In TEXT, collapse non-trivial whitespace into single ' ' */ COLLAPSE_WHITESPACE,\n  /** Enable $ and $$ containing LaTeX equations. */              LATEX_MATH_SPANS,\n  /** Disable raw HTML blocks. */                                 NO_HTML_BLOCKS,\n  /** Disable raw HTML (inline). */                               NO_HTML_SPANS,\n  /** Disable indented code blocks. (Only fenced code works.) */  NO_INDENTED_CODE_BLOCKS,\n  /** Do not require space in ATX headers ( ###header ) */        PERMISSIVE_ATX_HEADERS,\n  /** Recognize e-mails as links even without <...> */            PERMISSIVE_EMAIL_AUTO_LINKS,\n  /** Recognize URLs as links even without <...> */               PERMISSIVE_URL_AUTO_LINKS,\n  /** Enable WWW autolinks (without proto; just 'www.') */        PERMISSIVE_WWW_AUTOLINKS,\n  /** Enable strikethrough extension. */                          STRIKETHROUGH,\n  /** Enable tables extension. */                                 TABLES,\n  /** Enable task list extension. */                              TASK_LISTS,\n  /** Enable wiki links extension. */                             WIKI_LINKS,\n  /** Enable underline extension (disables '_' for emphasis) */   UNDERLINE,\n\n  /** Default flags are:\n   *    COLLAPSE_WHITESPACE |\n   *    PERMISSIVE_ATX_HEADERS |\n   *    PERMISSIVE_URL_AUTO_LINKS |\n   *    STRIKETHROUGH |\n   *    TABLES |\n   *    TASK_LISTS\n   */\n  DEFAULT,\n\n  /** Shorthand for NO_HTML_BLOCKS | NO_HTML_SPANS */\n  NO_HTML,\n}\n"
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package-lock.json",
+          "type": "blob",
+          "size": 0.822265625,
+          "content": "{\n  \"name\": \"markdown-wasm\",\n  \"version\": \"1.2.0\",\n  \"lockfileVersion\": 2,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"version\": \"1.2.0\",\n      \"license\": \"MIT\",\n      \"devDependencies\": {\n        \"wasmc\": \"^2.2.1\"\n      }\n    },\n    \"node_modules/wasmc\": {\n      \"version\": \"2.2.1\",\n      \"resolved\": \"https://registry.npmjs.org/wasmc/-/wasmc-2.2.1.tgz\",\n      \"integrity\": \"sha512-uV/nhZdfnffBfLv2WJWWfRoJwk+5phhPobg7fqnJoRpXdUV5eShRb6tOXoco987cTxarkBymYwGufMdC4dPXAw==\",\n      \"dev\": true,\n      \"bin\": {\n        \"wasmc\": \"wasmc\"\n      }\n    }\n  },\n  \"dependencies\": {\n    \"wasmc\": {\n      \"version\": \"2.2.1\",\n      \"resolved\": \"https://registry.npmjs.org/wasmc/-/wasmc-2.2.1.tgz\",\n      \"integrity\": \"sha512-uV/nhZdfnffBfLv2WJWWfRoJwk+5phhPobg7fqnJoRpXdUV5eShRb6tOXoco987cTxarkBymYwGufMdC4dPXAw==\",\n      \"dev\": true\n    }\n  }\n}\n"
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.2021484375,
+          "content": "{\n  \"name\": \"markdown-wasm\",\n  \"version\": \"1.2.0\",\n  \"description\": \"Markdown parser and html generator implemented in WebAssembly\",\n  \"browser\": \"dist/markdown.js\",\n  \"main\": \"dist/markdown.node.js\",\n  \"jsnext:main\": \"dist/markdown.es.js\",\n  \"module\": \"dist/markdown.es.js\",\n  \"typings\": \"markdown.d.ts\",\n  \"homepage\": \"https://github.com/rsms/markdown-wasm\",\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/rsms/markdown-wasm.git\"\n  },\n  \"files\": [\n    \"dist/markdown.wasm\",\n    \"dist/markdown.js\",\n    \"dist/markdown.js.map\",\n    \"dist/markdown.node.js\",\n    \"dist/markdown.node.js.map\",\n    \"dist/markdown.es.js\",\n    \"dist/markdown.es.js.map\",\n    \"markdown.d.ts\",\n    \"README.md\",\n    \"LICENSE\"\n  ],\n  \"scripts\": {\n    \"build\": \"wasmc\",\n    \"build-debug\": \"wasmc -g\",\n    \"build-watch\": \"wasmc -g -w\",\n    \"test\": \"wasmc -quiet && bash test/test.sh >/dev/null && echo OK\",\n    \"update-web\": \"cp dist/markdown.js dist/markdown.wasm docs/\",\n    \"print-gzip-size\": \"echo 'dist/markdown.{js,wasm} gzipped:' $(gzip -9 -c dist/markdown.js dist/markdown.wasm | wc -c | cat) bytes\"\n  },\n  \"author\": \"Rasmus Andersson <https://rsms.me/>\",\n  \"license\": \"MIT\",\n  \"devDependencies\": {\n    \"wasmc\": \"^2.2.1\"\n  }\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "wasmc.js",
+          "type": "blob",
+          "size": 1.5888671875,
+          "content": "const package = require(\"./package.json\")\nconst outdir = debug ? builddir : \"dist\"\n\nconst m = {\n  jsentry: \"src/md.js\",\n  sources: [\n    \"src/wlib.c\",\n    \"src/wbuf.c\",\n    \"src/md.c\",\n    \"src/md4c.c\",\n    \"src/fmt_html.c\",\n    // \"src/fmt_json.c\",\n  ],\n  cflags: [\n    \"-DMD4C_USE_UTF8\",\n  ].concat(debug ? [\n    // debug flags\n    \"-DDEBUG=1\",\n    \"-DASSERTIONS=1\", // emcc\n    \"-DSAFE_HEAP=1\", // emcc\n    \"-DSTACK_OVERFLOW_CHECK=1\", // emcc\n    \"-DDEMANGLE_SUPPORT=1\", // emcc\n  ] : [\n    // release flags\n  ]),\n  lflags: [\n    // force inclusion of addFunction & removeFunction in release builds (emcc bug?)\n    \"-s\",\"EXPORTED_RUNTIME_METHODS=addFunction,removeFunction\",\n  ],\n  constants: {\n    VERSION: package.version,\n  },\n}\n\n// —————————————————————————————————————————————————\n// products\n\n// embedded wasm, ES module, nodejs-specific compression\n// Suitable for using or bundling as a library targeting nodejs only\nmodule({ ...m,\n  name:    \"markdown-node\",\n  out:     outdir + \"/markdown.node.js\",\n  target:  \"node\",\n  embed:   true,\n})\n\nif (!debug) {\n  // sideloaded wasm, universal js library, exports API at global[\"markdown\"] as a fallback\n  // Suitable as a runtime library in browsers\n  module({ ...m,\n    name: \"markdown\",\n    out:  outdir + \"/markdown.js\",\n  })\n\n  // embedded wasm, ES module\n  // Suitable for bundling as a library intended for browsers\n  module({ ...m,\n    name:    \"markdown-es\",\n    out:     outdir + \"/markdown.es.js\",\n    outwasm: outdir + \"/markdown.wasm\",\n    format:  \"es\",\n  })\n}\n"
+        }
+      ]
+    }
+  ]
+}
