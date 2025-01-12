@@ -1,0 +1,143 @@
+{
+  "metadata": {
+    "timestamp": 1736711039835,
+    "page": 780,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "msojocs/fiddler-everywhere-enhance",
+      "stars": 1557,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0546875,
+          "content": "*.AppImage\nfiddler/\napi.getfiddler.com.zip\n.DS_Store\ntmp"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.7763671875,
+          "content": "# 耻辱柱（Hall Of Shame）\n\n[Hall Of Shame](./shame.md)\n\n# Get Latest Version of Fiddler Everywhere\n\n  - ### Linux - https://api.getfiddler.com/linux/latest-linux\n\n  - ### Windows - https://api.getfiddler.com/win/latest\n\n  - ### Mac\n    - ### Intel - https://api.getfiddler.com/mac/latest-mac\n    - ### Arm64 - https://api.getfiddler.com/mac-arm64/latest-mac\n\n# Get Old Versions of Fiddler Everywhere\n  \n  - ### Linux - https://downloads.getfiddler.com/linux/fiddler-everywhere-[version].AppImage\n\n  - ### Windows - https://downloads.getfiddler.com/win/Fiddler%20Everywhere%20[version].exe\n  \n  - ### Mac\n     - ### Intel - <br>https://downloads.getfiddler.com/mac/Fiddler%20Everywhere%20[version].dmg\n     - ### Arm64 - <br>https://downloads.getfiddler.com/mac-arm64/Fiddler%20Everywhere%20[version].dmg\n\n  > [!NOTE]\n  > In the above links replace `[version]` with the version you want to download <br>\n  > Ex: https://downloads.getfiddler.com/win/Fiddler%20Everywhere%205.19.0.exe to download `5.10.0` for Windows.\n  \n  > [!TIP] \n  > You can find a list of available versions here: [Version History](https://www.telerik.com/support/whats-new/fiddler-everywhere/release-history)\n\n\n# Get Started - Patch / Enhance For v5.9.0 and later (Maybe for all)\n  > [!IMPORTANT]\n  > **For Windows**, for `5.17.0` & later, `libfiddler.dll` is now renamed to `fiddler.dll`.\n  > So you need to get `Yui-Patch` release `1.1.0 +` for Fiddler Everywhere `5.17.0` and later. \n\n## Windows\n\n> [!TIP]\n>  ## Now you can Patch Fiddler Everywhere Automatically Too! - [Patch Automatically](https://github.com/sipsuru/fiddler-everywhere-patch-automated)\n\n### Patch Manually: \n\n1. Delete libfiddler.dll, (or fiddler.dll in 5.17.0+) & Rename `resources\\app\\out\\WebServer\\hostpolicy.dll` to `resources\\app\\out\\WebServer\\hostpolicy.original.dll`\n2. Go to https://github.com/project-yui/Yui-patch/releases\n3. Download `libfiddler` (or `fiddler.dll` in `5.17.0` and later) and `hostpolicy.dll`\n4. Move `libfiddler.dll` (or `fiddler.dll` in `5.17.0` and later) to the *root path* of Fiddler Everywhere\n5. Move `hostpolicy.dll` to `resources\\app\\out\\WebServer`\n6. Create file `resources\\app\\out\\WebServer\\patch.json`\n    \n    the content of `patch.json`:\n    ```json\n    {\n        \"ClientApp\\\\dist\\\\main-XXXXXXXX.js\": {\n            \"target\": \"ClientApp\\\\dist\\\\main-XXXXXXXX.original.js\",\n            \"content\": \"\",\n            \"cur\": 0,\n            \"start\": 0,\n            \"end\": 1\n        },\n        \"..\\\\main.js\": {\n            \"target\": \"..\\\\main.original.js\",\n            \"content\": \"\",\n            \"cur\": 0,\n            \"start\": 0,\n            \"end\": 1\n        }\n    }\n    ```\n\n    > [!NOTE]\n    > XXXXXXXX is a random letters combination that differs from version to version.\n\n    \n7. Copy `ClientApp\\\\dist\\\\main-XXXXXXXX.js` to `ClientApp\\\\dist\\\\main-XXXXXXXX.original.js`\n8. Copy `resources\\app\\out\\main.js` to `resources\\app\\out\\main.original.js`\n9. Modify file `main-XXXXXXXX.js` and file `main.js` as instructed below.\n10. Copy `server/file` -> `Fiddler/resources/app/out/file`\n\n> [!TIP]\n> For windows, for more detailed info for noobs: [Windows Patch for Noobs](https://github.com/sipsuru/fiddler-everywhere-patch-manual)\n\n## Linux\n\n1. Delete `libfiddler.so`.\n2. Go to https://github.com/project-yui/Yui-patch/releases\n3. Download `libfiddler.so` and `libopen.so`\n4. Move `libfiddler.so` to the root path of fiddler.\n5. Move `libopen.so` to `resources/app/out/WebServer`\n6. Rename `resources/app/out/WebServer/Fiddler.WebUi` to `resources/app/out/WebServer/Fiddler.WebUi1`\n7. Create file `resources/app/out/WebServer/Fiddler.WebUi`\n    \n    the content of `Fiddler.WebUi`:\n    ```shell\n    #!/bin/bash\n    export LD_PRELOAD=./libopen.so\n    ./Fiddler.WebUi1 $@\n    ```\n8. Open directory `resources/app/out/WebServer` and execute `chmod +x Fiddler.WebUi`\n9. Create file `resources/app/out/WebServer/patch.json`\n    \n    the content of `patch.json`:\n    ```json\n    {\n        \"ClientApp/dist/main-XXXXXXXX.js\": {\n            \"target\": \"ClientApp/dist/main-XXXXXXXX.original.js\",\n            \"content\": \"\",\n            \"cur\": 0,\n            \"start\": 0,\n            \"end\": 1\n        },\n        \"../main.js\": {\n            \"target\": \"../main.original.js\",\n            \"content\": \"\",\n            \"cur\": 0,\n            \"start\": 0,\n            \"end\": 1\n        }\n    }\n    ```\n    > [!NOTE]\n    > XXXXXXXX is a random letters combination that differs from version to version.\n\n    \n10. Copy `ClientApp/dist/main-XXXXXXXX.js` to `ClientApp/dist/main-XXXXXXXX.original.js`\n11. Copy `resources/app/out/main.js` to `resources/app/out/main.original.js`\n12. Modify file `main-XXXXXXXX.js` and file `main.js` as instructed below.\n13. Copy `server/file` -> `Fiddler/resources/app/out/file`\n\n> [!NOTE]\n> You may need to recompile `libfiddler.so` and `libopen.so` by yourself.\n\n## Mac \n> [!Caution]\n> Not fully tested and may not be used!\n\n1. Delete `libfiddler.dylib`. (or fiddler.dylib in 5.17.0+) which's in (`Contents/Frameworks`)\n2. Go to https://github.com/project-yui/Yui-patch/releases\n3. Download `libfiddler.dylib` (or `fiddler.dylib` in `5.17.0` and later) \n4. Move `libfiddler.dylib` (or `fiddler.dylib` in `5.17.0` and later) to `Contents/Frameworks`.\n5. Clone this repository, open `hook/src`, run `dotnet publish`\n6. Open `hook/src/bin/Release/net8.0/publish`, Move `src.dll` and `0Harmony.dll` to `Resources/app/out/WebServer/lib`\n7. Rename `Resources/app/out/WebServer/Fiddler.WebUi` to `Resources/app/out/WebServer/Fiddler.WebUi1`\n8. Create file `Resources/app/out/WebServer/Fiddler.WebUi`\n    \n    the content of `Fiddler.WebUi`:\n    ```shell\n    #!/bin/bash\n    root_dir=$(cd `dirname $0` && pwd -P)\n    export DOTNET_STARTUP_HOOKS=\"$root_dir/lib/src.dll\"\n\n    ./Fiddler.WebUi1 $@\n    ```\n9. Open directory `Resources/app/out/WebServer` and execute `chmod +x Fiddler.WebUi`\n10. Copy `ClientApp/dist/main-XXXXXXXX.js` to `ClientApp/dist/main-XXXXXXXX.original.js`\n11. Copy `Resources/app/out/main.js` to `Resources/app/out/main.original.js`\n12. Modify file `main-XXXXXXXX.js` and file `main.js` as instructed below.\n13. Copy `server/file` -> `Contents/Resources/app/out/file`\n\n> [!NOTE]\n> You may need to recompile `libfiddler.dylib` (or `fiddler.dylib` in `5.17.0` and later) and `libopen.dylib` by yourself.\n\n# How to Modify main.XXXXXXXX.js & main.js\n\n## For main.js\n\n1. Open `resources/app/out/main.js` in a text editor\n2. Open & copy content of `server/index.js` & append to `resources/app/out/main.js` at the begining.\n\n## For main-XXXXXXXX.js\n\n1. Open `resources/app/out/WebServer/ClientApp/dist/main-XXXXXXXX.js` in a text editor\n2. Find & Replace all - `https://api.getfiddler.com` with `http://127.0.0.1:5678/api.getfiddler.com`\n3. Find & Replace all - `https://identity.getfiddler.com` with `http://127.0.0.1:5678/identity.getfiddler.com`\n\n# Change **First Name**, **Last Name** & **Email** (Additional)\nIf you want to change default `first & last names` and `email`, you can edit, `resources/app/out/file/identity.getfiddler.com/oauth/token.json`. \n  - Content of `token.json`\n    ```json\n      {\n        \"id_token\": \"eyJhbGciOiJFUzI1NiIsImtpZCI6IjU4MDY4OTQzLWNlYmItNDY1OS1iNjZkLWZmZjY5NTg2NzA1ZCIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE2OTU5MTE3ODcsImp0aSI6ImIwNWIxNjhiLTFiNjQtNDRlNy1iN2QzLWZiNWIzZDE3N2Y5YiIsInN1YiI6IjRmZGYzOWYzMmYyODRiMjhhMjFhYWFkMWYzNGI2OTk0IiwiZW1haWwiOiJqaXllY2FmZUBnbWFpbC5jb20iLCJpZGVudGl0aWVzIjpbeyJwcm92aWRlck5hbWUiOiJHb29nbGUiLCJwcm92aWRlclR5cGUiOiIifV0sImN1c3RvbTpmaXJzdF9uYW1lIjoiam9jcyIsImN1c3RvbTpsYXN0X25hbWUiOiJtc28iLCJjdXN0b206Y291bnRyeSI6IjgzIiwibmJmIjoxNjk1OTExNzg3LCJleHAiOjE2OTU5MTUzODcsImlzcyI6Imh0dHBzOi8vaWRlbnRpdHkuZ2V0ZmlkZGxlci5jb20vIiwiYXVkIjoiZmlkZGxlciJ9.9sLm19DExaTaraNtdJnTWUibua3toHENsTcDwxg6022rcHHshA0esnebks7WLWBAG7svYVyWkPWKDuHbB3syTA\",\n        \"expires_in\": 3539,\n        \"token_type\": \"Bearer\",\n        \"user_info\": {\n          \"id\": \"4fdf39f32f284b28a21aaad1f34b6994\",\n          \"email\": \"user@gmail.com\",\n          \"firstName\": \"first\",\n          \"lastName\": \"last\",\n          \"country\": \"83\",\n          \"identities\": [\n            {\n              \"providerName\": \"Google\"\n            }\n          ]\n        }\n      }\n    ```\n  - And in the json, you can edit `email: user@gmail.com`, `firstName: first` & `lastName: last` by replacing json values.\n\n> [!TIP]\n> You'll need to sign out and sign again after changing these values.\n\n# Some Extra Information\n\n[Let me see old](./v4.6.2/readme.md)\n\n[Let me see old old](./old/DETAIL.MD)\n\n## 免责声明\n\t\n* 本仓库仅供技术学习交流使用，如有下载相关文件，请在学习后24小时内删除相关内容。\n* 如果你觉得软件很好用，请购买官方正版：https://www.telerik.com/purchase/fiddler\n* 切勿在 tb/pdd 等商城的非法渠道付费此软件。\n* 如将本仓库教程/文件用于获利，那么：你妈死了。\n* 请勿将本项目内容用于非法用途，使用者在使用时即视为对行为可能产生的任何不良后果负责。\n* 由于传播、利用此工具所提供的信息而造成的任何直接或者间接的后果及损失，均由使用者本人负责，作者不为此承担任何责任。\n\n## Disclaimer\n\n* This repository is only for technical learning and communication. If you download related files, please delete the related content within 24 hours after learning.\n* If you think the software is useful, please buy the official version: https://www.telerik.com/purchase/fiddler\n* Do not pay for this software through illegal channels such as tb/pdd.\n* If you use this repository tutorial/file for profit, then: your mother is dead.\n* Please do not use the content of this project for illegal purposes. When using it, the user is deemed to be responsible for any adverse consequences that may arise from the behavior.\n* Any direct or indirect consequences and losses caused by the dissemination and use of the information provided by this tool are the responsibility of the user himself, and the author does not assume any responsibility for this.\n"
+        },
+        {
+          "name": "crack.sh",
+          "type": "blob",
+          "size": 0.65234375,
+          "content": "#!/bin/bash\n\nroot_dir=$(cd `dirname $0` && pwd -P)\n\nexport PATH=\"/mnt/disk2/work/dotnet/test/bin/Release/net6.0/linux-x64:$PATH\"\n\ndll_file_webui=\"/mnt/disk2/fiddler3.2.0/resources/app/out/WebServer/Fiddler.WebUi.dll\"\n# ildasm -tok -byt $dll_file_webui -out=Fiddler.WebUi.il\n# ilasm -dll -X64 -output=$dll_file_webui Fiddler.WebUi.il\nilasm -dll -X64 -output=Fiddler.WebUi.dll Fiddler.WebUi.il\n\ndll_file_sdk=\"/mnt/disk2/fiddler3.2.0/resources/app/out/WebServer/FiddlerBackendSDK.dll\"\n# ildasm -tok -byt $dll_file_sdk -out=FiddlerBackendSDK.il\n# ilasm -dll -X64 -output=$dll_file_sdk FiddlerBackendSDK.il\nilasm -dll -X64 -output=FiddlerBackendSDK.dll FiddlerBackendSDK.il"
+        },
+        {
+          "name": "hook",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ildasm.sh",
+          "type": "blob",
+          "size": 0.6455078125,
+          "content": "#!/bin/bash\n\nroot_dir=$(cd `dirname $0` && pwd -P)\n\nexport PATH=\"/mnt/disk2/work/dotnet/test/bin/Release/net6.0/linux-x64:$PATH\"\n\ndll_file_webui=\"$root_dir/original/Fiddler.WebUi.dll\"\nildasm -tok -byt $dll_file_webui -out=Fiddler.WebUi.il\n# ilasm -dll -X64 -output=$dll_file_webui Fiddler.WebUi.il\n# ilasm -dll -X64 -output=Fiddler.WebUi.dll Fiddler.WebUi.il\n# ildasm /tok /byt Fiddler.WebUi.dll /out=Fiddler.WebUi.il\n\ndll_file_sdk=\"$root_dir/original/FiddlerBackendSDK.dll\"\nildasm -tok -byt $dll_file_sdk -out=FiddlerBackendSDK.il\n# ilasm -dll -X64 -output=$dll_file_sdk FiddlerBackendSDK.il\n# ilasm -dll -X64 -output=FiddlerBackendSDK.dll FiddlerBackendSDK.il"
+        },
+        {
+          "name": "old",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "original",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "shame.md",
+          "type": "blob",
+          "size": 0.455078125,
+          "content": "# 耻辱柱\n\n## starxg\n\n在某宝进行售卖此软件，获得利益。\n\n### 依据\n\n1. 打开：https://www.bilibili.com/read/cv30511923/ backup: https://web.archive.org/web/20240530094607/https://www.bilibili.com/read/cv30511923/\n2. 可以看到此域名：`taobao.starxg.com`\n3. 访问 `starxg.com` 可以得到github主页。 （backup: https://web.archive.org/web/20240501021448/https://starxg.com/）\n4. 看看repo有此项目fork以及star，闭环完成。\n"
+        },
+        {
+          "name": "signature",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.2.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.4.0",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v3.4.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.0.1-mac",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.0.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.01 win trial to enterprise",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.1.2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.6.1",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.6.2",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v4.7.0",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v5.1.0",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "v5.8.1",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

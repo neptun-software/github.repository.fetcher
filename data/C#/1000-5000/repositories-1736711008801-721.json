@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "timestamp": 1736711008801,
+    "page": 721,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjczMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "i-saint/Unity5Effects",
+      "stars": 1661,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1796875,
+          "content": "*.obj\r\n*.pch\r\n*.lib\r\n*.exe\r\n*.exp\r\n*.ilk\r\n*.ipch\r\n*.pdb\r\n*.suo\r\n*.sdf\r\n*.opensdf\r\n*.user\r\n*.log\r\n*.tlog\r\n\r\n*.sln\r\n*.csproj\r\n\r\n_out/\r\n_tmp/\r\nExternals/\r\nLibrary/\r\nTemp/\r\nHidden/\r\nobj/\r\n"
+        },
+        {
+          "name": "Assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Packages",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ProjectSettings",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.7822265625,
+          "content": "Unity5 Effects\n============\n\nUnity5 用エフェクト置き場。  \nこちらのパッケージをインポートすれば大体そのまま使えます：[IstEffects.unitypackage](https://github.com/i-saint/Unity5Effects/raw/master/Packages/IstEffects.unitypackage)  \n多くはレンダリングパスが deferred であることを前提としています。また、カメラが HDR モードである方がより望ましい結果になります。\n\n## Temporal Screen Space Reflections\n![alt text](doc/ScreenSpaceReflections.jpg)  \nスクリーンスペース反射です。  \nkode80 氏が[似たようなもの](https://github.com/kode80/kode80SSR)を公開していますが、そちらとはアルゴリズムが違い、\n若干残像が残ってしまう欠点があるものの、圧倒的に高速でクオリティも引けを取りません。  \n実装の詳細に興味があれば[こちらの記事](http://i-saint.hatenablog.com/entry/2014/12/05/174706)もどうぞ。\nまた、上記スクリーンショットの背景は[こちら](https://github.com/i-saint/RaymarchingOnUnity5)の Raymarcher によるものです。\n\n## Screen Space Shadows\n![alt text](doc/ScreenSpaceShadows.gif)  \nG-Buffer をレイマーチすることで影を出せるライトです。点光源の他に線光源も扱えるようになっています。  \nライティング処理の大部分は<a href=\"http://blogs.unity3d.com/2015/02/06/extending-unity-5-rendering-pipeline-command-buffers/\">公式の CommandBuffer のサンプルプロジェクト</a>から借用しています。\n\n## Screen Space Boolean\n![alt text](doc/Boolean.gif)  \nG-Buffer 加工によるスクリーンスペースブーリアン演算です。  \n重い、影を正しく処理できない、複雑な立体交差で破綻する、などいくつか問題はありますが、見た目に結構インパクトがある効果は得られます。  \n実装の詳細に興味があれば[こちらの記事 (の下の方)](http://i-saint.hatenablog.com/entry/2014/07/25/001608)もどうぞ。\n\n## Rim Light\n![alt text](doc/RimLight.jpg)  \n法線と カメラ -> ピクセル位置 の角度が浅い部分を明るくするアレです。\n\n## Water Surface & Caustics Field\n![alt text](doc/WaterSurface.jpg)  \n水面とコースティクスです。  \n水面は G-Buffer をレイマーチすることで屈折をエミュレートしています。コースティクスは 3 次元ノイズで明るくしてそれっぽく見せかけています。\n\n\n## Light Particle\n![alt text](doc/LightParticle.jpg)  \n一粒一粒を Point Light として扱うパーティクルレンダラ。MassParticle の拡張。\n\n\n## Procedural Modeling\n![alt text](doc/ProceduralModeling.jpg)  \nMesh の表面を開始点としてレイマーチ (sphere tracing) することで、オブジェクトスペースで distance function をレンダリングする代物。\n上の画像は Unity ちゃん以外の背景オブジェクトは全て Cube をピクセルシェーダで加工したものです。\n\n## Metaball\n![alt text](doc/Metaball.gif)  \nレイマーチによる Metaball。完全に GPU で完結するので、MC 法などでメッシュを生成するよりはずっと高速なはずです。  \n実装には Media Molecule の方が発表した soft_min() 関数を拝借しています。([詳細](http://media.lolrus.mediamolecule.com/AlexEvans_SIGGRAPH-2015-sml.pdf)。この資料プロシージャルモデリングの類に関する情報の宝庫なのでおすすめです) また、D3D11 世代の機能 (StructuredBuffer) を使っているのでやや環境を選びます。  \n\n## Temporal SSAO\n![alt text](doc/SSAO.jpg)  \ndangerous samples を考慮することで残像対策を入れた temporal な SSAO です。  \n動いてる箇所のノイズが目立ち、ちょっと実用に耐えるとは言い難いクオリティですが、動きが少ないシーンに限れば標準 SSAO の倍くらいの速度で近いクオリティの絵が出せます。\n状況によっては役立つこともあるかもしれません。  \n[こちら](http://bitsquid.blogspot.jp/2015/09/temporal-reprojection-and-sao.html) をヒントに実装しました、が、元記事の方がずっと高度な実装になっています。いずれ元記事で言及されている SSAO の発展形にも手を出してみたいところです。\n\n### Mosaic Field\n![alt text](doc/mosaic.gif)  \n指定オブジェクトをモザイク領域化するシェーダ。\n\n<a rel=\"license\" href=\"http://creativecommons.org/licenses/by/4.0/\"><img alt=\"Creative Commons License\" style=\"border-width:0\" src=\"https://i.creativecommons.org/l/by/4.0/88x31.png\" /></a><br />This work is licensed under a <a rel=\"license\" href=\"http://creativecommons.org/licenses/by/4.0/\">Creative Commons Attribution 4.0 International License</a>.\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "timestamp": 1736711259778,
+    "page": 6,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kkkgo/LTSC-Add-MicrosoftStore",
+      "stars": 3387,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "Add-Store.cmd",
+          "type": "blob",
+          "size": 5.091796875,
+          "content": "@echo off\r\nfor /f \"tokens=6 delims=[]. \" %%G in ('ver') do if %%G lss 16299 goto :version\r\n%windir%\\system32\\reg.exe query \"HKU\\S-1-5-19\" 1>nul 2>nul || goto :uac\r\nsetlocal enableextensions\r\nif /i \"%PROCESSOR_ARCHITECTURE%\" equ \"AMD64\" (set \"arch=x64\") else (set \"arch=x86\")\r\ncd /d \"%~dp0\"\r\n\r\nif not exist \"*WindowsStore*.appxbundle\" goto :nofiles\r\nif not exist \"*WindowsStore*.xml\" goto :nofiles\r\n\r\nfor /f %%i in ('dir /b *WindowsStore*.appxbundle 2^>nul') do set \"Store=%%i\"\r\nfor /f %%i in ('dir /b *NET.Native.Framework*1.6*.appx 2^>nul ^| find /i \"x64\"') do set \"Framework6X64=%%i\"\r\nfor /f %%i in ('dir /b *NET.Native.Framework*1.6*.appx 2^>nul ^| find /i \"x86\"') do set \"Framework6X86=%%i\"\r\nfor /f %%i in ('dir /b *NET.Native.Runtime*1.6*.appx 2^>nul ^| find /i \"x64\"') do set \"Runtime6X64=%%i\"\r\nfor /f %%i in ('dir /b *NET.Native.Runtime*1.6*.appx 2^>nul ^| find /i \"x86\"') do set \"Runtime6X86=%%i\"\r\nfor /f %%i in ('dir /b *VCLibs*140*.appx 2^>nul ^| find /i \"x64\"') do set \"VCLibsX64=%%i\"\r\nfor /f %%i in ('dir /b *VCLibs*140*.appx 2^>nul ^| find /i \"x86\"') do set \"VCLibsX86=%%i\"\r\n\r\nif exist \"*StorePurchaseApp*.appxbundle\" if exist \"*StorePurchaseApp*.xml\" (\r\nfor /f %%i in ('dir /b *StorePurchaseApp*.appxbundle 2^>nul') do set \"PurchaseApp=%%i\"\r\n)\r\nif exist \"*DesktopAppInstaller*.appxbundle\" if exist \"*DesktopAppInstaller*.xml\" (\r\nfor /f %%i in ('dir /b *DesktopAppInstaller*.appxbundle 2^>nul') do set \"AppInstaller=%%i\"\r\n)\r\nif exist \"*XboxIdentityProvider*.appxbundle\" if exist \"*XboxIdentityProvider*.xml\" (\r\nfor /f %%i in ('dir /b *XboxIdentityProvider*.appxbundle 2^>nul') do set \"XboxIdentity=%%i\"\r\n)\r\n\r\nif /i %arch%==x64 (\r\nset \"DepStore=%VCLibsX64%,%VCLibsX86%,%Framework6X64%,%Framework6X86%,%Runtime6X64%,%Runtime6X86%\"\r\nset \"DepPurchase=%VCLibsX64%,%VCLibsX86%,%Framework6X64%,%Framework6X86%,%Runtime6X64%,%Runtime6X86%\"\r\nset \"DepXbox=%VCLibsX64%,%VCLibsX86%,%Framework6X64%,%Framework6X86%,%Runtime6X64%,%Runtime6X86%\"\r\nset \"DepInstaller=%VCLibsX64%,%VCLibsX86%\"\r\n) else (\r\nset \"DepStore=%VCLibsX86%,%Framework6X86%,%Runtime6X86%\"\r\nset \"DepPurchase=%VCLibsX86%,%Framework6X86%,%Runtime6X86%\"\r\nset \"DepXbox=%VCLibsX86%,%Framework6X86%,%Runtime6X86%\"\r\nset \"DepInstaller=%VCLibsX86%\"\r\n)\r\n\r\nfor %%i in (%DepStore%) do (\r\nif not exist \"%%i\" goto :nofiles\r\n)\r\n\r\nset \"PScommand=PowerShell -NoLogo -NoProfile -NonInteractive -InputFormat None -ExecutionPolicy Bypass\"\r\n\r\necho.\r\necho ============================================================\r\necho Adding Microsoft Store\r\necho ============================================================\r\necho.\r\n1>nul 2>nul %PScommand% Add-AppxProvisionedPackage -Online -PackagePath %Store% -DependencyPackagePath %DepStore% -LicensePath Microsoft.WindowsStore_8wekyb3d8bbwe.xml\r\nfor %%i in (%DepStore%) do (\r\n%PScommand% Add-AppxPackage -Path %%i\r\n)\r\n%PScommand% Add-AppxPackage -Path %Store%\r\n\r\nif defined PurchaseApp (\r\necho.\r\necho ============================================================\r\necho Adding Store Purchase App\r\necho ============================================================\r\necho.\r\n1>nul 2>nul %PScommand% Add-AppxProvisionedPackage -Online -PackagePath %PurchaseApp% -DependencyPackagePath %DepPurchase% -LicensePath Microsoft.StorePurchaseApp_8wekyb3d8bbwe.xml\r\n%PScommand% Add-AppxPackage -Path %PurchaseApp%\r\n)\r\nif defined AppInstaller (\r\necho.\r\necho ============================================================\r\necho Adding App Installer\r\necho ============================================================\r\necho.\r\n1>nul 2>nul %PScommand% Add-AppxProvisionedPackage -Online -PackagePath %AppInstaller% -DependencyPackagePath %DepInstaller% -LicensePath Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.xml\r\n%PScommand% Add-AppxPackage -Path %AppInstaller%\r\n)\r\nif defined XboxIdentity (\r\necho.\r\necho ============================================================\r\necho Adding Xbox Identity Provider\r\necho ============================================================\r\necho.\r\n1>nul 2>nul %PScommand% Add-AppxProvisionedPackage -Online -PackagePath %XboxIdentity% -DependencyPackagePath %DepXbox% -LicensePath Microsoft.XboxIdentityProvider_8wekyb3d8bbwe.xml\r\n%PScommand% Add-AppxPackage -Path %XboxIdentity%\r\n)\r\ngoto :fin\r\n\r\n:uac\r\necho.\r\necho ============================================================\r\necho Error: Run the script as administrator\r\necho ============================================================\r\necho.\r\necho.\r\necho Press any key to Exit\r\npause >nul\r\nexit\r\n\r\n:version\r\necho.\r\necho ============================================================\r\necho Error: This pack is for Windows 10 version 1709 and later\r\necho ============================================================\r\necho.\r\necho.\r\necho Press any key to Exit\r\npause >nul\r\nexit\r\n\r\n:nofiles\r\necho.\r\necho ============================================================\r\necho Error: Required files are missing in the current directory\r\necho ============================================================\r\necho.\r\necho.\r\necho Press any key to Exit\r\npause >nul\r\nexit\r\n\r\n:fin\r\necho.\r\necho ============================================================\r\necho Done\r\necho ============================================================\r\necho.\r\necho Press any Key to Exit.\r\npause >nul\r\nexit\r\n"
+        },
+        {
+          "name": "Microsoft.DesktopAppInstaller_1.6.29000.1000_neutral_~_8wekyb3d8bbwe.AppxBundle",
+          "type": "blob",
+          "size": 1628.30078125,
+          "content": null
+        },
+        {
+          "name": "Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.xml",
+          "type": "blob",
+          "size": 2.625,
+          "content": "<License xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ID=\"e2134258-b498-4104-bbe5-fb111cc943ca\" LicenseID=\"517cfcaf-138b-1796-2cea-62892204250a\" ContentID=\"97612282-d1e8-1d6a-9e92-c271e7f177ef\" Version=\"3\" xmlns=\"urn:schemas-microsoft-com:windows:store:licensing:ls\"><Binding Binding_Type=\"Machine\"><ProductID>9NBLGGH4NNS1</ProductID><PFM>microsoft.desktopappinstaller_8wekyb3d8bbwe</PFM><LicenseInstanceID>e1a39502-1ffc-44f0-8c28-0034168e09ff</LicenseInstanceID><RequestorID>2c3f1d47-426d-c7d7-face-ef1add208818</RequestorID><LeaseRequired>False</LeaseRequired></Binding><LicenseInfo Type=\"Full\" LicenseUsage=\"Offline\" LicenseCategory=\"OEM\"><IssuedDate>2016-04-14T15:58:20.6111541Z</IssuedDate><LastUpdateDate>2016-04-14T15:58:20.4032196Z</LastUpdateDate><BeginDate>2016-04-14T15:58:20.4032196Z</BeginDate></LicenseInfo><SPLicenseBlock>FAAAAMAAAADJAAAACgAAAAMAAQAdvg9XAgDLAAAAEAAAAK/8fFGLE5YXLOpiiSIEJQrOAAAAWAAAAG0AaQBjAHIAbwBzAG8AZgB0AC4AZABlAHMAawB0AG8AcABhAHAAcABpAG4AcwB0AGEAbABsAGUAcgBfADgAdwBlAGsAeQBiADMAZAA4AGIAYgB3AGUAAADNAAAAIgAAAAEAPHRzkyJyTeprvahJYVs0C0HSgOyvT4hrOkNjQkRP3ZkgAAAABAAAABy+D1fMAAAARAAAAAEAAgBIa5/IGWUu4VPS25nTkLR8ppTVf6vcPSq/gcYDNJ9lN2zTLbFu6TvvW9vRaJ+VeOW+RRkKhoksVH7Pt7QD1r6b</SPLicenseBlock><Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\" /><Reference URI=\"\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\" /><DigestValue>gFx+w8DBVQVIbEe2VcpuymyNmZ2W4wEaZRbCfq2+g9k=</DigestValue></Reference></SignedInfo><SignatureValue>eLMrCQLsZziDD7p7OTk+r0/1PlW/QvNCd1tuouOIatqECfL1vw0ssHqzwztfAKlLvpaQ1NnB6MlW4wBdOziLQs6TNUNIseASPZWl9s/0qUb85+BpOoFPt+A2t0C0+1Y33UqlpBsXOLndXgySGorBjbRBEDrpX4HFrOfuyGkUSbMVFgSr0H6xXRbLJmYTId0Oy2bPCpRfTqDwqS1x71+IDSBel8I8fs6UHYdYhGvFVqiOtg2+eeuD5pd6I5wiYLIXkfzu6/66QDT7kR1LJ+zgEJCFfauUft1vUIYjTj4evPLZUXRrK7ff8ktfaoppD3o7ToN4C3XSik9HzcsEfhLeUg==</SignatureValue><KeyInfo Id=\"_0f81b24f-bc40-2712-0d5d-e7c10085c330\"><KeyValue><RSAKeyValue><Modulus>oVSJXItDsaAIfwyR9bhh/ZSppCAO+in9POLWdC2/TQodgeHZzbdBvxJvKhpbrq6ZP0FsSElLwRoLAmv7zIuVw3Vb7tfQt5bjCDHRAG9fesNlYKV3ybyNrHyzglfZPRB5UJZw32yi03zQa+LLa05fjs6joEmlHc5BrGQrGrbNMBahz4cmuxKC4/dhEb7JZFUkc0MRhs/M3Ve511HQfKuG+92g1OffJdRsAPzWRdskPoN35knnqno7F85OBmGV/LNBgdtDWUH6di1eUCQFeKGfMp+Q/LFUX9jawTTEPn72tYbpYASug05Skcg6KTHlcLGzevxGw7BYsOsqfDka5n0YGw==</Modulus><Exponent>AAEAAQ==</Exponent></RSAKeyValue></KeyValue></KeyInfo></Signature></License>"
+        },
+        {
+          "name": "Microsoft.NET.Native.Framework.1.6_1.6.24903.0_x64__8wekyb3d8bbwe.Appx",
+          "type": "blob",
+          "size": 2819.6923828125,
+          "content": null
+        },
+        {
+          "name": "Microsoft.NET.Native.Framework.1.6_1.6.24903.0_x86__8wekyb3d8bbwe.Appx",
+          "type": "blob",
+          "size": 2554.576171875,
+          "content": null
+        },
+        {
+          "name": "Microsoft.NET.Native.Runtime.1.6_1.6.24903.0_x64__8wekyb3d8bbwe.Appx",
+          "type": "blob",
+          "size": 242.8798828125,
+          "content": null
+        },
+        {
+          "name": "Microsoft.NET.Native.Runtime.1.6_1.6.24903.0_x86__8wekyb3d8bbwe.Appx",
+          "type": "blob",
+          "size": 199.751953125,
+          "content": null
+        },
+        {
+          "name": "Microsoft.StorePurchaseApp_11808.1001.413.0_neutral_~_8wekyb3d8bbwe.AppxBundle",
+          "type": "blob",
+          "size": 8853.8798828125,
+          "content": ""
+        },
+        {
+          "name": "Microsoft.StorePurchaseApp_8wekyb3d8bbwe.xml",
+          "type": "blob",
+          "size": 2.6142578125,
+          "content": "<License xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ID=\"e0ba47c9-6e60-4002-9735-9c584ec71c28\" LicenseID=\"28502d06-9d29-8514-1e5d-64447116d798\" ContentID=\"62b49c0a-499e-a02d-ebcb-eb168e148e52\" Version=\"3\" xmlns=\"urn:schemas-microsoft-com:windows:store:licensing:ls\"><Binding Binding_Type=\"Machine\"><ProductID>9NBLGGH4LS1F</ProductID><PFM>microsoft.storepurchaseapp_8wekyb3d8bbwe</PFM><LicenseInstanceID>a8301a7a-06f7-425e-8fb5-ebfb702440df</LicenseInstanceID><RequestorID>2c3f1d47-426d-c7d7-face-ef1add208818</RequestorID><LeaseRequired>False</LeaseRequired></Binding><LicenseInfo Type=\"Full\" LicenseUsage=\"Offline\" LicenseCategory=\"OEM\"><IssuedDate>2016-04-01T22:02:43.4444915Z</IssuedDate><LastUpdateDate>2016-04-01T22:02:43.0608594Z</LastUpdateDate><BeginDate>2016-04-01T22:02:43.0608594Z</BeginDate></LicenseInfo><SPLicenseBlock>FAAAALoAAADJAAAACgAAAAMAAQAD8P5WAgDLAAAAEAAAAAYtUCgpnRSFHl1kRHEW15jOAAAAUgAAAG0AaQBjAHIAbwBzAG8AZgB0AC4AcwB0AG8AcgBlAHAAdQByAGMAaABhAHMAZQBhAHAAcABfADgAdwBlAGsAeQBiADMAZAA4AGIAYgB3AGUAAADNAAAAIgAAAAEAMPDiheq+DxYSDJaaOq7obPBL5IlMNiWK7M2dpI865e8gAAAABAAAAAPw/lbMAAAARAAAAAEAAgCVOMM09off+6NXUn50Ct6Pw0Nc1vQYj/q1lncPdmHi2L06skc87Z+WxfZQmqdsuERDP/S/l3I1ThyK+o9S+73W</SPLicenseBlock><Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\" /><Reference URI=\"\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\" /><DigestValue>wnqdrNUltStkbVpNc1Fq5IKTPRvEU6bTBjRLvJ064AE=</DigestValue></Reference></SignedInfo><SignatureValue>S0Gc1y9ck1pyaQn0jbLG2eI6Jkw/AjTu9Rpyc1u9qedNB1C5e9jKBLf0B3GTnALSnt87G0dqLZru6kqBLLjXoLUChtxgf4NA8J9MMeQeEWfuFtv1j5rucmvfEsRlU/dKs1q46z7GKzIX0Yl3dAEkbEKAEdUqvdBijjuRDwLckOVz0rBvFZy4qwQ+W2hP0UfgDoHiPdS9vi5VE8odzB0SO/MUxpAT/DuixrWVghqqyU9x+uVMYE9C328mNDTK3bkRiCR/bzl4EsoShTVNxdQrRFnnlB3vaOIUEg5Ge6OkGrYp69M4f82k92rH3OzlQr+qdm2UkKNAMkpI5mrwo2zuGA==</SignatureValue><KeyInfo Id=\"_0f81b24f-bc40-2712-0d5d-e7c10085c330\"><KeyValue><RSAKeyValue><Modulus>oVSJXItDsaAIfwyR9bhh/ZSppCAO+in9POLWdC2/TQodgeHZzbdBvxJvKhpbrq6ZP0FsSElLwRoLAmv7zIuVw3Vb7tfQt5bjCDHRAG9fesNlYKV3ybyNrHyzglfZPRB5UJZw32yi03zQa+LLa05fjs6joEmlHc5BrGQrGrbNMBahz4cmuxKC4/dhEb7JZFUkc0MRhs/M3Ve511HQfKuG+92g1OffJdRsAPzWRdskPoN35knnqno7F85OBmGV/LNBgdtDWUH6di1eUCQFeKGfMp+Q/LFUX9jawTTEPn72tYbpYASug05Skcg6KTHlcLGzevxGw7BYsOsqfDka5n0YGw==</Modulus><Exponent>AAEAAQ==</Exponent></RSAKeyValue></KeyValue></KeyInfo></Signature></License>"
+        },
+        {
+          "name": "Microsoft.VCLibs.140.00_14.0.26706.0_x64__8wekyb3d8bbwe.Appx",
+          "type": "blob",
+          "size": 828.3798828125,
+          "content": null
+        },
+        {
+          "name": "Microsoft.VCLibs.140.00_14.0.26706.0_x86__8wekyb3d8bbwe.Appx",
+          "type": "blob",
+          "size": 682.59765625,
+          "content": null
+        },
+        {
+          "name": "Microsoft.WindowsStore_11809.1001.713.0_neutral_~_8wekyb3d8bbwe.AppxBundle",
+          "type": "blob",
+          "size": 49084.5439453125,
+          "content": ""
+        },
+        {
+          "name": "Microsoft.WindowsStore_8wekyb3d8bbwe.xml",
+          "type": "blob",
+          "size": 2.6025390625,
+          "content": "<License xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ID=\"01b4d678-9760-447a-baac-8c8a98634bf2\" LicenseID=\"e64ffef1-e246-b632-595b-56076a3fa776\" ContentID=\"9d4ded89-cabc-f4fb-8133-bc5edb1c7eda\" Version=\"3\" xmlns=\"urn:schemas-microsoft-com:windows:store:licensing:ls\"><Binding Binding_Type=\"Machine\"><ProductID>9WZDNCRFJBMP</ProductID><PFM>microsoft.windowsstore_8wekyb3d8bbwe</PFM><LicenseInstanceID>20ae9d1d-4b7d-4c35-b7d6-65e31396efd3</LicenseInstanceID><RequestorID>2c3f1d47-426d-c7d7-face-ef1add208818</RequestorID><LeaseRequired>False</LeaseRequired></Binding><LicenseInfo Type=\"Full\" LicenseUsage=\"Offline\" LicenseCategory=\"OEM\"><IssuedDate>2015-06-01T18:28:54.3098854Z</IssuedDate><LastUpdateDate>2015-06-01T18:28:54.3574657Z</LastUpdateDate><BeginDate>2015-06-01T18:28:54.3574657Z</BeginDate></LicenseInfo><SPLicenseBlock>FAAAALIAAADJAAAACgAAAAMAAQBmpGxVAgDLAAAAEAAAAPH+T+ZG4jK2WVtWB2o/p3bOAAAASgAAAG0AaQBjAHIAbwBzAG8AZgB0AC4AdwBpAG4AZABvAHcAcwBzAHQAbwByAGUAXwA4AHcAZQBrAHkAYgAzAGQAOABiAGIAdwBlAAAAzQAAACIAAAABAAaf7l9Jp21JeRrJKBhcbP6ODp40LTKLpK3I9WgJHJhOIAAAAAQAAABmpGxVzAAAAEQAAAABAAIAHJNoXjtSbcT3K6z4K6PvH4xijDdLWKmaFiS9nm3Qze7YKZpMaHEm1aiE13HD0bKHyHyl5tAXOn8UgIHHFZ8i6g==</SPLicenseBlock><Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\" /><Reference URI=\"\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\" /><DigestValue>RRM/4J8WsRpcxBMBpyvG7aUsW0jEomzv7f++SIVEVDc=</DigestValue></Reference></SignedInfo><SignatureValue>ZoYDzCjHhwPTGGBopKxKsXIuvKveOvKlLVFi3inlQUSG/4yJELe1Eu/3e02s2ImCRq/Zxkue+bWXcQG/YdD8MtAQ1Q1BcqqhW3/xQt7cRBX/dwE+SVxvyFr+l7kNkzg8r7UtMMTPHmVsdH5rGR6Ej0kEW8eqUvq9Tbs6MpXFOzwIYrqbwu+LEeWfmL1UZ0DgcGBEGRupgEBzxS362H6R//oReEN0OgSWUhMZcGBuI0rJIOICntxhU/dtsksxGwwoVPheAeCAdDvjZlShWERm0T9aQnOdDqhVY96sH0DTB90GVwXZsvzksXSzdSk4rbjHRinXBS/2HHXu49iy3dXBjg==</SignatureValue><KeyInfo Id=\"_0f81b24f-bc40-2712-0d5d-e7c10085c330\"><KeyValue><RSAKeyValue><Modulus>oVSJXItDsaAIfwyR9bhh/ZSppCAO+in9POLWdC2/TQodgeHZzbdBvxJvKhpbrq6ZP0FsSElLwRoLAmv7zIuVw3Vb7tfQt5bjCDHRAG9fesNlYKV3ybyNrHyzglfZPRB5UJZw32yi03zQa+LLa05fjs6joEmlHc5BrGQrGrbNMBahz4cmuxKC4/dhEb7JZFUkc0MRhs/M3Ve511HQfKuG+92g1OffJdRsAPzWRdskPoN35knnqno7F85OBmGV/LNBgdtDWUH6di1eUCQFeKGfMp+Q/LFUX9jawTTEPn72tYbpYASug05Skcg6KTHlcLGzevxGw7BYsOsqfDka5n0YGw==</Modulus><Exponent>AAEAAQ==</Exponent></RSAKeyValue></KeyValue></KeyInfo></Signature></License>"
+        },
+        {
+          "name": "Microsoft.XboxIdentityProvider_12.45.6001.0_neutral_~_8wekyb3d8bbwe.AppxBundle",
+          "type": "blob",
+          "size": 6442.98046875,
+          "content": ""
+        },
+        {
+          "name": "Microsoft.XboxIdentityProvider_8wekyb3d8bbwe.xml",
+          "type": "blob",
+          "size": 2.6298828125,
+          "content": "<License xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" ID=\"8d908a80-f246-40f3-a262-fc9fce515ba7\" LicenseID=\"c3d42a1a-2f3f-a4a9-6a04-cc1b234485fb\" ContentID=\"dfbe09d0-1f22-a9c0-2d3d-3f4c6351e58f\" Version=\"3\" xmlns=\"urn:schemas-microsoft-com:windows:store:licensing:ls\"><Binding Binding_Type=\"Machine\"><ProductID>9WZDNCRD1HKW</ProductID><PFM>microsoft.xboxidentityprovider_8wekyb3d8bbwe</PFM><LicenseInstanceID>15a58266-bcff-4ee0-91f9-315ff813936a</LicenseInstanceID><RequestorID>2c3f1d47-426d-c7d7-face-ef1add208818</RequestorID><LeaseRequired>False</LeaseRequired></Binding><LicenseInfo Type=\"Full\" LicenseUsage=\"Offline\" LicenseCategory=\"OEM\"><IssuedDate>2016-02-20T19:07:41.1189892Z</IssuedDate><LastUpdateDate>2016-02-20T19:07:40.9422576Z</LastUpdateDate><BeginDate>2016-02-20T19:07:40.9422576Z</BeginDate></LicenseInfo><SPLicenseBlock>FAAAAMIAAADJAAAACgAAAAMAAQB9uchWAgDLAAAAEAAAABoq1MM/L6mkagTMGyNEhfvOAAAAWgAAAG0AaQBjAHIAbwBzAG8AZgB0AC4AeABiAG8AeABpAGQAZQBuAHQAaQB0AHkAcAByAG8AdgBpAGQAZQByAF8AOAB3AGUAawB5AGIAMwBkADgAYgBiAHcAZQAAAM0AAAAiAAAAAQDwzmDCtA2xOY++tCB7M16iflwLDnYpa1uHDY1XwsgdRyAAAAAEAAAAfbnIVswAAABEAAAAAQACAA1ST4slzJ4Gp3ms6V/TBuTK+mmQyhsquAlbksVmHOGGXfd2JnVaoKWScx8Dn6o88wWwQPqnWF/6QMISZLDXBgE=</SPLicenseBlock><Signature xmlns=\"http://www.w3.org/2000/09/xmldsig#\"><SignedInfo><CanonicalizationMethod Algorithm=\"http://www.w3.org/2001/10/xml-exc-c14n#\" /><SignatureMethod Algorithm=\"http://www.w3.org/2001/04/xmldsig-more#rsa-sha256\" /><Reference URI=\"\"><Transforms><Transform Algorithm=\"http://www.w3.org/2000/09/xmldsig#enveloped-signature\" /></Transforms><DigestMethod Algorithm=\"http://www.w3.org/2001/04/xmlenc#sha256\" /><DigestValue>uvKEEs3RJfIFW/HdJ1h6CAkLr2PLsJGl07/6ndV0mLY=</DigestValue></Reference></SignedInfo><SignatureValue>oA1IZpnzE4ocdvFwp3Obf57L9dSe/p/jYINwjGMINETHP2vohVdKsyBHfn9vKWao7nWuI5BYZJR1pfSlCtVQuJxavzaE+cCKtokJG+UYcRz/cJ8BBzi9sG2z62QrAbXGdFArvvaVM77s7DAjXgeGP4HWjSSM64k1aHGfKzfwexSgAyKetEto7nTrLleKtKWKxfx3CKLLRpbVBU+D//m+dXFuxIe+OCIMepFBr4udAYeAJYyFxgPKqHeqGrM8IAWoXHtZmoiKLFndDTpUsBNlvZLbyouw9W7rGYzkSE3htXIhExJilbTXXe+L5v4YD5w+1AalGAIJR42M9RZyYOGWLw==</SignatureValue><KeyInfo Id=\"_0f81b24f-bc40-2712-0d5d-e7c10085c330\"><KeyValue><RSAKeyValue><Modulus>oVSJXItDsaAIfwyR9bhh/ZSppCAO+in9POLWdC2/TQodgeHZzbdBvxJvKhpbrq6ZP0FsSElLwRoLAmv7zIuVw3Vb7tfQt5bjCDHRAG9fesNlYKV3ybyNrHyzglfZPRB5UJZw32yi03zQa+LLa05fjs6joEmlHc5BrGQrGrbNMBahz4cmuxKC4/dhEb7JZFUkc0MRhs/M3Ve511HQfKuG+92g1OffJdRsAPzWRdskPoN35knnqno7F85OBmGV/LNBgdtDWUH6di1eUCQFeKGfMp+Q/LFUX9jawTTEPn72tYbpYASug05Skcg6KTHlcLGzevxGw7BYsOsqfDka5n0YGw==</Modulus><Exponent>AAEAAQ==</Exponent></RSAKeyValue></KeyValue></KeyInfo></Signature></License>"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.08984375,
+          "content": "# Add Store to Windows 10 Enterprise LTSC  \nFor Windows 10 Enterprise LTSC 2019   \n[Download](https://github.com/lixuy/LTSC-Add-MicrosoftStore/archive/2019.zip)  \n## To install, run Add-Store.cmd as Administrator  \nIf you do not want App Installer / Purchase App / Xbox identity, delete each one appxbundle before running to install. However, if you plan on installing games or any app with in-purchase options, you should include everything.  \nIf the store still will not function, reboot. If still not working, open the command prompt as the administrator and run the following command, then reboot once more.  \n```PowerShell -ExecutionPolicy Unrestricted -Command \"& {$manifest = (Get-AppxPackage Microsoft.WindowsStore).InstallLocation + '\\AppxManifest.xml' ; Add-AppxPackage -DisableDevelopmentMode -Register $manifest}\"```    \n## Addition troubleshooting    \n>Right click start  \nSelect Run  \nType in: WSReset.exe  \nThis will clear the cache if needed.  \n  \n# 为Windows 10 Enterprise LTSC增加应用商店  \n适用于Windows 10 Enterprise LTSC 2019    \n[下载地址](https://github.com/lixuy/LTSC-Add-MicrosoftStore/archive/2019.zip)  \n## 要开始安装, 请打包下载后用右键管理员运行 Add-Store.cmd   \n如果您不想安装App Installer / Purchase App / Xbox，请在运行安装之前删除对应的.appxbundle后缀的文件。但是，如果您计划安装游戏，或带有购买选项的应用，则不要删除。   \n如果装完之后商店仍然打不开，请先重启试试。如果仍然不行，请以管理员身份打开命令提示符并运行以下命令之后，然后再重启试试。  \n```PowerShell -ExecutionPolicy Unrestricted -Command \"& {$manifest = (Get-AppxPackage Microsoft.WindowsStore).InstallLocation + '\\AppxManifest.xml' ; Add-AppxPackage -DisableDevelopmentMode -Register $manifest}\"```    \n## 商店修复    \nWin+R打开运行，输入WSReset.exe回车。    \n该命令会清空并重置Windows Store商店的所有缓存。    \n  \n该脚本由abbodi1406贡献：    \nhttps://forums.mydigitallife.net/threads/add-store-to-windows-10-enterprise-ltsc-LTSC.70741/page-30#post-1468779\n"
+        }
+      ]
+    }
+  ]
+}

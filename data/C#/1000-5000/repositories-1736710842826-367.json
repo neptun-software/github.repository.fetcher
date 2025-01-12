@@ -1,0 +1,578 @@
+{
+  "metadata": {
+    "timestamp": 1736710842826,
+    "page": 367,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "PlummersSoftwareLLC/Primes",
+      "stars": 2518,
+      "defaultBranch": "drag-race",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.251953125,
+          "content": "[submodule \"PrimeCUDA/solution_1/CUDASieve\"]\n\tpath = PrimeCUDA/solution_1/CUDASieve\n\turl = https://github.com/curtisseizert/CUDASieve.git\n[submodule \"PrimeGNUMake/solution_1/gmsl\"]\n\tpath = PrimeGNUMake/solution_1/gmsl\n\turl = https://github.com/jgrahamc/gmsl\n"
+        },
+        {
+          "name": "BENCHMARK.md",
+          "type": "blob",
+          "size": 21.3095703125,
+          "content": "# Benchmarks <!-- omit in toc -->\n\nThis document describes how to build and run all benchmarks (solutions) for different operating systems that can be automatically executed.\n\nSome solutions are not included in the automated benchmark runs, either because no Dockerfile is included in the solution, or due to legal reasons. We do strive to include all solutions in the automated benchmark runs, if it is technically and legally possible to do so.\n\n## Table of contents <!-- omit in toc -->\n\n- [What operating system to use?](#what-operating-system-to-use)\n- [General working mechanism](#general-working-mechanism)\n- [Linux](#linux)\n  - [Linux run instructions](#linux-run-instructions)\n  - [Linux installation and prerequisites](#linux-installation-and-prerequisites)\n- [Windows](#windows)\n  - [Windows run instructions](#windows-run-instructions)\n  - [Windows installation and prerequisites](#windows-installation-and-prerequisites)\n- [macOS](#macos)\n  - [macOS run instructions](#macos-run-instructions)\n  - [macOS installation and prerequisites](#macos-installation-and-prerequisites)\n- [Example output](#example-output)\n- [Running a single benchmark](#running-a-single-benchmark)\n- [Running a benchmark of all solutions for a particular language](#running-a-benchmark-of-all-solutions-for-a-particular-language)\n- [Running in unconfined mode](#running-in-unconfined-mode)\n- [Output formats](#output-formats)\n- [Setting the solution timeout](#setting-the-solution-timeout)\n\n## What operating system to use?\n\nA Unix-like operating system is the preferred operating system to run this benchmark. Linux and macOS are Unix-like operating systems. This will result in the best performance because the benchmark is based on Unix technologies. Running with Windows or other operating systems is possible but will always require some extra layer of virtualization that impact the performance. Running the benchmark with Windows can have a significant impact on the performance, up to 50%.\n\n## General working mechanism\n\nThe main directory contains a file named \"`Makefile`\". This Makefile implements the following basic flow:\n\n- A temp directory is created to write the output of the benchmarks to\n- All solution directories that have a Dockerfile are processed one by one\n- If a solution requires a specific hardware architecture that does not match your hardware then this solution is skipped. For example, `PrimeAssembly\\solution_1` contains a file named `arch-arm64`. If you are running on different hardware then this solution is skipped\n- Each solution is built and run with the Dockerfile that is provided in the solution directory.\n- After all solutions have been run a summary report is created in the temp directory that was created in the first step.\n\n## Linux\n\n### Linux run instructions\n\nTake the following steps to run all benchmarks:\n\n1. Make sure you have installed the [required software](#linux-installation-and-prerequisites)\n2. Open a terminal.\n3. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.\n   For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`\n4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`\n5. `cd Primes`\n6. `make`\n7. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.\n8. Once complete a report is written to the terminal, see [example output](#example-output).\n\n### Linux installation and prerequisites\n\nThe following software must be installed:\n\n- /bin/bash\n- make\n- cc\n- git\n- Node.js\n- Docker\n\nThe details for each required software are described below.\n\nNote: although optional, it's generally a good idea to update the package database and installed packages before installing new ones. The instructions for doing this vary across distributions. For Debian based distributions, use:\n\n```bash\nsudo apt-get update && sudo apt-get upgrade\n```\n\nOn a Fedora based distribution:\n\n```bash\nsudo dnf upgrade --refresh\n```\n\n#### /bin/bash\n\nMost Linux distributions include `/bin/bash` by default. If this is not the case for your distribution then please check your distribution specific documentation on how to install.\n\n#### cc and make\n\nMany Linux distributions will have `cc` (the C compiler) and `make` installed by default. If this is not the case for your distribution then please check your distribution specific documentation on how to install them. Below are some examples:\n\nDebian based distributions:\n\n```bash\nsudo apt-get install build-essential\n```\n\nFedora based distributions:\n\n```bash\nsudo dnf install make automake gcc gcc-c++ kernel-devel\n```\n\n#### Git for Linux\n\nMost Linux distributions include `git` by default. If this is not the case for your distribution then please check your distribution specific documentation. Below are some examples:\n\nDebian based distributions:\n\n```bash\nsudo apt-get install git\n```\n\nFedora based distributions:\n\n```bash\nsudo dnf git\n```\n\n#### Node.js for Linux\n\nThe benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that are included in many OS-provided package managers are too old. This means that it will generally be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.\n\nTake the following steps to install Node.js on Linux:\n\n1. Navigate to <https://nodejs.org/en/download/>\n2. Download the Linux Binaries, depending on your CPU architecture\n3. Unzip the downloaded file: `tar -xf /path/to/downloaded/file.xz>`\n   For example: `tar -xf ~/Downloads/node-v14.17.0-linux-x64.tar.xz`\n4. The Node.js binaries are now extracted to a directory. This directory is referred to as `/path/to/node` in the run instructions.\n\n#### Docker for Linux\n\nFor the installation of Docker first follow the instructions as described in <https://docs.docker.com/engine/install/>.\n\nAfter the installation you need to enable docker as non-root user. Take the following steps:\n\n1. `sudo groupadd docker`\n2. `sudo usermod -aG docker $USER`\n3. Log out and log back in so that your group membership is re-evaluated.\n4. Verify that you can run docker:\n\n   ```bash\n   docker run hello-world\n   ```\n\n The docker website describes more [post-installation steps for linux](https://docs.docker.com/engine/install/linux-postinstall/). These additional steps are optional for running the benchmarks.\n\n## Windows\n\nThe preferred method to run the benchmark is with native Linux. Running the benchmark with Windows can have a significant impact on the performance, up to 50%.\n\n### Windows run instructions\n\nTake the following steps to run all benchmarks:\n\n1. Make sure you have installed the [required software](#windows-installation-and-prerequisites)\n2. Make sure Node.js is added to the path. `export PATH=/path/to/node/bin:$PATH`.\n   For example: `export PATH=~/node-v14.17.0-linux-x64/bin:$PATH`\n3. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)\n4. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`\n5. `cd Primes`\n6. `make`\n7. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.\n8. Once complete a report is written to the terminal, see [example output](#example-output).\n\n### Windows installation and prerequisites\n\nThe following software must be installed:\n\n- Windows Subsystem for Linux 2 (WSL2) with the Ubuntu 20.04 LTS distribution\n- make\n- cc\n- Node.js\n- Docker Desktop for Windows\n\nWSL2 has special [hardware requirements](https://docs.microsoft.com/en-us/windows-server/virtualization/hyper-v/system-requirements-for-hyper-v-on-windows).\n\n#### Install WSL2\n\nWindows Subsystem for Linux (WSL) is a compatibility layer for running Linux binary executables natively on Windows. For the installation of WSL2 follow the instructions as described in <https://docs.microsoft.com/en-us/windows/wsl/install-win10>. Make sure to enable WSL2. Use Ubuntu 20.04 LTS as the default distribution to use. Start the Ubuntu app once to create a user, as described in the above instructions.\n\n#### Install cc and make inside the Ubuntu distribution\n\nTake the following steps to install cc and make inside the Ubuntu distribution:\n\n1. Open an Ubuntu terminal\n2. `sudo apt-get install build-essential`\n\n#### Install Node.js inside the Ubuntu distribution\n\nThe benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that is included in Ubuntu 20.04 is too old. This means that it will be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.\n\nTake the following steps to install Node.js inside the Ubuntu distribution:\n\n1. Navigate to <https://nodejs.org/en/download/>\n2. Download the Linux Binaries, depending on your CPU architecture\n3. Copy the downloaded file inside the Ubuntu distribution home directory. For example:\n   `\\\\wsl$\\Ubuntu-20.04\\home\\user`\n4. Open an Ubuntu terminal\n5. Unzip the downloaded file: `tar -xf ~/file.xz>`. For example: `tar -xf ~/node-v14.17.0-linux-x64.tar.xz`\n6. The Node.js binaries are now extracted to a directory. This directory is referred to as `/path/to/node` in the run instructions.\n\n#### Docker Desktop for Windows\n\nTake the following steps to install Docker Desktop for Windows with the WSL2 backend:\n\n1. Make sure [WSL2 is installed](#install-wsl2) with the Ubuntu 20.04 LTS before you start with the installation of Docker.\n2. For the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-windows/install/#install-docker-desktop-on-windows>. At step 2 select **install required Windows components for WSl2**.\n3. Once Docker is installed, start Docker Desktop\n4. In Docker Desktop navigate to **Settings --> Resources --> WSL Integration**\n5. Check Ubuntu 18.04 and click Apply & Restart\n6. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)\n7. ```sudo groupadd docker```\n8. ```sudo usermod -aG docker $USER```\n9. Close the Ubuntu window\n10. Open an **Ubuntu** terminal (  Start --> Ubuntu 20.04 LTS)\n11. Verify that you can run docker inside the Ubuntu WSL2 container:\n\n   ```bash\n   docker run hello-world\n   ```\n\n   This command downloads a test image and runs it in a container. When the container runs, it prints an informational message and exits.\n\n## macOS\n\n### macOS run instructions\n\nTake the following steps to run all benchmarks:\n\n1. Make sure you have installed the [required software](#macos-installation-and-prerequisites)\n2. Open a terminal.\n3. `git clone https://github.com/PlummersSoftwareLLC/Primes.git`\n4. `cd Primes`\n5. `make`\n6. All benchmarks will now be build and run one by one. Note that this will take a while, so please wait until this task is complete. The build will only happen the first time. On subsequent runs, only solutions that have changed since the last benchmark run will be rebuilt, which makes those runs a lot faster.\n7. Once complete a report is written to the terminal, see [example output](#example-output).\n\n### macOS installation and prerequisites\n\nThe following software must be installed:\n\n- xcode-select (make, cc and git)\n- nodejs\n- Docker Desktop for macOS\n\nThe details for each required software are described below.\n\n#### xcode-select (make, cc and git) for macOS\n\nTake the following steps to install make, cc and git on macOS:\n\n1. Open a terminal\n2. `xcode-select --install`\n3. A popup window appears, select install\n4. In the next window accept the terms\n5. The installation now starts, wait until it completes\n\n#### Node.js for macOs\n\nThe benchmarks makes use of Node.js to create a report. This requires Node.js version 14.17.0 or higher. The Node.js/npm versions that are included in many OS-provided package managers are too old. This means that it will generally be required to download and install an appropriate version of Node.js from <https://nodejs.org/en/download/>.\n\nTake the following steps to install Node.js on macOS:\n\n1. Navigate to <https://nodejs.org/en/download/>\n2. Download the macOS Installer (.pkg)\n3. Start the installer\n4. Click Continue\n5. Click Continue, accept the licence agreement\n6. Click Install\n7. Provide your password to confirm\n8. The installation now starts\n9. Close the installer\n\n#### Docker Desktop for macOS\n\nFor the installation of Docker follow the instructions as described in <https://docs.docker.com/docker-for-mac/install/>.\n\n## Example output\n\nBelow is an example of the benchmark output.\n\n```bash\n                                                                   Single-threaded\n┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬───────────┬─────────┬───────────┬──────────┬──────┬───────────────┐\n│ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration  │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │\n├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼───────────┼─────────┼───────────┼──────────┼──────┼───────────────┤\n│   1   │ c              │ 2        │ danielspaangberg_5760of30030_owrb │ 12451  │  5.00006  │    1    │   wheel   │   yes    │ 1    │  2490.17012   │\n│   2   │ c              │ 1        │ mckoss-c830                       │  9774  │  5.00000  │    1    │   wheel   │   yes    │ 1    │  1954.80000   │\n│   3   │ c              │ 2        │ danielspaangberg_480of2310_owrb   │  9458  │  5.00015  │    1    │   wheel   │   yes    │ 1    │  1891.54325   │\n\netc\n\n│  72   │ powershell     │ 2        │ crowbar27_ps2                     │   3    │  5.78784  │    1    │   base    │   yes    │ 1    │    0.51833    │\n│  73   │ haxe           │ 1        │ TayIorRobinson_Haxe_Python        │   4    │ 12.33397  │    1    │   base    │   yes    │      │    0.32431    │\n│  74   │ powershell     │ 1        │ crowbar27_ps1                     │   1    │ 150.03900 │    1    │   base    │   yes    │ 1    │    0.00666    │\n└───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴───────────┴─────────┴───────────┴──────────┴──────┴───────────────┘\n\n                                                                   Multi-threaded\n┌───────┬────────────────┬──────────┬───────────────────────────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐\n│ Index │ Implementation │ Solution │ Label                             │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │\n├───────┼────────────────┼──────────┼───────────────────────────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤\n│   1   │ c              │ 2        │ danielspaangberg_5760of30030_epar │ 24298  │ 5.00118  │    4    │   wheel   │   yes    │ 1    │  1214.61335   │\n│   2   │ c              │ 2        │ danielspaangberg_480of2310_epar   │ 21729  │ 5.00549  │    4    │   wheel   │   yes    │ 1    │  1085.25774   │\n│   3   │ c              │ 2        │ danielspaangberg_48of210_epar     │ 17161  │ 5.00735  │    4    │   wheel   │   yes    │ 1    │   856.78966   │\n\netc\n\n│  13   │ c              │ 2        │ danielspaangberg_1of2_par         │  2943  │ 5.00040  │    4    │   base    │   yes    │ 1    │   147.13829   │\n│  14   │ csharp         │ 1        │ kinematics_pool6p                 │  2510  │ 5.00935  │    4    │           │          │      │   125.26575   │\n│  15   │ csharp         │ 1        │ kinematics_rawp                   │  1840  │ 5.00896  │    4    │           │          │      │   91.83543    │\n└───────┴────────────────┴──────────┴───────────────────────────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘\n```\n\n## Running a single benchmark\n\nRunning the following command:\n\n```bash\nmake DIRECTORY=PrimeCrystal/solution_1\n```\n\nshould return something like:\n\n```bash\n❯ make DIRECTORY=PrimeCrystal/solution_1\nmake[1]: Entering directory '/home/user/source/Primes/tools/node_modules/node-uname/build'\n  CC(target) Release/obj.target/uname/uname.o\n  SOLINK_MODULE(target) Release/obj.target/uname.node\n  COPY Release/uname.node\nmake[1]: Leaving directory '/home/user/source/Primes/tools/node_modules/node-uname/build'\nadded 229 packages in 11.074s\ninfo: Detected architecture: amd64\ninfo: [PrimeCrystal][solution_1] Building...\ninfo: [PrimeCrystal][solution_1] Running...\n                                                       Single-threaded\n┌───────┬────────────────┬──────────┬────────────┬────────┬──────────┬─────────┬───────────┬──────────┬──────┬───────────────┐\n│ Index │ Implementation │ Solution │ Label      │ Passes │ Duration │ Threads │ Algorithm │ Faithful │ Bits │ Passes/Second │\n├───────┼────────────────┼──────────┼────────────┼────────┼──────────┼─────────┼───────────┼──────────┼──────┼───────────────┤\n│   1   │ crystal        │ 1        │ marghidanu │  4232  │ 5.00019  │    1    │   base    │   yes    │ 1    │   846.36716   │\n└───────┴────────────────┴──────────┴────────────┴────────┴──────────┴─────────┴───────────┴──────────┴──────┴───────────────┘\n```\n\n## Running a benchmark of all solutions for a particular language\n\nMake the `DIRECTORY` variable point to the directory that contains the solutions you want to run. For instance, to run a benchmark of all C++ solutions, run:\n\n```bash\nmake DIRECTORY=PrimeCPP\n```\n\n## Running in unconfined mode\n\nFor some interpreted languages (Python, Ruby, NodeJS), docker has a non-zero effect slowing CPU-intensive code.\nSee <https://github.com/moby/moby/issues/41389> for the related docker issue. You can disable some of the sandboxing\nto obtain near-native performance (at least on Linux) with the `UNCONFINED=1` option:\n\n```bash\nmake UNCONFINED=1\nmake DIRECTORY=PrimeMyFavoriteInterpretedLanguage UNCONFINED=1\n```\n\n## Output formats\n\nThe benchmark suite supports multiple output formats; if no formatter is specified, it will default to the `table` format.\nHere are the supported values:\n\n- table\n- chart\n- csv\n- json (this also includes the machine information data)\n- minifiedjson (same as json, but not pretty-printed)\n\nThe output format can be controlled via the `FORMATTER` variable like this:\n\n```shell\nmake FORMATTER=json\nmake DIRECTORY=PrimeCrystal/solution_1 FORMATTER=csv\n```\n\n## Setting the solution timeout\n\nThe run of each solution is limited to a certain duration, which is 10 minutes by default.\nYou can change this setting through the `TIMEOUT` variable like this:\n\n```shell\nmake TIMEOUT=15\nmake DIRECTORY=PrimeCPP/solution_2 TIMEOUT=15\n```\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 19.9013671875,
+          "content": "# Contributing <!-- omit in toc -->\n\n## Table of Contents <!-- omit in toc -->\n\n- [Introduction](#introduction)\n- [If (a) solution(s) already exists for your language...](#if-a-solutions-already-exists-for-your-language)\n- [Guide](#guide)\n  - [Determining the implementation characteristics](#determining-the-implementation-characteristics)\n  - [README.md](#readmemd)\n  - [Folder/directory](#folderdirectory)\n  - [Dockerfile](#dockerfile)\n  - [Pull request](#pull-request)\n  - [Help/support](#helpsupport)\n- [Rules](#rules)\n- [Characteristics](#characteristics)\n  - [Algorithm](#algorithm)\n  - [Faithfulness](#faithfulness)\n  - [Parallelism](#parallelism)\n  - [Flag storage](#flag-storage)\n- [Output](#output)\n  - [Tags](#tags)\n  - [Examples](#examples)\n\n## Introduction\n\nPlease follow the guidelines in this document if you want to submit a solution/implementation for inclusion in the drag race.\n\nThese guidelines have been drafted to facilitate a \"fair\" comparison between solutions, and to allow results to be processed and reported on, automatically. **Submissions that do not conform to these guidelines will, in principle, not be accepted.**\n\n<!-- markdownlint-disable-next-line MD026 no-trailing-punctuation -->\n## If (a) solution(s) already exists for your language...\n\n...then please:\n\n1. First see if your ideas/approach can be used to improve one of the existing solutions. If the [key characteristics](#characteristics) of your approach match those of an existing solution then that is a strong indication that improving is the way to go. If that is the case, structure your [pull request](#pull-request) to improve the solution in question. Include only those changes that objectively improve the performance of the benchmarked/timed part of the code. We will not merge changes in style, idiomatic improvements, whitespace optimizations, etc. unless you arrange approval from the original author of the solution you're aiming to improve.\n\n2. Before opening your pull request, check if another one is already open that aims to modify the same solution that yours does. If one exists, please discuss in that PR how your improvements can be added to it.\n\n3. Only if you're convinced that adding a new solution is the only appropriate way forward, open a pull requests that aims to achieve that. In that case, a) explain clearly in your pull request description why you think a new solution is warranted, and b) please keep reading.\n\n## Guide\n\n### Determining the implementation characteristics\n\nOnce you've written the solution, make sure it complies with the basic [rules](#rules) and determine what are the relevant characteristics of your implementation(s). You can do this by referring to [the descriptions of relevant characteristics](#characteristics) included below.\n\n### README.md\n\nNow make sure to add a `README.md` that contains at least the following:\n\n```md\n# <Language> solution by <YourUserName>\n\n(Optional) <Badges>\n\n*Give a short description of your implementation*\n\n## Run instructions\n\n*Describe how to run your application here. If build steps are required to make the solution runnable, include those too.*\n\n## Output\n\n*Show the output you got on your machine(s) here, in code blocks*\n```\n\nWith the introduction of [tags](#tags) in the [output format](#output), badges are now optional in the `README.md`, _provided that tags are indeed used in the solution output_. If you do choose to add badges to your `README.md`, then:\n\n- They need to comply with what is described in [the characteristics section](#characteristics).\n- If your solution includes multiple implementations that have different characteristics, then add all appropriate badges, once.\n- If your solution deviates from the basic [rules](#rules), add an additional badge, using the following template:\n\n  ```md\n  ![Deviation](https://img.shields.io/badge/Deviation-<name>-blue)\n  ```\n\n  Choose an appropriate name, and include an explanation in your `README.md`.\n\n### Folder/directory\n\nIn the  `drag-race` branch, see what the highest numbered solution is for the language you chose, and place your solution in the following folder:\n`Prime<Language>/solution_<highest+1>/` where \"highest\" is the number of the highest numbered solution you found.\n\nIf no solution yet exists for the language you're submitting, put yours in `Prime<Language>/solution_1/`\n\n### Dockerfile\n\nPlease add a `Dockerfile` that is configured to build and run your solution. It should output the run result to standard output (stdout), using the format described under [output](#output). As indicated there, any \"auxiliary\" output should be directed to standard error (stderr), if the language and toolkit you chose allows.\n\nWhen composing the Dockerfile, please use the following as a reference for selecting the base image:\n\n- If an official image exists on [Docker Hub](https://hub.docker.com/) for the language you chose, use that. If multiple images are available with different underlying Linux distributions, select the one to use in accordance with the next steps in this list.\n- Otherwise, if it is possible to get the solution to build and run on Alpine 3.13 using Alpine 3.13 packages, use that.\n- Otherwise, if it is possible to get the solution to build and run on a supported LTS release of Ubuntu (currently 18.04 or 20.04), use that. Employ standard packages to the extent possible.\n- Otherwise, choose another base image that you can get the solution to build and run in.\n\nAlso:\n\n- If the solution requires a significantly larger number of packages/files to build than it does to run, please define an `AS build` image for the build stage.\n- Do not include binary dependencies (executables, archives, etc) in your solution submission. If these are needed, create a base image on Docker Hub, preferably backed by a public GitHub repo under your account.\n\n#### Support for hardware architectures\n\nWe encourage solutions and therefore Docker images to support both amd64/x86_64 and arm64/aarch64 hardware architectures.\n\nIf your solution fundamentally supports only one architecture, you can use a \"flag file\" to indicate what architecture that is. Currently, examples of architecture-specific builds are the assembly builds for amd64 and arm64.\n\nA flag file is an empty file in the solution directory that tells the CI and benchmark implementations to build and run the solution only for/on the architecture indicated. The flag file for arm64 builds is `arch-arm64`, for amd64 builds it is `arch-amd64`.\n\n#### Disabling build and benchmark\n\nIf it is not possible to include your solution in the CI workflow and/or automated benchmark runs, a `build-no` flag file has to be added to the solution directory. Note that:\n\n- Your solution has to be included in the automated benchmark runs, if it is possible to do so. For one, lack of familiarity with Docker is _not_ a valid reason to exclude it.\n- Automated builds should _only_ be disabled after the repository maintainers have specifically indicated that you need to do so.\n\n#### Hadolint\n\nDuring the review of any PR, a CI workflow is triggered that includes a linting of Dockerfiles using [hadolint](https://github.com/hadolint/hadolint). Any issues that are found in a solution's Dockerfile will need to be fixed before the respective PR is merged.\n\nIf you want to run hadolint locally before submitting your Dockerfile, you can do so using the configuration in [config/hadolint.yml](config/hadolint.yml).\nInstructions for installing hadolint can be found in the tool's documentation. Using a Docker container is a \"non-intrusive\" way of running hadolint once Docker is installed. In a Unix-like shell, this can be done by running the following command from the root directory of the Primes repository:\n\n```bash\ntools/hadolint.sh <language> <number>\n```\n\nwhere:\n\n- `<language>` corresponds to the `Prime` directory for the specified language. This is case-insensitive.\n- `<number>` corresponds to the solution number.\n\nExamples:\n\n```bash\ntools/hadolint.sh CPP 1\n```\n\nor\n\n```bash\ntools/hadolint.sh cpp 1\n```\n\nBoth of these correspond to the `PrimeCPP/solution_1` directory.\n\n### Pull request\n\nFinally, submit a pull request **targeting the branch `drag-race`**, and place at least the name of the language in the title. Make sure to verify and check the contributing requirements that are summarized in the pull request template.\n\n**Please note:** pull requests that are opened on another branch than `drag-race` will not be merged, by definition.\n\n### Help/support\n\nIf you need assistance with conforming to any of the guidelines mentioned above, then please clearly indicate this in your pull request and be specific in what you need help with.\nNote that we cannot guarantee that we can help make your solution mergeable if it doesn't conform to the guidelines, but we will do our best to help where we can.\n\n## Rules\n\n- Your solution uses the [sieve of Eratosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes).\n- Your benchmarked code returns either a list of primes or the `is_prime` array, containing the result of the sieve.\n- Your solution runs for at least 5 seconds, and stops as quickly as possible after that.\n- Your solution calculates all the primes up to 1,000,000.\n- You own copyright to all code and are willing to license that code under BSD-new/BSD-3 or a more permissive license, or the code is available under BSD-new/BSD-3 or a more permissive license.\n\n<!-- markdownlint-disable MD024 no-duplicate-header -->\n## Characteristics\n\nThe collection of solutions in this repository have come to use different approaches to implementing the prime number sieve. A number of characteristics have been defined as being relevant for an equal comparison between implementations. These are:\n| Name | Description |\n|-|-|\n| [algorithm](#algorithm) | The algorithm used to find the primes in the prime number sieve. |\n| [faithfulness](#faithfulness) | If the implementation is true to the original one implemented by @davepl, at a technical level. |\n| [parallelism](#parallelism) | If the implementation uses any type of multi-threaded processing/calculation. |\n| [storage](#flag-storage) | The number of bits used to indicate if a number in the sieve is a prime number, or not. |\n\nThese characteristics are discussed in more detail in the following sections.\n\n### Algorithm\n\nThis defines the algorithm(s) used by your implementation(s).\n\n#### Known algorithms\n\nWe currently consider the following algorithms to be \"known\" algorithms:\n| Name | Description |\n|-|-|\n| base | This is the algorithm that was used by @davepl in the YouTube video that spawned this repository. It is described in more detail, [below](#base-algorithm). |\n| wheel | Algorithms rooted in the principle of [wheel factorization](https://en.wikipedia.org/wiki/Wheel_factorization). These tend to take a (pre)calculated set of prime numbers within a certain base number range, that are then sequentially projected onto the sieve. |\n| other | All algorithms that do not fall in the values already mentioned. This is used as the default if no algorithm is specified. |\n\n**Note:** All implementations **must** use a form of the [sieve of Erastosthenes](https://en.wikipedia.org/wiki/Sieve_of_Eratosthenes) as the fundamental algorithm, as indicated in the base [rules](#rules).\n\n#### Base algorithm\n\nThe base algorithm is defined as follows:\n\n- The algorithm uses an outer loop, in which two operations are performed:\n  1. searching for the next prime in the sieve, and\n  2. clearing this prime's multiples in the sieve.\n\n  In order to allow for idiomatic code, it is permissible to perform these steps in either order, provided the results are correct.\n\n- When seeking factors (the first operation), the algorithm sequentially checks all odd numbers, starting at 3.\n\n- When clearing non-primes in the sieve (the second operation), the algorithm clears all non-primes individually, increasing the number with 2 * factor on each cycle.\n\n- Not seeking factors beyond the square root of the sieve size is permissible.\n\n- Inverted prime marking logic (marking primes as zero/false and non-primes as one/true) is permissible.\n\n- Starting the clearing loop at factor \\* factor (instead of 3 \\* factor, as done in the original implementation) is permissible.\n\nIf needed, the [original implementation in C++](https://github.com/PlummersSoftwareLLC/Primes/blob/38c826678a52a37b8a864465410562d330002091/PrimeCPP/solution_1/PrimeCPP.cpp) can be used as a reference.\n\n#### Tag\n\nThe [output tag](#output) for the algorithm is `algorithm`. Recognized values are those listed under [known algorithms](#known-algorithms). If an implementation doesn't write an `algorithm` tag to output, it is considered to be an `other` algorithm.\n\n#### Badge\n\nIf you choose to include badges in your `README.md`, then:\n\n- if the base algorithm is used, the badge to use is:\n\n  ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Algorithm](https://img.shields.io/badge/Algorithm-base-green)\n  ```\n\n- if a different algorithm is used (either wheel or other), then the badge template to use is:\n\n  ![Algorithm](https://img.shields.io/badge/Algorithm-<algorithm>-yellowgreen)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Algorithm](https://img.shields.io/badge/Algorithm-<algorithm>-yellowgreen)\n  ```\n\n### Faithfulness\n\nAt a technical level, an implementation is considered faithful if it complies with the following:\n\n- It uses no external dependencies to calculate the actual sieve.\n- It uses a class to encapsulate the sieve, or a (closest) equivalent feature in your language if a class construct is not available. This class must contain the full state of the sieve. Each iteration should re-create a new instance of this class from scratch.\n- The sieve size and corresponding prime candidate memory buffer (or language equivalent) are set/allocated dynamically at runtime. The size of the memory buffer must correspond to the size of the sieve.\n- It conforms to the base [rules](#rules).\n\nAll other implementations are considered unfaithful. Note that they still need to conform to the base [rules](#rules).\n\nIf the faithfulness of an implementation is not specified, it is assumed to be unfaithful.\n\n#### Tag\n\nThe [output tag](#output) to express faithfulness is `faithful`. Recognized values are `yes` for faithful implementations, and `no` for unfaithful implementations. If an implementation doesn't write a `faithful` tag to output, it is considered to be an unfaithful algorithm.\n\n#### Badge\n\nIf you choose to include badges in your `README.md`, then:\n\n- if the implementation is faithful, the badge to use is:\n\n  ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Faithfulness](https://img.shields.io/badge/Faithful-yes-green)\n  ```\n\n- if the implementation is unfaithful, the badge to use is:\n\n  ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Faithfulness](https://img.shields.io/badge/Faithful-no-yellowgreen)\n  ```\n\n### Parallelism\n\nThis indicates if the implementation uses any form of parallelism. In this context, an implementation is considered to do so if more than 1 thread is involved with running the sieve, i.e. identifying the primes in it.\n\n#### Tag\n\nAs the [output](#output) of implementations specifies how many threads are used, it is not needed to use a tag to indicate if an implementation is multi-threaded. That is, if the thread count that is written to output is 1, then the implementation is considered to be single-threaded. If the output includes a higher thread count, then it is marked as a multi-threaded implementation.\n\n#### Badge\n\nIf you choose to include badges in your `README.md`, then:\n\n- if the implementation is single-threaded, the badge to use is:\n\n  ![Parallelism](https://img.shields.io/badge/Parallel-no-green)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Parallelism](https://img.shields.io/badge/Parallel-no-green)\n  ```\n\n- if the implementation is multi-threaded, the badge to use is:\n\n  ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Parallelism](https://img.shields.io/badge/Parallel-yes-green)\n  ```\n\n### Flag storage\n\nThis characteristic specifies how many bits the implementation uses to store the indication (flag) if a number in the sieve is a prime number, or not.\n\nCommon bit counts are:\n| Number | Used when |\n|-|-|\n| 1 | Each prime number flag occupies one bit. Common implementations of this type use a bit array or bit masking on wider data types to get and set individual flags. |\n| 8 | Common implementations that occupy 8 bits per flag store the flags in a \"byte\" variable. |\n| 32 | Common implementations that occupy 32 bits per flag store the flags in a \"regular\" integer variable. |\n| 64 | Common implementations that occupy 64 bits per flag store the flags in a \"long\" integer variable. |\n\nIt's possible that the number of bits per flag is unknown. For example, this can be the case if an implementation uses a \"boolean\" basic type provided by the language, and the language does not define how booleans are logically stored in memory.\n\n#### Tag\n\nThe [output tag](#output) for the flag size is `bits`. The value should reflect the exact number of bits that are occupied by each prime number flag. If an implementation doesn't write a `bits` tag to output, the bit count per tag is considered to be unknown.\n\n#### Badge\n\nIf you choose to include badges in your `README.md`, then:\n\n- if the implementation's flag size is known to be 1 bit, the badge to use is:\n\n  ![Bit count](https://img.shields.io/badge/Bits-1-green)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Bit count](https://img.shields.io/badge/Bits-1-green)\n  ```\n\n- if the implementation's flag size is known but larger than 1 bit, the badge template to use is:\n\n  ![Bit count](https://img.shields.io/badge/Bits-<count>-yellowgreen)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Bit count](https://img.shields.io/badge/Bits-<count>-yellowgreen)\n  ```\n\n- if the implementation's flag size is unknown, the badge to use is:\n\n  ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)\n\n  The corresponding markdown is:\n\n  ```md\n  ![Bit count](https://img.shields.io/badge/Bits-unknown-yellowgreen)\n  ```\n\n<!-- markdownlint-enable MD024 no-duplicate-header -->\n## Output\n\nYour solution should write the following text to standard output for each implementation that it runs:\n\n```log\n<label>;<iterations>;<total_time>;<num_threads>;<tags>\n```\n\nwhere:\n\n- `label` is **at least** your username, and if you have multiple implementations for a specific language, a short keyword to discriminate each implementation.\n- `iterations` is the amount of times your code ran in the allotted time.\n- `total_time` is the total time it took to run, which would be slightly more than 5 seconds, in an `en_US` formatted decimal value (so, use `.` (period) and not `,` (comma) as the decimal separator).\n- `num_threads` is the total amount of threads that were used to execute the indicated number of `iterations` (so 1 for a single-threaded solution).\n- `tags` is an optional collection of name/value pairs that provide information on the [characteristics](#characteristics) of your implementation(s). They are discussed in more detail, [below](#tags).\n\nAny other output should be directed to standard error, if possible.\n\n### Tags\n\nIf you choose to include tags, then:\n\n- They must conform to what's indicated in the [characteristics](#characteristics) section.\n- Specificy each tag as `<name>=<value>`\n- Make sure that `<name>` and `<value>` each don't exceed 32 characters in length\n- If multiple tags are included in your output, separate them with commas (`,`)\n- Don't use spaces anywhere in or between names, values, or name/value pairs\n\nIf you don't output tags, then the semicolon (`;`) between `num_threads` and `tags` should also not be written.\n\nDo note that default values are used for all tags that are not included, as mentioned under [characteristics](#characteristics).\n\n### Examples\n\nAn example of a line of output with tags is:\n\n```log\nrbergen;1234;5.005678;1;algorithm=base,faithful=no,bits=1\n```\n\nA line of output without tags could look like this:\n\n```log\nrbergen;1234;5.005678;1\n```\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.25,
+          "content": "SHELL := /bin/bash\n\n.ONESHELL:\n\nDIRECTORY := $(shell pwd)\nFORMATTER := \"table\"\nTIMEOUT := \"10\"\n\n.PHONY: all\nall: benchmark\n\n.PHONY: benchmark\nbenchmark: check-env\n\t@REALPATH=$$(cd \"$${DIRECTORY}\" && pwd); \\\n\tARGS=(\"-d $${REALPATH}\" \"-f $(FORMATTER)\"); \\\n\t[ ! -z $${OUTPUT_FILE} ] && ARGS+=( \"-o $${OUTPUT_FILE}\" ); \\\n\t[ ! -z $${UNCONFINED} ] && ARGS+=( \"--unconfined\" ); \\\n\t[ ! -z $${TIMEOUT} ] && ARGS+=( \"-t $${TIMEOUT}\" ); \\\n\tcd ./tools; npm ci --silent && npm start --silent -- benchmark $${ARGS[@]}\n\n.PHONY: check-env\ncheck-env: check-cc-works check-docker-works check-node-works\n\n.PHONY: check-cc-works\ncheck-cc-works:\n\t@cc --version >/dev/null 2>&1 || (echo 'Please install a C compiler. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)\n\n.PHONY: check-node-works\ncheck-node-works:\n\t@npm --version >/dev/null 2>&1 || (echo 'Please install Node.js. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)\n\n.PHONY: check-docker-works\ncheck-docker-works:\n\t@docker --version >/dev/null 2>&1 || (echo 'Please install docker. See https://github.com/PlummersSoftwareLLC/Primes/blob/drag-race/BENCHMARK.md for more information.' && exit 1)\n\t@docker ps >/dev/null\n"
+        },
+        {
+          "name": "Prime6502Assembly",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAPL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAWK",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAda",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAlgol68g",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAmd64",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAssembly",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeAssemblyScript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBASIC",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBallerina",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBash",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBatch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBeef",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBefunge",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeBrainFuck",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeC",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCMake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCOBOL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCOMAL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCPP",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCSharp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCUDA",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCenturionAssembly",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCenturionJCL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCenturionPL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeChapel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeClipper",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeClojure",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCrystal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeCython",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeD",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeDart",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeDelphi",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeElixir",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeEmojicode",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeErlang",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeEuphoria",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeFSharp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeForth",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeFortran",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeGDScript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeGNUMake",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeGo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeGroovy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeHack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeHaskell",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeHaxe",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeIDL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeJanet",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeJava",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeJavaScript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeJulia",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeKermit",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeKos",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeKotlin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeLean4",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeLisp",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeLua",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeM",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeMACRO11",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeMIXAL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeMinecraftDatapack",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeMixed",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeNim",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeOCaml",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeOctave",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeOdin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePDL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePHP",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePascal",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePerl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePhix",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePony",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePostScript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePowerShell",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeProlog",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePyret",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimePython",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeR",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeREXX",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeRaku",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeRed",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeRuby",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeRust",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeSQL",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeScala",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeScheme",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeSmalltalk",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeSquirrel",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeStandardML",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeSwift",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeTcl",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeTeX",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeTerra",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeTypeScript",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeUmple",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeUnicat",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeV",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeVerilog",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeWhitespace",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeWren",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeYoix",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "PrimeZig",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.4306640625,
+          "content": "# Primes | A Software Drag Race\n\n**Note:** You're currently looking at the community contribution branch of this repo, which is now the default. The original branch can be found [here](https://github.com/plummerssoftwarellc/Primes/tree/original). \n<br/>\n<br/>\nSource code to [Dave's Garage](https://www.youtube.com/c/DavesGarage/featured) video\nbenchmarking the same prime number sieve in Python, C#, and C++.\n\n[![Software Drag Racing | Dave's Garage](https://img.youtube.com/vi/D3h62rgewZM/0.jpg)](https://youtu.be/D3h62rgewZM)\n\n## Build status\n\n![example workflow](https://github.com/PlummersSoftwareLLC/Primes/actions/workflows/CI.yml/badge.svg?branch=drag-race)\n\n## Community contributions\n\nCommunity contributions, fixes and improvements are accepted on this branch. If you want to add your own solution, please read [CONTRIBUTING.md](CONTRIBUTING.md).\n\n## Running the benchmarks\n\nThe vast majority of benchmarks (solutions) in this repository can be built and run with one Makefile. This is described in [BENCHMARK.md](BENCHMARK.md).\n\n## Viewing results\n\nThe [PrimeView web application](https://plummerssoftwarellc.github.io/PrimeView/) can be used to view, filter and sort results generated by Dave's benchmark machine. It is our intention to add results of other systems in the future. **Note** that any feedback, suggestions, PRs concerning PrimeView need to be made on [the application's own repository](https://github.com/PlummersSoftwareLLC/PrimeView).\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

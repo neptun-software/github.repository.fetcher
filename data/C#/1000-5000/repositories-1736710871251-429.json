@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "timestamp": 1736710871251,
+    "page": 429,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "aras-p/UnityGaussianSplatting",
+      "stars": 2323,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.39453125,
+          "content": "*.csproj\n*.sln\n.DS_Store\n.idea\n\n/builds/*\n/images/*\n/Shot-*.png\n\n/Assets/GaussianAssets/*\n/Assets/GaussianAssets.meta\n/Assets/Models~/*\n/Library/*\n/Logs/*\n/Temp/*\n/UserSettings/*\n/obj/*\n\n/projects/**/Assets/GaussianAssets/*\n/projects/**/Assets/GaussianAssets.meta\n/projects/**/Assets/Models~/*\n/projects/**/Library/*\n/projects/**/Logs/*\n/projects/**/Temp/*\n/projects/**/UserSettings/*\n/projects/**/obj/*\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0498046875,
+          "content": "MIT License\n\nCopyright (c) 2023 Aras Pranckevičius\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "projects",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 6.2646484375,
+          "content": "# Gaussian Splatting playground in Unity\n\nSIGGRAPH 2023 had a paper \"[**3D Gaussian Splatting for Real-Time Radiance Field Rendering**](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/)\" by Kerbl, Kopanas, Leimkühler, Drettakis\nthat is really cool! Check out their website, source code repository, data sets and so on. I've decided to try to implement the realtime visualization part (i.e. the one that takes already-produced\ngaussian splat \"model\" file) in Unity.\n\n![Screenshot](/docs/Images/shotOverview.jpg?raw=true \"Screenshot\")\n\nEverything in this repository is based on that \"OG\" gaussian splatting paper. Towards end of 2023, there's a ton of\n[new gaussian splatting research](https://github.com/MrNeRF/awesome-3D-gaussian-splatting) coming out; _none_ of that is in this project.\n\n:warning: Status as of 2023 December: I'm not planning any significant further developments.\n\n:warning: The only platforms where this is known to work are the ones that use D3D12, Metal or Vulkan graphics APIs.\nPC (Windows on D3D12 or Vulkan), Mac (Metal), Linux (Vulkan) should work. Anything else I have not actually tested;\nit might work or it might not.\n- Some virtual reality devices work (reportedly HTC Vive, Varjo Aero, Quest 3 and Quest Pro). Some others might not\n  work, e.g. Apple Vision Pro. See [#17](https://github.com/aras-p/UnityGaussianSplatting/issues/17)\n- Anything using OpenGL or OpenGL ES: [#26](https://github.com/aras-p/UnityGaussianSplatting/issues/26)\n- WebGPU might work someday, but seems that today it does not quite have all the required graphics features yet: [#65](https://github.com/aras-p/UnityGaussianSplatting/issues/65)\n- Mobile may or might not work. Some iOS devices definitely do not work ([#72](https://github.com/aras-p/UnityGaussianSplatting/issues/72)),\n  some Androids do not work either ([#112](https://github.com/aras-p/UnityGaussianSplatting/issues/112))\n\n## Usage\n\nDownload or clone this repository, open `projects/GaussianExample` as a Unity project (I use Unity 2022.3, other versions might also work),\nand open `GSTestScene` scene in there.\n\nNote that the project requires DX12 or Vulkan on Windows, i.e. **DX11 will not work**. This is **not tested at all on mobile/web**, and probably\ndoes not work there.\n\n<img align=\"right\" src=\"docs/Images/shotAssetCreator.png\" width=\"250px\">\n\nNext up, **create some GaussianSplat assets**: open `Tools -> Gaussian Splats -> Create GaussianSplatAsset` menu within Unity.\nIn the dialog, point `Input PLY File` to your Gaussian Splat file (note that it has to be a gaussian splat PLY file, not some \nother PLY file. E.g. in the official paper models, the correct files are under `point_cloud/iteration_*/point_cloud.ply`).\nOptionally there can be `cameras.json` next to it or somewhere in parent folders.\n\nPick desired compression options and output folder, and press \"Create Asset\" button. The compression even at \"very low\" quality setting is decently usable, e.g. \nthis capture at Very Low preset is under 8MB of total size (click to see the video): \\\n[![Watch the video](https://img.youtube.com/vi/iccfV0YlWVI/0.jpg)](https://youtu.be/iccfV0YlWVI)\n\nIf everything was fine, there should be a GaussianSplat asset that has several data files next to it.\n\nSince the gaussian splat models are quite large, I have not included any in this Github repo. The original\n[paper github page](https://github.com/graphdeco-inria/gaussian-splatting) has a a link to\n[14GB zip](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/datasets/pretrained/models.zip) of their models.\n\n\nIn the game object that has a `GaussianSplatRenderer` script, **point the Asset field to** one of your created assets.\nThere are various controls on the script to debug/visualize the data, as well as a slider to move game camera into one of asset's camera\nlocations.\n\nThe rendering takes game object transformation matrix into account; the official gaussian splat models seem to be all rotated by about\n-160 degrees around X axis, and mirrored around Z axis, so in the sample scene the object has such a transform set up.\n\nAdditional documentation:\n\n* [Render Pipeline Integration](/docs/render-pipeline-integration.md)\n* [Editing Splats](/docs/splat-editing.md)\n\n_That's it!_\n\n\n## Write-ups\n\nMy own blog posts about all this:\n* [Gaussian Splatting is pretty cool!](https://aras-p.info/blog/2023/09/05/Gaussian-Splatting-is-pretty-cool/) (2023 Sep 5)\n* [Making Gaussian Splats smaller](https://aras-p.info/blog/2023/09/13/Making-Gaussian-Splats-smaller/) (2023 Sep 13)\n* [Making Gaussian Splats more smaller](https://aras-p.info/blog/2023/09/27/Making-Gaussian-Splats-more-smaller/) (2023 Sep 27)\n* [Gaussian Explosion](https://aras-p.info/blog/2023/12/08/Gaussian-explosion/) (2023 Dec 8)\n\n## Performance numbers:\n\n\"bicycle\" scene from the paper, with 6.1M splats and first camera in there, rendering at 1200x797 resolution,\nat \"Medium\" asset quality level (282MB asset file):\n\n* Windows (NVIDIA RTX 3080 Ti):\n  * Official SBIR viewer: 7.4ms (135FPS). 4.8GB VRAM usage.\n  * Unity, DX12 or Vulkan: 6.8ms (147FPS) - 4.5ms rendering, 1.1ms sorting, 0.8ms splat view calc. 1.3GB VRAM usage.\n* Mac (Apple M1 Max):\n  * Unity, Metal: 21.5ms (46FPS).\n\nBesides the gaussian splat asset that is loaded into GPU memory, currently this also needs about 48 bytes of GPU memory\nper splat (for sorting, caching view dependent data etc.).\n\n\n## License and External Code Used\n\nThe code I wrote for this is under MIT license. The project also uses several 3rd party libraries:\n\n- [zanders3/json](https://github.com/zanders3/json), MIT license, (c) 2018 Alex Parker.\n- \"DeviceRadixSort\" GPU sorting code contributed by Thomas Smith ([#82](https://github.com/aras-p/UnityGaussianSplatting/pull/82)).\n- Virtual Reality fixes contributed by [@ninjamode](https://github.com/ninjamode) based on\n  [Unity-VR-Gaussian-Splatting](https://github.com/ninjamode/Unity-VR-Gaussian-Splatting).\n\nHowever, keep in mind that the [license of the original paper implementation](https://github.com/graphdeco-inria/gaussian-splatting/blob/main/LICENSE.md)\nsays that the official _training_ software for the Gaussian Splats is for educational / academic / non-commercial\npurpose; commercial usage requires getting license from INRIA. That is: even if this viewer / integration\ninto Unity is just \"MIT license\", you need to separately consider *how* did you get your Gaussian Splat PLY files.\n"
+        }
+      ]
+    }
+  ]
+}

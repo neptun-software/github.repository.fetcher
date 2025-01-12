@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "timestamp": 1736710701423,
+    "page": 77,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "brandonlw/Psychson",
+      "stars": 4127,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1123046875,
+          "content": "**/bin/Debug/*\n**/obj/Debug/*\n**/bin/Release/*\n**/obj/Release/*\nfirmware/bin/*\npatch/bin/*\npatch/equates.h\ntools/*\n"
+        },
+        {
+          "name": "DriveCom",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "EmbedPayload",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Injector",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0703125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Adam Caudill, Brandon Wilson\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.5244140625,
+          "content": "Phison 2251-03 (2303) Custom Firmware &amp; Existing Firmware Patches\n========\n\nThis repository contains the following items:\n- `DriveCom` -- PC C# application to communicate with Phison drives.\n- `EmbedPayload` -- PC C# application to embed Rubber Ducky inject.bin key scripts into custom firmware for execution on the drive.\n- `Injector` -- PC C# application to extract addresses/equates from firmware as well as embed patching code into the firmware.\n- `firmware` -- this is 8051 custom firmware written in C.\n- `patch` -- this is a collection of 8051 patch code written in C.\n\nReleases have the following items:\n- `patch` -- this is a collection of 8051 patch code written in C.\n- `tools` -- these are the compiled binaries of all the tools.\n- `CFW.bin` -- this is custom firmware set up to send an embedded HID payload.\n\nTake note that the firmware patches have only been tested against PS2251-03 firmware version _1.03.53_ (which is for an 8K eD3 NAND flash chip). They may work for others, but be careful.\n\nAs long as you are using the correct firmware image for your controller version and NAND chip, there is no harm in downgrading to an earlier version (such as from 1.10.53).\n\n**WARNING: This is experimental software. Use on unsupported devices, or even on supported devices, may cause loss of data, or even permananent damage to devices. Use at your own risk.**\n\n## Getting Started\n*See [Known Supported Devices](https://github.com/adamcaudill/Psychson/wiki/Known-Supported-Devices) for information on supported devices; use on an unsupported device may cause permanent damage to the device.*\n\nTo get started, you'll need to obtain a burner image, which is the 8051 executable responsible for flashing firmware to the drive.\n\nSee [Obtaining a Burner Image](https://github.com/adamcaudill/Psychson/wiki/Obtaining-a-Burner-Image) on the wiki for more information.\n\n## Build Environment\nTo patch or modify existing firmware, you must first set up a build environment. See [Setting Up the Environment](https://github.com/adamcaudill/Psychson/wiki/Setting-Up-the-Environment) on the wiki for more information.\n\nAt a minimum, SDCC needs to be installed to `C:\\Program Files\\SDCC`.\n\n## Dumping Firmware\nRun DriveCom, passing in the drive letter representing the drive you want to flash, the path of the burner image you obtained, and the destination path for the firmware image:\n\n    tools\\DriveCom.exe /drive=E /action=DumpFirmware /burner=BN03V104M.BIN /firmware=fw.bin\n\nwhere `E` is the drive letter, `BN03V104M.BIN` is the path to the burner image, and `fw.bin` is the resulting firmware dump.\n\nCurrently, only 200KB firmware images can be dumped (which is what the [Patriot 8GB Supersonic Xpress](http://www.amazon.com/gp/product/B005EWB15W/) drive uses).\n\n## Flashing Custom Firmware\nRun `DriveCom`, passing in the drive letter representing the drive you want to flash, the path of the burner image you obtained, and the path of the firmware image you want to flash:\n\n    tools\\DriveCom.exe /drive=E /action=SendFirmware /burner=BN03V104M.BIN /firmware=fw.bin\n\nwhere `E` is the drive letter, `BN03V104M.BIN` is the path to the burner image, and `fw.bin` is the path to the firmware image.\n\n## Running Demo 1 (HID Payload)\nCreate a key script in [Rubber Ducky format](https://github.com/hak5darren/USB-Rubber-Ducky/wiki/Payloads), then use [Duckencoder](https://code.google.com/p/ducky-decode/downloads/detail?name=DuckEncoder_2.6.3.zip&can=2&q=) to create an `inject.bin` version of it:\n\n    java -jar duckencoder.java -i keys.txt -o inject.bin\n\nwhere `keys.txt` is the path to your key script.\n\nYou may notice the delays are not quite the same between the Rubber Ducky and the drive -- you may need to adjust your scripts to compensate.\n\n(These tools are available from https://code.google.com/p/ducky-decode/.)\n\nOnce you have an `inject.bin` file, embed it into the custom firmware with:\n\n    copy CFW.bin hid.bin\n    tools\\EmbedPayload.exe inject.bin hid.bin\n\nwhere `inject.bin` is the path to your inject.bin file, and `hid.bin` is the path to the HID payload custom firmware.\n\n(Notice that the firmware image is copied, and the payload is embedded into the copy -- this is because the payload can only be embedded once, so the original `CFW.bin` must remain intact.)\n\nYou can now flash the firmware to your drive with:\n\n    tools\\DriveCom.exe /drive=E /action=SendFirmware /burner=BN03V104M.BIN /firmware=hid.bin\n\nwhere `E` is the drive letter representing your drive, `BN03V104M.BIN` is the path to your burner image, and `hid.bin` is the path to the HID payload custom firmware.\n\n*Huge thanks to the [Hak5](http://hak5.org/) team for their work on the excellent [USB Rubber Ducky](https://hakshop.myshopify.com/collections/usb-rubber-ducky/products/usb-rubber-ducky-deluxe)!*\n\n## Running Demo 2 (Hidden Partition Patch)\nFirst, determine the number of logical blocks (sectors) your drive has with the following command:\n\n    tools\\DriveCom.exe /drive=E /action=GetNumLBAs\n\nGo into the `patch` directory and modify `base.c` to disable all other patches, and enable the hidden partition patch:\n\n    //#define FEATURE_CHANGE_PASSWORD\n\n    #define FEATURE_EXPOSE_HIDDEN_PARTITION\n\nThen modify the `NUM_LBAS` define to the number of logical blocks on your drive:\n\n    #define NUM_LBAS  0xE6C980UL //this needs to be even! (round down)\n\nMake sure you round down to an even number, and it couldn't hurt to subtract a few first, in case a few blocks go bad over time. (For example, if the number of LBAs was `0xE6C981`, you might reduce it to `0xE6C940`.)\n\nPlace the firmware image you want to patch into the `patch` directory and name it `fw.bin`.\n\nGo to the `patch` directory and run `build.bat`. It will produce a file at `patch\\bin\\fw.bin` -- this is the modified firmware image.\n\nYou can now flash this file to your drive.\n\nAfter flashing, Windows may be confused, as it now only sees half of the partition it once did -- it may ask you to format the first time you view either the public or hidden halves of the drive. This is normal.\n\n## Running Demo 3 (Password Patch)\nGo into the `patch` directory and modify `base.c` to disable all other patches, and enable the password patch:\n\n    #define FEATURE_CHANGE_PASSWORD\n\n    //#define FEATURE_EXPOSE_HIDDEN_PARTITION\n\nPlace the firmware image you want to patch into the `patch` directory and name it `fw.bin`.\n\nGo to the `patch` directory and run `build.bat`. It will produce a file at `patch\\bin\\fw.bin` -- this is the modified firmware image.\n\nYou can now flash this file to your drive.\n\n## Running No Boot Mode Patch\nGo into the `patch` directory and modify `base.c` to disable all other patches, and enable the no boot patch:\n\n    //#define FEATURE_CHANGE_PASSWORD\n    //#define FEATURE_EXPOSE_HIDDEN_PARTITION\n    #define FEATURE_PREVENT_BOOT\n\nPlace the firmware image you want to patch into the `patch` directory and name it `fw.bin`.\n\nGo to the `patch` directory and run `build.bat`. It will produce a file at `patch\\bin\\fw.bin` -- this is the modified firmware image.\n\nYou can now flash this file to your drive. Once flashed to your device, it will no longer act on the command to jump to boot mode. To update the firmware again will require [shorting pins](https://github.com/adamcaudill/Psychson/blob/master/docs/PinsToShortUponPlugInForBootMode.jpg) on the controller. To make it impossible* to update, after flashing this patch coat the device with epoxy.\n\n* *Within reason; it may be possible to get to boot mode via an exploit or other non-standard method.*\n\n#### Converting to Mode 7\nYou can run the `ModeConverterFF01.exe` application (see [Useful Links](https://github.com/adamcaudill/Psychson/wiki/Useful-Links)) to split the drive into public and secure partitions, or restore the original (mode 3) functionality.\n\nAfter converting to mode 7, you should be able to set, change, or disable the secure partition password with the `USB DISK Pro LOCK` utility.\n\n## Building From Source\nModify the C files in the `firmware` directory for custom firmware, or the `patch` directory for the firmware patches, then run the `build.bat` file in the appropriate directory.\n\nOnce it has built successfully, use DriveCom to flash the resulting file (`bin\\fw.bin`) to your drive:\n\n    tools\\DriveCom.exe /drive=E /action=SendFirmware /burner=BN03V104M.BIN /firmware=firmware\\bin\\fw.bin\n\n...or...\n\n    tools\\DriveCom.exe /drive=E /action=SendFirmware /burner=BN03V104M.BIN /firmware=patch\\bin\\fw.bin\n\n## Questions? Comments? Complaints?\n\nUnfortunately this isn't the most straightforward process at the moment, so if you have questions, open an [issue](https://github.com/adamcaudill/Psychson/issues) and we'll do our best to help (and update the readme/wiki).\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "firmware",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "patch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

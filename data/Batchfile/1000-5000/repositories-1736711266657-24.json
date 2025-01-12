@@ -1,0 +1,64 @@
+{
+  "metadata": {
+    "timestamp": 1736711266657,
+    "page": 24,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "maguowei/k8s-docker-desktop-for-mac",
+      "stars": 1483,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0185546875,
+          "content": ".DS_Store\n.vscode/\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "MIT License\n\nCopyright (c) 2020 gotok8s\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.96875,
+          "content": "# `Docker Desktop for Mac` 开启并使用 `Kubernetes`\n\n[![github workflow](https://github.com/maguowei/k8s-docker-desktop-for-mac/workflows/k8s%20image%20sync/badge.svg)](https://github.com/maguowei/k8s-docker-desktop-for-mac/actions)\n\n`Docker Desktop` 可以方便的启用 `Kubernetes` 集群, 为学习 `Kubernetes` 提供了极大的便利, 但是由于众所周知的原因, 国内的网络下不能很方便的下载 `Kubernetes` 集群所需要的镜像, 导致集群启用失败. 这里提供了一个简单的方法, 利用 [GitHub Actions](https://developer.github.com/actions/creating-github-actions/) 实现 `k8s.gcr.io` 上 `kubernetes` 依赖镜像自动同步到 [Docker Hub](https://hub.docker.com/) 上指定的仓库中。 通过 [load_images.sh](./load_images.sh) 将所需镜像从 `Docker Hub` 的同步仓库中取回，并重新打上原始的`tag`. 镜像对应关系文件可以查看: [images](./images).\n\n说明:\n\n- 当前在 `Docker Desktop (Mac) Version 4.14.1 (Kubernetes: v1.25.2)`上经过测试可用\n- 使用 `Kubeadm` 在`Ubuntu`上安装 `Kubernetes` 请查看 [gotok8s](https://github.com/maguowei/gotok8s)\n\n## 安装并启动\n\n1. 下载安装 [Docker Desktop (Mac)](https://desktop.docker.com/mac/stable/Docker.dmg)\n\n2. 从 `Docker Hub` 的同步仓库中取回，并重新打上原始的`tag`.\n\n```bash\n./load_images.sh\n```\n\n3. 在`Docker for Mac` 设置中启用 `Kubernetes` 选项, 并等待一会儿，直到 `Kubernetes` 开始运行。\n\n![k8s](./image/k8s.png)\n\n4. 可选的步骤: 切换`Kubernetes`运行上下文至 `docker-desktop`\n\n```bash\n# 一般只有在之前用其他方式运行过Kubernetes才需要\n$ kubectl config use-context docker-desktop\n```\n\n5. 验证 `Kubernetes` 集群状态\n\n```bash\n$ kubectl cluster-info\n$ kubectl get nodes\n$ kubectl describe node\n```\n\n## 参考\n\n- [部署 Kubernetes Dashboard](https://github.com/maguowei/k8s-cookbook#%E9%83%A8%E7%BD%B2-kubernetes-dashboard)\n- [Helm 的使用](https://github.com/maguowei/k8s-cookbook#helm)\n"
+        },
+        {
+          "name": "image",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "images",
+          "type": "blob",
+          "size": 0.392578125,
+          "content": "k8s.gcr.io/kube-proxy:v1.25.2=gotok8s/kube-proxy:v1.25.2\nk8s.gcr.io/kube-controller-manager:v1.25.2=gotok8s/kube-controller-manager:v1.25.2\nk8s.gcr.io/kube-scheduler:v1.25.2=gotok8s/kube-scheduler:v1.25.2\nk8s.gcr.io/kube-apiserver:v1.25.2=gotok8s/kube-apiserver:v1.25.2\nk8s.gcr.io/coredns:v1.9.3=gotok8s/coredns:v1.9.3\nk8s.gcr.io/pause:3.8=gotok8s/pause:3.8\nk8s.gcr.io/etcd:3.5.4-0=gotok8s/etcd:3.5.4-0"
+        },
+        {
+          "name": "load_images.bat",
+          "type": "blob",
+          "size": 0.267578125,
+          "content": "@echo off\nset file=images\nif exist %file% (\n    echo %file% found.\n    for /f \"tokens=1,2 delims==\" %%i in (%file%) do (\n        echo pulling %%j ...\n        docker pull %%j\n        docker tag %%j %%i\n        docker rmi %%j\n    )\n) else (\n    echo %file% not found.\n)\npause\n"
+        },
+        {
+          "name": "load_images.sh",
+          "type": "blob",
+          "size": 0.2666015625,
+          "content": "#!/bin/bash\n\nfile=\"images\"\n\nif [ -f \"$file\" ]\nthen\n  echo \"$file found.\"\n\n  while IFS='=' read -r key value\n  do\n    #echo \"${key}=${value}\"\n    docker pull ${value}\n    docker tag ${value} ${key}\n    docker rmi ${value}\n  done < \"$file\"\n\nelse\n  echo \"$file not found.\"\nfi\n"
+        }
+      ]
+    }
+  ]
+}
