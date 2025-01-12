@@ -1,0 +1,126 @@
+{
+  "metadata": {
+    "timestamp": 1736712257740,
+    "page": 6,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjEw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bobthecow/psysh",
+      "stars": 9759,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.2138671875,
+          "content": "root = true\n\n[*]\nindent_style = space\nindent_size = 4\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.md]\ntrim_trailing_whitespace = false\n\n[Makefile]\nindent_style = tab\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.4248046875,
+          "content": "/.editorconfig export-ignore\n/.gitattributes export-ignore\n/.github export-ignore\n/.gitignore export-ignore\n/.phan export-ignore\n/.styleci.yml export-ignore\n/.travis.yml export-ignore\n/bin/build-stub export-ignore\n/box.json.dist export-ignore\n/codecov.yml export-ignore\n/Makefile export-ignore\n/phpstan.neon.dist export-ignore\n/phpunit.xml.dist export-ignore\n/scoper.inc.php export-ignore\n/test export-ignore\n/vendor-bin export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1796875,
+          "content": "__pycache__\n*.pyc\n/.phpunit.result.cache\n/build/\n/composer.lock\n/dist/\n/phpstan.neon\n/vendor-bin/*/vendor/\n/vendor-bin/phpstan/composer.lock\n/vendor-bin/phpunit/composer.lock\n/vendor/\n"
+        },
+        {
+          "name": ".phan",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".styleci.yml",
+          "type": "blob",
+          "size": 0.390625,
+          "content": "risky: true\n\npreset: symfony\n\nenabled:\n  - align_double_arrow\n  - native_function_invocation\n  - ordered_use\n  - strict\n\ndisabled:\n  - native_function_invocation_symfony\n  - no_superfluous_phpdoc_tags_symfony\n  - pow_to_exponentiation\n  - pre_increment\n  - unalign_double_arrow\n  - yoda_style\n\nfinder:\n  exclude:\n    - \"src/Readline/Hoa\"\n  name:\n    - \"*.php\"\n    - \"build-manual\"\n    - \"build-phar\"\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.060546875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2012-2023 Justin Hileman\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,\nDAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR\nOTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE\nOR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 2.8271484375,
+          "content": "PSYSH_SRC = bin src box.json.dist composer.json build/stub scoper.inc.php\nPSYSH_SRC_FILES = $(shell find src -type f -name \"*.php\")\nVERSION = $(shell git describe --tag --always --dirty=-dev)\n\nCOMPOSER_OPTS = --no-interaction --no-progress --verbose\nCOMPOSER_REQUIRE_OPTS = $(COMPOSER_OPTS) --no-update\nCOMPOSER_UPDATE_OPTS = $(COMPOSER_OPTS) --prefer-stable --no-dev --classmap-authoritative --prefer-dist\n\nifneq ($(CI),)\n\tPHPUNIT_OPTS = --verbose --coverage-clover=coverage.xml\nendif\n\n\n# Commands\n\n.PHONY: help build clean dist test phpstan\n.DEFAULT_GOAL := help\n\nhelp:\n\t@echo \"\\033[33mUsage:\\033[0m\\n  make TARGET\\n\\n\\033[33mTargets:\\033[0m\"\n\t@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = \":.*?## \"}; {printf \"  \\033[32m%-7s\\033[0m %s\\n\", $$1, $$2}'\n\nbuild: ## Compile PHARs (use `build/psysh/psysh` for just the default build!)\nbuild: build/psysh/psysh\n\nclean: ## Clean all created artifacts\n\trm -rf build/*\n\trm -rf dist/*\n\trm -rf vendor-bin/*/vendor/\n\ndist: ## Build tarballs for distribution\ndist: dist/psysh-$(VERSION).tar.gz\n\ntest: ## Run unit tests\ntest: vendor/bin/phpunit\n\t$< $(PHPUNIT_OPTS)\n\nphpstan: ## Run static analysis\nphpstan: vendor/bin/phpstan vendor/bin/phpunit\n\tvendor/bin/phpstan --memory-limit=1G analyse\n\n\n# All the composer stuffs\n\ncomposer.lock: composer.json\n\tcomposer install\n\ttouch $@\n\nvendor/autoload.php: composer.lock\n\tcomposer install\n\ttouch $@\n\nvendor-bin/%/vendor/autoload.php: vendor/autoload.php vendor-bin/%/composer.json\n\tcomposer bin $* install\n\ttouch $@\n\nvendor/bin/box: vendor-bin/box/vendor/autoload.php\n\tcomposer bin box install\n\tln -sf ../../vendor-bin/box/vendor/humbug/box/bin/box $@\n\nvendor/bin/phpunit: vendor-bin/phpunit/vendor/autoload.php\n\tcomposer bin phpunit install --ignore-platform-reqs\n\tln -sf ../../vendor-bin/phpunit/vendor/phpunit/phpunit/phpunit $@\n\nvendor/bin/phpstan: vendor-bin/phpstan/vendor/autoload.php\n\tcomposer bin phpstan install --ignore-platform-reqs\n\tln -sf ../../vendor-bin/phpstan/vendor/phpstan/phpstan/phpstan $@\n\n\n# Lots of PHARs\n\nbuild/stub: bin/build-stub bin/psysh LICENSE\n\tbin/build-stub\n\nbuild/psysh: $(PSYSH_SRC) $(PSYSH_SRC_FILES)\n\trm -rf $@ || true\n\tmkdir $@\n\tcp -R $(PSYSH_SRC) $@/\n\tsed -i -e \"/^ *const VERSION =/ s/'.*'/'$(VERSION)'/\" $@/src/Shell.php\n\tcomposer config --working-dir $@ platform.php 7.4\n\tcomposer require --working-dir $@ $(COMPOSER_REQUIRE_OPTS) php:'>=7.4'\n\tcomposer require --working-dir $@ $(COMPOSER_REQUIRE_OPTS) symfony/polyfill-iconv symfony/polyfill-mbstring\n\tcomposer require --working-dir $@ $(COMPOSER_REQUIRE_OPTS) --dev roave/security-advisories:dev-latest\n\tcomposer update --working-dir $@ $(COMPOSER_UPDATE_OPTS)\n\nbuild/%/psysh: vendor/bin/box build/%\n\tvendor/bin/box compile --no-parallel --working-dir $(dir $@)\n\n\n# Dist packages\n\ndist/psysh-$(VERSION).tar.gz: build/psysh/psysh\n\t@mkdir -p $(@D)\n\ttar -C $(dir $<) -czf $@ $(notdir $<)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.31640625,
+          "content": "# PsySH\n\nPsySH is a runtime developer console, interactive debugger and [REPL](https://en.wikipedia.org/wiki/Read%E2%80%93eval%E2%80%93print_loop) for PHP. Learn more at [psysh.org](http://psysh.org/) and [in the manual](https://github.com/bobthecow/psysh/wiki/Home).\n\n\n[![Package version](https://img.shields.io/packagist/v/psy/psysh.svg?style=flat-square)](https://packagist.org/packages/psy/psysh)\n[![Monthly downloads](http://img.shields.io/packagist/dm/psy/psysh.svg?style=flat-square)](https://packagist.org/packages/psy/psysh)\n[![Made out of awesome](https://img.shields.io/badge/made_out_of_awesome-✓-brightgreen.svg?style=flat-square)](http://psysh.org)\n\n[![Build status](https://img.shields.io/github/actions/workflow/status/bobthecow/psysh/tests.yml?branch=main&style=flat-square)](https://github.com/bobthecow/psysh/actions?query=branch:main)\n[![StyleCI](https://styleci.io/repos/4549925/shield)](https://styleci.io/repos/4549925)\n\n\n<a id=\"downloading-the-manual\"></a>\n\n## [PsySH manual](https://github.com/bobthecow/psysh/wiki/Home)\n\n### [💾 Installation](https://github.com/bobthecow/psysh/wiki/Installation)\n * [📕 PHP manual installation](https://github.com/bobthecow/psysh/wiki/PHP-manual)\n * <a class=\"internal present\" href=\"https://github.com/bobthecow/psysh/wiki/Windows\"><img src=\"https://user-images.githubusercontent.com/53660/40878809-407e8368-664b-11e8-8455-f11602c41dfe.png\" width=\"18\"> Windows</a>\n\n### [🖥 Usage](https://github.com/bobthecow/psysh/wiki/Usage)\n * [✨ Magic variables](https://github.com/bobthecow/psysh/wiki/Magic-variables)\n * [⏳ Managing history](https://github.com/bobthecow/psysh/wiki/History)\n * [💲 System shell integration](https://github.com/bobthecow/psysh/wiki/Shell-integration)\n * [🎥 Tutorials & guides](https://github.com/bobthecow/psysh/wiki/Tutorials)\n * [🐛 Troubleshooting](https://github.com/bobthecow/psysh/wiki/Troubleshooting)\n\n### [📢 Commands](https://github.com/bobthecow/psysh/wiki/Commands)\n\n### [🛠 Configuration](https://github.com/bobthecow/psysh/wiki/Configuration)\n * [🎛 Config options](https://github.com/bobthecow/psysh/wiki/Config-options)\n * [🎨 Themes](https://github.com/bobthecow/psysh/wiki/Themes)\n * [📄 Sample config file](https://github.com/bobthecow/psysh/wiki/Sample-config)\n\n### [🔌 Integrations](https://github.com/bobthecow/psysh/wiki/Integrations)\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "box.json.dist",
+          "type": "blob",
+          "size": 0.2880859375,
+          "content": "{\n    \"stub\": \"stub\",\n    \"output\": \"psysh\",\n    \"compactors\": [\n        \"KevinGH\\\\Box\\\\Compactor\\\\Php\",\n        \"KevinGH\\\\Box\\\\Compactor\\\\PhpScoper\"\n    ],\n    \"blacklist\": [\n        \"grammar\",\n        \"test_old\",\n        \"Documentation\",\n        \"php-parse\",\n        \"var-dump-server\"\n    ]\n}\n"
+        },
+        {
+          "name": "codecov.yml",
+          "type": "blob",
+          "size": 0.1552734375,
+          "content": "codecov:\n    notify:\n        after_n_builds: 7\n\ncoverage:\n    range: \"60..100\"\n    status:\n        project:\n            default:\n                threshold: 1%\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.6611328125,
+          "content": "{\n    \"name\": \"psy/psysh\",\n    \"description\": \"An interactive shell for modern PHP.\",\n    \"type\": \"library\",\n    \"keywords\": [\"console\", \"interactive\", \"shell\", \"repl\"],\n    \"homepage\": \"http://psysh.org\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Justin Hileman\",\n            \"email\": \"justin@justinhileman.info\",\n            \"homepage\": \"http://justinhileman.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.0 || ^7.4\",\n        \"ext-json\": \"*\",\n        \"ext-tokenizer\": \"*\",\n        \"nikic/php-parser\": \"^5.0 || ^4.0\",\n        \"symfony/console\": \"^7.0 || ^6.0 || ^5.0 || ^4.0 || ^3.4\",\n        \"symfony/var-dumper\": \"^7.0 || ^6.0 || ^5.0 || ^4.0 || ^3.4\"\n    },\n    \"require-dev\": {\n        \"bamarni/composer-bin-plugin\": \"^1.2\"\n    },\n    \"suggest\": {\n        \"ext-pcntl\": \"Enabling the PCNTL extension makes PsySH a lot happier :)\",\n        \"ext-posix\": \"If you have PCNTL, you'll want the POSIX extension as well.\",\n        \"ext-pdo-sqlite\": \"The doc command requires SQLite to work.\"\n    },\n    \"autoload\": {\n        \"files\": [\"src/functions.php\"],\n        \"psr-4\": {\n            \"Psy\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Psy\\\\Test\\\\\": \"test/\"\n        }\n    },\n    \"bin\": [\"bin/psysh\"],\n    \"config\": {\n        \"allow-plugins\": {\n            \"bamarni/composer-bin-plugin\": true\n        }\n    },\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-main\": \"0.12.x-dev\"\n        },\n        \"bamarni-bin\": {\n            \"bin-links\": false,\n            \"forward-command\": false\n        }\n    },\n    \"conflict\": {\n        \"symfony/console\": \"4.4.37 || 5.3.14 || 5.3.15 || 5.4.3 || 5.4.4 || 6.0.3 || 6.0.4\"\n    }\n}\n"
+        },
+        {
+          "name": "phpstan.neon.dist",
+          "type": "blob",
+          "size": 0.5244140625,
+          "content": "includes:\n  - vendor-bin/phpstan/baseline.neon\n  - vendor-bin/phpstan/ignore.neon\n\nparameters:\n  # Test on PHP 7.4\n  phpVersion: 70400\n\n  # See: https://phpstan.org/user-guide/rule-levels\n  level: 1\n  paths:\n    - src\n    - test\n  excludePaths:\n    # Signature errors related to wide PHP version support.\n    # See: https://github.com/bobthecow/psysh/pull/738#issuecomment-1202622730\n    - src/Readline/Hoa/FileLink.php\n    - src/Util/Str.php\n  bootstrapFiles:\n    - vendor-bin/phpstan/bootstrap.php\n  reportUnmatchedIgnoredErrors: true\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.3642578125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\" colors=\"true\" bootstrap=\"vendor/autoload.php\">\n\t<php>\n\t\t<ini name=\"memory_limit\" value=\"512M\"/>\n\t</php>\n\n\t<testsuite name=\"PsySH\">\n\t\t<directory suffix=\"Test.php\">./test</directory>\n\t</testsuite>\n\n\t<filter>\n\t\t<whitelist>\n\t\t\t<directory suffix=\".php\">./src</directory>\n\t\t</whitelist>\n\t</filter>\n</phpunit>\n"
+        },
+        {
+          "name": "scoper.inc.php",
+          "type": "blob",
+          "size": 5.2451171875,
+          "content": "<?php\n\n/*\n * This file is part of Psy Shell.\n *\n * (c) 2012-2023 Justin Hileman\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nuse Symfony\\Component\\Finder\\Finder;\n\n$polyfillsBootstraps = \\array_map(\n    function (SplFileInfo $fileInfo) {\n        return $fileInfo->getPathname();\n    },\n    \\iterator_to_array(\n        Finder::create()\n            ->files()\n            ->in(__DIR__.'/vendor/symfony/polyfill-*')\n            ->name('bootstrap*.php'),\n        false\n    )\n);\n\n$polyfillsStubs = [];\n\ntry {\n    $polyfillsStubs = \\array_map(\n        function (SplFileInfo $fileInfo) {\n            return $fileInfo->getPathname();\n        },\n        \\iterator_to_array(\n            Finder::create()\n                ->files()\n                ->in(__DIR__.'/vendor/symfony/polyfill-*/Resources/stubs')\n                ->name('*.php'),\n            false\n        )\n    );\n} catch (Throwable $e) {\n    // There may not be any stubs?\n}\n\nreturn [\n    'exclude-namespaces' => [\n        'Psy',\n        'Symfony\\Polyfill',\n    ],\n\n    'exclude-constants' => [\n        // Symfony global constants\n        '/^SYMFONY\\_[\\p{L}_]+$/',\n    ],\n\n    'exclude-files' => \\array_merge($polyfillsBootstraps, $polyfillsStubs),\n\n    'patchers' => [\n        // https://github.com/humbug/php-scoper/issues/294\n        // https://github.com/humbug/php-scoper/issues/286\n        static function (string $filePath, string $prefix, string $contents): string {\n            if (!\\in_array($filePath, ['src/Formatter/DocblockFormatter.php', 'src/Output/ShellOutput.php'], true)) {\n                return $contents;\n            }\n\n            return \\str_replace(\n                '\\'Symfony\\\\\\\\Component\\\\\\\\Console\\\\\\\\Formatter\\\\\\\\OutputFormatter\\'',\n                \\sprintf(\n                    '\\'%s\\\\%s\\'',\n                    $prefix,\n                    'Symfony\\\\Component\\\\Console\\\\Formatter\\\\OutputFormatter'\n                ),\n                $contents\n            );\n        },\n        // Symfony patches\n        static function (string $filePath, string $prefix, string $contents): string {\n            if ('vendor/symfony/debug/DebugClassLoader.php' !== $filePath) {\n                return $contents;\n            }\n\n            return \\preg_replace(\n                '/case \\'(Symfony\\\\\\\\.+\\\\\\\\)\\':/',\n                \\sprintf(\n                    'case \\'%s\\\\\\\\\\\\\\$1\\':',\n                    $prefix\n                ),\n                $contents\n            );\n        },\n        // https://github.com/humbug/php-scoper/issues/286\n        static function (string $filePath, string $prefix, string $contents): string {\n            if ('vendor/symfony/var-dumper/Cloner/AbstractCloner.php' !== $filePath) {\n                return $contents;\n            }\n\n            return \\preg_replace(\n                '/\\'(Symfony\\\\\\\\.+?)\\'/',\n                \\sprintf(\n                    '\\'%s\\\\\\\\\\\\\\$1\\'',\n                    $prefix\n                ),\n                $contents\n            );\n        },\n        // https://github.com/humbug/php-scoper/issues/286\n        static function (string $filePath, string $prefix, string $contents): string {\n            if ('vendor/symfony/debug/Exception/FlattenException.php' !== $filePath) {\n                return $contents;\n            }\n\n            return \\preg_replace(\n                '/\\'(Symfony\\\\\\\\.+?)\\'/',\n                \\sprintf(\n                    '\\'%s\\\\\\\\\\\\\\$1\\'',\n                    $prefix\n                ),\n                $contents\n            );\n        },\n        // PHP-Parser patches\n        static function (string $filePath, string $prefix, string $contents): string {\n            if ('vendor/nikic/php-parser/lib/PhpParser/JsonDecoder.php' !== $filePath) {\n                return $contents;\n            }\n\n            return \\str_replace(\n                '\\'PhpParser\\\\\\\\Node\\\\\\\\\\'',\n                \\sprintf(\n                    '\\'%s\\\\\\\\PhpParser\\\\\\\\Node\\\\\\\\\\'',\n                    $prefix\n                ),\n                $contents\n            );\n        },\n        static function (string $filePath, string $prefix, string $contents): string {\n            if ('vendor/nikic/php-parser/lib/PhpParser/Unserializer/XML.php' !== $filePath) {\n                return $contents;\n            }\n\n            $contents = \\preg_replace(\n                '/\\'(PhpParser\\\\\\\\.+(?:\\\\\\\\)?)\\'/',\n                \\sprintf(\n                    '\\'%s\\\\\\\\\\\\\\$1\\'',\n                    $prefix\n                ),\n                $contents\n            );\n\n            $contents = \\preg_replace(\n                '/\\'(PhpParser\\\\\\\\\\\\\\\\\\p{L}+)(?:\\\\\\\\\\\\\\\\)?\\'/u',\n                \\sprintf(\n                    '\\'%s\\\\\\\\\\\\\\$1\\'',\n                    $prefix\n                ),\n                $contents\n            );\n\n            return $contents;\n        },\n        static function (string $filePath, string $prefix, string $contents): string {\n            if ('vendor/nikic/php-parser/lib/PhpParser/Lexer.php' !== $filePath) {\n                return $contents;\n            }\n\n            return \\str_replace(\n                '\\'PhpParser\\\\\\\\Parser\\\\\\\\Tokens::\\'',\n                \\sprintf(\n                    '\\'%s\\\\\\\\PhpParser\\\\\\\\Parser\\\\\\\\Tokens::\\'',\n                    $prefix\n                ),\n                $contents\n            );\n        },\n    ],\n];\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vendor-bin",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

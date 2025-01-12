@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "timestamp": 1736712265223,
+    "page": 23,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "myclabs/DeepCopy",
+      "stars": 8792,
+      "defaultBranch": "1.x",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.3056640625,
+          "content": "# Auto detect text files and perform LF normalization\n* text=auto\n\n*.png    binary\n\n.github/ export-ignore\ndoc/ export-ignore\nfixtures/ export-ignore\ntests/ export-ignore\n.gitattributes export-ignore\n.gitignore export-ignore\n.scrutinizer.yml export-ignore\n.travis.yml export-ignore\nphpunit.xml.dist export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.060546875,
+          "content": "/composer.phar\n/composer.lock\n/vendor/*\n.phpunit.result.cache\n"
+        },
+        {
+          "name": ".scrutinizer.yml",
+          "type": "blob",
+          "size": 0.083984375,
+          "content": "build:\n    environment:\n        variables:\n            COMPOSER_ROOT_VERSION: '1.8.0'\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0517578125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 My C-Sense\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 10.5146484375,
+          "content": "# DeepCopy\n\nDeepCopy helps you create deep copies (clones) of your objects. It is designed to handle cycles in the association graph.\n\n[![Total Downloads](https://poser.pugx.org/myclabs/deep-copy/downloads.svg)](https://packagist.org/packages/myclabs/deep-copy)\n[![Integrate](https://github.com/myclabs/DeepCopy/actions/workflows/ci.yaml/badge.svg?branch=1.x)](https://github.com/myclabs/DeepCopy/actions/workflows/ci.yaml)\n\n## Table of Contents\n\n1. [How](#how)\n1. [Why](#why)\n    1. [Using simply `clone`](#using-simply-clone)\n    1. [Overriding `__clone()`](#overriding-__clone)\n    1. [With `DeepCopy`](#with-deepcopy)\n1. [How it works](#how-it-works)\n1. [Going further](#going-further)\n    1. [Matchers](#matchers)\n        1. [Property name](#property-name)\n        1. [Specific property](#specific-property)\n        1. [Type](#type)\n    1. [Filters](#filters)\n        1. [`SetNullFilter`](#setnullfilter-filter)\n        1. [`KeepFilter`](#keepfilter-filter)\n        1. [`DoctrineCollectionFilter`](#doctrinecollectionfilter-filter)\n        1. [`DoctrineEmptyCollectionFilter`](#doctrineemptycollectionfilter-filter)\n        1. [`DoctrineProxyFilter`](#doctrineproxyfilter-filter)\n        1. [`ReplaceFilter`](#replacefilter-type-filter)\n        1. [`ShallowCopyFilter`](#shallowcopyfilter-type-filter)\n1. [Edge cases](#edge-cases)\n1. [Contributing](#contributing)\n    1. [Tests](#tests)\n\n\n## How?\n\nInstall with Composer:\n\n```\ncomposer require myclabs/deep-copy\n```\n\nUse it:\n\n```php\nuse DeepCopy\\DeepCopy;\n\n$copier = new DeepCopy();\n$myCopy = $copier->copy($myObject);\n```\n\n\n## Why?\n\n- How do you create copies of your objects?\n\n```php\n$myCopy = clone $myObject;\n```\n\n- How do you create **deep** copies of your objects (i.e. copying also all the objects referenced in the properties)?\n\nYou use [`__clone()`](http://www.php.net/manual/en/language.oop5.cloning.php#object.clone) and implement the behavior\nyourself.\n\n- But how do you handle **cycles** in the association graph?\n\nNow you're in for a big mess :(\n\n![association graph](doc/graph.png)\n\n\n### Using simply `clone`\n\n![Using clone](doc/clone.png)\n\n\n### Overriding `__clone()`\n\n![Overriding __clone](doc/deep-clone.png)\n\n\n### With `DeepCopy`\n\n![With DeepCopy](doc/deep-copy.png)\n\n\n## How it works\n\nDeepCopy recursively traverses all the object's properties and clones them. To avoid cloning the same object twice it\nkeeps a hash map of all instances and thus preserves the object graph.\n\nTo use it:\n\n```php\nuse function DeepCopy\\deep_copy;\n\n$copy = deep_copy($var);\n```\n\nAlternatively, you can create your own `DeepCopy` instance to configure it differently for example:\n\n```php\nuse DeepCopy\\DeepCopy;\n\n$copier = new DeepCopy(true);\n\n$copy = $copier->copy($var);\n```\n\nYou may want to roll your own deep copy function:\n\n```php\nnamespace Acme;\n\nuse DeepCopy\\DeepCopy;\n\nfunction deep_copy($var)\n{\n    static $copier = null;\n    \n    if (null === $copier) {\n        $copier = new DeepCopy(true);\n    }\n    \n    return $copier->copy($var);\n}\n```\n\n\n## Going further\n\nYou can add filters to customize the copy process.\n\nThe method to add a filter is `DeepCopy\\DeepCopy::addFilter($filter, $matcher)`,\nwith `$filter` implementing `DeepCopy\\Filter\\Filter`\nand `$matcher` implementing `DeepCopy\\Matcher\\Matcher`.\n\nWe provide some generic filters and matchers.\n\n\n### Matchers\n\n  - `DeepCopy\\Matcher` applies on a object attribute.\n  - `DeepCopy\\TypeMatcher` applies on any element found in graph, including array elements.\n\n\n#### Property name\n\nThe `PropertyNameMatcher` will match a property by its name:\n\n```php\nuse DeepCopy\\Matcher\\PropertyNameMatcher;\n\n// Will apply a filter to any property of any objects named \"id\"\n$matcher = new PropertyNameMatcher('id');\n```\n\n\n#### Specific property\n\nThe `PropertyMatcher` will match a specific property of a specific class:\n\n```php\nuse DeepCopy\\Matcher\\PropertyMatcher;\n\n// Will apply a filter to the property \"id\" of any objects of the class \"MyClass\"\n$matcher = new PropertyMatcher('MyClass', 'id');\n```\n\n\n#### Type\n\nThe `TypeMatcher` will match any element by its type (instance of a class or any value that could be parameter of\n[gettype()](http://php.net/manual/en/function.gettype.php) function):\n\n```php\nuse DeepCopy\\TypeMatcher\\TypeMatcher;\n\n// Will apply a filter to any object that is an instance of Doctrine\\Common\\Collections\\Collection\n$matcher = new TypeMatcher('Doctrine\\Common\\Collections\\Collection');\n```\n\n\n### Filters\n\n- `DeepCopy\\Filter` applies a transformation to the object attribute matched by `DeepCopy\\Matcher`\n- `DeepCopy\\TypeFilter` applies a transformation to any element matched by `DeepCopy\\TypeMatcher`\n\nBy design, matching a filter will stop the chain of filters (i.e. the next ones will not be applied).\nUsing the ([`ChainableFilter`](#chainablefilter-filter)) won't stop the chain of filters.\n\n\n#### `SetNullFilter` (filter)\n\nLet's say for example that you are copying a database record (or a Doctrine entity), so you want the copy not to have\nany ID:\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\SetNullFilter;\nuse DeepCopy\\Matcher\\PropertyNameMatcher;\n\n$object = MyClass::load(123);\necho $object->id; // 123\n\n$copier = new DeepCopy();\n$copier->addFilter(new SetNullFilter(), new PropertyNameMatcher('id'));\n\n$copy = $copier->copy($object);\n\necho $copy->id; // null\n```\n\n\n#### `KeepFilter` (filter)\n\nIf you want a property to remain untouched (for example, an association to an object):\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\KeepFilter;\nuse DeepCopy\\Matcher\\PropertyMatcher;\n\n$copier = new DeepCopy();\n$copier->addFilter(new KeepFilter(), new PropertyMatcher('MyClass', 'category'));\n\n$copy = $copier->copy($object);\n// $copy->category has not been touched\n```\n\n\n#### `ChainableFilter` (filter)\n\nIf you use cloning on proxy classes, you might want to apply two filters for:\n1. loading the data\n2. applying a transformation\n\nYou can use the `ChainableFilter` as a decorator of the proxy loader filter, which won't stop the chain of filters (i.e. \nthe next ones may be applied).\n\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\ChainableFilter;\nuse DeepCopy\\Filter\\Doctrine\\DoctrineProxyFilter;\nuse DeepCopy\\Filter\\SetNullFilter;\nuse DeepCopy\\Matcher\\Doctrine\\DoctrineProxyMatcher;\nuse DeepCopy\\Matcher\\PropertyNameMatcher;\n\n$copier = new DeepCopy();\n$copier->addFilter(new ChainableFilter(new DoctrineProxyFilter()), new DoctrineProxyMatcher());\n$copier->addFilter(new SetNullFilter(), new PropertyNameMatcher('id'));\n\n$copy = $copier->copy($object);\n\necho $copy->id; // null\n```\n\n\n#### `DoctrineCollectionFilter` (filter)\n\nIf you use Doctrine and want to copy an entity, you will need to use the `DoctrineCollectionFilter`:\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\Doctrine\\DoctrineCollectionFilter;\nuse DeepCopy\\Matcher\\PropertyTypeMatcher;\n\n$copier = new DeepCopy();\n$copier->addFilter(new DoctrineCollectionFilter(), new PropertyTypeMatcher('Doctrine\\Common\\Collections\\Collection'));\n\n$copy = $copier->copy($object);\n```\n\n\n#### `DoctrineEmptyCollectionFilter` (filter)\n\nIf you use Doctrine and want to copy an entity who contains a `Collection` that you want to be reset, you can use the\n`DoctrineEmptyCollectionFilter`\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\Doctrine\\DoctrineEmptyCollectionFilter;\nuse DeepCopy\\Matcher\\PropertyMatcher;\n\n$copier = new DeepCopy();\n$copier->addFilter(new DoctrineEmptyCollectionFilter(), new PropertyMatcher('MyClass', 'myProperty'));\n\n$copy = $copier->copy($object);\n\n// $copy->myProperty will return an empty collection\n```\n\n\n#### `DoctrineProxyFilter` (filter)\n\nIf you use Doctrine and use cloning on lazy loaded entities, you might encounter errors mentioning missing fields on a\nDoctrine proxy class (...\\\\\\_\\_CG\\_\\_\\Proxy).\nYou can use the `DoctrineProxyFilter` to load the actual entity behind the Doctrine proxy class.\n**Make sure, though, to put this as one of your very first filters in the filter chain so that the entity is loaded\nbefore other filters are applied!**\nWe recommend to decorate the `DoctrineProxyFilter` with the `ChainableFilter` to allow applying other filters to the\ncloned lazy loaded entities.\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\Doctrine\\DoctrineProxyFilter;\nuse DeepCopy\\Matcher\\Doctrine\\DoctrineProxyMatcher;\n\n$copier = new DeepCopy();\n$copier->addFilter(new ChainableFilter(new DoctrineProxyFilter()), new DoctrineProxyMatcher());\n\n$copy = $copier->copy($object);\n\n// $copy should now contain a clone of all entities, including those that were not yet fully loaded.\n```\n\n\n#### `ReplaceFilter` (type filter)\n\n1. If you want to replace the value of a property:\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\Filter\\ReplaceFilter;\nuse DeepCopy\\Matcher\\PropertyMatcher;\n\n$copier = new DeepCopy();\n$callback = function ($currentValue) {\n  return $currentValue . ' (copy)'\n};\n$copier->addFilter(new ReplaceFilter($callback), new PropertyMatcher('MyClass', 'title'));\n\n$copy = $copier->copy($object);\n\n// $copy->title will contain the data returned by the callback, e.g. 'The title (copy)'\n```\n\n2. If you want to replace whole element:\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\TypeFilter\\ReplaceFilter;\nuse DeepCopy\\TypeMatcher\\TypeMatcher;\n\n$copier = new DeepCopy();\n$callback = function (MyClass $myClass) {\n  return get_class($myClass);\n};\n$copier->addTypeFilter(new ReplaceFilter($callback), new TypeMatcher('MyClass'));\n\n$copy = $copier->copy([new MyClass, 'some string', new MyClass]);\n\n// $copy will contain ['MyClass', 'some string', 'MyClass']\n```\n\n\nThe `$callback` parameter of the `ReplaceFilter` constructor accepts any PHP callable.\n\n\n#### `ShallowCopyFilter` (type filter)\n\nStop *DeepCopy* from recursively copying element, using standard `clone` instead:\n\n```php\nuse DeepCopy\\DeepCopy;\nuse DeepCopy\\TypeFilter\\ShallowCopyFilter;\nuse DeepCopy\\TypeMatcher\\TypeMatcher;\nuse Mockery as m;\n\n$this->deepCopy = new DeepCopy();\n$this->deepCopy->addTypeFilter(\n\tnew ShallowCopyFilter,\n\tnew TypeMatcher(m\\MockInterface::class)\n);\n\n$myServiceWithMocks = new MyService(m::mock(MyDependency1::class), m::mock(MyDependency2::class));\n// All mocks will be just cloned, not deep copied\n```\n\n\n## Edge cases\n\nThe following structures cannot be deep-copied with PHP Reflection. As a result they are shallow cloned and filters are\nnot applied. There is two ways for you to handle them:\n\n- Implement your own `__clone()` method\n- Use a filter with a type matcher\n\n\n## Contributing\n\nDeepCopy is distributed under the MIT license.\n\n\n### Tests\n\nRunning the tests is simple:\n\n```php\nvendor/bin/phpunit\n```\n\n### Support\n\nGet professional support via [the Tidelift Subscription](https://tidelift.com/subscription/pkg/packagist-myclabs-deep-copy?utm_source=packagist-myclabs-deep-copy&utm_medium=referral&utm_campaign=readme).\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.998046875,
+          "content": "{\n    \"name\": \"myclabs/deep-copy\",\n    \"description\": \"Create deep copies (clones) of your objects\",\n    \"license\": \"MIT\",\n    \"type\": \"library\",\n    \"keywords\": [\n        \"clone\",\n        \"copy\",\n        \"duplicate\",\n        \"object\",\n        \"object graph\"\n    ],\n    \"require\": {\n        \"php\": \"^7.1 || ^8.0\"\n    },\n    \"require-dev\": {\n        \"doctrine/collections\": \"^1.6.8\",\n        \"doctrine/common\": \"^2.13.3 || ^3.2.2\",\n        \"phpspec/prophecy\": \"^1.10\",\n        \"phpunit/phpunit\": \"^7.5.20 || ^8.5.23 || ^9.5.13\"\n    },\n    \"conflict\": {\n        \"doctrine/collections\": \"<1.6.8\",\n        \"doctrine/common\": \"<2.13.3 || >=3 <3.2.2\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"DeepCopy\\\\\": \"src/DeepCopy/\"\n        },\n        \"files\": [\n            \"src/DeepCopy/deep_copy.php\"\n        ]\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"DeepCopyTest\\\\\": \"tests/DeepCopyTest/\",\n            \"DeepCopy\\\\\": \"fixtures/\"\n        }\n    },\n    \"config\": {\n        \"sort-packages\": true\n    }\n}\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "fixtures",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.5771484375,
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"vendor/phpunit/phpunit/phpunit.xsd\"\n         colors=\"true\">\n\n    <testsuites>\n        <testsuite name=\"Test suite\">\n            <directory>./tests/DeepCopyTest</directory>\n        </testsuite>\n    </testsuites>\n\n    <filter>\n        <whitelist>\n            <directory suffix=\".php\">./src/</directory>\n            <exclude>\n                <file>src/DeepCopy/deep_copy.php</file>\n            </exclude>\n        </whitelist>\n    </filter>\n\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

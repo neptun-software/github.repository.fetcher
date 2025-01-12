@@ -1,0 +1,103 @@
+{
+  "metadata": {
+    "timestamp": 1736712232912,
+    "page": 965,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "staudenmeir/belongs-to-through",
+      "stars": 1189,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.408203125,
+          "content": "/.docker                export-ignore\n/.github                export-ignore\n/tests                  export-ignore\n/types                  export-ignore\n.gitattributes          export-ignore\n.gitignore              export-ignore\ndocker-compose.ci.yml   export-ignore\ndocker-compose.yml      export-ignore\nphpstan.neon.dist       export-ignore\nphpstan.types.neon.dist export-ignore\nphpunit.xml.dist        export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0634765625,
+          "content": "/.idea\n/.phpunit.cache\n/vendor\n.php-cs-fixer.cache\ncomposer.lock\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.080078125,
+          "content": "MIT License\n\nCopyright (c) 2015 Rahul Kadyan\nCopyright (c) 2019 Jonas Staudenmeir\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.4892578125,
+          "content": "# BelongsToThrough\n\n[![CI](https://github.com/staudenmeir/belongs-to-through/actions/workflows/ci.yml/badge.svg)](https://github.com/staudenmeir/belongs-to-through/actions/workflows/ci.yml?query=branch%3Amain)\n[![Code Coverage](https://codecov.io/gh/staudenmeir/belongs-to-through/graph/badge.svg?token=Z4KscVFWIE)](https://codecov.io/gh/staudenmeir/belongs-to-through)\n[![PHPStan](https://img.shields.io/badge/PHPStan-level%2010-brightgreen.svg?style=flat)](https://github.com/staudenmeir/belongs-to-through/actions/workflows/static-analysis.yml?query=branch%3Amain)\n[![Latest Stable Version](https://poser.pugx.org/staudenmeir/belongs-to-through/v/stable)](https://packagist.org/packages/staudenmeir/belongs-to-through)\n[![Total Downloads](https://poser.pugx.org/staudenmeir/belongs-to-through/downloads)](https://packagist.org/packages/staudenmeir/belongs-to-through/stats)\n[![License](https://poser.pugx.org/staudenmeir/belongs-to-through/license)](https://github.com/staudenmeir/belongs-to-through/blob/main/LICENSE)\n\nThis inverse version of `HasManyThrough` allows `BelongsToThrough` relationships with unlimited intermediate models.\n\nSupports Laravel 5.0+.\n\n## Installation\n\n    composer require staudenmeir/belongs-to-through:\"^2.5\"\n\nUse this command if you are in PowerShell on Windows (e.g. in VS Code):\n\n    composer require staudenmeir/belongs-to-through:\"^^^^2.5\"\n\n## Versions\n\n| Laravel | Package |\n|:--------|:--------|\n| 11.x    | 2.16    |\n| 10.x    | 2.13    |\n| 9.x     | 2.12    |\n| 8.x     | 2.11    |\n| 7.x     | 2.10    |\n| 6.x     | 2.6     |\n| 5.x     | 2.5     |\n\n## Usage\n\n- [Custom Foreign Keys](#custom-foreign-keys)\n- [Custom Local Keys](#custom-local-keys)\n- [Table Aliases](#table-aliases)\n- [Soft Deleting](#soft-deleting)\n\nConsider this `HasManyThrough` relationship:  \n`Country` → has many → `User` → has many → `Post`\n\n```php\nclass Country extends Model\n{\n    public function posts()\n    {\n        return $this->hasManyThrough(Post::class, User::class);\n    }\n}\n```\n\nUse the `BelongsToThrough` trait in your model to define the inverse relationship:  \n`Post` → belongs to → `User` → belongs to → `Country`  \n\n```php\nclass Post extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\BelongsToThrough;\n\n    public function country(): \\Znck\\Eloquent\\Relations\\BelongsToThrough\n    {\n        return $this->belongsToThrough(Country::class, User::class);\n    }\n}\n```\n\nYou can also define deeper relationships:  \n`Comment` → belongs to → `Post` → belongs to → `User` → belongs to → `Country`\n\nSupply an array of intermediate models as the second argument, from the related (`Country`) to the parent model (`Comment`):  \n\n```php\nclass Comment extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\BelongsToThrough;\n\n    public function country(): \\Znck\\Eloquent\\Relations\\BelongsToThrough\n    {\n        return $this->belongsToThrough(Country::class, [User::class, Post::class]);\n    }\n}\n```\n\n### Custom Foreign Keys\n\nYou can specify custom foreign keys as the fifth argument:\n\n```php\nclass Comment extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\BelongsToThrough;\n\n    public function country(): \\Znck\\Eloquent\\Relations\\BelongsToThrough\n    {\n        return $this->belongsToThrough(\n            Country::class,\n            [User::class, Post::class], \n            foreignKeyLookup: [User::class => 'custom_user_id']\n        );\n    }\n}\n```\n\n### Custom Local Keys\n\nYou can specify custom local keys for the relations:\n\n`VendorCustomerAddress` → belongs to → `VendorCustomer` in `VendorCustomerAddress.vendor_customer_id`\n`VendorCustomerAddress` → belongs to → `CustomerAddress` in `VendorCustomerAddress.address_id`\n\nYou can access `VendorCustomer` from `CustomerAddress` by the following\n\n```php\nclass CustomerAddress extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\BelongsToThrough;\n\n    public function vendorCustomer(): \\Znck\\Eloquent\\Relations\\BelongsToThrough\n    {\n        return $this->belongsToThrough(\n            VendorCustomer::class,\n            VendorCustomerAddress::class,\n            foreignKeyLookup: [VendorCustomerAddress::class => 'id'],\n            localKeyLookup: [VendorCustomerAddress::class => 'address_id'],\n        );\n    }    \n}\n```\n\n### Table Aliases\n\nIf your relationship path contains the same model multiple times, you can specify a table alias (Laravel 6+):\n\n```php\nclass Comment extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\BelongsToThrough;\n\n    public function grandparent(): \\Znck\\Eloquent\\Relations\\BelongsToThrough\n    {\n        return $this->belongsToThrough(\n            Comment::class,\n            Comment::class . ' as alias',\n            foreignKeyLookup: [Comment::class => 'parent_id']\n        );\n    }\n}\n```\n\nUse the `HasTableAlias` trait in the models you are aliasing:\n\n```php\nclass Comment extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\HasTableAlias;\n}\n```\n\n### Soft Deleting\n\nBy default, soft-deleted intermediate models will be excluded from the result. Use `withTrashed()` to include them:\n\n```php\nclass Comment extends Model\n{\n    use \\Znck\\Eloquent\\Traits\\BelongsToThrough;\n\n    public function country(): \\Znck\\Eloquent\\Relations\\BelongsToThrough\n    {\n        return $this->belongsToThrough(Country::class, [User::class, Post::class])\n            ->withTrashed('users.deleted_at');\n    }\n}\n\nclass User extends Model\n{\n    use SoftDeletes;\n}\n```\n\n## Contributing\n\nPlease see [CONTRIBUTING](.github/CONTRIBUTING.md) and [CODE OF CONDUCT](.github/CODE_OF_CONDUCT.md) for details.\n\n## Credits\n\n- [Rahul Kadyan](https://github.com/znck)\n- [Danny Weeks](https://github.com/dannyweeks)\n- [All Contributors](../../contributors)\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.20703125,
+          "content": "{\n    \"name\": \"staudenmeir/belongs-to-through\",\n    \"description\": \"Laravel Eloquent BelongsToThrough relationships\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Rahul Kadyan\",\n            \"email\": \"hi@znck.me\"\n        },\n        {\n            \"name\": \"Jonas Staudenmeir\",\n            \"email\": \"mail@jonas-staudenmeir.de\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.2\",\n        \"illuminate/database\": \"^11.0\"\n    },\n    \"require-dev\": {\n        \"barryvdh/laravel-ide-helper\": \"^3.0\",\n        \"larastan/larastan\": \"^3.0\",\n        \"laravel/framework\": \"^11.0\",\n        \"mockery/mockery\": \"^1.5.1\",\n        \"orchestra/testbench-core\": \"^9.5\",\n        \"phpunit/phpunit\": \"^11.0\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Staudenmeir\\\\BelongsToThrough\\\\\": \"src/\",\n            \"Znck\\\\Eloquent\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Tests\\\\\": \"tests/\"\n        }\n    },\n    \"config\": {\n        \"sort-packages\": true\n    },\n    \"extra\": {\n        \"laravel\": {\n            \"providers\": [\n                \"Staudenmeir\\\\BelongsToThrough\\\\IdeHelperServiceProvider\"\n            ]\n        }\n    },\n    \"minimum-stability\": \"dev\",\n    \"prefer-stable\": true\n}\n"
+        },
+        {
+          "name": "docker-compose.ci.yml",
+          "type": "blob",
+          "size": 0.8271484375,
+          "content": "services:\n  php8.2:\n    image: ghcr.io/staudenmeir/php:8.2\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - ~/.cache/composer/files:/root/.composer/cache/files\n  php8.3:\n    image: ghcr.io/staudenmeir/php:8.3\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - ~/.cache/composer/files:/root/.composer/cache/files\n  php8.4:\n    image: ghcr.io/staudenmeir/php:8.4\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - ~/.cache/composer/files:/root/.composer/cache/files\n  php8.4-xdebug:\n    image: ghcr.io/staudenmeir/php:8.4\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - .docker/xdebug.ci.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini\n      - ~/.cache/composer/files:/root/.composer/cache/files\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.61328125,
+          "content": "services:\n  php8.2:\n    image: ghcr.io/staudenmeir/php:8.2\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - .docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini\n  php8.3:\n    image: ghcr.io/staudenmeir/php:8.3\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - .docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini\n  php8.4:\n    image: ghcr.io/staudenmeir/php:8.4\n    working_dir: /var/www/html\n    volumes:\n      - .:/var/www/html:delegated\n      - .docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini\n"
+        },
+        {
+          "name": "phpstan.neon.dist",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "parameters:\n    level: 10\n    paths:\n        - src\n"
+        },
+        {
+          "name": "phpstan.types.neon.dist",
+          "type": "blob",
+          "size": 0.1083984375,
+          "content": "includes:\n    - ./vendor/larastan/larastan/extension.neon\nparameters:\n    level: 10\n    paths:\n        - types\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.609375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" backupGlobals=\"false\" colors=\"true\" processIsolation=\"false\" stopOnError=\"false\" stopOnFailure=\"false\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/10.3/phpunit.xsd\" cacheDirectory=\".phpunit.cache\" backupStaticProperties=\"false\">\n  <testsuites>\n    <testsuite name=\"BelongsToThrough Test Suite\">\n      <directory suffix=\"Test.php\">./tests</directory>\n    </testsuite>\n  </testsuites>\n  <coverage/>\n  <source>\n    <include>\n      <directory suffix=\".php\">./src</directory>\n    </include>\n  </source>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "types",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

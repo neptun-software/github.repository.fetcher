@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736712203070,
+    "page": 896,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "asm89/stack-cors",
+      "stars": 1276,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1640625,
+          "content": "* text=auto\n\n/tests export-ignore\n.github export-ignore\n.gitattributes export-ignore\n.gitignore export-ignore\nphpunit.xml.dist export-ignore\nCHANGELOG.md export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.068359375,
+          "content": "phpunit.xml\ncomposer.lock\ncomposer.phar\n/vendor/\n.phpunit.result.cache"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.6953125,
+          "content": "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\nand this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n\n## [Unreleased]\n\n### Fixed\n\n- Bug with `Access-Control-Allow-Origin` header is `null` then `allowedOrigins` is `['*']`, `supportsCredentials` is `true` and `Origin` header doesn't  set (#85)\n\n## [2.0.0] - 2020-05-11\n\n### Added\n- CORS headers are better cachable now, with correct Vary headers (#70, #74)\n\n### Changed\n- CORS headers are added to non-Origin requests when possible (#73)\n- Requests are no longer blocked by the server, only by the browser (#70)\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "Copyright (c) 2013-2017 Alexander <iam.asm89@gmail.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.455078125,
+          "content": "# Stack/Cors\n\nLibrary and middleware enabling cross-origin resource sharing for your\nhttp-{foundation,kernel} using application. It attempts to implement the\n[W3C Recommendation] for cross-origin resource sharing.\n\n[W3C Recommendation]: http://www.w3.org/TR/cors/\n\nBuild status: ![.github/workflows/run-tests.yml](https://github.com/asm89/stack-cors/workflows/.github/workflows/run-tests.yml/badge.svg)\n\n## Installation\n\nRequire `asm89/stack-cors` using composer.\n\n## Usage\n\nThis package can be used as a library or as [stack middleware].\n\n[stack middleware]: http://stackphp.com/\n\n### Options\n\n| Option                 | Description                                                | Default value |\n|------------------------|------------------------------------------------------------|---------------|\n| `allowedMethods`         | Matches the request method.                                | `[]`          |\n| `allowedOrigins`         | Matches the request origin.                                | `[]`          |\n| `allowedOriginsPatterns` | Matches the request origin with `preg_match`.              | `[]`          |\n| `allowedHeaders`         | Sets the Access-Control-Allow-Headers response header.     | `[]`          |\n| `exposedHeaders`         | Sets the Access-Control-Expose-Headers response header.    | `false`       |\n| `maxAge`                 | Sets the Access-Control-Max-Age response header.<br/>Set to `null` to omit the header/use browser default.           | `0`       |\n| `supportsCredentials`    | Sets the Access-Control-Allow-Credentials header.          | `false`       |\n\nThe _allowedMethods_ and _allowedHeaders_ options are case-insensitive.\n\nYou don't need to provide both _allowedOrigins_ and _allowedOriginsPatterns_. If one of the strings passed matches, it is considered a valid origin.\n\nIf `['*']` is provided to _allowedMethods_, _allowedOrigins_ or _allowedHeaders_ all methods / origins / headers are allowed.\n\nIf _supportsCredentials_ is `true`, you must [explicitly set](https://fetch.spec.whatwg.org/#cors-protocol-and-credentials) `allowedHeaders` for any headers which are not CORS safelisted.\n\n### Example: using the library\n\n```php\n<?php\n\nuse Asm89\\Stack\\CorsService;\n\n$cors = new CorsService([\n    'allowedHeaders'         => ['x-allowed-header', 'x-other-allowed-header'],\n    'allowedMethods'         => ['DELETE', 'GET', 'POST', 'PUT'],\n    'allowedOrigins'         => ['http://localhost'],\n    'allowedOriginsPatterns' => ['/localhost:\\d/'],\n    'exposedHeaders'         => false,\n    'maxAge'                 => 600,\n    'supportsCredentials'    => true,\n]);\n\n$cors->addActualRequestHeaders(Response $response, $origin);\n$cors->handlePreflightRequest(Request $request);\n$cors->isActualRequestAllowed(Request $request);\n$cors->isCorsRequest(Request $request);\n$cors->isPreflightRequest(Request $request);\n```\n\n## Example: using the stack middleware\n\n```php\n<?php\n\nuse Asm89\\Stack\\Cors;\n\n$app = new Cors($app, [\n    // you can use ['*'] to allow any headers\n    'allowedHeaders'      => ['x-allowed-header', 'x-other-allowed-header'],\n    // you can use ['*'] to allow any methods\n    'allowedMethods'      => ['DELETE', 'GET', 'POST', 'PUT'],\n    // you can use ['*'] to allow requests from any origin\n    'allowedOrigins'      => ['localhost'],\n    // you can enter regexes that are matched to the origin request header\n    'allowedOriginsPatterns' => ['/localhost:\\d/'],\n    'exposedHeaders'      => false,\n    'maxAge'              => 600,\n    'supportsCredentials' => false,\n]);\n```\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.3251953125,
+          "content": "{\n    \"name\": \"asm89/stack-cors\",\n    \"description\": \"Cross-origin resource sharing library and stack middleware\",\n    \"keywords\": [\"stack\", \"cors\"],\n    \"homepage\": \"https://github.com/asm89/stack-cors\",\n    \"type\": \"library\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Alexander\",\n            \"email\": \"iam.asm89@gmail.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^7.3|^8.0\",\n        \"symfony/http-foundation\": \"^5.3|^6|^7\",\n        \"symfony/http-kernel\": \"^5.3|^6|^7\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^9\",\n        \"squizlabs/php_codesniffer\": \"^3.5\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Asm89\\\\Stack\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Asm89\\\\Stack\\\\Tests\\\\\": \"tests/\"\n        }\n    },\n    \"scripts\": {\n        \"test\": \"phpunit\",\n        \"check-style\": \"phpcs -p --standard=PSR12 --exclude=Generic.Files.LineLength --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src\",\n        \"fix-style\": \"phpcbf -p --standard=PSR12 --exclude=Generic.Files.LineLength --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src\"\n    },\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-master\": \"2.2-dev\"\n        }\n    },\n    \"minimum-stability\": \"beta\",\n    \"prefer-stable\": true\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.5654296875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n>\n  <testsuites>\n    <testsuite name=\"Stack Cors Test Suite\">\n      <directory>./tests</directory>\n    </testsuite>\n  </testsuites>\n\n  <filter>\n    <whitelist>\n      <directory suffix=\".php\">./src/</directory>\n    </whitelist>\n  </filter>\n\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

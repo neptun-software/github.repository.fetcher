@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736712216823,
+    "page": 926,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "aarondfrancis/fast-paginate",
+      "stars": 1237,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.35546875,
+          "content": "# Ignore all test and documentation with \"export-ignore\".\n/.gitattributes     export-ignore\n/.gitignore         export-ignore\n/.github            export-ignore\n/phpunit.xml.dist   export-ignore\n/tests              export-ignore\n/docs               export-ignore\n/test               export-ignore\n/storage            export-ignore\n/bootstrap          export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.2353515625,
+          "content": "/vendor\n/storage/framework/testing\n.env\n.phpunit.result.cache\nnpm-debug.log\nyarn-error.log\ncomposer.lock\nbootstrap/cache/packages.php\nbootstrap/cache/services.php\n\ndocs/*.blade.php\ndocs/**/*.blade.php\nphpunit.xml\n.phpunit.cache/test-results\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "# Changelog\n## Unreleased \n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2021 Hammerstone\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.029296875,
+          "content": "# Fast Paginate for Laravel\n\n## About\n\nThis is a fast `limit`/`offset` pagination macro for Laravel. It can be used in place of the standard `paginate` methods. \n\nThis package uses a SQL method similar to a \"deferred join\" to achieve this speedup. A deferred join is a technique that defers access to requested columns until _after_ the `offset` and `limit` have been applied.\n\nIn our case we don't actually do a join, but rather a `where in` with a subquery. Using this technique we create a subquery that can be optimized with specific indexes for maximum speed and then use those results to fetch the full rows.\n\nThe SQL looks something like this:\n\n```sql\nselect * from contacts              -- The full data that you want to show your users.\n    where contacts.id in (          -- The \"deferred join\" or subquery, in our case.\n        select id from contacts     -- The pagination, accessing as little data as possible - ID only.\n        limit 15 offset 150000      \n    )\n```\n\n> You might get an error trying to run the query above! Something like `This version of MySQL doesn't yet support 'LIMIT & IN/ALL/ANY/SOME subquery.`\n> In this package, we run them as [two _separate_ queries](https://github.com/hammerstonedev/fast-paginate/blob/154da286f8160a9e75e64e8025b0da682aa2ba23/src/BuilderMixin.php#L62-L79) to get around that!  \n\nThe benefits can vary based on your dataset, but this method allows the database to examine as little data as possible to satisfy the user's intent.\n\nIt's unlikely that this method will ever perform worse than traditional `offset` / `limit`, although it is possible, so be\nsure to test on your data!\n\n> If you want to read 3,000 words on the theory of this package, you can head over to [aaronfrancis.com/2022/efficient-pagination-using-deferred-joins](https://aaronfrancis.com/2022/efficient-pagination-using-deferred-joins).\n\n## Installation\n\nThis package supports Laravel 8, 9, and 10. (Laravel 8 must be 8.37 or higher.)\n\nTo install, require the package via composer:\n\n```\ncomposer require hammerstone/fast-paginate\n```\n\nThere is nothing further you need to do. The service provider will be loaded automatically by Laravel.\n\n## Usage\n\nAnywhere you would use `Model::query()->paginate()`, you can use `Model::query()->fastPaginate()`! That's it! The method signature is the same.\n\nRelationships are supported as well: \n\n```php\nUser::first()->posts()->fastPaginate();\n```\n\n## A Favor\n\nIf this helps you, please [tweet at me](https://twitter.com/aarondfrancis) with before and after times! I'd love to know :D\n\nSome community results so far: \n* [30 seconds --> 250ms](https://twitter.com/mdavis1982/status/1482429071288066054) \n* [28 seconds --> 2 seconds](https://twitter.com/joecampo/status/1483550610028957701) \n* [7.5x faster](https://twitter.com/max_eckel/status/1483764319372333057) \n* [1.1 seconds --> 0.1 seconds](https://twitter.com/max_eckel/status/1483852300414337032) \n* [20 seconds --> 2 seconds](https://twitter.com/1ralphmorris/status/1484242437618941957) \n* [2 seconds --> .2 seconds](https://twitter.com/julioelpoeta/status/1549524738980077568) \n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9248046875,
+          "content": "{\n    \"name\": \"hammerstone/fast-paginate\",\n    \"description\": \"Fast paginate for Laravel\",\n    \"type\": \"library\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Aaron Francis\",\n            \"email\": \"aaron@hammerstone.dev\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^7.4|^8.0\",\n        \"illuminate/database\": \"^8.37|^9.0|^10.0|^11.0\"\n    },\n    \"require-dev\": {\n        \"orchestra/testbench\": \"^6|^7|^8.0|^9.0\",\n        \"mockery/mockery\": \"^1.3.3\",\n        \"phpunit/phpunit\": \">=8.5.23|^9\",\n        \"laravel/scout\": \"^9.4|^10.8\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Hammerstone\\\\FastPaginate\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Hammerstone\\\\FastPaginate\\\\Tests\\\\\": \"tests/\"\n        }\n    },\n    \"extra\": {\n        \"laravel\": {\n            \"providers\": [\n                \"Hammerstone\\\\FastPaginate\\\\FastPaginateProvider\"\n            ]\n        }\n    }\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.9150390625,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" bootstrap=\"vendor/autoload.php\" backupGlobals=\"false\" colors=\"true\" processIsolation=\"false\" stopOnFailure=\"false\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/10.0/phpunit.xsd\" cacheDirectory=\".phpunit.cache\" backupStaticProperties=\"false\">\n  <coverage>\n    <include>\n      <directory suffix=\".php\">src/</directory>\n    </include>\n  </coverage>\n  <testsuites>\n    <testsuite name=\"unit\">\n      <directory>tests/Unit</directory>\n    </testsuite>\n    <testsuite name=\"integration\">\n      <directory>tests/Integration</directory>\n    </testsuite>\n  </testsuites>\n  <php>\n    <env name=\"DB_CONNECTION\" value=\"mysql\"/>\n    <env name=\"DB_DATABASE\" value=\"fast_paginate\"/>\n    <env name=\"DB_USERNAME\" value=\"test\"/>\n    <env name=\"DB_PASSWORD\" value=\"root\"/>\n    <env name=\"SCOUT_DRIVER\" value=\"collection\"/>\n  </php>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

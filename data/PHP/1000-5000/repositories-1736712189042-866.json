@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": 1736712189042,
+    "page": 866,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jpfuentes2/php-activerecord",
+      "stars": 1320,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.2802734375,
+          "content": "# editorconfig.org\nroot = true\n\n[*]\nindent_style = space\nindent_size = 2\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.md]\ntrim_trailing_whitespace = false\n\n[*.php]\nindent_style = tab\nindent_size = 4\n\n[*.{xml,xml.dist}]\nindent_size = 4\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.080078125,
+          "content": ".project\n.buildpath\n.settings\n*.log\n*.db\n*.swp\nvendor/*\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.9130859375,
+          "content": "install: composer install --prefer-source --dev\n\nservices:\n  - memcache\n\nenv: PHPAR_MYSQL=mysql://root@127.0.0.1/phpar_test PHPAR_PGSQL=pgsql://postgres@127.0.0.1/phpar_test\n\nlanguage: php\nphp:\n  - 5.3\n  - 5.4\n  - 5.5\n  - 7.0\n  - 7.1\n  - nightly\n\nmatrix:\n  include:\n    - php: hhvm\n      dist: trusty\n  allow_failures:\n    - php: hhvm\n    - php: nightly\n  fast_finish: true\n\nbefore_script:\n  - |\n    if [[ \"${TRAVIS_PHP_VERSION:0:1}\" == \"7\" ]]; then\n      curl -L https://github.com/websupport-sk/pecl-memcache/archive/NON_BLOCKING_IO_php7.tar.gz | tar xz;\n      (cd pecl-memcache-NON_BLOCKING_IO_php7 && phpize && ./configure && make && make install);\n    fi\n  - if [[ \"$TRAVIS_PHP_VERSION\" != \"hhvm\" ]]; then echo 'extension = \"memcache.so\"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini; fi\n  \n  - mysql -e 'CREATE DATABASE phpar_test;'\n  - psql -c 'CREATE DATABASE phpar_test;' -U postgres\n\nscript: ./vendor/bin/phpunit\n"
+        },
+        {
+          "name": "ActiveRecord.php",
+          "type": "blob",
+          "size": 1.5595703125,
+          "content": "<?php\r\nif (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50300)\r\n\tdie('PHP ActiveRecord requires PHP 5.3 or higher');\r\n\r\ndefine('PHP_ACTIVERECORD_VERSION_ID','1.0');\r\n\r\nif (!defined('PHP_ACTIVERECORD_AUTOLOAD_PREPEND'))\r\n\tdefine('PHP_ACTIVERECORD_AUTOLOAD_PREPEND',true);\r\n\r\nrequire __DIR__.'/lib/Singleton.php';\r\nrequire __DIR__.'/lib/Config.php';\r\nrequire __DIR__.'/lib/Utils.php';\r\nrequire __DIR__.'/lib/DateTimeInterface.php';\r\nrequire __DIR__.'/lib/DateTime.php';\r\nrequire __DIR__.'/lib/Model.php';\r\nrequire __DIR__.'/lib/Table.php';\r\nrequire __DIR__.'/lib/ConnectionManager.php';\r\nrequire __DIR__.'/lib/Connection.php';\r\nrequire __DIR__.'/lib/Serialization.php';\r\nrequire __DIR__.'/lib/SQLBuilder.php';\r\nrequire __DIR__.'/lib/Reflections.php';\r\nrequire __DIR__.'/lib/Inflector.php';\r\nrequire __DIR__.'/lib/CallBack.php';\r\nrequire __DIR__.'/lib/Exceptions.php';\r\nrequire __DIR__.'/lib/Cache.php';\r\n\r\nif (!defined('PHP_ACTIVERECORD_AUTOLOAD_DISABLE'))\r\n\tspl_autoload_register('activerecord_autoload',false,PHP_ACTIVERECORD_AUTOLOAD_PREPEND);\r\n\r\nfunction activerecord_autoload($class_name)\r\n{\r\n\t$path = ActiveRecord\\Config::instance()->get_model_directory();\r\n\t$root = realpath(isset($path) ? $path : '.');\r\n\r\n\tif (($namespaces = ActiveRecord\\get_namespaces($class_name)))\r\n\t{\r\n\t\t$class_name = array_pop($namespaces);\r\n\t\t$directories = array();\r\n\r\n\t\tforeach ($namespaces as $directory)\r\n\t\t\t$directories[] = $directory;\r\n\r\n\t\t$root .= DIRECTORY_SEPARATOR . implode($directories, DIRECTORY_SEPARATOR);\r\n\t}\r\n\r\n\t$file = \"$root/$class_name.php\";\r\n\r\n\tif (file_exists($file))\r\n\t\trequire_once $file;\r\n}"
+        },
+        {
+          "name": "CHANGELOG",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "Version 1.0 - June 27, 2010\n\n- d2bed65 fixed an error with eager loading when no records exist\n- c225942 fixed set methods on DateTime objects to properly flag attributes as dirty\n- 46a1219 fixed a memory leak when using validations\n- c225942 fixed problem with some model functionality not working correctly after being deserialized \n- 3e26749 fixed validates_numericality_of to not ignore other options when only_integer is present and matches\n- 53ad5ec fixed ambiguous id error when finding by pk with a join option\n- 26e40f4 fixed conditions to accept DateTime values\n- 41e52fe changed serialization to serialize datetime fields as strings instead of the actual DateTime objects\n- dbee94b Model::transaction() now returns true if commit was successful otherwise false\n\nVersio 1.0 RC1 - May 7, 2010\n\n- support for Oracle\n- support for PostgreSQL\n- added delegators\n- added setters\n- added getters\n- added HAVING as a finder option\n- added ability to find using a hash\n- added find_or_create_by\n- added validates_uniqueness_of\n- added dynamic count_by\n- added eager loading\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.5224609375,
+          "content": "# Contributing to PHP ActiveRecord #\n\nWe always appreciate contributions to PHP ActiveRecord, but we are not always able to respond as quickly as we would like.\nPlease do not take delays personal and feel free to remind us by commenting on issues.\n\n### Testing ###\n\nPHP ActiveRecord has a full set of unit tests, which are run by PHPUnit.\n\nIn order to run these unit tests, you need to install the required packages using [Composer](https://getcomposer.org/):\n\n```sh\ncomposer install\n```\n\nAfter that you can run the tests by invoking the local PHPUnit\n\nTo run all test simply use:\n\n```sh\nvendor/bin/phpunit\n```\n\nOr run a single test file by specifying its path:\n\n```sh\nvendor/bin/phpunit test/InflectorTest.php\n```\n\n#### Skipped Tests ####\n\nYou might notice that some tests are marked as skipped. To obtain more information about skipped\ntests, pass the `--verbose` flag to PHPUnit:\n\n```sh\nvendor/bin/phpunit --verbose\n```\n\nSome common steps for fixing skipped tests are to:\n\n* Install `memcached` and the PHP memcached extension (e.g., `brew install php56-memcache memcached` on macOS)\n* Install the PDO drivers for PostgreSQL (e.g., `brew install php56-pdo-pgsql` on macOS)\n* Create a MySQL database and a PostgreSQL database. You can either create these such that they are available at the default locations of `mysql://test:test@127.0.0.1/test` and `pgsql://test:test@127.0.0.1/test` respectively. Alternatively, you can set the `PHPAR_MYSQL` and `PHPAR_PGSQL` environment variables to specify a different location for the MySQL and PostgreSQL databases.\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "Copyright (c) 2009\n\nAUTHORS:\nKien La\nJacques Fuentes\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.455078125,
+          "content": "# PHP ActiveRecord - Version 1.0 #\n\n[![Build Status](https://travis-ci.org/jpfuentes2/php-activerecord.png?branch=master)](https://travis-ci.org/jpfuentes2/php-activerecord)\n\nby \n\n* [@kla](https://github.com/kla) - Kien La\n* [@jpfuentes2](https://github.com/jpfuentes2) - Jacques Fuentes\n* [And these terrific Contributors](https://github.com/kla/php-activerecord/contributors)\n\n<http://www.phpactiverecord.org/> \n\n## Introduction ##\nA brief summarization of what ActiveRecord is:\n\n> Active record is an approach to access data in a database. A database table or view is wrapped into a class,\n> thus an object instance is tied to a single row in the table. After creation of an object, a new row is added to\n> the table upon save. Any object loaded gets its information from the database; when an object is updated, the\n> corresponding row in the table is also updated. The wrapper class implements accessor methods or properties for\n> each column in the table or view.\n\nMore details can be found [here](http://en.wikipedia.org/wiki/Active_record_pattern).\n\nThis implementation is inspired and thus borrows heavily from Ruby on Rails' ActiveRecord.\nWe have tried to maintain their conventions while deviating mainly because of convenience or necessity.\nOf course, there are some differences which will be obvious to the user if they are familiar with rails.\n\n## Minimum Requirements ##\n\n- PHP 5.3+\n- PDO driver for your respective database\n\n## Supported Databases ##\n\n- MySQL\n- SQLite\n- PostgreSQL\n- Oracle\n\n## Features ##\n\n- Finder methods\n- Dynamic finder methods\n- Writer methods\n- Relationships\n- Validations\n- Callbacks\n- Serializations (json/xml)\n- Transactions\n- Support for multiple adapters\n- Miscellaneous options such as: aliased/protected/accessible attributes\n\n## Installation ##\n\nSetup is very easy and straight-forward. There are essentially only three configuration points you must concern yourself with:\n\n1. Setting the model autoload directory.\n2. Configuring your database connections.\n3. Setting the database connection to use for your environment.\n\nExample:\n\n```php\nActiveRecord\\Config::initialize(function($cfg)\n{\n   $cfg->set_model_directory('/path/to/your/model_directory');\n   $cfg->set_connections(\n     array(\n       'development' => 'mysql://username:password@localhost/development_database_name',\n       'test' => 'mysql://username:password@localhost/test_database_name',\n       'production' => 'mysql://username:password@localhost/production_database_name'\n     )\n   );\n});\n```\n\nAlternatively (w/o the 5.3 closure):\n\n```php\n$cfg = ActiveRecord\\Config::instance();\n$cfg->set_model_directory('/path/to/your/model_directory');\n$cfg->set_connections(\n  array(\n    'development' => 'mysql://username:password@localhost/development_database_name',\n    'test' => 'mysql://username:password@localhost/test_database_name',\n    'production' => 'mysql://username:password@localhost/production_database_name'\n  )\n);\n```\n\nPHP ActiveRecord will default to use your development database. For testing or production, you simply set the default\nconnection according to your current environment ('test' or 'production'):\n\n```php\nActiveRecord\\Config::initialize(function($cfg)\n{\n  $cfg->set_default_connection(your_environment);\n});\n```\n\nOnce you have configured these three settings you are done. ActiveRecord takes care of the rest for you.\nIt does not require that you map your table schema to yaml/xml files. It will query the database for this information and\ncache it so that it does not make multiple calls to the database for a single schema.\n\n## Basic CRUD ##\n\n### Retrieve ###\nThese are your basic methods to find and retrieve records from your database.\nSee the *Finders* section for more details.\n\n```php\n$post = Post::find(1);\necho $post->title; # 'My first blog post!!'\necho $post->author_id; # 5\n\n# also the same since it is the first record in the db\n$post = Post::first();\n\n# finding using dynamic finders\n$post = Post::find_by_name('The Decider');\n$post = Post::find_by_name_and_id('The Bridge Builder',100);\n$post = Post::find_by_name_or_id('The Bridge Builder',100);\n\n# finding using a conditions array\n$posts = Post::find('all',array('conditions' => array('name=? or id > ?','The Bridge Builder',100)));\n```\n\n### Create ###\nHere we create a new post by instantiating a new object and then invoking the save() method.\n\n```php\n$post = new Post();\n$post->title = 'My first blog post!!';\n$post->author_id = 5;\n$post->save();\n# INSERT INTO `posts` (title,author_id) VALUES('My first blog post!!', 5)\n```\n\n### Update ###\nTo update you would just need to find a record first and then change one of its attributes.\nIt keeps an array of attributes that are \"dirty\" (that have been modified) and so our\nsql will only update the fields modified.\n\n```php\n$post = Post::find(1);\necho $post->title; # 'My first blog post!!'\n$post->title = 'Some real title';\n$post->save();\n# UPDATE `posts` SET title='Some real title' WHERE id=1\n\n$post->title = 'New real title';\n$post->author_id = 1;\n$post->save();\n# UPDATE `posts` SET title='New real title', author_id=1 WHERE id=1\n```\n\n### Delete ###\nDeleting a record will not *destroy* the object. This means that it will call sql to delete\nthe record in your database but you can still use the object if you need to.\n\n```php\n$post = Post::find(1);\n$post->delete();\n# DELETE FROM `posts` WHERE id=1\necho $post->title; # 'New real title'\n```\n\n## Contributing ##\n\nPlease refer to [CONTRIBUTING.md](https://github.com/jpfuentes2/php-activerecord/blob/master/CONTRIBUTING.md) for information on how to contribute to PHP ActiveRecord.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.5283203125,
+          "content": "{\n    \"name\": \"php-activerecord/php-activerecord\",\n    \"type\": \"library\",\n    \"description\": \"php-activerecord is an open source ORM library based on the ActiveRecord pattern.\",\n    \"keywords\": [\"activerecord\", \"orm\"],\n    \"homepage\": \"http://www.phpactiverecord.org/\",\n    \"license\": \"MIT\",\n    \"require\": {\n        \"php\": \">=5.3.0\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"4.*\",\n        \"pear/pear_exception\": \"1.0-beta1\",\n        \"pear/log\": \"~1.12\"\n    },\n    \"autoload\": {\n        \"files\": [ \"ActiveRecord.php\" ]\n    }\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.52734375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         bootstrap=\"test/helpers/config.php\"\n>\n    <testsuites>\n        <testsuite name=\"PHP ActiveRecord Test Suite\">\n            <directory>./test/</directory>\n        </testsuite>\n    </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

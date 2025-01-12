@@ -1,0 +1,106 @@
+{
+  "metadata": {
+    "timestamp": 1736712178268,
+    "page": 849,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "mvdbos/php-spider",
+      "stars": 1335,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.193359375,
+          "content": ".idea\ncomposer.lock\nvendor\nTODO.md\nbuild\nexample/logs/*.log\nexample/results\n*.doctrinecache.php\n.DS_Store\ncache.properties\n.tmp\n.phpunit.result.cache\n.php_cs.cache\n.php-cs-fixer.cache\ncomposer.phar\n"
+        },
+        {
+          "name": ".phan",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".php-cs-fixer.dist.php",
+          "type": "blob",
+          "size": 0.1884765625,
+          "content": "<?php\n\n$finder = PhpCsFixer\\Finder::create()\n    ->in(__DIR__ . '/src/');\n\n$fixer = new PhpCsFixer\\Config();\nreturn $fixer->setRules([\n        '@PSR2' => true\n    ])\n    ->setFinder($finder);\n\n"
+        },
+        {
+          "name": ".run",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0390625,
+          "content": "Copyright (c) 2023 Matthijs van den Bos\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.171875,
+          "content": "![Build Status](https://github.com/mvdbos/php-spider/workflows/PHP-Spider/badge.svg?branch=master)\n[![Latest Stable Version](https://poser.pugx.org/vdb/php-spider/v)](https://packagist.org/packages/vdb/php-spider)\n[![Total Downloads](https://poser.pugx.org/vdb/php-spider/downloads)](https://packagist.org/packages/vdb/php-spider)\n[![License](https://poser.pugx.org/vdb/php-spider/license)](https://packagist.org/packages/vdb/php-spider)\n\n\nPHP-Spider Features\n======\n- supports two traversal algorithms: breadth-first and depth-first\n- supports crawl depth limiting, queue size limiting and max downloads limiting\n- supports adding custom URI discovery logic, based on XPath, CSS selectors, or plain old PHP\n- comes with a useful set of URI filters, such as robots.txt and Domain limiting\n- supports custom URI filters, both prefetch (URI) and postfetch (Resource content)\n- supports custom request handling logic\n- supports Basic, Digest and NTLM HTTP authentication. See [example](example/example_basic_auth.php).\n- comes with a useful set of persistence handlers (memory, file)\n- supports custom persistence handlers\n- collects statistics about the crawl for reporting\n- dispatches useful events, allowing developers to add even more custom behavior\n- supports a politeness policy\n\nThis Spider does not support Javascript.\n\nInstallation\n------------\nThe easiest way to install PHP-Spider is with [composer](https://getcomposer.org/).  Find it on [Packagist](https://packagist.org/packages/vdb/php-spider).\n\n```bash\n$ composer require vdb/php-spider\n```\n\nUsage\n-----\nThis is a very simple example. This code can be found in [example/example_simple.php](example/example_simple.php). For a more complete example with some logging, caching and filters, see [example/example_complex.php](example/example_complex.php). That file contains a more real-world example.\n\n>> Note that by default, the spider stops processing when it encounters a 4XX or 5XX error responses. To set the spider up to keep processing, please see [the link checker example](https://github.com/mvdbos/php-spider/blob/master/example/example_link_check.php). It uses a custom request handler, that configures the default Guzzle request handler to not fail on 4XX and 5XX responses. \n\nFirst create the spider\n```php\n$spider = new Spider('http://www.dmoz.org');\n```\nAdd a URI discoverer. Without it, the spider does nothing. In this case, we want all `<a>` nodes from a certain `<div>`\n\n```php\n$spider->getDiscovererSet()->set(new XPathExpressionDiscoverer(\"//div[@id='catalogs']//a\"));\n```\nSet some sane options for this example. In this case, we only get the first 10 items from the start page.\n\n```php\n$spider->getDiscovererSet()->maxDepth = 1;\n$spider->getQueueManager()->maxQueueSize = 10;\n```\nAdd a listener to collect stats from the Spider and the QueueManager.\nThere are more components that dispatch events you can use.\n\n```php\n$statsHandler = new StatsHandler();\n$spider->getQueueManager()->getDispatcher()->addSubscriber($statsHandler);\n$spider->getDispatcher()->addSubscriber($statsHandler);\n```\nExecute the crawl\n\n```php\n$spider->crawl();\n```\nWhen crawling is done, we could get some info about the crawl\n```php\necho \"\\n  ENQUEUED:  \" . count($statsHandler->getQueued());\necho \"\\n  SKIPPED:   \" . count($statsHandler->getFiltered());\necho \"\\n  FAILED:    \" . count($statsHandler->getFailed());\necho \"\\n  PERSISTED:    \" . count($statsHandler->getPersisted());\n```\nFinally we could do some processing on the downloaded resources. In this example, we will echo the title of all resources\n```php\necho \"\\n\\nDOWNLOADED RESOURCES: \";\nforeach ($spider->getDownloader()->getPersistenceHandler() as $resource) {\n    echo \"\\n - \" . $resource->getCrawler()->filterXpath('//title')->text();\n}\n\n```\nContributing\n------------\nContributing to PHP-Spider is as easy as Forking the repository on Github and submitting a Pull Request.\nThe Symfony documentation contains an excellent guide for how to do that properly here: [Submitting a Patch](http://symfony.com/doc/current/contributing/code/patches.html#step-1-setup-your-environment).\n\nThere a few requirements for a Pull Request to be accepted:\n- Follow the coding standards: PHP-Spider follows the coding standards defined in the [PSR-0](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-0.md), [PSR-1](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-1-basic-coding-standard.md) and [PSR-2](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md) Coding Style Guides;\n- Prove that the code works with unit tests and that coverage remains 100%;\n\n> Note: An easy way to check if your code conforms to PHP-Spider is by running the script `bin/static-analysis`, which is part of this repo. This will run the following tools, configured for PHP-Spider: PHP CodeSniffer, PHP Mess Detector and PHP Copy/Paste Detector.  \n\n> Note: To run PHPUnit with coverage, and to check that coverage == 100%, you can run `bin/coverage-enforce`.\n\nSupport\n-------\nFor things like reporting bugs and requesting features it is best to create an [issue](https://github.com/mvdbos/php-spider/issues) here on GitHub. It is even better to accompany it with a Pull Request. ;-)\n\nLicense\n-------\nPHP-Spider is licensed under the MIT license.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.3955078125,
+          "content": "{\n    \"name\": \"vdb/php-spider\",\n    \"type\": \"application\",\n    \"description\": \"A configurable and extensible PHP web spider\",\n    \"keywords\": [\"spider\", \"crawler\", \"scraper\"],\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Matthijs van den Bos\"\n        }\n    ],\n    \"support\": {\n        \"issues\": \"https://github.com/matthijsvandenbos/php-spider/issues\",\n        \"source\": \"https://github.com/matthijsvandenbos/php-spider\"\n    },\n    \"require\": {\n        \"php\": \">=8.0\",\n        \"ext-dom\": \"*\",\n        \"ext-pcntl\": \"*\",\n        \"guzzlehttp/guzzle\": \"^6.0.0||^7.0.0\",\n        \"pdepend/pdepend\": \"^2.16.1\",\n        \"symfony/css-selector\": \"^3.0.0||^4.0.0||^5.0.0||^6.0||^7.0\",\n        \"symfony/dom-crawler\": \"^3.0.0||^4.0.0||^5.0.0||^6.0||^7.0\",\n        \"symfony/finder\": \"^3.0.0||^4.0.0||^5.0.0||^6.0||^7.0\",\n        \"symfony/event-dispatcher\": \"^4.0.0||^5.0.0||^6.0||^7.0\",\n        \"vdb/uri\": \"^0.3.2\",\n        \"spatie/robots-txt\": \"^2.0\",\n        \"phan/phan\": \"^4.0||^5.0\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^9.0.0\",\n        \"squizlabs/php_codesniffer\": \"^3.0.0\",\n        \"phpmd/phpmd\": \"^2.0.0\",\n        \"sebastian/phpcpd\": \"^6.0.0\",\n        \"friendsofphp/php-cs-fixer\": \"^3.16.0\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"VDB\\\\Spider\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"VDB\\\\Spider\\\\Tests\\\\\": \"tests/\"\n        }\n    }\n}\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "example",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpmd-tests.xml",
+          "type": "blob",
+          "size": 1.7197265625,
+          "content": "<?xml version=\"1.0\"?>\n<ruleset name=\"PHP Spider Ruleset for test code\"\n         xmlns=\"http://pmd.sf.net/ruleset/1.0.0\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://pmd.sf.net/ruleset/1.0.0\n                     http://pmd.sf.net/ruleset_xml_schema.xsd\"\n         xsi:noNamespaceSchemaLocation=\"\n                     http://pmd.sf.net/ruleset_xml_schema.xsd\">\n    <description>\n        PHP Spider Ruleset for test code\n    </description>\n\n    <rule ref=\"rulesets/cleancode.xml\">\n        <exclude name=\"BooleanArgumentFlag\" />\n        <exclude name=\"ElseExpression\" />\n        <exclude name=\"StaticAccess\" />\n    </rule>\n\n    <rule ref=\"rulesets/unusedcode.xml\">\n        <!-- we turn this back on as soon as an exception for inherited/implemented methods is available-->\n        <exclude name=\"UnusedFormalParameter\"/>\n        <exclude name=\"UnusedLocalVariable\"/>\n    </rule>\n    <rule ref=\"rulesets/unusedcode.xml/UnusedLocalVariable\">\n        <properties>\n            <property name=\"allow-unused-foreach-variables\">\n                <value>\n                   true\n                </value>\n            </property>\n        </properties>\n    </rule>\n\n    <rule ref=\"rulesets/codesize.xml\" >\n        <exclude name=\"TooManyFields\" />\n        <exclude name=\"TooManyMethods\" />\n        <exclude name=\"TooManyPublicMethods\" />\n    </rule>\n\n    <rule ref=\"rulesets/controversial.xml\" />\n\n    <rule ref=\"rulesets/design.xml\">\n        <exclude name=\"CouplingBetweenObjects\" />\n        <exclude name=\"NumberOfChildren\" />\n    </rule>\n\n    <rule ref=\"rulesets/naming.xml\">\n        <exclude name=\"ShortVariable\" />\n        <exclude name=\"LongVariable\" />\n        <exclude name=\"LongClassName\" />\n    </rule>\n\n</ruleset>\n"
+        },
+        {
+          "name": "phpmd.xml",
+          "type": "blob",
+          "size": 1.3583984375,
+          "content": "<?xml version=\"1.0\"?>\n<ruleset name=\"PHP Spider Ruleset for source code\"\n         xmlns=\"http://pmd.sf.net/ruleset/1.0.0\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:schemaLocation=\"http://pmd.sf.net/ruleset/1.0.0\n                     http://pmd.sf.net/ruleset_xml_schema.xsd\"\n         xsi:noNamespaceSchemaLocation=\"\n                     http://pmd.sf.net/ruleset_xml_schema.xsd\">\n    <description>\n        PHP Spider Ruleset for source code\n    </description>\n\n    <rule ref=\"rulesets/cleancode.xml\">\n        <exclude name=\"BooleanArgumentFlag\" />\n        <exclude name=\"ElseExpression\" />\n        <exclude name=\"StaticAccess\" />\n    </rule>\n\n    <rule ref=\"rulesets/unusedcode.xml\">\n        <!-- we turn this back on as soon as an exception for inherited/implemented methods is available-->\n        <!--<exclude name=\"UnusedFormalParameter\"/>-->\n    </rule>\n\n    <rule ref=\"rulesets/codesize.xml\" />\n\n    <rule ref=\"rulesets/controversial.xml\" />\n\n    <rule ref=\"rulesets/design.xml\">\n        <exclude name=\"CouplingBetweenObjects\"/>\n    </rule>\n\n    <rule ref=\"rulesets/design.xml/CouplingBetweenObjects\">\n        <properties>\n            <property name=\"minimum\" value=\"15\" />\n        </properties>\n    </rule>\n\n    <rule ref=\"rulesets/naming.xml\">\n        <exclude name=\"ShortVariable\" />\n        <exclude name=\"LongVariable\" />\n    </rule>\n\n</ruleset>\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.6328125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         colors=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         bootstrap=\"./vendor/autoload.php\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/9.3/phpunit.xsd\">\n  <coverage processUncoveredFiles=\"true\">\n    <include>\n      <directory suffix=\".php\">src</directory>\n    </include>\n  </coverage>\n  <testsuites>\n    <testsuite name=\"Spider Test Suite\">\n      <directory>./tests</directory>\n    </testsuite>\n  </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

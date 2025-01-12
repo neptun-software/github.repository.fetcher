@@ -1,0 +1,74 @@
+{
+  "metadata": {
+    "timestamp": 1736712194285,
+    "page": 877,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "devfake/flox",
+      "stars": 1300,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0595703125,
+          "content": "* text=auto\n*.css linguist-vendored\n*.scss linguist-vendored\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3203125,
+          "content": "node_modules\n/backend/vendor\n/.idea\nHomestead.json\nHomestead.yaml\n/backend/.env\n/bin/.worker.pid\n/backend/.phpunit.result.cache\n\n*/.DS_Store\n/public/assets/app.css\n/public/assets/app.js\n/public/assets/vendor.js\n/public/assets/poster/*.jpg\n/public/assets/poster/subpage/*.jpg\n/public/assets/backdrop/*.jpg\n/public/exports/*.json\n"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.1025390625,
+          "content": "[submodule \"flox-file-parser\"]\n\tpath = flox-file-parser\n\turl = https://github.com/exane/flox-file-parser\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.4248046875,
+          "content": "language: php\n\nsudo: false\n\nphp:\n  - 7.2\n\nenv:\n  APP_ENV: testing\n  CACHE_DRIVER: array\n  SESSION_DRIVER: array\n  QUEUE_DRIVER: sync\n  APP_KEY: 16efa6c23c2e8c705826b0e66778fbe7\n  DB_CONNECTION: sqlite\n\ncache:\n  directories:\n    - backend/vendor\n\nservices:\n  - mysql\n\nscript:\n  - (cd backend && vendor/bin/phpunit --testdox)\n\ninstall:\n  - (cd backend && composer install --prefer-source --no-interaction)\n\nnotifications:\n  email: false\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0458984375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 devfake\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.8642578125,
+          "content": "Flox\n===============\n[![Build Status](https://travis-ci.org/devfake/flox.svg?branch=master)](https://travis-ci.org/devfake/flox)\n\nFlox is a self hosted Movie, Series and Animes watch list. It's build on top of Laravel and Vue.js and uses [The Movie Database](https://www.themoviedb.org/) API.\nThe rating based on an 3-Point system for `good`, `medium` and `bad`.\n\n### [Try live demo](https://flox-demo.pyxl.dev) and [login](https://flox-demo.pyxl.dev/login) with `demo / demo` to add new stuff or change ratings.\n\n![flox](./public/assets/screenshot.jpg)\n\n### Requirements\n\n* PHP >=7.2\n* Database (MySQL or [other](https://laravel.com/docs/6.x/database))\n* [Composer](https://getcomposer.org/)\n* The Movie Database Account for the free [API-Key](https://www.themoviedb.org/faq/api)\n\n### Install\n\n```bash\ngit clone https://github.com/devfake/flox\ncd flox/backend\ncomposer install\nphp artisan flox:init # Enter here your database credentials\n```\n\nEnter your TMDb API-Key in `backend/.env`. Then run:\n```bash\nphp artisan flox:db # Running migrations and enter your admin credentials for the site\n```\n\n* Give `backend/storage`, `public/assets` and `public/exports` recursive write access.\n* Set the correct `APP_URL` in `backend/.env`.\n* Set your `CLIENT_URI` in `backend/.env`.\n```bash\n# CLIENT_URI=/flox/public\nhttps://localhost:8888/flox/public\n\n# CLIENT_URI=/subfolder/for/flox/public\nhttps://mydomain.com/subfolder/for/flox/public\n\n# CLIENT_URI=/\nhttps://mydomain.com\n```\n\n### Features\n\n- API for Plex.\n  - Sync movies, shows and watched episodes from Plex to Flox.\n- Episode Tracking.\n- Suggestions.\n- Watchlist.\n- Popular Movies and Shows, Upcoming and Current Movies.\n  - This lists are updated daily.\n- Calendar.\n  - A simple calendar for your episodes and movies.\n  - Movies and tv shows have different colors for better differentiation. You can also use the arrow keys to jump months forward or backward.\n- Reminders.\n\n### Plex\n\nTo enable the sync from Plex to Flox, you first need to generate an API-Key in Flox in the settings page. Then enter the Flox API-URL to the webhooks section in Plex.\n\n```\nhttps://YOUR-FLOX-URL/api/plex?token=YOUR-TOKEN\n```\n\nIf you start a tv show or movie in Plex, Flox will search the item via the title from TMDb and add them into the Flox database. If you rate a movie or tv show in Plex, Flox will also rate the item. Note that rating for seasons or episodes are not supported in Flox. If you rate an movie or tv show, which is not in the Flox database, Flox will also fetch them from TMDb first. If you complete an episode (passing the 90% mark), Flox will also check this episode as seen.\n\n### Queue\n\nTo import or refresh any of your entries you need to have at least one worker running.\n\n```bash\n# spawn a single worker\nphp artisan queue:work --daemon --tries=3\n\n# Alternatively install it as a systemctl service:\n\n# The script uses the current directory as Flox root path. To override\n# use the first argument and set a new absolute Flox (root) path.\n# A second argument takes the php path (defaults to /usr/bin)\nbash ./bin/install_worker_service.sh\n# bash ./bin/install_worker_service.sh $HOME/flox /custom/path/to/php/\n```\n\nThe default queue driver is set to `database`. All your jobs will be stored in the `jobs` table. If you need some better performance and more reliability, consider to choose redis.\n\nCheck the [documentation](https://laravel.com/docs/6.x/queues) for more informations.\n\n### Cron Job\n\nTo utilize the queues to update automatically you have to set up a cron task once manually on your server.\n\n```\n* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1\n```\n\nYou can use ```crontab -e``` to add this new Cron task.\n\nMake sure Cron is running and you are good to go.\n```\nsudo service cron status\n```\n\nThis Cron will call the Laravel command scheduler every minute. Then, Laravel evaluates your scheduled tasks and runs the tasks that are due.\n\nCurrently in Flox defined tasks (which you can activate in the settings):\n\n| When   | Description                     |\n| ------ | ------------------------------- |\n| Daily  | Update all Entities from TMDb   |\n| Daily  | Send a daily reminder via mail   |\n| Weekly  | Send a weekly summary via mail   |\n\nYou can change the time for daily and weekly reminder in your `.env`.\n\n### Export / Import\n\nAlso you can make a backup of all your movies and shows in the settings page. If you click the `EXPORT` button, there will be an download for an `json` file. This file contains all your movies and shows from your database. This backup file will also be automatically saved in your `public/exports` folder.\n\nIf you import an backup, all movies and shows in your database will be deleted and replaced. Be sure to make an current backup before you import.\nThe import will download all poster images.\n\n### Refresh data\n\nTo keep your entries up to date (e.g. ratings, episodes, images) you need to refresh them. In the settings there is the possibility to refresh the data manually or via a cron job (you need the queue worker for this). If you want to refresh only a single entry, there is a button on the subpage of this item.\n\n### Reminders\n\nFlox can send you a daily reminder of episodes or movies coming out today via mail. Or a weekly summary of episodes and movies coming out in the last 7 days. There are options in the settings page for this.\n\nMake sure you tweak the `DATE_FORMAT_PATTERN` config in your `.env` file.\n\n### Translation\n\nAll titles are in english by default. You can change your language by setting `TRANSLATION` in `backend/.env`. The most commons are `DE`, `IT`, `FR`, `ES` and `RU`. You can try to use your language code.\n\nThis will also affect the language of you website. See in `client/resources/languages` if your language is supported. Pull requests are welcome :)\n\nIf there isn't a translation for your language, english will be used.\n\n### Settings\n\nYou can edit your admin account (username and password) in the settings page (link is in footer).\n\nYou can also set options to display release date and/or genre of your own list. Both will still display on search, trending and upcoming. If you want to hide your ratings (or show only on hover) there is also an option for this.\n\nThere is an option to enable or disable spoiler protection for episode names.\n\n### Troubleshooting\n\n#### Import does not work\n\n- Your import file is probably to big. In default php.ini the max upload file is 2MB. Set the number higher and try again.\n- Make sure that the queue worker is active! Otherwise flox will tell you the import is running, but nothing happens!\n\n### Development\n\n* Run `npm install` or `yarn` in your `/client` folder.\n* Run `npm run dev`.\n\n### Contribution\n\nLike this project? Want to contribute? Awesome! Feel free to open some pull requests or just open an issue.\n\n### Changelog\n\nDetailed changes for each release are documented in the [release notes](https://github.com/devfake/flox/releases).\n\n### License\n\nFlox is published under the MIT license. See LICENSE for more information.\n"
+        },
+        {
+          "name": "backend",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "client",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "public",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

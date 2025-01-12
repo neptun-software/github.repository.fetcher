@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "timestamp": 1736712207368,
+    "page": 907,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/web-server-bundle",
+      "stars": 1262,
+      "defaultBranch": "4.4",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1064453125,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.gitattributes export-ignore\n/.gitignore export-ignore\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.3095703125,
+          "content": "CHANGELOG\n=========\n\n4.4.0\n-----\n\n * The bundle is deprecated and will be removed in 5.0.\n\n4.2.0\n-----\n\n * Added ability to display the current hostname address if available when binding to 0.0.0.0\n\n3.4.0\n-----\n\n * WebServer can now use `*` as a wildcard to bind to 0.0.0.0 (INADDR_ANY)\n\n3.3.0\n-----\n\n * Added bundle\n"
+        },
+        {
+          "name": "Command",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DependencyInjection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0400390625,
+          "content": "Copyright (c) 2004-2022 Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.7216796875,
+          "content": "WebServerBundle\n===============\n\n**CAUTION**: this bundle is deprecated since Symfony 4.4. Instead, use the\n[Symfony Local Web Server](https://symfony.com/doc/current/setup/symfony_server.html).\n\nWebServerBundle provides commands for running applications using the PHP\nbuilt-in web server. It simplifies your local development setup because you\ndon't have to configure a proper web server such as Apache or Nginx to run your\napplication.\n\nResources\n---------\n\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n"
+        },
+        {
+          "name": "Resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "WebServer.php",
+          "type": "blob",
+          "size": 5.2060546875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Bundle\\WebServerBundle;\n\nuse Symfony\\Component\\Process\\Exception\\RuntimeException;\nuse Symfony\\Component\\Process\\PhpExecutableFinder;\nuse Symfony\\Component\\Process\\Process;\n\n/**\n * Manages a local HTTP web server.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n *\n * @deprecated since Symfony 4.4, to be removed in 5.0; the new Symfony local server has more features, you can use it instead.\n */\nclass WebServer\n{\n    public const STARTED = 0;\n    public const STOPPED = 1;\n\n    private $pidFileDirectory;\n\n    public function __construct(string $pidFileDirectory = null)\n    {\n        $this->pidFileDirectory = $pidFileDirectory;\n    }\n\n    public function run(WebServerConfig $config, $disableOutput = true, callable $callback = null)\n    {\n        if ($this->isRunning()) {\n            throw new \\RuntimeException(sprintf('A process is already listening on http://%s.', $config->getAddress()));\n        }\n\n        $process = $this->createServerProcess($config);\n        if ($disableOutput) {\n            $process->disableOutput();\n            $callback = null;\n        } else {\n            try {\n                $process->setTty(true);\n                $callback = null;\n            } catch (RuntimeException $e) {\n            }\n        }\n\n        $process->run($callback);\n\n        if (!$process->isSuccessful()) {\n            $error = 'Server terminated unexpectedly.';\n            if ($process->isOutputDisabled()) {\n                $error .= ' Run the command again with -v option for more details.';\n            }\n\n            throw new \\RuntimeException($error);\n        }\n    }\n\n    public function start(WebServerConfig $config, $pidFile = null)\n    {\n        $pidFile = $pidFile ?: $this->getDefaultPidFile();\n        if ($this->isRunning($pidFile)) {\n            throw new \\RuntimeException(sprintf('A process is already listening on http://%s.', $config->getAddress()));\n        }\n\n        $pid = pcntl_fork();\n\n        if ($pid < 0) {\n            throw new \\RuntimeException('Unable to start the server process.');\n        }\n\n        if ($pid > 0) {\n            return self::STARTED;\n        }\n\n        if (posix_setsid() < 0) {\n            throw new \\RuntimeException('Unable to set the child process as session leader.');\n        }\n\n        $process = $this->createServerProcess($config);\n        $process->disableOutput();\n        $process->start();\n\n        if (!$process->isRunning()) {\n            throw new \\RuntimeException('Unable to start the server process.');\n        }\n\n        file_put_contents($pidFile, $config->getAddress());\n\n        // stop the web server when the lock file is removed\n        while ($process->isRunning()) {\n            if (!file_exists($pidFile)) {\n                $process->stop();\n            }\n\n            sleep(1);\n        }\n\n        return self::STOPPED;\n    }\n\n    public function stop($pidFile = null)\n    {\n        $pidFile = $pidFile ?: $this->getDefaultPidFile();\n        if (!file_exists($pidFile)) {\n            throw new \\RuntimeException('No web server is listening.');\n        }\n\n        unlink($pidFile);\n    }\n\n    public function getAddress($pidFile = null)\n    {\n        $pidFile = $pidFile ?: $this->getDefaultPidFile();\n        if (!file_exists($pidFile)) {\n            return false;\n        }\n\n        return file_get_contents($pidFile);\n    }\n\n    public function isRunning($pidFile = null)\n    {\n        $pidFile = $pidFile ?: $this->getDefaultPidFile();\n        if (!file_exists($pidFile)) {\n            return false;\n        }\n\n        $address = file_get_contents($pidFile);\n        $pos = strrpos($address, ':');\n        $hostname = substr($address, 0, $pos);\n        $port = substr($address, $pos + 1);\n        if (false !== $fp = @fsockopen($hostname, $port, $errno, $errstr, 1)) {\n            fclose($fp);\n\n            return true;\n        }\n\n        unlink($pidFile);\n\n        return false;\n    }\n\n    private function createServerProcess(WebServerConfig $config): Process\n    {\n        $finder = new PhpExecutableFinder();\n        if (false === $binary = $finder->find(false)) {\n            throw new \\RuntimeException('Unable to find the PHP binary.');\n        }\n\n        $xdebugArgs = \\ini_get('xdebug.profiler_enable_trigger') ? ['-dxdebug.profiler_enable_trigger=1'] : [];\n\n        $process = new Process(array_merge([$binary], $finder->findArguments(), $xdebugArgs, ['-dvariables_order=EGPCS', '-S', $config->getAddress(), $config->getRouter()]));\n        $process->setWorkingDirectory($config->getDocumentRoot());\n        $process->setTimeout(null);\n\n        if (\\in_array('APP_ENV', explode(',', getenv('SYMFONY_DOTENV_VARS')))) {\n            $process->setEnv(['APP_ENV' => false]);\n\n            if (!method_exists(Process::class, 'fromShellCommandline')) {\n                // Symfony 3.4 does not inherit env vars by default:\n                $process->inheritEnvironmentVariables();\n            }\n        }\n\n        return $process;\n    }\n\n    private function getDefaultPidFile(): string\n    {\n        return ($this->pidFileDirectory ?? getcwd()).'/.web-server-pid';\n    }\n}\n"
+        },
+        {
+          "name": "WebServerBundle.php",
+          "type": "blob",
+          "size": 0.70703125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Bundle\\WebServerBundle;\n\nuse Symfony\\Component\\HttpKernel\\Bundle\\Bundle;\n\n/**\n * @deprecated since Symfony 4.4, to be removed in 5.0; the new Symfony local server has more features, you can use it instead.\n */\nclass WebServerBundle extends Bundle\n{\n    public function boot()\n    {\n        @trigger_error('Using the WebserverBundle is deprecated since Symfony 4.4. The new Symfony local server has more features, you can use it instead.', \\E_USER_DEPRECATED);\n    }\n}\n"
+        },
+        {
+          "name": "WebServerConfig.php",
+          "type": "blob",
+          "size": 4.1640625,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Bundle\\WebServerBundle;\n\n/**\n * @author Fabien Potencier <fabien@symfony.com>\n *\n * @deprecated since Symfony 4.4, to be removed in 5.0; the new Symfony local server has more features, you can use it instead.\n */\nclass WebServerConfig\n{\n    private $hostname;\n    private $port;\n    private $documentRoot;\n    private $env;\n    private $router;\n\n    public function __construct(string $documentRoot, string $env, string $address = null, string $router = null)\n    {\n        if (!is_dir($documentRoot)) {\n            throw new \\InvalidArgumentException(sprintf('The document root directory \"%s\" does not exist.', $documentRoot));\n        }\n\n        if (null === $file = $this->findFrontController($documentRoot, $env)) {\n            throw new \\InvalidArgumentException(sprintf('Unable to find the front controller under \"%s\" (none of these files exist: \"%s\").', $documentRoot, implode('\", \"', $this->getFrontControllerFileNames($env))));\n        }\n\n        $_ENV['APP_FRONT_CONTROLLER'] = $file;\n\n        $this->documentRoot = $documentRoot;\n        $this->env = $env;\n\n        if (null !== $router) {\n            $absoluteRouterPath = realpath($router);\n\n            if (false === $absoluteRouterPath) {\n                throw new \\InvalidArgumentException(sprintf('Router script \"%s\" does not exist.', $router));\n            }\n\n            $this->router = $absoluteRouterPath;\n        } else {\n            $this->router = __DIR__.'/Resources/router.php';\n        }\n\n        if (null === $address) {\n            $this->hostname = '127.0.0.1';\n            $this->port = $this->findBestPort();\n        } elseif (false !== $pos = strrpos($address, ':')) {\n            $this->hostname = substr($address, 0, $pos);\n            if ('*' === $this->hostname) {\n                $this->hostname = '0.0.0.0';\n            }\n            $this->port = substr($address, $pos + 1);\n        } elseif (ctype_digit($address)) {\n            $this->hostname = '127.0.0.1';\n            $this->port = $address;\n        } else {\n            $this->hostname = $address;\n            $this->port = $this->findBestPort();\n        }\n\n        if (!ctype_digit($this->port)) {\n            throw new \\InvalidArgumentException(sprintf('Port \"%s\" is not valid.', $this->port));\n        }\n    }\n\n    public function getDocumentRoot()\n    {\n        return $this->documentRoot;\n    }\n\n    public function getEnv()\n    {\n        return $this->env;\n    }\n\n    public function getRouter()\n    {\n        return $this->router;\n    }\n\n    public function getHostname()\n    {\n        return $this->hostname;\n    }\n\n    public function getPort()\n    {\n        return $this->port;\n    }\n\n    public function getAddress()\n    {\n        return $this->hostname.':'.$this->port;\n    }\n\n    /**\n     * @return string contains resolved hostname if available, empty string otherwise\n     */\n    public function getDisplayAddress()\n    {\n        if ('0.0.0.0' !== $this->hostname) {\n            return '';\n        }\n\n        if (false === $localHostname = gethostname()) {\n            return '';\n        }\n\n        return gethostbyname($localHostname).':'.$this->port;\n    }\n\n    private function findFrontController(string $documentRoot, string $env): ?string\n    {\n        $fileNames = $this->getFrontControllerFileNames($env);\n\n        foreach ($fileNames as $fileName) {\n            if (file_exists($documentRoot.'/'.$fileName)) {\n                return $fileName;\n            }\n        }\n\n        return null;\n    }\n\n    private function getFrontControllerFileNames(string $env): array\n    {\n        return ['app_'.$env.'.php', 'app.php', 'index_'.$env.'.php', 'index.php'];\n    }\n\n    private function findBestPort(): int\n    {\n        $port = 8000;\n        while (false !== $fp = @fsockopen($this->hostname, $port, $errno, $errstr, 1)) {\n            fclose($fp);\n            if ($port++ >= 8100) {\n                throw new \\RuntimeException('Unable to find a port available to run the web server.');\n            }\n        }\n\n        return $port;\n    }\n}\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.212890625,
+          "content": "{\n    \"name\": \"symfony/web-server-bundle\",\n    \"type\": \"symfony-bundle\",\n    \"description\": \"Provides commands for running applications using the PHP built-in web server\",\n    \"keywords\": [],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Fabien Potencier\",\n            \"email\": \"fabien@symfony.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=7.1.3\",\n        \"symfony/config\": \"^3.4|^4.0|^5.0\",\n        \"symfony/console\": \"^3.4|^4.0|^5.0\",\n        \"symfony/dependency-injection\": \"^3.4|^4.0|^5.0\",\n        \"symfony/http-kernel\": \"^3.4|^4.0|^5.0\",\n        \"symfony/polyfill-ctype\": \"~1.8\",\n        \"symfony/polyfill-php80\": \"^1.16\",\n        \"symfony/process\": \"^3.4.2|^4.0.2|^5.0\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Bundle\\\\WebServerBundle\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"suggest\": {\n        \"symfony/monolog-bridge\": \"For using the log server.\",\n        \"symfony/expression-language\": \"For using the filter option of the log server.\"\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.8623046875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/5.2/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony WebServerBundle Test Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <filter>\n        <whitelist>\n            <directory>./</directory>\n            <exclude>\n                <directory>./Resources</directory>\n                <directory>./Tests</directory>\n                <directory>./vendor</directory>\n            </exclude>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

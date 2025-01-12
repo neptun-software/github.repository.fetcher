@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "timestamp": 1736712163966,
+    "page": 812,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjgyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "tighten/parental",
+      "stars": 1388,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.064453125,
+          "content": "/vendor/\n.idea\ncomposer.lock\n.phpunit.result.cache\n.phpunit.cache\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.0869140625,
+          "content": "# The MIT License (MIT)\n\nCopyright (c) 2020 Caleb Porzio\n\n> Permission is hereby granted, free of charge, to any person obtaining a copy\n> of this software and associated documentation files (the \"Software\"), to deal\n> in the Software without restriction, including without limitation the rights\n> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n> copies of the Software, and to permit persons to whom the Software is\n> furnished to do so, subject to the following conditions:\n>\n> The above copyright notice and this permission notice shall be included in\n> all copies or substantial portions of the Software.\n>\n> THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\n> THE SOFTWARE.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.2578125,
+          "content": "{\n    \"name\": \"tightenco/parental\",\n    \"description\": \"A simple eloquent trait that allows relationships to be accessed through child models.\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"role\": \"author\",\n            \"name\": \"Caleb Porzio\",\n            \"email\": \"calebporzio@gmail.com\",\n            \"homepage\": \"https://calebporzio.com/\"\n        },\n        {\n            \"role\": \"developer\",\n            \"name\": \"Steve McDougall\",\n            \"email\": \"juststevemcd@gmail.com\",\n            \"homepage\": \"https://www.juststeveking.uk/\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.0\",\n        \"illuminate/database\": \"^9.0||^10.0||^11.0\",\n        \"illuminate/events\": \"^9.0||^10.0||^11.0\"\n    },\n    \"require-dev\": {\n        \"orchestra/testbench\": \"^7.0||^8.0||^9.0\",\n        \"phpunit/phpunit\": \"^9.5.10||^10.5\",\n        \"tightenco/duster\": \"^2.7\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Parental\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Parental\\\\Tests\\\\\": \"tests/\",\n            \"Database\\\\Factories\\\\\": \"tests/factories/\"\n        }\n    },\n    \"scripts\": {\n        \"lint\": \"vendor/bin/duster lint\",\n        \"fix\": \"vendor/bin/duster fix\"\n    },\n    \"minimum-stability\": \"dev\",\n    \"prefer-stable\": true\n}\n"
+        },
+        {
+          "name": "parental-banner.png",
+          "type": "blob",
+          "size": 56.2734375,
+          "content": null
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.6044921875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" backupGlobals=\"false\" bootstrap=\"vendor/autoload.php\" colors=\"true\" processIsolation=\"false\" stopOnFailure=\"false\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/10.2/phpunit.xsd\" cacheDirectory=\".phpunit.cache\" backupStaticProperties=\"false\">\n  <coverage/>\n  <testsuites>\n    <testsuite name=\"Unit Tests\">\n      <directory suffix=\"Test.php\">./tests</directory>\n    </testsuite>\n  </testsuites>\n  <source>\n    <include>\n      <directory suffix=\".php\">./src</directory>\n    </include>\n  </source>\n</phpunit>\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 4.27734375,
+          "content": "![Parental - Use single table inheritance in your Laravel App](parental-banner.png)\n\n# Parental\n\nParental is a Laravel package that brings STI (Single Table Inheritance) capabilities to Eloquent.\n\n### What is single table inheritance (STI)?\n\nIt's a fancy name for a simple concept: Extending a model (usually to add specific behavior), but referencing the same table.\n\n## Installation\n\n```bash\ncomposer require tightenco/parental\n```\n\n## Simple Usage\n\n```php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Parental\\HasChildren;\n\n// The \"parent\"\nclass User extends Model\n{\n    use HasChildren;\n    //\n}\n```\n\n```php\nnamespace App\\Models;\n\nuse Parental\\HasParent;\n\n// The \"child\"\nclass Admin extends User\n{\n    use HasParent;\n\n    public function impersonate($user) {\n        //...\n    }\n}\n```\n\n```php\nuse App\\Models\\Admin;\n\n// Returns \"Admin\" model, but reference \"users\" table:\n$admin = Admin::first();\n\n// Can now access behavior exclusive to \"Admin\"s\n$admin->impersonate($user);\n```\n\n### What problem did we just solve?\n\nWithout Parental, calling `Admin::first()` would throw an error because Laravel would be looking for an `admins` table. Laravel generates expected table names, as well as foreign keys and pivot table names, using the model's class name. By adding the `HasParent` trait to the Admin model, Laravel will now reference the parent model's class name `users`.\n\n## Accessing Child Models from Parents\n\n```php\n// First, we need to create a `type` column on the `users` table\nSchema::table('users', function ($table) {\n    $table->string('type')->nullable();\n});\n```\n\n```php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Parental\\HasChildren;\n\n// The \"parent\"\nclass User extends Model\n{\n    use HasChildren;\n\n    protected $fillable = ['type'];\n}\n```\n\n```php\nnamespace App\\Models;\n\nuse Parental\\HasParent;\n\n// A \"child\"\nclass Admin extends User\n{\n    use HasParent;\n}\n```\n\n```php\nnamespace App\\Models;\n\nuse Parental\\HasParent;\n\n// Another \"child\"\nclass Guest extends User\n{\n    use HasParent;\n}\n```\n\n```php\nuse App\\Models\\Admin;\nuse App\\Models\\Guest;\nuse App\\Models\\User;\n\n// Adds row to \"users\" table with \"type\" column set to: \"App/Admin\"\nAdmin::create(...);\n\n// Adds row to \"users\" table with \"type\" column set to: \"App/Guest\"\nGuest::create(...);\n\n// Returns 2 model instances: Admin, and Guest\nUser::all();\n```\n\n### What problem did we just solve?\n\nBefore, if we ran: `User::first()` we would only get back `User` models. By adding the `HasChildren` trait and a `type` column to the `users` table, running `User::first()` will return an instance of the child model (`Admin` or `Guest` in this case).\n\n## Type Aliases\n\nIf you don't want to store raw class names in the type column, you can override them using the `$childTypes` property.\n\n```php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Parental\\HasChildren;\n\nclass User extends Model\n{\n    use HasChildren;\n\n    protected $fillable = ['type'];\n\n    protected $childTypes = [\n        'admin' => Admin::class,\n        'guest' => Guest::class,\n    ];\n}\n```\n\nNow, running `Admin::create()` will set the `type` column in the `users` table to `admin` instead of `App\\Models\\Admin`.\n\nThis feature is useful if you are working with an existing type column, or if you want to decouple application details from your database.\n\n## Custom Type Column Name\n\nYou can override the default type column by setting the `$childColumn` property on the parent model.\n\n```php\nnamespace App\\Models;\n\nuse Illuminate\\Database\\Eloquent\\Model;\nuse Parental\\HasChildren;\n\nclass User extends Model\n{\n    use HasChildren;\n\n    protected $fillable = ['parental_type'];\n\n    protected $childColumn = 'parental_type';\n}\n```\n\n## Laravel Nova Support\n\nIf you want to use share parent Nova resources with child models, you may register the following provider at the end of the boot method of your NovaServiceProvider:\n\n```php\nclass NovaServiceProvider extends NovaApplicationServiceProvider\n{\n    public function boot() {\n        parent::boot();\n        // ...\n        $this->app->register(\\Parental\\Providers\\NovaResourceProvider::class);\n    }\n}\n```\n\n---\n\nThanks to [@sschoger](https://twitter.com/steveschoger) for the sick logo design, and [@DanielCoulbourne](https://twitter.com/DCoulbourne) for helping brainstorm the idea on [Twenty Percent Time](http://twentypercent.fm/).\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

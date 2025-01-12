@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "timestamp": 1736712237854,
+    "page": 978,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "fghrsh/live2d_api",
+      "stars": 1177,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2018 FGHRSH\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.3115234375,
+          "content": "# Live2D API\r\n\r\nLive2D 看板娘插件 (https://www.fghrsh.net/post/123.html) 上使用的后端 API\r\n\r\n### 特性\r\n\r\n- 原生 PHP 开发，无需伪静态，开箱即用\r\n- 支持 模型、皮肤 的 顺序切换 和 随机切换\r\n- 支持 单模型 单皮肤 切换、多组皮肤 递归穷举\r\n- 支持 同分组 多个模型 或 多个路径 的 加载切换\r\n\r\n## 使用\r\n\r\n### 环境要求\r\n- PHP 版本 >= 5.2\r\n- 依赖 PHP 扩展：json\r\n\r\n### 目录结构\r\n\r\n```shell\r\n│  model_list.json              // 模型列表\r\n│\r\n├─model                         // 模型路径\r\n│  └─GroupName                  // 模组分组\r\n│      └─ModelName              // 模型名称\r\n│\r\n├─add                           // 更新皮肤列表\r\n├─get                           // 获取模型配置\r\n├─rand                          // 随机切换模型\r\n├─rand_textures                 // 随机切换皮肤\r\n├─switch                        // 顺序切换模型\r\n├─switch_textures               // 顺序切换皮肤\r\n└─tools\r\n        modelList.php           // 列出模型列表\r\n        modelTextures.php       // 列出皮肤列表\r\n        name-to-lower.php       // 文件名格式化\r\n```\r\n\r\n### 添加模型\r\n\r\n- 单模型 单皮肤 切换\r\n    - 单次加载只输出一个皮肤\r\n    - 皮肤放在 `textures` 文件夹，自动识别\r\n\r\n```shell\r\n│  index.json\r\n│  model.moc\r\n│  textures.cache       // 皮肤列表缓存，自动生成\r\n│\r\n├─motions\r\n│      idle_01.mtn\r\n│      idle_02.mtn\r\n│      idle_03.mtn\r\n│\r\n└─textures\r\n        default-costume.png\r\n        school-costume.png\r\n        winter-costume.png\r\n```\r\n\r\n- 单模型 多组皮肤 递归穷举\r\n    - 多组皮肤 组合模型、穷举组合\r\n    - 皮肤文件夹按 `texture_XX` 命名\r\n    - 添加 `textures_order.json` 列出组合\r\n```shell\r\n│  index.json\r\n│  model.moc\r\n│  textures.cache\r\n│  textures_order.json\r\n│\r\n├─motions\r\n│      idle_01.mtn\r\n│      idle_02.mtn\r\n│      idle_03.mtn\r\n│\r\n├─texture_00\r\n│      00.png\r\n│\r\n├─texture_01\r\n│      00.png\r\n│      01.png\r\n│      02.png\r\n│\r\n├─texture_02\r\n│      00.png\r\n│      01.png\r\n│      02.png\r\n│\r\n└─texture_03\r\n       00.png\r\n       01.png\r\n```\r\n\r\ntextures_order.json\r\n\r\n```json\r\n[\r\n    [\"texture_00\"],\r\n    [\"texture_01\",\"texture_02\"],\r\n    [\"texture_03\"]\r\n]\r\n```\r\n\r\ntextures.cache\r\n\r\n```json\r\n[\r\n    [\"texture_00/00.png\",\"texture_01/00.png\",\"texture_02/00.png\",\"texture_03/00.png\"],\r\n    [\"texture_00/00.png\",\"texture_01/00.png\",\"texture_02/00.png\",\"texture_03/01.png\"],\r\n    [\"texture_00/00.png\",\"texture_01/01.png\",\"texture_02/01.png\",\"texture_03/00.png\"],\r\n    [\"texture_00/00.png\",\"texture_01/01.png\",\"texture_02/01.png\",\"texture_03/01.png\"],\r\n    [\"texture_00/00.png\",\"texture_01/02.png\",\"texture_02/02.png\",\"texture_03/00.png\"],\r\n    [\"texture_00/00.png\",\"texture_01/02.png\",\"texture_02/02.png\",\"texture_03/01.png\"]\r\n]\r\n```\r\n\r\n- 同分组 多个模型 或 多个路径 切换\r\n    - 修改 `model_list.json` 添加多个模型\r\n\r\n```shell\r\n│\r\n├─model\r\n│  ├─Group1\r\n│  │  ├─Model1\r\n│  │  │      index.json\r\n│  │  │\r\n│  │  └─Model2\r\n│  │          index.json\r\n│  │\r\n│  ├─Group2\r\n│  │  └─Model1\r\n│  │          index.json\r\n│  │\r\n│  └─GroupName\r\n│     └─ModelName\r\n│          │  index.json\r\n│          │  model.moc\r\n│          │\r\n│          ├─motions\r\n│          └─textures\r\n│\r\n```\r\n\r\nmodel_list.json\r\n```json\r\n{\r\n    \"models\": [\r\n        \"GroupName/ModelName\",\r\n        [\r\n            \"Group1/Model1\",\r\n            \"Group1/Model2\",\r\n            \"Group2/Model1\"\r\n        ]\r\n    ],\r\n    \"messages\": [\r\n        \"Example 1\",\r\n        \"Example 2\"\r\n    ]\r\n}\r\n```\r\n\r\n### 接口用法\r\n- `/add/` - 检测 新增皮肤 并更新 缓存列表\r\n- `/get/?id=1-23` 获取 分组 1 的 第 23 号 皮肤\r\n- `/rand/?id=1` 根据 上一分组 随机切换\r\n- `/switch/?id=1` 根据 上一分组 顺序切换\r\n- `/rand_textures/?id=1-23` 根据 上一皮肤 随机切换 同分组其他皮肤\r\n- `/switch_textures/?id=1-23` 根据 上一皮肤 顺序切换 同分组其他皮肤\r\n\r\n## 版权声明\r\n\r\n> (>▽<) 都看到这了，点个 Star 吧 ~\r\n\r\n**API 内所有模型 版权均属于原作者，仅供研究学习，不得用于商业用途**  \r\n\r\nMIT © FGHRSH\r\n"
+        },
+        {
+          "name": "add",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "get",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "model",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "model_list.json",
+          "type": "blob",
+          "size": 1.61328125,
+          "content": "{\n    \"models\": [\n        \"Potion-Maker/Pio\",\n        \"Potion-Maker/Tia\",\n        \"bilibili-live/22\",\n        \"bilibili-live/33\",\n        [\n            \"ShizukuTalk/shizuku-48\",\n            \"ShizukuTalk/shizuku-pajama\"\n        ],\n        [\n            \"HyperdimensionNeptunia/neptune_classic\",\n            \"HyperdimensionNeptunia/nepnep\",\n            \"HyperdimensionNeptunia/neptune_santa\",\n            \"HyperdimensionNeptunia/nepmaid\",\n            \"HyperdimensionNeptunia/nepswim\",\n            \"HyperdimensionNeptunia/noir_classic\",\n            \"HyperdimensionNeptunia/noir\",\n            \"HyperdimensionNeptunia/noir_santa\",\n            \"HyperdimensionNeptunia/noireswim\",\n            \"HyperdimensionNeptunia/blanc_classic\",\n            \"HyperdimensionNeptunia/blanc_normal\",\n            \"HyperdimensionNeptunia/blanc_swimwear\",\n            \"HyperdimensionNeptunia/vert_classic\",\n            \"HyperdimensionNeptunia/vert_normal\",\n            \"HyperdimensionNeptunia/vert_swimwear\",\n            \"HyperdimensionNeptunia/nepgear\",\n            \"HyperdimensionNeptunia/nepgear_extra\",\n            \"HyperdimensionNeptunia/nepgearswim\",\n            \"HyperdimensionNeptunia/histoire\",\n            \"HyperdimensionNeptunia/histoirenohover\"\n        ],\n        \"KantaiCollection/murakumo\"\n    ],\n    \"messages\": [\n        \"来自 Potion Maker 的 Pio 酱 ~\",\n        \"来自 Potion Maker 的 Tia 酱 ~\",\n        \"来自 Bilibili Live 的 22 哦 ~\",\n        \"来自 Bilibili Live 的 33 的说\",\n        \"Shizuku Talk ！这里是 Shizuku ~\",\n        \"Nep! Nep! 超次元游戏：海王星 系列\",\n        \"艦隊これくしょん / 叢雲(むらくも)\"\n    ]\n}"
+        },
+        {
+          "name": "rand",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "rand_textures",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "switch",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "switch_textures",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tools",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

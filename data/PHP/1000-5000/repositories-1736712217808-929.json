@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": 1736712217808,
+    "page": 929,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "davibennun/laravel-push-notification",
+      "stars": 1232,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0439453125,
+          "content": "/vendor\ncomposer.phar\ncomposer.lock\n.DS_Store"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.16015625,
+          "content": "language: php\n\nphp: \n  - 5.3\n  - 5.4\n  - 5.5\n\nbefore_script:\n  - curl -s http://getcomposer.org/installer | php\n  - php composer.phar install --dev\n\nscript: phpunit"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.0810546875,
+          "content": "Laravel Push Notification\n=========\n\nPackage to enable sending push notifications to devices\n\nInstallation\n----\n\nUpdate your `composer.json` file to include this package as a dependency\n\nLaravel 5 & Lumen\n\n```json\n\"davibennun/laravel-push-notification\": \"dev-laravel5\"\n```\nLaravel 4.*\n```json\n\"davibennun/laravel-push-notification\": \"dev-master\"\n```\n\nRegister the PushNotification service provider by adding it to the providers array.\n```php\n'providers' => array(\n\t...\n\t'Davibennun\\LaravelPushNotification\\LaravelPushNotificationServiceProvider'\n)\n```\n\nAlias the PushNotification facade by adding it to the aliases array in the `app/config/app.php` file.\n```php\n'aliases' => array(\n\t...\n\t'PushNotification' => 'Davibennun\\LaravelPushNotification\\Facades\\PushNotification'\n)\n```\n\n# Configuration\n\nCopy the config file into your project by running: (Lumen users skip this)\n\nLaravel 5\n```php\nphp artisan vendor:publish --provider=\"Davibennun\\LaravelPushNotification\\LaravelPushNotificationServiceProvider\" --tag=\"config\"\n```\n\nLaravel 4.*\n```\nphp artisan config:publish davibennun/laravel-push-notification\n```\n\nThis will generate a config file like this\n```php\narray(\n    'appNameIOS'=>array(\n\t\t'environment' => 'development',\n\t\t'certificate' => '/path/to/certificate.pem',\n\t\t'passPhrase'  => 'password',\n\t\t'service'     => 'apns'\n    ),\n    'appNameAndroid'=>array(\n\t\t'environment' => 'production',\n\t\t'apiKey'      => 'yourAPIKey',\n\t\t'service'     => 'gcm'\n    )\n);\n```\nWhere all first level keys corresponds to an service configuration, each service has its own properties, android for instance have `apiKey` and IOS uses `certificate` and `passPhrase`. You can set as many services configurations as you want, one for each app.\n\n##### Dont forget to set `service` key to identify IOS `'service'=>'apns'` and Android `'service'=>'gcm'`\n\n##### The certificate path must be an absolute path, so in the configuration file you can use these:\n```\n//Path to the 'app' folder\n'certificate'=>app_path().'/myCert.pem'\n```\nLaravel functions are also available `public_path()` `storage_path()` `base_path()`\n\n# Usage\n```php\n\nPushNotification::app('appNameIOS')\n                ->to($deviceToken)\n                ->send('Hello World, i`m a push message');\n\n```\nWhere app argument `appNameIOS` refers to defined service in config file.\n\n### Dynamic configuration and Lumen users\nYou can set the app config array directly: (keep in mind the array schema)\n```php\n//iOS app\nPushNotification::app(['environment' => 'development',\n\t\t'certificate' => '/path/to/certificate.pem',\n\t\t'passPhrase'  => 'password',\n\t\t'service'     => 'apns']);\n//Android app\t\t\nPushNotification::app(['environment' => 'production',\n\t\t'apiKey'      => 'yourAPIKey',\n\t\t'service'     => 'gcm']);\n\n```\n\n\nTo multiple devices and optioned message:\n```php\n$devices = PushNotification::DeviceCollection(array(\n    PushNotification::Device('token', array('badge' => 5)),\n    PushNotification::Device('token1', array('badge' => 1)),\n    PushNotification::Device('token2')\n));\n$message = PushNotification::Message('Message Text',array(\n    'badge' => 1,\n    'sound' => 'example.aiff',\n    \n    'actionLocKey' => 'Action button title!',\n    'locKey' => 'localized key',\n    'locArgs' => array(\n        'localized args',\n        'localized args',\n    ),\n    'launchImage' => 'image.jpg',\n    \n    'custom' => array('custom data' => array(\n        'we' => 'want', 'send to app'\n    ))\n));\n\n$collection = PushNotification::app('appNameIOS')\n    ->to($devices)\n    ->send($message);\n\n// get response for each device push\nforeach ($collection->pushManager as $push) {\n    $response = $push->getAdapter()->getResponse();\n}\n\n// access to adapter for advanced settings\n$push = PushNotification::app('appNameAndroid');\n$push->adapter->setAdapterParameters(['sslverifypeer' => false]);\n```\nThis package is wrapps [Notification Package] and adds some flavor to it.\n\n#### Usage advice\nThis package should be used with [Laravel Queues], so pushes dont blocks the user and are processed in the background, meaning a better flow.\n\n\n\n[Notification Package]:https://github.com/Ph3nol/NotificationPusher\n[Laravel Queues]:http://laravel.com/docs/queues\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.5966796875,
+          "content": "{\n    \"name\": \"davibennun/laravel-push-notification\",\n    \"description\": \"Laravel package to send push notifications to mobile devices (apns, gcm)\",\n     \"keywords\": [\"apns\",\"gcm\",\"push\",\"notification\", \"laravel\"],\n    \"authors\": [\n        {\n            \"name\": \"DaviBenNun\",\n            \"email\": \"davi@andradenunes.org\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.3.0\",\n        \"illuminate/support\": \"4.*\",\n        \"sly/notification-pusher\": \"2.*\"\n    },\n    \"autoload\": {\n        \"psr-0\": {\n            \"Davibennun\\\\LaravelPushNotification\": \"src/\"\n        }\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.5556640625,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"vendor/autoload.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         syntaxCheck=\"false\"\n>\n    <testsuites>\n        <testsuite name=\"Package Test Suite\">\n            <directory suffix=\".php\">./tests/</directory>\n        </testsuite>\n    </testsuites>\n</phpunit>"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

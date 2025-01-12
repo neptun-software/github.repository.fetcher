@@ -1,0 +1,81 @@
+{
+  "metadata": {
+    "timestamp": 1736712235414,
+    "page": 971,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "box-project/box2",
+      "stars": 1186,
+      "defaultBranch": "2.0",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.177734375,
+          "content": "# box files\n/*.phar\n/*.phar.sig\n/box.json\n\n# composer directories\n/bin/\n/src/vendors/\n\n# composer files\n/composer.lock\n\n# phpunit files\n/phpunit.xml\n\n# phpstorm files\n/.idea/\n/*.iml\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.4326171875,
+          "content": "language: php\n\nsudo: false\n\ncache:\n    directories:\n        - $HOME/.composer/cache/files\n\nphp:\n    - 5.3\n    - 5.4\n    - 5.5\n    - 5.6\n    - 7.0\n    - hhvm\n    \nmatrix:\n    fast_finish: true\n    allow_failures:\n        - php: hhvm\n        - php: 7.0\n\nbefore_install:\n    - composer self-update\n\ninstall:\n    - composer install\n\nbefore_script:\n    - git config --global user.email test@test.com\n    - git config --global user.name \"Test User\"\n"
+        },
+        {
+          "name": "Gofile",
+          "type": "blob",
+          "size": 0.7734375,
+          "content": "<?php\n\nuse Symfony\\Component\\Console\\Input\\InputInterface as In;\nuse Symfony\\Component\\Console\\Output\\OutputInterface as Out;\n\ntask(\n    'build',\n    'Builds a new phar',\n    function (In $in, Out $out) {\n        $verbose = (Out::VERBOSITY_VERBOSE === $out->getVerbosity())\n            ? ' --verbose'\n            : '';\n\n        passthru(\"bin/box build --ansi$verbose\", $exit);\n\n        return $exit;\n    }\n);\n\ntask(\n    'test',\n    'Runs the project unit tests',\n    function (In $in, Out $out) {\n        $coverage = $in->getOption('coverage')\n            ? ' --coverage-html coverage'\n            : '';\n\n        passthru(\"bin/phpunit --verbose$coverage\", $exit);\n\n        return $exit;\n    }\n);\n\noption(\n    'coverage',\n    'c',\n    OPT_NO_VALUE,\n    'Generate HTML code coverage report'\n);\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0322265625,
+          "content": "Copyright (c) 2013 Kevin Herrera\n\nPermission is hereby granted, free of charge, to any person obtaining a copy \nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.9560546875,
+          "content": "This project has been moved to https://github.com/box-project/box\n\nIf you are looking to upgrade, don't forget to have a look at the [upgrade guide](https://github.com/box-project/box/blob/master/UPGRADE.md#from-27-to-30).\n\n<hr/>\n\nBox\n===\n\n[![Build Status](https://travis-ci.org/box-project/box2.svg?branch=2.0)](https://travis-ci.org/box-project/box2)\n\nWhat is it?\n-----------\n\nThe Box application simplifies the Phar building process. Out of the box (no pun intended), the application can do many great things:\n\n- Add, replace, and remove files and stubs in existing Phars.\n- Extract a whole Phar, or cherry pick which files you want.\n- Retrieve information about the Phar extension, or a Phar file.\n  - List the contents of a Phar.\n- Verify the signature of an existing Phar.\n- Generate RSA (PKCS#1 encoded) private keys for OpenSSL signing.\n  - Extract public keys from existing RSA private keys.\n- Use Git tags and short commit hashes for versioning.\n\nSince the application is based on the [Box library](https://github.com/herrera-io/php-box), you get its benefits as well:\n\n- On the fly search and replace of placeholders.\n- Compact file contents based on file type.\n- Generate custom stubs.\n\nForks\n-----\n\nBecause of the lack of proper maintenance on my part, I created a wiki page to list the known forks of this project. Please feel free to add to this list. [You can find the wiki page here.](https://github.com/box-project/box2/wiki/Forks)\n\nHow do I get started?\n---------------------\n\nYou can use Box in one of three ways:\n\n### As a Phar (Recommended)\n\nYou may download a ready-to-use version of Box as a Phar:\n\n```sh\n$ curl -LSs https://box-project.github.io/box2/installer.php | php\n```\n\nThe command will check your PHP settings, warn you of any issues, and the download it to the current directory. From there, you may place it anywhere that will make it easier for you to access (such as `/usr/local/bin`) and chmod it to `755`. You can even rename it to just `box` to avoid having to type the `.phar` extension every time.\n\n```sh\n$ box --version\n```\n\nWhenever a new version of the application is released, you can simply run the `update` command to get the latest version:\n\n```sh\n$ box update\n```\n\n### As a Global Composer Install\n\nThis is probably the best way when you have other tools like phpunit and other tools installed in this way:\n\n```sh\n$ composer global require kherge/box --prefer-source\n```\n\n### As a Composer Dependency\n\nYou may also install Box as a dependency for your Composer managed project:\n\n```sh\n$ composer require --dev kherge/box\n```\n\n(or)\n\n```json\n{\n    \"require-dev\": {\n        \"kherge/box\": \"~2.5\"\n    }\n}\n```\n\n> Be aware that using this approach requires additional configuration steps to prevent Box's own dependencies from accidentally being added to your Phar, causing file size bloat. You can find more information about this [issue on the wiki](https://github.com/kherge/php-box/wiki/App%2C-or-Library%3F).\n\nOnce you have installed the application, you can run the `help` command to get detailed information about all of the available commands. This should be your go-to place for information about how to use Box. You may also find additional useful information [on the wiki](https://github.com/kherge/php-box/wiki). If you happen to come across any information that could prove to be useful to others, the wiki is open for you to contribute.\n\n```sh\n$ box help\n```\n\nCreating a Phar\n---------------\n\nTo get started, you may want to check out the [example application](https://github.com/kherge/php-box-example) that is ready to be built by Box. How your project is structured is entirely up to you. All that Box requires is that you have a file called `box.json` at the root of your project directory. You can find a complete and detailed list of configuration settings available by seeing the help information for the `build` command:\n\n```sh\n$ box help build\n```\n\n> You may find example configuration files for popular projects on the wiki.\n\nOnce you have configured your project using `box.json` (or `box.json.dist`), you can simply run the `build` command in the directory containing `box.json`:\n\n```sh\n$ box build -v\n```\n\n> The `-v` option enabled verbose output. This will provide you with a lot of useful information for debugging your build process. Once you are satisfied with the results, I recommend not using the verbose option. It may considerably slow down the build process.\n\nContributing\n------------\n\nYou can contribute in one of three ways:\n\n1. File bug reports using the [issue tracker](https://github.com/kherge/php-box/issues).\n2. Answer questions or fix bugs on the issue tracker.\n3. Contribute new features or update the wiki.\n\n> The code contribution process is not very formal. You just need to make sure that you follow the PSR-0, PSR-1, and PSR-2 coding guidelines. Any new code contributions must be accompanied by unit tests where applicable.\n\nGPG Signature\n-------------\n\nYou can find [kherge's GPG on keybase.io](https://keybase.io/kherge).\n\n    32E4 B747 57B1 D652 34FC 389F 293D 7712 4151 5FE8\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "box.json.dist",
+          "type": "blob",
+          "size": 0.9482421875,
+          "content": "{\n    \"alias\": \"box.phar\",\n    \"chmod\": \"0755\",\n    \"compactors\": [\n        \"Herrera\\\\Box\\\\Compactor\\\\Json\",\n        \"Herrera\\\\Box\\\\Compactor\\\\Php\"\n    ],\n    \"directories\": [\"src/lib\"],\n    \"extract\": true,\n    \"files\": [\n        \"LICENSE\",\n        \"res/schema.json\",\n        \"src/vendors/herrera-io/phar-update/res/schema.json\"\n    ],\n    \"finder\": [\n        {\n            \"name\": \"*.php\",\n            \"exclude\": [\n                \"File\",\n                \"mikey179\",\n                \"Net\",\n                \"phpunit\",\n                \"phpunit-test-case\",\n                \"Tester\",\n                \"Tests\",\n                \"tests\",\n                \"yaml\"\n            ],\n            \"in\": \"src/vendors\"\n        }\n    ],\n    \"git-commit\": \"git-commit\",\n    \"git-version\": \"git-version\",\n    \"main\": \"bin/box\",\n    \"output\": \"box-@git-version@.phar\",\n    \"replacements\": {\n        \"manifest_url\": \"https://box-project.github.io/box2/manifest.json\"\n    },\n    \"stub\": true\n}\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.44921875,
+          "content": "{\n    \"name\": \"kherge/box\",\n    \"description\": \"A tool to simplify building PHARs.\",\n    \"keywords\": [\"phar\"],\n    \"homepage\": \"http://box-project.github.io/box2/\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Kevin Herrera\",\n            \"email\": \"kevin@herrera.io\",\n            \"homepage\": \"http://kevin.herrera.io\"\n        }\n    ],\n    \"support\": {\n        \"issues\": \"https://github.com/box-project/box2/issues\"\n    },\n    \"require\": {\n        \"php\": \">=5.3.3\",\n        \"herrera-io/annotations\": \"~1.0\",\n        \"herrera-io/box\": \"~1.6\",\n        \"herrera-io/json\": \"~1.0\",\n        \"kherge/amend\": \"~3.0\",\n        \"justinrainbow/json-schema\": \"~1.3\",\n        \"phine/path\": \"~1.0\",\n        \"phpseclib/phpseclib\": \"~2.0\",\n        \"symfony/console\": \"~2.1 || ~3.0\",\n        \"symfony/finder\": \"~2.1 || ~3.0\",\n        \"symfony/process\": \"~2.1 || ~3.0\"\n    },\n    \"require-dev\": {\n        \"herrera-io/phpunit-test-case\": \"1.*\",\n        \"mikey179/vfsStream\": \"1.1.0\",\n        \"phpunit/phpunit\": \"3.7.*\"\n    },\n    \"suggest\": {\n        \"ext-openssl\": \"To accelerate private key generation.\"\n    },\n    \"autoload\": {\n        \"psr-0\": {\n            \"KevinGH\\\\Box\": \"src/lib\"\n        }\n    },\n    \"bin\": [\n        \"bin/box\"\n    ],\n    \"config\": {\n        \"bin-dir\": \"bin\",\n        \"platform\": {\n          \"php\": \"5.3.3\"\n        },\n        \"vendor-dir\": \"src/vendors\"\n    },\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-master\": \"2.x-dev\"\n        }\n    }\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.6416015625,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"true\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"src/tests/bootstrap.php\"\n         colors=\"true\"\n         stopOnError=\"false\"\n         stopOnFailure=\"false\"\n         stopOnIncomplete=\"false\"\n         stopOnSkipped=\"false\"\n         strict=\"true\"\n         verbose=\"false\">\n  <filter>\n    <whitelist>\n      <directory suffix=\".php\">src/lib/</directory>\n    </whitelist>\n  </filter>\n  <testsuites>\n    <testsuite name=\"Box Test Suite\">\n      <directory phpVersion=\"5.3.0\" phpVersionOperator=\">=\" suffix=\"Test.php\">src/tests/</directory>\n    </testsuite>\n  </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "res",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "timestamp": 1736712173903,
+    "page": 837,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjg0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gherkins/regexpbuilderphp",
+      "stars": 1343,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0400390625,
+          "content": "vendor\ncomposer.lock\n.php-cs-fixer.cache\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 Andrew Jones\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.9033203125,
+          "content": "```asciidoc\n ____            _____            ____        _ _     _           ____  _   _ ____  \n|  _ \\ ___  __ _| ____|_  ___ __ | __ ) _   _(_) | __| | ___ _ __|  _ \\| | | |  _ \\ \n| |_) / _ \\/ _` |  _| \\ \\/ / '_ \\|  _ \\| | | | | |/ _` |/ _ \\ '__| |_) | |_| | |_) |\n|  _ <  __/ (_| | |___ >  <| |_) | |_) | |_| | | | (_| |  __/ |  |  __/|  _  |  __/ \n|_| \\_\\___|\\__, |_____/_/\\_\\ .__/|____/ \\__,_|_|_|\\__,_|\\___|_|  |_|   |_| |_|_|    \n           |___/           |_|                                                      \n```\n## human-readable regular expressions for PHP\n[![release](https://img.shields.io/github/release/gherkins/regexpbuilderphp.svg?style=flat-square)](https://github.com/gherkins/regexpbuilderphp/releases)\n![release](https://img.shields.io/badge/php-%5E8.*-blue?style=flat-square)\n[![phpunit](https://img.shields.io/github/actions/workflow/status/gherkins/regexpbuilderphp/main.yml?style=flat-square&color=lightgreen)](https://github.com/gherkins/regexpbuilderphp/actions)\n[![release](https://img.shields.io/badge/coverage-100%25-lightgreen?style=flat-square)](https://github.com/gherkins/regexpbuilderphp/releases)\n![release](https://img.shields.io/badge/much-wow-lightgreen?style=flat-square)\n\n\nPHP port of `regexpbuilderjs`\n\n> RegExpBuilder integrates regular expressions into the programming language, thereby making them easy to read and maintain. Regular Expressions are created by using chained methods and variables such as arrays or strings.\n\n## Installation\n\n```bash\ncomposer req gherkins/regexpbuilderphp\n```\n\nOr download [the appropriate release](https://github.com/gherkins/regexpbuilderphp/releases/latest) and require `RegExpBuilder.php` and `RegExp.php` from `/src`.\n\n\n## Documentation\n\nhttps://github.com/gherkins/regexpbuilderphp/wiki\n\n\n## Examples\n\n```php\nuse Gherkins\\RegExpBuilderPHP;\n$builder = new RegExpBuilder();\n```\n\n### Validation\n\n```php\n$regExp = $builder\n    ->startOfInput()\n    ->exactly(4)->digits()\n    ->then(\"_\")\n    ->exactly(2)->digits()\n    ->then(\"_\")\n    ->min(3)->max(10)->letters()\n    ->then(\".\")\n    ->anyOf(array(\"png\", \"jpg\", \"gif\"))\n    ->endOfInput()\n    ->getRegExp();\n\n//true\n$regExp->matches(\"2020_10_hund.jpg\");\n$regExp->matches(\"2030_11_katze.png\");\n$regExp->matches(\"4000_99_maus.gif\");\n\n//false\n$regExp->matches(\"123_00_nein.gif\");\n$regExp->matches(\"4000_0_nein.pdf\");\n$regExp->matches(\"201505_nein.jpg\");\n```\n\n### Search\n\n```php\n$regExp = $builder\n    ->multiLine()\n    ->globalMatch()\n    ->min(1)->max(10)->anythingBut(\" \")\n    ->anyOf(array(\".pdf\", \".doc\"))\n    ->getRegExp();\n\n$text = 'Lorem ipsum dolor sit amet, consetetur sadipscing elitr,\nsed diam nonumy SomeFile.pdf eirmod tempor invidunt ut labore et dolore\nmagna aliquyam erat, sed diam voluptua. At vero eos et accusam\net justo duo dolores et ea rebum. doc_04.pdf Stet clita kasd File.doc.'\n\n$matches = $regExp->findIn($text);\n\n//true\n($matches[0] === \"SomeFile.pdf\");\n($matches[1] === \"doc_04.pdf\");\n($matches[2] === \"File.doc\");\n```\n\n### Replace\n\n```php\n$regExp = $builder\n    ->min(1)\n    ->max(10)\n    ->digits()\n    ->getRegExp();\n\n$text = \"98 bottles of beer on the wall\";\n\n$text = $regExp->replace(\n    $text,\n    function ($match) {\n        return (int)$match + 1;\n    }\n);\n\n//true\n(\"99 bottles of beer on the wall\" === $text);\n```\n\n### Validation with multiple patterns\n\n```php\n$a = $builder\n    ->startOfInput()\n    ->exactly(3)->digits()\n    ->anyOf(array(\".pdf\", \".doc\"))\n    ->endOfInput();\n\n$b = $builder\n    ->getNew()\n    ->startOfInput()\n    ->exactly(4)->letters()\n    ->then(\".jpg\")\n    ->endOfInput();\n\n$regExp = $builder\n    ->getNew()\n    ->eitherFind($a)\n    ->orFind($b)\n    ->getRegExp();\n\n//true\n$regExp->matches(\"123.pdf\");\n$regExp->matches(\"456.doc\");\n$regExp->matches(\"bbbb.jpg\");\n$regExp->matches(\"aaaa.jpg\");\n\n//false\n$regExp->matches(\"1234.pdf\");\n$regExp->matches(\"123.gif\");\n$regExp->matches(\"aaaaa.jpg\");\n$regExp->matches(\"456.docx\");\n```\n        \nTake a look at the [tests](tests/RegExpBuilderTest.php) for more examples\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.4560546875,
+          "content": "{\n  \"name\": \"gherkins/regexpbuilderphp\",\n  \"description\": \"PHP port of thebinarysearchtree/regexpbuilderjs\",\n  \"keywords\": [\"php\", \"regex\", \"builder\"],\n  \"homepage\": \"https://github.com/gherkins/regexpbuilderphp/\",\n  \"license\": \"MIT\",\n  \"require\": {\n    \"php\": \"^8.0\"\n  },\n  \"require-dev\": {\n    \"phpunit/phpunit\": \"^9.0\"\n  },\n  \"autoload\": {\n    \"psr-4\": {\n      \"Gherkins\\\\RegExpBuilderPHP\\\\\": \"src\"\n    }\n  },\n  \"scripts\": {\n    \"test\": \"vendor/bin/phpunit\"\n  }\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.7392578125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/9.3/phpunit.xsd\"\n         bootstrap=\"vendor/autoload.php\"\n         colors=\"true\"\n         verbose=\"true\"\n         convertDeprecationsToExceptions=\"true\"\n         >\n  <coverage cacheDirectory=\".phpunit.cache/code-coverage\" processUncoveredFiles=\"true\">\n    <include>\n      <directory>src</directory>\n    </include>\n    <report>\n      <clover outputFile=\"clover.xml\" />\n    </report>\n  </coverage>\n  <testsuites>\n    <testsuite name=\"unit tests\">\n      <directory>tests</directory>\n    </testsuite>\n  </testsuites>\n  <php>\n    <ini name=\"error_reporting\" value=\"E_ALL\"/>\n  </php>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

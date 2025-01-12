@@ -1,0 +1,146 @@
+{
+  "metadata": {
+    "timestamp": 1736712209715,
+    "page": 912,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "themosis/themosis",
+      "stars": 1256,
+      "defaultBranch": "3.0",
+      "files": [
+        {
+          "name": ".env.sample",
+          "type": "blob",
+          "size": 0.48046875,
+          "content": "APP_ENV=local\nAPP_DEBUG=true\nAPP_KEY=\nAPP_TD=themosis\n\nAUTH_KEY=\nSECURE_AUTH_KEY=\nLOGGED_IN_KEY=\nNONCE_KEY=\nAUTH_SALT=\nSECURE_AUTH_SALT=\nLOGGED_IN_SALT=\nNONCE_SALT=\n\nAPP_URL=http://local.test\nWP_URL=http://local.test/cms\n\nDATABASE_NAME=themosis\nDATABASE_USER=root\nDATABASE_PASSWORD=root\nDATABASE_HOST=localhost\nDATABASE_PREFIX=th_\n\nLOG_CHANNEL=stack\nLOG_LEVEL=debug\n\nMAIL_HOST=your-smtp-host\nMAIL_USERNAME=null\nMAIL_PASSWORD=null\nMAIL_FROM_ADDRESS=noreply@themosis.com\nMAIL_FROM_NAME=Themosis"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0107421875,
+          "content": "* text=auto"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3232421875,
+          "content": "### Miscellaneous\n.DS_Store\nThumbs.db\n\n### Homestead\nafter.sh\naliases\nHomestead.yaml\nVagrantfile\n\n### Vagrant\n/.vagrant\n\n### Composer\n/vendor/\n\n### IDE\n/.idea\n\n### PHPCS\ncs_fixer*\n.php_cs.cache\n\n### NodeJS\nnode_modules/\n\n### WordPress\n/htdocs/cms/\n/htdocs/content/uploads/\n/htdocs/content/upgrade/\n\n### Environment Credentials\n.env"
+        },
+        {
+          "name": ".php_cs.dist",
+          "type": "blob",
+          "size": 1.857421875,
+          "content": "<?php\n\nuse PhpCsFixer\\Config;\nuse PhpCsFixer\\Finder;\n\n/**\n * Plugin PHP code fixer.\n */\n$finder = Finder::create()\n    ->exclude([\n        'bin',\n        'htdocs',\n        'node_modules'\n    ])\n    ->in([\n        'app',\n        'bootstrap',\n        'config',\n        'tests',\n    ]);\n\nreturn Config::create()\n    ->setFinder($finder)\n    ->setRules([\n        '@PSR2' => true,\n        'strict_param' => false,\n        'array_syntax' => [\n            'syntax' => 'short'\n        ],\n        'cast_spaces' => [\n            'space' => 'single'\n        ],\n        'concat_space' => [\n            'spacing' => 'none'\n        ],\n        'ordered_imports' => true,\n        'no_unused_imports' => true,\n        'no_whitespace_before_comma_in_array' => true,\n        'blank_line_before_return' => true,\n        'no_whitespace_in_blank_line' => true,\n        'blank_line_after_namespace' => true,\n        'single_blank_line_before_namespace' => true,\n        'single_line_after_imports' => true,\n        'blank_line_after_opening_tag' => true,\n        'no_empty_statement' => true,\n        'trailing_comma_in_multiline_array' => false,\n        'no_blank_lines_after_class_opening' => true,\n        'no_blank_lines_after_phpdoc' => true,\n        'phpdoc_trim' => true,\n        'phpdoc_add_missing_param_annotation' => true,\n        'phpdoc_align' => true,\n        'phpdoc_no_empty_return' => true,\n        'phpdoc_order' => true,\n        'phpdoc_return_self_reference' => true,\n        'phpdoc_scalar' => true,\n        'phpdoc_separation' => true,\n        'phpdoc_single_line_var_spacing' => true,\n        'phpdoc_var_without_name' => true,\n        'not_operator_with_successor_space' => true,\n        'return_type_declaration' => [\n            'space_before' => 'none'\n        ],\n        'semicolon_after_instruction' => true,\n        'trim_array_spaces' => true,\n        'ternary_operator_spaces' => true\n    ]);\n"
+        },
+        {
+          "name": "LocalValetDriver.php",
+          "type": "blob",
+          "size": 1.8662109375,
+          "content": "<?php\n\nclass LocalValetDriver extends LaravelValetDriver\n{\n    /**\n     * Determine if the driver serves the request.\n     *\n     * @param string $sitePath\n     * @param string $siteName\n     * @param string $uri\n     *\n     * @return bool\n     */\n    public function serves($sitePath, $siteName, $uri)\n    {\n        return file_exists($sitePath.'/htdocs/cms/wp-load.php');\n    }\n\n    /**\n     * Determine if the incoming request is for a static file.\n     *\n     * @param string $sitePath\n     * @param string $siteName\n     * @param string $uri\n     *\n     * @return false|string\n     */\n    public function isStaticFile($sitePath, $siteName, $uri)\n    {\n        $staticFilePath = $sitePath.'/htdocs'.$uri;\n\n        if ($this->isActualFile($staticFilePath)) {\n            return $staticFilePath;\n        }\n\n        return false;\n    }\n\n    /**\n     * Get the fully resolved path to the application's front controller.\n     *\n     * @param string $sitePath\n     * @param string $siteName\n     * @param string $uri\n     *\n     * @return string\n     */\n    public function frontControllerPath($sitePath, $siteName, $uri)\n    {\n        $_SERVER['PHP_SELF'] = $uri;\n        $_SERVER['SERVER_NAME'] = $_SERVER['HTTP_HOST'];\n\n        if (strpos($uri, '/cms/') === 0) {\n            if (is_dir($sitePath.'/htdocs'.$uri)) {\n                $uri = $this->forceTrailingSlash($uri);\n\n                return $sitePath.'/htdocs'.$uri.'/index.php';\n            }\n\n            return $sitePath.'/htdocs'.$uri;\n        }\n\n        return $sitePath.'/htdocs/index.php';\n    }\n\n    /**\n     * Redirect to uri with trailing slash.\n     *\n     * @param  string $uri\n     *\n     * @return string\n     */\n    private function forceTrailingSlash($uri)\n    {\n        if (substr($uri, -1 * strlen('/cms/wp-admin')) == '/cms/wp-admin') {\n            header('Location: '.$uri.'/');\n            die;\n        }\n\n        return $uri;\n    }\n}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.625,
+          "content": "Themosis framework\n==================\n\n[![Build Status](https://travis-ci.org/themosis/themosis.svg?branch=dev)](https://travis-ci.org/themosis/themosis)\n\nThe Themosis framework is a tool aimed to WordPress developers of any levels. But the better WordPress and PHP knowledge you have the easier it is to work with.\n\nThemosis framework is a tool to help you develop websites and web applications faster using [WordPress](https://wordpress.org). Using an elegant and simple code syntax, Themosis framework helps you structure and organize your code and allows you to better manage and scale your WordPress websites and applications.\n\nInstallation\n------------\nPlease see the [installation section](https://framework.themosis.com/docs/master/installation/) of the Themosis documentation.\n\nDevelopment team\n----------------\nThe framework was created by [Julien Lambé](https://www.themosis.com/), who continues to lead the development.\n\nContributing\n------------\nAny help is appreciated. The project is open-source and we encourage you to participate. You can contribute to the project in multiple ways by:\n\n- Reporting a bug issue\n- Suggesting features\n- Sending a pull request with code fix or feature\n- Following the project on [GitHub](https://github.com/themosis)\n- Following us on Twitter: [@Themosis](https://twitter.com/Themosis)\n- Sharing the project around your community\n\nFor details about contributing to the framework, please check the [contribution guide](https://framework.themosis.com/docs/master/contributing).\n\nLicense\n-------\nThe Themosis framework is open-source software licensed under [GPL-2+ license](http://www.gnu.org/licenses/gpl-2.0.html).\n"
+        },
+        {
+          "name": "app",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "artisan",
+          "type": "blob",
+          "size": 1.8955078125,
+          "content": "#!/usr/bin/env php\n<?php\n\nuse Symfony\\Component\\Console\\Input\\ArgvInput;\nuse Symfony\\Component\\Console\\Output\\ConsoleOutput;\n\ndefine('THEMOSIS_START', microtime(true));\n\n/*\n|--------------------------------------------------------------------------\n| Register application constants\n|--------------------------------------------------------------------------\n|\n*/\ndefine('DS', DIRECTORY_SEPARATOR);\ndefine('THEMOSIS_ROOT', realpath(__DIR__));\ndefine('THEMOSIS_PUBLIC_DIR', 'htdocs');\ndefine('CONTENT_DIR', 'content');\ndefine('WP_CONTENT_DIR', realpath(THEMOSIS_ROOT.DS.THEMOSIS_PUBLIC_DIR.DS.CONTENT_DIR));\ndefine('ABSPATH', THEMOSIS_ROOT . '/' . THEMOSIS_PUBLIC_DIR . '/cms/');\n\n/*\n|--------------------------------------------------------------------------\n| Register the autoloader\n|--------------------------------------------------------------------------\n|\n*/\nrequire __DIR__.'/vendor/autoload.php';\n\n$app = require_once __DIR__.'/bootstrap/app.php';\n\n/*\n|--------------------------------------------------------------------------\n| Start the application\n|--------------------------------------------------------------------------\n|\n| When we run the console application, the current CLI command will be\n| executed in this console and the response sent back to a terminal\n| or another output device for the developers.\n|\n*/\n$kernel = $app->make(Illuminate\\Contracts\\Console\\Kernel::class);\n\n$status = $kernel->handle(\n    $input = new ArgvInput(),\n    new ConsoleOutput()\n);\n\n/*\n|--------------------------------------------------------------------------\n| Shutdown the application\n|--------------------------------------------------------------------------\n|\n| Once the console has finished running, we will fire off the shutdown events\n| so that any final work may be done by the application before we shut\n| down the process. This is the last thing to happen to the request.\n|\n*/\n$kernel->terminate($input, $status);\n\nexit($status);\n"
+        },
+        {
+          "name": "bootstrap",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 2.15625,
+          "content": "{\n  \"name\": \"themosis/themosis\",\n  \"description\": \"Themosis, a WordPress framework.\",\n  \"keywords\": [\"themosis\", \"framework\", \"wordpress\"],\n  \"license\": \"GPL-2.0-or-later\",\n  \"support\": {\n    \"issues\": \"https://github.com/themosis/framework/issues\",\n    \"source\": \"https://github.com/themosis/framework\"\n  },\n  \"authors\": [\n    {\n      \"name\": \"Julien Lambé\",\n      \"email\": \"julien@themosis.com\",\n      \"homepage\": \"https://www.themosis.com/\"\n    }\n  ],\n  \"type\": \"project\",\n  \"repositories\":[\n    {\n      \"type\": \"composer\",\n      \"url\": \"https://wpackagist.org\"\n    }\n  ],\n  \"autoload\": {\n    \"psr-4\": {\n      \"App\\\\\": \"app/\",\n      \"Database\\\\Factories\\\\\": \"database/factories/\",\n      \"Database\\\\Seeders\\\\\": \"database/seeders/\"\n    }\n  },\n  \"autoload-dev\": {\n    \"psr-4\": {\n      \"Tests\\\\\": \"tests/\"\n    }\n  },\n  \"config\": {\n    \"preferred-install\": \"dist\",\n    \"sort-packages\": true,\n    \"optimize-autoloader\": true,\n    \"allow-plugins\": {\n      \"composer/installers\": true,\n      \"johnpbloch/wordpress-core-installer\": true\n    }\n  },\n  \"require\": {\n    \"php\": \"^8.0\",\n    \"johnpbloch/wordpress-core\": \"^6.0.0\",\n    \"johnpbloch/wordpress-core-installer\": \"^2.0\",\n    \"themosis/framework\": \"^3.1\",\n    \"fideloper/proxy\": \"^4.4\",\n    \"fruitcake/laravel-cors\": \"^2.0\"\n  },\n  \"require-dev\": {\n    \"phpunit/phpunit\": \"^9.0\"\n  },\n  \"extra\":{\n    \"installer-paths\": {\n      \"htdocs/content/plugins/{$name}/\": [\"type:wordpress-plugin\"],\n      \"htdocs/content/mu-plugins/{$name}/\": [\"type:wordpress-muplugin\"],\n      \"htdocs/content/themes/{$name}/\": [\"type:wordpress-theme\"]\n    },\n    \"wordpress-install-dir\": {\n      \"johnpbloch/wordpress-core\": \"htdocs/cms\"\n    }\n  },\n  \"minimum-stability\": \"dev\",\n  \"prefer-stable\": true,\n  \"scripts\": {\n    \"post-autoload-dump\": [\n      \"Themosis\\\\Core\\\\ComposerScripts::postAutoloadDump\",\n      \"@php artisan package:discover --ansi\"\n    ],\n    \"post-root-package-install\": [\n      \"@php -r \\\"file_exists('.env') || copy('.env.sample', '.env');\\\"\"\n    ],\n    \"post-create-project-cmd\": [\n      \"@php artisan vendor:publish --tag=themosis --force\",\n      \"@php artisan key:generate --ansi\",\n      \"@php artisan salts:generate --ansi\"\n    ],\n    \"test\": \"phpunit\"\n  }\n}\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "database",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "htdocs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 1.08203125,
+          "content": "{\n  \"name\": \"themosis\",\n  \"version\": \"2.0.0\",\n  \"description\": \"Themosis framework\",\n  \"main\": \"/\",\n  \"directories\": {\n    \"test\": \"tests\"\n  },\n  \"scripts\": {\n    \"dev\": \"npm run development\",\n    \"development\": \"cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js\",\n    \"watch\": \"cross-env NODE_ENV=development node_modules/webpack/bin/webpack.js --watch --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js\",\n    \"hot\": \"cross-env NODE_ENV=development webpack-dev-server --inline --hot --config=node_modules/laravel-mix/setup/webpack.config.js\",\n    \"prod\": \"npm run production\",\n    \"production\": \"cross-env NODE_ENV=production node_modules/webpack/bin/webpack.js --progress --hide-modules --config=node_modules/laravel-mix/setup/webpack.config.js\"\n  },\n  \"bugs\": {\n    \"url\": \"https://github.com/themosis/framework/issues\"\n  },\n  \"homepage\": \"https://github.com/themosis/themosis#readme\",\n  \"devDependencies\": {\n    \"cross-env\": \"^5.2.0\",\n    \"laravel-mix\": \"^4.0.15\"\n  }\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.443359375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit bootstrap=\"tests/bootstrap.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         verbose=\"true\">\n    <testsuites>\n        <testsuite name=\"Themosis\">\n            <directory suffix=\"Test.php\">./tests</directory>\n        </testsuite>\n    </testsuites>\n</phpunit>"
+        },
+        {
+          "name": "resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "routes",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "server.php",
+          "type": "blob",
+          "size": 0.4267578125,
+          "content": "<?php\n\n$uri = urldecode(\n    parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH)\n);\n\n// This file allows us to emulate Apache's \"mod_rewrite\" functionality from the\n// built-in PHP web server. This provides a convenient way to test a Themosis\n// application without having installed a \"real\" web server software here.\nif ($uri !== '/' && file_exists(__DIR__.'/htdocs'.$uri)) {\n    return false;\n}\n\nrequire_once __DIR__.'/htdocs/index.php';\n"
+        },
+        {
+          "name": "storage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "webpack.mix.js",
+          "type": "blob",
+          "size": 2.6279296875,
+          "content": "let mix = require('laravel-mix');\n\n/*\n |--------------------------------------------------------------------------\n | Mix Asset Management\n |--------------------------------------------------------------------------\n |\n | Mix provides a clean, fluent API for defining some Webpack build steps\n | for your Laravel application. By default, we are compiling the Sass\n | file for your application, as well as bundling up your JS files.\n |\n */\n\nmix.js('resources/js/app.js', 'htdocs/dist/')\n    .sass('resources/sass/app.scss', 'htdocs/dist/');\n\n// Full API\n// mix.js(src, output);\n// mix.react(src, output); <-- Identical to mix.js(), but registers React Babel compilation.\n// mix.preact(src, output); <-- Identical to mix.js(), but registers Preact compilation.\n// mix.coffee(src, output); <-- Identical to mix.js(), but registers CoffeeScript compilation.\n// mix.ts(src, output); <-- TypeScript support. Requires tsconfig.json to exist in the same folder as webpack.mix.js\n// mix.extract(vendorLibs);\n// mix.sass(src, output);\n// mix.less(src, output);\n// mix.stylus(src, output);\n// mix.postCss(src, output, [require('postcss-some-plugin')()]);\n// mix.browserSync('my-site.test');\n// mix.combine(files, destination);\n// mix.babel(files, destination); <-- Identical to mix.combine(), but also includes Babel compilation.\n// mix.copy(from, to);\n// mix.copyDirectory(fromDir, toDir);\n// mix.minify(file);\n// mix.sourceMaps(); // Enable sourcemaps\n// mix.version(); // Enable versioning.\n// mix.disableNotifications();\n// mix.setPublicPath('path/to/public');\n// mix.setResourceRoot('prefix/for/resource/locators');\n// mix.autoload({}); <-- Will be passed to Webpack's ProvidePlugin.\n// mix.webpackConfig({}); <-- Override webpack.config.js, without editing the file directly.\n// mix.babelConfig({}); <-- Merge extra Babel configuration (plugins, etc.) with Mix's default.\n// mix.then(function () {}) <-- Will be triggered each time Webpack finishes building.\n// mix.dump(); <-- Dump the generated webpack config object t the console.\n// mix.extend(name, handler) <-- Extend Mix's API with your own components.\n// mix.options({\n//   extractVueStyles: false, // Extract .vue component styling to file, rather than inline.\n//   globalVueStyles: file, // Variables file to be imported in every component.\n//   processCssUrls: true, // Process/optimize relative stylesheet url()'s. Set to false, if you don't want them touched.\n//   purifyCss: false, // Remove unused CSS selectors.\n//   terser: {}, // Terser-specific options. https://github.com/webpack-contrib/terser-webpack-plugin#options\n//   postCss: [] // Post-CSS options: https://github.com/postcss/postcss/blob/master/docs/plugins.md\n// });\n"
+        },
+        {
+          "name": "wp-cli.yml",
+          "type": "blob",
+          "size": 0.015625,
+          "content": "path: htdocs/cms"
+        }
+      ]
+    }
+  ]
+}

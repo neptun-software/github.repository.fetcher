@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "timestamp": 1736712309549,
+    "page": 110,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjExMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "JakubOnderka/PHP-Console-Color",
+      "stars": 6177,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "build\nvendor\ncomposer.lock\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.271484375,
+          "content": "language: php\n\nphp:\n  - 5.4\n  - 5.5\n  - 5.6\n  - 7.0\n  - 7.1\n  - 7.2\n  - 7.3\n\nsudo: false\n\ncache:\n  directories:\n    - vendor\n    - $HOME/.composer/cache\n\nbefore_script:\n  - composer install --no-interaction --prefer-source\n\nscript:\n  - ant phplint\n  - ant phpcs\n  - ant phpunit\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.2841796875,
+          "content": "Copyright (c) 2014-2018, Jakub Onderka\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions\nare met:\n\n  * Redistributions of source code must retain the above copyright\n    notice, this list of conditions and the following disclaimer.\n\n  * Redistributions in binary form must reproduce the above copyright\n    notice, this list of conditions and the following disclaimer in\n    the documentation and/or other materials provided with the\n    distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS\n\"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT\nLIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS\nFOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,\nINCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,\nBUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\nCAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\nLIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN\nANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.5126953125,
+          "content": "PHP Console Color\n=================\n\n**This repository is abandoned.**\n\nSuggested alternative: https://github.com/php-parallel-lint/PHP-Console-Color\n\n------\n\n[![Build Status](https://travis-ci.org/JakubOnderka/PHP-Console-Color.svg?branch=master)](https://travis-ci.org/JakubOnderka/PHP-Console-Color)\n\nSimple library for creating colored console ouput.\n\nSee `example.php` how to use this library.\n\n![Example from Windows 10](https://user-images.githubusercontent.com/89590/40762008-687f909a-646c-11e8-88d6-e268a064be4c.png)"
+        },
+        {
+          "name": "build.xml",
+          "type": "blob",
+          "size": 3.81640625,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project default=\"build\">\n    <!-- Set executables according to OS -->\n    <condition property=\"phpunit\" value=\"${basedir}/vendor/bin/phpunit.bat\" else=\"${basedir}/vendor/bin/phpunit\">\n        <os family=\"windows\" />\n    </condition>\n\n    <condition property=\"phpcs\" value=\"${basedir}/vendor/bin/phpcs.bat\" else=\"${basedir}/vendor/bin/phpcs\">\n        <os family=\"windows\" />\n    </condition>\n\n    <condition property=\"parallel-lint\" value=\"${basedir}/vendor/bin/parallel-lint.bat\" else=\"${basedir}/vendor/bin/parallel-lint\">\n        <os family=\"windows\" />\n    </condition>\n\n    <condition property=\"var-dump-check\" value=\"${basedir}/vendor/bin/var-dump-check.bat\" else=\"${basedir}/vendor/bin/var-dump-check\">\n        <os family=\"windows\"/>\n    </condition>\n\n    <!-- Use colors in output can be disabled when calling ant with -Duse-colors=false -->\n    <property name=\"use-colors\" value=\"true\" />\n\n    <condition property=\"colors-arg.color\" value=\"--colors\" else=\"\">\n        <equals arg1=\"${use-colors}\" arg2=\"true\" />\n    </condition>\n\n    <condition property=\"colors-arg.no-colors\" value=\"\" else=\"--no-colors\">\n        <equals arg1=\"${use-colors}\" arg2=\"true\" />\n    </condition>\n\n    <!-- Targets -->\n    <target name=\"prepare\" description=\"Create build directory\">\n        <mkdir dir=\"${basedir}/build/logs\" />\n    </target>\n\n    <target name=\"phplint\" description=\"Check syntax errors in PHP files\">\n        <exec executable=\"${parallel-lint}\" failonerror=\"true\">\n            <arg line='--exclude ${basedir}/vendor/' />\n            <arg line='${colors-arg.no-colors}' />\n            <arg line='${basedir}' />\n        </exec>\n    </target>\n\n    <target name=\"var-dump-check\" description=\"Check PHP files for forgotten variable dumps\">\n        <exec executable=\"${var-dump-check}\" failonerror=\"true\">\n            <arg line='--exclude ${basedir}/vendor/' />\n            <arg line='${colors-arg.no-colors}' />\n            <arg line='${basedir}' />\n        </exec>\n    </target>\n\n    <target name=\"phpcs\" depends=\"prepare\" description=\"Check PHP code style\">\n        <delete file=\"${basedir}/build/logs/checkstyle.xml\" quiet=\"true\" />\n\n        <exec executable=\"${phpcs}\">\n            <arg line='--extensions=php' />\n            <arg line='--standard=\"${basedir}/vendor/jakub-onderka/php-code-style/ruleset.xml\"' />\n            <arg line='--report-checkstyle=\"${basedir}/build/logs/checkstyle.xml\"' />\n            <arg line='--report-full' />\n            <arg line='\"${basedir}/src\"' />\n        </exec>\n    </target>\n\n    <target name=\"phpunit\" depends=\"prepare\" description=\"PHP unit\">\n        <delete file=\"${basedir}/build/logs/phpunit.xml\" quiet=\"true\" />\n\n        <exec executable=\"${phpunit}\">\n            <arg line='--configuration ${basedir}/phpunit.xml' />\n            <arg line='-d memory_limit=256M' />\n            <arg line='--log-junit \"${basedir}/build/logs/phpunit.xml\"' />\n            <arg line='${colors-arg.color}' />\n        </exec>\n    </target>\n\n    <target name=\"phpunit-coverage\" depends=\"prepare\" description=\"PHP unit with code coverage\">\n        <delete file=\"${basedir}/build/logs/phpunit.xml\" quiet=\"true\" />\n        <delete file=\"${basedir}/build/logs/clover.xml\" quiet=\"true\" />\n        <delete dir=\"${basedir}/build/coverage\" quiet=\"true\" />\n        <mkdir dir=\"${basedir}/build/coverage\" />\n\n        <exec executable=\"${phpunit}\">\n            <arg line='--configuration ${basedir}/phpunit.xml' />\n            <arg line='-d memory_limit=256M' />\n            <arg line='--log-junit \"${basedir}/build/logs/phpunit.xml\"' />\n            <arg line='--coverage-clover \"${basedir}/build/logs/clover.xml\"' />\n            <arg line='--coverage-html \"${basedir}/build/coverage/\"' />\n            <arg line='${colors-arg.color}' />\n        </exec>\n    </target>\n\n    <target name=\"build\" depends=\"phplint,var-dump-check,phpcs,phpunit\" />\n\n</project>"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.638671875,
+          "content": "{\n    \"name\": \"jakub-onderka/php-console-color\",\n    \"license\": \"BSD-2-Clause\",\n    \"authors\": [\n        {\n            \"name\": \"Jakub Onderka\",\n            \"email\": \"jakub.onderka@gmail.com\"\n        }\n    ],\n    \"autoload\": {\n        \"psr-4\": {\"JakubOnderka\\\\PhpConsoleColor\\\\\": \"src/\"}\n    },\n    \"require\": {\n        \"php\": \">=5.4.0\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"~4.3\",\n        \"jakub-onderka/php-parallel-lint\": \"1.0\",\n        \"jakub-onderka/php-var-dump-check\": \"0.*\",\n        \"squizlabs/php_codesniffer\": \"1.*\",\n        \"jakub-onderka/php-code-style\": \"1.0\"\n    },\n    \"abandoned\": \"php-parallel-lint/php-console-color\"\n}\n"
+        },
+        {
+          "name": "example.php",
+          "type": "blob",
+          "size": 0.982421875,
+          "content": "<?php\n$loader = require_once __DIR__ . '/vendor/autoload.php';\n\n$consoleColor = new JakubOnderka\\PhpConsoleColor\\ConsoleColor();\n\necho \"Colors are supported: \" . ($consoleColor->isSupported() ? 'Yes' : 'No') . \"\\n\";\necho \"256 colors are supported: \" . ($consoleColor->are256ColorsSupported() ? 'Yes' : 'No') . \"\\n\\n\";\n\nif ($consoleColor->isSupported()) {\n    foreach ($consoleColor->getPossibleStyles() as $style) {\n        echo $consoleColor->apply($style, $style) . \"\\n\";\n    }\n}\n\necho \"\\n\";\n\nif ($consoleColor->are256ColorsSupported()) {\n    echo \"Foreground colors:\\n\";\n    for ($i = 1; $i <= 255; $i++) {\n        echo $consoleColor->apply(\"color_$i\", str_pad($i, 6, ' ', STR_PAD_BOTH));\n\n        if ($i % 15 === 0) {\n            echo \"\\n\";\n        }\n    }\n\n    echo \"\\nBackground colors:\\n\";\n\n    for ($i = 1; $i <= 255; $i++) {\n        echo $consoleColor->apply(\"bg_color_$i\", str_pad($i, 6, ' ', STR_PAD_BOTH));\n\n        if ($i % 15 === 0) {\n            echo \"\\n\";\n        }\n    }\n\n    echo \"\\n\";\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.38671875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit\n    bootstrap=\"./vendor/autoload.php\">\n    <testsuites>\n        <testsuite>\n            <directory suffix=\"Test.php\">tests</directory>\n        </testsuite>\n    </testsuites>\n\n    <!-- Ignore vendor folder for code coverage -->\n    <filter>\n        <blacklist>\n            <directory>vendor</directory>\n        </blacklist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

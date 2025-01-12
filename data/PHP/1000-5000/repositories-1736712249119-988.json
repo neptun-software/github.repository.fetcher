@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "timestamp": 1736712249119,
+    "page": 988,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjk5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "maknz/slack",
+      "stars": 1170,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "/vendor\ncomposer.phar\ncomposer.lock\n.DS_Store\n"
+        },
+        {
+          "name": ".styleci.yml",
+          "type": "blob",
+          "size": 0.044921875,
+          "content": "preset: laravel\n\nrisky: false\n\nlinting: true\n\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.19921875,
+          "content": "language: php\n\nphp:\n  - 5.5\n  - 5.6\n  - 7.0\n  - 7.1.0a1\n  - hhvm\n  \nmatrix:\n  allow_failures:\n    - php: 7.1.0a1\n\nbefore_script:\n  - composer install --prefer-source --no-interaction\n\nscript:\n  - phpunit\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.2705078125,
+          "content": "Copyright (c) 2014, Regan McEntyre (maknz)\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:\n\n1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n\n2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.9345703125,
+          "content": "# Slack for PHP\n\n[![Build Status](https://travis-ci.org/maknz/slack.svg?branch=master)](https://travis-ci.org/maknz/slack)\n[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/maknz/slack/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/maknz/slack/?branch=master)\n[![StyleCI](https://styleci.io/repos/19448330/shield)](https://styleci.io/repos/19448330)\n\nA simple PHP package for sending messages to [Slack](https://slack.com) with [incoming webhooks](https://my.slack.com/services/new/incoming-webhook), focussed on ease-of-use and elegant syntax. **Note: this package is no longer being actively maintained.**\n\n* Laravel integration: [Slack for Laravel](https://github.com/maknz/slack-laravel)\n* Symfony integration: [NexySlackBundle](https://github.com/nexylan/NexySlackBundle)\n\n## Requirements\n\n* PHP 5.5, 5.6, 7.0 or HHVM\n\n## Installation\n\nYou can install the package using the [Composer](https://getcomposer.org/) package manager. You can install it by running this command in your project root:\n\n```sh\ncomposer require maknz/slack\n```\n\nThen [create an incoming webhook](https://my.slack.com/services/new/incoming-webhook) on your Slack account for the package to use. You'll need the webhook URL to instantiate the client (or for the configuration file if using Laravel).\n\n## Basic Usage\n\n### Instantiate the client\n\n```php\n// Instantiate without defaults\n$client = new Maknz\\Slack\\Client('https://hooks.slack.com/...');\n\n// Instantiate with defaults, so all messages created\n// will be sent from 'Cyril' and to the #accounting channel\n// by default. Any names like @regan or #channel will also be linked.\n$settings = [\n\t'username' => 'Cyril',\n\t'channel' => '#accounting',\n\t'link_names' => true\n];\n\n$client = new Maknz\\Slack\\Client('https://hooks.slack.com/...', $settings);\n```\n\n#### Settings\n\nThe default settings are pretty good, but you may wish to set up default behaviour for your client to be used for all messages sent. **All settings are optional and you don't need to provide any**. Where not provided, we'll fallback to what is configured on the webhook integration, which are [managed at Slack](https://my.slack.com/apps/manage/custom-integrations), or our sensible defaults.\n\nField | Type | Description\n----- | ---- | -----------\n`channel` | string | The default channel that messages will be sent to\n`username` | string | The default username for your bot\n`icon` | string | The default icon that messages will be sent with, either `:emoji:` or a URL to an image\n`link_names` | bool | Whether names like `@regan` or `#accounting` should be linked in the message (defaults to false)\n`unfurl_links` | bool | Whether Slack should unfurl text-based URLs (defaults to false)\n`unfurl_media` | bool | Whether Slack should unfurl media-based URLs, like tweets or Youtube videos (defaults to true)\n`allow_markdown` | bool | Whether markdown should be parsed in messages, or left as plain text (defaults to true)\n`markdown_in_attachments` | array | Which attachment fields should have markdown parsed (defaults to none)\n\n### Sending messages\n\n#### Sending a basic message ([preview](https://goo.gl/fY43nw))\n\n```php\n$client->send('Hello world!');\n```\n\n#### Sending a message to a non-default channel\n```php\n$client->to('#accounting')->send('Are we rich yet?');\n```\n\n#### Sending a message to a user\n```php\n$client->to('@regan')->send('Yo!');\n```\n\n#### Sending a message to a channel as a different bot name ([preview](https://goo.gl/xCeEfY))\n```php\n$client->from('Jake the Dog')->to('@FinnTheHuman')->send('Adventure time!');\n```\n\n#### Sending a message with a different icon ([preview](https://goo.gl/lff21l))\n```php\n// Either with a Slack emoji\n$client->to('@regan')->withIcon(':ghost:')->send('Boo!');\n\n// or a URL\n$client->to('#accounting')->withIcon('http://example.com/accounting.png')->send('Some accounting notification');\n```\n\n#### Send an attachment ([preview](https://goo.gl/fp3iaY))\n\n```php\n$client->to('#operations')->attach([\n\t'fallback' => 'Server health: good',\n\t'text' => 'Server health: good',\n\t'color' => 'danger',\n])->send('New alert from the monitoring system'); // no message, but can be provided if you'd like\n```\n\n#### Send an attachment with fields ([preview](https://goo.gl/264mhU))\n\n```php\n$client->to('#operations')->attach([\n\t'fallback' => 'Current server stats',\n\t'text' => 'Current server stats',\n\t'color' => 'danger',\n\t'fields' => [\n\t\t[\n\t\t\t'title' => 'CPU usage',\n\t\t\t'value' => '90%',\n\t\t\t'short' => true // whether the field is short enough to sit side-by-side other fields, defaults to false\n\t\t],\n\t\t[\n\t\t\t'title' => 'RAM usage',\n\t\t\t'value' => '2.5GB of 4GB',\n\t\t\t'short' => true\n\t\t]\n\t]\n])->send('New alert from the monitoring system'); // no message, but can be provided if you'd like\n```\n\n#### Send an attachment with an author ([preview](https://goo.gl/CKd1zJ))\n\n```php\n$client->to('@regan')->attach([\n\t'fallback' => 'Keep up the great work! I really love how the app works.',\n\t'text' => 'Keep up the great work! I really love how the app works.',\n\t'author_name' => 'Jane Appleseed',\n\t'author_link' => 'https://yourapp.com/feedback/5874601',\n\t'author_icon' => 'https://static.pexels.com/photos/61120/pexels-photo-61120-large.jpeg'\n])->send('New user feedback');\n```\n\n## Advanced usage\n\n### Markdown\n\nBy default, Markdown is enabled for message text, but disabled for attachment fields. This behaviour can be configured in settings, or on the fly:\n\n#### Send a message enabling or disabling Markdown\n\n```php\n$client->to('#weird')->disableMarkdown()->send('Disable *markdown* just for this message');\n\n$client->to('#general')->enableMarkdown()->send('Enable _markdown_ just for this message');\n```\n\n#### Send an attachment specifying which fields should have Markdown enabled\n\n```php\n$client->to('#operations')->attach([\n\t'fallback' => 'It is all broken, man',\n\t'text' => 'It is _all_ broken, man',\n\t'pretext' => 'From user: *JimBob*',\n\t'color' => 'danger',\n\t'mrkdwn_in' => ['pretext', 'text']\n])->send('New alert from the monitoring system');\n```\n\n### Explicit message creation\n\nFor convenience, message objects are created implicitly by calling message methods on the client. We can however do this explicitly to avoid hitting the magic method.\n\n```php\n// Implicitly\n$client->to('@regan')->send('I am sending this implicitly');\n\n// Explicitly\n$message = $client->createMessage();\n\n$message->to('@regan')->setText('I am sending this explicitly');\n\n$message->send();\n```\n\n### Attachments\n\nWhen using attachments, the easiest way is to provide an array of data as shown in the examples, which is actually converted to an Attachment object under the hood. You can also attach an Attachment object to the message:\n\n```php\n$attachment = new Attachment([\n\t'fallback' => 'Some fallback text',\n\t'text' => 'The attachment text'\n]);\n\n// Explicitly create a message from the client\n// rather than using the magic passthrough methods\n$message = $client->createMessage();\n\n$message->attach($attachment);\n\n// Explicitly set the message text rather than\n// implicitly through the send method\n$message->setText('Hello world')->send();\n```\n\nEach attachment field is also an object, an AttachmentField. They can be used as well instead of their data in array form:\n\n```php\n$attachment = new Attachment([\n\t'fallback' => 'Some fallback text',\n\t'text' => 'The attachment text',\n\t'fields' => [\n\t\tnew AttachmentField([\n\t\t\t'title' => 'A title',\n\t\t\t'value' => 'A value',\n\t\t\t'short' => true\n\t\t])\n\t]\n]);\n```\n\nYou can also set the attachments and fields directly if you have a whole lot of them:\n\n```php\n// implicitly create a message and set the attachments\n$client->setAttachments($bigArrayOfAttachments);\n\n// or explicitly\n$client->createMessage()->setAttachments($bigArrayOfAttachments);\n```\n\n```php\n$attachment = new Attachment([]);\n\n$attachment->setFields($bigArrayOfFields);\n```\n\n## Contributing\n\nIf you're having problems, spot a bug, or have a feature suggestion, please log and issue on Github. If you'd like to have a crack yourself, fork the package and make a pull request. Please include tests for any added or changed functionality. If it's a bug, include a regression test.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.8232421875,
+          "content": "{\n    \"name\": \"maknz/slack\",\n    \"description\": \"A simple PHP package for sending messages to Slack, with a focus on ease of use and elegant syntax.\",\n    \"keywords\": [\"laravel\", \"slack\"],\n    \"license\": \"BSD-2-Clause\",\n    \"authors\": [\n        {\n            \"name\": \"maknz\",\n            \"email\": \"github@mak.geek.nz\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.5.0\",\n        \"guzzlehttp/guzzle\": \"~6.0|~5.0|~4.0\",\n        \"ext-mbstring\": \"*\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"4.2.*\",\n        \"mockery/mockery\": \"0.9.*\"\n    },\n    \"suggest\": {\n        \"maknz/slack-laravel\": \"Required for Laravel support\",\n        \"nexylan/slack-bundle\": \"Required for Symfony bundle support\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Maknz\\\\Slack\\\\\": \"src/\"\n        }\n    },\n    \"minimum-stability\": \"stable\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.556640625,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"vendor/autoload.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         syntaxCheck=\"false\"\n>\n    <testsuites>\n        <testsuite name=\"Package Test Suite\">\n            <directory suffix=\".php\">./tests/</directory>\n        </testsuite>\n    </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

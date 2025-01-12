@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": 1736712300962,
+    "page": 89,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjkw",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "php-pm/php-pm",
+      "stars": 6566,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.3056640625,
+          "content": "# This file is for unifying the coding style for different editors and IDEs\n# editorconfig.org\n\n# PHP PSR-2 Coding Standards\n# http://www.php-fig.org/psr/psr-2/\n\nroot = true\n\n[*.php]\ncharset = utf-8\nend_of_line = lf\ninsert_final_newline = true\ntrim_trailing_whitespace = true\nindent_style = space\nindent_size = 4\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0380859375,
+          "content": "/tests export-ignore\n/.* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0732421875,
+          "content": ".idea/\n/vendor/\n/.vscode/\n/.ppm/\n/web/\ncomposer.lock\n.phpunit.result.cache\n"
+        },
+        {
+          "name": ".php_cs.php",
+          "type": "blob",
+          "size": 0.470703125,
+          "content": "<?php\n\nrequire_once __DIR__ . '/vendor/autoload.php';\n\n$finder = (new PhpCsFixer\\Finder())\n    ->in('src')\n;\n\nreturn (new PhpCsFixer\\Config())\n    ->setRules([\n        '@PSR2' => true,\n        'array_syntax' => ['syntax' => 'short'],\n        'native_function_invocation' => ['strict' => true, 'include' => ['@internal']],\n    ])\n    // ->registerCustomFixers([new Drew\\DebugStatementsFixers\\Dump()])\n    ->setRiskyAllowed(true)\n    ->setFinder($finder)\n    ->setUsingCache(false)\n;\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "Copyright (c) 2014-2018 Marc J. Schmidt, Andreas Götz\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.3828125,
+          "content": "PPM - PHP Process Manager\n====================================================\n\n<p align=\"center\">\n<img src=\"https://avatars3.githubusercontent.com/u/11821812?v=3&s=200\" />\n</p>\n\nPHP-PM is a process manager, supercharger and load balancer for PHP applications.\n\n![Build Status](https://github.com/php-pm/php-pm/workflows/CS%20&%20PHPStan%20&%20Phpunit%20&%20Integration%20Tests/badge.svg)\n[![Gitter](https://badges.gitter.im/php-pm/php-pm.svg)](https://gitter.im/php-pm/php-pm?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)\n\nIt's based on ReactPHP and works best with applications that use request-response frameworks like Symfony's HTTPKernel.\nThe approach of this is to kill the expensive bootstrap of PHP (declaring symbols, loading/parsing files) and the bootstrap of feature-rich frameworks. See Performance section for a quick hint.\nPHP-PM basically spawns several PHP instances as worker bootstraping your application (eg. the whole Symfony Kernel) and hold it in the memory to be prepared for every\nincoming request: This is why PHP-PM makes your application so fast.\n\nMore information can be found in the article: [Bring High Performance Into Your PHP App (with ReactPHP)](https://web.archive.org/web/20190103202024/http://marcjschmidt.de/2014/02/08/php-high-performance/)\n\n### Features\n\n* Performance boost up to 15x (compared to PHP-FPM, Symfony applications).\n* Integrated load balancer.\n* Hot-Code reload (when PHP files change).\n* Static file serving for easy development procedures.\n* Support for HttpKernel (Symfony/Laravel), Drupal (experimental), Zend (experimental).\n\n### Badge all the things\n\nDoes your app/library support PPM? Show it!\n\n[![PPM Compatible](https://raw.githubusercontent.com/php-pm/ppm-badge/master/ppm-badge.png)](https://github.com/php-pm/php-pm)\n\n```\n[![PPM Compatible](https://raw.githubusercontent.com/php-pm/ppm-badge/master/ppm-badge.png)](https://github.com/php-pm/php-pm)\n```\n\n#### Use\n\n```bash\ncd into/your-application\n\n# run Symfony\ndocker run -v \"$(pwd):/var/www\" -p 8080:80 phppm/nginx --bootstrap=symfony --static-directory=web/\n\n# run Laravel\ndocker run -v \"$(pwd):/var/www\" -p 8080:80 phppm/nginx --bootstrap=laravel --static-directory=public/\n```\n\nDocker is easier to setup and maintain. If your applications requires additional environment tools or libraries,\nyou can build your own image based on ours. See [github.com/php-pm/php-pm-docker](https://github.com/php-pm/php-pm-docker) for more information.\n\nWhen `debug` is enabled, PHP-PM detects file changes and restarts its worker automatically.\n\n#### Use without Docker\n\nFollow the wiki article [Use without Docker](https://github.com/php-pm/php-pm/wiki/Use-without-Docker).\n\n#### Performance\n\nTo get the maximum performance you should usually use `--app-env=prod` with disabled\ndebug `--debug=0`. Also make sure xdebug is disabled. Try with different amount of workers.\nUsually a 10% over your cpu core count is good. Example: If you have 8 real cores (excl. hyper-threading) use `--workers=9`.\n\nTo get even more performance (for static file serving or for rather fast applications) try a different event loop (see https://github.com/reactphp/event-loop).\n\n#### Debugging\n\nIf you get strange issues in your application and you have no idea where they are coming from try\nusing only one worker `--workers=1` and enable `-v` or `-vv`. \n\nWhen debugging you should use xdebug as you're used to. If you set a break point and hold the application, then only one\nworker is stopped until you release the break point. All other workers are fully functional. \n\n**Note for XDebug and PHPStorm**: Since php-pm uses at least two processes, there are two xdebug instances as well. PHPStorm is per default configured to only accept one connection at a time. You need to increase that. You won't get xdebug working with your application if you don't increase that count.\n\n![Xdebug and PHPStorm](https://raw.githubusercontent.com/php-pm/assets/master/xdebug-phpstorm.png)\n\nIn all workers the STDOUT is redirected to the connected client. So take care, `var_dump`, `echo` are not displayed on the console.\nSTDERR is not redirected to the client, but to the console. So, for very simple debugging you could use `error_log('hi')` and you'll see it on the console.\nPer default exceptions and errors are only displayed on the console, prettified with Symfony/Debug component.\n\n### Adapter\n\n**HttpKernel for Symfony/Laravel** - https://github.com/php-pm/php-pm-httpkernel\n\n**Zend** - https://github.com/php-pm/php-pm-zend\n\n**CakePHP** - https://github.com/CakeDC/cakephp-phppm\n\n### Command\n\n![ppm-help](https://raw.githubusercontent.com/php-pm/assets/master/help-screenshot.png)\n\n![ppm-start](https://raw.githubusercontent.com/php-pm/assets/master/start-command.png)\n\n\n#### Symfony\n\n```bash\ncd my-project\ndocker run -v `pwd`:/var/www -p 8080:80 phppm/nginx --static-directory=web/\n```\n\n#### Laravel\n\n```bash\ncd my-project\ndocker run -v `pwd`:/var/www -p 8080:80 phppm/nginx --bootstrap=laravel --static-directory=web/\n```\n\n#### Zend\n\n```bash\ncd my-project\ndocker run -v `pwd`:/var/www -p 8080:80 phppm/nginx --bootstrap=Zf2\n```\n\n#### Wordpress\n\nFor all Wordpress lovers out there: PPM is not going to work with Wordpress due to the lack of request-response abstraction.\nWe highly doubt that Wordpress is ever going to be compatible because its architecture is written in a way that makes it\ncurrently impossible to serve multiple requests in one application process.\n\n### Performance (requests/s)\n\n6x4GHz Intel i7, 16GB RAM. 10 concurrent, 1000 total request: `ab -c 10 -n 1000 http://127.0.0.1:8080/`\n\n#### Symfony, CMS application\n\n`ppm start --bootstrap=symfony --app-env=prod --logging=0 --debug=0 --workers=20`\n\nhttps://github.com/jarves/jarves\n\n| PHP Version              | Dynamic at Jarves | Static file |\n|--------------------------|-------------------|-------------|\n| 7.0.3, StreamSelectLoop  | 2387,67           | 3944,52     |\n| 5.6.18, StreamSelectLoop | 1663,56           | 2636,09     |\n| 5.6.18, LibEventLoop     | 1811,76           | 3441,72     |\n\n#### Laravel, example package\n\nhttps://github.com/bestmomo/laravel5-example\n\n`ppm start --bootstrap=laravel --app-env=prod --debug=0 --logging=0 --workers=20`\n\n\n<p align=\"center\">\n<img src=\"https://raw.githubusercontent.com/php-pm/assets/master/laravel.png\" />\n</p>\n\n## Issues\n\n* Memory leaks, memory leaks and memory leaks. You will also find leaks in your application. :) But no big issue since workers restart automatically.\n* Does not work with ExtEventLoop. (So don't install `php70-event`, but you can try LibEventLoop `php56-libevent`)\n* Drupal and Zend is very experimental and not fully working. Try using https://github.com/php-pm/php-pm-drupal.\n* Laravel's debugger isn't working perfectly yet since it's still needed to reset some stuff after each request.\n* Streamed responses are not streamed yet\n* No windows support due to signal handling\n\nPlease help us fix these issues by creating pull requests. :)\n\n### Setup\n\nWe provide ready-to-use docker images you can use right away.\nIf you have own setup, see in the [PHP-PM docker repository](https://github.com/php-pm/php-pm-docker) how to integrate PHP-PM in your NGiNX setup.\n\n#### Trusted proxy Symfony\n \nTo get the real remote IP in your Symfony application for example, don't forget to add ppm (default `127.0.0.1`)\nas trusted reverse proxy.\n\n```yml\n# app/config/config.yml\n# ...\nframework:\n    trusted_proxies:  [127.0.0.1]\n```\n\nMore information at http://symfony.com/doc/current/cookbook/request/load_balancer_reverse_proxy.html.\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.2255859375,
+          "content": "{\n    \"name\": \"php-pm/php-pm\",\n    \"description\": \"PHP-PM is a process manager, supercharger and load balancer for PHP applications.\",\n    \"license\": \"MIT\",\n    \"require\": {\n        \"php\": \"^7.3 || ^8.0 \",\n        \"ext-pcntl\": \"*\",\n        \"symfony/console\": \"^4|^5|^6\",\n        \"symfony/error-handler\": \"^4.4|^5|^6\",\n        \"symfony/process\": \"^4|^5|^6\",\n        \"react/event-loop\": \"^1.0\",\n        \"react/http\": \"^1.0\",\n        \"react/stream\": \"^1.0\",\n        \"react/socket\": \"^1.0\",\n        \"react/child-process\": \"^0.6\",\n        \"psr/http-server-handler\": \"^1.0\",\n        \"ringcentral/psr7\": \"^1.2\",\n        \"psr/http-message\": \"^1.0.1\",\n        \"react/promise\": \"^2.0\"\n    },\n    \"require-dev\": {\n        \"mockery/mockery\": \"^1.0\",\n        \"phpunit/phpunit\": \"^9.4\",\n        \"friendsofphp/php-cs-fixer\": \"^3.0\",\n        \"phpstan/phpstan\": \"^1.0\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"PHPPM\\\\\": \"src\"\n        },\n        \"files\": [\n            \"src/functions.php\"\n        ]\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"PHPPM\\\\Tests\\\\\": \"tests\"\n        }\n    },\n    \"suggest\": {\n        \"php-pm/httpkernel-adapter\": \"HttpKernel adapter for Symfony and Laravel frameworks\"\n    },\n    \"bin\": [\n        \"bin/ppm\"\n    ]\n}"
+        },
+        {
+          "name": "integration_test.sh",
+          "type": "blob",
+          "size": 2.310546875,
+          "content": "#!/bin/bash\n# exit when any command fails\nset -e\n\n# Integration test\nmkdir web && echo \"Hello\" > web/index.html\nbin/ppm start --workers=1 --bridge=StaticBridge --static-directory=web --max-requests=1 -v &\nsleep 5\nbin/ppm status\ncurl -v -f \"http://127.0.0.1:8080\"\nbin/ppm status\ncurl -v -f \"http://127.0.0.1:8080\"\nbin/ppm status\nbin/ppm stop\n# Test memory limit\nbin/ppm start --workers=1 --bridge=PHPPM\\\\Tests\\\\TestBridge --static-directory=web --memory-limit=5 -v > /tmp/ppmout &\nsleep 5\n# Memory limit: Nothing should happen\ncurl -f --silent \"http://127.0.0.1:8080/test?memory=0\" &\nsleep 5\nbash -c 'grep -q \"because it reached memory limit of 5\" /tmp/ppmout || exit 0'\nbin/ppm status\nsleep 5\n# Memory limit: Worker should restart\ncurl -f --silent \"http://127.0.0.1:8080/test?memory=10\" &\nsleep 5\nbash -c 'grep -q \"because it reached memory limit of 5\" /tmp/ppmout && exit 0'\nbin/ppm status\nbin/ppm stop\n# Trigger 502 error by triggering an exit() in the worker\nbin/ppm start --workers=1 --bridge=PHPPM\\\\Tests\\\\TestBridge --static-directory=web --max-requests=1 --max-execution-time=15 -v > /tmp/ppmout &\nsleep 5\nbash -c 'if [[ $(curl --write-out %{http_code} --silent --output /dev/null \"http://127.0.0.1:8080/test?exit_prematurely=1\") == \"502\" ]]; then exit 0; else exit 1; fi'\nbin/ppm status\n# Trigger 503 error by tying up the worker and making a second request\ncurl -f --silent \"http://127.0.0.1:8080/test?sleep=10000\" &\nbash -c 'if [[ $(curl --write-out %{http_code} --silent --output /dev/null \"http://127.0.0.1:8080\") == \"503\" ]]; then exit 0; else exit 1; fi'\nbin/ppm status\n# Trigger 504 error by making a sleep request and waiting until the timeout\nbash -c 'if [[ $(curl --write-out %{http_code} --silent --output /dev/null \"http://127.0.0.1:8080/test?sleep=10000\") == \"504\" ]]; then exit 0; else exit 1; fi'\nbin/ppm status\n# Trigger 502 error by making the bridge throw an exception\nbash -c 'if [[ $(curl --write-out %{http_code} --silent --output /dev/null \"http://127.0.0.1:8080/test?exception=1\") == \"502\" ]]; then exit 0; else exit 1; fi'\nbash -c 'grep -q \"An exception was thrown by the bridge. Forcing restart of the worker. The exception was\" /tmp/ppmout && exit 0'\nbash -c 'grep -q \"This is a very bad exception\" /tmp/ppmout && exit 0'\nbash -c 'grep -q \"Shutdown function triggered\" /tmp/ppmoutshutdownfunc && exit 0'\nbin/ppm status\nbin/ppm stop\n"
+        },
+        {
+          "name": "phpstan.neon.dist",
+          "type": "blob",
+          "size": 0.3505859375,
+          "content": "parameters:\n    level: 4\n    paths:\n        - src/\n    ignoreErrors:\n        # Actually called on implementations of PromiseInterface\n        - '#^Call to an undefined method React\\\\Promise\\\\PromiseInterface::done\\(\\)\\.$#'\n        # Actually returns an implementation of PromiseInterface\n        - '#^Method PHPPM\\\\ProcessSlave::onRequest\\(\\) should return#'\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.5126953125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         bootstrap=\"tests/bootstrap.php\"\n>\n\n    <testsuites>\n        <testsuite name=\"PHP-PM Test Suite\">\n            <directory>tests/</directory>\n        </testsuite>\n    </testsuites>\n\n</phpunit>"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}
