@@ -1,0 +1,69 @@
+{
+  "metadata": {
+    "timestamp": 1736712058577,
+    "page": 596,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "Gregwar/Captcha",
+      "stars": 1736,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.046875,
+          "content": ".idea/\ndemo/*.jpg\ndemo/*.pgm\ndemo/temp/\nvendor/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1552734375,
+          "content": "language: php\n\nphp:\n    - 5.3.3\n    - 5.3\n    - 5.4\n    - 5.5\n    - 5.6\n    - 7.0\n    - 7.1\n    - 7.2\n    - hhvm\n\nscript:\n    - composer install\n    - phpunit\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0439453125,
+          "content": "Copyright (c) <2012-2017> Grégoire Passault\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.41015625,
+          "content": "Captcha\n=======\n\n![Captchas examples](http://gregwar.com/captchas.png)\n[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUXRLWHQSWS6L)\n\nInstallation\n============\n\nWith composer :\n\n``` json\n{\n    ...\n    \"require\": {\n        \"gregwar/captcha\": \"1.*\"\n    }\n}\n```\n\nUsage\n=====\n\nYou can create a captcha with the `CaptchaBuilder` :\n\n```php\n<?php\n\nuse Gregwar\\Captcha\\CaptchaBuilder;\n\n$builder = new CaptchaBuilder;\n$builder->build();\n```\n\nYou can then save it to a file :\n\n```php\n<?php\n\n$builder->save('out.jpg');\n```\n\nOr output it directly :\n\n```php\n<?php\n\nheader('Content-type: image/jpeg');\n$builder->output();\n```\n\nOr inline it directly in the HTML page:\n\n```php\n<img src=\"<?php echo $builder->inline(); ?>\" />\n```\n\nYou'll be able to get the code and compare it with a user input :\n\n```php\n<?php\n\n// Example: storing the phrase in the session to test for the user \n// input later\n$_SESSION['phrase'] = $builder->getPhrase();\n```\n\nYou can compare the phrase with user input:\n```php\nif($builder->testPhrase($userInput)) {\n    // instructions if user phrase is good\n}\nelse {\n    // user phrase is wrong\n}\n```\n\nAPI\n===\n\nYou can use theses functions :\n\n* **__construct($phrase = null)**, constructs the builder with the given phrase, if the phrase is null, a random one will be generated\n* **getPhrase()**, allow you to get the phrase contents\n* **setDistortion($distortion)**, enable or disable the distortion, call it before `build()`\n* **isOCRReadable()**, returns `true` if the OCR can be read using the `ocrad` software, you'll need to have shell_exec enabled, imagemagick and ocrad installed\n* **buildAgainstOCR($width = 150, $height = 40, $font = null)**, builds a code until it is not readable by `ocrad`\n* **build($width = 150, $height = 40, $font = null)**, builds a code with the given $width, $height and $font. By default, a random font will be used from the library\n* **save($filename, $quality = 80)**, saves the captcha into a jpeg in the $filename, with the given quality\n* **get($quality = 80)**, returns the jpeg data\n* **output($quality = 80)**, directly outputs the jpeg code to a browser\n* **setBackgroundColor($r, $g, $b)**, sets the background color to force it (this will disable many effects and is not recommended)\n* **setBackgroundImages(array($imagepath1, $imagePath2))**, Sets custom background images to be used as captcha background. It is recommended to disable image effects when passing custom images for background (ignore_all_effects). A random image is selected from the list passed, the full paths to the image files must be passed.\n* **setInterpolation($interpolate)**, enable or disable the interpolation (enabled by default), disabling it will be quicker but the images will look uglier\n* **setIgnoreAllEffects($ignoreAllEffects)**, disable all effects on the captcha image. Recommended to use when passing custom background images for the captcha.\n* **testPhrase($phrase)**, returns true if the given phrase is good\n* **setMaxBehindLines($lines)**, sets the maximum number of lines behind the code\n* **setMaxFrontLines($lines)**, sets the maximum number of lines on the front of the code\n\nIf you want to change the number of character, you can call the phrase builder directly using\nextra parameters:\n\n```php\nuse Gregwar\\Captcha\\CaptchaBuilder;\nuse Gregwar\\Captcha\\PhraseBuilder;\n\n// Will build phrases of 3 characters\n$phraseBuilder = new PhraseBuilder(4);\n\n// Will build phrases of 5 characters, only digits\n$phraseBuilder = new PhraseBuilder(5, '0123456789');\n\n// Pass it as first argument of CaptchaBuilder, passing it the phrase\n// builder\n$captcha = new CaptchaBuilder(null, $phraseBuilder);\n```\n\nYou can also pass directly the wanted phrase to the builder:\n\n```php\n// Building a Captcha with the \"hello\" phrase\n$captcha = new CaptchaBuilder('hello');\n```\n\nComplete example\n================\n\nIf you want to see an example you can have a look at the ``demo/form.php``, which uses ``demo/session.php`` to\nrender a captcha and check it after the submission\n\nSymfony Bundle\n================\n\nYou can have a look at the following repository to enjoy the Symfony 2 bundle packaging this captcha generator :\nhttps://github.com/Gregwar/CaptchaBundle\n\nYii2 Extension\n===============\n\nYou can use the following extension for integrating with Yii2 Framework :\nhttps://github.com/juliardi/yii2-captcha\n\nLicense\n=======\n\nThis library is under MIT license, have a look to the `LICENSE` file\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.78125,
+          "content": "{\n    \"name\": \"gregwar/captcha\",\n    \"type\": \"library\",\n    \"description\": \"Captcha generator\",\n    \"keywords\": [\"captcha\", \"spam\", \"bot\"],\n    \"homepage\": \"https://github.com/Gregwar/Captcha\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Grégoire Passault\",\n            \"email\": \"g.passault@gmail.com\",\n            \"homepage\": \"http://www.gregwar.com/\"\n        },\n        {\n            \"name\": \"Jeremy Livingston\",\n            \"email\": \"jeremy.j.livingston@gmail.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.3.0\",\n        \"ext-gd\": \"*\",\n        \"ext-mbstring\": \"*\",\n        \"symfony/finder\": \"*\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Gregwar\\\\\": \"src/Gregwar\"\n        }\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^6.4\"\n    }\n}\n"
+        },
+        {
+          "name": "demo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.3720703125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit colors=\"true\" bootstrap=\"vendor/autoload.php\">\n    <testsuites>\n        <testsuite name=\"KnpMenu Test Suite\">\n            <directory suffix=\"Test.php\">./tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <filter>\n        <whitelist>\n            <directory>./src</directory>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

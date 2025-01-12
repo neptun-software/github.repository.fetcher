@@ -1,0 +1,89 @@
+{
+  "metadata": {
+    "timestamp": 1736711945302,
+    "page": 376,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/cache-contracts",
+      "stars": 2323,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0205078125,
+          "content": "/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.1533203125,
+          "content": "CHANGELOG\n=========\n\nThe changelog is maintained for all Symfony contracts at the following URL:\nhttps://github.com/symfony/contracts/blob/main/CHANGELOG.md\n"
+        },
+        {
+          "name": "CacheInterface.php",
+          "type": "blob",
+          "size": 2.255859375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Cache;\n\nuse Psr\\Cache\\CacheItemInterface;\nuse Psr\\Cache\\InvalidArgumentException;\n\n/**\n * Covers most simple to advanced caching needs.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n */\ninterface CacheInterface\n{\n    /**\n     * Fetches a value from the pool or computes it if not found.\n     *\n     * On cache misses, a callback is called that should return the missing value.\n     * This callback is given a PSR-6 CacheItemInterface instance corresponding to the\n     * requested key, that could be used e.g. for expiration control. It could also\n     * be an ItemInterface instance when its additional features are needed.\n     *\n     * @template T\n     *\n     * @param string $key The key of the item to retrieve from the cache\n     * @param (callable(CacheItemInterface,bool):T)|(callable(ItemInterface,bool):T)|CallbackInterface<T> $callback\n     * @param float|null $beta      A float that, as it grows, controls the likeliness of triggering\n     *                              early expiration. 0 disables it, INF forces immediate expiration.\n     *                              The default (or providing null) is implementation dependent but should\n     *                              typically be 1.0, which should provide optimal stampede protection.\n     *                              See https://en.wikipedia.org/wiki/Cache_stampede#Probabilistic_early_expiration\n     * @param array      &$metadata The metadata of the cached item {@see ItemInterface::getMetadata()}\n     *\n     * @return T\n     *\n     * @throws InvalidArgumentException When $key is not valid or when $beta is negative\n     */\n    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed;\n\n    /**\n     * Removes an item from the pool.\n     *\n     * @param string $key The key to delete\n     *\n     * @return bool True if the item was successfully removed, false if there was any error\n     *\n     * @throws InvalidArgumentException When $key is not valid\n     */\n    public function delete(string $key): bool;\n}\n"
+        },
+        {
+          "name": "CacheTrait.php",
+          "type": "blob",
+          "size": 2.4150390625,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Cache;\n\nuse Psr\\Cache\\CacheItemPoolInterface;\nuse Psr\\Cache\\InvalidArgumentException;\nuse Psr\\Log\\LoggerInterface;\n\n// Help opcache.preload discover always-needed symbols\nclass_exists(InvalidArgumentException::class);\n\n/**\n * An implementation of CacheInterface for PSR-6 CacheItemPoolInterface classes.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n */\ntrait CacheTrait\n{\n    public function get(string $key, callable $callback, ?float $beta = null, ?array &$metadata = null): mixed\n    {\n        return $this->doGet($this, $key, $callback, $beta, $metadata);\n    }\n\n    public function delete(string $key): bool\n    {\n        return $this->deleteItem($key);\n    }\n\n    private function doGet(CacheItemPoolInterface $pool, string $key, callable $callback, ?float $beta, ?array &$metadata = null, ?LoggerInterface $logger = null): mixed\n    {\n        if (0 > $beta ??= 1.0) {\n            throw new class(\\sprintf('Argument \"$beta\" provided to \"%s::get()\" must be a positive number, %f given.', static::class, $beta)) extends \\InvalidArgumentException implements InvalidArgumentException {};\n        }\n\n        $item = $pool->getItem($key);\n        $recompute = !$item->isHit() || \\INF === $beta;\n        $metadata = $item instanceof ItemInterface ? $item->getMetadata() : [];\n\n        if (!$recompute && $metadata) {\n            $expiry = $metadata[ItemInterface::METADATA_EXPIRY] ?? false;\n            $ctime = $metadata[ItemInterface::METADATA_CTIME] ?? false;\n\n            if ($recompute = $ctime && $expiry && $expiry <= ($now = microtime(true)) - $ctime / 1000 * $beta * log(random_int(1, \\PHP_INT_MAX) / \\PHP_INT_MAX)) {\n                // force applying defaultLifetime to expiry\n                $item->expiresAt(null);\n                $logger?->info('Item \"{key}\" elected for early recomputation {delta}s before its expiration', [\n                    'key' => $key,\n                    'delta' => \\sprintf('%.1f', $expiry - $now),\n                ]);\n            }\n        }\n\n        if ($recompute) {\n            $save = true;\n            $item->set($callback($item, $save));\n            if ($save) {\n                $pool->save($item);\n            }\n        }\n\n        return $item->get();\n    }\n}\n"
+        },
+        {
+          "name": "CallbackInterface.php",
+          "type": "blob",
+          "size": 0.8125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Cache;\n\nuse Psr\\Cache\\CacheItemInterface;\n\n/**\n * Computes and returns the cached value of an item.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n *\n * @template T\n */\ninterface CallbackInterface\n{\n    /**\n     * @param CacheItemInterface|ItemInterface $item  The item to compute the value for\n     * @param bool                             &$save Should be set to false when the value should not be saved in the pool\n     *\n     * @return T The computed value for the passed item\n     */\n    public function __invoke(CacheItemInterface $item, bool &$save): mixed;\n}\n"
+        },
+        {
+          "name": "ItemInterface.php",
+          "type": "blob",
+          "size": 1.748046875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Cache;\n\nuse Psr\\Cache\\CacheException;\nuse Psr\\Cache\\CacheItemInterface;\nuse Psr\\Cache\\InvalidArgumentException;\n\n/**\n * Augments PSR-6's CacheItemInterface with support for tags and metadata.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n */\ninterface ItemInterface extends CacheItemInterface\n{\n    /**\n     * References the Unix timestamp stating when the item will expire.\n     */\n    public const METADATA_EXPIRY = 'expiry';\n\n    /**\n     * References the time the item took to be created, in milliseconds.\n     */\n    public const METADATA_CTIME = 'ctime';\n\n    /**\n     * References the list of tags that were assigned to the item, as string[].\n     */\n    public const METADATA_TAGS = 'tags';\n\n    /**\n     * Reserved characters that cannot be used in a key or tag.\n     */\n    public const RESERVED_CHARACTERS = '{}()/\\@:';\n\n    /**\n     * Adds a tag to a cache item.\n     *\n     * Tags are strings that follow the same validation rules as keys.\n     *\n     * @param string|string[] $tags A tag or array of tags\n     *\n     * @return $this\n     *\n     * @throws InvalidArgumentException When $tag is not valid\n     * @throws CacheException           When the item comes from a pool that is not tag-aware\n     */\n    public function tag(string|iterable $tags): static;\n\n    /**\n     * Returns a list of metadata info that were saved alongside with the cached value.\n     *\n     * See ItemInterface::METADATA_* consts for keys potentially found in the returned array.\n     */\n    public function getMetadata(): array;\n}\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2018-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.318359375,
+          "content": "Symfony Cache Contracts\n=======================\n\nA set of abstractions extracted out of the Symfony components.\n\nCan be used to build on semantics that the Symfony components proved useful and\nthat already have battle tested implementations.\n\nSee https://github.com/symfony/contracts/blob/main/README.md for more information.\n"
+        },
+        {
+          "name": "TagAwareCacheInterface.php",
+          "type": "blob",
+          "size": 0.9873046875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Cache;\n\nuse Psr\\Cache\\InvalidArgumentException;\n\n/**\n * Allows invalidating cached items using tags.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n */\ninterface TagAwareCacheInterface extends CacheInterface\n{\n    /**\n     * Invalidates cached items using tags.\n     *\n     * When implemented on a PSR-6 pool, invalidation should not apply\n     * to deferred items. Instead, they should be committed as usual.\n     * This allows replacing old tagged values by new ones without\n     * race conditions.\n     *\n     * @param string[] $tags An array of tags to invalidate\n     *\n     * @return bool True on success\n     *\n     * @throws InvalidArgumentException When $tags is not valid\n     */\n    public function invalidateTags(array $tags): bool;\n}\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.923828125,
+          "content": "{\n    \"name\": \"symfony/cache-contracts\",\n    \"type\": \"library\",\n    \"description\": \"Generic abstractions related to caching\",\n    \"keywords\": [\"abstractions\", \"contracts\", \"decoupling\", \"interfaces\", \"interoperability\", \"standards\"],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Nicolas Grekas\",\n            \"email\": \"p@tchwork.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=8.1\",\n        \"psr/cache\": \"^3.0\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Contracts\\\\Cache\\\\\": \"\" }\n    },\n    \"minimum-stability\": \"dev\",\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-main\": \"3.6-dev\"\n        },\n        \"thanks\": {\n            \"name\": \"symfony/contracts\",\n            \"url\": \"https://github.com/symfony/contracts\"\n        }\n    }\n}\n"
+        }
+      ]
+    }
+  ]
+}

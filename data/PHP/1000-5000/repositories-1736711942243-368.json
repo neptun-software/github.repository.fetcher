@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "timestamp": 1736711942243,
+    "page": 368,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/debug-bundle",
+      "stars": 2346,
+      "defaultBranch": "7.2",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.1640625,
+          "content": "CHANGELOG\n=========\n\n4.1.0\n-----\n\n * Added the `server:dump` command to run a server collecting and displaying\n   dumps on a single place with multiple formats support\n"
+        },
+        {
+          "name": "Command",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DebugBundle.php",
+          "type": "blob",
+          "size": 2.095703125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Bundle\\DebugBundle;\n\nuse Symfony\\Bundle\\DebugBundle\\DependencyInjection\\Compiler\\DumpDataCollectorPass;\nuse Symfony\\Component\\Console\\Application;\nuse Symfony\\Component\\DependencyInjection\\ContainerBuilder;\nuse Symfony\\Component\\HttpKernel\\Bundle\\Bundle;\nuse Symfony\\Component\\VarDumper\\VarDumper;\n\n/**\n * @author Nicolas Grekas <p@tchwork.com>\n */\nclass DebugBundle extends Bundle\n{\n    public function boot(): void\n    {\n        if ($this->container->getParameter('kernel.debug')) {\n            $container = $this->container;\n\n            // This code is here to lazy load the dump stack. This default\n            // configuration is overridden in CLI mode on 'console.command' event.\n            // The dump data collector is used by default, so dump output is sent to\n            // the WDT. In a CLI context, if dump is used too soon, the data collector\n            // will buffer it, and release it at the end of the script.\n            VarDumper::setHandler(function ($var, ?string $label = null) use ($container) {\n                $dumper = $container->get('data_collector.dump');\n                $cloner = $container->get('var_dumper.cloner');\n                $handler = function ($var, ?string $label = null) use ($dumper, $cloner) {\n                    $var = $cloner->cloneVar($var);\n                    if (null !== $label) {\n                        $var = $var->withContext(['label' => $label]);\n                    }\n\n                    $dumper->dump($var);\n                };\n                VarDumper::setHandler($handler);\n                $handler($var, $label);\n            });\n        }\n    }\n\n    public function build(ContainerBuilder $container): void\n    {\n        parent::build($container);\n\n        $container->addCompilerPass(new DumpDataCollectorPass());\n    }\n\n    public function registerCommands(Application $application): void\n    {\n        // noop\n    }\n}\n"
+        },
+        {
+          "name": "DependencyInjection",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2014-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.4736328125,
+          "content": "DebugBundle\n===========\n\nDebugBundle provides a tight integration of the Symfony VarDumper component and\nthe ServerLogCommand from MonologBridge into the Symfony full-stack framework.\n\nResources\n---------\n\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n"
+        },
+        {
+          "name": "Resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.1982421875,
+          "content": "{\n    \"name\": \"symfony/debug-bundle\",\n    \"type\": \"symfony-bundle\",\n    \"description\": \"Provides a tight integration of the Symfony VarDumper component and the ServerLogCommand from MonologBridge into the Symfony full-stack framework\",\n    \"keywords\": [],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Fabien Potencier\",\n            \"email\": \"fabien@symfony.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=8.2\",\n        \"ext-xml\": \"*\",\n        \"symfony/dependency-injection\": \"^6.4|^7.0\",\n        \"symfony/http-kernel\": \"^6.4|^7.0\",\n        \"symfony/twig-bridge\": \"^6.4|^7.0\",\n        \"symfony/var-dumper\": \"^6.4|^7.0\"\n    },\n    \"require-dev\": {\n        \"symfony/config\": \"^6.4|^7.0\",\n        \"symfony/web-profiler-bundle\": \"^6.4|^7.0\"\n    },\n    \"conflict\": {\n        \"symfony/config\": \"<6.4\",\n        \"symfony/dependency-injection\": \"<6.4\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Bundle\\\\DebugBundle\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.8388671875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/9.3/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony DebugBundle Test Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <coverage>\n        <include>\n            <directory>./</directory>\n        </include>\n        <exclude>\n            <directory>./Resources</directory>\n            <directory>./Tests</directory>\n            <directory>./vendor</directory>\n        </exclude>\n    </coverage>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

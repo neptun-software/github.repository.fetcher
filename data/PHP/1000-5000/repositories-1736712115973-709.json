@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "timestamp": 1736712115973,
+    "page": 709,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjcxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "kylekatarnls/update-helper",
+      "stars": 1530,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.33203125,
+          "content": "/examples           export-ignore\n/tests              export-ignore\n/.codeclimate.yml   export-ignore\n/.editorconfig      export-ignore\n/.gitattributes     export-ignore\n/.gitignore         export-ignore\n/.styleci.yml       export-ignore\n/.travis.yml        export-ignore\n/*.md               export-ignore\n/phpunit.xml        export-ignore\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0693359375,
+          "content": "composer.phar\ncomposer.lock\n/vendor/\n/.idea/\n/node_modules/\n/coverage/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.158203125,
+          "content": "language: php\n\ncache:\n  apt: true\n  directories:\n    - $HOME/.composer/cache\n\nsudo: false\n\nenv:\n  global:\n    - setup=basic\n\ninstall:\n  - if [[ $setup = 'nightly'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest --ignore-platform-reqs; fi\n  - if [[ $setup = 'basic'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-dist --no-interaction --no-suggest; fi\n  - if [[ $setup = 'lowest'  ]]; then COMPOSER_MEMORY_LIMIT=-1 travis_retry composer update --prefer-lowest --prefer-dist --no-interaction --no-suggest; fi\n\nscript:\n  - vendor/bin/phpunit --verbose --coverage-clover=coverage.xml --coverage-text\n\nafter_success:\n  - if [[ $coverage = 'true' ]]; then bash <(curl -s https://codecov.io/bash); fi\n\nmatrix:\n  include:\n    - php: '5.3'\n      dist: precise\n      env: setup=lowest\n    - php: '5.3'\n      dist: precise\n    - php: '5.4'\n      dist: trusty\n    - php: '5.5'\n      dist: trusty\n    - php: '5.6'\n    - php: '7.0'\n    - php: '7.1'\n    - php: '7.2'\n    - php: '7.3'\n      env: coverage=true\n    - php: nightly\n      env: setup=nightly\n  allow_failures:\n    - php: nightly\n      env: setup=nightly\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.107421875,
+          "content": "MIT License\n\nCopyright (c) 2017 https://github.com/pug-php\nCopyright (c) 2017 https://github.com/kylekatarnls\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.3681640625,
+          "content": "# update-helper\n\nAllow you to display update/upgrade instructions to your library users.\n\n## Usage\n\n```json\n...\n\"require\": {\n    \"kylekatarnls/update-helper\": \"^1\"\n},\n\"require-dev\": {\n    \"composer/composer\": \"^1.2\",\n},\n\"extra\": {\n    \"update-helper\": \"MyNamesapace\\\\MyUpdateHelper\"\n},\n\"scripts\": {\n    \"post-autoload-dump\": [\n        \"UpdateHelper\\\\UpdateHelper::check\"\n    ]\n},\n...\n```\n\n\n```php\nnamespace MyNamesapace;\n\nuse UpdateHelper\\UpdateHelper;\nuse UpdateHelper\\UpdateHelperInterface;\n\nclass MyUpdateHelper implements UpdateHelperInterface\n{\n    public function check(UpdateHelper $helper)\n    {\n        $helper->write(\"You're using an obsolete version of my-super-package, consider upgrading to version 2 or greater.\");\n\n        if ($helper->hasAsDependency('laravel/framework') && $helper->isDependencyLesserThan('laravel/framework', '5.0.0')) {\n            $helper->write(\"You're using a very old version or Laravel we don't support, please consider upgrading at least to 5.0.0.\");\n        }\n\n        if ($helper->isInteractive()) {\n            if ($helper->getIo()->askConfirmation('Do you want us to upgrade it for you?')) {\n                $helper->setDependencyVersions(array(\n                    'my-vendor/my-super-package' => '^2.0.0',\n                    'laravel/framework' => '^5.0.0', // Skip it if not installed\n                ))->update();\n            }\n        }\n    }\n}\n```\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.2265625,
+          "content": "{\n    \"name\": \"kylekatarnls/update-helper\",\n    \"description\": \"Update helper\",\n    \"type\": \"composer-plugin\",\n    \"license\": \"MIT\",\n    \"minimum-stability\": \"dev\",\n    \"prefer-stable\": true,\n    \"authors\": [\n        {\n            \"name\": \"Kyle\",\n            \"email\": \"kylekatarnls@gmail.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.3.0\",\n        \"composer-plugin-api\": \"^1.1.0 || ^2.0.0\"\n    },\n    \"require-dev\": {\n        \"composer/composer\": \"2.0.x-dev || ^2.0.0-dev\",\n        \"phpunit/phpunit\": \">=4.8.35 <6.0\",\n        \"codeclimate/php-test-reporter\": \"dev-master\"\n    },\n    \"autoload\": {\n        \"psr-0\": {\n            \"UpdateHelper\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"UpdateHelper\\\\Tests\\\\\": \"tests/UpdateHelper/\"\n        }\n    },\n    \"scripts\": {\n        \"post-install-cmd\": [\n            \"UpdateHelper\\\\UpdateHelper::check\"\n        ],\n        \"post-update-cmd\": [\n            \"UpdateHelper\\\\UpdateHelper::check\"\n        ],\n        \"post-package-install\": [\n            \"UpdateHelper\\\\UpdateHelper::check\"\n        ],\n        \"post-package-update\": [\n            \"UpdateHelper\\\\UpdateHelper::check\"\n        ]\n    },\n    \"extra\": {\n        \"class\": \"UpdateHelper\\\\ComposerPlugin\"\n    }\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.525390625,
+          "content": "<phpunit\n    bootstrap=\"vendor/autoload.php\"\n    backupGlobals=\"false\"\n    colors=\"true\"\n    convertErrorsToExceptions=\"true\"\n    convertNoticesToExceptions=\"true\"\n    convertWarningsToExceptions=\"true\"\n    >\n    <testsuites>\n        <testsuite name=\"UpdateHelper\">\n            <directory suffix=\"Test.php\">tests</directory>\n        </testsuite>\n    </testsuites>\n    <filter>\n        <whitelist processUncoveredFilesFromWhitelist=\"true\">\n            <directory suffix=\".php\">src</directory>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

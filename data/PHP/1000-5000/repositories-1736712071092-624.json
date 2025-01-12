@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "timestamp": 1736712071092,
+    "page": 624,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "lorisleiva/laravel-deployer",
+      "stars": 1677,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0810546875,
+          "content": "/.build/\n/.idea/\n/vendor/\n/tests/fixtures/tmp/\n.phpunit.result.cache\ncomposer.lock\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.6162109375,
+          "content": "# 🚀 Laravel Deployer\n\n> Looking for the old Laravel Deployer? [Click here](https://github.com/lorisleiva/laravel-deployer/tree/old).\n\nLaravel Deployer is no longer the package it used to be. Since that package was created, [Deployer](https://github.com/deployphp/deployer) has become better and better at integrating with Laravel to the point that I will now put my efforts into maintaining Deployer directly for Laravel users rather than mirroring its changes on a different repo after each release. You can [read more about this decision here](https://twitter.com/lorismatic/status/1376519608207867907?s=20).\n\nI've written a series of tutorials to help Laravel users deploy their application using Deployer directly.\n\n[Deploy your Laravel app from scratch](https://lorisleiva.com/deploy-your-laravel-app-from-scratch).\n\nIf you prefer a quick guide to get started with Deployer 7, I've added one for you below.\n\n## Deploy your Laravel application using Deployer 7\n\n- Add [Deployer](https://github.com/deployphp/deployer) to your dependencies.\n  ```shell\n  composer require deployer/deployer:^7.0\n  ```\n- Copy/paste the [`deploy.yaml`](./deploy.yaml) or [`deploy.php`](./deploy.php) file of this repository to the root of your project.\n- Update the `deploy.yaml` or `deploy.php` with your own server details.\n- Run `dep deploy` to deploy once.\n- Run `dep ssh` to connect to your server via SSH.\n- Run `cp .env.example .env && php artisan key:generate` to initialize your `.env` file.\n- Run `vim .env` and update your production environment variables.\n- Exit your server — `exit`.\n- Run `dep deploy` once more now that your `.env` file is all set up.\n"
+        },
+        {
+          "name": "deploy.php",
+          "type": "blob",
+          "size": 0.7705078125,
+          "content": "<?php\n\nnamespace Deployer;\n\nrequire 'recipe/laravel.php';\nrequire 'contrib/php-fpm.php';\nrequire 'contrib/npm.php';\n\nset('application', 'mylaravelapp');\nset('repository', 'git@github.com:lorisleiva/mylaravelapp.git');\nset('php_fpm_version', '8.0');\n\nhost('prod')\n    ->set('remote_user', 'root')\n    ->set('hostname', 'mylaravelapp.com')\n    ->set('deploy_path', '/var/www/{{hostname}}');\n\ntask('deploy', [\n    'deploy:prepare',\n    'deploy:vendors',\n    'artisan:storage:link',\n    'artisan:view:cache',\n    'artisan:config:cache',\n    'artisan:migrate',\n    'npm:install',\n    'npm:run:prod',\n    'deploy:publish',\n    'php-fpm:reload',\n]);\n\ntask('npm:run:prod', function () {\n    cd('{{release_or_current_path}}');\n    run('npm run prod');\n});\n\nafter('deploy:failed', 'deploy:unlock');\n"
+        },
+        {
+          "name": "deploy.yaml",
+          "type": "blob",
+          "size": 0.65625,
+          "content": "import:\n  - recipe/laravel.php\n  - contrib/php-fpm.php\n  - contrib/npm.php\n\nconfig:\n  application: 'mylaravelapp'\n  repository: 'git@github.com:lorisleiva/mylaravelapp.git'\n  php_fpm_version: '8.0'\n\nhosts:\n  prod:\n    remote_user: root\n    hostname: mylaravelapp.com\n    deploy_path: '/var/www/{{hostname}}'\n\ntasks:\n  deploy:\n    - deploy:prepare\n    - deploy:vendors\n    - artisan:storage:link\n    - artisan:view:cache\n    - artisan:config:cache\n    - artisan:migrate\n    - npm:install\n    - npm:run:prod\n    - deploy:publish\n    - php-fpm:reload\n  npm:run:prod:\n    script:\n      - 'cd {{release_or_current_path}} && npm run prod'\n\nafter:\n  deploy:failed: deploy:unlock\n"
+        },
+        {
+          "name": "episode-3",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "episode-4",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "episode-5",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "episode-6",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "episode-7",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

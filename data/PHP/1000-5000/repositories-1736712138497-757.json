@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736712138497,
+    "page": 757,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc2MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "simshaun/recurr",
+      "stars": 1446,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "/.gitattributes export-ignore\n/.gitignore export-ignore\n/.github export-ignore\n/tests export-ignore\n/phpunit.xml.dist export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.052734375,
+          "content": "/vendor/\n/.idea/\n/composer.lock\n/.phpunit.result.cache"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 2.599609375,
+          "content": "Copyright (c) 2015 Shaun Simmons\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n\n----------------------------------------------\n\nRecurr is heavily based on rrule.js:\n\nCopyright 2010, Jakub Roztocil <jakub@roztocil.name> and Lars Schöning\n\nRedistribution and use in source and binary forms, with or without\nmodification, are permitted provided that the following conditions are met:\n\n    1. Redistributions of source code must retain the above copyright notice,\n       this list of conditions and the following disclaimer.\n\n    2. Redistributions in binary form must reproduce the above copyright\n       notice, this list of conditions and the following disclaimer in the\n       documentation and/or other materials provided with the distribution.\n\n    3. Neither the name of The author nor the names of its contributors may\n       be used to endorse or promote products derived from this software\n       without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE AUTHOR AND CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;\nLOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON\nANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT\n(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS\nSOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.6005859375,
+          "content": "# Recurr \n\n[![tests](https://github.com/simshaun/recurr/workflows/tests/badge.svg)](https://github.com/simshaun/recurr/actions)\n[![Latest Stable Version](https://poser.pugx.org/simshaun/recurr/v/stable.svg)](https://packagist.org/packages/simshaun/recurr) \n[![Total Downloads](https://poser.pugx.org/simshaun/recurr/downloads.svg)](https://packagist.org/packages/simshaun/recurr) \n[![Latest Unstable Version](https://poser.pugx.org/simshaun/recurr/v/unstable.svg)](https://packagist.org/packages/simshaun/recurr) \n[![License](https://poser.pugx.org/simshaun/recurr/license.svg)](https://packagist.org/packages/simshaun/recurr)\n\nRecurr is a PHP library for working with recurrence rules ([RRULE](https://tools.ietf.org/html/rfc5545)) and converting them in to DateTime objects.\n\nRecurr was developed as a precursor for a calendar with recurring events, and is heavily inspired by [rrule.js](https://github.com/jkbr/rrule).\n\nInstalling Recurr\n------------\n\nThe recommended way to install Recurr is through [Composer](http://getcomposer.org).\n\n```bash\ncomposer require simshaun/recurr\n```\n\nUsing Recurr \n-----------\n\n### Creating RRULE rule objects ###\n\nYou can create a new Rule object by passing the ([RRULE](https://tools.ietf.org/html/rfc5545)) string or an array with the rule parts, the start date, end date (optional) and timezone.\n\n```php\n$timezone    = 'America/New_York';\n$startDate   = new \\DateTime('2013-06-12 20:00:00', new \\DateTimeZone($timezone));\n$endDate     = new \\DateTime('2013-06-14 20:00:00', new \\DateTimeZone($timezone)); // Optional\n$rule        = new \\Recurr\\Rule('FREQ=MONTHLY;COUNT=5', $startDate, $endDate, $timezone);\n```\n\nYou can also use chained methods to build your rule programmatically and get the resulting RRULE.\n\n```php\n$rule = (new \\Recurr\\Rule)\n    ->setStartDate($startDate)\n    ->setTimezone($timezone)\n    ->setFreq('DAILY')\n    ->setByDay(['MO', 'TU'])\n    ->setUntil(new \\DateTime('2017-12-31'))\n;\n\necho $rule->getString(); //FREQ=DAILY;UNTIL=20171231T000000;BYDAY=MO,TU\n```\n\n### RRULE to DateTime objects ###\n\n```php\n$transformer = new \\Recurr\\Transformer\\ArrayTransformer();\n\nprint_r($transformer->transform($rule));\n```\n\n1. `$transformer->transform(...)` returns a `RecurrenceCollection` of `Recurrence` objects.\n2. Each `Recurrence` has `getStart()` and `getEnd()` methods that return a `\\DateTime` object.\n3. If the transformed `Rule` lacks an end date, `getEnd()` will return a `\\DateTime` object equal to that of `getStart()`.\n\n> Note: The transformer has a \"virtual\" limit (default 732) on the number of objects it generates.\n> This prevents the script from crashing on an infinitely recurring rule.\n> You can change the virtual limit with an `ArrayTransformerConfig` object that you pass to `ArrayTransformer`.\n\n### Transformation Constraints ###\n\nConstraints are used by the ArrayTransformer to allow or prevent certain dates from being added to a `RecurrenceCollection`. Recurr provides the following constraints:\n\n- `AfterConstraint(\\DateTime $after, $inc = false)`\n- `BeforeConstraint(\\DateTime $before, $inc = false)`\n- `BetweenConstraint(\\DateTime $after, \\DateTime $before, $inc = false)`\n\n`$inc` defines what happens if `$after` or `$before` are themselves recurrences. If `$inc = true`, they will be included in the collection. For example,\n\n```php\n$startDate   = new \\DateTime('2014-06-17 04:00:00');\n$rule        = new \\Recurr\\Rule('FREQ=MONTHLY;COUNT=5', $startDate);\n$transformer = new \\Recurr\\Transformer\\ArrayTransformer();\n\n$constraint = new \\Recurr\\Transformer\\Constraint\\BeforeConstraint(new \\DateTime('2014-08-01 00:00:00'));\nprint_r($transformer->transform($rule, $constraint));\n```\n\n> Note: If building your own constraint, it is important to know that dates which do not meet the constraint's requirements do **not** count toward the transformer's virtual limit. If you manually set your constraint's `$stopsTransformer` property to `false`, the transformer *might* crash via an infinite loop. See the `BetweenConstraint` for an example on how to prevent that.\n\n### Post-Transformation `RecurrenceCollection` Filters ###\n\n`RecurrenceCollection` provides the following chainable helper methods to filter out recurrences:\n\n- `startsBetween(\\DateTime $after, \\DateTime $before, $inc = false)`\n- `startsBefore(\\DateTime $before, $inc = false)`\n- `startsAfter(\\DateTime $after, $inc = false)`\n- `endsBetween(\\DateTime $after, \\DateTime $before, $inc = false)`\n- `endsBefore(\\DateTime $before, $inc = false)`\n- `endsAfter(\\DateTime $after, $inc = false)`\n\n`$inc` defines what happens if `$after` or `$before` are themselves recurrences. If `$inc = true`, they will be included in the filtered collection. For example,\n\n    pseudo...\n    2014-06-01 startsBetween(2014-06-01, 2014-06-20) // false\n    2014-06-01 startsBetween(2014-06-01, 2014-06-20, true) // true\n\n> Note: `RecurrenceCollection` extends the Doctrine project's [ArrayCollection](https://github.com/doctrine/collections/blob/master/lib/Doctrine/Common/Collections/ArrayCollection.php) class.\n\nRRULE to Text\n--------------------------\n\nRecurr supports transforming some recurrence rules into human readable text.\nThis feature is still in beta and only supports yearly, monthly, weekly, and daily frequencies.\n\n```php\n$rule = new Rule('FREQ=YEARLY;INTERVAL=2;COUNT=3;', new \\DateTime());\n\n$textTransformer = new TextTransformer();\necho $textTransformer->transform($rule);\n```\n\nIf you need more than English you can pass in a translator with one of the\nsupported locales *(see translations folder)*.\n\n```php\n$rule = new Rule('FREQ=YEARLY;INTERVAL=2;COUNT=3;', new \\DateTime());\n\n$textTransformer = new TextTransformer(\n    new \\Recurr\\Transformer\\Translator('de')\n);\necho $textTransformer->transform($rule);\n```\n\nWarnings\n---------------\n\n- **Monthly recurring rules **\n  By default, if your start date is on the 29th, 30th, or 31st, Recurr will skip following months that don't have at least that many days.\n  *(e.g. Jan 31 + 1 month = March)* \n\nThis behavior is configurable:\n\n```php\n$timezone    = 'America/New_York';\n$startDate   = new \\DateTime('2013-01-31 20:00:00', new \\DateTimeZone($timezone));\n$rule        = new \\Recurr\\Rule('FREQ=MONTHLY;COUNT=5', $startDate, null, $timezone);\n$transformer = new \\Recurr\\Transformer\\ArrayTransformer();\n\n$transformerConfig = new \\Recurr\\Transformer\\ArrayTransformerConfig();\n$transformerConfig->enableLastDayOfMonthFix();\n$transformer->setConfig($transformerConfig);\n\nprint_r($transformer->transform($rule));\n// 2013-01-31, 2013-02-28, 2013-03-31, 2013-04-30, 2013-05-31\n```\n\n\nContribute\n----------\n\nFeel free to comment or make pull requests. Please include tests with PRs.\n\n\nLicense\n-------\n\nRecurr is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.794921875,
+          "content": "{\n\t\"name\": \"simshaun/recurr\",\n\t\"description\": \"PHP library for working with recurrence rules\",\n\t\"keywords\": [\"rrule\", \"recurrence\", \"recurring\", \"events\", \"dates\"],\n\t\"homepage\": \"https://github.com/simshaun/recurr\",\n\t\"type\": \"library\",\n\t\"license\": \"MIT\",\n\t\"authors\": [\n\t\t{\n\t\t\t\"name\": \"Shaun Simmons\",\n\t\t\t\"email\": \"shaun@shaun.pub\",\n\t\t\t\"homepage\": \"https://shaun.pub\"\n\t\t}\n\t],\n\t\"require\": {\n\t\t\"php\": \"^7.2||^8.0\",\n\t\t\"doctrine/collections\": \"~1.6||^2.0\"\n\t},\n\t\"require-dev\": {\n\t\t\"phpunit/phpunit\": \"^8.5.16\",\n\t\t\"symfony/yaml\": \"^5.3\"\n\t},\n\t\"autoload\": {\n\t\t\"psr-4\": {\n\t\t\t\"Recurr\\\\\": \"src/Recurr/\"\n\t\t}\n\t},\n\t\"autoload-dev\": {\n\t\t\"psr-4\": {\n\t\t\t\"Recurr\\\\Test\\\\\": \"tests/Recurr/Test\"\n\t\t}\n\t},\n\t\"extra\": {\n\t\t\"branch-alias\": {\n\t\t\t\"dev-master\": \"0.x-dev\"\n\t\t}\n\t},\n\t\"scripts\": {\n\t\t\"test\": \"./vendor/bin/phpunit --color=always\"\n\t}\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.7802734375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"./tests/bootstrap.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/8.5/phpunit.xsd\">\n  <testsuites>\n    <testsuite name=\"Recurr Test Suite\">\n      <directory suffix=\"Test.php\">./tests/Recurr/Test/</directory>\n    </testsuite>\n  </testsuites>\n\n  <filter>\n    <whitelist>\n      <directory suffix=\".php\">./src/Recurr/</directory>\n    </whitelist>\n  </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test.ps1",
+          "type": "blob",
+          "size": 0.2548828125,
+          "content": "#$env:XDEBUG_MODE = \"debug\"\n#$env:XDEBUG_SESSION = 1\n\n# If no arguments, run all tests.\nif (-not $args)\n{\n    ./vendor/bin/phpunit --stop-on-failure -c phpunit.xml.dist\n}\nelse\n{\n    ./vendor/bin/phpunit --stop-on-failure -c phpunit.xml.dist --filter $args[0]\n}\n"
+        },
+        {
+          "name": "test.sh",
+          "type": "blob",
+          "size": 0.2568359375,
+          "content": "#!/usr/bin/env bash\n\n#export XDEBUG_MODE=debug XDEBUG_SESSION=1\n\n# If no arguments, run all tests.\nif [ -z \"$1\" ]\nthen\n  ./vendor/bin/phpunit --stop-on-failure -c phpunit.xml.dist\nelse\n  ./vendor/bin/phpunit --stop-on-failure -c phpunit.xml.dist --filter \"$1\"\nfi\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "translations",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

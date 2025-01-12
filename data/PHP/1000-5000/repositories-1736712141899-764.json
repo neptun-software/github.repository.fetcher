@@ -1,0 +1,114 @@
+{
+  "metadata": {
+    "timestamp": 1736712141899,
+    "page": 764,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/security-guard",
+      "stars": 1435,
+      "defaultBranch": "5.4",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "AbstractGuardAuthenticator.php",
+          "type": "blob",
+          "size": 1.126953125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Guard;\n\nuse Symfony\\Component\\Security\\Core\\User\\UserInterface;\nuse Symfony\\Component\\Security\\Guard\\Token\\PostAuthenticationGuardToken;\n\n/**\n * An optional base class that creates a PostAuthenticationGuardToken for you.\n *\n * @author Ryan Weaver <ryan@knpuniversity.com>\n *\n * @deprecated since Symfony 5.3, use the new authenticator system instead\n */\nabstract class AbstractGuardAuthenticator implements AuthenticatorInterface\n{\n    /**\n     * Shortcut to create a PostAuthenticationGuardToken for you, if you don't really\n     * care about which authenticated token you're using.\n     *\n     * @return PostAuthenticationGuardToken\n     */\n    public function createAuthenticatedToken(UserInterface $user, string $providerKey)\n    {\n        return new PostAuthenticationGuardToken(\n            $user,\n            $providerKey,\n            $user->getRoles()\n        );\n    }\n}\n"
+        },
+        {
+          "name": "Authenticator",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "AuthenticatorInterface.php",
+          "type": "blob",
+          "size": 5.345703125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Guard;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\Response;\nuse Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface;\nuse Symfony\\Component\\Security\\Core\\Exception\\AuthenticationException;\nuse Symfony\\Component\\Security\\Core\\User\\UserInterface;\nuse Symfony\\Component\\Security\\Core\\User\\UserProviderInterface;\nuse Symfony\\Component\\Security\\Guard\\Token\\GuardTokenInterface;\nuse Symfony\\Component\\Security\\Http\\EntryPoint\\AuthenticationEntryPointInterface;\n\n/**\n * The interface for all \"guard\" authenticators.\n *\n * The methods on this interface are called throughout the guard authentication\n * process to give you the power to control most parts of the process from\n * one location.\n *\n * @author Ryan Weaver <ryan@knpuniversity.com>\n * @author Amaury Leroux de Lens <amaury@lerouxdelens.com>\n *\n * @deprecated since Symfony 5.3, use the new authenticator system instead\n */\ninterface AuthenticatorInterface extends AuthenticationEntryPointInterface\n{\n    /**\n     * Does the authenticator support the given Request?\n     *\n     * If this returns false, the authenticator will be skipped.\n     *\n     * @return bool\n     */\n    public function supports(Request $request);\n\n    /**\n     * Get the authentication credentials from the request and return them\n     * as any type (e.g. an associate array).\n     *\n     * Whatever value you return here will be passed to getUser() and checkCredentials()\n     *\n     * For example, for a form login, you might:\n     *\n     *      return [\n     *          'username' => $request->request->get('_username'),\n     *          'password' => $request->request->get('_password'),\n     *      ];\n     *\n     * Or for an API token that's on a header, you might use:\n     *\n     *      return ['api_key' => $request->headers->get('X-API-TOKEN')];\n     *\n     * @return mixed Any non-null value\n     *\n     * @throws \\UnexpectedValueException If null is returned\n     */\n    public function getCredentials(Request $request);\n\n    /**\n     * Return a UserInterface object based on the credentials.\n     *\n     * The *credentials* are the return value from getCredentials()\n     *\n     * You may throw an AuthenticationException if you wish. If you return\n     * null, then a UserNotFoundException is thrown for you.\n     *\n     * @param mixed $credentials\n     *\n     * @return UserInterface|null\n     *\n     * @throws AuthenticationException\n     */\n    public function getUser($credentials, UserProviderInterface $userProvider);\n\n    /**\n     * Returns true if the credentials are valid.\n     *\n     * If false is returned, authentication will fail. You may also throw\n     * an AuthenticationException if you wish to cause authentication to fail.\n     *\n     * The *credentials* are the return value from getCredentials()\n     *\n     * @param mixed $credentials\n     *\n     * @return bool\n     *\n     * @throws AuthenticationException\n     */\n    public function checkCredentials($credentials, UserInterface $user);\n\n    /**\n     * Create an authenticated token for the given user.\n     *\n     * If you don't care about which token class is used or don't really\n     * understand what a \"token\" is, you can skip this method by extending\n     * the AbstractGuardAuthenticator class from your authenticator.\n     *\n     * @see AbstractGuardAuthenticator\n     *\n     * @return GuardTokenInterface\n     */\n    public function createAuthenticatedToken(UserInterface $user, string $providerKey);\n\n    /**\n     * Called when authentication executed, but failed (e.g. wrong username password).\n     *\n     * This should return the Response sent back to the user, like a\n     * RedirectResponse to the login page or a 401 response.\n     *\n     * If you return null, the request will continue, but the user will\n     * not be authenticated. This is probably not what you want to do.\n     *\n     * @return Response|null\n     */\n    public function onAuthenticationFailure(Request $request, AuthenticationException $exception);\n\n    /**\n     * Called when authentication executed and was successful!\n     *\n     * This should return the Response sent back to the user, like a\n     * RedirectResponse to the last page they visited.\n     *\n     * If you return null, the current request will continue, and the user\n     * will be authenticated. This makes sense, for example, with an API.\n     *\n     * @return Response|null\n     */\n    public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $providerKey);\n\n    /**\n     * Does this method support remember me cookies?\n     *\n     * Remember me cookie will be set if *all* of the following are met:\n     *  A) This method returns true\n     *  B) The remember_me key under your firewall is configured\n     *  C) The \"remember me\" functionality is activated. This is usually\n     *      done by having a _remember_me checkbox in your form, but\n     *      can be configured by the \"always_remember_me\" and \"remember_me_parameter\"\n     *      parameters under the \"remember_me\" firewall key\n     *  D) The onAuthenticationSuccess method returns a Response object\n     *\n     * @return bool\n     */\n    public function supportsRememberMe();\n}\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.171875,
+          "content": "CHANGELOG\n=========\n\n5.3\n---\n\nThe CHANGELOG for version 5.3 and earlier can be found at https://github.com/symfony/symfony/blob/5.3/src/Symfony/Component/Security/CHANGELOG.md\n"
+        },
+        {
+          "name": "Firewall",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "GuardAuthenticatorHandler.php",
+          "type": "blob",
+          "size": 6.0078125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Guard;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\Response;\nuse Symfony\\Component\\Security\\Core\\Authentication\\Token\\Storage\\TokenStorageInterface;\nuse Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface;\nuse Symfony\\Component\\Security\\Core\\Exception\\AuthenticationException;\nuse Symfony\\Component\\Security\\Core\\User\\UserInterface;\nuse Symfony\\Component\\Security\\Http\\Event\\InteractiveLoginEvent;\nuse Symfony\\Component\\Security\\Http\\SecurityEvents;\nuse Symfony\\Component\\Security\\Http\\Session\\SessionAuthenticationStrategyInterface;\nuse Symfony\\Contracts\\EventDispatcher\\EventDispatcherInterface;\n\ntrigger_deprecation('symfony/security-guard', '5.3', 'The \"%s\" class is deprecated, use the new authenticator system instead.', GuardAuthenticatorHandler::class);\n\n/**\n * A utility class that does much of the *work* during the guard authentication process.\n *\n * By having the logic here instead of the listener, more of the process\n * can be called directly (e.g. for manual authentication) or overridden.\n *\n * @author Ryan Weaver <ryan@knpuniversity.com>\n *\n * @final\n *\n * @deprecated since Symfony 5.3, use the new authenticator system instead\n */\nclass GuardAuthenticatorHandler\n{\n    private $tokenStorage;\n    private $dispatcher;\n    private $sessionStrategy;\n    private $statelessProviderKeys;\n\n    /**\n     * @param array $statelessProviderKeys An array of provider/firewall keys that are \"stateless\" and so do not need the session migrated on success\n     */\n    public function __construct(TokenStorageInterface $tokenStorage, ?EventDispatcherInterface $eventDispatcher = null, array $statelessProviderKeys = [])\n    {\n        $this->tokenStorage = $tokenStorage;\n        $this->dispatcher = $eventDispatcher;\n        $this->statelessProviderKeys = $statelessProviderKeys;\n    }\n\n    /**\n     * Authenticates the given token in the system.\n     */\n    public function authenticateWithToken(TokenInterface $token, Request $request, ?string $providerKey = null, ?TokenInterface $previousToken = null)\n    {\n        $this->migrateSession($request, $token, $providerKey, 3 < \\func_num_args() ? $previousToken : $this->tokenStorage->getToken());\n        $this->tokenStorage->setToken($token);\n\n        if (null !== $this->dispatcher) {\n            $loginEvent = new InteractiveLoginEvent($request, $token);\n            $this->dispatcher->dispatch($loginEvent, SecurityEvents::INTERACTIVE_LOGIN);\n        }\n    }\n\n    /**\n     * Returns the \"on success\" response for the given GuardAuthenticator.\n     */\n    public function handleAuthenticationSuccess(TokenInterface $token, Request $request, AuthenticatorInterface $guardAuthenticator, string $providerKey): ?Response\n    {\n        $response = $guardAuthenticator->onAuthenticationSuccess($request, $token, $providerKey);\n\n        // check that it's a Response or null\n        if ($response instanceof Response || null === $response) {\n            return $response;\n        }\n\n        throw new \\UnexpectedValueException(sprintf('The \"%s::onAuthenticationSuccess()\" method must return null or a Response object. You returned \"%s\".', \\get_class($guardAuthenticator), get_debug_type($response)));\n    }\n\n    /**\n     * Convenience method for authenticating the user and returning the\n     * Response *if any* for success.\n     */\n    public function authenticateUserAndHandleSuccess(UserInterface $user, Request $request, AuthenticatorInterface $authenticator, string $providerKey): ?Response\n    {\n        // create an authenticated token for the User\n        $token = $authenticator->createAuthenticatedToken($user, $providerKey);\n        // authenticate this in the system\n        $this->authenticateWithToken($token, $request, $providerKey, $this->tokenStorage->getToken());\n\n        // return the success metric\n        return $this->handleAuthenticationSuccess($token, $request, $authenticator, $providerKey);\n    }\n\n    /**\n     * Handles an authentication failure and returns the Response for the\n     * GuardAuthenticator.\n     */\n    public function handleAuthenticationFailure(AuthenticationException $authenticationException, Request $request, AuthenticatorInterface $guardAuthenticator, string $providerKey): ?Response\n    {\n        $response = $guardAuthenticator->onAuthenticationFailure($request, $authenticationException);\n        if ($response instanceof Response || null === $response) {\n            // returning null is ok, it means they want the request to continue\n            return $response;\n        }\n\n        throw new \\UnexpectedValueException(sprintf('The \"%s::onAuthenticationFailure()\" method must return null or a Response object. You returned \"%s\".', \\get_class($guardAuthenticator), get_debug_type($response)));\n    }\n\n    /**\n     * Call this method if your authentication token is stored to a session.\n     *\n     * @final\n     */\n    public function setSessionAuthenticationStrategy(SessionAuthenticationStrategyInterface $sessionStrategy)\n    {\n        $this->sessionStrategy = $sessionStrategy;\n    }\n\n    private function migrateSession(Request $request, TokenInterface $token, ?string $providerKey, ?TokenInterface $previousToken)\n    {\n        if (\\in_array($providerKey, $this->statelessProviderKeys, true) || !$this->sessionStrategy || !$request->hasSession() || !$request->hasPreviousSession()) {\n            return;\n        }\n\n        if ($previousToken) {\n            $user = method_exists($token, 'getUserIdentifier') ? $token->getUserIdentifier() : $token->getUsername();\n            $previousUser = method_exists($previousToken, 'getUserIdentifier') ? $previousToken->getUserIdentifier() : $previousToken->getUsername();\n\n            if ('' !== ($user ?? '') && $user === $previousUser) {\n                return;\n            }\n        }\n\n        $this->sessionStrategy->onAuthentication($request, $token);\n    }\n}\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2004-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "PasswordAuthenticatedInterface.php",
+          "type": "blob",
+          "size": 0.8505859375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Guard;\n\ntrigger_deprecation('symfony/security-guard', '5.3', 'The \"%s\" class is deprecated, use the new authenticator system instead.', PasswordAuthenticatedInterface::class);\n\n/**\n * An optional interface for \"guard\" authenticators that deal with user passwords.\n *\n * @deprecated since Symfony 5.3, use the new authenticator system instead\n */\ninterface PasswordAuthenticatedInterface\n{\n    /**\n     * Returns the clear-text password contained in credentials if any.\n     *\n     * @param mixed $credentials The user credentials\n     */\n    public function getPassword($credentials): ?string;\n}\n"
+        },
+        {
+          "name": "Provider",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.01171875,
+          "content": "Security Component - Guard\n==========================\n\nThe Guard component brings many layers of authentication together, making\nit much easier to create complex authentication systems where you have\ntotal control.\n\nSponsor\n-------\n\nThe Security component for Symfony 5.4/6.0 is [backed][1] by [SymfonyCasts][2].\n\nLearn Symfony faster by watching real projects being built and actively coding\nalong with them. SymfonyCasts bridges that learning gap, bringing you video\ntutorials and coding challenges. Code on!\n\nHelp Symfony by [sponsoring][3] its development!\n\nResources\n---------\n\n * [Documentation](https://symfony.com/doc/current/components/security.html)\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n\n[1]: https://symfony.com/backers\n[2]: https://symfonycasts.com\n[3]: https://symfony.com/sponsor\n"
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Token",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9013671875,
+          "content": "{\n    \"name\": \"symfony/security-guard\",\n    \"type\": \"library\",\n    \"description\": \"Symfony Security Component - Guard\",\n    \"keywords\": [],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Fabien Potencier\",\n            \"email\": \"fabien@symfony.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=7.2.5\",\n        \"symfony/deprecation-contracts\": \"^2.1|^3\",\n        \"symfony/security-core\": \"^5.0\",\n        \"symfony/security-http\": \"^5.3\",\n        \"symfony/polyfill-php80\": \"^1.15\"\n    },\n    \"require-dev\": {\n        \"psr/log\": \"^1|^2|^3\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Component\\\\Security\\\\Guard\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.8662109375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/5.2/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony Security Component Guard Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <filter>\n        <whitelist>\n            <directory>./</directory>\n            <exclude>\n                <directory>./Resources</directory>\n                <directory>./Tests</directory>\n                <directory>./vendor</directory>\n            </exclude>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

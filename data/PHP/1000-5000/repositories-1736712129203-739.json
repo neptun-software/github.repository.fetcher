@@ -1,0 +1,92 @@
+{
+  "metadata": {
+    "timestamp": 1736712129203,
+    "page": 739,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jasny/sso",
+      "stars": 1482,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.2646484375,
+          "content": "/demo export-ignore\n/tests export-ignore\n/.gitattributes export-ignore\n/.gitignore export-ignore\n/.scrutinizer.yml export-ignore\n/.travis.yml export-ignore\n/phpunit.xml.dist export-ignore\n/phpcs.xml.dist export-ignore\n/phpstan.neon export-ignore\n/README.md export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1953125,
+          "content": ".DS_Store\nnbproject\n/vendor\ncomposer.lock\n\ntests/_output/*\n# Elastic Beanstalk Files\n.elasticbeanstalk/*\n!.elasticbeanstalk/*.cfg.yml\n!.elasticbeanstalk/*.global.yml\n/tests/_support/_generated/\n.idea\n"
+        },
+        {
+          "name": ".scrutinizer.yml",
+          "type": "blob",
+          "size": 0.5478515625,
+          "content": "#language: php\nchecks:\n  php: true\nfilter:\n  excluded_paths:\n    - tests\nbuild:\n  nodes:\n    analysis:\n      environment:\n        php: 8.2\n        postgresql: false\n        redis: false\n        mongodb: false\n      tests:\n        override:\n            - phpcs-run src\n            -\n                command: vendor/bin/phpstan analyze --error-format=checkstyle | sed '/^\\s*$/d' > phpstan-checkstyle.xml\n                analysis:\n                    file: phpstan-checkstyle.xml\n                    format: 'general-checkstyle'\n            - php-scrutinizer-run\n\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.033203125,
+          "content": "Copyright (c) 2020 Arnold Daniels\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 10.8984375,
+          "content": "![jasny-banner](https://user-images.githubusercontent.com/100821/62123924-4c501c80-b2c9-11e9-9677-2ebc21d9b713.png)\n\nSingle Sign-On for PHP\n========\n\n[![PHP](https://github.com/jasny/sso/workflows/PHP/badge.svg)](https://github.com/jasny/sso/actions)\n[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/jasny/sso/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/jasny/sso/?branch=master)\n[![Code Coverage](https://scrutinizer-ci.com/g/jasny/sso/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/jasny/sso/?branch=master)\n[![Packagist Stable Version](https://img.shields.io/packagist/v/jasny/sso.svg)](https://packagist.org/packages/jasny/sso)\n[![Packagist License](https://img.shields.io/packagist/l/jasny/sso.svg)](https://packagist.org/packages/jasny/sso)\n\nJasny SSO is a relatively simple and straightforward solution for single sign on (SSO).\n\nWith SSO, logging into a single website will authenticate you for all affiliate sites. The sites don't need to share a\ntoplevel domain.\n\n### How it works\n\nWhen using SSO, we can distinguish 3 parties:\n\n* Client - This is the browser of the visitor\n* Broker - The website which is visited\n* Server - The place that holds the user info and credentials\n\nThe broker has an id and a secret. These are known to both the broker and server.\n\nWhen the client visits the broker, it creates a random token, which is stored in a cookie. The broker will then send\nthe client to the server, passing along the broker's id and token. The server creates a hash using the broker id, broker\nsecret and the token. This hash is used to create a link to the user's session. When the link is created the server\nredirects the client back to the broker.\n\nThe broker can create the same link hash using the token (from the cookie), the broker id and the broker secret. When\ndoing requests, it passes that hash as a session id.\n\nThe server will notice that the session id is a link and use the linked session. As such, the broker and client are\nusing the same session. When another broker joins in, it will also use the same session.\n\nFor a more in depth explanation, please [read this article](https://github.com/jasny/sso/wiki).\n\n### How is this different from OAuth?\n\nWith OAuth, you can authenticate a user at an external server and get access to their profile info. However, you\naren't sharing a session.\n\nA user logs in to website foo.com using Google OAuth. Next they visit website bar.org which also uses Google OAuth.\nRegardless of that, they are still required to press the 'login' button on bar.org.\n\nWith Jasny SSO both websites use the same session. So when the user visits bar.org, they are automatically logged in.\nWhen they log out (on either of the sites), they are logged out for both.\n\n## Installation\n\nInstall this library through composer\n\n    composer require jasny/sso\n\n## Demo\n\nThere is a demo server and two demo brokers as example. One with normal redirects and one using\n[JSONP](https://en.wikipedia.org/wiki/JSONP) / AJAX.\n\nTo prove it's working you should setup the server and two or more brokers, each on their own machine and their own\n(sub)domain. However, you can also run both server and brokers on your own machine, simply to test it out.\n\nOn *nix (Linux / Unix / OSX) run:\n\n    php -S localhost:8000 -t demo/server/\n    export SSO_SERVER=http://localhost:8000/attach.php SSO_BROKER_ID=Alice SSO_BROKER_SECRET=8iwzik1bwd; php -S localhost:8001 -t demo/broker/\n    export SSO_SERVER=http://localhost:8000/attach.php SSO_BROKER_ID=Greg SSO_BROKER_SECRET=7pypoox2pc; php -S localhost:8002 -t demo/broker/\n    export SSO_SERVER=http://localhost:8000/attach.php SSO_BROKER_ID=Julius SSO_BROKER_SECRET=ceda63kmhp; php -S localhost:8003 -t demo/ajax-broker/\n\nNow open some tabs and visit \n\n  * http://localhost:8001\n  * http://localhost:8002\n  * http://localhost:8003\n\nusername | password\n-------- | --------\njackie   | jackie123\njohn     | john123\n\n_Note that after logging in, you need to refresh on the other brokers to see the effect._\n\n# Usage\n\n## Server\n\nThe `Server` class takes a callback as first constructor argument. This callback should look up the secret\nfor a broker based on the id.\n\nThe second argument must be a PSR-16 compatible cache object. It's used to store the link between broker token and\nclient session.\n\n```php\nuse Jasny\\SSO\\Server\\Server;\n\n$brokers = [\n    'foo' => ['secret' => '8OyRi6Ix1x', 'domains' => ['example.com']],\n    // ...\n];\n\n$server = new Server(\n    fn($id) => $brokers[$id] ?? null, // Unique secret and allowed domains for each broker.\n    new Cache()                       // Any PSR-16 compatible cache\n);\n```\n\n_In this example the brokers are simply configured as an array, but typically you want to fetch the broker info from a DB._\n\n### Attach\n\nA client needs to attach the broker token to the session id by doing an HTTP request to the server. This request can be\nhandled by calling `attach()`.\n\nThe `attach()` method returns a verification code. This code must be returned to the broker, as it's needed to\ncalculate the checksum.\n\n```php\n$verificationCode = $server->attach();\n```\n\nIf it's not possible to attach (for instance in case of an incorrect checksum), an Exception is thrown.\n\n### Handle broker API request\n\nAfter the client session is attached to the broker token, the broker is able to send API requests on behalf of the\nclient. Calling the `startBrokerSession()` method with start the session of the client based on the bearer token. This\nmeans that these request the server can access the session information of the client through `$_SESSION`.\n\n```\n$server->startBrokerSession();\n```\n\nThe broker could use this to login, logout, get user information, etc. The API for handling such requests is outside\nthe scope of the project. However since the broker uses normal sessions, any existing the authentication can be used.\n\n_If you're lookup for an authentication library, consider using [Jasny Auth](https://github.com/jasny/auth)._\n\n### PSR-7\n\nBy default, the library works with superglobals like `$_GET` and `$_SERVER`. Alternatively it can use a PSR-7 server\nrequest. This can be passed to `attach()` and `startBrokerSession()` as argument.\n\n```php\n$verificationCode = $server->attach($serverRequest);\n```\n\n### Session interface\n\nBy default, the library uses the superglobal `$_SESSION` and the `php_session_*()` functions. It does this through\nthe `GlobalSession` object, which implements `SessionInterface`.\n\nFor projects that use alternative sessions, it's possible to create a wrapper that implements `SessionInterface`.\n\n```php\nuse Jasny\\SSO\\Server\\SessionInterface;\n\nclass CustomerSessionHandler implements SessionInterface\n{\n    // ...\n}\n```\n\nThe `withSession()` methods creates a copy of the Server object with the custom session interface.\n\n```php\n$server = (new Server($callback, $cache))\n    ->withSession(new CustomerSessionHandler());\n```\n\nThe `withSession()` method can also be used with a mock object for testing.\n\n### Logging\n\nEnable logging for debugging and catching issues.\n\n```php\n$server = (new Server($callback, $cache))\n    ->withLogging(new Logger());\n``` \n\nAny PSR-3 compatible logger can be used, like [Monolog](https://packagist.org/packages/monolog/monolog) or\n[Loggy](https://packagist.org/packages/yubb/loggy). The `context` may contain the broker id, token, and session id.\n\n## Broker\n\nWhen creating a `Broker` instance, you need to pass the server url, broker id and broker secret. The broker id and\nsecret needs to match the secret registered at the server.\n\n**CAVEAT**: *The broker id MUST be alphanumeric.*\n\n### Attach\n\nBefore the broker can do API requests on the client's behalf, the client needs to attach the broker token to the client\nsession. For this, the client must do an HTTP request to the SSO Server.\n\nThe `getAttachUrl()` method will generate a broker token for the client and use it to create an attach URL. The method\ntakes an array of query parameters as single argument.\n\nThere are several methods in making the client do an HTTP request. The broker can redirect the client or do a request\nvia the browser using AJAX or loading an image.\n\n```php\nuse Jasny\\SSO\\Broker\\Broker;\n\n// Configure the broker.\n$broker = new Broker(\n    getenv('SSO_SERVER'),\n    getenv('SSO_BROKER_ID'),\n    getenv('SSO_BROKER_SECRET')\n);\n\n// Attach through redirect if the client isn't attached yet.\nif (!$broker->isAttached()) {\n    $returnUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];\n    $attachUrl = $broker->getAttachUrl(['return_url' => $returnUrl]);\n\n    header(\"Location: $attachUrl\", true, 303);\n    echo \"You're redirected to <a href='$attachUrl'>$attachUrl</a>\";\n    exit();\n}\n```\n\n### Verify\n\nUpon verification the SSO Server will return a verification code (as a query parameter or in the JSON response). The code\nis used to calculate the checksum. The verification code prevents session hijacking using an attach link.\n\n```php\nif (isset($_GET['sso_verify'])) {\n    $broker->verify($_GET['sso_verify']);\n}\n```\n\n### API requests\n\nOnce attached, the broker is able to do API requests on behalf of the client. This can be done by\n\n- using the broker `request()` method, or by\n- using any HTTP client like Guzzle\n\n#### Broker request\n\n```php\n// Post to modify the user info\n$broker->request('POST', '/login', $credentials);\n\n// Get user info\n$user = $broker->request('GET', '/user');\n```\n\nThe `request()` method uses Curl to send HTTP requests, adding the bearer token for authentication. It expects a JSON\nresponse and will automatically decode it.\n\n#### HTTP library (Guzzle)\n\nTo use a library like [Guzzle](http://docs.guzzlephp.org/) or [Httplug](http://httplug.io/), get the bearer token using\n`getBearerToken()` and set the `Authorization` header\n    \n```php\n$guzzle = new GuzzleHttp\\Client(['base_uri' => 'https://sso-server.example.com']);\n\n$res = $guzzle->request('GET', '/user', [\n    'headers' => [\n        'Authorization' => 'Bearer ' . $broker->getBearerToken()\n    ]\n]);\n```\n\n### Client state\n\nBy default, the Broker uses the cookies (`$_COOKIE` and `setcookie()`) via the `Cookies` class to persist the client's\nSSO token.\n\n#### Cookie\n\nInstantiate a new `Cookies` object with custom parameters to modify things like cookie TTL, domain and https only.\n\n```php\nuse Jasny\\SSO\\Broker\\{Broker,Cookies};\n\n$broker = (new Broker(getenv('SSO_SERVER'), getenv('SSO_BROKER_ID'), getenv('SSO_BROKER_SECRET')))\n    ->withTokenIn(new Cookies(7200, '/myapp', 'example.com', true));\n```\n\n_(The cookie can never be accessed by the browser.)_\n\n#### Session\n\nAlternatively, you can store the SSO token in a PHP session for the broker by using `Session`.\n\n```php\nuse Jasny\\SSO\\Broker\\{Broker,Session};\n\nsession_start();\n\n$broker = (new Broker(getenv('SSO_SERVER'), getenv('SSO_BROKER_ID'), getenv('SSO_BROKER_SECRET')))\n    ->withTokenIn(new Session());\n```\n\n#### Custom\n\nThe method accepts any object that implements `ArrayAccess`, allowing you to create a custom handler if needed.\n\n```php\nclass CustomStateHandler implements \\ArrayAccess\n{\n    // ...\n}\n```\n\nThis can also be used with a mock object for testing. \n"
+        },
+        {
+          "name": "codeception.yml",
+          "type": "blob",
+          "size": 0.2705078125,
+          "content": "actor: Tester\npaths:\n    tests: tests\n    log: tests/_output\n    data: tests/_data\n    support: tests/_support\n    envs: tests/_envs\nbootstrap: _bootstrap.php\nsettings:\n    colors: true\n    memory_limit: 1024M\nextensions:\n    enabled:\n        - Codeception\\Extension\\RunFailed\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.521484375,
+          "content": "{\n    \"name\": \"jasny/sso\",\n    \"description\": \"Simple Single Sign-On\",\n    \"keywords\": [\"sso\", \"auth\"],\n    \"license\": \"MIT\",\n    \"homepage\": \"https://github.com/jasny/sso/wiki\",\n    \"authors\": [\n        {\n            \"name\": \"Arnold Daniels\",\n            \"email\": \"arnold@jasny.net\",\n            \"homepage\": \"http://www.jasny.net\"\n        }\n    ],\n    \"support\": {\n        \"issues\": \"https://github.com/jasny/sso/issues\",\n        \"source\": \"https://github.com/jasny/sso\"\n    },\n    \"require\": {\n        \"php\": \"^8.0\",\n        \"ext-json\": \"*\",\n        \"jasny/immutable\": \"^2.1\",\n        \"psr/simple-cache\": \"*\",\n        \"psr/log\": \"*\"\n    },\n    \"require-dev\": {\n        \"phpstan/phpstan\": \"^0.12.59\",\n        \"codeception/codeception\": \"^4.1\",\n        \"codeception/module-phpbrowser\": \"^1.0\",\n        \"codeception/module-rest\": \"^1.2\",\n        \"desarrolla2/cache\": \"^3.0\",\n        \"jasny/http-message\": \"^1.3\",\n        \"jasny/php-code-quality\": \"^2.6.0\",\n        \"jasny/phpunit-extension\": \"^0.3.2\",\n        \"yubb/loggy\": \"^2.1\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Jasny\\\\SSO\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Jasny\\\\Tests\\\\SSO\\\\\": \"tests/unit/\"\n        }\n    },\n    \"scripts\": {\n        \"test\": [\n            \"phpstan analyse\",\n            \"codecept run\",\n            \"phpcs -p src\"\n        ]\n    },\n    \"config\": {\n        \"preferred-install\": \"dist\",\n        \"sort-packages\": true,\n        \"optimize-autoloader\": true\n    },\n    \"minimum-stability\": \"dev\",\n    \"prefer-stable\": true\n}\n"
+        },
+        {
+          "name": "demo",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpcs.xml",
+          "type": "blob",
+          "size": 0.283203125,
+          "content": "<?xml version=\"1.0\"?>\n<ruleset name=\"Jasny\">\n    <description>The Jasny coding standard.</description>\n \n    <!-- Include the whole PSR-1 standard -->\n    <rule ref=\"PSR1\"/>\n    <!-- Include the whole PSR-2 standard -->\n    <rule ref=\"PSR2\"/>\n \n    <!-- TODO: Add own rules -->\n</ruleset>\n\n"
+        },
+        {
+          "name": "phpstan.neon",
+          "type": "blob",
+          "size": 0.1484375,
+          "content": "parameters:\n    level: 7\n    paths:\n        - src\n    reportUnmatchedIgnoredErrors: false\nincludes:\n  \t- vendor/phpstan/phpstan-strict-rules/rules.neon\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

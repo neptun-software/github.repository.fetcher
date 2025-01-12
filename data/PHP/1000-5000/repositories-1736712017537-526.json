@@ -1,0 +1,76 @@
+{
+  "metadata": {
+    "timestamp": 1736712017537,
+    "page": 526,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "markjaquith/WordPress-Skeleton",
+      "stars": 1852,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.076171875,
+          "content": "/shared\n/local-config.php\n/sql-dump-*.sql\n/db-sync\n/content/upgrade/\n.DS_Store"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.07421875,
+          "content": "[submodule \"wp\"]\n\tpath = wp\n\turl = git://github.com/WordPress/WordPress.git\n"
+        },
+        {
+          "name": ".htaccess",
+          "type": "blob",
+          "size": 0.19921875,
+          "content": "\n# BEGIN WordPress\n<IfModule mod_rewrite.c>\nRewriteEngine On\nRewriteBase /\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule . /index.php [L]\n</IfModule>\n# END WordPress\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 2.0830078125,
+          "content": "# WordPress Skeleton\n\nThis is simply a skeleton repo for a WordPress site. Clone it to jump-start your WordPress site repos, or fork it and customize it to your own liking!\n\n## Assumptions\n\n* WordPress as a Git submodule in `/wp/`\n* Custom content directory in `/content/` (cleaner, and also because it can't be in `/wp/`)\n* `wp-config.php` in the root (because it can't be in `/wp/`)\n* All writable directories are symlinked to similarly named locations under `/shared/`.\n\n## Questions & Answers\n\n**Q:** Will you accept pull requests?  \n**A:** Maybe — if I think the change is useful. I primarily made this for my own use, and thought people might find it useful. If you want to take it in a different direction and make your own customized skeleton, then just maintain your own fork.\n\n**Q:** Why the `/shared/` symlink stuff for uploads?  \n**A:** For local development, create `/shared/` (it is ignored by Git), and have the files live there. For production, have your deploy script symlink `/shared/` to some outside-the-repo location (like an NFS shared directory or something). This gives you separation between Git-managed code and uploaded files.\n\n**Q:** What version of WordPress does this track?  \n**A:** The latest stable release. It should automatically update within 6 hours of a new WordPress stable release. Open an issue if that doesn't happen.\n\n**Q:** What's the deal with `local-config.php`?  \n**A:** It is for local development, which might have different MySQL credentials or do things like enable query saving or debug mode. This file is ignored by Git, so it doesn't accidentally get checked in. If the file does not exist (which it shouldn't, in production), then WordPress will use the DB credentials defined in `wp-config.php`.\n\n**Q:** What is `memcached.php`?  \n**A:** This is for people using memcached as an object cache backend. It should be something like: `<?php return array( \"server01:11211\", \"server02:11211\" ); ?>`. Programattic generation of this file is recommended.\n\n**Q:** Does this support WordPress in multisite mode?  \n**A:** Yes, as of WordPress v3.5 which was released in December, 2012.\n"
+        },
+        {
+          "name": "content",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "index.php",
+          "type": "blob",
+          "size": 0.10546875,
+          "content": "<?php\n// WordPress view bootstrapper\ndefine( 'WP_USE_THEMES', true );\nrequire( './wp/wp-blog-header.php' );\n"
+        },
+        {
+          "name": "local-config-sample.php",
+          "type": "blob",
+          "size": 0.3798828125,
+          "content": "<?php\n/*\nThis is a sample local-config.php file\nIn it, you *must* include the four main database defines\n\nYou may include other settings here that you only want enabled on your local development checkouts\n*/\n\ndefine( 'DB_NAME', 'local_db_name' );\ndefine( 'DB_USER', 'local_db_user' );\ndefine( 'DB_PASSWORD', 'local_db_password' );\ndefine( 'DB_HOST', 'localhost' ); // Probably 'localhost'\n"
+        },
+        {
+          "name": "wp",
+          "type": "commit",
+          "content": null
+        },
+        {
+          "name": "wp-cli.yml",
+          "type": "blob",
+          "size": 0.03125,
+          "content": "path: wp\nurl: http://example.com"
+        },
+        {
+          "name": "wp-config.php",
+          "type": "blob",
+          "size": 3.302734375,
+          "content": "<?php\n// ===================================================\n// Load database info and local development parameters\n// ===================================================\nif ( file_exists( dirname( __FILE__ ) . '/local-config.php' ) ) {\n\tdefine( 'WP_LOCAL_DEV', true );\n\tinclude( dirname( __FILE__ ) . '/local-config.php' );\n} else {\n\tdefine( 'WP_LOCAL_DEV', false );\n\tdefine( 'DB_NAME', '%%DB_NAME%%' );\n\tdefine( 'DB_USER', '%%DB_USER%%' );\n\tdefine( 'DB_PASSWORD', '%%DB_PASSWORD%%' );\n\tdefine( 'DB_HOST', '%%DB_HOST%%' ); // Probably 'localhost'\n}\n\n// ========================\n// Custom Content Directory\n// ========================\ndefine( 'WP_CONTENT_DIR', dirname( __FILE__ ) . '/content' );\ndefine( 'WP_CONTENT_URL', 'https://' . $_SERVER['HTTP_HOST'] . '/content' );\n\n// ================================================\n// You almost certainly do not want to change these\n// ================================================\ndefine( 'DB_CHARSET', 'utf8' );\ndefine( 'DB_COLLATE', '' );\n\n// ==============================================================\n// Salts, for security\n// Grab these from: https://api.wordpress.org/secret-key/1.1/salt\n// ==============================================================\ndefine( 'AUTH_KEY',         'put your unique phrase here' );\ndefine( 'SECURE_AUTH_KEY',  'put your unique phrase here' );\ndefine( 'LOGGED_IN_KEY',    'put your unique phrase here' );\ndefine( 'NONCE_KEY',        'put your unique phrase here' );\ndefine( 'AUTH_SALT',        'put your unique phrase here' );\ndefine( 'SECURE_AUTH_SALT', 'put your unique phrase here' );\ndefine( 'LOGGED_IN_SALT',   'put your unique phrase here' );\ndefine( 'NONCE_SALT',       'put your unique phrase here' );\n\n// ==============================================================\n// Table prefix\n// Change this if you have multiple installs in the same database\n// ==============================================================\n$table_prefix  = 'wp_';\n\n// ================================\n// Language\n// Leave blank for American English\n// ================================\ndefine( 'WPLANG', '' );\n\n// ===========\n// Hide errors\n// ===========\nini_set( 'display_errors', 0 );\ndefine( 'WP_DEBUG_DISPLAY', false );\n\n// =================================================================\n// Debug mode\n// Debugging? Enable these. Can also enable them in local-config.php\n// =================================================================\n// define( 'SAVEQUERIES', true );\n// define( 'WP_DEBUG', true );\n\n// ======================================\n// Load a Memcached config if we have one\n// ======================================\nif ( file_exists( dirname( __FILE__ ) . '/memcached.php' ) )\n\t$memcached_servers = include( dirname( __FILE__ ) . '/memcached.php' );\n\n// ===========================================================================================\n// This can be used to programatically set the stage when deploying (e.g. production, staging)\n// ===========================================================================================\ndefine( 'WP_STAGE', '%%WP_STAGE%%' );\ndefine( 'STAGING_DOMAIN', '%%WP_STAGING_DOMAIN%%' ); // Does magic in WP Stack to handle staging domain rewriting\n\n// ===================\n// Bootstrap WordPress\n// ===================\nif ( !defined( 'ABSPATH' ) )\n\tdefine( 'ABSPATH', dirname( __FILE__ ) . '/wp/' );\nrequire_once( ABSPATH . 'wp-settings.php' );\n"
+        }
+      ]
+    }
+  ]
+}

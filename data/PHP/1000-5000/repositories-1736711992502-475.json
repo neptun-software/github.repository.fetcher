@@ -1,0 +1,80 @@
+{
+  "metadata": {
+    "timestamp": 1736711992502,
+    "page": 475,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "jenssegers/imagehash",
+      "stars": 1993,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.166015625,
+          "content": "/tests              export-ignore\n/.gitattributes     export-ignore\n/.gitignore         export-ignore\n/.travis.yml        export-ignore\n/phpunit.xml        export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.056640625,
+          "content": "/vendor\ncomposer.lock\n.phpunit.cache\n.phpunit.result.cache"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "MIT License\n\nCopyright (c) 2020 Jens Segers\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.9921875,
+          "content": "ImageHash\n=========\n\n[![Latest Stable Version](http://img.shields.io/github/release/jenssegers/imagehash.svg)](https://packagist.org/packages/jenssegers/imagehash) [![Build Status](http://img.shields.io/travis/jenssegers/imagehash.svg)](https://travis-ci.org/jenssegers/imagehash) [![Coverage Status](http://img.shields.io/coveralls/jenssegers/imagehash.svg)](https://coveralls.io/r/jenssegers/imagehash) [![Donate](https://img.shields.io/badge/donate-paypal-blue.svg)](https://www.paypal.me/jenssegers)\n\n> A perceptual hash is a fingerprint of a multimedia file derived from various features from its content. Unlike cryptographic hash functions which rely on the avalanche effect of small changes in input leading to drastic changes in the output, perceptual hashes are \"close\" to one another if the features are similar.\n\n<p align=\"center\"><img src=\"https://jenssegers.com/static/media/fingerprint.png\"></p>\n\nPerceptual hashes are a different concept compared to cryptographic hash functions like MD5 and SHA1. With cryptographic hashes, the hash values are random. The data used to generate the hash acts like a random seed, so the same data will generate the same result, but different data will create different results. Comparing two SHA1 hash values really only tells you two things. If the hashes are different, then the data is different. And if the hashes are the same, then the data is likely the same. In contrast, perceptual hashes can be compared -- giving you a sense of similarity between the two data sets.\n\nThis code was inspired/based on:\n - https://github.com/kennethrapp/phasher\n - http://www.phash.org\n - http://blockhash.io\n - http://www.hackerfactor.com/blog/?/archives/529-Kind-of-Like-That.html\n - http://www.hackerfactor.com/blog/?/archives/432-Looks-Like-It.html\n - http://blog.iconfinder.com/detecting-duplicate-images-using-python\n\nRequirements\n------------\n\n - PHP 8.1 or higher\n - The [gd](http://php.net/manual/en/book.image.php) or [imagick](http://php.net/manual/en/book.imagick.php) extension\n - Optionally, install the [GMP](http://php.net/manual/en/book.gmp.php) extension for faster fingerprint comparisons\n\nInstallation\n------------\n\n*This package has not reached a stable version yet, backwards compatibility may be broken between 0.x releases. Make sure to lock your version if you intend to use this in production!*\n\nInstall using composer:\n\n\tcomposer require jenssegers/imagehash\n\nUsage\n-----\n\nThe library comes with 4 built-in hashing implementations:\n\n - `Jenssegers\\ImageHash\\Implementations\\AverageHash` - Hash based the average image color\n - `Jenssegers\\ImageHash\\Implementations\\DifferenceHash` - Hash based on the previous pixel\n - `Jenssegers\\ImageHash\\Implementations\\BlockHash` - Hash based on blockhash.io **Still under development**\n - `Jenssegers\\ImageHash\\Implementations\\PerceptualHash` - The original pHash **Still under development**\n\nChoose one of these implementations. If you don't know which one to use, try the `DifferenceHash` implementation. Some implementations allow some configuration, be sure to check the constructor.\n\n```php\nuse Jenssegers\\ImageHash\\ImageHash;\nuse Jenssegers\\ImageHash\\Implementations\\DifferenceHash;\n\n$hasher = new ImageHash(new DifferenceHash());\n$hash = $hasher->hash('path/to/image.jpg');\n\necho $hash;\n// or\necho $hash->toHex();\n```\n\nThe resulting `Hash` object, is a hexadecimal image fingerprint that can be stored in your database once calculated. The hamming distance is used to compare two image fingerprints for similarities. Low distance values will indicate that the images are similar or the same, high distance values indicate that the images are different. Use the following method to detect if images are similar or not:\n\n```php\n$distance = $hasher->distance($hash1, $hash2);\n// or\n$distance = $hash1->distance($hash2);\n```\n\nEqual images will not always have a distance of 0, so you will need to decide at which distance you will evaluate images as equal. For the image set that I tested, a max distance of 5 was acceptable. But this will depend on the implementation, the images and the number of images. For example; when comparing a small set of images, a lower maximum distances should be acceptable as the chances of false positives are quite low. If however you are comparing a large amount of images, 5 might already be too much.\n\nThe `Hash` object can return the internal binary hash in a couple of different format:\n\n```php\necho $hash->toHex(); // 7878787c7c707c3c\necho $hash->toBits(); // 0111100001111000011110000111110001111100011100000111110000111100\necho $hash->toInt(); // 8680820757815655484\necho $hash->toBytes(); // \"\\x0F\\x07ƒƒ\\x03\\x0F\\x07\\x00\"\n```\n\nChoose your preference for storing your hashes in your database. If you want to reconstruct a `Hash` object from a previous calculated value, use:\n\n```php\n$hash = Hash::fromHex('7878787c7c707c3c');\n$hash = Hash::fromBin('0111100001111000011110000111110001111100011100000111110000111100');\n$hash = Hash::fromInt('8680820757815655484');\n```\n\nDemo\n----\n\nThese images are similar:\n\n![Equals1](https://raw.githubusercontent.com/jenssegers/imagehash/master/tests/images/forest/forest-high.jpg)\n![Equals2](https://raw.githubusercontent.com/jenssegers/imagehash/master/tests/images/forest/forest-copyright.jpg)\n\n\tImage 1 hash: 3c3e0e1a3a1e1e1e (0011110000111110000011100001101000111010000111100001111000011110)\n\tImage 2 hash: 3c3e0e3e3e1e1e1e (0011110000111110000011100011111000111110000111100001111000011110)\n\tHamming distance: 3\n\nThese images are different:\n\n![Equals1](https://raw.githubusercontent.com/jenssegers/imagehash/master/tests/images/office/tumblr_ndyfnr7lk21tubinno1_1280.jpg)\n![Equals2](https://raw.githubusercontent.com/jenssegers/imagehash/master/tests/images/office/tumblr_ndyfq386o41tubinno1_1280.jpg)\n\n\tImage 1 hash: 69684858535b7575 (0010100010101000101010001010100010101011001010110101011100110111)\n\tImage 2 hash: e1e1e2a7bbaf6faf (0111000011110000111100101101001101011011011101010011010101001111)\n\tHamming distance: 32\n\n## Security contact information\n\nTo report a security vulnerability, follow [these steps](https://tidelift.com/security).\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.908203125,
+          "content": "{\n    \"name\": \"jenssegers/imagehash\",\n    \"description\": \"Perceptual image hashing for PHP\",\n    \"keywords\": [\"imagehash\", \"perceptual\", \"hash\", \"dhash\", \"ahash\", \"phash\", \"image hash\"],\n    \"homepage\": \"https://github.com/jenssegers/imagehash\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Jens Segers\",\n            \"homepage\": \"https://jenssegers.com\"\n        },\n        {\n            \"name\": \"Kenneth Rapp\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.1\",\n        \"intervention/image\": \"^3.3\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^10\",\n        \"php-coveralls/php-coveralls\": \"^2.0\"\n    },\n    \"suggest\": {\n        \"ext-gmp\": \"GMP results in faster comparisons\",\n        \"ext-gd\": \"GD or ImageMagick is required\",\n        \"ext-imagick\": \"GD or ImageMagick is required\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Jenssegers\\\\ImageHash\\\\\": \"src\"\n        }\n    }\n}\n"
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.50390625,
+          "content": "version: '3'\n\nservices:\n\n  gd:\n    build:\n      context: .\n      dockerfile: docker/gd.Dockerfile\n    volumes:\n      - .:/code\n    working_dir: /code\n    command: ./vendor/bin/phpunit\n\n  imagick:\n    build:\n      context: .\n      dockerfile: docker/imagick.Dockerfile\n    volumes:\n      - .:/code\n    working_dir: /code\n    command: ./vendor/bin/phpunit\n\n  gmp:\n    build:\n      context: .\n      dockerfile: docker/gmp.Dockerfile\n    volumes:\n      - .:/code\n    working_dir: /code\n    command: ./vendor/bin/phpunit\n"
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.568359375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" backupGlobals=\"false\" bootstrap=\"tests/bootstrap.php\" colors=\"true\" processIsolation=\"false\" stopOnFailure=\"false\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/10.5/phpunit.xsd\" cacheDirectory=\".phpunit.cache\" backupStaticProperties=\"false\">\n  <testsuites>\n    <testsuite name=\"pHash\">\n      <directory>./tests/</directory>\n    </testsuite>\n  </testsuites>\n  <source>\n    <include>\n      <directory suffix=\".php\">src/</directory>\n    </include>\n  </source>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

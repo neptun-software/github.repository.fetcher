@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "timestamp": 1736711922640,
+    "page": 326,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/twig-bridge",
+      "stars": 2502,
+      "defaultBranch": "7.2",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "AppVariable.php",
+          "type": "blob",
+          "size": 5.876953125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Bridge\\Twig;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\RequestStack;\nuse Symfony\\Component\\HttpFoundation\\Session\\FlashBagAwareSessionInterface;\nuse Symfony\\Component\\HttpFoundation\\Session\\SessionInterface;\nuse Symfony\\Component\\Security\\Core\\Authentication\\Token\\Storage\\TokenStorageInterface;\nuse Symfony\\Component\\Security\\Core\\Authentication\\Token\\TokenInterface;\nuse Symfony\\Component\\Security\\Core\\User\\UserInterface;\nuse Symfony\\Component\\Translation\\LocaleSwitcher;\n\n/**\n * Exposes some Symfony parameters and services as an \"app\" global variable.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass AppVariable\n{\n    private TokenStorageInterface $tokenStorage;\n    private RequestStack $requestStack;\n    private string $environment;\n    private bool $debug;\n    private LocaleSwitcher $localeSwitcher;\n    private array $enabledLocales;\n\n    public function setTokenStorage(TokenStorageInterface $tokenStorage): void\n    {\n        $this->tokenStorage = $tokenStorage;\n    }\n\n    public function setRequestStack(RequestStack $requestStack): void\n    {\n        $this->requestStack = $requestStack;\n    }\n\n    public function setEnvironment(string $environment): void\n    {\n        $this->environment = $environment;\n    }\n\n    public function setDebug(bool $debug): void\n    {\n        $this->debug = $debug;\n    }\n\n    public function setLocaleSwitcher(LocaleSwitcher $localeSwitcher): void\n    {\n        $this->localeSwitcher = $localeSwitcher;\n    }\n\n    public function setEnabledLocales(array $enabledLocales): void\n    {\n        $this->enabledLocales = $enabledLocales;\n    }\n\n    /**\n     * Returns the current token.\n     *\n     * @throws \\RuntimeException When the TokenStorage is not available\n     */\n    public function getToken(): ?TokenInterface\n    {\n        if (!isset($this->tokenStorage)) {\n            throw new \\RuntimeException('The \"app.token\" variable is not available.');\n        }\n\n        return $this->tokenStorage->getToken();\n    }\n\n    /**\n     * Returns the current user.\n     *\n     * @see TokenInterface::getUser()\n     */\n    public function getUser(): ?UserInterface\n    {\n        if (!isset($this->tokenStorage)) {\n            throw new \\RuntimeException('The \"app.user\" variable is not available.');\n        }\n\n        return $this->tokenStorage->getToken()?->getUser();\n    }\n\n    /**\n     * Returns the current request.\n     */\n    public function getRequest(): ?Request\n    {\n        if (!isset($this->requestStack)) {\n            throw new \\RuntimeException('The \"app.request\" variable is not available.');\n        }\n\n        return $this->requestStack->getCurrentRequest();\n    }\n\n    /**\n     * Returns the current session.\n     */\n    public function getSession(): ?SessionInterface\n    {\n        if (!isset($this->requestStack)) {\n            throw new \\RuntimeException('The \"app.session\" variable is not available.');\n        }\n        $request = $this->getRequest();\n\n        return $request?->hasSession() ? $request->getSession() : null;\n    }\n\n    /**\n     * Returns the current app environment.\n     */\n    public function getEnvironment(): string\n    {\n        if (!isset($this->environment)) {\n            throw new \\RuntimeException('The \"app.environment\" variable is not available.');\n        }\n\n        return $this->environment;\n    }\n\n    /**\n     * Returns the current app debug mode.\n     */\n    public function getDebug(): bool\n    {\n        if (!isset($this->debug)) {\n            throw new \\RuntimeException('The \"app.debug\" variable is not available.');\n        }\n\n        return $this->debug;\n    }\n\n    public function getLocale(): string\n    {\n        if (!isset($this->localeSwitcher)) {\n            throw new \\RuntimeException('The \"app.locale\" variable is not available.');\n        }\n\n        return $this->localeSwitcher->getLocale();\n    }\n\n    public function getEnabled_locales(): array\n    {\n        if (!isset($this->enabledLocales)) {\n            throw new \\RuntimeException('The \"app.enabled_locales\" variable is not available.');\n        }\n\n        return $this->enabledLocales;\n    }\n\n    /**\n     * Returns some or all the existing flash messages:\n     *  * getFlashes() returns all the flash messages\n     *  * getFlashes('notice') returns a simple array with flash messages of that type\n     *  * getFlashes(['notice', 'error']) returns a nested array of type => messages.\n     */\n    public function getFlashes(string|array|null $types = null): array\n    {\n        try {\n            $session = $this->getSession();\n        } catch (\\RuntimeException) {\n            return [];\n        }\n\n        if (!$session instanceof FlashBagAwareSessionInterface) {\n            return [];\n        }\n\n        if (null === $types || '' === $types || [] === $types) {\n            return $session->getFlashBag()->all();\n        }\n\n        if (\\is_string($types)) {\n            return $session->getFlashBag()->get($types);\n        }\n\n        $result = [];\n        foreach ($types as $type) {\n            $result[$type] = $session->getFlashBag()->get($type);\n        }\n\n        return $result;\n    }\n\n    public function getCurrent_route(): ?string\n    {\n        if (!isset($this->requestStack)) {\n            throw new \\RuntimeException('The \"app.current_route\" variable is not available.');\n        }\n\n        return $this->getRequest()?->attributes->get('_route');\n    }\n\n    /**\n     * @return array<string, mixed>\n     */\n    public function getCurrent_route_parameters(): array\n    {\n        if (!isset($this->requestStack)) {\n            throw new \\RuntimeException('The \"app.current_route_parameters\" variable is not available.');\n        }\n\n        return $this->getRequest()?->attributes->get('_route_params') ?? [];\n    }\n}\n"
+        },
+        {
+          "name": "Attribute",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 7.181640625,
+          "content": "CHANGELOG\n=========\n\n7.2\n---\n\n * Deprecate passing a tag to the constructor of `FormThemeNode`\n\n7.1\n---\n\n * Add `emojify` Twig filter\n\n7.0\n---\n\n * Drop support for Twig 2\n\n6.4\n---\n\n * Allow an array to be passed as the first argument to the `importmap()` Twig function\n * Add `TemplatedEmail::locale()` to set the locale for the email rendering\n * Add `AppVariable::getEnabledLocales()` to retrieve the enabled locales\n * Add `impersonation_path()` and `impersonation_url()` Twig functions\n\n6.3\n---\n\n * Add `AppVariable::getLocale()` to retrieve the current locale when using the `LocaleSwitcher`\n\n6.2\n---\n\n * Add `form_label_content` and `form_help_content` block to form themes\n * Add `#[Template()]` to describe how to render arrays returned by controllers\n * Add support for toggle buttons in Bootstrap 5 form theme\n * Add `app.current_route` and `app.current_route_parameters` variables\n\n6.1\n---\n\n * Wrap help messages on form elements in `div` instead of `p`\n\n5.4\n---\n\n* Add `github` format & autodetection to render errors as annotations when\n  running the Twig linter command in a Github Actions environment.\n\n5.3\n---\n\n * Add a new `markAsPublic` method on `NotificationEmail` to change the `importance` context option to null after creation\n * Add a new `fragment_uri()` helper to generate the URI of a fragment\n * Add support of Bootstrap 5 for form theming\n * Add a new `serialize` filter to serialize objects using the Serializer component\n\n5.2.0\n-----\n\n * added the `impersonation_exit_url()` and `impersonation_exit_path()` functions. They return a URL that allows to switch back to the original user.\n * added the `workflow_transition()` function to easily retrieve a specific transition object\n * added support for translating `TranslatableInterface` objects\n * added the `t()` function to easily create `TranslatableMessage` objects\n * Added support for extracting messages from the `t()` function\n * Added `field_*` Twig functions to access string values from Form fields\n * changed the `importance` context option of `NotificationEmail` to allow `null`\n\n5.0.0\n-----\n\n * removed `TwigEngine` class, use `\\Twig\\Environment` instead.\n * removed `transChoice` filter and token\n * `HttpFoundationExtension` requires a `UrlHelper` on instantiation\n * removed support for implicit STDIN usage in the `lint:twig` command, use `lint:twig -` (append a dash) instead to make it explicit.\n * added form theme for Foundation 6\n * added support for Foundation 6 switches: add the `switch-input` class to the attributes of a `CheckboxType`\n\n4.4.0\n-----\n\n * added a new `TwigErrorRenderer` for `html` format, integrated with the `ErrorHandler` component\n * marked all classes extending twig as `@final`\n * deprecated to pass `$rootDir` and `$fileLinkFormatter` as 5th and 6th argument respectively to the\n   `DebugCommand::__construct()` method, swap the variables position.\n * the `LintCommand` lints all the templates stored in all configured Twig paths if none argument is provided\n * deprecated accepting STDIN implicitly when using the `lint:twig` command, use `lint:twig -` (append a dash) instead to make it explicit.\n * added `--show-deprecations` option to the `lint:twig` command\n * added support for Bootstrap4 switches: add the `switch-custom` class to the label attributes of a `CheckboxType`\n * Marked the `TwigDataCollector` class as `@final`.\n\n4.3.0\n-----\n\n * added the `form_parent()` function that allows to reliably retrieve the parent form in Twig templates\n * added the `workflow_transition_blockers()` function\n * deprecated the `$requestStack` and `$requestContext` arguments of the\n   `HttpFoundationExtension`, pass a `Symfony\\Component\\HttpFoundation\\UrlHelper`\n   instance as the only argument instead\n\n4.2.0\n-----\n\n * add bundle name suggestion on wrongly overridden templates paths\n * added `name` argument in `debug:twig` command and changed `filter` argument as `--filter` option\n * deprecated the `transchoice` tag and filter, use the `trans` ones instead with a `%count%` parameter\n\n4.1.0\n-----\n\n * add a `workflow_metadata` function\n\n3.4.0\n-----\n\n * added an `only` keyword to `form_theme` tag to disable usage of default themes when rendering a form\n * deprecated `Symfony\\Bridge\\Twig\\Form\\TwigRenderer`\n * deprecated `DebugCommand::set/getTwigEnvironment`. Pass an instance of\n   `Twig\\Environment` as first argument  of the constructor instead\n * deprecated `LintCommand::set/getTwigEnvironment`. Pass an instance of\n   `Twig\\Environment` as first argument of the constructor instead\n\n3.3.0\n-----\n\n * added a `workflow_has_marked_place` function\n * added a `workflow_marked_places` function\n\n3.2.0\n-----\n\n * added `AppVariable::getToken()`\n * Deprecated the possibility to inject the Form `TwigRenderer` into the `FormExtension`.\n * [BC BREAK] Registering the `FormExtension` without configuring a runtime loader for the `TwigRenderer`\n   doesn't work anymore.\n\n   Before:\n\n   ```php\n   use Symfony\\Bridge\\Twig\\Extension\\FormExtension;\n   use Symfony\\Bridge\\Twig\\Form\\TwigRenderer;\n   use Symfony\\Bridge\\Twig\\Form\\TwigRendererEngine;\n\n   // ...\n   $rendererEngine = new TwigRendererEngine(['form_div_layout.html.twig']);\n   $rendererEngine->setEnvironment($twig);\n   $twig->addExtension(new FormExtension(new TwigRenderer($rendererEngine, $csrfTokenManager)));\n   ```\n\n   After:\n\n   ```php\n   // ...\n   $rendererEngine = new TwigRendererEngine(['form_div_layout.html.twig'], $twig);\n   // require Twig 1.30+\n   $twig->addRuntimeLoader(new \\Twig\\RuntimeLoader\\FactoryRuntimeLoader([\n       TwigRenderer::class => function () use ($rendererEngine, $csrfTokenManager) {\n           return new TwigRenderer($rendererEngine, $csrfTokenManager);\n       },\n   ]));\n   $twig->addExtension(new FormExtension());\n   ```\n * Deprecated the `TwigRendererEngineInterface` interface.\n * added WorkflowExtension (provides `workflow_can` and `workflow_transitions`)\n\n2.7.0\n-----\n\n * added LogoutUrlExtension (provides `logout_url` and `logout_path`)\n * added an HttpFoundation extension (provides the `absolute_url` and the `relative_path` functions)\n * added AssetExtension (provides the `asset` and `asset_version` functions)\n * Added possibility to extract translation messages from a file or files besides extracting from a directory\n\n2.5.0\n-----\n\n * moved command `twig:lint` from `TwigBundle`\n\n2.4.0\n-----\n\n * added stopwatch tag to time templates with the WebProfilerBundle\n\n2.3.0\n-----\n\n * added helpers form(), form_start() and form_end()\n * deprecated form_enctype() in favor of form_start()\n\n2.2.0\n-----\n\n * added a `controller` function to help generating controller references\n * added a `render_esi` and a `render_hinclude` function\n * [BC BREAK] restricted the `render` tag to only accept URIs or ControllerReference instances (the signature changed)\n * added a `render` function to render a request\n * The `app` global variable is now injected even when using the twig service directly.\n * Added an optional parameter to the `path` and `url` function which allows to generate\n   relative paths (e.g. \"../parent-file\") and scheme-relative URLs (e.g. \"//example.com/dir/file\").\n\n2.1.0\n-----\n\n * added global variables access in a form theme\n * added TwigEngine\n * added TwigExtractor\n * added a csrf_token function\n * added a way to specify a default domain for a Twig template (via the\n   'trans_default_domain' tag)\n"
+        },
+        {
+          "name": "Command",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "DataCollector",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ErrorRenderer",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "EventListener",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Extension",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Form",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2004-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Mime",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Node",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "NodeVisitor",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.423828125,
+          "content": "Twig Bridge\n===========\n\nThe Twig bridge provides integration for [Twig](https://twig.symfony.com/) with\nvarious Symfony components.\n\nResources\n---------\n\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n"
+        },
+        {
+          "name": "Resources",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "TokenParser",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Translation",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "UndefinedCallableHandler.php",
+          "type": "blob",
+          "size": 4.24609375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Bridge\\Twig;\n\nuse Composer\\InstalledVersions;\nuse Symfony\\Bundle\\FullStack;\nuse Twig\\Error\\SyntaxError;\nuse Twig\\TwigFilter;\nuse Twig\\TwigFunction;\n\n/**\n * @internal\n */\nclass UndefinedCallableHandler\n{\n    private const FILTER_COMPONENTS = [\n        'emojify' => 'emoji',\n        'humanize' => 'form',\n        'form_encode_currency' => 'form',\n        'serialize' => 'serializer',\n        'trans' => 'translation',\n        'sanitize_html' => 'html-sanitizer',\n        'yaml_encode' => 'yaml',\n        'yaml_dump' => 'yaml',\n    ];\n\n    private const FUNCTION_COMPONENTS = [\n        'asset' => 'asset',\n        'asset_version' => 'asset',\n        'importmap' => 'asset-mapper',\n        'dump' => 'debug-bundle',\n        'encore_entry_link_tags' => 'webpack-encore-bundle',\n        'encore_entry_script_tags' => 'webpack-encore-bundle',\n        'expression' => 'expression-language',\n        'form_widget' => 'form',\n        'form_errors' => 'form',\n        'form_label' => 'form',\n        'form_help' => 'form',\n        'form_row' => 'form',\n        'form_rest' => 'form',\n        'form' => 'form',\n        'form_start' => 'form',\n        'form_end' => 'form',\n        'csrf_token' => 'form',\n        'form_parent' => 'form',\n        'field_name' => 'form',\n        'field_value' => 'form',\n        'field_label' => 'form',\n        'field_help' => 'form',\n        'field_errors' => 'form',\n        'field_choices' => 'form',\n        'logout_url' => 'security-http',\n        'logout_path' => 'security-http',\n        'is_granted' => 'security-core',\n        'impersonation_path' => 'security-http',\n        'impersonation_url' => 'security-http',\n        'impersonation_exit_path' => 'security-http',\n        'impersonation_exit_url' => 'security-http',\n        't' => 'translation',\n        'link' => 'web-link',\n        'preload' => 'web-link',\n        'dns_prefetch' => 'web-link',\n        'preconnect' => 'web-link',\n        'prefetch' => 'web-link',\n        'prerender' => 'web-link',\n        'workflow_can' => 'workflow',\n        'workflow_transitions' => 'workflow',\n        'workflow_transition' => 'workflow',\n        'workflow_has_marked_place' => 'workflow',\n        'workflow_marked_places' => 'workflow',\n        'workflow_metadata' => 'workflow',\n        'workflow_transition_blockers' => 'workflow',\n    ];\n\n    private const FULL_STACK_ENABLE = [\n        'html-sanitizer' => 'enable \"framework.html_sanitizer\"',\n        'form' => 'enable \"framework.form\"',\n        'security-core' => 'add the \"SecurityBundle\"',\n        'security-http' => 'add the \"SecurityBundle\"',\n        'web-link' => 'enable \"framework.web_link\"',\n        'workflow' => 'enable \"framework.workflows\"',\n    ];\n\n    public static function onUndefinedFilter(string $name): TwigFilter|false\n    {\n        if (!isset(self::FILTER_COMPONENTS[$name])) {\n            return false;\n        }\n\n        throw new SyntaxError(self::onUndefined($name, 'filter', self::FILTER_COMPONENTS[$name]));\n    }\n\n    public static function onUndefinedFunction(string $name): TwigFunction|false\n    {\n        if (!isset(self::FUNCTION_COMPONENTS[$name])) {\n            return false;\n        }\n\n        if ('webpack-encore-bundle' === self::FUNCTION_COMPONENTS[$name]) {\n            return new TwigFunction($name, static fn () => '');\n        }\n\n        throw new SyntaxError(self::onUndefined($name, 'function', self::FUNCTION_COMPONENTS[$name]));\n    }\n\n    private static function onUndefined(string $name, string $type, string $component): string\n    {\n        if (class_exists(FullStack::class) && isset(self::FULL_STACK_ENABLE[$component])) {\n            return \\sprintf('Did you forget to %s? Unknown %s \"%s\".', self::FULL_STACK_ENABLE[$component], $type, $name);\n        }\n\n        $missingPackage = 'symfony/'.$component;\n\n        if (class_exists(InstalledVersions::class) && InstalledVersions::isInstalled($missingPackage)) {\n            $missingPackage = 'symfony/twig-bundle';\n        }\n\n        return \\sprintf('Did you forget to run \"composer require %s\"? Unknown %s \"%s\".', $missingPackage, $type, $name);\n    }\n}\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 2.6240234375,
+          "content": "{\n    \"name\": \"symfony/twig-bridge\",\n    \"type\": \"symfony-bridge\",\n    \"description\": \"Provides integration for Twig with various Symfony components\",\n    \"keywords\": [],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Fabien Potencier\",\n            \"email\": \"fabien@symfony.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=8.2\",\n        \"symfony/deprecation-contracts\": \"^2.5|^3\",\n        \"symfony/translation-contracts\": \"^2.5|^3\",\n        \"twig/twig\": \"^3.12\"\n    },\n    \"require-dev\": {\n        \"egulias/email-validator\": \"^2.1.10|^3|^4\",\n        \"league/html-to-markdown\": \"^5.0\",\n        \"phpdocumentor/reflection-docblock\": \"^3.0|^4.0|^5.0\",\n        \"symfony/asset\": \"^6.4|^7.0\",\n        \"symfony/asset-mapper\": \"^6.4|^7.0\",\n        \"symfony/dependency-injection\": \"^6.4|^7.0\",\n        \"symfony/emoji\": \"^7.1\",\n        \"symfony/finder\": \"^6.4|^7.0\",\n        \"symfony/form\": \"^6.4|^7.0\",\n        \"symfony/html-sanitizer\": \"^6.4|^7.0\",\n        \"symfony/http-foundation\": \"^6.4|^7.0\",\n        \"symfony/http-kernel\": \"^6.4|^7.0\",\n        \"symfony/intl\": \"^6.4|^7.0\",\n        \"symfony/mime\": \"^6.4|^7.0\",\n        \"symfony/polyfill-intl-icu\": \"~1.0\",\n        \"symfony/property-info\": \"^6.4|^7.0\",\n        \"symfony/routing\": \"^6.4|^7.0\",\n        \"symfony/translation\": \"^6.4|^7.0\",\n        \"symfony/yaml\": \"^6.4|^7.0\",\n        \"symfony/security-acl\": \"^2.8|^3.0\",\n        \"symfony/security-core\": \"^6.4|^7.0\",\n        \"symfony/security-csrf\": \"^6.4|^7.0\",\n        \"symfony/security-http\": \"^6.4|^7.0\",\n        \"symfony/serializer\": \"^6.4.3|^7.0.3\",\n        \"symfony/stopwatch\": \"^6.4|^7.0\",\n        \"symfony/console\": \"^6.4|^7.0\",\n        \"symfony/expression-language\": \"^6.4|^7.0\",\n        \"symfony/web-link\": \"^6.4|^7.0\",\n        \"symfony/workflow\": \"^6.4|^7.0\",\n        \"twig/cssinliner-extra\": \"^2.12|^3\",\n        \"twig/inky-extra\": \"^2.12|^3\",\n        \"twig/markdown-extra\": \"^2.12|^3\"\n    },\n    \"conflict\": {\n        \"phpdocumentor/reflection-docblock\": \"<3.2.2\",\n        \"phpdocumentor/type-resolver\": \"<1.4.0\",\n        \"symfony/console\": \"<6.4\",\n        \"symfony/form\": \"<6.4\",\n        \"symfony/http-foundation\": \"<6.4\",\n        \"symfony/http-kernel\": \"<6.4\",\n        \"symfony/mime\": \"<6.4\",\n        \"symfony/serializer\": \"<6.4\",\n        \"symfony/translation\": \"<6.4\",\n        \"symfony/workflow\": \"<6.4\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Bridge\\\\Twig\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.8388671875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/9.3/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony Twig Bridge Test Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <coverage>\n        <include>\n            <directory>./</directory>\n        </include>\n        <exclude>\n            <directory>./Resources</directory>\n            <directory>./Tests</directory>\n            <directory>./vendor</directory>\n        </exclude>\n    </coverage>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

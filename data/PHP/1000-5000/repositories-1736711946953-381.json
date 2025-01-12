@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "timestamp": 1736711946953,
+    "page": 381,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "walkor/phpsocket.io",
+      "stars": 2308,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.146484375,
+          "content": "/.*             export-ignore\n/docs/          export-ignore\n/examples/      export-ignore\n/tests/         export-ignore\n/phpcs.xml      export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.091796875,
+          "content": ".buildpath\n.project\n.settings/org.eclipse.php.core.prefs\nvendor\nexamples/vendor\ncomposer.lock\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.666015625,
+          "content": "# phpsocket.io\nA server side alternative implementation of [socket.io](https://github.com/socketio/socket.io) in PHP based on [Workerman](https://github.com/walkor/Workerman).<br>\n\n# Notice\nOnly support socket.io >= v1.3.0 and <= v2.x <br>\nThis project is just translate socket.io by [workerman](https://github.com/walkor/Workerman).<br>\nMore api just see [https://socket.io/docs/v2/server-api/](https://socket.io/docs/v2/server-api/)\n\n# Install\ncomposer require workerman/phpsocket.io\n\n# Examples\n## Simple chat\nstart.php\n```php\n\nuse Workerman\\Worker;\nuse PHPSocketIO\\SocketIO;\nrequire_once __DIR__ . '/vendor/autoload.php';\n\n// Listen port 2021 for socket.io client\n$io = new SocketIO(2021);\n$io->on('connection', function ($socket) use ($io) {\n    $socket->on('chat message', function ($msg) use ($io) {\n        $io->emit('chat message', $msg);\n    });\n});\n\nWorker::runAll();\n```\n\n## Another chat demo\n\nhttps://github.com/walkor/phpsocket.io/blob/master/examples/chat/start_io.php\n```php\n\nuse Workerman\\Worker;\nuse PHPSocketIO\\SocketIO;\nrequire_once __DIR__ . '/vendor/autoload.php';\n\n// Listen port 2020 for socket.io client\n$io = new SocketIO(2020);\n$io->on('connection', function ($socket) {\n    $socket->addedUser = false;\n\n    // When the client emits 'new message', this listens and executes\n    $socket->on('new message', function ($data) use ($socket) {\n        // We tell the client to execute 'new message'\n        $socket->broadcast->emit('new message', array(\n            'username' => $socket->username,\n            'message' => $data\n        ));\n    });\n\n    // When the client emits 'add user', this listens and executes\n    $socket->on('add user', function ($username) use ($socket) {\n        global $usernames, $numUsers;\n\n        // We store the username in the socket session for this client\n        $socket->username = $username;\n        // Add the client's username to the global list\n        $usernames[$username] = $username;\n        ++$numUsers;\n\n        $socket->addedUser = true;\n        $socket->emit('login', array( \n            'numUsers' => $numUsers\n        ));\n\n        // echo globally (all clients) that a person has connected\n        $socket->broadcast->emit('user joined', array(\n            'username' => $socket->username,\n            'numUsers' => $numUsers\n        ));\n    });\n\n    // When the client emits 'typing', we broadcast it to others\n    $socket->on('typing', function () use ($socket) {\n        $socket->broadcast->emit('typing', array(\n            'username' => $socket->username\n        ));\n    });\n\n    // When the client emits 'stop typing', we broadcast it to others\n    $socket->on('stop typing', function () use ($socket) {\n        $socket->broadcast->emit('stop typing', array(\n            'username' => $socket->username\n        ));\n    });\n\n    // When the user disconnects, perform this\n    $socket->on('disconnect', function () use ($socket) {\n        global $usernames, $numUsers;\n\n        // Remove the username from global usernames list\n        if ($socket->addedUser) {\n            unset($usernames[$socket->username]);\n            --$numUsers;\n\n            // echo globally that this client has left\n            $socket->broadcast->emit('user left', array(\n               'username' => $socket->username,\n               'numUsers' => $numUsers\n            ));\n        }\n   });\n});\n\nWorker::runAll();\n```\n\n## Enable SSL for https \n**```(phpsocket.io>=1.1.1 && workerman>=3.3.7 required)```**\n\nstart.php\n```php\n<?php\n\nuse Workerman\\Worker;\nuse PHPSocketIO\\SocketIO;\n\nrequire_once __DIR__ . '/vendor/autoload.php';\n\n// SSL context\n$context = array(\n    'ssl' => array(\n        'local_cert'  => '/your/path/of/server.pem',\n        'local_pk'    => '/your/path/of/server.key',\n        'verify_peer' => false\n    )\n);\n$io = new SocketIO(2021, $context);\n\n$io->on('connection', function ($connection) use ($io) {\n    echo \"New connection coming\\n\";\n});\n\nWorker::runAll();\n```\n\n## Acknowledgement callback\n```php\n\nuse Workerman\\Worker;\nuse PHPSocketIO\\SocketIO;\n\nrequire_once __DIR__ . '/vendor/autoload.php';\n\n$io = new SocketIO(2021);\n\n$io->on('connection', function ($connection) use ($io) {\n    $socket->on('message with ack', function ($data, $callback) use ($socket, $io) {\n        // acknowledgement callback\n        if ($callback && is_callable($callback)) {\n            $callback(0);\n        }\n    });\n});\n\nWorker::runAll();\n```\n\n# 手册\n[中文手册](https://github.com/walkor/phpsocket.io/tree/master/docs/zh)\n\n# Livedemo\n[chat demo](http://demos.workerman.net/phpsocketio-chat/)\n\n# Run chat example\ncd examples/chat\n\n## Start\n```php start.php start``` for debug mode\n\n```php start.php start -d ``` for daemon mode\n\n## Stop\n```php start.php stop```\n\n## Status\n```php start.php status```\n\n# License\nMIT\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.6083984375,
+          "content": "{\n  \"name\": \"workerman/phpsocket.io\",\n  \"description\": \"A server side alternative implementation of socket.io in PHP based on Workerman\",\n  \"type\": \"library\",\n  \"keywords\": [\n    \"socket.io\",\n    \"phpsocket.io\",\n    \"workerman\",\n    \"sockets\",\n    \"async\",\n    \"stream\",\n    \"server\",\n    \"non-blocking\"\n  ],\n  \"homepage\": \"https://www.workerman.net\",\n  \"license\": \"MIT\",\n  \"require\": {\n    \"workerman/workerman\": \"^4.0.0\",\n    \"workerman/channel\": \">=1.0.0\",\n    \"ext-json\": \"*\"\n  },\n  \"autoload\": {\n    \"psr-4\": {\n      \"PHPSocketIO\\\\\": \"./src\"\n    }\n  },\n  \"require-dev\": {\n    \"squizlabs/php_codesniffer\": \"^3.7\"\n  }\n}\n"
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpcs.xml",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "<?xml version=\"1.0\"?>\n<ruleset name=\"PHPSocket.io Coding Standard\">\n    <description>PHPSocket.io Coding Standard</description>\n\n    <!-- display progress -->\n    <arg value=\"p\"/>\n    <arg name=\"colors\"/>\n\n    <exclude-pattern>*/tests/*</exclude-pattern>\n    <exclude-pattern>*/vendor/*</exclude-pattern>\n    <exclude-pattern>*/examples/*</exclude-pattern>\n\n    <!-- inherit rules from: -->\n    <rule ref=\"PSR2\"/>\n    <rule ref=\"Generic.Files.LineLength\">\n        <properties>\n            <property name=\"lineLimit\" value=\"200\"/>\n            <property name=\"absoluteLineLimit\" value=\"0\"/>\n        </properties>\n    </rule>\n    <rule ref=\"Generic.Arrays.DisallowLongArraySyntax\"/>\n    <rule ref=\"Generic.Formatting.SpaceAfterNot\"/>\n    <rule ref=\"Squiz.WhiteSpace.OperatorSpacing\">\n        <properties>\n            <property name=\"ignoreNewlines\" value=\"true\"/>\n        </properties>\n    </rule>\n    <rule ref=\"Squiz.WhiteSpace.SuperfluousWhitespace\">\n        <properties>\n            <property name=\"ignoreBlankLines\" value=\"false\"/>\n        </properties>\n    </rule>\n</ruleset>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "metadata": {
+    "timestamp": 1736711995193,
+    "page": 482,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "humanmade/S3-Uploads",
+      "stars": 1967,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1220703125,
+          "content": "/tests export-ignore\n/bin export-ignore\n/.gitignore export-ignore\n/.travis.yml export-ignore\n/phpunit.xml.dist export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.03125,
+          "content": ".DS_Store\n.idea/\n*.phar\nvendor/\n"
+        },
+        {
+          "name": ".phpcsignore",
+          "type": "blob",
+          "size": 0.01171875,
+          "content": "lib/\npsalm/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.34375,
+          "content": "# Travis CI Configuration File\n\nservices:\n  - docker\n\ncache:\n  timeout: 1000\n  directories:\n    - vendor\n\nnotifications:\n  email: false\n\nbefore_script:\n  - docker run --rm -v $PWD:/code --entrypoint='' humanmade/plugin-tester composer install\n\nscript:\n  - ./tests/run-tests.sh --coverage-clover=coverage.xml\n  - bash <(curl -s https://codecov.io/bash)\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.3056640625,
+          "content": "# Changelog\n\n## 2.1.0-RC2\n\n- Remove `lib/aws-sdk` from repository [#305](https://github.com/humanmade/S3-Uploads/pull/305)\n- Fix delete files on delete attachment [#307](https://github.com/humanmade/S3-Uploads/pull/307)\n- Fix Imagick with s3 compatibility [#306](https://github.com/humanmade/S3-Uploads/pull/306)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.982421875,
+          "content": "<table width=\"100%\">\n\t<tr>\n\t\t<td align=\"left\" width=\"70\">\n\t\t\t<strong>S3 Uploads</strong><br />\n\t\t\tLightweight \"drop-in\" for storing WordPress uploads on Amazon S3 instead of the local filesystem.\n\t\t</td>\n\t\t<td align=\"right\" width=\"20%\">\n\t\t\t<a href=\"https://shepherd.dev/github/humanmade/S3-Uploads/\">\n\t\t\t\t<img src=\"https://shepherd.dev/github/humanmade/S3-Uploads/coverage.svg\" alt=\"Psalm coverage\">\n\t\t\t</a>\n\t\t\t<a href=\"https://travis-ci.com/humanmade/S3-Uploads\">\n\t\t\t\t<img src=\"https://travis-ci.com/humanmade/S3-Uploads.svg?branch=master\" alt=\"Build status\">\n\t\t\t</a>\n\t\t\t<a href=\"http://codecov.io/github/humanmade/S3-Uploads?branch=master\">\n\t\t\t\t<img src=\"http://codecov.io/github/humanmade/S3-Uploads/coverage.svg?branch=master\" alt=\"Coverage via codecov.io\" />\n\t\t\t</a>\n\t\t</td>\n\t</tr>\n\t<tr>\n\t\t<td>\n\t\t\tA <strong><a href=\"https://hmn.md/\">Human Made</a></strong> project. Maintained by @joehoyle.\n\t\t</td>\n\t\t<td align=\"center\">\n\t\t\t<img src=\"https://humanmade.com/content/themes/hmnmd/assets/images/hm-logo.svg\" width=\"100\" />\n\t\t</td>\n\t</tr>\n</table>\n\nS3 Uploads is a WordPress plugin to store uploads on S3. S3 Uploads aims to be a lightweight \"drop-in\" for storing uploads on Amazon S3 instead of the local filesystem.\n\nIt's focused on providing a highly robust S3 interface with no \"bells and whistles\", WP-Admin UI or much otherwise. It comes with some helpful WP-CLI commands for generating IAM users, listing files on S3 and Migrating your existing library to S3.\n\n## Requirements\n\n- PHP >= 7.1\n- WordPress >= 5.3\n\n## Getting Set Up\n\nS3 Uploads requires installation via Composer:\n\n```\ncomposer require humanmade/s3-uploads\n```\n\n**Note:** [Composer's autoloader](https://getcomposer.org/doc/01-basic-usage.md#autoloading) must be loaded before S3 Uploads is loaded. We recommend loading it in your `wp-config.php` before `wp-settings.php` is loaded as shown below.\n\n```php\nrequire_once __DIR__ . '/vendor/autoload.php';\n```\n\n## Configuration\n\nOnce you've installed the plugin, add the following constants to your `wp-config.php`:\n\n```PHP\ndefine( 'S3_UPLOADS_BUCKET', 'my-bucket' );\ndefine( 'S3_UPLOADS_REGION', '' ); // the s3 bucket region (excluding the rest of the URL)\n\n// You can set key and secret directly:\ndefine( 'S3_UPLOADS_KEY', '' );\ndefine( 'S3_UPLOADS_SECRET', '' );\n\n// Or if using IAM instance profiles, you can use the instance's credentials:\ndefine( 'S3_UPLOADS_USE_INSTANCE_PROFILE', true );\n```\nPlease refer to this region list http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region for the S3_UPLOADS_REGION values.\n\nUse of path prefix after the bucket name is allowed and is optional. For example, if you want to upload all files to 'my-folder' inside a bucket called 'my-bucket', you can use:\n\n```PHP\ndefine( 'S3_UPLOADS_BUCKET', 'my-bucket/my-folder' );\n```\n\nYou must then enable the plugin. To do this via WP-CLI use command:\n\n```\nwp plugin activate S3-Uploads\n```\n\nThe plugin name must match the directory you have cloned S3 Uploads into;\nIf you're using Composer, use\n```\nwp plugin activate s3-uploads\n```\n\n\nThe next thing that you should do is to verify your setup. You can do this using the `verify` command\nlike so:\n\n```\nwp s3-uploads verify\n```\n\nYou will need to create your IAM user yourself, or attach the necessary permissions to an existing user, you can output the policy via `wp s3-uploads generate-iam-policy`\n\n\n## Listing files on S3\n\nS3-Uploads comes with a WP-CLI command for listing files in the S3 bucket for debugging etc.\n\n```\nwp s3-uploads ls [<path>]\n```\n\n## Uploading files to S3\n\nIf you have an existing media library with attachment files, use the below command to copy them all to S3 from local disk.\n\n```\nwp s3-uploads upload-directory <from> <to> [--verbose]\n```\n\nFor example, to migrate your whole uploads directory to S3, you'd run:\n\n```\nwp s3-uploads upload-directory /path/to/uploads/ uploads\n```\n\nThere is also an all purpose `cp` command for arbitrary copying to and from S3.\n\n```\nwp s3-uploads cp <from> <to>\n```\n\nNote: as either `<from>` or `<to>` can be S3 or local locations, you must specify the full S3 location via `s3://mybucket/mydirectory` for example `cp ./test.txt s3://mybucket/test.txt`.\n\n## Private Uploads\n\nWordPress (and therefor S3 Uploads) default behaviour is that all uploaded media files are publicly accessible. In certain cases which may not be desireable. S3 Uploads supports setting S3 Objects to a `private` ACL and providing temporarily signed URLs for all files that are marked as private.\n\nS3 Uploads does not make assumptions or provide UI for marking attachments as private, instead you should integrate the `s3_uploads_is_attachment_private` WordPress filter to control the behaviour. For example, to mark _all_ attachments as private:\n\n```php\nadd_filter( 's3_uploads_is_attachment_private', '__return_true' );\n```\n\nPrivate uploads can be transitioned to public by calling `S3_Uploads::set_attachment_files_acl( $id, 'public-read' )` or vica-versa. For example:\n\n```php\nS3_Uploads::get_instance()->set_attachment_files_acl( 15, 'public-read' );\n```\n\nThe default expiry for all private file URLs is 6 hours. You can modify this by using the `s3_uploads_private_attachment_url_expiry` WordPress filter. The value can be any string interpreted by `strtotime`. For example:\n\n```php\nadd_filter( 's3_uploads_private_attachment_url_expiry', function ( $expiry ) {\n\treturn '+1 hour';\n} );\n```\n\n## Cache Control\n\nYou can define the default HTTP `Cache-Control` header for uploaded media using the\nfollowing constant:\n\n```PHP\ndefine( 'S3_UPLOADS_HTTP_CACHE_CONTROL', 30 * 24 * 60 * 60 );\n\t// will expire in 30 days time\n```\n\nYou can also configure the `Expires` header using the `S3_UPLOADS_HTTP_EXPIRES` constant\nFor instance if you wanted to set an asset to effectively not expire, you could\nset the Expires header way off in the future.  For example:\n\n```PHP\ndefine( 'S3_UPLOADS_HTTP_EXPIRES', gmdate( 'D, d M Y H:i:s', time() + (10 * 365 * 24 * 60 * 60) ) .' GMT' );\n\t// will expire in 10 years time\n```\n\n## Default Behaviour\n\nAs S3 Uploads is a plug and play plugin, activating it will start rewriting image URLs to S3, and also put\nnew uploads on S3. Sometimes this isn't required behaviour as a site owner may want to upload a large\namount of media to S3 using the `wp-cli` commands before enabling S3 Uploads to direct all uploads requests\nto S3. In this case one can define the `S3_UPLOADS_AUTOENABLE` to `false`. For example, place the following\nin your `wp-config.php`:\n\n```PHP\ndefine( 'S3_UPLOADS_AUTOENABLE', false );\n```\n\nTo then enable S3 Uploads rewriting, use the wp-cli command: `wp s3-uploads enable` / `wp s3-uploads disable`\nto toggle the behaviour.\n\n## URL Rewrites\n\nBy default, S3 Uploads will use the canonical S3 URIs for referencing the uploads, i.e. `[bucket name].s3.amazonaws.com/uploads/[file path]`. If you want to use another URL to serve the images from (for instance, if you [wish to use S3 as an origin for CloudFlare](https://support.cloudflare.com/hc/en-us/articles/200168926-How-do-I-use-CloudFlare-with-Amazon-s-S3-Service-)), you should define `S3_UPLOADS_BUCKET_URL` in your `wp-config.php`:\n\n```PHP\n// Define the base bucket URL (without trailing slash)\ndefine( 'S3_UPLOADS_BUCKET_URL', 'https://your.origin.url.example/path' );\n```\nS3 Uploads' URL rewriting feature can be disabled if the current website does not require it, nginx proxy to s3 etc. In this case the plugin will only upload files to the S3 bucket.\n```PHP\n// disable URL rewriting alltogether\ndefine( 'S3_UPLOADS_DISABLE_REPLACE_UPLOAD_URL', true );\n```\n\n## S3 Object Permissions\n\nThe object permission of files uploaded to S3 by this plugin can be controlled by setting the `S3_UPLOADS_OBJECT_ACL`\nconstant. The default setting if not specified is `public-read` to allow objects to be read by anyone. If you don't\nwant the uploads to be publicly readable then you can define `S3_UPLOADS_OBJECT_ACL` as one of `private` or `authenticated-read`\nin you wp-config file:\n\n```PHP\n// Set the S3 object permission to private\ndefine('S3_UPLOADS_OBJECT_ACL', 'private');\n```\n\nFor more information on S3 permissions please see the Amazon S3 permissions documentation.\n\n## Custom Endpoints\n\nDepending on your requirements you may wish to use an alternative S3 compatible object storage system such as Minio, Ceph,\nDigital Ocean Spaces, Scaleway and others.\n\nYou can configure the endpoint by adding the following code to a file in the `wp-content/mu-plugins/` directory, for example `wp-content/mu-plugins/s3-endpoint.php`:\n\n```php\n<?php\n// Filter S3 Uploads params.\nadd_filter( 's3_uploads_s3_client_params', function ( $params ) {\n\t$params['endpoint'] = 'https://your.endpoint.com';\n\t$params['use_path_style_endpoint'] = true;\n\t$params['debug'] = false; // Set to true if uploads are failing.\n\treturn $params;\n} );\n```\n\n## Temporary Session Tokens\n\nIf your S3 access is configured to require a temporary session token in addition to the access key and secret, you should configure the credentials using the following code:\n\n```php\n// Filter S3 Uploads params.\nadd_filter( 's3_uploads_s3_client_params', function ( $params ) {\n\t$params['credentials']['token'] = 'your session token here';\n\treturn $params;\n} );\n```\n\n## Offline Development\n\nWhile it's possible to use S3 Uploads for local development (this is actually a nice way to not have to sync all uploads from production to development),\nif you want to develop offline you have a couple of options.\n\n1. Just disable the S3 Uploads plugin in your development environment.\n2. Define the `S3_UPLOADS_USE_LOCAL` constant with the plugin active.\n\nOption 2 will allow you to run the S3 Uploads plugin for production parity purposes, it will essentially mock\nAmazon S3 with a local stream wrapper and actually store the uploads in your WP Upload Dir `/s3/`.\n\n## Credits\n\nCreated by Human Made for high volume and large-scale sites. We run S3 Uploads on sites with millions of monthly page views, and thousands of sites.\n\nWritten and maintained by [Joe Hoyle](https://github.com/joehoyle). Thanks to all our [contributors](https://github.com/humanmade/S3-Uploads/graphs/contributors).\n\nInterested in joining in on the fun? [Join us, and become human!](https://hmn.md/is/hiring/)\n"
+        },
+        {
+          "name": "codecov.yml",
+          "type": "blob",
+          "size": 0.0146484375,
+          "content": "comment: false\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.8603515625,
+          "content": "{\n\t\"name\": \"humanmade/s3-uploads\",\n\t\"description\": \"WordPress plugin to store uploads on S3\",\n\t\"homepage\": \"https://github.com/humanmade/S3-Uploads\",\n\t\"keywords\": [\n\t\t\"wordpress\"\n\t],\n\t\"license\": \"GPL-2.0+\",\n\t\"autoload\": {\n\t\t\"classmap\": [ \"./inc\" ]\n\t},\n\t\"authors\": [\n\t\t{\n\t\t\t\"name\": \"Human Made\",\n\t\t\t\"homepage\": \"https://humanmade.com/\"\n\t\t}\n\t],\n\t\"support\": {\n\t\t\t\"issues\": \"https://github.com/humanmade/s3-uploads/issues\",\n\t\t\t\"source\": \"https://github.com/humanmade/s3-uploads\"\n\t},\n\t\"type\": \"wordpress-plugin\",\n\t\"require\": {\n\t\t\"composer/installers\": \"~1.0 || ^2.0\",\n\t\t\"aws/aws-sdk-php\": \"~3.18\"\n\t},\n\t\"require-dev\": {\n\t\t\"phpunit/phpunit\": \"7.5\",\n\t\t\"pcov/clobber\": \"^2.0\",\n\t\t\"humanmade/psalm-plugin-wordpress\": \"^1.0\"\n\t},\n\t\"scripts\": {\n\t\t\"test\": \"./tests/run-tests.sh\",\n\t\t\"check-types\": \"./vendor/bin/psalm\"\n\t},\n\t\"config\": {\n\t\t\"allow-plugins\": {\n\t\t\t\"composer/installers\": true\n\t\t}\n\t}\n}\n"
+        },
+        {
+          "name": "inc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.634765625,
+          "content": "<phpunit\n\tbootstrap=\"tests/bootstrap.php\"\n\tbackupGlobals=\"false\"\n\tcolors=\"true\"\n\tconvertErrorsToExceptions=\"true\"\n\tconvertNoticesToExceptions=\"true\"\n\tconvertWarningsToExceptions=\"true\"\n\t>\n\t<testsuites>\n\t\t\t<!-- Default test suite to run all tests -->\n\t\t\t<testsuite name=\"S3_Uploads\">\n\t\t\t\t\t<directory prefix=\"test-\" suffix=\".php\">tests</directory>\n\t\t\t</testsuite>\n\t</testsuites>\n\t<filter>\n\t\t<whitelist>\n\t\t\t<directory suffix=\".php\">./inc</directory>\n\t\t\t<file>./s3-uploads.php</file>\n\t\t\t<exclude>\n\t\t\t\t<directory suffix=\".php\">./lib</directory>\n\t\t\t\t<file>./inc/class-s3-uploads-wp-cli-command.php</file>\n\t\t\t</exclude>\n\t\t</whitelist>\n\t</filter>\n</phpunit>\n"
+        },
+        {
+          "name": "psalm.xml",
+          "type": "blob",
+          "size": 0.9140625,
+          "content": "<?xml version=\"1.0\"?>\n<psalm requireVoidReturnType=\"false\" totallyTyped=\"true\" ensureArrayStringOffsetsExist=\"true\">\n    <projectFiles>\n        <directory name=\"./\"/>\n         <ignoreFiles>\n            <directory name=\"vendor\"/>\n            <directory name=\"psalm\"/>\n            <directory name=\"tests\"/>\n        </ignoreFiles>\n    </projectFiles>\n    <stubs>\n        <file name=\"psalm/stubs/imagick.php\"/>\n        <file name=\"psalm/stubs/constants.php\"/>\n        <file name=\"inc/class-wp-cli-command.php\"/>\n    </stubs>\n    <globals>\n        <var name=\"wp_version\" type=\"string\"/>\n    </globals>\n    <issueHandlers>\n        <MissingFile>\n            <errorLevel type=\"suppress\">\n                <file name=\"inc/class-plugin.php\"/>\n            </errorLevel>\n        </MissingFile>\n    </issueHandlers>\n    <plugins>\n        <pluginClass xmlns=\"https://getpsalm.org/schema/config\" class=\"PsalmWordPress\\Plugin\"/>\n    </plugins>\n</psalm>\n"
+        },
+        {
+          "name": "psalm",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "s3-uploads.php",
+          "type": "blob",
+          "size": 0.2353515625,
+          "content": "<?php\n\n/*\nPlugin Name: S3 Uploads\nDescription: Store uploads in S3\nAuthor: Human Made Limited\nVersion: 3.0.8\nAuthor URI: https://hmn.md\n*/\n\nrequire_once __DIR__ . '/inc/namespace.php';\n\nadd_action( 'plugins_loaded', 'S3_Uploads\\\\init', 0 );\n"
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "verify.txt",
+          "type": "blob",
+          "size": 0.0263671875,
+          "content": "• Todo: migrate to Altis\n"
+        }
+      ]
+    }
+  ]
+}

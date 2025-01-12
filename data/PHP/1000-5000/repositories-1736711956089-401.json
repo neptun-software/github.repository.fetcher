@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "timestamp": 1736711956089,
+    "page": 401,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gabrielrcouto/php-gui",
+      "stars": 2244,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.5576171875,
+          "content": "* text=auto\n\n.gitattributes export-ignore\n.gitignore export-ignore\n.travis.yml export-ignore\n\nPROTOCOL.md export-ignore\nREADME.md export-ignore\nbuild.xml export-ignore\nphpunit.xml.dist export-ignore\n\nbin/ export-ignore\nexamples/ export-ignore\ntest/ export-ignore\n\nlazarus/linux-docker.sh export-ignore\nlazarus/phpgui.ico export-ignore\nlazarus/phpgui.lpi export-ignore\nlazarus/phpgui.lpr export-ignore\nlazarus/phpgui.lps export-ignore\nlazarus/phpgui.res export-ignore\nlazarus/unit1.lfm export-ignore\nlazarus/unit1.pas export-ignore\nlazarus/unitipcthread.pas export-ignore\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1220703125,
+          "content": "composer.lock\nvendor/\nmaterial/\nlazarus/backup/\nlazarus/lib/\nbin/*\n!bin/.gitkeep\n!bin/generatedoc\nphpunit.xml\ndoc/\n/nbproject"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2861328125,
+          "content": "language: php\n\nphp:\n  - 5.6\n  - 7.0\n  - 7.1\n  - 7.2\n  - 7.3\n  - hhvm\n\nbefore_install:\n  - travis_retry composer self-update\n\ninstall:\n  - travis_retry composer install --no-interaction --prefer-source --dev\n\nscript:\n  - bin/phing\n\nmatrix:\n  allow_failures:\n    - php: hhvm\n  fast_finish: true\n"
+        },
+        {
+          "name": "PROTOCOL.md",
+          "type": "blob",
+          "size": 2.240234375,
+          "content": "# IPC Protocol\n\nThis file describes the IPC protocol used for the PHP <-> Lazarus communication.\n\nThis protocol is based on JSON RPC.\n\nEach message needs to be terminated by NULL character (PHP = \"\\0\", Lazarus = #0). This will be used to identify each message on the stream.\n\n## Request (Command):\n\n```json\n{\n    \"id\": 2,\n    \"method\": \"createObject\",\n    \"params\": [\n        {\n            \"lazarusClass\": \"TButton\",\n            \"lazarusObjectId\": 1,\n            \"parent\": 0\n        }\n    ]\n}\n```\n\n## Response:\n\n```json\n{\n    \"id\": 2,\n    \"result\": 123\n}\n```\n\n## Notification (Event):\n\n```json\n{\n    \"method\": \"eventCallback\",\n    \"params\": [\n        {\n            \"name\": \"Click\",\n            \"target\": 123\n        }\n    ]\n}\n```\n\n## Commands available:\n\n### createObject\n\nRequest:\n\n```json\n{\n    \"id\": 2,\n    \"method\": \"createObject\",\n    \"params\": [\n        {\n            \"lazarusClass\": \"TButton\",\n            \"lazarusObjectId\": 123,\n            \"parent\": 0\n        }\n    ]\n}\n```\n\nResponse:\n\n```json\n{\n    \"id\": 2,\n    \"result\": 123 // This is the object ID\n}\n```\n\n### setObjectProperty\n\n```json\n{\n    \"id\": 2,\n    \"method\": \"setObjectProperty\",\n    \"params\": [\n        lazarusObjectId,\n        \"propertyName\",\n        \"propertyValue\"\n    ]\n}\n```\n\nResponse:\n\n```json\n{\n    \"id\": 2,\n    \"result\": true\n}\n```\n\n### setObjectEventListener\n\n```json\n{\n    \"id\": 2,\n    \"method\": \"setObjectEventListener\",\n    \"params\": [\n        lazarusObjectId,\n        \"eventName\"\n    ]\n}\n```\n\nResponse:\n\n```json\n{\n    \"id\": 2,\n    \"result\": true\n}\n```\n\n### getObjectProperty\n\n```json\n{\n    \"callback\":false,\n    \"id\":134,\n    \"method\":\"getObjectProperty\",\n    \"params\":[\n        14,\n        \"itemIndex\"\n    ]\n}\n```\n\nResponse:\n\n```json\n{\n    \"id\": 134,\n    \"result\": 1\n}\n```\n\n### callObjectMethod\n\n```json\n{\n    \"callback\":{},\n    \"id\":19,\n    \"method\":\"callObjectMethod\",\n    \"params\":[\n        14,\n        \"items.addObject\",\n        [\n            \"Male\",\n            0\n        ]\n    ]\n}\n```\n\nResponse:\n\n```json\n{\n    \"id\": 19,\n    \"result\": 14\n}\n```\n\n### Debug\n\nif you want debug something from lazarus you can use the key \"debug\" like \n\n```\n{\n    \"callback\" : {},\n    \"id\" : 94,\n    \"method\" : \"setObjectProperty\",\n    \"params\" : [\n        18,\n        \"caption\",\n        \"test\"\n    ],\n    \"debug\" : true\n}\n```"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.93359375,
+          "content": "<p align=\"center\"><img src=\"https://cloud.githubusercontent.com/assets/2197005/14036936/f3457ba0-f21c-11e5-886a-f754e8109c28.png\" alt=\"php-gui\" /></p>\n\n<p align=\"center\">Extensionless PHP Graphic User Interface library</p>\n\n<p align=\"center\"><img src=\"https://cloud.githubusercontent.com/assets/2197005/14338716/85ef00a2-fc4f-11e5-8ae8-7a0d5be74723.gif\" alt=\"made with PHP S2\" /></p>\n\n[![Build Status](https://travis-ci.org/gabrielrcouto/php-gui.svg?branch=master)](https://travis-ci.org/gabrielrcouto/php-gui)\n[![Latest Stable Version](https://poser.pugx.org/gabrielrcouto/php-gui/v/stable)](https://packagist.org/packages/gabrielrcouto/php-gui)\n[![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](http://gabrielrcouto.mit-license.org/)\n[![Packagist](https://img.shields.io/badge/packagist-install-brightgreen.svg)](https://packagist.org/packages/gabrielrcouto/php-gui)\n\n## Table of Contents\n\n+ [Why](#why)\n+ [Requirements](#requirements)\n+ [Usage](#usage)\n+ [Documentation](#documentation)\n+ [How it works](#how-it-works)\n+ [Contributors Guide](#contributors-guide)\n+ [TO-DO](#to-do)\n+ [Credits](#credits)\n+ [License](#license)\n\n## Why\n\nPHP can be more than a \"Web Language\", it's a fast language, with a cross platform interpreter and a good CLI. GUI is a natural step for completing this ecosystem.\n\nFor many years, GUI projects are being developed for PHP, like [PHP-GTK](http://gtk.php.net/), [PHP-QT](https://sourceforge.net/projects/php-qt/), [wxPHP](http://wxphp.org/) and so many others, but none of them became popular.\n\nThis project aims to solve the most common problems of existing \"GUI Projects\":\n\n- The need for installing an extension\n- Cross platform\n- No external dependencies\n- Easy to install (composer require php-gui) / Easy to use ($button = new Button)\n\n## Requirements\n\nThe following PHP versions are supported:\n\n+ PHP 5.6\n+ PHP 7\n+ HHVM\n\nAnd OS:\n\n+ Linux x64\n+ Windows x64\n+ Mac OSX (tested on 10.10.x and 10.11.x)\n\n## Usage\n\nDownload the library using [composer](https://packagist.org/packages/gabrielrcouto/php-gui):\n\n\n#### Stable version\n```bash\n$ composer require gabrielrcouto/php-gui\n```\n\n#### Latest version (development)\n\n```bash\n$ composer require gabrielrcouto/php-gui:dev-master\n```\n\nNow, you can build a GUI application. Let's do a Hello World!\n\nCreate the file 'myapp.php':\n\n```php\n<?php\nrequire 'vendor/autoload.php';\n\nuse Gui\\Application;\nuse Gui\\Components\\Button;\n\n$application = new Application();\n\n$application->on('start', function() use ($application) {\n    $button = (new Button())\n        ->setLeft(40)\n        ->setTop(100)\n        ->setWidth(200)\n        ->setValue('Look, I\\'m a button!');\n\n    $button->on('click', function() use ($button) {\n        $button->setValue('Look, I\\'m a clicked button!');\n    });\n});\n\n$application->run();\n\n```\n\nNow, run it:\n\n```bash\nphp myapp.php\n\n```\n\nSimple? :clap: You don't need to compile anything, just download the library via composer and use it! :smile:\n\n\n## Documentation\n\nWe have a [Documentation Page](https://gabrielrcouto.github.io/php-gui/dist/#/home)\n\nBut, if you want to see some examples, just follow the instructions below.\n\n```bash\n# clone the repository\ngit clone https://github.com/gabrielrcouto/php-gui.git\ncd php-gui\n\n# install dependencies\ncomposer install\n\n# run examples\nphp examples/01-basic/example.php\nphp examples/02-animation/example.php\nphp examples/03-window/example.php\nphp examples/04-multiple-windows/example.php\nphp examples/05-canvas/example.php\nphp examples/06-ping/example.php\nphp examples/07-php-internals/example.php\nphp examples/08-alert/example.php   \nphp examples/09-3d-perspective/example.php \n\n```\n\n## How it works\n\nTo create a GUI without the need for an extension, PHP executes a binary with proc_open and communicates with it using Stdin/Stdout Pipes--it's a fast and cross platform solution.\n\nPHP <=> Stdin/Stdout Pipes <=> Lazarus Application <=> GUI\n\nThe binary is created using Lazarus (Free Pascal). After much research, I found a large advantage by using Lazarus over other desktop languages (like C#, Java...):\n\n<p align=\"center\"><img src=\"https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/LCLArchitecture.png/440px-LCLArchitecture.png\" alt=\"LCL graph, showing that LCL will use an interface for building the GUI according to the operation system\" /></p>\n\nIt doesn't have any dependencies (except for Linux, which needs GTK), has a good component library, is compiled, open source and has a nice slogan (Write Once, Compile Anywhere).\n\nThe communication (IPC) between PHP and Lazarus is performed using a protocol based on JSON RPC. You can view the specification [here](PROTOCOL.md).\n\n## Contributors Guide\n\n### Components names\n\nTo be an easy to use library, this project will use HTML friendly names for the components, as PHP developers are more familiar with it.\n\nExamples:\n\n- On Lazarus, the property \"caption\" is for the text of a button. On php-gui, the property name is \"value\".\n- On Lazarus, \"Edit\" is the component for text input, on php-gui, it's \"InputText\".\n\n### Compiling Lazarus App\n\n#### On your Local Machine\n\nFirst, you need to [install Lazarus](http://www.lazarus-ide.org/index.php?page=downloads).\n\nFor compiling the lazarus binary:\n\n```bash\nlazbuild phpgui.lpr\n```\n\n#### Using Docker\n\nIf you are generating the Linux binary, you can use Docker:\n\n```bash\nlazarus/linux-docker.sh\ncd lazarus/\nlazbuild phpgui.lpr\n```\n\n### Test\n\nFirst install the dependencies, and after you can run:\n\n```bash\nbin/phing\n```\n\n## TO-DO\n\nThe \"Issues\" page from this repository is being used for TO-DO management, just search for the \"to-do\" tag.\n\n## Credits\n\n[@gabrielrcouto](http://www.twitter.com/gabrielrcouto)\n\n[@reisraff](http://www.twitter.com/reisraff)\n\n## License\n\n[MIT License](http://gabrielrcouto.mit-license.org/)\n\n<a target='_blank' rel='nofollow' href='https://app.codesponsor.io/link/bvezX9B9cTJTidmcB4iikNff/gabrielrcouto/php-gui'>  <img alt='Sponsor' width='888' height='68' src='https://app.codesponsor.io/embed/bvezX9B9cTJTidmcB4iikNff/gabrielrcouto/php-gui.svg' /></a>\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build.xml",
+          "type": "blob",
+          "size": 1.5185546875,
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<project name=\"php-gui\" basedir=\".\" default=\"main\">\n    <property name=\"examples\" value=\"examples\" />\n    <property name=\"source\" value=\"src\" />\n    <property name=\"test\" value=\"test\" />\n    <property name=\"bindir\" value=\"bin\" />\n\n    <target name=\"main\" description=\"Start analyzing our application\">\n        <echo msg=\"Start Build\" />\n\n        <phingCall target=\"phplint\" />\n        <phingCall target=\"phpunit\" />\n        <phingCall target=\"phpcs\" />\n        <phingCall target=\"generatedoc\" />\n\n        <echo msg=\"Finished Build\" />\n    </target>\n\n    <target name=\"phplint\" description=\"Check syntax of a fileset of source files.\">\n        <phplint>\n            <fileset dir=\"${source}\">\n                <include name=\"**/*.php\"/>\n            </fileset>\n        </phplint>\n    </target>\n\n    <target name=\"phpunit\" description=\"Run unit tests using PHPUnit\">\n        <exec passthru=\"true\" command=\"${bindir}/phpunit\" checkreturn=\"true\"/>\n    </target>\n\n    <target name=\"phpcs\" description=\"Coding Standards Analysis\">\n        <exec passthru=\"true\" command=\"${bindir}/phpcs --standard=PSR2 ${source}\" checkreturn=\"true\" />\n        <exec passthru=\"true\" command=\"${bindir}/phpcs --standard=PSR2 ${examples}\" checkreturn=\"true\" />\n        <exec passthru=\"true\" command=\"${bindir}/phpcs --standard=PSR2 ${test}\" checkreturn=\"true\" />\n    </target>\n\n    <target name=\"generatedoc\" description=\"Generate Doc\">\n        <exec passthru=\"true\" command=\"${bindir}/generatedoc\" checkreturn=\"true\"/>\n    </target>\n</project>\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.845703125,
+          "content": "{\n    \"name\": \"gabrielrcouto/php-gui\",\n    \"description\": \"Extensionless PHP Graphic User Interface library\",\n    \"keywords\": [\"php\",\"gui\",\"graphic\",\"interface\"],\n    \"homepage\": \"http://github.com/gabrielrcouto/php-gui\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Gabriel Rodrigues Couto\",\n            \"email\": \"gabrielrcouto@gmail.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.6\",\n        \"react/child-process\": \"^0.4.0\"\n    },\n    \"require-dev\" : {\n        \"phing/phing\": \"2.*\",\n        \"phpunit/phpunit\": \"^4.8.35\",\n        \"squizlabs/php_codesniffer\": \"2.0.*@dev\",\n        \"evert/phpdoc-md\" : \"~0.2.0\",\n        \"phpdocumentor/phpdocumentor\": \"^2.8\"\n    },\n    \"config\" : {\n        \"bin-dir\" : \"bin/\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Gui\\\\\": \"src/\",\n            \"Test\\\\\": \"test/\"\n        }\n    }\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "lazarus",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 1.06640625,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/4.1/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         syntaxCheck=\"true\"\n         stopOnFailure=\"false\"\n         bootstrap=\"vendor/autoload.php\">\n    <testsuites>\n        <testsuite name=\"Test Suite\">\n            <directory>test/</directory>\n        </testsuite>\n    </testsuites>\n    <filter>\n        <whitelist addUncoveredFilesFromWhitelist=\"true\">\n            <directory suffix=\".php\">src</directory>\n            <exclude>\n                <directory suffix=\"Interface.php\">src</directory>\n                <directory suffix=\"Aware.php\">src</directory>\n                <directory suffix=\"Trait.php\">src</directory>\n            </exclude>\n        </whitelist>\n        <blacklist>\n            <directory>vendor</directory>\n        </blacklist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

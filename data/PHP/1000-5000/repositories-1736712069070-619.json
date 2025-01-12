@@ -1,0 +1,86 @@
+{
+  "metadata": {
+    "timestamp": 1736712069070,
+    "page": 619,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "doctrine/deprecations",
+      "stars": 1686,
+      "defaultBranch": "1.1.x",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.208984375,
+          "content": "/.gitattributes export-ignore\n/.github export-ignore\n/.gitignore export-ignore\n/phpcs.xml export-ignore\n/phpunit.xml.dist export-ignore\n/tests export-ignore\n/test_fixtures export-ignore\n/phpstan.neon export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0556640625,
+          "content": "/vendor\n.phpcs-cache\n.phpunit.result.cache\ncomposer.lock\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0400390625,
+          "content": "Copyright (c) 2020-2021 Doctrine Project\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies\nof the Software, and to permit persons to whom the Software is furnished to do\nso, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.009765625,
+          "content": "# Doctrine Deprecations\n\nA small (side-effect free by default) layer on top of\n`trigger_error(E_USER_DEPRECATED)` or PSR-3 logging.\n\n- no side-effects by default, making it a perfect fit for libraries that don't know how the error handler works they operate under\n- options to avoid having to rely on error handlers global state by using PSR-3 logging\n- deduplicate deprecation messages to avoid excessive triggering and reduce overhead\n\nWe recommend to collect Deprecations using a PSR logger instead of relying on\nthe global error handler.\n\n## Usage from consumer perspective:\n\nEnable Doctrine deprecations to be sent to a PSR3 logger:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::enableWithPsrLogger($logger);\n```\n\nEnable Doctrine deprecations to be sent as `@trigger_error($message, E_USER_DEPRECATED)`\nmessages by setting the `DOCTRINE_DEPRECATIONS` environment variable to `trigger`.\nAlternatively, call:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::enableWithTriggerError();\n```\n\nIf you only want to enable deprecation tracking, without logging or calling `trigger_error`\nthen set the `DOCTRINE_DEPRECATIONS` environment variable to `track`.\nAlternatively, call:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::enableTrackingDeprecations();\n```\n\nTracking is enabled with all three modes and provides access to all triggered\ndeprecations and their individual count:\n\n```php\n$deprecations = \\Doctrine\\Deprecations\\Deprecation::getTriggeredDeprecations();\n\nforeach ($deprecations as $identifier => $count) {\n    echo $identifier . \" was triggered \" . $count . \" times\\n\";\n}\n```\n\n### Suppressing Specific Deprecations\n\nDisable triggering about specific deprecations:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::ignoreDeprecations(\"https://link/to/deprecations-description-identifier\");\n```\n\nDisable all deprecations from a package\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::ignorePackage(\"doctrine/orm\");\n```\n\n### Other Operations\n\nWhen used within PHPUnit or other tools that could collect multiple instances of the same deprecations\nthe deduplication can be disabled:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::withoutDeduplication();\n```\n\nDisable deprecation tracking again:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::disable();\n```\n\n## Usage from a library/producer perspective:\n\nWhen you want to unconditionally trigger a deprecation even when called\nfrom the library itself then the `trigger` method is the way to go:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::trigger(\n    \"doctrine/orm\",\n    \"https://link/to/deprecations-description\",\n    \"message\"\n);\n```\n\nIf variable arguments are provided at the end, they are used with `sprintf` on\nthe message.\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::trigger(\n    \"doctrine/orm\",\n    \"https://github.com/doctrine/orm/issue/1234\",\n    \"message %s %d\",\n    \"foo\",\n    1234\n);\n```\n\nWhen you want to trigger a deprecation only when it is called by a function\noutside of the current package, but not trigger when the package itself is the cause,\nthen use:\n\n```php\n\\Doctrine\\Deprecations\\Deprecation::triggerIfCalledFromOutside(\n    \"doctrine/orm\",\n    \"https://link/to/deprecations-description\",\n    \"message\"\n);\n```\n\nBased on the issue link each deprecation message is only triggered once per\nrequest.\n\nA limited stacktrace is included in the deprecation message to find the\noffending location.\n\nNote: A producer/library should never call `Deprecation::enableWith` methods\nand leave the decision how to handle deprecations to application and\nframeworks.\n\n## Usage in PHPUnit tests\n\nThere is a `VerifyDeprecations` trait that you can use to make assertions on\nthe occurrence of deprecations within a test.\n\n```php\nuse Doctrine\\Deprecations\\PHPUnit\\VerifyDeprecations;\n\nclass MyTest extends TestCase\n{\n    use VerifyDeprecations;\n\n    public function testSomethingDeprecation()\n    {\n        $this->expectDeprecationWithIdentifier('https://github.com/doctrine/orm/issue/1234');\n\n        triggerTheCodeWithDeprecation();\n    }\n\n    public function testSomethingDeprecationFixed()\n    {\n        $this->expectNoDeprecationWithIdentifier('https://github.com/doctrine/orm/issue/1234');\n\n        triggerTheCodeWithoutDeprecation();\n    }\n}\n```\n\n## Displaying deprecations after running a PHPUnit test suite\n\nIt is possible to integrate this library with PHPUnit to display all\ndeprecations triggered during the test suite execution.\n\n```xml\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"vendor/phpunit/phpunit/phpunit.xsd\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         displayDetailsOnTestsThatTriggerDeprecations=\"true\"\n         failOnDeprecation=\"true\"\n    >\n    <!-- one attribute to display the deprecations, the other to fail the test suite -->\n\n    <php>\n        <!-- ensures native PHP deprecations are used -->\n        <server name=\"DOCTRINE_DEPRECATIONS\" value=\"trigger\"/>\n    </php>\n\n    <!-- ensures the @ operator in @trigger_error is ignored -->\n    <source ignoreSuppressionOfDeprecations=\"true\">\n        <include>\n            <directory>src</directory>\n        </include>\n    </source>\n</phpunit>\n```\n\nNote that you can still trigger Deprecations in your code, provided you use the\n`#[WithoutErrorHandler]` attribute to disable PHPUnit's error handler for tests\nthat call it. Be wary that this will disable all error handling, meaning it\nwill mask any warnings or errors that would otherwise be caught by PHPUnit.\n\nAt the moment, it is not possible to disable deduplication with an environment\nvariable, but you can use a bootstrap file to achieve that:\n\n```php\n// tests/bootstrap.php\n<?php\n\ndeclare(strict_types=1);\n\nrequire dirname(__DIR__) . '/vendor/autoload.php';\n\nuse Doctrine\\Deprecations\\Deprecation;\n\nDeprecation::withoutDeduplication();\n```\n\nThen, reference that file in your PHPUnit configuration:\n\n```xml\n<phpunit …\n        bootstrap=\"tests/bootstrap.php\"\n        …\n    >\n    …\n</phpunit>\n```\n\n## What is a deprecation identifier?\n\nAn identifier for deprecations is just a link to any resource, most often a\nGithub Issue or Pull Request explaining the deprecation and potentially its\nalternative.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.1201171875,
+          "content": "{\n    \"name\": \"doctrine/deprecations\",\n    \"description\": \"A small layer on top of trigger_error(E_USER_DEPRECATED) or PSR-3 logging with options to disable all deprecations or selectively for packages.\",\n    \"license\": \"MIT\",\n    \"type\": \"library\",\n    \"homepage\": \"https://www.doctrine-project.org/\",\n    \"require\": {\n        \"php\": \"^7.1 || ^8.0\"\n    },\n    \"require-dev\": {\n        \"doctrine/coding-standard\": \"^9 || ^12\",\n        \"phpstan/phpstan\": \"1.4.10 || 2.0.3\",\n        \"phpstan/phpstan-phpunit\": \"^1.0 || ^2\",\n        \"phpunit/phpunit\": \"^7.5 || ^8.5 || ^9.6 || ^10.5 || ^11.5\",\n        \"psr/log\": \"^1 || ^2 || ^3\"\n    },\n    \"suggest\": {\n        \"psr/log\": \"Allows logging deprecations via PSR-3 logger implementation\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Doctrine\\\\Deprecations\\\\\": \"src\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"DeprecationTests\\\\\": \"test_fixtures/src\",\n            \"Doctrine\\\\Foo\\\\\": \"test_fixtures/vendor/doctrine/foo\"\n        }\n    },\n    \"config\": {\n        \"allow-plugins\": {\n            \"dealerdirect/phpcodesniffer-composer-installer\": true\n        }\n    }\n}\n"
+        },
+        {
+          "name": "phpcs.xml",
+          "type": "blob",
+          "size": 0.6650390625,
+          "content": "<?xml version=\"1.0\"?>\n<ruleset>\n    <arg name=\"basepath\" value=\".\"/>\n    <arg name=\"extensions\" value=\"php\"/>\n    <arg name=\"parallel\" value=\"80\"/>\n    <arg name=\"cache\" value=\".phpcs-cache\"/>\n    <arg name=\"colors\"/>\n\n    <!-- Ignore warnings, show progress of the run and show sniff names -->\n    <arg value=\"nps\"/>\n\n    <config name=\"php_version\" value=\"70100\"/>\n\n    <!-- Directories to be checked -->\n    <file>src</file>\n    <file>tests</file>\n    <file>test_fixtures</file>\n\n    <!-- Include full Doctrine Coding Standard -->\n    <rule ref=\"Doctrine\">\n        <exclude name=\"SlevomatCodingStandard.TypeHints.PropertyTypeHint.MissingNativeTypeHint\" />\n    </rule>\n</ruleset>\n"
+        },
+        {
+          "name": "phpstan.neon",
+          "type": "blob",
+          "size": 0.4638671875,
+          "content": "parameters:\n    level: 9\n    paths:\n        - src\n        - tests\n        - test_fixtures\n    ignoreErrors:\n        # False positive due to https://github.com/phpstan/phpstan/issues/9384\n        -\n            message: '/^Static property Doctrine\\\\Deprecations\\\\Deprecation::\\$type \\(int<0, 7>\\|null\\) does not accept int\\.$/'\n            path: src/Deprecation.php\n\nincludes:\n    - vendor/phpstan/phpstan-phpunit/extension.neon\n    - vendor/phpstan/phpstan-phpunit/rules.neon\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.216796875,
+          "content": "<?xml version=\"1.0\" ?>\n<phpunit bootstrap=\"vendor/autoload.php\">\n    <testsuites>\n        <testsuite name=\"Doctrine Deprecations\">\n            <directory>tests</directory>\n        </testsuite>\n    </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "test_fixtures",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "metadata": {
+    "timestamp": 1736711993530,
+    "page": 478,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "drewm/mailchimp-api",
+      "stars": 1988,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".env.test",
+          "type": "blob",
+          "size": 0.0361328125,
+          "content": "MC_API_KEY=\"api-key\"\nMC_LIST_ID=\"42\"\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.2099609375,
+          "content": "/tests export-ignore  \n/.gitattributes export-ignore  \n/.gitignore export-ignore\n/.scrutinizer.yml export-ignore\n/.travis.yml export-ignore\n/phpunit.xml export-ignore\n/.env export-ignore\n/.env.example export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.03125,
+          "content": ".env\n/vendor\ncomposer.lock\n.idea"
+        },
+        {
+          "name": ".scrutinizer.yml",
+          "type": "blob",
+          "size": 0.130859375,
+          "content": "# .scrutinizer.yml\nchecks:\n    php: true\n\nfilter:\n    excluded_paths:\n        - tests/*\n        - vendor/*\n    paths:\n        - src/*\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.296875,
+          "content": "language: php\nsudo: true\ndist: trusty # Required for PHP 5.4/5.5 support\nphp:\n  - 5.4\n  - 5.5\n  - 5.6\n  - 7.0\n  - 7.1\n  - 7.2\n  - 7.3\n  - 7.4\n  - 8.0\nbefore_script:\n  - composer self-update\n  - composer install --prefer-source --no-interaction --dev --ignore-platform-reqs\nscript:\n  - vendor/bin/phpunit\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0546875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 Drew McLellan\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 8.10546875,
+          "content": "MailChimp API\n=============\n\nSuper-simple, minimum abstraction MailChimp API v3 wrapper, in PHP.\n\nI hate complex wrappers. This lets you get from the MailChimp API docs to the code as directly as possible.\n\nRequires PHP 5.3 and a pulse. Abstraction is for chimps.\n\n[![Build Status](https://travis-ci.org/drewm/mailchimp-api.svg?branch=master)](https://travis-ci.org/drewm/mailchimp-api)\n[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/drewm/mailchimp-api/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/drewm/mailchimp-api/?branch=master)\n[![Packagist](https://img.shields.io/packagist/dt/drewm/mailchimp-api.svg?maxAge=2592000)](https://packagist.org/packages/drewm/mailchimp-api)\n\nInstallation\n------------\n\nYou can install mailchimp-api using Composer:\n\n```\ncomposer require drewm/mailchimp-api\n```\n\nYou will then need to:\n* run ``composer install`` to get these dependencies added to your vendor directory\n* add the autoloader to your application with this line: ``require(\"vendor/autoload.php\")``\n\nAlternatively you can just download the `MailChimp.php` file and include it manually:\n\n```php\ninclude('./MailChimp.php'); \n```\n\nIf you wish to use the batch request or webhook interfaces, you'll also need to download and include the `Batch.php` or `Webhook.php` files:\n\n```php\ninclude('./Batch.php'); \ninclude('./Webhook.php'); \n```\n\nThese are optional. If you're not using batches or webhooks you can just skip them. You can always come back and add them later.\n\nExamples\n--------\n\nStart by `use`-ing the class and creating an instance with your API key\n\n```php\nuse \\DrewM\\MailChimp\\MailChimp;\n\n$MailChimp = new MailChimp('abc123abc123abc123abc123abc123-us1');\n```\n\nThen, list all the mailing lists (with a `get` on the `lists` method)\n\n```php\n$result = $MailChimp->get('lists');\n\nprint_r($result);\n```\n\nSubscribe someone to a list (with a `post` to the `lists/{listID}/members` method):\n\n```php\n$list_id = 'b1234346';\n\n$result = $MailChimp->post(\"lists/$list_id/members\", [\n\t\t\t\t'email_address' => 'davy@example.com',\n\t\t\t\t'status'        => 'subscribed',\n\t\t\t]);\n\nprint_r($result);\n```\n\nUpdate a list member with more information (using `patch` to update):\n\n```php\n$list_id = 'b1234346';\n$subscriber_hash = MailChimp::subscriberHash('davy@example.com');\n\n$result = $MailChimp->patch(\"lists/$list_id/members/$subscriber_hash\", [\n\t\t\t\t'merge_fields' => ['FNAME'=>'Davy', 'LNAME'=>'Jones'],\n\t\t\t\t'interests'    => ['2s3a384h' => true],\n\t\t\t]);\n\nprint_r($result);\n```\n\nRemove a list member using the `delete` method:\n\n```php\n$list_id = 'b1234346';\n$subscriber_hash = MailChimp::subscriberHash('davy@example.com');\n\n$MailChimp->delete(\"lists/$list_id/members/$subscriber_hash\");\n```\n\nQuickly test for a successful action with the `success()` method:\n\n```php\n$list_id = 'b1234346';\n\n$result = $MailChimp->post(\"lists/$list_id/members\", [\n\t\t\t\t'email_address' => 'davy@example.com',\n\t\t\t\t'status'        => 'subscribed',\n\t\t\t]);\n\nif ($MailChimp->success()) {\n\tprint_r($result);\t\n} else {\n\techo $MailChimp->getLastError();\n}\n```\n\nBatch Operations\n----------------\n\nThe MailChimp [Batch Operations](http://developer.mailchimp.com/documentation/mailchimp/guides/how-to-use-batch-operations/) functionality enables you to complete multiple operations with a single call. A good example is adding thousands of members to a list - you can perform this in one request rather than thousands.\n\n```php\nuse \\DrewM\\MailChimp\\MailChimp;\nuse \\DrewM\\MailChimp\\Batch;\n\n$MailChimp = new MailChimp('abc123abc123abc123abc123abc123-us1');\n$Batch \t   = $MailChimp->new_batch();\n```\n\nYou can then make requests on the `Batch` object just as you would normally with the `MailChimp` object. The difference is that you need to set an ID for the operation as the first argument, and also that you won't get a response. The ID is used for finding the result of this request in the combined response from the batch operation.\n\n```php\n$Batch->post(\"op1\", \"lists/$list_id/members\", [\n\t\t\t\t'email_address' => 'micky@example.com',\n\t\t\t\t'status'        => 'subscribed',\n\t\t\t]);\n\n$Batch->post(\"op2\", \"lists/$list_id/members\", [\n\t\t\t\t'email_address' => 'michael@example.com',\n\t\t\t\t'status'        => 'subscribed',\n\t\t\t]);\n\n$Batch->post(\"op3\", \"lists/$list_id/members\", [\n\t\t\t\t'email_address' => 'peter@example.com',\n\t\t\t\t'status'        => 'subscribed',\n\t\t\t]);\n```\n\nOnce you've finished all the requests that should be in the batch, you need to execute it.\n\n```php\n$result = $Batch->execute();\n```\n\nThe result includes a batch ID. At a later point, you can check the status of your batch:\n\n```php\n$MailChimp->new_batch($batch_id);\n$result = $Batch->check_status();\n```\n\nWhen your batch is finished, you can download the results from the URL given in the response. In the JSON, the result of each operation will be keyed by the ID you used as the first argument for the request.\n\nWebhooks\n--------\n\n**Note:** Use of the Webhooks functionality requires at least PHP 5.4.\n\nMailChimp [webhooks](http://kb.mailchimp.com/integrations/other-integrations/how-to-set-up-webhooks) enable your code to be notified of changes to lists and campaigns.\n\nWhen you set up a webhook you specify a URL on your server for the data to be sent to. This wrapper's Webhook class helps you catch that incoming webhook in a tidy way. It uses a subscription model, with your code subscribing to whichever webhook events it wants to listen for. You provide a callback function that the webhook data is passed to.\n\nTo listen for the `unsubscribe` webhook:\n\n```php\nuse \\DrewM\\MailChimp\\Webhook;\n\nWebhook::subscribe('unsubscribe', function($data){\n\tprint_r($data);\n});\n```\n\nAt first glance the _subscribe/unsubscribe_ looks confusing - your code is subscribing to the MailChimp `unsubscribe` webhook event. The callback function is passed as single argument - an associative array containing the webhook data.\n\nIf you'd rather just catch all webhooks and deal with them yourself, you can use:\n\n```php\nuse \\DrewM\\MailChimp\\Webhook;\n\n$result = Webhook::receive();\nprint_r($result);\n```\n\nThere doesn't appear to be any documentation for the content of the webhook data. It's helpful to use something like [ngrok](https://ngrok.com) for tunneling the webhooks to your development machine - you can then use its web interface to inspect what's been sent and to replay incoming webhooks while you debug your code.\n\nTroubleshooting\n---------------\n\nTo get the last error returned by either the HTTP client or by the API, use `getLastError()`:\n\n```php\necho $MailChimp->getLastError();\n```\n\nFor further debugging, you can inspect the headers and body of the response:\n\n```php\nprint_r($MailChimp->getLastResponse());\n```\n\nIf you suspect you're sending data in the wrong format, you can look at what was sent to MailChimp by the wrapper:\n\n```php\nprint_r($MailChimp->getLastRequest());\n```\n\nIf your server's CA root certificates are not up to date you may find that SSL verification fails and you don't get a response. The correction solution for this [is not to disable SSL verification](http://snippets.webaware.com.au/howto/stop-turning-off-curlopt_ssl_verifypeer-and-fix-your-php-config/). The solution is to update your certificates. If you can't do that, there's an option at the top of the class file. Please don't just switch it off without at least attempting to update your certs -- that's lazy and dangerous. You're not a lazy, dangerous developer are you?\n\nIf you have **high-level implementation questions about your project** (\"How do I add this to WordPress\", \"I've got a form that takes an email address...\") please **take them to somewhere like StackOverflow**. If you think you've found a bug, or would like to discuss a change or improvement, feel free to raise an issue and we'll figure it out between us.\n\nContributing\n------------\n\nThis is a fairly simple wrapper, but it has been made much better by contributions from those using it. If you'd like to suggest an improvement, please raise an issue to discuss it before making your pull request.\n\nPull requests for bugs are more than welcome - please explain the bug you're trying to fix in the message.\n\nThere are a small number of PHPUnit unit tests. Unit testing against an API is obviously a bit tricky, but I'd welcome any contributions to this. It would be great to have more test coverage.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.76171875,
+          "content": "{\n    \"name\": \"drewm/mailchimp-api\",\n    \"description\": \"Super-simple, minimum abstraction MailChimp API v3 wrapper\",\n    \"license\": \"MIT\",\n    \"require\": {\n        \"php\": \">=5.3\",\n        \"ext-curl\": \"*\",\n        \"ext-json\": \"*\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"7.0.*\",\n        \"vlucas/phpdotenv\": \"^2.0\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"DrewM\\\\MailChimp\\\\\": \"src\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"DrewM\\\\MailChimp\\\\Tests\\\\\": \"tests/\"\n        }\n    },\n    \"homepage\": \"https://github.com/drewm/mailchimp-api\",\n    \"authors\": [ \n        {\n            \"name\": \"Drew McLellan\",\n            \"email\": \"drew.mclellan@gmail.com\",\n            \"homepage\": \"http://allinthehead.com/\"\n\n        }\n    ]\n\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.4287109375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"./tests/bootstrap.php\"\n         colors=\"true\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n         stopOnFailure=\"false\">\n    <testsuites>\n        <testsuite name=\"MailChimp Test Suite\">\n            <directory suffix=\".php\">./tests/</directory>\n        </testsuite>\n    </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

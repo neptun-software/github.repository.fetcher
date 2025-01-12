@@ -1,0 +1,115 @@
+{
+  "metadata": {
+    "timestamp": 1736711862197,
+    "page": 199,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjIwMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/asset",
+      "stars": 3127,
+      "defaultBranch": "7.2",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.810546875,
+          "content": "CHANGELOG\n=========\n\n6.1\n---\n\n* `UrlPackage` accepts empty strings as `base_url`, in order to simplify local dev configuration\n\n6.0\n---\n\n* Remove `RemoteJsonManifestVersionStrategy`, use `JsonManifestVersionStrategy` instead\n\n5.3\n---\n\n * deprecated `RemoteJsonManifestVersionStrategy`, use `JsonManifestVersionStrategy` instead.\n\n5.1.0\n-----\n\n * added `RemoteJsonManifestVersionStrategy` to download manifest over HTTP.\n\n4.2.0\n-----\n\n * added different protocols to be allowed as asset base_urls\n\n3.4.0\n-----\n\n * added optional arguments `$basePath` and `$secure` in `RequestStackContext::__construct()`\n   to provide a default request context in case the stack is empty\n\n3.3.0\n-----\n * Added `JsonManifestVersionStrategy` as a way to read final,\n   versioned paths from a JSON manifest file.\n\n2.7.0\n-----\n\n * added the component\n"
+        },
+        {
+          "name": "Context",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Exception",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2004-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Package.php",
+          "type": "blob",
+          "size": 1.546875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Asset;\n\nuse Symfony\\Component\\Asset\\Context\\ContextInterface;\nuse Symfony\\Component\\Asset\\Context\\NullContext;\nuse Symfony\\Component\\Asset\\VersionStrategy\\VersionStrategyInterface;\n\n/**\n * Basic package that adds a version to asset URLs.\n *\n * @author Kris Wallsmith <kris@symfony.com>\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass Package implements PackageInterface\n{\n    private ContextInterface $context;\n\n    public function __construct(\n        private VersionStrategyInterface $versionStrategy,\n        ?ContextInterface $context = null,\n    ) {\n        $this->context = $context ?? new NullContext();\n    }\n\n    public function getVersion(string $path): string\n    {\n        return $this->versionStrategy->getVersion($path);\n    }\n\n    public function getUrl(string $path): string\n    {\n        if ($this->isAbsoluteUrl($path)) {\n            return $path;\n        }\n\n        return $this->versionStrategy->applyVersion($path);\n    }\n\n    protected function getContext(): ContextInterface\n    {\n        return $this->context;\n    }\n\n    protected function getVersionStrategy(): VersionStrategyInterface\n    {\n        return $this->versionStrategy;\n    }\n\n    protected function isAbsoluteUrl(string $url): bool\n    {\n        return str_contains($url, '://') || str_starts_with($url, '//');\n    }\n}\n"
+        },
+        {
+          "name": "PackageInterface.php",
+          "type": "blob",
+          "size": 0.615234375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Asset;\n\n/**\n * Asset package interface.\n *\n * @author Kris Wallsmith <kris@symfony.com>\n */\ninterface PackageInterface\n{\n    /**\n     * Returns the asset version for an asset.\n     */\n    public function getVersion(string $path): string;\n\n    /**\n     * Returns an absolute or root-relative public path.\n     */\n    public function getUrl(string $path): string;\n}\n"
+        },
+        {
+          "name": "Packages.php",
+          "type": "blob",
+          "size": 2.80078125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Asset;\n\nuse Symfony\\Component\\Asset\\Exception\\InvalidArgumentException;\nuse Symfony\\Component\\Asset\\Exception\\LogicException;\n\n/**\n * Helps manage asset URLs.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n * @author Kris Wallsmith <kris@symfony.com>\n */\nclass Packages\n{\n    private array $packages = [];\n\n    /**\n     * @param PackageInterface[] $packages Additional packages indexed by name\n     */\n    public function __construct(\n        private ?PackageInterface $defaultPackage = null,\n        iterable $packages = [],\n    ) {\n        foreach ($packages as $name => $package) {\n            $this->addPackage($name, $package);\n        }\n    }\n\n    public function setDefaultPackage(PackageInterface $defaultPackage): void\n    {\n        $this->defaultPackage = $defaultPackage;\n    }\n\n    public function addPackage(string $name, PackageInterface $package): void\n    {\n        $this->packages[$name] = $package;\n    }\n\n    /**\n     * Returns an asset package.\n     *\n     * @param string|null $name The name of the package or null for the default package\n     *\n     * @throws InvalidArgumentException If there is no package by that name\n     * @throws LogicException           If no default package is defined\n     */\n    public function getPackage(?string $name = null): PackageInterface\n    {\n        if (null === $name) {\n            if (null === $this->defaultPackage) {\n                throw new LogicException('There is no default asset package, configure one first.');\n            }\n\n            return $this->defaultPackage;\n        }\n\n        if (!isset($this->packages[$name])) {\n            throw new InvalidArgumentException(\\sprintf('There is no \"%s\" asset package.', $name));\n        }\n\n        return $this->packages[$name];\n    }\n\n    /**\n     * Gets the version to add to public URL.\n     *\n     * @param string      $path        A public path\n     * @param string|null $packageName A package name\n     */\n    public function getVersion(string $path, ?string $packageName = null): string\n    {\n        return $this->getPackage($packageName)->getVersion($path);\n    }\n\n    /**\n     * Returns the public path.\n     *\n     * Absolute paths (i.e. http://...) are returned unmodified.\n     *\n     * @param string      $path        A public path\n     * @param string|null $packageName The name of the asset package to use\n     *\n     * @return string A public path which takes into account the base path and URL path\n     */\n    public function getUrl(string $path, ?string $packageName = null): string\n    {\n        return $this->getPackage($packageName)->getUrl($path);\n    }\n}\n"
+        },
+        {
+          "name": "PathPackage.php",
+          "type": "blob",
+          "size": 1.880859375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Asset;\n\nuse Symfony\\Component\\Asset\\Context\\ContextInterface;\nuse Symfony\\Component\\Asset\\VersionStrategy\\VersionStrategyInterface;\n\n/**\n * Package that adds a base path to asset URLs in addition to a version.\n *\n * In addition to the provided base path, this package also automatically\n * prepends the current request base path if a Context is available to\n * allow a website to be hosted easily under any given path under the Web\n * Server root directory.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass PathPackage extends Package\n{\n    private string $basePath;\n\n    /**\n     * @param string $basePath The base path to be prepended to relative paths\n     */\n    public function __construct(string $basePath, VersionStrategyInterface $versionStrategy, ?ContextInterface $context = null)\n    {\n        parent::__construct($versionStrategy, $context);\n\n        if (!$basePath) {\n            $this->basePath = '/';\n        } else {\n            if ('/' != $basePath[0]) {\n                $basePath = '/'.$basePath;\n            }\n\n            $this->basePath = rtrim($basePath, '/').'/';\n        }\n    }\n\n    public function getUrl(string $path): string\n    {\n        $versionedPath = parent::getUrl($path);\n\n        // if absolute or begins with /, we're done\n        if ($this->isAbsoluteUrl($versionedPath) || ($versionedPath && '/' === $versionedPath[0])) {\n            return $versionedPath;\n        }\n\n        return $this->getBasePath().ltrim($versionedPath, '/');\n    }\n\n    /**\n     * Returns the base path.\n     */\n    public function getBasePath(): string\n    {\n        return $this->getContext()->getBasePath().$this->basePath;\n    }\n}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.5390625,
+          "content": "Asset Component\n===============\n\nThe Asset component manages URL generation and versioning of web assets such as\nCSS stylesheets, JavaScript files and image files.\n\nResources\n---------\n\n * [Documentation](https://symfony.com/doc/current/components/asset/introduction.html)\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n"
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "UrlPackage.php",
+          "type": "blob",
+          "size": 3.6845703125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Asset;\n\nuse Symfony\\Component\\Asset\\Context\\ContextInterface;\nuse Symfony\\Component\\Asset\\Exception\\InvalidArgumentException;\nuse Symfony\\Component\\Asset\\Exception\\LogicException;\nuse Symfony\\Component\\Asset\\VersionStrategy\\VersionStrategyInterface;\n\n/**\n * Package that adds a base URL to asset URLs in addition to a version.\n *\n * The package allows to use more than one base URLs in which case\n * it randomly chooses one for each asset; it also guarantees that\n * any given path will always use the same base URL to be nice with\n * HTTP caching mechanisms.\n *\n * When the request context is available, this package can choose the\n * best base URL to use based on the current request scheme:\n *\n *  * For HTTP request, it chooses between all base URLs;\n *  * For HTTPs requests, it chooses between HTTPs base URLs and relative protocol URLs\n *    or falls back to any base URL if no secure ones are available.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass UrlPackage extends Package\n{\n    private array $baseUrls = [];\n    private ?self $sslPackage = null;\n\n    /**\n     * @param string|string[] $baseUrls Base asset URLs\n     */\n    public function __construct(string|array $baseUrls, VersionStrategyInterface $versionStrategy, ?ContextInterface $context = null)\n    {\n        parent::__construct($versionStrategy, $context);\n\n        if (!\\is_array($baseUrls)) {\n            $baseUrls = (array) $baseUrls;\n        }\n\n        if (!$baseUrls) {\n            throw new LogicException('You must provide at least one base URL.');\n        }\n\n        foreach ($baseUrls as $baseUrl) {\n            $this->baseUrls[] = rtrim($baseUrl, '/');\n        }\n\n        $sslUrls = $this->getSslUrls($baseUrls);\n\n        if ($sslUrls && $baseUrls !== $sslUrls) {\n            $this->sslPackage = new self($sslUrls, $versionStrategy);\n        }\n    }\n\n    public function getUrl(string $path): string\n    {\n        if ($this->isAbsoluteUrl($path)) {\n            return $path;\n        }\n\n        if (null !== $this->sslPackage && $this->getContext()->isSecure()) {\n            return $this->sslPackage->getUrl($path);\n        }\n\n        $url = $this->getVersionStrategy()->applyVersion($path);\n\n        if ($this->isAbsoluteUrl($url)) {\n            return $url;\n        }\n\n        if ($url && '/' != $url[0]) {\n            $url = '/'.$url;\n        }\n\n        return $this->getBaseUrl($path).$url;\n    }\n\n    /**\n     * Returns the base URL for a path.\n     */\n    public function getBaseUrl(string $path): string\n    {\n        if (1 === \\count($this->baseUrls)) {\n            return $this->baseUrls[0];\n        }\n\n        return $this->baseUrls[$this->chooseBaseUrl($path)];\n    }\n\n    /**\n     * Determines which base URL to use for the given path.\n     *\n     * Override this method to change the default distribution strategy.\n     * This method should always return the same base URL index for a given path.\n     */\n    protected function chooseBaseUrl(string $path): int\n    {\n        return abs(crc32($path)) % \\count($this->baseUrls);\n    }\n\n    private function getSslUrls(array $urls): array\n    {\n        $sslUrls = [];\n        foreach ($urls as $url) {\n            if (str_starts_with($url, 'https://') || str_starts_with($url, '//') || '' === $url) {\n                $sslUrls[] = $url;\n            } elseif (!parse_url($url, \\PHP_URL_SCHEME)) {\n                throw new InvalidArgumentException(\\sprintf('\"%s\" is not a valid URL.', $url));\n            }\n        }\n\n        return $sslUrls;\n    }\n}\n"
+        },
+        {
+          "name": "VersionStrategy",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.94921875,
+          "content": "{\n    \"name\": \"symfony/asset\",\n    \"type\": \"library\",\n    \"description\": \"Manages URL generation and versioning of web assets such as CSS stylesheets, JavaScript files and image files\",\n    \"keywords\": [],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Fabien Potencier\",\n            \"email\": \"fabien@symfony.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=8.2\"\n    },\n    \"require-dev\": {\n        \"symfony/http-client\": \"^6.4|^7.0\",\n        \"symfony/http-foundation\": \"^6.4|^7.0\",\n        \"symfony/http-kernel\": \"^6.4|^7.0\"\n    },\n    \"conflict\": {\n        \"symfony/http-foundation\": \"<6.4\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Component\\\\Asset\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.796875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/9.3/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony Asset Component Test Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <coverage>\n        <include>\n            <directory>./</directory>\n        </include>\n        <exclude>\n            <directory>./Tests</directory>\n            <directory>./vendor</directory>\n        </exclude>\n    </coverage>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

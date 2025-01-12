@@ -1,0 +1,58 @@
+{
+  "metadata": {
+    "timestamp": 1736711960662,
+    "page": 412,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "laracasts/PHP-Vars-To-Js-Transformer",
+      "stars": 2211,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0498046875,
+          "content": "/vendor\ncomposer.phar\ncomposer.lock\n.DS_Store\n.idea"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1484375,
+          "content": "language: php\n\nphp:\n  - 5.5\n  - 5.6\n  - 7.0\n\nbefore_script:\n  - composer install --dev --prefer-source --no-interaction\n\nscript: vendor/bin/phpspec run\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0771484375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Jeffrey Way <jeffrey@jeffrey-way.com>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE."
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9453125,
+          "content": "{\n    \"name\": \"laracasts/utilities\",\n    \"description\": \"Transform your PHP to JavaScript\",\n    \"keywords\": [\n        \"laravel\",\n        \"javascript\"\n    ],\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Jeffrey Way\",\n            \"email\": \"jeffrey@laracasts.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.5.0|>=7.2.5|>=8.0.0\",\n        \"illuminate/support\": \"^5.0|^6.0|^7.0|^8.0|^9.0|^10.0|^11.0\"\n    },\n    \"require-dev\": {\n        \"phpspec/phpspec\": \">=2.0\"\n    },\n    \"autoload\": {\n        \"files\": [\n            \"src/helpers.php\"\n        ],\n        \"psr-4\": {\n            \"Laracasts\\\\Utilities\\\\JavaScript\\\\\": \"src/\"\n        }\n    },\n    \"extra\": {\n        \"laravel\": {\n            \"providers\": [\n                \"Laracasts\\\\Utilities\\\\JavaScript\\\\JavaScriptServiceProvider\"\n            ],\n            \"aliases\": {\n                \"JavaScript\": \"Laracasts\\\\Utilities\\\\JavaScript\\\\JavaScriptFacade\"\n            }\n        }\n    }\n}\n"
+        },
+        {
+          "name": "readme.md",
+          "type": "blob",
+          "size": 5.580078125,
+          "content": "# Transform PHP Vars to JavaScript\n\n[![Build Status](https://travis-ci.org/laracasts/PHP-Vars-To-Js-Transformer.png?branch=master)](https://travis-ci.org/laracasts/PHP-Vars-To-Js-Transformer)\n\nOften, you'll find yourself in situations, where you want to pass some server-side string/array/collection/whatever\nto your JavaScript. Traditionally, this can be a bit of a pain - especially as your app grows.\n\nThis package simplifies the process drastically.\n\n## Installation\n\nBegin by installing this package through Composer.\n\n```bash\ncomposer require laracasts/utilities\n```\n\n> If you use Laravel 4: instead install `~1.0` of this package (and use the documentation for that release). For Laravel 5 (or non-Laravel), `~2.0` will do the trick!\n\n### Laravel Users\n\nFor Laravel users, there is a service provider you can make use of to automatically register the necessary bindings.\n\n> Laravel 5.5+ users: this step may be skipped, as we can auto-register the package with the framework.\n\n```php\n\n// config/app.php\n\n'providers' => [\n    '...',\n    'Laracasts\\Utilities\\JavaScript\\JavaScriptServiceProvider'\n];\n```\n\n\nWhen this provider is booted, you'll gain access to a helpful `JavaScript` facade, which you may use in your controllers.\n\n```php\npublic function index()\n{\n    JavaScript::put([\n        'foo' => 'bar',\n        'user' => User::first(),\n        'age' => 29\n    ]);\n\n    return View::make('hello');\n}\n```\n\n> In Laravel 5, of course add `use JavaScript;` to the top of your controller.\n\nUsing the code above, you'll now be able to access `foo`, `user`, and `age` from your JavaScript.\n\n```js\nconsole.log(foo); // bar\nconsole.log(user); // User Obj\nconsole.log(age); // 29\n```\n\nThis package, by default, binds your JavaScript variables to a \"footer\" view, which you will include. For example:\n\n```\n<body>\n    <h1>My Page</h1>\n\n    @include ('footer') // <-- Variables prepended to this view\n</body>\n```\n\nNaturally, you can change this default to a different view. See below.\n\n### Defaults\n\nIf using Laravel, there are only two configuration options that you'll need to worry about. First, publish the default configuration.\n\n```bash\nphp artisan vendor:publish\n\n// Or...\n\nphp artisan vendor:publish --provider=\"Laracasts\\Utilities\\JavaScript\\JavaScriptServiceProvider\"\n```\n\nThis will add a new configuration file to: `config/javascript.php`.\n\n```php\n<?php\n\nreturn [\n\n    /*\n    |--------------------------------------------------------------------------\n    | View to Bind JavaScript Vars To\n    |--------------------------------------------------------------------------\n    |\n    | Set this value to the name of the view (or partial) that\n    | you want to prepend all JavaScript variables to.\n    |\n    */\n    'bind_js_vars_to_this_view' => 'footer',\n\n    /*\n    |--------------------------------------------------------------------------\n    | JavaScript Namespace\n    |--------------------------------------------------------------------------\n    |\n    | By default, we'll add variables to the global window object. However,\n    | it's recommended that you change this to some namespace - anything.\n    | That way, you can access vars, like \"SomeNamespace.someVariable.\"\n    |\n    */\n    'js_namespace' => 'window'\n\n];\n```\n\n#### bind_js_vars_to_this_view\n\nYou need to update this file to specify which view you want your new JavaScript variables to be prepended to. Typically, your footer is a good place for this.\n\nIf you include something like a `layouts/partials/footer` partial, where you store your footer and script references, then make the `bind_js_vars_to_this_view` key equal to that path. Behind the scenes, the Laravel implementation of this package will listen for when that view is composed, and essentially paste the JS variables within it.\n\n#### js_namespace\n\nBy default, all JavaScript vars will be nested under the global `window` object. You'll likely want to change this. Update the\n`js_namespace` key with the name of your desired JavaScript namespace. It can be anything. Just remember: if you change this setting (which you should),\nthen you'll access all JavaScript variables, like so:\n\n```js\nMyNewNamespace.varName\n```\n\n#### Note\nRun this artisan command after changing the view path.\n```\nphp artisan config:clear\n```\n\n### Symfony2\nTo use this component in Symfony2 applications you can try [this bundle](https://github.com/holyspecter/HospectPhpVarsToJsBundle), built on top of PHP-Vars-To-Js-Transformer.\n\n### Without Laravel\n\nIf you're not using Laravel, then you'll need to hard-wire things yourself. (Or, feel free to submit a pull request with an implementation for your desired framework.)\n\nFirst, create an implementation of the `Laracasts\\Utilities\\JavaScript\\ViewBinder` interface. This class is in charge of inserting the given JavaScript into your view/page.\n\n```php\n<?php\n\nclass MyAppViewBinder implements Laracasts\\Utilities\\JavaScript\\ViewBinder {\n\n    // $js will contain your JS-formatted variable initializations\n    public function bind($js)\n    {\n        // Do what you need to do to add this JavaScript to\n        // the appropriate place in your app.\n    }\n}\n```\n\nNext, put it all together:\n\n```php\n\nuse Laracasts\\Utilities\\JavaScript\\Transformers\\Transformer;\n\n$binder = new MyAppViewBinder;\n\n$javascript = new Transformer($binder, 'window'); // change window to your desired namespace\n\n$javascript->put(['foo' => 'bar']);\n```\n\nNow, you can access `window.foo` from your JavaScript.\n\nRemember, though, this is only necessary if you aren't using Laravel. If you are, then just reference the service provider, as demonstrated above.\n\n## License\n\n[View the license](https://github.com/laracasts/PHP-Vars-To-Js-Transformer/blob/master/LICENSE) for this repo.\n"
+        },
+        {
+          "name": "spec",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

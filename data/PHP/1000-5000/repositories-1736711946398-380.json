@@ -1,0 +1,88 @@
+{
+  "metadata": {
+    "timestamp": 1736711946398,
+    "page": 380,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "gabordemooij/redbean",
+      "stars": 2311,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.3984375,
+          "content": "# Compiled source #\n###################\n*.com\n*.class\n*.dll\n*.exe\n*.o\n*.so\n*.pyc\n\n# Logs and databases #\n######################\n*.log\n\n# OS generated files #\n######################\n.DS_Store*\nehthumbs.db\nIcon?\nThumbs.db\n/.project\n/.settings/org.eclipse.php.core.prefs\n/.settings/org.eclipse.php.debug.core.Debug_Process_Preferences.prefs\n/rb.phar\n/rb.php\n/rb-mysql.php\n/rb-postgres.php\n/rb-sqlite.php\nbuild/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.0341796875,
+          "content": "language: php\n\nservices:\n  - mysql\n  - postgresql\n\nmatrix:\n include:\n  - php: 5.3\n    dist: precise\n  - php: 5.4\n    dist: trusty\n  - php: 5.5\n    dist: trusty\n  - php: 5.6\n    dist: trusty\n  - php: 7.0\n    dist: trusty\n  - php: 7.1\n    dist: trusty\n  - php: 7.2\n    dist: trusty\n  - php: 7.3\n    dist: trusty\n  - php: 7.4\n    dist: trusty\n  - php: 8.0\n    dist: xenial\n  - php: 8.1.0\n    dist: bionic\n  - php: 8.2.0\n    dist: focal\n  - php: 8.3.0\n    dist: bionic\n\nenv:\n  global:\n  - PGUSER=postgres\n  - PGPORT=5432\n  - PGHOST=localhost\n  - XDEBUG_MODE=coverage\n\nbefore_install:\n  - if [[ \"$TRAVIS_DIST\" == \"focal\" ]]; then sudo apt-get install libonig5 ;fi\n  - if [[ \"$TRAVIS_DIST\" == \"focal\" ]]; then sudo service postgresql restart ;fi\n\nbefore_script:\n  - touch /tmp/oodb.db\n  - mysql -e 'create database oodb;'\n  - psql template1 -c 'CREATE EXTENSION \"uuid-ossp\";' -U postgres\n  - psql -c 'create database oodb;' -U postgres\n  - php replica2.php onlyphp\n  - cp rb.php testing/cli/testcontainer/rb.php  \n  - cd testing/cli\n    \n \nscript: php runtests.php\n"
+        },
+        {
+          "name": "README.markdown",
+          "type": "blob",
+          "size": 2.248046875,
+          "content": "RedBeanPHP 5\n============\n\n[![Build Status](https://travis-ci.org/gabordemooij/redbean.svg?branch=master)](https://travis-ci.org/gabordemooij/redbean)\n\nRedBeanPHP is an easy to use ORM tool for PHP.\n\n* Automatically creates tables and columns as you go\n* No configuration, just fire and forget\n* No complicated package tools, no autoloaders, just ONE file\n\nInstallation (recommended)\n---------------------------\n\nDownload RedBeanPHP from the website:\n\nhttps://redbeanphp.com/download\n\nExtract the archive and put it in your PHP project, voila!\n\nOptional: sha256sum and check signature.\n\n\nInstallation via Composer (not recommended)\n-----------------------------------------\n\nJust open your composer.json file and add the package name ```(e.g. \"gabordemooij/redbean\": \"dev-master\")``` in your require list.\n\n```json\n{\n    \"require\": {\n        \"gabordemooij/redbean\": \"dev-master\"\n    }\n}\n```\n\n**NOTE**: \nYou will find many examples on the RedBean website make use of RedBean's `R` class. Because of namespaced autoloading in Composer, this class will be available as `\\RedbeanPHP\\R` instead of `R`. If you desire to use the much shorter `R` alias, you can add a `use` statement at the beginning of your code:\n\n```php\nuse \\RedBeanPHP\\R as R;\n```\n**NOTE:**\nIt is important to note that when using RedBeanPHP with Composer, there are some extra precautions needed when working with [Models](https://redbeanphp.com/index.php?p=/models). Due to the namespace requirements of Composer, when creating Models we need to use the `SimpleModel` to extend, not `RedBean_SimpleModel`. Furthermore, we need to specify the namespace of the `SimpleModel`, so a full example of using a Model with RedBean with Composer is as follows:\n\n```php\nuse \\RedBeanPHP\\R;\n\nclass User extends \\RedBeanPHP\\SimpleModel\n{\n    ...\n}\n```\nNotice that we also need to add the `use \\RedBeanPHP\\R` statement so that we can use the `R::` shortcut within the Model.\n\n\nQuick Example\n-------------\n\nHow we store a book object with RedBeanPHP:\n```php\n$book = R::dispense(\"book\");\n$book->author = \"Santa Claus\";\n$book->title = \"Secrets of Christmas\";\n$id = R::store( $book );\n```\n\nYep, it's that simple.\n\n\nMore information\n----------------\n\nFor more information about RedBeanPHP please consult\nthe RedBeanPHP website:\n\nhttps://www.redbeanphp.com/\n"
+        },
+        {
+          "name": "RedBeanPHP",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.419921875,
+          "content": "{\n  \"name\": \"gabordemooij/redbean\",\n  \"description\": \"RedBeanPHP ORM\",\n  \"keywords\": [\"orm\"],\n  \"homepage\": \"https://redbeanphp.com/\",\n  \"license\": \"BSD-3-Clause\",\n  \"authors\": [\n    {\n      \"name\": \"Gabor de Mooij\",\n      \"email\": \"gabor@redbeanphp.com\",\n      \"homepage\": \"https://redbeanphp.com\"\n    }\n  ],\n  \"require\": {\n    \"php\": \">=5.3.4\"\n  },\n  \"autoload\": {\n    \"psr-4\": {\n      \"RedBeanPHP\\\\\" : \"RedBeanPHP\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "p533patch.php",
+          "type": "blob",
+          "size": 0.330078125,
+          "content": "<?php\n\necho \"Running Patch P533...\";\necho PHP_EOL;\n\n$code = file_get_contents('rb.php');\n$code = str_replace('&offsetGet', 'offsetGet', $code);\n\n$bytes = file_put_contents('rb-p533.php', $code);\n\nif ($bytes > 0) {\n\techo 'Applied patch for PHP < 5.3.3';\n\techo PHP_EOL;\n\texit;\n} else {\n\techo 'Somthing went wrong.';\n\techo PHP_EOL;\n\texit;\n}\n"
+        },
+        {
+          "name": "replica2-win.php",
+          "type": "blob",
+          "size": 0.884765625,
+          "content": "<?php\n\necho \"Welcome to Replica 2 Build Script for RedBeanPHP\\n\";\necho \"Now building your beans!\\n\";\necho \"-------------------------------------------\\n\";\n\necho \"Cleaning up... \";\n@exec('del /q rb.phar');\n@exec('del /q build');\necho \"Done.\\n\";\n\necho \"Trying to create a directory called build to build the PHAR... \";\n@mkdir('build');\n@mkdir('build\\RedBeanPHP');\necho \"Done.\\n\";\n\necho \"Trying to copy RedBeanPHP to build/RedBeanPHP... \";\n@exec('xcopy .\\RedBeanPHP .\\build\\RedBeanPHP /e /y');\necho \"Done.\\n\";\n\necho \"Moving loader to build folder... \";\n@exec('move .\\build\\RedBeanPHP\\loader.php .\\build\\loader.php');\necho \"Done.\\n\";\n\necho \"Creating PHAR archive... \";\n$phar = new Phar(\"rb.phar\", 0, \"rb.phar\");\n$phar->buildFromDirectory('./build');\necho \"Done.\\n\";\n\necho \"Adding stub... \";\n$phar->setStub($phar->createDefaultStub(\"loader.php\"));\necho \"Done.\\n\"; \n\necho \"Your PHAR file has been generated.\\n\";\n"
+        },
+        {
+          "name": "replica2.php",
+          "type": "blob",
+          "size": 3.783203125,
+          "content": "#!/usr/bin/env php\n<?php\n\necho \"Welcome to Replica 2 Build Script for RedBeanPHP\\n\";\necho \"Now building your beans!\\n\";\necho \"-------------------------------------------\\n\";\n\n\n$code = '';\n$codeMySQL = '';\n$codePostgres = '';\n$codeSQLite = '';\n\nfunction addFile($file, $only = null) {\n\tglobal $code;\n\tglobal $codeMySQL;\n\tglobal $codePostgres;\n\tglobal $codeSQLite;\n\techo 'Added ', $file , ' to package... ',PHP_EOL;\n\t$raw = file_get_contents($file);\n\t$raw = preg_replace('/namespace\\s+([a-zA-Z0-9\\\\\\;]+);/m', 'namespace $1 {', $raw);\n\t$raw .= '}';\n\t$code .= $raw;\n\tif ( $only == null || $only == 'mysql' ) $codeMySQL .= $raw;\n\tif ( $only == null || $only == 'postgres' ) $codePostgres .= $raw;\n\tif ( $only == null || $only == 'sqlite' ) $codeSQLite .= $raw;\n}\n\ndefine('DIR', 'RedBeanPHP/');\n\naddFile( DIR . 'Logger.php' );\naddFile( DIR . 'Logger/RDefault.php' );\naddFile( DIR . 'Logger/RDefault/Debug.php' );\naddFile( DIR . 'Driver.php' );\naddFile( DIR . 'Driver/RPDO.php' );\naddFile( DIR . 'OODBBean.php' );\naddFile( DIR . 'Observable.php' );\naddFile( DIR . 'Observer.php' );\naddFile( DIR . 'Adapter.php' );\naddFile( DIR . 'Adapter/DBAdapter.php' );\naddFile( DIR . 'Cursor.php');\naddFile( DIR . 'Cursor/PDOCursor.php');\naddFile( DIR . 'Cursor/NullCursor.php');\naddFile( DIR . 'BeanCollection.php' );\naddFile( DIR . 'QueryWriter.php' );\naddFile( DIR . 'QueryWriter/AQueryWriter.php' );\naddFile( DIR . 'QueryWriter/MySQL.php', 'mysql' );\naddFile( DIR . 'QueryWriter/SQLiteT.php', 'sqlite' );\naddFile( DIR . 'QueryWriter/PostgreSQL.php', 'postgres' );\naddFile( DIR . 'QueryWriter/CUBRID.php' );\naddFile( DIR . 'RedException.php' );\naddFile( DIR . 'RedException/SQL.php' );\naddFile( DIR . 'Repository.php' );\naddFile( DIR . 'Repository/Fluid.php' );\naddFile( DIR . 'Repository/Frozen.php' );\naddFile( DIR . 'OODB.php' );\naddFile( DIR . 'ToolBox.php' );\naddFile( DIR . 'Finder.php' );\naddFile( DIR . 'AssociationManager.php' );\naddFile( DIR . 'BeanHelper.php' );\naddFile( DIR . 'BeanHelper/SimpleFacadeBeanHelper.php' );\naddFile( DIR . 'BeanHelper/DynamicBeanHelper.php' );\naddFile( DIR . 'SimpleModel.php' );\naddFile( DIR . 'SimpleModelInterface.php' );\naddFile( DIR . 'SimpleModelHelper.php' );\naddFile( DIR . 'TagManager.php' );\naddFile( DIR . 'LabelMaker.php' );\naddFile( DIR . 'Facade.php' );\naddFile( DIR . 'DuplicationManager.php' );\naddFile( DIR . 'Util/ArrayTool.php' );\naddFile( DIR . 'Util/DispenseHelper.php' );\naddFile( DIR . 'Util/Dump.php' );\naddFile( DIR . 'Util/MultiLoader.php' );\naddFile( DIR . 'Util/Transaction.php' );\naddFile( DIR . 'Util/QuickExport.php' );\naddFile( DIR . 'Util/MatchUp.php' );\naddFile( DIR . 'Util/Look.php' );\naddFile( DIR . 'Util/Diff.php' );\naddFile( DIR . 'Util/Tree.php' );\naddFile( DIR . 'Util/Feature.php' );\naddFile( DIR . 'Util/Either.php' );\naddFile( DIR . 'Plugin.php' );\n\n$func = file_get_contents(DIR . 'Functions.php');\n\n$extra = \"\nnamespace {\n\n//make some classes available for backward compatibility\nclass RedBean_SimpleModel extends \\RedBeanPHP\\SimpleModel {};\n\nif (!class_exists('R')) {\n\tclass R extends \\RedBeanPHP\\Facade{};\n}\n\n$func\n\n}\n\";\n\n$code .= $extra;\n$codeMySQL .= $extra;\n$codePostgres .= $extra;\n$codeSQLite .= $extra;\n\n$code = '<?php'.str_replace('<?php', '', $code);\n$codeMySQL = '<?php'.str_replace('<?php', '', $codeMySQL);\n$codePostgres = '<?php'.str_replace('<?php', '', $codePostgres);\n$codeSQLite = '<?php'.str_replace('<?php', '', $codeSQLite);\n\n$files = array( 'rb.php' => $code, 'rb-mysql.php' => $codeMySQL, 'rb-postgres.php' => $codePostgres, 'rb-sqlite.php' => $codeSQLite );\nforeach( $files as $file => $content ) {\n\techo 'Okay, seems we have all the code.. now writing file: ', $file ,PHP_EOL;\n\t$b = file_put_contents($file, $content);\n\techo 'Written: ',$b,' bytes.',PHP_EOL;\n\tif ($b > 0) {\n\t\techo 'Done!' ,PHP_EOL;\n\t} else {\n\t\techo 'Hm, something seems to have gone wrong... ',PHP_EOL;\n\t}\n}\n\n\n\n"
+        },
+        {
+          "name": "run_all_tests.sh",
+          "type": "blob",
+          "size": 0.1025390625,
+          "content": "#!/bin/sh\nphp replica2.php\ncp rb.php testing/cli/testcontainer/rb.php\ncd testing\ncd cli\nphp runtests.php\n"
+        },
+        {
+          "name": "run_single_test.sh",
+          "type": "blob",
+          "size": 0.2060546875,
+          "content": "#!/bin/sh\nif [ -z \"$1\" ]\nthen\n\techo \"Please enter the name of a test suite, example: Blackhole/Version\"\n\texit\nfi\nphp replica2.php\ncp rb.php testing/cli/testcontainer/rb.php\ncd testing\ncd cli\nphp runtests.php $1\n"
+        },
+        {
+          "name": "test-dist.ini",
+          "type": "blob",
+          "size": 0.2841796875,
+          "content": "; Test suite database config\n; Rename this file to test.ini if you are done\n\n[mysql]\nhost    = \"localhost\"\nschema  = \"oodb\"\nuser    = \"root\"\npass    = \"password\"\n\n[pgsql]\nhost    = \"localhost\"\nschema  = \"oodb\"\nuser    = \"postgres\"\npass    = \"password\"\n\n[sqlite]\nfile    = \"/tmp/database.db\"\n"
+        },
+        {
+          "name": "testing",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

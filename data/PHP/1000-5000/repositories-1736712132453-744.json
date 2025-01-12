@@ -1,0 +1,146 @@
+{
+  "metadata": {
+    "timestamp": 1736712132453,
+    "page": 744,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "easy-coding-standard/easy-coding-standard",
+      "stars": 1472,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.1435546875,
+          "content": "root = true\n\n[*]\ncharset = utf-8\nend_of_line = lf\ninsert_final_newline = true\ntrim_trailing_whitespace = true\nindent_style = space\nindent_size = 4\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1591796875,
+          "content": "/.github export-ignore\n/tests export-ignore\n.gitattributes export-ignore\n.gitignore export-ignore\nphpunit.xml export-ignore\n*.md export-ignore\n/docs export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.1142578125,
+          "content": "/vendor\ncomposer.lock\n\n/.phpunit.cache\n\n\n# to keep local rector outside git repository\nrector-local\n\nphp-scoper.phar\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0908203125,
+          "content": "The MIT License\n---------------\n\nCopyright (c) 2016 Tomas Votruba (https://tomasvotruba.com)\n\nPermission is hereby granted, free of charge, to any person\nobtaining a copy of this software and associated documentation\nfiles (the \"Software\"), to deal in the Software without\nrestriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the\nSoftware is furnished to do so, subject to the following\nconditions:\n\nThe above copyright notice and this permission notice shall be\nincluded in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\nOF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND\nNONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT\nHOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR\nOTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.361328125,
+          "content": "# The Easiest way to use Coding Standard\n\n[![Downloads total](https://img.shields.io/packagist/dt/symplify/easy-coding-standard.svg?style=flat-square)](https://packagist.org/packages/symplify/easy-coding-standard/stats)\n\n<br>\n\n## Killer Features\n\n- Install on **any PHP 7.2-PHP 8.3** project with any dependencies\n- Blazing fast with parallel run out of the box\n- Use [PHP_CodeSniffer or PHP-CS-Fixer](https://tomasvotruba.com/blog/2017/05/03/combine-power-of-php-code-sniffer-and-php-cs-fixer-in-3-lines/) - anything you like\n- Use **prepared sets** and [PHP CS Fixer sets](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/blob/master/doc/ruleSets/index.rst) to save time\n\n<br>\n\n## Install\n\n```bash\ncomposer require symplify/easy-coding-standard --dev\n```\n\n<br>\n\n## Usage\n\n```bash\nvendor/bin/ecs\n```\n\nOn the first run, ECS creates `ecs.php` config file with directories and first rule to kick off.\n\nThen you can run again to see the suggested diffs:\n\n```bash\nvendor/bin/ecs\n```\n\nTo actually **fix your code**, add `--fix`:\n\n```bash\nvendor/bin/ecs --fix\n```\n\nThat's it!\n\n<br>\n\n## Configure\n\nMost of the time, you'll be happy with the default configuration. The most relevant part is configuring paths, checkers and sets:\n\n```php\nuse PhpCsFixer\\Fixer\\ArrayNotation\\ArraySyntaxFixer;\nuse PhpCsFixer\\Fixer\\ListNotation\\ListSyntaxFixer;\nuse Symplify\\EasyCodingStandard\\Config\\ECSConfig;\n\nreturn ECSConfig::configure()\n    ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])\n    ->withConfiguredRule(\n        ArraySyntaxFixer::class,\n        ['syntax' => 'long']\n    )\n    ->withRules([\n        ListSyntaxFixer::class,\n    ])\n    ->withPreparedSets(psr12: true);\n```\n\n<br>\n\nDo you want to check all `*.php` files in your root (`ecs.php`, `rector.php` etc.)? Instead of listing them one by one, use `->withRootFiles()` method:\n\n```php\nuse Symplify\\EasyCodingStandard\\Config\\ECSConfig;\n\nreturn ECSConfig::configure()\n    ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])\n    ->withRootFiles();\n```\n\n<br>\n\nDo you want to include one of 44 sets from [php-cs-fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/blob/master/doc/ruleSets/index.rst)?\n\nYou can:\n\n```php\nuse Symplify\\EasyCodingStandard\\Config\\ECSConfig;\n\nreturn ECSConfig::configure()\n    ->withPaths([__DIR__ . '/src', __DIR__ . '/tests'])\n    ->withPhpCsFixerSets(perCS20: true, doctrineAnnotation: true);\n```\n\n<br>\n\n### How to Skip Files/Rules?\n\nLove the sets of rules, but want to skip single rule or some files?\n\n```php\nuse Symplify\\EasyCodingStandard\\Config\\ECSConfig;\n\nreturn ECSConfig::configure()\n    ->withSkip([\n        // skip single rule\n        ArraySyntaxFixer::class,\n\n        // skip single rule in specific paths\n        ArraySyntaxFixer::class => [\n            __DIR__ . '/src/ValueObject/',\n        ],\n\n        // skip directory by absolute or * mask\n        __DIR__ . '/src/Migrations',\n\n        // skip directories by mask\n        __DIR__ . '/src/*/Legacy',\n    ]);\n```\n\n<br>\n\n### Less Common Options\n\nYou probably won't use these, but they can give you more control over the internal process:\n\n```php\nuse Symplify\\EasyCodingStandard\\Config\\ECSConfig;\nuse Symplify\\EasyCodingStandard\\ValueObject\\Option;\n\nreturn ECSConfig::configure()\n    // file extensions to scan\n    ->withFileExtensions(['php'])\n\n    // configure cache paths and namespace - useful e.g. Gitlab CI caching, where getcwd() produces always different path\n    ->withCache(\n        directory: sys_get_temp_dir() . '/_changed_files_detector_tests',\n        namespace: getcwd() // normalized to directory separator\n    )\n\n    // print contents with specific indent rules\n    ->withSpacing(indentation: Option::INDENTATION_SPACES, lineEnding: PHP_EOL)\n\n    // modify parallel run\n    ->withParallel(timeoutSeconds: 120, maxNumberOfProcess: 32, jobSize: 20);\n```\n\nMentioned values are default ones.\n\n<br>\n\nDo you use ECS across variety of project? Do you want to run them always the same way in each of those project? Let's make use of [Composer scripts](https://blog.martinhujer.cz/have-you-tried-composer-scripts/)\n\nThis command adds 2 handy scripts to your `composer.json`:\n\n```bash\nvendor/bin/ecs scripts\n```\n\nRun them always the same way - to check the code:\n\n```bash\ncomposer check-cs\n```\n\nTo apply fixes, run:\n\n```bash\ncomposer fix-cs\n```\n\n<br>\n\n### Controlling Output Format\n\nYou may want to use ECS to generate reports for third-party tooling.\n\nWe currently provide formatters for:\n\n- `console`:  Human-oriented printing à la PHP CS Fixer.\n- `json`:  A custom JSON blob for arbitrary tooling.\n- `junit`:  JUnit format to be used in different CI environments.\n- `checkstyle`: Useful for Github Action Reports.\n- `gitlab`: For Gitlab code quality reports or Code Climate tooling.\n\nFor information on how each of these behave, refer to their respective\n[implementations](src/Console/Output/).\n\n<br>\n\n## FAQ\n\n### How do I clear cache?\n\n```bash\nvendor/bin/ecs --clear-cache\n```\n\n### How can I see all used rules?\n\n```bash\nvendor/bin/ecs list-checkers\n```\n\nDo you look for json format?\n\n```bash\nvendor/bin/ecs list-checkers --output-format json\n```\n\n<br>\n\n## How to Migrate from another coding standard tool?\n\nDo you use another tool and want to migrate? It's pretty straightforward - here is \"how to\":\n\n* for [PHP_CodeSniffer](https://tomasvotruba.com/blog/2018/06/04/how-to-migrate-from-php-code-sniffer-to-easy-coding-standard)\n* and [PHP CS Fixer](https://tomasvotruba.com/blog/2018/06/07/how-to-migrate-from-php-cs-fixer-to-easy-coding-standard).\n"
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 3.072265625,
+          "content": "{\n    \"name\": \"symplify/easy-coding-standard\",\n    \"description\": \"Use Coding Standard with 0-knowledge of PHP-CS-Fixer and PHP_CodeSniffer.\",\n    \"license\": \"MIT\",\n    \"keywords\": [\n        \"static analysis\",\n        \"code style\",\n        \"automation\",\n        \"fixer\"\n    ],\n    \"bin\": [\n        \"bin/ecs\"\n    ],\n    \"require\": {\n        \"php\": \">=8.2\",\n        \"composer/pcre\": \"^3.3.2\",\n        \"composer/xdebug-handler\": \"^3.0.5\",\n        \"friendsofphp/php-cs-fixer\": \"^3.66\",\n        \"illuminate/container\": \"^11.36.1\",\n        \"nette/utils\": \"^4.0.5\",\n        \"sebastian/diff\": \"^6.0.2\",\n        \"squizlabs/php_codesniffer\": \"^3.11.2\",\n        \"symfony/console\": \"^6.4.17\",\n        \"symfony/finder\": \"^7.2.2\",\n        \"symplify/coding-standard\": \"^12.2.3\",\n        \"symplify/easy-parallel\": \"^11.2.2\",\n        \"webmozart/assert\": \"^1.11\"\n    },\n    \"require-dev\": {\n        \"php-parallel-lint/php-parallel-lint\": \"^1.4\",\n        \"phpstan/extension-installer\": \"^1.4.3\",\n        \"phpstan/phpstan\": \"^2.1\",\n        \"phpstan/phpstan-phpunit\": \"^2.0.3\",\n        \"phpstan/phpstan-webmozart-assert\": \"^2.0\",\n        \"phpunit/phpunit\": \"^11.5.2\",\n        \"rector/rector\": \"^2.0.5\",\n        \"rector/type-perfect\": \"^2.0.1\",\n        \"symplify/phpstan-extensions\": \"^12.0\",\n        \"symplify/vendor-patches\": \"^11.3.7\",\n        \"tomasvotruba/class-leak\": \"^2.0\",\n        \"tomasvotruba/type-coverage\": \"^2.0.1\",\n        \"tomasvotruba/unused-public\": \"^2.0\",\n        \"tracy/tracy\": \"^2.10.9\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Symplify\\\\EasyCodingStandard\\\\\": \"src\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Symplify\\\\EasyCodingStandard\\\\Tests\\\\\": \"tests\"\n        },\n        \"files\": [\n            \"tests/functions.php\"\n        ]\n    },\n    \"config\": {\n        \"sort-packages\": true,\n        \"platform-check\": false,\n        \"allow-plugins\": {\n            \"cweagans/composer-patches\": true,\n            \"phpstan/extension-installer\": true\n        }\n    },\n    \"scripts\": {\n        \"lint\": [\n            \"@phpstan\",\n            \"@rector\",\n            \"@check-cs\"\n        ],\n        \"lint.fix\": [\n            \"@fix-rector\",\n            \"@fix-cs\"\n        ],\n        \"phpstan\": \"vendor/bin/phpstan analyse --ansi --memory-limit=1G --error-format symplify\",\n        \"rector\": \"vendor/bin/rector process --dry-run --memory-limit=1G --ansi\",\n        \"fix-rector\": \"vendor/bin/rector process --memory-limit=1G --ansi\",\n        \"check-cs\": \"bin/ecs check --ansi\",\n        \"fix-cs\": \"bin/ecs check --fix --ansi\"\n    },\n    \"replace\": {\n        \"symfony/polyfill-intl-grapheme\": \"*\",\n        \"symfony/polyfill-ctype\": \"*\",\n        \"symfony/polyfill-intl-normalizer\": \"*\",\n        \"symfony/event-dispatcher\": \"7.*\",\n        \"symfony/process\": \"7.*\",\n        \"symfony/stopwatch\": \"7.*\",\n        \"symfony/string\": \"7.*\"\n    },\n    \"extra\": {\n        \"patches\": {\n            \"illuminate/container\": [\n                \"patches/illuminate-container-container-php.patch\"\n            ],\n            \"symfony/console\": [\n                \"patches/symfony-console-helper-helper-php.patch\"\n            ]\n        }\n    }\n}\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ecs.php",
+          "type": "blob",
+          "size": 0.4375,
+          "content": "<?php\n\ndeclare(strict_types=1);\n\nuse Symplify\\CodingStandard\\Fixer\\LineLength\\LineLengthFixer;\nuse Symplify\\EasyCodingStandard\\Config\\ECSConfig;\n\nreturn ECSConfig::configure()\n    ->withPaths([__DIR__ . '/bin', __DIR__ . '/config', __DIR__ . '/src', __DIR__ . '/tests'])\n    ->withRules([LineLengthFixer::class])\n    ->withRootFiles()\n    ->withSkip(['*/Source/*', '*/Fixture/*'])\n    ->withPreparedSets(symplify: true, psr12: true, common: true);\n"
+        },
+        {
+          "name": "full_ecs_build.sh",
+          "type": "blob",
+          "size": 2.6259765625,
+          "content": "#!/usr/bin/env bash\n\n# add patches\ncomposer install --ansi\n\n# but skip dev dependencies\ncomposer update --no-dev --ansi\n\n# remove tests and useless files, to make downgraded, scoped and deployed codebase as small as possible\nrm -rf tests vendor/phpcsstandards/php_codesniffer/tests vendor/phpcsstandards/php_codesniffer/src/Standards/Generic/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/MySource/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/PEAR/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/PSR1/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/PSR12/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/PSR2/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/Squiz/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/Zend/Tests vendor/phpcsstandards/php_codesniffer/src/Standards/Generic/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/MySource/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/PEAR/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/PSR1/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/PSR12/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/PSR2/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/Squiz/Docs vendor/phpcsstandards/php_codesniffer/src/Standards/Zend/Docs vendor/phpcsstandards/php_codesniffer/src/Reports vendor/phpcsstandards/php_codesniffer/src/Filters vendor/phpcsstandards/php_codesniffer/src/Generators vendor/friendsofphp/php-cs-fixer/src/Linter vendor/friendsofphp/php-cs-fixer/src/Runner vendor/friendsofphp/php-cs-fixer/src/Documentation vendor/friendsofphp/php-cs-fixer/src/Cache vendor/friendsofphp/php-cs-fixer/src/Console/Output vendor/friendsofphp/php-cs-fixer/src/Console/Report vendor/friendsofphp/php-cs-fixer/src/Console/SelfUpdate vendor/friendsofphp/php-cs-fixer/src/Console/Application.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/DescribeCommand.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/Documentation.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/FixCommand.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/HelpCommand.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/ListSetsCommand.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/SelfUpdateCommand.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/ListFilesCommand.php vendor/friendsofphp/php-cs-fixer/src/Console/Command/DocumentationCommand.php\n\n# downgrade with rector\nmkdir rector-local\ncomposer require rector/rector --working-dir rector-local\nrector-local/vendor/bin/rector process bin config/config.php src vendor --config build/rector-downgrade-php-72.php --ansi\n\n# prefix\nsh prefix-code.sh\n"
+        },
+        {
+          "name": "patches",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpstan.neon",
+          "type": "blob",
+          "size": 3.3544921875,
+          "content": "parameters:\n    level: 8\n\n    reportUnmatchedIgnoredErrors: false\n\n    # requires exact closure types\n    checkMissingCallableSignature: true\n\n    paths:\n        - src\n        - tests\n        - ecs.php\n        - rector.php\n\n    excludePaths:\n        # deprecated, to be removed\n        - scoper.php\n\n        # tests\n        - '*/Source/*'\n        - '*/Fixture/*'\n\n    # see https://github.com/tomasVotruba/unused-public\n    unused_public:\n        methods: true\n        properties: true\n        constants: true\n\n    # see https://github.com/TomasVotruba/type-coverage\n    type_coverage:\n        return: 99\n        param: 94.4\n        property: 99\n\n    bootstrapFiles:\n        - tests/bootstrap.php\n\n    treatPhpDocTypesAsCertain: true\n\n    ignoreErrors:\n        # set above\n        -\n            path: src/Parallel/Application/ParallelFileProcessor.php\n            message: '#Cannot call method (.*?)\\(\\) on Symplify\\\\EasyParallel\\\\ValueObject\\\\ProcessPool\\|null#'\n\n        - '#Method Symplify\\\\EasyCodingStandard\\\\Console\\\\Command\\\\ListCheckersCommand\\:\\:getObjectClasses\\(\\) should return (.*?)#'\n\n        - '#Method Symplify\\\\EasyCodingStandard\\\\Application\\\\SingleFileProcessor\\:\\:processFilePath\\(\\) should return array\\{file_diffs\\?\\: array<Symplify\\\\EasyCodingStandard\\\\ValueObject\\\\Error\\\\FileDiff>, coding_standard_errors\\?\\: array<Symplify\\\\EasyCodingStandard\\\\SniffRunner\\\\ValueObject\\\\Error\\\\CodingStandardError>\\} but returns array<(.*?), array<Symplify\\\\EasyCodingStandard\\\\SniffRunner\\\\ValueObject\\\\Error\\\\CodingStandardError\\|Symplify\\\\EasyCodingStandard\\\\ValueObject\\\\Error\\\\FileDiff>>#'\n\n        - '#Method Symplify\\\\EasyCodingStandard\\\\FixerRunner\\\\Parser\\\\FileToTokensParser\\:\\:parseFromFilePath\\(\\) should return iterable<PhpCsFixer\\\\Tokenizer\\\\Token>&PhpCsFixer\\\\Tokenizer\\\\Tokens but returns PhpCsFixer\\\\Tokenizer\\\\Tokens#'\n\n        # false positive on custom config tets\n        -\n            message: '#Missing call to parent\\:\\:setUp\\(\\) method#'\n            paths:\n                 - tests/Skipper/Skipper/Skipper/SkipperTest.php\n                 - tests/Skipper/Skipper/Skip/SkipSkipperTest.php\n                 - tests/Skipper/SkipCriteriaResolver/SkippedPathsResolver/SkippedPathsResolverTest.php\n                 - tests/FixerRunner/Application/FileProcessorTest.ph\n                 - src/Testing/PHPUnit/AbstractCheckerTestCase.php\n\n        # optional\n        -\n            message: '#Method Symplify\\\\EasyCodingStandard\\\\Config\\\\ECSConfig\\:\\:singleton\\(\\) has parameter \\$concrete with no signature specified for Closure#'\n            path: src/Config/ECSConfig.php\n\n        # testing instance of on purpose\n        -\n            message: '#Call to method PHPUnit\\\\Framework\\\\Assert\\:\\:assertInstanceOf#'\n            path: tests/*\n\n        # overly detailed\n        - '#PHPDoc tag @var with type string\\|false is not subtype of native type non\\-empty\\-string\\|false#'\n\n        # array validation on purpose\n        - '#Call to static method Webmozart\\\\Assert\\\\Assert\\:\\:allString\\(\\) with (non-empty-array|list|array)<string> will always evaluate to true#'\n        - '#Call to static method Webmozart\\\\Assert\\\\Assert\\:\\:allIsArray\\(\\) with array<class\\-string<PHP_CodeSniffer\\\\Sniffs\\\\Sniff\\|PhpCsFixer\\\\Fixer\\\\FixerInterface>, array<mixed>> will always evaluate to true#'\n\n        # hack to autoload contants\n        - '#Call to new PHP_CodeSniffer\\\\Util\\\\Tokens\\(\\) on a separate line has no effect#'\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.38671875,
+          "content": "<?xml version=\"1.0\"?>\n<phpunit\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xsi:noNamespaceSchemaLocation=\"vendor/phpunit/phpunit/phpunit.xsd\"\n    bootstrap=\"tests/bootstrap.php\"\n    colors=\"true\"\n    cacheDirectory=\".phpunit.cache\"\n    displayDetailsOnTestsThatTriggerWarnings=\"true\"\n>\n    <testsuite name=\"all\">\n        <directory>tests</directory>\n    </testsuite>\n</phpunit>\n"
+        },
+        {
+          "name": "prefix-code.sh",
+          "type": "blob",
+          "size": 1.2763671875,
+          "content": "#!/usr/bin/env bash\n\n# inspired from https://github.com/rectorphp/rector/blob/main/build/build-rector-scoped.sh\n\n# see https://stackoverflow.com/questions/66644233/how-to-propagate-colors-from-bash-script-to-github-action?noredirect=1#comment117811853_66644233\nexport TERM=xterm-color\n\n# show errors\nset -e\n\n# script fails if trying to access to an undefined variable\nset -u\n\n\n# functions\nnote()\n{\n    MESSAGE=$1;\n    printf \"\\n\";\n    echo \"\\033[0;33m[NOTE] $MESSAGE\\033[0m\";\n}\n\n# ---------------------------\n\n# 2. scope it -\nnote \"Downloading php-scoper 0.18.10\"\n# released 2023-12\nwget https://github.com/humbug/php-scoper/releases/download/0.18.10/php-scoper.phar -N --no-verbose\n\n\nnote \"Running php-scoper\"\n\n# Work around possible PHP memory limits\nphp -d memory_limit=-1 php-scoper.phar add-prefix bin config src vendor composer.json --config scoper.php --force --ansi --output-dir scoped-code\n\n# the output code is in \"/scoped-code\", lets move it up\n# the local directories have to be empty to move easily\nrm -r bin config src vendor composer.json\nmv scoped-code/* .\n\nnote \"Show prefixed files\"\nls -l .\n\nnote \"Dumping Composer Autoload\"\ncomposer dump-autoload --ansi --classmap-authoritative --no-dev\n\n# make bin/ecs runnable without \"php\"\nchmod 777 \"bin/ecs\"\nchmod 777 \"bin/ecs.php\"\n\nnote \"Finished\"\n"
+        },
+        {
+          "name": "rector.php",
+          "type": "blob",
+          "size": 0.7041015625,
+          "content": "<?php\n\ndeclare(strict_types=1);\n\nuse Rector\\Config\\RectorConfig;\n\nreturn RectorConfig::configure()\n    ->withPhpSets()\n    ->withPreparedSets(\n        codeQuality: true,\n        deadCode: true,\n        codingStyle: true,\n        typeDeclarations: true,\n        naming: true,\n        privatization: true,\n        earlyReturn: true\n    )\n    ->withPaths([__DIR__ . '/bin', __DIR__ . '/config', __DIR__ . '/src', __DIR__ . '/config', __DIR__ . '/tests'])\n    ->withRootFiles()\n    ->withImportNames()\n    ->withBootstrapFiles([__DIR__ . '/tests/bootstrap.php'])\n    ->withSkip([\n        '*/Source/*',\n        '*/Fixture/*',\n        __DIR__ . '/src/SniffRunner/ValueObject/File.php',\n        __DIR__ . '/scoper.php',\n    ]);\n"
+        },
+        {
+          "name": "scoper.php",
+          "type": "blob",
+          "size": 4.9580078125,
+          "content": "<?php\n\ndeclare(strict_types=1);\n\nuse Isolated\\Symfony\\Component\\Finder\\Finder;\nuse Nette\\Utils\\Strings;\n\nrequire __DIR__ . '/vendor/autoload.php';\n\n$timestamp = (new DateTime('now'))->format('Ym');\n\nuse Symplify\\EasyCodingStandard\\Application\\Version\\StaticVersionResolver;\n\n// excluding polyfills in generic way\n// @see https://github.com/humbug/php-scoper/blob/cb23986d9309a10eaa284242f2169723af4e4a7e/docs/further-reading.md#further-reading\n\n$polyfillsBootstraps = array_map(\n    static fn (SplFileInfo $fileInfo) => $fileInfo->getPathname(),\n    iterator_to_array(\n        Finder::create()\n            ->files()\n            ->in(__DIR__ . '/vendor/symfony/polyfill-*')\n            ->name('bootstrap*.php'),\n        false,\n    ),\n);\n\n$polyfillsStubs = array_map(\n    static fn (SplFileInfo $fileInfo) => $fileInfo->getPathname(),\n    iterator_to_array(\n        Finder::create()\n            ->files()\n            ->in(__DIR__ . '/vendor/symfony/polyfill-*/Resources/stubs')\n            ->name('*.php'),\n        false,\n    ),\n);\n\n// see https://github.com/humbug/php-scoper\nreturn [\n    'prefix' => 'ECSPrefix' . $timestamp,\n\n    // excluded\n    'exclude-namespaces' => [\n        '#^Symplify\\\\\\\\EasyCodingStandard#',\n        '#^Symplify\\\\\\\\CodingStandard#',\n        '#^PhpCsFixer#',\n        '#^PHP_CodeSniffer#',\n        '#^Symfony\\\\\\\\Polyfill#',\n    ],\n    'exclude-constants' => [\n        // Symfony global constants\n        '#^SYMFONY\\_[\\p{L}_]+$#',\n        // TOKENS from code sniffer - https://github.com/symplify/easy-coding-standard/blob/main/vendor/squizlabs/php_codesniffer/src/Util/Tokens.php\n        '#^T_(.*?)#',\n        'PHP_CODESNIFFER_CBF',\n        'PHP_CODESNIFFER_VERBOSITY',\n    ],\n    'expose-constants' => ['__ECS_RUNNING__'],\n    'expose-functions' => ['u', 'b', 's', 'trigger_deprecation'],\n\n    'exclude-files' => [...$polyfillsBootstraps, ...$polyfillsStubs],\n\n    // expose\n    'expose-classes' => ['Normalizer'],\n\n    'patchers' => [\n        static function (string $filePath, string $prefix, string $content): string {\n            if (! \\str_ends_with(\n                $filePath,\n                'vendor/friendsofphp/php-cs-fixer/src/Fixer/ClassNotation/FinalInternalClassFixer.php',\n            )) {\n                return $content;\n            }\n\n            // php-cs-fixer uses partial namespaces, that are only strings - should be kept untouched\n            // ref.: https://github.com/easy-coding-standard/easy-coding-standard/issues/91\n            return str_replace([\n                $prefix . '\\\\\\\\ORM\\\\\\\\Entity',\n                $prefix . '\\\\\\\\ORM\\\\\\\\Mapping\\\\\\\\Entity',\n                $prefix . '\\\\\\\\Mapping\\\\\\\\Entity',\n                $prefix . '\\\\\\\\ODM\\\\\\\\Document',\n            ], ['ORM\\\\Entity', 'ORM\\\\Mapping\\\\Entity', 'Mapping\\\\Entity', 'ODM\\\\Document'], $content);\n        },\n\n        static function (string $filePath, string $prefix, string $content): string {\n            if (! \\str_ends_with(\n                $filePath,\n                'vendor/friendsofphp/php-cs-fixer/src/Fixer/Operator/OperatorLinebreakFixer.php'\n            )) {\n                return $content;\n            }\n\n            // PHP Code Sniffer and php-cs-fixer use different type, so both are compatible\n            // remove type, to allow string|int constants for token emulation\n            $content = str_replace('array_map(static function (int $id)', 'array_map(static function ($id)', $content);\n\n            return str_replace('static fn (int $id)', 'static fn ($id)', $content);\n        },\n\n        static function (string $filePath, string $prefix, string $content): string {\n            if (! \\str_ends_with($filePath, 'vendor/symfony/deprecation-contracts/function.php')) {\n                return $content;\n            }\n\n            // comment out\n            return str_replace('@\\trigger_', '// @\\trigger_', $content);\n        },\n\n        // fixes https://github.com/symplify/symplify/issues/3205\n        function (string $filePath, string $prefix, string $content): string {\n            if (\n                ! str_ends_with($filePath, 'src/Testing/PHPUnit/AbstractCheckerTestCase.php') &&\n                ! str_ends_with($filePath, 'src/Testing/PHPUnit/AbstractTestCase.php')\n            ) {\n                return $content;\n            }\n\n            return Strings::replace(\n                $content,\n                '#' . $prefix . '\\\\\\\\PHPUnit\\\\\\\\Framework\\\\\\\\TestCase#',\n                'PHPUnit\\Framework\\TestCase'\n            );\n        },\n\n        // add static versions constant values\n        function (string $filePath, string $prefix, string $content): string {\n            if (! str_ends_with($filePath, 'src/Application/Version/StaticVersionResolver.php')) {\n                return $content;\n            }\n\n            $releaseDateTime = StaticVersionResolver::resolverReleaseDateTime();\n\n            return strtr($content, [\n                '@package_version@' => StaticVersionResolver::resolvePackageVersion(),\n                '@release_date@' => $releaseDateTime->format('Y-m-d H:i:s'),\n            ]);\n        },\n    ],\n];\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests-released",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

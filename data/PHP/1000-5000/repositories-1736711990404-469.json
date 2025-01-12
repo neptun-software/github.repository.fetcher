@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "timestamp": 1736711990404,
+    "page": 469,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "nicolaslopezj/searchable",
+      "stars": 2009,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.009765625,
+          "content": ".DS_Store\n"
+        },
+        {
+          "name": "LICENSE.txt",
+          "type": "blob",
+          "size": 1.0537109375,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2014 Nicolas Lopez\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 6.3173828125,
+          "content": "Searchable, a search trait for Laravel\n==========================================\n\nSearchable is a trait for Laravel 4.2+ and Laravel 5.0 that adds a simple search function to Eloquent Models.\n\nSearchable allows you to perform searches in a table giving priorities to each field for the table and it's relations.\n\nThis is not optimized for big searches, but sometimes you just need to make it simple (Although it is not slow).\n\n# Installation\n\nSimply add the package to your `composer.json` file and run `composer update`.\n\n```\n\"nicolaslopezj/searchable\": \"1.*\"\n```\n\n# Usage\n\nAdd the trait to your model and your search rules.\n\n```php\nuse Nicolaslopezj\\Searchable\\SearchableTrait;\n\nclass User extends \\Eloquent\n{\n    use SearchableTrait;\n\n    /**\n     * Searchable rules.\n     *\n     * @var array\n     */\n    protected $searchable = [\n        /**\n         * Columns and their priority in search results.\n         * Columns with higher values are more important.\n         * Columns with equal values have equal importance.\n         *\n         * @var array\n         */\n        'columns' => [\n            'users.first_name' => 10,\n            'users.last_name' => 10,\n            'users.bio' => 2,\n            'users.email' => 5,\n            'posts.title' => 2,\n            'posts.body' => 1,\n        ],\n        'joins' => [\n            'posts' => ['users.id','posts.user_id'],\n        ],\n    ];\n\n    public function posts()\n    {\n        return $this->hasMany('Post');\n    }\n\n}\n```\n\nNow you can search your model.\n\n```php\n// Simple search\n$users = User::search($query)->get();\n\n// Search and get relations\n// It will not get the relations if you don't do this\n$users = User::search($query)\n            ->with('posts')\n            ->get();\n```\n\n\n## Search Paginated\n\nAs easy as laravel default queries\n\n```php\n// Search with relations and paginate\n$users = User::search($query)\n            ->with('posts')\n            ->paginate(20);\n```\n\n## Mix queries\n\nSearch method is compatible with any eloquent method. You can do things like this:\n\n```php\n// Search only active users\n$users = User::where('status', 'active')\n            ->search($query)\n            ->paginate(20);\n```\n\n## Custom Threshold\n\nThe default threshold for accepted relevance is the sum of all attribute relevance divided by 4.\nTo change this value you can pass in a second parameter to search() like so:\n\n```php\n// Search with lower relevance threshold\n$users = User::where('status', 'active')\n            ->search($query, 0)\n            ->paginate(20);\n```\n\nThe above, will return all users in order of relevance.\n\n## Entire Text search\n\nBy default, multi-word search terms are split and Searchable searches for each word individually. Relevance plays a role in prioritizing matches that matched on multiple words. If you want to prioritize matches that include the multi-word search (thus, without splitting into words) you can enable full text search by setting the third value to true. Example:\n\n```php\n// Prioritize matches containing \"John Doe\" above matches containing only \"John\" or \"Doe\".\n$users = User::search(\"John Doe\", null, true)->get();\n```\n\nIf you explicitly want to search for full text matches only, you can disable multi-word splitting by setting the fourth parameter to true.\n\n```php\n// Do not include matches that only matched \"John\" OR \"Doe\".\n$users = User::search(\"John Doe\", null, true, true)->get();\n```\n\n# How does it work?\n\nSearchable builds a query that search through your model using Laravel's Eloquent.\nHere is an example query\n\n#### Eloquent Model:\n```php\nuse Nicolaslopezj\\Searchable\\SearchableTrait;\n\nclass User extends \\Eloquent\n{\n    use SearchableTrait;\n\n    /**\n     * Searchable rules.\n     *\n     * @var array\n     */\n    protected $searchable = [\n        'columns' => [\n            'first_name' => 10,\n            'last_name' => 10,\n            'bio' => 2,\n            'email' => 5,\n        ],\n    ];\n\n}\n```\n\n#### Search:\n```php\n$search = User::search('Sed neque labore', null, true)->get();\n```\n\n#### Result:\n```sql\nselect `users`.*, \n\n-- If third parameter is set as true, it will check if the column starts with the search\n-- if then it adds relevance * 30\n-- this ensures that relevant results will be at top\n(case when first_name LIKE 'Sed neque labore%' then 300 else 0 end) + \n\n-- For each column you specify makes 3 \"ifs\" containing \n-- each word of the search input and adds relevace to \n-- the row\n\n-- The first checks if the column is equal to the word,\n-- if then it adds relevance * 15\n(case when first_name LIKE 'Sed' || first_name LIKE 'neque' || first_name LIKE 'labore' then 150 else 0 end) + \n\n-- The second checks if the column starts with the word,\n-- if then it adds relevance * 5\n(case when first_name LIKE 'Sed%' || first_name LIKE 'neque%' || first_name LIKE 'labore%' then 50 else 0 end) + \n\n-- The third checks if the column contains the word, \n-- if then it adds relevance * 1\n(case when first_name LIKE '%Sed%' || first_name LIKE '%neque%' || first_name LIKE '%labore%' then 10 else 0 end) + \n\n-- Repeats with each column\n(case when last_name LIKE 'Sed' || last_name LIKE 'neque' || last_name LIKE 'labore' then 150 else 0 end) + \n(case when last_name LIKE 'Sed%' || last_name LIKE 'neque%' || last_name LIKE 'labore%' then 50 else 0 end) +\n(case when last_name LIKE '%Sed%' || last_name LIKE '%neque%' || last_name LIKE '%labore%' then 10 else 0 end) + \n\n(case when bio LIKE 'Sed' || bio LIKE 'neque' || bio LIKE 'labore' then 30 else 0 end) + \n(case when bio LIKE 'Sed%' || bio LIKE 'neque%' || bio LIKE 'labore%' then 10 else 0 end) + \n(case when bio LIKE '%Sed%' || bio LIKE '%neque%' || bio LIKE '%labore%' then 2 else 0 end) + \n\n(case when email LIKE 'Sed' || email LIKE 'neque' || email LIKE 'labore' then 75 else 0 end) + \n(case when email LIKE 'Sed%' || email LIKE 'neque%' || email LIKE 'labore%' then 25 else 0 end) + \n(case when email LIKE '%Sed%' || email LIKE '%neque%' || email LIKE '%labore%' then 5 else 0 end) \n\nas relevance \nfrom `users` \ngroup by `id` \n\n-- Selects only the rows that have more than\n-- the sum of all attributes relevances and divided by 4\n-- Ej: (20 + 5 + 2) / 4 = 6.75\nhaving relevance > 6.75 \n\n-- Orders the results by relevance\norder by `relevance` desc\n```\n\n## Contributing\n\nAnyone is welcome to contribute. Fork, make your changes, and then submit a pull request.\n\n[![Support via Gittip](https://rawgithub.com/twolfson/gittip-badge/0.2.0/dist/gittip.png)](https://gratipay.com/nicolaslopezj/)\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.5703125,
+          "content": "{\n    \"name\": \"nicolaslopezj/searchable\",\n    \"description\": \"Eloquent model search trait.\",\n    \"keywords\": [\"laravel\", \"eloquent\", \"search\", \"searchable\", \"database\", \"model\"],\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Nicolas Lopez\",\n            \"email\": \"nicolaslopezj@me.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=5.4.0\",\n        \"illuminate/database\": \">=4.2\",\n        \"ext-mbstring\": \"*\"\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Nicolaslopezj\\\\Searchable\\\\\": \"src/\"\n        }\n    },\n    \"minimum-stability\": \"stable\"\n}\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

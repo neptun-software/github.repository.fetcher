@@ -1,0 +1,141 @@
+{
+  "metadata": {
+    "timestamp": 1736711897639,
+    "page": 271,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI4MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "PGYER/codefever",
+      "stars": 2700,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.43359375,
+          "content": "!*/\n\n.vscode\n/env.yaml\n/config.yaml\n/node_modules\n\n/application/logs/**\n/application/libraries/composerlib/vendor\n\n/www/robots.txt\n/www/view/node_modules\n/www/view/npm-debug.log*\n/www/view/yarn-debug.log*\n/www/view/yarn-error.log*\n\n/http-gateway/main\n/ssh-gateway/shell/main\n\n/misc/modify_authorized_keys.pid\n/misc/modify_authorized_keys.child.pipe\n/misc/modify_authorized_keys.master.pipe\n\n/file-storage/**\n/git-storage/**\n!/git-storage/hooks\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 2.5830078125,
+          "content": "FROM webdevops/php-nginx:7.4\nMAINTAINER rexshi <rexshi@pgyer.com>\n\nEXPOSE 80 22\nENV GO111MODULE=off\n\nRUN apt-get update -y \\\n&& apt-get install libyaml-dev git golang-go zip sendmail mailutils mariadb-client vim -y \\\n&& pecl install yaml \\\n&& docker-php-ext-enable yaml\n\n# Nodejs\nRUN cd /usr/local \\\n&& wget https://nodejs.org/dist/v16.15.1/node-v16.15.1-linux-x64.tar.xz \\\n&& tar -xf node-v16.15.1-linux-x64.tar.xz \\ \n&& rm -rf node-v16.15.1-linux-x64.tar.xz \\\n&& mv node-v16.15.1-linux-x64 node \\\n&& ln -s /usr/local/node/bin/node /usr/local/bin/node \\\n&& ln -s /usr/local/node/bin/npm /usr/local/bin/npm \\\n&& ln -s /usr/local/node/bin/npx /usr/local/bin/npx \\\n&& ln -s /usr/local/node/bin/corepack /usr/local/bin/corepack \\\n&& corepack enable\n\n# SSH\nRUN docker-service enable ssh && docker-service enable cron\n\n# Codefever repo\nRUN mkdir -p /data/www \\\n&& cd /data/www \\\n&& git clone https://github.com/PGYER/codefever.git codefever-community \\\n&& cd codefever-community\n\n# Nginx\nCOPY ./misc/docker/vhost.conf-template /opt/docker/etc/nginx/vhost.conf\n\n# Go\nRUN cd /data/www/codefever-community/http-gateway \\\n&& go get gopkg.in/yaml.v2 \\\n&& go build main.go \\\n&& cd /data/www/codefever-community/ssh-gateway/shell \\\n&& go get gopkg.in/yaml.v2 \\\n&& go build main.go\n\n# Codefever worker\nCOPY misc/docker/supervisor-codefever-modify-authorized-keys.conf /opt/docker/etc/supervisor.d/codefever-modify-authorized-keys.conf\nCOPY misc/docker/supervisor-codefever-http-gateway.conf /opt/docker/etc/supervisor.d/codefever-http-gateway.conf\n\n# Configs\nRUN useradd -rm git \\\n    && mkdir /usr/local/php/bin \\\n    && ln -s /usr/local/bin/php /usr/local/php/bin/php \\\n    && cd /data/www/codefever-community/misc \\\n    && cp ./codefever-service-template /etc/init.d/codefever \\\n    && cp ../config.template.yaml ../config.yaml \\\n    && cp ../env.template.yaml ../env.yaml \\\n    && chmod 0777 ../config.yaml ../env.yaml \\\n    && mkdir ../application/logs \\\n    && chown -R git:git ../application/logs \\\n    && chmod -R 0777 ../application/logs  \\\n    && chmod -R 0777 ../git-storage \\\n    && mkdir ../file-storage \\\n    && chown -R git:git ../file-storage \\\n    && chown -R git:git ../misc \\\n    && chmod +x /opt/docker/etc/supervisor.d/codefever-modify-authorized-keys.conf \\\n    && chmod +x /opt/docker/etc/supervisor.d/codefever-http-gateway.conf \\\n    && cd ../application/libraries/composerlib/ \\\n    && php ./composer.phar install\n\n# Cron\nRUN docker-cronjob '* * * * *  sh /data/www/codefever-community/application/backend/codefever_schedule.sh'\n\n# Entrypoint\nCOPY misc/docker/docker-entrypoint.sh /opt/docker/provision/entrypoint.d/20-codefever.sh\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License\n\nCopyright © 2022 CodeFever authors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.5966796875,
+          "content": "<div align=\"center\">\n  <br /><br />\n  <a href=\"https://codefever.cn\">\n    <img\n      src=\"https://assets.pgyer.com/image/view/admin_images/c73a429ef2f134f337ef690dfba4d47f\"\n      alt=\"Logo\"\n      height=\"32\"\n    />\n  </a>\n  <br />\n  <p>\n    <h3>\n      <b>\n        CodeFever Community\n      </b>\n    </h3>\n  </p>\n  <p>\n    <b>\n      完全开源的 Git 代码托管服务\n    </b>\n  </p>\n  <p>\n\n[![contributions welcome](https://img.shields.io/badge/Contributions-welcome-brightgreen?logo=github)](CODE_OF_CONDUCT.md) [![Website](https://img.shields.io/badge/Website-available-brightgreen?logo=e)](https://codefever.cn) [![Docker](https://img.shields.io/badge/Docker-passing-brightgreen?logo=docker)](https://github.com/PGYER/codefever/)\n\n  </p>\n  <p>\n    <sub>\n      Built with ❤︎ by\n      <a href=\"https://codefever.cn\">\n        CodeFever\n      </a>\n    </sub>\n  </p>\n  <br />\n  <p>\n    <a href=\"https://codefever.cn\">\n      <img\n        src=\"https://pgyer-download.oss-cn-shenzhen.aliyuncs.com/codefever-screenshot-1.png\"\n        alt=\"Screenshot\"\n        width=\"100%\"\n      />\n    </a>\n  </p>\n</div\n\n英文版本文档正在完善中, 欢迎 [提交文档](doc/zh-cn/contribute/doc_pr.md)\n\n[English](README_EN.md)\n\n<details open>\n  <summary><b>目录</b></summary>\n\n---\n\n- [功能特性](#功能特性)\n- [如何安装](#如何安装)\n- [如何更新](#如何更新)\n- [使用说明](#使用说明)\n- [问题反馈](#问题反馈)\n- [贡献代码](#贡献代码)\n- [贡献文档](#贡献文档)\n- [关于](#关于)\n\n---\n\n</details>\n\n### **Demo**\n\n[请点击这里查看 Demo](http://43.132.120.17/)（仅测试使用，请勿上传正式代码，本 Demo 运行在 1 核 1 GB 内存的云服务器上，大家可以体验下速度）\n\n### **功能特性**\n\n- 🆓 **永久免费:** 永久免费提供给大家使用，您无需担心付费\n- ❤️ **完整开源:** 毫无保留的完整开源，无任何编译或加密代码\n- 🥬 **轻量安装:** 极简设计风格，排除重度冗余的多余功能\n- ⚡️ **性能高效:** 速度极快，对服务器资源要求极低，1核CPU/1G内存即可运行\n- ♾️ **无限仓库:** 没有任何仓库数量、使用数量的限制\n- ⌨️ **代码对比:** 支持提交代码的不同版本支持高亮显示对比\n- 🛤️ **分支管理:** 完整支持 Git 原生分支和 Tag，帮助更清晰的管理代码\n- 🙋‍♂️ **合并请求（Merge Request）:** 支持多人协作，让代码版本控制更顺畅\n- 🙅🏻‍♀️ **分支保护:** 分支保护功能让代码提交安全可控，代码 Review 更容易清晰\n- 👥 **多人协作:** 支持多人团队协作，并可以设置每个成员的角色和权限\n- 🔌 **Webhook:** 支持Webhook功能，可轻松和其他系统进行集成\n- 🖥️ **管理后台:** 支持超级管理员后台，可以让团队leader管理所有项目和用户信息\n- 💬 **中英双语:** 原生支持中文和英文两种语言\n\n### **如何安装**\n\n`CodeFever` 提供 `从零开始安装` 和 `Docker 镜像安装` 两种安装方式，可以根据自己的实际需要选择安装方式。\n\n- **(推荐)** 最简单的安装方式是使用 `Docker`, 只需要一行命令即可完成, 具体可见: [Docker 镜像安装](doc/zh-cn/installation/install_via_docker.md) \n- 如果出于学习、研究或定制化需求, 也可以手动方式安装, 具体可见: [从零开始安装](doc/zh-cn/installation/install_from_scratch.md)\n\n### **如何更新**\n\n`CodeFever` 可以进行保留原有数据更新, 按照如下文档即可完成更新操作。具体可见: [更新 CodeFever](doc/zh-cn/installation/update.md)\n\n### **使用说明**\n\n- [仓库](doc/zh-cn/repo)\n- [仓库组](doc/zh-cn/repo_group)\n- [管理员设置](doc/zh-cn/admin)\n- [Git](doc/zh-cn/git)\n- [常见问题](doc/zh-cn/common)\n\n### **问题反馈**\n\n- 如果你在使用过程中遇到期望外的结果，欢迎提交 `Issue`。参照: [提交问题](doc/zh-cn/contribute/bug_fix_issue.md)\n- 如果你希望在 `CodeFever Community` 添加一些特性, 也欢迎提交 `Issue`。参照: [提交特性请求](doc/zh-cn/contribute/request_feature_issue.md)\n\n### **贡献代码**\n\n欢迎提交 `PR`, 请确定修复 `Bug` 后或者新增 `Feature` 后进行适当的测试。\n\n- 如果 `PR` 内容是问题，请先提交 `Issue` 并在提交 PR 时引用该 `Issue`。参照: [提交问题修复](doc/zh-cn/contribute/bug_fix_pr.md)\n- 如果 `PR` 内容是新特性，请在 `PR` 中请尽量详细描述此特性的内容，如果此 PR 是针对某个特性请求的提交，在提交 PR 时引用该 `Issue`。参照: [提交新特性](doc/zh-cn/contribute/new_feature_pr.md)\n\n### 贡献文档\n\n欢迎指正文档中的错误或参加翻译工作，提交 `PR` 前请确定文档内容表述是否准确，具体参照: [提交文档](doc/zh-cn/contribute/doc_pr.md)\n\n### **关于**\n\n`CodeFever` 项目起初由 `蒲公英开发者服务平台` 开发和维护, 项目于 2020 年 6 月上线 [https://codefever.pgyer.com/](https://codefever.pgyer.com/) 。 经过将近两年时间打磨和稳定性验证, 于 2022 年 2 月开源, 接受社区的考验。\n\n`CodeFever` 开源后, 开源版本称为 `CodeFever Conmmunity` 版本。同时公有云版本继续服务，继续称为 `CodeFever`。\n\n`CodeFever Community` 由 `蒲公英开发者服务平台` 团队完整自主研发并基于 `MIT` 协议进行完整开源, 拥有完全自主的知识产权, 因此您可以放心使用而不必考虑是否侵犯他人权利。\n\n`CodeFever Community` 保留了 `CodeFever` 的大部分功能, 并且进行了更适合单机部署的优化。`CodeFever Community` 也会随 `CodeFever` 更新的同时接受来自社区的提交。\n\n"
+        },
+        {
+          "name": "README_EN.md",
+          "type": "blob",
+          "size": 5.771484375,
+          "content": "<div align=\"center\">\n  <br /><br />\n  <a href=\"https://codefever.cn\">\n    <img\n      src=\"https://assets.pgyer.com/image/view/admin_images/c73a429ef2f134f337ef690dfba4d47f\"\n      alt=\"Logo\"\n      height=\"32\"\n    />\n  </a>\n  <br />\n  <p>\n    <h3>\n      <b>\n        CodeFever Community\n      </b>\n    </h3>\n  </p>\n  <p>\n    <b>\n      A Fully Open Source Code Hosting Service for Git\n    </b>\n  </p>\n  <p>\n\n[![contributions welcome](https://img.shields.io/badge/Contributions-welcome-brightgreen?logo=github)](CODE_OF_CONDUCT.md) [![Website](https://img.shields.io/badge/Website-available-brightgreen?logo=e)](https://codefever.cn) [![Docker](https://img.shields.io/badge/Docker-passing-brightgreen?logo=docker)](https://github.com/PGYER/codefever/)\n\n  </p>\n  <p>\n    <sub>\n      Built with ❤︎ by\n      <a href=\"https://codefever.cn\">\n        CodeFever\n      </a>\n    </sub>\n  </p>\n  <br />\n  <p>\n    <a href=\"https://codefever.cn\">\n      <img\n        src=\"https://pgyer-download.oss-cn-shenzhen.aliyuncs.com/codefever-screenshot-1.png\"\n        alt=\"Screenshot\"\n        width=\"100%\"\n      />\n    </a>\n  </p>\n</div\n\n[中文说明](README.md)\n\n<details open>\n  <summary><b>Indexes</b></summary>\n\n---\n\n- [Features](#Features)\n- [Installation](#Installation)\n- [Upgrade](#Upgrade)\n- [User Guide](#User%20Guide)\n- [Feedback](#Feedback)\n- [Contribute](#Contribute)\n- [Contribute to Docs](#Contribute%20to%Docs)\n- [About](#About)\n\n---\n\n</details>\n\n### **Demo**\n\n[Demo](http://43.132.120.17/) (DO NOT upload the production code, This DEMO is for evaluation purposes only. This demo is running on a 1 vCPU & 1 GB memory VPS)\n\n### **Features**\n\n- 🆓 **Free:** Free for everyone to use and don't have to worry about any paying\n- ❤️ **Open Source:** Fully Open Source without any compiled or encrypted code\n- 🥬 **Lightweight:** Minimalist design style, excluding heavy redundancy of redundant features\n- ⚡️ **Efficiency:** Very fast, very low server resource costs, minimum requirement is 1 vCPU & 1G RAM.\n- ♾️ **Unlimited:** There is no limit to the number of repository\n- ⌨️ **Code Review:** Highlighting comparison with different versions of code or branches\n- 🛤️ **Branch:** Full support for Git native branches and Tags to help manage code more clearly\n- 🙋️ **Merge Request:** Support for team collaboration for smoother code version control\n- 🙅🏻 **Branch Protection:** Branch protection makes code commits safe and controllable, and code reviews easier and clearer\n- 👥 **Collaboration:** Team collaboration and the ability to set roles and permissions for each member\n- 🔌 **Integration:** Eeasily integrated with other systems you are using via webhook, for example, jira, jenkins, etc.\n- 🖥️ **Management:** With super Management protal, you can let the team leader manage all the project and users\n- 💬 **Language:** Native support for both Chinese and English languages\n\n### **Installation**\n\n`CodeFever` provides `Install From Scratch` and `Install Via Docker`, choose the installation method according to your actual needs.\n\n- **(Recommended)** The easiest way is to use `Docker`, which can be done with a one line of command, see: [Install Via Docker](doc/en-us/installation/install_via_docker.md) \n- For learning, research or customization needs, you can also install it manually, see: [Install From Scratch](doc/en-us/installation/install_from_scratch.md)\n\n### **Upgrade**\n\n`CodeFever` can be updated and keep the original data, follow the documentation to complete the update operation. See: [Update CodeFever](doc/en-us/installation/update.md)\n\n### **User Guide**\n\n- [Repository](doc/en-us/repo)\n- [Repository Group](doc/en-us/repo_group)\n- [Administrator](doc/en-us/admin)\n- [Git](doc/en-us/git)\n- [FAQ](doc/en-us/common)\n\n### **Feedback**\n\n- If any issue or inconvenient encountered while using `CodeFever Community`, feel free to submit `Issue`. See: [Bug Fix Issue](doc/en-us/contribute/bug_fix_issue.md)\n- If you have any idea to improve `CodeFever Community`, feel free to submit an `Issue` as well. See: [Feature Request issue](doc/en-us/contribute/request_feature_issue.md)\n\n### **Contribute**\n\nFeel free to submit a `PR`, please make sure to test it properly after fixing the `Bug` or adding a `Feature`.\n\n- If the content of the `PR` is a bug fix issue, please submit the `Issue` first and reference the `Issue` when submitting the PR. Reference: [Bug Fix PR](doc/en-us/contribute/bug_fix_pr.md)\n- If the content of the `PR` is a new feature, please describe the feature in as much detail as possible in the `PR`, and if the PR is a commit for a feature request issue, reference the `Issue` when submitting the PR. Reference: [New Feature PR](doc/en-us/contribute/new_feature_pr.md)\n\n### **Contribute to Docs**\n\nYou are welcome to correct errors in the document or participate in the translation works, please make sure the content of the document is accurate before submitting `PR`, please refer to: [Document PR](doc/en-us/contribute/doc_pr.md)\n\n### **About**\n\nThe `CodeFever` project was initially developed and maintained by `PGYER` and went live in June 2020 [https://codefever.pgyer.com/](https://codefever.pgyer.com/). After nearly two years of stability verification, the project was open sourced in February 2022 to be tested by the community.\n\nAfter `CodeFever` open source, the open source version is called `CodeFever Conmmunity` version. The public cloud version will continue to be called `CodeFever`.\n\n`CodeFever Community` is developed by the `PGYER` team and is fully open source based on the `MIT` license, and has completely independent property rights, so you can use it without worrying about whether it violates other's rights.\n\n`CodeFever Community` retains most of the features of `CodeFever` and is optimized for standalone deployment. `CodeFever Community` also accepts community submissions as `CodeFever` is updated.\n\n"
+        },
+        {
+          "name": "application",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "codefever.build",
+          "type": "blob",
+          "size": 2.5263671875,
+          "content": "FROM pgyer/codefever-community-env-dry\n\nMAINTAINER cubicwork@qq.com\n\nWORKDIR /data/www/codefever-community\n\nENV GO111MODULE=off\nENV GOPROXY=https://mirrors.aliyun.com/goproxy\n\nRUN useradd -r www\nRUN useradd -rm git\n\n# install dependencies\nRUN go get gopkg.in/yaml.v2\n\n# copy repo\nRUN mkdir -p /data/www\nRUN git clone https://github.com/PGYER/codefever.git /data/www/codefever-community\n\nEXPOSE 80 22\n\nVOLUME [\"/var/lib/mysql\", \"/data/www/codefever-community/env\", \"/data/www/codefever-community/application/logs\", \"/data/www/codefever-community/git-storage\", \"/data/www/codefever-community/file-storage\"]\n\n# build gateway\nRUN cd /data/www/codefever-community/http-gateway && go build main.go\nRUN cd /data/www/codefever-community/ssh-gateway/shell && go build main.go\n\n# copy configs\nRUN cp ./misc/nginx.conf-template /usr/local/nginx/conf/nginx.conf\nRUN cp ./misc/php.ini-template /usr/local/php/etc/php.ini\nRUN cp ./misc/www.conf-template /usr/local/php/etc/php-fpm.d/www.conf\nRUN cp ./misc/php-fpm.conf-template /usr/local/php/etc/php-fpm.conf\n\n# copy start scripts\nRUN cp ./misc/nginx-service-template /etc/init.d/nginx\nRUN cp ./misc/php-fpm-service-template /etc/init.d/php-fpm\nRUN cp ./misc/codefever-service-template /etc/init.d/codefever\n\n# install composer dependencies\nRUN cd ./application/libraries/composerlib/ && /usr/local/php/bin/php ./composer.phar install\n\n# create symbolic link\nRUN mkdir -p ./env && chmod -R 0777 ./env \nRUN ln -s ./env/env.yaml ./env.yaml && ln -s ./env/config.yaml ./config.yaml\n\n# initialize container\nRUN chmod +x ./misc/initailize_container.sh ./misc/system_init.sh\nCMD [\"/bin/bash\", \"./misc/system_init.sh\"]\n\n# USAGE:\n# docker build --no-cache -f ./codefever.build -t pgyer/codefever-community .\n# docker container run -d --privileged=true --name codefever-test -p 40080:80 -p 40022:22 -v ~/config-test/db:/var/lib/mysql -v ~/config-test/env:/data/www/codefever-community/env -v ~/config-test/logs:/data/www/codefever-community/application/logs -v ~/config-test/git-storage:/data/www/codefever-community/git-storage -v ~/config-test/file-storage:/data/www/codefever-community/file-storage -it pgyer/codefever-community\n# docker container run -d --privileged=true --name codefever -p 80:80 -p 22:22 -v ~/config/db:/var/lib/mysql -v ~/config/env:/data/www/codefever-community/env -v ~/config/logs:/data/www/codefever-community/application/logs -v ~/config/git-storage:/data/www/codefever-community/git-storage -v ~/config/file-storage:/data/www/codefever-community/file-storage -it pgyer/codefever-community\n# docker push pgyer/codefever-community\n"
+        },
+        {
+          "name": "config.template.yaml",
+          "type": "blob",
+          "size": 0.12890625,
+          "content": "---\nhost: http://localhost\nssh: 'git@localhost:'\nallowRegister: true\nemail:\n  name: CodeFever Community\n  from: git@mail.sender\n...\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker-compose.yml",
+          "type": "blob",
+          "size": 0.7890625,
+          "content": "version: \"3\"\nservices:\n  codefever:\n    image: pgyer/codefever-community-lite:latest\n    ports:\n      - \"80:80\"\n      - \"22:22\"\n    depends_on:\n      - db\n    volumes:\n      - /data/git-storage:/data/www/codefever-community/git-storage\n      - /data/logs:/data/www/codefever-community/application/logs\n    environment:\n      DB_HOST: \"db\"\n      DB_PORT: \"3306\"\n      DB_USER: \"root\"\n      DB_PASS: \"123456\" # Need to be the same as MYSQL_ROOT_PASSWORD\n      DB_NAME: \"codefever_community\"\n\n  db:\n    image: mysql:5.7.31\n    restart: always\n    #privileged: true\n    volumes:\n      - /data/mysql:/var/lib/mysql\n    environment:\n      MYSQL_ROOT_PASSWORD: \"123456\"\n    command: [\n        '--character-set-server=utf8mb4',\n        '--collation-server=utf8mb4_general_ci',\n        '--max_connections=3000'\n    ]\n"
+        },
+        {
+          "name": "env.template.yaml",
+          "type": "blob",
+          "size": 0.9365234375,
+          "content": "# production setting\n# set running enviroment\n# value: development | testing | production\nenv: 'production'\n\n# release number setting\n# value: 14-digit number\nreleaseNumber: '00000000000001'\n\n# mysql configuration (DO NOT CHANGE mysql/db)\nmysql:\n  host: localhost\n  port: 3306\n  username: root\n  password: 123456\n  db: codefever_community\n\n# session setting\nsession:\n  domain:\n  name: codefever_community\n  key: <session_key>\n\n# totp settings (for verification code generating)\ntotp:\n  salt: <totp_salt_for_codefever>\n\n# path\npath:\n  file: file-storage\n  git: git-storage\n\n# cli\ncli:\n  git: /usr/local/git/bin/git\n  shell: /usr/local/git/bin/git-shell\n  http: /usr/local/git/libexec/git-core/git-http-backend\n\n# users\nusers:\n  www: git\n  git: git\n\n# gateway\ngateway:\n  token: <codefever_community_api_token>\n  hooks: http://127.0.0.1/apiv1/internal/hooks\n  authHTTP: http://127.0.0.1/apiv1/internal/authHTTP\n  authSSH: http://127.0.0.1/apiv1/internal/authSSH\n"
+        },
+        {
+          "name": "git-storage",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "http-gateway",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "misc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "package.json",
+          "type": "blob",
+          "size": 0.4990234375,
+          "content": "{\n  \"name\": \"codefever\",\n  \"version\": \"1.0.0\",\n  \"description\": \"\",\n  \"main\": \"index.js\",\n  \"directories\": {\n    \"test\": \"tests\"\n  },\n  \"scripts\": {\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"https://github.com/PGYER/codefever\"\n  },\n  \"author\": \"\",\n  \"license\": \"ISC\",\n  \"devDependencies\": {\n    \"cz-conventional-changelog\": \"^2.1.0\"\n  },\n  \"config\": {\n    \"commitizen\": {\n      \"path\": \"./node_modules/cz-conventional-changelog\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.859375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit>\n  <testsuites>\n    <testsuite name=\"model\">\n      <directory>tests/model</directory>\n    </testsuite>\n    <testsuite name=\"service\">\n      <directory>tests/service</directory>\n    </testsuite>\n  </testsuites>\n  <filter>\n    <whitelist processUncoveredFilesFromWhitelist=\"false\">\n      <directory suffix=\".php\">application/controllers/api</directory>\n      <directory suffix=\".php\">application/controllers/apiv1</directory>\n      <directory suffix=\".php\">application/event_handlers</directory>\n      <directory suffix=\".php\">application/libraries/service</directory>\n      <directory suffix=\".php\">application/models</directory>\n      <exclude>\n        <file>application/event_handlers/EventHandler.php</file>\n        <file>application/libraries/service/autoLoader.php</file>\n      </exclude>\n    </whitelist>\n  </filter>\n</phpunit>"
+        },
+        {
+          "name": "run_test.sh",
+          "type": "blob",
+          "size": 0.162109375,
+          "content": "#! /bin/bash\nphp application/libraries/composerlib/vendor/phpunit/phpunit/phpunit --prepend $PWD/tests/bootstrap.php --configuration $PWD/phpunit.xml --coverage-text\n"
+        },
+        {
+          "name": "ssh-gateway",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "system",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "www",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "yarn.lock",
+          "type": "blob",
+          "size": 1.537109375,
+          "content": "# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.\n# yarn lockfile v1\n\n\nconventional-commit-types@^2.0.0:\n  version \"2.2.0\"\n  resolved \"https://registry.yarnpkg.com/conventional-commit-types/-/conventional-commit-types-2.2.0.tgz#5db95739d6c212acbe7b6f656a11b940baa68946\"\n  integrity sha1-XblXOdbCEqy+e29lahG5QLqmiUY=\n\ncz-conventional-changelog@^2.1.0:\n  version \"2.1.0\"\n  resolved \"https://registry.yarnpkg.com/cz-conventional-changelog/-/cz-conventional-changelog-2.1.0.tgz#2f4bc7390e3244e4df293e6ba351e4c740a7c764\"\n  integrity sha1-L0vHOQ4yROTfKT5ro1Hkx0Cnx2Q=\n  dependencies:\n    conventional-commit-types \"^2.0.0\"\n    lodash.map \"^4.5.1\"\n    longest \"^1.0.1\"\n    right-pad \"^1.0.1\"\n    word-wrap \"^1.0.3\"\n\nlodash.map@^4.5.1:\n  version \"4.6.0\"\n  resolved \"https://registry.yarnpkg.com/lodash.map/-/lodash.map-4.6.0.tgz#771ec7839e3473d9c4cde28b19394c3562f4f6d3\"\n  integrity sha1-dx7Hg540c9nEzeKLGTlMNWL09tM=\n\nlongest@^1.0.1:\n  version \"1.0.1\"\n  resolved \"https://registry.yarnpkg.com/longest/-/longest-1.0.1.tgz#30a0b2da38f73770e8294a0d22e6625ed77d0097\"\n  integrity sha1-MKCy2jj3N3DoKUoNIuZiXtd9AJc=\n\nright-pad@^1.0.1:\n  version \"1.0.1\"\n  resolved \"https://registry.yarnpkg.com/right-pad/-/right-pad-1.0.1.tgz#8ca08c2cbb5b55e74dafa96bf7fd1a27d568c8d0\"\n  integrity sha1-jKCMLLtbVedNr6lr9/0aJ9VoyNA=\n\nword-wrap@^1.0.3:\n  version \"1.2.3\"\n  resolved \"https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c\"\n  integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==\n"
+        }
+      ]
+    }
+  ]
+}

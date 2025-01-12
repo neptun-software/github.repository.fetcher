@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "timestamp": 1736711911127,
+    "page": 302,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMxMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/service-contracts",
+      "stars": 2585,
+      "defaultBranch": "main",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.0205078125,
+          "content": "/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "Attribute",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.1533203125,
+          "content": "CHANGELOG\n=========\n\nThe changelog is maintained for all Symfony contracts at the following URL:\nhttps://github.com/symfony/contracts/blob/main/CHANGELOG.md\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2018-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 0.322265625,
+          "content": "Symfony Service Contracts\n=========================\n\nA set of abstractions extracted out of the Symfony components.\n\nCan be used to build on semantics that the Symfony components proved useful and\nthat already have battle tested implementations.\n\nSee https://github.com/symfony/contracts/blob/main/README.md for more information.\n"
+        },
+        {
+          "name": "ResetInterface.php",
+          "type": "blob",
+          "size": 1.0107421875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\n/**\n * Provides a way to reset an object to its initial state.\n *\n * When calling the \"reset()\" method on an object, it should be put back to its\n * initial state. This usually means clearing any internal buffers and forwarding\n * the call to internal dependencies. All properties of the object should be put\n * back to the same state it had when it was first ready to use.\n *\n * This method could be called, for example, to recycle objects that are used as\n * services, so that they can be used to handle several requests in the same\n * process loop (note that we advise making your services stateless instead of\n * implementing this interface when possible.)\n */\ninterface ResetInterface\n{\n    /**\n     * @return void\n     */\n    public function reset();\n}\n"
+        },
+        {
+          "name": "ServiceCollectionInterface.php",
+          "type": "blob",
+          "size": 0.611328125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\n/**\n * A ServiceProviderInterface that is also countable and iterable.\n *\n * @author Kevin Bond <kevinbond@gmail.com>\n *\n * @template-covariant T of mixed\n *\n * @extends ServiceProviderInterface<T>\n * @extends \\IteratorAggregate<string, T>\n */\ninterface ServiceCollectionInterface extends ServiceProviderInterface, \\Countable, \\IteratorAggregate\n{\n}\n"
+        },
+        {
+          "name": "ServiceLocatorTrait.php",
+          "type": "blob",
+          "size": 3.51953125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\nuse Psr\\Container\\ContainerExceptionInterface;\nuse Psr\\Container\\NotFoundExceptionInterface;\n\n// Help opcache.preload discover always-needed symbols\nclass_exists(ContainerExceptionInterface::class);\nclass_exists(NotFoundExceptionInterface::class);\n\n/**\n * A trait to help implement ServiceProviderInterface.\n *\n * @author Robin Chalas <robin.chalas@gmail.com>\n * @author Nicolas Grekas <p@tchwork.com>\n */\ntrait ServiceLocatorTrait\n{\n    private array $loading = [];\n    private array $providedTypes;\n\n    /**\n     * @param array<string, callable> $factories\n     */\n    public function __construct(\n        private array $factories,\n    ) {\n    }\n\n    public function has(string $id): bool\n    {\n        return isset($this->factories[$id]);\n    }\n\n    public function get(string $id): mixed\n    {\n        if (!isset($this->factories[$id])) {\n            throw $this->createNotFoundException($id);\n        }\n\n        if (isset($this->loading[$id])) {\n            $ids = array_values($this->loading);\n            $ids = \\array_slice($this->loading, array_search($id, $ids));\n            $ids[] = $id;\n\n            throw $this->createCircularReferenceException($id, $ids);\n        }\n\n        $this->loading[$id] = $id;\n        try {\n            return $this->factories[$id]($this);\n        } finally {\n            unset($this->loading[$id]);\n        }\n    }\n\n    public function getProvidedServices(): array\n    {\n        if (!isset($this->providedTypes)) {\n            $this->providedTypes = [];\n\n            foreach ($this->factories as $name => $factory) {\n                if (!\\is_callable($factory)) {\n                    $this->providedTypes[$name] = '?';\n                } else {\n                    $type = (new \\ReflectionFunction($factory))->getReturnType();\n\n                    $this->providedTypes[$name] = $type ? ($type->allowsNull() ? '?' : '').($type instanceof \\ReflectionNamedType ? $type->getName() : $type) : '?';\n                }\n            }\n        }\n\n        return $this->providedTypes;\n    }\n\n    private function createNotFoundException(string $id): NotFoundExceptionInterface\n    {\n        if (!$alternatives = array_keys($this->factories)) {\n            $message = 'is empty...';\n        } else {\n            $last = array_pop($alternatives);\n            if ($alternatives) {\n                $message = \\sprintf('only knows about the \"%s\" and \"%s\" services.', implode('\", \"', $alternatives), $last);\n            } else {\n                $message = \\sprintf('only knows about the \"%s\" service.', $last);\n            }\n        }\n\n        if ($this->loading) {\n            $message = \\sprintf('The service \"%s\" has a dependency on a non-existent service \"%s\". This locator %s', end($this->loading), $id, $message);\n        } else {\n            $message = \\sprintf('Service \"%s\" not found: the current service locator %s', $id, $message);\n        }\n\n        return new class($message) extends \\InvalidArgumentException implements NotFoundExceptionInterface {\n        };\n    }\n\n    private function createCircularReferenceException(string $id, array $path): ContainerExceptionInterface\n    {\n        return new class(\\sprintf('Circular reference detected for service \"%s\", path: \"%s\".', $id, implode(' -> ', $path))) extends \\RuntimeException implements ContainerExceptionInterface {\n        };\n    }\n}\n"
+        },
+        {
+          "name": "ServiceMethodsSubscriberTrait.php",
+          "type": "blob",
+          "size": 2.9248046875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\nuse Psr\\Container\\ContainerInterface;\nuse Symfony\\Contracts\\Service\\Attribute\\Required;\nuse Symfony\\Contracts\\Service\\Attribute\\SubscribedService;\n\n/**\n * Implementation of ServiceSubscriberInterface that determines subscribed services\n * from methods that have the #[SubscribedService] attribute.\n *\n * Service ids are available as \"ClassName::methodName\" so that the implementation\n * of subscriber methods can be just `return $this->container->get(__METHOD__);`.\n *\n * @author Kevin Bond <kevinbond@gmail.com>\n */\ntrait ServiceMethodsSubscriberTrait\n{\n    protected ContainerInterface $container;\n\n    public static function getSubscribedServices(): array\n    {\n        $services = method_exists(get_parent_class(self::class) ?: '', __FUNCTION__) ? parent::getSubscribedServices() : [];\n\n        foreach ((new \\ReflectionClass(self::class))->getMethods() as $method) {\n            if (self::class !== $method->getDeclaringClass()->name) {\n                continue;\n            }\n\n            if (!$attribute = $method->getAttributes(SubscribedService::class)[0] ?? null) {\n                continue;\n            }\n\n            if ($method->isStatic() || $method->isAbstract() || $method->isGenerator() || $method->isInternal() || $method->getNumberOfRequiredParameters()) {\n                throw new \\LogicException(\\sprintf('Cannot use \"%s\" on method \"%s::%s()\" (can only be used on non-static, non-abstract methods with no parameters).', SubscribedService::class, self::class, $method->name));\n            }\n\n            if (!$returnType = $method->getReturnType()) {\n                throw new \\LogicException(\\sprintf('Cannot use \"%s\" on methods without a return type in \"%s::%s()\".', SubscribedService::class, $method->name, self::class));\n            }\n\n            /* @var SubscribedService $attribute */\n            $attribute = $attribute->newInstance();\n            $attribute->key ??= self::class.'::'.$method->name;\n            $attribute->type ??= $returnType instanceof \\ReflectionNamedType ? $returnType->getName() : (string) $returnType;\n            $attribute->nullable = $returnType->allowsNull();\n\n            if ($attribute->attributes) {\n                $services[] = $attribute;\n            } else {\n                $services[$attribute->key] = ($attribute->nullable ? '?' : '').$attribute->type;\n            }\n        }\n\n        return $services;\n    }\n\n    #[Required]\n    public function setContainer(ContainerInterface $container): ?ContainerInterface\n    {\n        $ret = null;\n        if (method_exists(get_parent_class(self::class) ?: '', __FUNCTION__)) {\n            $ret = parent::setContainer($container);\n        }\n\n        $this->container = $container;\n\n        return $ret;\n    }\n}\n"
+        },
+        {
+          "name": "ServiceProviderInterface.php",
+          "type": "blob",
+          "size": 1.349609375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\nuse Psr\\Container\\ContainerInterface;\n\n/**\n * A ServiceProviderInterface exposes the identifiers and the types of services provided by a container.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n * @author Mateusz Sip <mateusz.sip@gmail.com>\n *\n * @template-covariant T of mixed\n */\ninterface ServiceProviderInterface extends ContainerInterface\n{\n    /**\n     * @return T\n     */\n    public function get(string $id): mixed;\n\n    public function has(string $id): bool;\n\n    /**\n     * Returns an associative array of service types keyed by the identifiers provided by the current container.\n     *\n     * Examples:\n     *\n     *  * ['logger' => 'Psr\\Log\\LoggerInterface'] means the object provides a service named \"logger\" that implements Psr\\Log\\LoggerInterface\n     *  * ['foo' => '?'] means the container provides service name \"foo\" of unspecified type\n     *  * ['bar' => '?Bar\\Baz'] means the container provides a service \"bar\" of type Bar\\Baz|null\n     *\n     * @return array<string, string> The provided service types, keyed by service names\n     */\n    public function getProvidedServices(): array;\n}\n"
+        },
+        {
+          "name": "ServiceSubscriberInterface.php",
+          "type": "blob",
+          "size": 2.685546875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\nuse Symfony\\Contracts\\Service\\Attribute\\SubscribedService;\n\n/**\n * A ServiceSubscriber exposes its dependencies via the static {@link getSubscribedServices} method.\n *\n * The getSubscribedServices method returns an array of service types required by such instances,\n * optionally keyed by the service names used internally. Service types that start with an interrogation\n * mark \"?\" are optional, while the other ones are mandatory service dependencies.\n *\n * The injected service locators SHOULD NOT allow access to any other services not specified by the method.\n *\n * It is expected that ServiceSubscriber instances consume PSR-11-based service locators internally.\n * This interface does not dictate any injection method for these service locators, although constructor\n * injection is recommended.\n *\n * @author Nicolas Grekas <p@tchwork.com>\n */\ninterface ServiceSubscriberInterface\n{\n    /**\n     * Returns an array of service types (or {@see SubscribedService} objects) required\n     * by such instances, optionally keyed by the service names used internally.\n     *\n     * For mandatory dependencies:\n     *\n     *  * ['logger' => 'Psr\\Log\\LoggerInterface'] means the objects use the \"logger\" name\n     *    internally to fetch a service which must implement Psr\\Log\\LoggerInterface.\n     *  * ['loggers' => 'Psr\\Log\\LoggerInterface[]'] means the objects use the \"loggers\" name\n     *    internally to fetch an iterable of Psr\\Log\\LoggerInterface instances.\n     *  * ['Psr\\Log\\LoggerInterface'] is a shortcut for\n     *  * ['Psr\\Log\\LoggerInterface' => 'Psr\\Log\\LoggerInterface']\n     *\n     * otherwise:\n     *\n     *  * ['logger' => '?Psr\\Log\\LoggerInterface'] denotes an optional dependency\n     *  * ['loggers' => '?Psr\\Log\\LoggerInterface[]'] denotes an optional iterable dependency\n     *  * ['?Psr\\Log\\LoggerInterface'] is a shortcut for\n     *  * ['Psr\\Log\\LoggerInterface' => '?Psr\\Log\\LoggerInterface']\n     *\n     * additionally, an array of {@see SubscribedService}'s can be returned:\n     *\n     *  * [new SubscribedService('logger', Psr\\Log\\LoggerInterface::class)]\n     *  * [new SubscribedService(type: Psr\\Log\\LoggerInterface::class, nullable: true)]\n     *  * [new SubscribedService('http_client', HttpClientInterface::class, attributes: new Target('githubApi'))]\n     *\n     * @return string[]|SubscribedService[] The required service types, optionally keyed by service names\n     */\n    public static function getSubscribedServices(): array;\n}\n"
+        },
+        {
+          "name": "ServiceSubscriberTrait.php",
+          "type": "blob",
+          "size": 3.15234375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Contracts\\Service;\n\nuse Psr\\Container\\ContainerInterface;\nuse Symfony\\Contracts\\Service\\Attribute\\Required;\nuse Symfony\\Contracts\\Service\\Attribute\\SubscribedService;\n\ntrigger_deprecation('symfony/contracts', 'v3.5', '\"%s\" is deprecated, use \"ServiceMethodsSubscriberTrait\" instead.', ServiceSubscriberTrait::class);\n\n/**\n * Implementation of ServiceSubscriberInterface that determines subscribed services\n * from methods that have the #[SubscribedService] attribute.\n *\n * Service ids are available as \"ClassName::methodName\" so that the implementation\n * of subscriber methods can be just `return $this->container->get(__METHOD__);`.\n *\n * @property ContainerInterface $container\n *\n * @author Kevin Bond <kevinbond@gmail.com>\n *\n * @deprecated since symfony/contracts v3.5, use ServiceMethodsSubscriberTrait instead\n */\ntrait ServiceSubscriberTrait\n{\n    public static function getSubscribedServices(): array\n    {\n        $services = method_exists(get_parent_class(self::class) ?: '', __FUNCTION__) ? parent::getSubscribedServices() : [];\n\n        foreach ((new \\ReflectionClass(self::class))->getMethods() as $method) {\n            if (self::class !== $method->getDeclaringClass()->name) {\n                continue;\n            }\n\n            if (!$attribute = $method->getAttributes(SubscribedService::class)[0] ?? null) {\n                continue;\n            }\n\n            if ($method->isStatic() || $method->isAbstract() || $method->isGenerator() || $method->isInternal() || $method->getNumberOfRequiredParameters()) {\n                throw new \\LogicException(\\sprintf('Cannot use \"%s\" on method \"%s::%s()\" (can only be used on non-static, non-abstract methods with no parameters).', SubscribedService::class, self::class, $method->name));\n            }\n\n            if (!$returnType = $method->getReturnType()) {\n                throw new \\LogicException(\\sprintf('Cannot use \"%s\" on methods without a return type in \"%s::%s()\".', SubscribedService::class, $method->name, self::class));\n            }\n\n            /* @var SubscribedService $attribute */\n            $attribute = $attribute->newInstance();\n            $attribute->key ??= self::class.'::'.$method->name;\n            $attribute->type ??= $returnType instanceof \\ReflectionNamedType ? $returnType->getName() : (string) $returnType;\n            $attribute->nullable = $returnType->allowsNull();\n\n            if ($attribute->attributes) {\n                $services[] = $attribute;\n            } else {\n                $services[$attribute->key] = ($attribute->nullable ? '?' : '').$attribute->type;\n            }\n        }\n\n        return $services;\n    }\n\n    #[Required]\n    public function setContainer(ContainerInterface $container): ?ContainerInterface\n    {\n        $ret = null;\n        if (method_exists(get_parent_class(self::class) ?: '', __FUNCTION__)) {\n            $ret = parent::setContainer($container);\n        }\n\n        $this->container = $container;\n\n        return $ret;\n    }\n}\n"
+        },
+        {
+          "name": "Test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.115234375,
+          "content": "{\n    \"name\": \"symfony/service-contracts\",\n    \"type\": \"library\",\n    \"description\": \"Generic abstractions related to writing services\",\n    \"keywords\": [\"abstractions\", \"contracts\", \"decoupling\", \"interfaces\", \"interoperability\", \"standards\"],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Nicolas Grekas\",\n            \"email\": \"p@tchwork.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=8.1\",\n        \"psr/container\": \"^1.1|^2.0\",\n        \"symfony/deprecation-contracts\": \"^2.5|^3\"\n    },\n    \"conflict\": {\n        \"ext-psr\": \"<1.1|>=2\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Contracts\\\\Service\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Test/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\",\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-main\": \"3.6-dev\"\n        },\n        \"thanks\": {\n            \"name\": \"symfony/contracts\",\n            \"url\": \"https://github.com/symfony/contracts\"\n        }\n    }\n}\n"
+        }
+      ]
+    }
+  ]
+}

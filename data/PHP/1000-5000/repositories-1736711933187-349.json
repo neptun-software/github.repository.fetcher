@@ -1,0 +1,70 @@
+{
+  "metadata": {
+    "timestamp": 1736711933187,
+    "page": 349,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjM1MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "VerbalExpressions/PHPVerbalExpressions",
+      "stars": 2410,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.07421875,
+          "content": "# General Ignores\n/vendor\ncomposer.lock\n/phpunit/\n# IDEs\n.idea/\n/nbproject/\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.7861328125,
+          "content": "language: php\nphp:\n  - '5.4'\n  - '5.5'\n  - '5.6'\n  - '7.0'\n  - '7.1'\n  - '7.2'\n  - nightly\nmatrix:\n  include:\n    - php: \"5.3\"\n      dist: precise\ngit:\n#there should rarely be a need to clone 50 deep, so this is just reducing build-time\n  depth: 5\nbefore_script:\n# no need to provide coverage more than once and no need for the speedbump otherwise\n  - if [[ ${TRAVIS_PHP_VERSION:0:3} != \"7.1\" ]]; then phpenv config-rm xdebug.ini || true ; fi\n# no need to test formatting more than once and php_codesniffer does not work with older php\n  - if [[ ${TRAVIS_PHP_VERSION:0:3} != \"5.6\" ]]; then composer remove --dev squizlabs/php_codesniffer ; fi\n  - composer install\nscript:\n# since it's disabled otherwise...\n  - if [[ ${TRAVIS_PHP_VERSION:0:3} == \"5.6\" ]]; then composer check-style ; fi\n  - composer test\n"
+        },
+        {
+          "name": "Example.php",
+          "type": "blob",
+          "size": 1.3359375,
+          "content": "<?php\n/**\n * Verbal Expressions v0.1 (https://github.com/jehna/VerbalExpressions) ported in PHP\n * @author Mihai Ionut Vilcu (ionutvmi@gmail.com)\n * 22.July.2013\n */\n\n$loader = require __DIR__ . '/vendor/autoload.php';\n\n$regex = new \\VerbalExpressions\\PHPVerbalExpressions\\VerbalExpressions();\n\n$regex->startOfLine()\n      ->then(\"http\")\n      ->maybe(\"s\")\n      ->then(\"://\")\n      ->maybe(\"www.\")\n      ->anythingBut(\" \")\n      ->endOfLine();\n\nif ($regex->test(\"http://github.com\")) {\n    echo \"valid url\". '<br>';\n} else {\n    echo \"invalid url\". '<br>';\n}\n\nif (preg_match($regex, 'http://github.com')) {\n    echo 'valid url';\n} else {\n    echo 'invalid url';\n}\n\necho \"<pre>\". $regex->getRegex() .\"</pre>\";\n\necho $regex->clean(array(\"modifiers\" => \"m\", \"replaceLimit\" => 4))\n           ->find(' ')\n           ->replace(\"This is a small test http://somesite.com and some more text.\", \"-\");\n\n\necho \"<hr>\";\n\n// limit\necho $regex ->clean(array(\"modifiers\" => \"m\"))\n            ->startOfLine()\n            ->anyOf(\"abc\")\n            ->anythingBut(\" \")\n            ->limit(1)\n            ->withAnyCase()\n            ->replace(\"Abracadabra is a nice word\", \"Ba\");\n\necho \"<br>\";\n\n\n\necho $regex ->clean(array(\"modifiers\" => \"gm\"))\n            ->add(\"\\b\")\n            ->word()\n            ->limit(2, 3)\n            ->add(\"\\b\")\n            ->replace(\"test abc ab abcd\", \"*\");\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.046875,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 jehna\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in\nthe Software without restriction, including without limitation the rights to\nuse, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of\nthe Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER\nIN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN\nCONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 4.0068359375,
+          "content": "[![Build Status](https://travis-ci.org/VerbalExpressions/PHPVerbalExpressions.svg)](https://travis-ci.org/VerbalExpressions/PHPVerbalExpressions)\n\n## PHPVerbalExpressions\n- ported from [VerbalExpressions](https://github.com/VerbalExpressions/JSVerbalExpressions)\n\nVerbalExpressions is a PHP library that helps to construct hard regular expressions.  \n\n## Installation\nThe project supports Composer so you have to install [Composer](http://getcomposer.org/doc/00-intro.md#installation-nix) first, before project setup.\n\n```sh\n$ composer require  verbalexpressions/php-verbal-expressions:dev-master\n```\n\n## Examples\n\n```php\n<?php\n// some tests\nrequire './vendor/autoload.php';\nuse VerbalExpressions\\PHPVerbalExpressions\\VerbalExpressions;\n\n$regex = new VerbalExpressions();\n\n$regex->startOfLine()\n      ->then(\"http\")\n      ->maybe(\"s\")\n      ->then(\"://\")\n      ->maybe(\"www.\")\n      ->anythingBut(\" \")\n      ->endOfLine();\n\n\nif ($regex->test(\"http://github.com\")) {\n    echo \"valid url\". '<br>';\n} else {\n    echo \"invalid url\". '<br>';\n}\n\nif (preg_match($regex, 'http://github.com')) {\n    echo 'valid url';\n} else {\n    echo 'invalid url';\n}\n\n\necho \"<pre>\". $regex->getRegex() .\"</pre>\";\n\necho $regex->clean(array(\"modifiers\" => \"m\", \"replaceLimit\" => 4))\n           ->find(' ')\n           ->replace(\"This is a small test http://somesite.com and some more text.\", \"-\");\n\n```\n\nMore examples are available in the following files:\n\n- [Example.php](Example.php)\n- [VerbalExpressionsTest.php](tests/VerbalExpressionsTest.php)\n\n### Business readable language  expression definition\n```PHP\n$definition = 'start, then \"http\", maybe \"s\", then \"://\", maybe \"www.\", anything but \" \", end';\n$regex = new VerbalExpressionsScenario($definition);\n```\n\n## Methods list\n\nName|Description|Usage\n:---|:---|:---\nadd| add values to the expression| add('abc')\nstartOfLine| mark expression with ^| startOfLine(false)\nendOfLine| mark the expression with $|endOfLine()\nthen|add a string to the expression| add('foo')\nfind| alias for then| find('foo')\nmaybe| define a string that might appear once or not| maybe('.com')\nanything| accept any string| anything()\nanythingBut| accept any string but the specified char| anythingBut(',')\nsomething| accept any non-empty string| something()\nsomethingBut| anything non-empty except for these chars| somethingBut('a')\nreplace| shorthand for preg_replace()| replace($source, $val)\nlineBreak| match \\r \\n|lineBreak()\nbr|shorthand for lineBreak| br()\ntab|match tabs \\t |tab()\nword|match \\w+|word()\nanyOf| any of the listed chars| anyOf('abc')\nany| shorthand for anyOf| any('abc')\nrange| adds a range to the expression|range(a,z,0,9)\nwithAnyCase| match case default case sensitive|withAnyCase()\nstopAtFirst|toggles the g modifiers|stopAtFirst()\naddModifier| add a modifier|addModifier('g')\nremoveModifier| remove a mofier|removeModifier('g')\nsearchOneLine| Toggles m modifier|searchOneLine()\nmultiple|adds the multiple modifier| multiple('*')\n_or|wraps the expression in an `or` with the provided value|_or('bar')\nlimit|adds char limit|limit(1,3)\ntest| performs a preg_match| test('valid@email.com')\n\nFor all the above method (except `test`) you could use the `VerbalExpressionsScenario`.\n\n## Other Implementations\nYou can see an up to date list of all ports on [VerbalExpressions.github.io](http://VerbalExpressions.github.io).\n- [Javascript](https://github.com/jehna/VerbalExpressions)\n- [Ruby](https://github.com/VerbalExpressions/RubyVerbalExpressions)\n- [C#](https://github.com/VerbalExpressions/CSharpVerbalExpressions)\n- [Python](https://github.com/VerbalExpressions/PythonVerbalExpressions)\n- [Java](https://github.com/VerbalExpressions/JavaVerbalExpressions)\n- [C++](https://github.com/VerbalExpressions/CppVerbalExpressions)\n\n## Building the project and running the tests\nThe project supports Composer so you have to install [Composer](https://getcomposer.org/doc/00-intro.md#installation-nix) first before project setup.\n\n    curl -sS https://getcomposer.org/installer | php\n    php composer.phar install --dev\n    ln -s vendor/phpunit/phpunit/phpunit.php phpunit\n    ./phpunit\n\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9150390625,
+          "content": "{\n    \"name\": \"verbalexpressions/php-verbal-expressions\",\n    \"license\": \"MIT\",\n    \"type\": \"project\",\n    \"description\": \"PHP Regular expressions made easy\",\n    \"require\": {\n        \"php\": \">=5.3\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"* >=4\",\n        \"squizlabs/php_codesniffer\": \"^3.1\"\n    },\n    \"minimum-stability\": \"stable\",\n    \"autoload\": {\n        \"psr-4\": {\n            \"VerbalExpressions\\\\PHPVerbalExpressions\\\\\": \"src/\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"VerbalExpressions\\\\PHPVerbalExpressions\\\\Tests\\\\\": \"tests/\"\n        }\n    },\n    \"scripts\": {\n        \"test\": \"vendor/bin/phpunit\",\n        \"check-style\": \"phpcs -p --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests\",\n        \"fix-style\": \"phpcbf -p --standard=PSR2 --runtime-set ignore_errors_on_exit 1 --runtime-set ignore_warnings_on_exit 1 src tests\"\n    }\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 1.1376953125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n    backupStaticAttributes=\"false\"\n    colors=\"true\"\n    convertErrorsToExceptions=\"false\"\n    convertNoticesToExceptions=\"false\"\n    convertWarningsToExceptions=\"false\"\n    processIsolation=\"false\"\n    stopOnFailure=\"false\"\n    stopOnError=\"false\"\n    stopOnIncomplete=\"false\"\n    stopOnSkipped=\"false\"\n    syntaxCheck=\"false\"\n    bootstrap=\"vendor/autoload.php\">\n    <testsuites>\n        <testsuite name=\"Application Test Suite\">\n            <directory>./tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <filter>\n        <whitelist>\n            <directory>./src</directory>\n        </whitelist>\n    </filter>\n\n\n    <logging>\n        <log\n            type=\"coverage-html\"\n            target=\"phpunit\"\n            logIncompleteSkipped=\"true\"\n        />\n        <log\n            type=\"testdox-text\"\n            target=\"phpunit/testdox.txt\"\n            logIncompleteSkipped=\"true\"\n        />\n        <log\n            type=\"coverage-text\"\n            target=\"php://stdout\"\n            showUncoveredFiles=\"true\"\n            showOnlySummary=\"false\"\n        />\n    </logging>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

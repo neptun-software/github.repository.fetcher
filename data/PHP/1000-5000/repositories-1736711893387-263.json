@@ -1,0 +1,91 @@
+{
+  "metadata": {
+    "timestamp": 1736711893387,
+    "page": 263,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjI3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "myclabs/php-enum",
+      "stars": 2725,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.2392578125,
+          "content": "# Auto detect text files and perform LF normalization\n* text=auto\n\n.gitattributes export-ignore\n.github export-ignore\n.gitignore export-ignore\ntests/ export-ignore\nphpunit.xml export-ignore\npsalm.xml export-ignore\nstatic-analysis/ export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0654296875,
+          "content": ".DS_Store\nnbproject/*\n.idea/*\nvendor/*\ncomposer.phar\ncomposer.lock\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.05078125,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2015 My C-Labs\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and\nassociated documentation files (the \"Software\"), to deal in the Software without restriction,\nincluding without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,\nand/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial\nportions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT\nNOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.\nIN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nWHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE\nSOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 9.7099609375,
+          "content": "# PHP Enum implementation inspired from SplEnum\n\n[![GitHub Actions][GA Image]][GA Link]\n[![Latest Stable Version](https://poser.pugx.org/myclabs/php-enum/version.png)](https://packagist.org/packages/myclabs/php-enum)\n[![Total Downloads](https://poser.pugx.org/myclabs/php-enum/downloads.png)](https://packagist.org/packages/myclabs/php-enum)\n[![Psalm Shepherd][Shepherd Image]][Shepherd Link]\n\nMaintenance for this project is [supported via Tidelift](https://tidelift.com/subscription/pkg/packagist-myclabs-php-enum?utm_source=packagist-myclabs-php-enum&utm_medium=referral&utm_campaign=readme).\n\n## Why?\n\nFirst, and mainly, `SplEnum` is not integrated to PHP, you have to install the extension separately.\n\nUsing an enum instead of class constants provides the following advantages:\n\n- You can use an enum as a parameter type: `function setAction(Action $action) {`\n- You can use an enum as a return type: `function getAction() : Action {`\n- You can enrich the enum with methods (e.g. `format`, `parse`, …)\n- You can extend the enum to add new values (make your enum `final` to prevent it)\n- You can get a list of all the possible values (see below)\n\nThis Enum class is not intended to replace class constants, but only to be used when it makes sense.\n\n## Installation\n\n```\ncomposer require myclabs/php-enum\n```\n\n## Declaration\n\n```php\nuse MyCLabs\\Enum\\Enum;\n\n/**\n * Action enum\n *\n * @extends Enum<Action::*>\n */\nfinal class Action extends Enum\n{\n    private const VIEW = 'view';\n    private const EDIT = 'edit';\n}\n```\n\n## Usage\n\n```php\n$action = Action::VIEW();\n\n// or with a dynamic key:\n$action = Action::$key();\n// or with a dynamic value:\n$action = Action::from($value);\n// or\n$action = new Action($value);\n```\n\nAs you can see, static methods are automatically implemented to provide quick access to an enum value.\n\nOne advantage over using class constants is to be able to use an enum as a parameter type:\n\n```php\nfunction setAction(Action $action) {\n    // ...\n}\n```\n\n## Documentation\n\n- `__construct()` The constructor checks that the value exist in the enum\n- `__toString()` You can `echo $myValue`, it will display the enum value (value of the constant)\n- `getValue()` Returns the current value of the enum\n- `getKey()` Returns the key of the current value on Enum\n- `equals()` Tests whether enum instances are equal (returns `true` if enum values are equal, `false` otherwise)\n\nStatic methods:\n\n- `from()` Creates an Enum instance, checking that the value exist in the enum\n- `toArray()` method Returns all possible values as an array (constant name in key, constant value in value)\n- `keys()` Returns the names (keys) of all constants in the Enum class\n- `values()` Returns instances of the Enum class of all Enum constants (constant name in key, Enum instance in value)\n- `isValid()` Check if tested value is valid on enum set\n- `isValidKey()` Check if tested key is valid on enum set\n- `assertValidValue()` Assert the value is valid on enum set, throwing exception otherwise\n- `search()` Return key for searched value\n\n### Static methods\n\n```php\nfinal class Action extends Enum\n{\n    private const VIEW = 'view';\n    private const EDIT = 'edit';\n}\n\n// Static method:\n$action = Action::VIEW();\n$action = Action::EDIT();\n```\n\nStatic method helpers are implemented using [`__callStatic()`](http://www.php.net/manual/en/language.oop5.overloading.php#object.callstatic).\n\nIf you care about IDE autocompletion, you can either implement the static methods yourself:\n\n```php\nfinal class Action extends Enum\n{\n    private const VIEW = 'view';\n\n    /**\n     * @return Action\n     */\n    public static function VIEW() {\n        return new Action(self::VIEW);\n    }\n}\n```\n\nor you can use phpdoc (this is supported in PhpStorm for example):\n\n```php\n/**\n * @method static Action VIEW()\n * @method static Action EDIT()\n */\nfinal class Action extends Enum\n{\n    private const VIEW = 'view';\n    private const EDIT = 'edit';\n}\n```\n\n## Native enums and migration\nNative enum arrived to PHP in version 8.1: https://www.php.net/enumerations  \nIf your project is running PHP 8.1+ or your library has it as a minimum requirement you should use it instead of this library.\n\nWhen migrating from `myclabs/php-enum`, the effort should be small if the usage was in the recommended way:\n- private constants\n- final classes\n- no method overridden\n\nChanges for migration:\n- Class definition should be changed from\n```php\n/**\n * @method static Action VIEW()\n * @method static Action EDIT()\n */\nfinal class Action extends Enum\n{\n    private const VIEW = 'view';\n    private const EDIT = 'edit';\n}\n```\n to\n```php\nenum Action: string\n{\n    case VIEW = 'view';\n    case EDIT = 'edit';\n}\n```\nAll places where the class was used as a type will continue to work.\n\nUsages and the change needed:\n\n| Operation                                                      | myclabs/php-enum                                                           | native enum                                                                                                                                                                                                                              |\n|----------------------------------------------------------------|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| Obtain an instance will change from                            | `$enumCase = Action::VIEW()`                                               | `$enumCase = Action::VIEW`                                                                                                                                                                                                               |\n| Create an enum from a backed value                             | `$enumCase = new Action('view')`                                           | `$enumCase = Action::from('view')`                                                                                                                                                                                                       |\n| Get the backed value of the enum instance                      | `$enumCase->getValue()`                                                    | `$enumCase->value`                                                                                                                                                                                                                       |\n| Compare two enum instances                                     | `$enumCase1 == $enumCase2` <br/> or <br/> `$enumCase1->equals($enumCase2)` | `$enumCase1 === $enumCase2`                                                                                                                                                                                                              |\n| Get the key/name of the enum instance                          | `$enumCase->getKey()`                                                      | `$enumCase->name`                                                                                                                                                                                                                        |\n| Get a list of all the possible instances of the enum           | `Action::values()`                                                         | `Action::cases()`                                                                                                                                                                                                                        |\n| Get a map of possible instances of the enum mapped by name     | `Action::values()`                                                         | `array_combine(array_map(fn($case) => $case->name, Action::cases()), Action::cases())` <br/> or <br/> `(new ReflectionEnum(Action::class))->getConstants()`                                                                              |\n| Get a list of all possible names of the enum                   | `Action::keys()`                                                           | `array_map(fn($case) => $case->name, Action::cases())`                                                                                                                                                                                   |\n| Get a list of all possible backed values of the enum           | `Action::toArray()`                                                        | `array_map(fn($case) => $case->value, Action::cases())`                                                                                                                                                                                  |\n| Get a map of possible backed values of the enum mapped by name | `Action::toArray()`                                                        | `array_combine(array_map(fn($case) => $case->name, Action::cases()), array_map(fn($case) => $case->value, Action::cases()))` <br/> or <br/> `array_map(fn($case) => $case->value, (new ReflectionEnum(Action::class))->getConstants()))` |\n\n## Related projects\n\n- [PHP 8.1+ native enum](https://www.php.net/enumerations)\n- [Doctrine enum mapping](https://github.com/acelaya/doctrine-enum-type)\n- [Symfony ParamConverter integration](https://github.com/Ex3v/MyCLabsEnumParamConverter)\n- [PHPStan integration](https://github.com/timeweb/phpstan-enum)\n\n\n[GA Image]: https://github.com/myclabs/php-enum/workflows/CI/badge.svg\n\n[GA Link]: https://github.com/myclabs/php-enum/actions?query=workflow%3A%22CI%22+branch%3Amaster\n\n[Shepherd Image]: https://shepherd.dev/github/myclabs/php-enum/coverage.svg\n\n[Shepherd Link]: https://shepherd.dev/github/myclabs/php-enum\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 0.2724609375,
+          "content": "# Security Policy\n\n## Supported Versions\n\nOnly the latest stable release is supported.\n\n## Reporting a Vulnerability\n\nTo report a security vulnerability, please use the [Tidelift security contact](https://tidelift.com/security).\n\nTidelift will coordinate the fix and disclosure.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.8486328125,
+          "content": "{\n    \"name\": \"myclabs/php-enum\",\n    \"type\": \"library\",\n    \"description\": \"PHP Enum implementation\",\n    \"keywords\": [\"enum\"],\n    \"homepage\": \"https://github.com/myclabs/php-enum\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"PHP Enum contributors\",\n            \"homepage\": \"https://github.com/myclabs/php-enum/graphs/contributors\"\n        }\n    ],\n    \"autoload\": {\n        \"psr-4\": {\n            \"MyCLabs\\\\Enum\\\\\": \"src/\"\n        },\n        \"classmap\": [\n            \"stubs/Stringable.php\"\n        ]\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"MyCLabs\\\\Tests\\\\Enum\\\\\": \"tests/\"\n        }\n    },\n    \"require\": {\n        \"php\": \"^7.3 || ^8.0\",\n        \"ext-json\": \"*\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^9.5\",\n        \"squizlabs/php_codesniffer\": \"1.*\",\n        \"vimeo/psalm\": \"^4.6.2 || ^5.2\"\n    }\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.51953125,
+          "content": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<phpunit\n     xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n     xsi:noNamespaceSchemaLocation=\"vendor/phpunit/phpunit/phpunit.xsd\"\n     colors=\"true\"\n     bootstrap=\"./tests/bootstrap.php\"\n>\n    <testsuites>\n        <testsuite name=\"PHP Enum Test Suite\">\n            <directory suffix=\".php\">./tests</directory>\n        </testsuite>\n    </testsuites>\n\n    <coverage>\n        <include>\n            <directory suffix=\".php\">src</directory>\n        </include>\n    </coverage>\n</phpunit>\n"
+        },
+        {
+          "name": "psalm.xml",
+          "type": "blob",
+          "size": 1.134765625,
+          "content": "<?xml version=\"1.0\"?>\n<psalm\n    totallyTyped=\"true\"\n    resolveFromConfigFile=\"true\"\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n    xmlns=\"https://getpsalm.org/schema/config\"\n    xsi:schemaLocation=\"https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd\"\n>\n    <projectFiles>\n        <directory name=\"src\" />\n        <directory name=\"static-analysis\" />\n        <ignoreFiles>\n            <directory name=\"vendor\" />\n            <directory name=\"src/PHPUnit\" />\n        </ignoreFiles>\n    </projectFiles>\n\n    <issueHandlers>\n        <MixedAssignment errorLevel=\"info\" />\n\n        <ImpureStaticProperty>\n            <!-- self::$... usages in Enum are used to populate an internal cache, and cause no side-effects -->\n            <errorLevel type=\"suppress\">\n                <file name=\"src/Enum.php\"/>\n            </errorLevel>\n        </ImpureStaticProperty>\n\n        <ImpureVariable>\n            <!-- $this usages in Enum point themselves to an immutable instance -->\n            <errorLevel type=\"suppress\">\n                <file name=\"src/Enum.php\"/>\n            </errorLevel>\n        </ImpureVariable>\n    </issueHandlers>\n</psalm>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "static-analysis",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "stubs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "metadata": {
+    "timestamp": 1736712041895,
+    "page": 561,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjU3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "SimpleRegex/SRL-PHP",
+      "stars": 1797,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0380859375,
+          "content": ".idea/\nvendor/\ncomposer.lock\nclover.xml"
+        },
+        {
+          "name": ".gitmodules",
+          "type": "blob",
+          "size": 0.0927734375,
+          "content": "[submodule \"tests/rules\"]\n\tpath = tests/rules\n\turl = https://github.com/SimpleRegex/Test-Rules\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.1826171875,
+          "content": "language: php\nphp:\n  - '7.0'\ninstall:\n  - composer install\nafter_success:\n  - bash <(curl -s https://codecov.io/bash)\nnotifications:\n  email:\n    on_success: change\n    on_failure: always"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.068359375,
+          "content": "The MIT License (MIT)\nCopyright (c) 2016 Karim Geiger <karim@TYVR.NET>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated\ndocumentation files (the \"Software\"), to deal in the Software without restriction, including without limitation\nthe rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,\nand to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of\nthe Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO\nTHE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,\nTORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 7.38671875,
+          "content": "# Simple Regex Language\n\n[![codecov](https://codecov.io/gh/SimpleRegex/SRL-PHP/branch/master/graph/badge.svg)](https://codecov.io/gh/SimpleRegex/SRL-PHP)\n[![Build Status](https://travis-ci.org/SimpleRegex/SRL-PHP.svg?branch=master)](https://travis-ci.org/SimpleRegex/SRL-PHP)\n[![License](https://poser.pugx.org/simpleregex/srl-php/license)](https://packagist.org/packages/simpleregex/srl-php)\n\nWe all know Regular Expressions are hard to read. Once written you're\nhappy if you never ever have to touch this line of code again because\nyou're going to have a hard time understanding what you've written there.\n\nBefore we get started, a short note on how to use SRL: You can either\nuse this project directly, or, if you're not into PHP or including a\nlibrary like that, you can build your query online and use the generated\nRegular Expression elsewhere:\n\nhttps://simple-regex.com/build\n\n## An Example\n\nRegular Expressions don't have to be bulky? - No, they don't!\nJust have a look at this:\n\n```\nbegin with any of (digit, letter, one of \"._%+-\") once or more,\nliterally \"@\",\nany of (digit, letter, one of \".-\") once or more,\nliterally \".\",\nletter at least 2,\nmust end, case insensitive\n```\n\nOr, if you like, a implementation in code itself:\n\n```php\n$query = SRL::startsWith()\n    ->anyOf(function (Builder $query) {\n        $query->digit()\n            ->letter()\n            ->oneOf('._%+-');\n    })->onceOrMore()\n    ->literally('@')\n    ->anyOf(function (Builder $query) {\n        $query->digit()\n            ->letter()\n            ->oneOf('.-');\n    })->onceOrMore()\n    ->literally('.')\n    ->letter()->atLeast(2)\n    ->mustEnd()->caseInsensitive();\n```\n\nYes, indeed, both examples are definitely longer than the corresponding\nregular expression:\n\n```\n/^([A-Z0-9._%+-])+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i\n```\n\nBut, however, the above is quite better to read and definitely better\nto maintain, isn't it? And to top that off: It's much harder to forget\nto escape something like a dot in SRL.\n\nLet's go through it real quick:\n\n1. First, we require the matching string to start. This way, we make sure\nthe match won't begin in the middle of something.\n2. Now, we're matching either a digit, a letter, or one of the literal\ncharacters ., _, %, + or -. We expect there to be one or more of them.\n3. We now expect exactly one @ - Looks like an email address.\n4. Again, either digits, letters or . or -, once or multiple times.\n5. A dot. Seems to be the end of the TLDs name\n6. To the end, we'll expect two or more letters, for the TLD.\n7. We require the string to end now, to avoid matching stuff like \n`invalid@email.com123`.\n8. And of course, all of that should be case insensitive, since it's\nan email address.\n\n## Features\n\n### Using the Language\n\nAbove you can see two examples. The first one uses the language itself,\nthe second one the Query Builder. Since using a language is more fluent\nthan a builder, we wanted to make things as easy as possible for you.\n\n```php\n$srl = new SRL('literally \"colo\", optional \"u\", literally \"r\"');\npreg_match($srl, 'color') // 1\n$srl->isMatching('colour') // true\n$srl->isMatching('soup') // false\n```\n\nEverything below applies to both, the SRL itself and the Query Builder.\n\n### Matching\n\nSRL is as simple as the example above states. To retrieve\nthe built Regular Expression which can be used by external tools like\n[preg_match](http://php.net/manual/en/function.preg-match.php), either\nuse the `->get()` method, or just let it cast to a string:\n\n```php\npreg_match($query, 'sample@email.com');\n```\n\nOf course, you may use the builtin match methods for an even easier\napproach:\n\n```php\n$query->isMatching('sample@email.com'); // true\n$query->isMatching('invalid-email.com'); // false\n```\n\n### Capture Groups\n\nSince regular expressions aren't only used for validation, capturing\ngroups is supported by SRL as well. After defining the Regular\nExpression just like before, simply add a `capture`-group which will\nmatch the query defined in the lambda function. Optionally, a name for\nthat capture group (`color`) can be set as well:\n\n```php\n// Using SRL\n$regEx = new SRL('literally \"color:\", whitespace, capture (letter once or more) as \"color\", literally \".\"');\n\n// Using the query builder\n$regEx = SRL::literally('color:')->whitespace()->capture(function (Builder $query) {\n    $query->letter()->onceOrMore();\n}, 'color')->literally('.');\n\n$matches = $regEx->getMatches('Favorite color: green. Another color: yellow.');\n\necho $matches[0]->get('color'); // green\necho $matches[1]->get('color'); // yellow\n```\n\nEach match will be passed to a `SRL\\Match` object, which will return the\nmatches found.\n\n### Additional PCRE functions\n\nFeel free to use all the available [PCRE PHP functions](http://php.net/manual/en/ref.pcre.php)\nin combination with SRL. Although, why bother? We've got wrappers for\nall common functions with additional features. Just like above, just\napply one of the following methods directly on the SRL or Builder:\n\n* `isMatching()` - Validate if the expression matches the given string.\n* `getMatches()` - Get all matches for supplied capture groups.\n* `getMatch()` - Get first match for supplied capture groups.\n* `replace()` - Replace data using the expression.\n* `split()` - Split string into array through expression.\n* `filter()` - Filter items using the expression.\n\n### Lookarounds\n\nIn case you want some regular expressions to only apply in certain\nconditions, lookarounds are probably what you're searching for.\n\nWith queries like:\n\n```php\n// SRL:\nnew SRL('capture (literally \"foo\") if followed by (literally \"bar\")');\n\n// Query Builder:\nSRL::capture(function (Builder $query) {\n    $query->literally('foo');\n})->ifFollowedBy(function (Builder $query) {\n    $query->literally('bar');\n});\n```\n\nyou can easily capture 'foo', but only if this match is followed by\n'bar'.\n\nBut to be honest, the Query Builder version is quite much code for\nsuch a simple thing, right? No problem! Not only are we supporting\nanonymous functions for sub-expressions, strings and Builder objects\nare supported as well.\nIsn't that great? Just have a look at one possible example:\n\n```php\nSRL::capture('foo')->ifFollowedBy(SRL::literally('bar'));\n```\n\nIf desired, lookbehinds are possible as well. Using `ifAlreadyHad()`\nyou can validate a certain condition only if the previous string\ncontained a specific pattern.\n\n## Performance\n\nThe built Regular Expression will be cached, so you don't have to worry\nabout it being created every time you call the `match`-method. And,\nsince it's a normal Regular Expression under the hood, performance\nwon't be an issue.\n\nOf course, building the expression may take some time, but in real life\napplications this shouldn't be noticeable. But if you like, you can\nbuild the expression somewhere else and just use the result in your app.\nIf you do that, please keep the code for that query somewhere and link\nto it, otherwise the Regular Expression will be unreadable just as before.\n\n## Usage\n\nAdd the package to your ``require`` section in the ``composer.json``-file\nand update your project.\n\n```json\n\"require\": {\n    \"simpleregex/srl-php\": \"0.1.x-dev\"\n}\n```\n\n```sh\ncomposer update\n```\n\n## Things to do\n\nWe're definitely not done yet. There's much to come. A short list of\nstuff that's planned would contain:\n\n* More functionality\n* More documentation\n* Variable support\n* Rule the world\n\n## License\n\nSRL is published under the MIT license. See `LICENSE` for more information.\n\n## Contribution\n\nLike this project? Want to contribute? Awesome! Feel free to open some\npull requests or just open an issue."
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.53515625,
+          "content": "{\n  \"name\": \"simpleregex/srl-php\",\n  \"description\": \"Simple Regex Language\",\n  \"version\": \"0.1.0\",\n  \"type\": \"library\",\n  \"license\": \"MIT\",\n  \"authors\": [\n    {\n      \"name\": \"Karim Geiger\",\n      \"email\": \"karim@tyvr.net\"\n    }\n  ],\n  \"require\": {\n    \"php\": \">=7.0.0\"\n  },\n  \"autoload\": {\n    \"psr-4\": {\n      \"SRL\\\\\": \"src/\"\n    }\n  },\n  \"autoload-dev\": {\n    \"classmap\": [\n      \"tests/TestCase.php\"\n    ]\n  },\n  \"require-dev\": {\n    \"phpunit/phpunit\": \"^5.5\"\n  },\n  \"extra\": {\n    \"branch-alias\": {\n      \"dev-master\": \"0.1.x-dev\"\n    }\n  }\n}\n"
+        },
+        {
+          "name": "examples",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.7802734375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"vendor/autoload.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\">\n    <testsuites>\n        <testsuite name=\"Application Test Suite\">\n            <directory suffix=\"Test.php\">./tests</directory>\n        </testsuite>\n    </testsuites>\n    <filter>\n        <whitelist processUncoveredFilesFromWhitelist=\"true\">\n            <directory suffix=\".php\">./src</directory>\n        </whitelist>\n    </filter>\n    <logging>\n        <log type=\"coverage-clover\" target=\"clover.xml\"/>\n    </logging>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

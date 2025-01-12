@@ -1,0 +1,209 @@
+{
+  "metadata": {
+    "timestamp": 1736712068493,
+    "page": 617,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjYyMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/security-http",
+      "stars": 1687,
+      "defaultBranch": "7.2",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "AccessMap.php",
+          "type": "blob",
+          "size": 1.3125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\RequestMatcherInterface;\n\n/**\n * AccessMap allows configuration of different access control rules for\n * specific parts of the website.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass AccessMap implements AccessMapInterface\n{\n    private array $map = [];\n\n    /**\n     * @param array       $attributes An array of attributes to pass to the access decision manager (like roles)\n     * @param string|null $channel    The channel to enforce (http, https, or null)\n     */\n    public function add(RequestMatcherInterface $requestMatcher, array $attributes = [], ?string $channel = null): void\n    {\n        $this->map[] = [$requestMatcher, $attributes, $channel];\n    }\n\n    public function getPatterns(Request $request): array\n    {\n        foreach ($this->map as $elements) {\n            if (null === $elements[0] || $elements[0]->matches($request)) {\n                return [$elements[1], $elements[2]];\n            }\n        }\n\n        return [null, null];\n    }\n}\n"
+        },
+        {
+          "name": "AccessMapInterface.php",
+          "type": "blob",
+          "size": 0.82421875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\n\n/**\n * AccessMap allows configuration of different access control rules for\n * specific parts of the website.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n * @author Kris Wallsmith <kris@symfony.com>\n */\ninterface AccessMapInterface\n{\n    /**\n     * Returns security attributes and required channel for the supplied request.\n     *\n     * @return array{0: array|null, 1: string|null} A tuple of security attributes and the required channel\n     */\n    public function getPatterns(Request $request): array;\n}\n"
+        },
+        {
+          "name": "AccessToken",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Attribute",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Authentication",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Authenticator",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Authorization",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 3.6513671875,
+          "content": "CHANGELOG\n=========\n\n7.2\n---\n\n * Pass the current token to the `checkPostAuth()` method of user checkers\n * Deprecate argument `$secret` of `RememberMeAuthenticator`\n * Deprecate passing an empty string as `$userIdentifier` argument to `UserBadge` constructor\n * Allow passing passport attributes to the `UserAuthenticatorInterface::authenticateUser()` method\n\n7.1\n---\n\n * Add `#[IsCsrfTokenValid]` attribute\n * Add CAS 2.0 access token handler\n * Make empty username or empty password on form login attempts throw `BadCredentialsException`\n\n7.0\n---\n\n * Add argument `$badgeFqcn` to `Passport::addBadge()`\n * Add argument `$lifetime` to `LoginLinkHandlerInterface::createLoginLink()`\n * Throw when calling the constructor of `DefaultLoginRateLimiter` with an empty secret\n\n6.4\n---\n\n * `UserValueResolver` no longer implements `ArgumentValueResolverInterface`\n * Deprecate calling the constructor of `DefaultLoginRateLimiter` with an empty secret\n\n6.3\n---\n\n * Add `RememberMeBadge` to `JsonLoginAuthenticator` and enable reading parameter in JSON request body\n * Add argument `$exceptionCode` to `#[IsGranted]`\n * Deprecate passing a secret as the 2nd argument to the constructor of `Symfony\\Component\\Security\\Http\\RememberMe\\PersistentRememberMeHandler`\n * Add `OidcUserInfoTokenHandler` and `OidcTokenHandler` with OIDC support for `AccessTokenAuthenticator`\n * Add `attributes` optional array argument in `UserBadge`\n * Call `UserBadge::userLoader` with attributes if the argument is set\n * Allow to override badge fqcn on `Passport::addBadge`\n * Add `SecurityTokenValueResolver` to inject token as controller argument\n\n6.2\n---\n\n * Add maximum username length enforcement of 4096 characters in `UserBadge`\n * Add `#[IsGranted()]`\n * Deprecate empty username or password when using when using `JsonLoginAuthenticator`\n * Set custom lifetime for login link\n * Add `$lifetime` parameter to `LoginLinkHandlerInterface::createLoginLink()`\n * Add RFC6750 Access Token support to allow token-based authentication\n * Allow using expressions as `#[IsGranted()]` attribute and subject\n\n6.0\n---\n\n * Remove `LogoutSuccessHandlerInterface` and `LogoutHandlerInterface`, register a listener on the `LogoutEvent` event instead\n * Remove `CookieClearingLogoutHandler`, `SessionLogoutHandler` and `CsrfTokenClearingLogoutHandler`.\n   Use `CookieClearingLogoutListener`, `SessionLogoutListener` and `CsrfTokenClearingLogoutListener` instead\n\n5.4\n---\n\n * Deprecate the `$authenticationEntryPoint` argument of `ChannelListener`, and add `$httpPort` and `$httpsPort` arguments\n * Deprecate `RetryAuthenticationEntryPoint`, this code is now inlined in the `ChannelListener`\n * Deprecate `FormAuthenticationEntryPoint` and `BasicAuthenticationEntryPoint`, in the new system the `FormLoginAuthenticator`\n   and `HttpBasicAuthenticator` should be used instead\n * Deprecate `AbstractRememberMeServices`, `PersistentTokenBasedRememberMeServices`, `RememberMeServicesInterface`,\n   `TokenBasedRememberMeServices`, use the remember me handler alternatives instead\n * Deprecate the `$authManager` argument of `AccessListener`\n * Deprecate not setting the `$exceptionOnNoToken` argument of `AccessListener` to `false`\n * Deprecate `DeauthenticatedEvent`, use `TokenDeauthenticatedEvent` instead\n * Deprecate `CookieClearingLogoutHandler`, `SessionLogoutHandler` and `CsrfTokenClearingLogoutHandler`.\n   Use `CookieClearingLogoutListener`, `SessionLogoutListener` and `CsrfTokenClearingLogoutListener` instead\n * Deprecate `PassportInterface`, `UserPassportInterface` and `PassportTrait`, use `Passport` instead\n\n5.3\n---\n\nThe CHANGELOG for version 5.3 and earlier can be found at https://github.com/symfony/symfony/blob/5.3/src/Symfony/Component/Security/CHANGELOG.md\n"
+        },
+        {
+          "name": "Controller",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "EntryPoint",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Event",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "EventListener",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Firewall.php",
+          "type": "blob",
+          "size": 4.13671875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\EventDispatcher\\EventSubscriberInterface;\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpKernel\\Event\\FinishRequestEvent;\nuse Symfony\\Component\\HttpKernel\\Event\\RequestEvent;\nuse Symfony\\Component\\HttpKernel\\KernelEvents;\nuse Symfony\\Component\\Security\\Http\\Firewall\\ExceptionListener;\nuse Symfony\\Component\\Security\\Http\\Firewall\\FirewallListenerInterface;\nuse Symfony\\Contracts\\EventDispatcher\\EventDispatcherInterface;\n\n/**\n * Firewall uses a FirewallMap to register security listeners for the given\n * request.\n *\n * It allows for different security strategies within the same application\n * (a Basic authentication for the /api, and a web based authentication for\n * everything else for instance).\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass Firewall implements EventSubscriberInterface\n{\n    /**\n     * @var \\SplObjectStorage<Request, ExceptionListener>\n     */\n    private \\SplObjectStorage $exceptionListeners;\n\n    public function __construct(\n        private FirewallMapInterface $map,\n        private EventDispatcherInterface $dispatcher,\n    ) {\n        $this->exceptionListeners = new \\SplObjectStorage();\n    }\n\n    /**\n     * @return void\n     */\n    public function onKernelRequest(RequestEvent $event)\n    {\n        if (!$event->isMainRequest()) {\n            return;\n        }\n\n        // register listeners for this firewall\n        $listeners = $this->map->getListeners($event->getRequest());\n\n        $authenticationListeners = $listeners[0];\n        $exceptionListener = $listeners[1];\n        $logoutListener = $listeners[2];\n\n        if (null !== $exceptionListener) {\n            $this->exceptionListeners[$event->getRequest()] = $exceptionListener;\n            $exceptionListener->register($this->dispatcher);\n        }\n\n        // Authentication listeners are pre-sorted by SortFirewallListenersPass\n        $authenticationListeners = function () use ($authenticationListeners, $logoutListener) {\n            if (null !== $logoutListener) {\n                $logoutListenerPriority = $this->getListenerPriority($logoutListener);\n            }\n\n            foreach ($authenticationListeners as $listener) {\n                $listenerPriority = $this->getListenerPriority($listener);\n\n                // Yielding the LogoutListener at the correct position\n                if (null !== $logoutListener && $listenerPriority < $logoutListenerPriority) {\n                    yield $logoutListener;\n                    $logoutListener = null;\n                }\n\n                yield $listener;\n            }\n\n            // When LogoutListener has the lowest priority of all listeners\n            if (null !== $logoutListener) {\n                yield $logoutListener;\n            }\n        };\n\n        $this->callListeners($event, $authenticationListeners());\n    }\n\n    /**\n     * @return void\n     */\n    public function onKernelFinishRequest(FinishRequestEvent $event)\n    {\n        $request = $event->getRequest();\n\n        if (isset($this->exceptionListeners[$request])) {\n            $this->exceptionListeners[$request]->unregister($this->dispatcher);\n            unset($this->exceptionListeners[$request]);\n        }\n    }\n\n    /**\n     * @return array\n     */\n    public static function getSubscribedEvents()\n    {\n        return [\n            KernelEvents::REQUEST => ['onKernelRequest', 8],\n            KernelEvents::FINISH_REQUEST => 'onKernelFinishRequest',\n        ];\n    }\n\n    /**\n     * @return void\n     */\n    protected function callListeners(RequestEvent $event, iterable $listeners)\n    {\n        foreach ($listeners as $listener) {\n            $listener($event);\n\n            if ($event->hasResponse()) {\n                break;\n            }\n        }\n    }\n\n    private function getListenerPriority(object $logoutListener): int\n    {\n        return $logoutListener instanceof FirewallListenerInterface ? $logoutListener->getPriority() : 0;\n    }\n}\n"
+        },
+        {
+          "name": "Firewall",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "FirewallMap.php",
+          "type": "blob",
+          "size": 1.509765625,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\HttpFoundation\\RequestMatcherInterface;\nuse Symfony\\Component\\Security\\Http\\Firewall\\ExceptionListener;\nuse Symfony\\Component\\Security\\Http\\Firewall\\LogoutListener;\n\n/**\n * FirewallMap allows configuration of different firewalls for specific parts\n * of the website.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass FirewallMap implements FirewallMapInterface\n{\n    /**\n     * @var list<array{RequestMatcherInterface, list<callable>, ExceptionListener|null, LogoutListener|null}>\n     */\n    private array $map = [];\n\n    /**\n     * @param list<callable> $listeners\n     */\n    public function add(?RequestMatcherInterface $requestMatcher = null, array $listeners = [], ?ExceptionListener $exceptionListener = null, ?LogoutListener $logoutListener = null): void\n    {\n        $this->map[] = [$requestMatcher, $listeners, $exceptionListener, $logoutListener];\n    }\n\n    public function getListeners(Request $request): array\n    {\n        foreach ($this->map as $elements) {\n            if (null === $elements[0] || $elements[0]->matches($request)) {\n                return [$elements[1], $elements[2], $elements[3]];\n            }\n        }\n\n        return [[], null, null];\n    }\n}\n"
+        },
+        {
+          "name": "FirewallMapInterface.php",
+          "type": "blob",
+          "size": 1.16796875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\Security\\Http\\Firewall\\ExceptionListener;\nuse Symfony\\Component\\Security\\Http\\Firewall\\LogoutListener;\n\n/**\n * This interface must be implemented by firewall maps.\n *\n * @author Johannes M. Schmitt <schmittjoh@gmail.com>\n */\ninterface FirewallMapInterface\n{\n    /**\n     * Returns the authentication listeners, and the exception listener to use\n     * for the given request.\n     *\n     * If there are no authentication listeners, the first inner array must be\n     * empty.\n     *\n     * If there is no exception listener, the second element of the outer array\n     * must be null.\n     *\n     * If there is no logout listener, the third element of the outer array\n     * must be null.\n     *\n     * @return array{iterable<mixed, callable>, ExceptionListener, LogoutListener}\n     */\n    public function getListeners(Request $request): array;\n}\n"
+        },
+        {
+          "name": "HttpUtils.php",
+          "type": "blob",
+          "size": 6.6845703125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\HttpFoundation\\RedirectResponse;\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\Routing\\Exception\\MethodNotAllowedException;\nuse Symfony\\Component\\Routing\\Exception\\ResourceNotFoundException;\nuse Symfony\\Component\\Routing\\Generator\\UrlGeneratorInterface;\nuse Symfony\\Component\\Routing\\Matcher\\RequestMatcherInterface;\nuse Symfony\\Component\\Routing\\Matcher\\UrlMatcherInterface;\n\n/**\n * Encapsulates the logic needed to create sub-requests, redirect the user, and match URLs.\n *\n * @author Fabien Potencier <fabien@symfony.com>\n */\nclass HttpUtils\n{\n    /**\n     * @param $domainRegexp       A regexp the target of HTTP redirections must match, scheme included\n     * @param $secureDomainRegexp A regexp the target of HTTP redirections must match when the scheme is \"https\"\n     *\n     * @throws \\InvalidArgumentException\n     */\n    public function __construct(\n        private ?UrlGeneratorInterface $urlGenerator = null,\n        private UrlMatcherInterface|RequestMatcherInterface|null $urlMatcher = null,\n        private ?string $domainRegexp = null,\n        private ?string $secureDomainRegexp = null,\n    ) {\n    }\n\n    /**\n     * Creates a redirect Response.\n     *\n     * @param string $path   A path (an absolute path (/foo), an absolute URL (http://...), or a route name (foo))\n     * @param int    $status The HTTP status code (302 \"Found\" by default)\n     */\n    public function createRedirectResponse(Request $request, string $path, int $status = 302): RedirectResponse\n    {\n        if (null !== $this->secureDomainRegexp && 'https' === $this->urlMatcher->getContext()->getScheme() && preg_match('#^https?:[/\\\\\\\\]{2,}+[^/]++#i', $path, $host) && !preg_match(\\sprintf($this->secureDomainRegexp, preg_quote($request->getHttpHost())), $host[0])) {\n            $path = '/';\n        }\n        if (null !== $this->domainRegexp && preg_match('#^https?:[/\\\\\\\\]{2,}+[^/]++#i', $path, $host) && !preg_match(\\sprintf($this->domainRegexp, preg_quote($request->getHttpHost())), $host[0])) {\n            $path = '/';\n        }\n\n        return new RedirectResponse($this->generateUri($request, $path), $status);\n    }\n\n    /**\n     * Creates a Request.\n     *\n     * @param string $path A path (an absolute path (/foo), an absolute URL (http://...), or a route name (foo))\n     */\n    public function createRequest(Request $request, string $path): Request\n    {\n        $newRequest = Request::create($this->generateUri($request, $path), 'get', [], $request->cookies->all(), [], $request->server->all());\n\n        static $setSession;\n\n        $setSession ??= \\Closure::bind(static function ($newRequest, $request) { $newRequest->session = $request->session; }, null, Request::class);\n        $setSession($newRequest, $request);\n\n        if ($request->attributes->has(SecurityRequestAttributes::AUTHENTICATION_ERROR)) {\n            $newRequest->attributes->set(SecurityRequestAttributes::AUTHENTICATION_ERROR, $request->attributes->get(SecurityRequestAttributes::AUTHENTICATION_ERROR));\n        }\n        if ($request->attributes->has(SecurityRequestAttributes::ACCESS_DENIED_ERROR)) {\n            $newRequest->attributes->set(SecurityRequestAttributes::ACCESS_DENIED_ERROR, $request->attributes->get(SecurityRequestAttributes::ACCESS_DENIED_ERROR));\n        }\n        if ($request->attributes->has(SecurityRequestAttributes::LAST_USERNAME)) {\n            $newRequest->attributes->set(SecurityRequestAttributes::LAST_USERNAME, $request->attributes->get(SecurityRequestAttributes::LAST_USERNAME));\n        }\n\n        if ($request->get('_format')) {\n            $newRequest->attributes->set('_format', $request->get('_format'));\n        }\n        if ($request->getDefaultLocale() !== $request->getLocale()) {\n            $newRequest->setLocale($request->getLocale());\n        }\n\n        return $newRequest;\n    }\n\n    /**\n     * Checks that a given path matches the Request.\n     *\n     * @param string $path A path (an absolute path (/foo), an absolute URL (http://...), or a route name (foo))\n     *\n     * @return bool true if the path is the same as the one from the Request, false otherwise\n     */\n    public function checkRequestPath(Request $request, string $path): bool\n    {\n        if ('/' !== $path[0]) {\n            // Shortcut if request has already been matched before\n            if ($request->attributes->has('_route')) {\n                return $path === $request->attributes->get('_route');\n            }\n\n            try {\n                // matching a request is more powerful than matching a URL path + context, so try that first\n                if ($this->urlMatcher instanceof RequestMatcherInterface) {\n                    $parameters = $this->urlMatcher->matchRequest($request);\n                } else {\n                    $parameters = $this->urlMatcher->match($request->getPathInfo());\n                }\n\n                return isset($parameters['_route']) && $path === $parameters['_route'];\n            } catch (MethodNotAllowedException|ResourceNotFoundException) {\n                return false;\n            }\n        }\n\n        return $path === rawurldecode($request->getPathInfo());\n    }\n\n    /**\n     * Generates a URI, based on the given path or absolute URL.\n     *\n     * @param string $path A path (an absolute path (/foo), an absolute URL (http://...), or a route name (foo))\n     *\n     * @throws \\LogicException\n     */\n    public function generateUri(Request $request, string $path): string\n    {\n        $url = parse_url($path);\n\n        if ('' === $path || isset($url['scheme'], $url['host'])) {\n            return $path;\n        }\n\n        if ('/' === $path[0]) {\n            return $request->getUriForPath($path);\n        }\n\n        if (null === $this->urlGenerator) {\n            throw new \\LogicException('You must provide a UrlGeneratorInterface instance to be able to use routes.');\n        }\n\n        $url = $this->urlGenerator->generate($path, $request->attributes->all(), UrlGeneratorInterface::ABSOLUTE_URL);\n\n        // unnecessary query string parameters must be removed from URL\n        // (ie. query parameters that are presents in $attributes)\n        // fortunately, they all are, so we have to remove entire query string\n        $position = strpos($url, '?');\n        if (false !== $position) {\n            $fragment = parse_url($url, \\PHP_URL_FRAGMENT);\n            $url = substr($url, 0, $position);\n            // fragment must be preserved\n            if ($fragment) {\n                $url .= \"#$fragment\";\n            }\n        }\n\n        return $url;\n    }\n}\n"
+        },
+        {
+          "name": "Impersonate",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2004-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "LoginLink",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Logout",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "ParameterBagUtils.php",
+          "type": "blob",
+          "size": 2.6689453125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\HttpFoundation\\ParameterBag;\nuse Symfony\\Component\\HttpFoundation\\Request;\nuse Symfony\\Component\\PropertyAccess\\Exception\\AccessException;\nuse Symfony\\Component\\PropertyAccess\\Exception\\InvalidArgumentException;\nuse Symfony\\Component\\PropertyAccess\\PropertyAccess;\nuse Symfony\\Component\\PropertyAccess\\PropertyAccessorInterface;\n\n/**\n * @internal\n */\nfinal class ParameterBagUtils\n{\n    private static PropertyAccessorInterface $propertyAccessor;\n\n    /**\n     * Returns a \"parameter\" value.\n     *\n     * Paths like foo[bar] will be evaluated to find deeper items in nested data structures.\n     *\n     * @throws InvalidArgumentException when the given path is malformed\n     */\n    public static function getParameterBagValue(ParameterBag $parameters, string $path): mixed\n    {\n        if (false === $pos = strpos($path, '[')) {\n            return $parameters->all()[$path] ?? null;\n        }\n\n        $root = substr($path, 0, $pos);\n\n        if (null === $value = $parameters->all()[$root] ?? null) {\n            return null;\n        }\n\n        self::$propertyAccessor ??= PropertyAccess::createPropertyAccessor();\n\n        try {\n            return self::$propertyAccessor->getValue($value, substr($path, $pos));\n        } catch (AccessException) {\n            return null;\n        }\n    }\n\n    /**\n     * Returns a request \"parameter\" value.\n     *\n     * Paths like foo[bar] will be evaluated to find deeper items in nested data structures.\n     *\n     * @throws InvalidArgumentException when the given path is malformed\n     */\n    public static function getRequestParameterValue(Request $request, string $path, array $parameters = []): mixed\n    {\n        if (false === $pos = strpos($path, '[')) {\n            return $parameters[$path] ?? $request->get($path);\n        }\n\n        $root = substr($path, 0, $pos);\n\n        if (null === $value = $parameters[$root] ?? $request->get($root)) {\n            return null;\n        }\n\n        self::$propertyAccessor ??= PropertyAccess::createPropertyAccessor();\n\n        try {\n            $value = self::$propertyAccessor->getValue($value, substr($path, $pos));\n\n            if (null === $value && isset($parameters[$root]) && null !== $value = $request->get($root)) {\n                $value = self::$propertyAccessor->getValue($value, substr($path, $pos));\n            }\n\n            return $value;\n        } catch (AccessException) {\n            return null;\n        }\n    }\n}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.1572265625,
+          "content": "Security Component - HTTP Integration\n=====================================\n\nThe Security HTTP component provides an HTTP integration of the Security Core\ncomponent. It allows securing (parts of) your application using firewalls and\nprovides authenticators to authenticate visitors.\n\nGetting Started\n---------------\n\n```bash\ncomposer require symfony/security-http\n```\n\nSponsor\n-------\n\nThe Security component for Symfony 7.1 is [backed][1] by [SymfonyCasts][2].\n\nLearn Symfony faster by watching real projects being built and actively coding\nalong with them. SymfonyCasts bridges that learning gap, bringing you video\ntutorials and coding challenges. Code on!\n\nHelp Symfony by [sponsoring][3] its development!\n\nResources\n---------\n\n * [Documentation](https://symfony.com/doc/current/components/security.html)\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n\n[1]: https://symfony.com/backers\n[2]: https://symfonycasts.com\n[3]: https://symfony.com/sponsor\n"
+        },
+        {
+          "name": "RateLimiter",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "RememberMe",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "SecurityEvents.php",
+          "type": "blob",
+          "size": 1.4267578125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\nuse Symfony\\Component\\Security\\Http\\Event\\InteractiveLoginEvent;\nuse Symfony\\Component\\Security\\Http\\Event\\SwitchUserEvent;\n\nfinal class SecurityEvents\n{\n    /**\n     * The INTERACTIVE_LOGIN event occurs after a user has actively logged\n     * into your website. It is important to distinguish this action from\n     * non-interactive authentication methods, such as:\n     *   - authentication based on your session.\n     *   - authentication using an HTTP basic or HTTP digest header.\n     *\n     * @Event(\"Symfony\\Component\\Security\\Http\\Event\\InteractiveLoginEvent\")\n     */\n    public const INTERACTIVE_LOGIN = 'security.interactive_login';\n\n    /**\n     * The SWITCH_USER event occurs before switch to another user and\n     * before exit from an already switched user.\n     *\n     * @Event(\"Symfony\\Component\\Security\\Http\\Event\\SwitchUserEvent\")\n     */\n    public const SWITCH_USER = 'security.switch_user';\n\n    /**\n     * Event aliases.\n     *\n     * These aliases can be consumed by RegisterListenersPass.\n     */\n    public const ALIASES = [\n        InteractiveLoginEvent::class => self::INTERACTIVE_LOGIN,\n        SwitchUserEvent::class => self::SWITCH_USER,\n    ];\n}\n"
+        },
+        {
+          "name": "SecurityRequestAttributes.php",
+          "type": "blob",
+          "size": 0.615234375,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\Security\\Http;\n\n/**\n * List of request attributes used along the security flow.\n *\n * @author Robin Chalas <robin.chalas@gmail.com>\n */\nfinal class SecurityRequestAttributes\n{\n    public const ACCESS_DENIED_ERROR = '_security.403_error';\n    public const AUTHENTICATION_ERROR = '_security.last_error';\n    public const LAST_USERNAME = '_security.last_username';\n}\n"
+        },
+        {
+          "name": "Session",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "Util",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.7158203125,
+          "content": "{\n    \"name\": \"symfony/security-http\",\n    \"type\": \"library\",\n    \"description\": \"Symfony Security Component - HTTP Integration\",\n    \"keywords\": [],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Fabien Potencier\",\n            \"email\": \"fabien@symfony.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"require\": {\n        \"php\": \">=8.2\",\n        \"symfony/deprecation-contracts\": \"^2.5|^3\",\n        \"symfony/http-foundation\": \"^6.4|^7.0\",\n        \"symfony/http-kernel\": \"^6.4|^7.0\",\n        \"symfony/polyfill-mbstring\": \"~1.0\",\n        \"symfony/property-access\": \"^6.4|^7.0\",\n        \"symfony/security-core\": \"^7.2\",\n        \"symfony/service-contracts\": \"^2.5|^3\"\n    },\n    \"require-dev\": {\n        \"symfony/cache\": \"^6.4|^7.0\",\n        \"symfony/clock\": \"^6.4|^7.0\",\n        \"symfony/expression-language\": \"^6.4|^7.0\",\n        \"symfony/http-client\": \"^6.4|^7.0\",\n        \"symfony/http-client-contracts\": \"^3.0\",\n        \"symfony/rate-limiter\": \"^6.4|^7.0\",\n        \"symfony/routing\": \"^6.4|^7.0\",\n        \"symfony/security-csrf\": \"^6.4|^7.0\",\n        \"symfony/translation\": \"^6.4|^7.0\",\n        \"psr/log\": \"^1|^2|^3\",\n        \"web-token/jwt-library\": \"^3.3.2|^4.0\"\n    },\n    \"conflict\": {\n        \"symfony/clock\": \"<6.4\",\n        \"symfony/event-dispatcher\": \"<6.4\",\n        \"symfony/http-client-contracts\": \"<3.0\",\n        \"symfony/security-bundle\": \"<6.4\",\n        \"symfony/security-csrf\": \"<6.4\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Component\\\\Security\\\\Http\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.8046875,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/9.3/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony Security Component HTTP Test Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <coverage>\n        <include>\n            <directory>./</directory>\n        </include>\n        <exclude>\n            <directory>./Tests</directory>\n            <directory>./vendor</directory>\n        </exclude>\n    </coverage>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "timestamp": 1736712143393,
+    "page": 767,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc3MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "aimeos/macro",
+      "stars": 1433,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".circleci",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0419921875,
+          "content": ".phpunit.result.cache\ncomposer.lock\nvendor\n"
+        },
+        {
+          "name": "CNAME",
+          "type": "blob",
+          "size": 0.0126953125,
+          "content": "php-macro.org"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0380859375,
+          "content": "MIT License\n\nCopyright (c) 2021 Aimeos\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 5.5205078125,
+          "content": "## PHP Macro\n\nThe PHP Macro package offers closure (anonymous function) based setter dependency\ninjection by providing a trait which can be included into any class.\n\n```bash\ncomposer req aimeos/macro\n```\n\nThis package is for application, framework and library developers who want to\nallow customizing the behavior of their code by their users.\n\n## Why macros\n\nIn applications, frameworks or libraries which are build for customization it’s\nnecessary to allow overwriting existing functionality to be able customize its\nbehavior. This is where macros are very handy because they can add custom code\nusing closures.\n\nWith the PHP Macro package, you can also allow users to overwrite methods in\nbase classes without forcing your users to extend these classes. The PHP Macro\npackage uses **NO reflection** or other hacks, just **pure PHP methods**.\n\nThere are some pros and cons when compared to class based depencency injection:\n\n**Pro:**\n\n* Less code to write and much easier to implement for simple stuff\n* Custom closures can be inherited and overwritten like class methods\n\n**Con:**\n\n* Limited static code analysis possibilities\n* Anonymous function can not be forced to implement an interface\n\nThus, it's not a replacement for class based depencency injection but a lightweight\naddition for small extension points where full-blown dependency injection using\nclasses implementing interfaces are too much work.\n\n## Allow customization\n\nThe result of existing methods can be modified if the original method checks\nfor an existing macro and use that instead its own implementation:\n\n```php\n// original code\n\nclass Order\n{\n    use Aimeos\\Macro\\Macroable;\n\n    private $id = '123';\n\n    public function getOrderNumber()\n    {\n        $fcn = static::macro( 'orderNumber' );\n        return $fcn ? $fcn( $this->id ) : $this->id;\n    }\n};\n```\n\nNow, you can add your custom `orderNumber` macro that will be used instead:\n\n```php\n// user code\n\nOrder::macro( 'orderNumber', function( string $id ) {\n   return date( 'Y' ) . '-' . $id;\n} );\n\n(new Order)->getOrderNumber(); // now returns '2020-123'\n```\n\nThus, you can generate own output or pass a different result to subseqent methods\nwithin the application.\n\n## Access class properties\n\nWhen macros are called in an object context, they can also access class properties:\n\n```php\n// original code\n\nclass A\n{\n    use Aimeos\\Macro\\Macroable;\n    private $name = 'A';\n};\n```\n\nHere, the private property `$name` is available in the macro:\n\n```php\n// user code\n\nA::macro( 'concat', function( array $values ) {\n   return $this->name . ':' . implode( '-', $values );\n} );\n\n(new A)->concat( ['1', '2', '3'] ); // returns 'A:1-2-3'\n```\n\nThe macro can use the property as input for creating the returned value.\n\n## Use inherited macros\n\nThe PHP macro package also allows to inherit macros from parent classes. Then,\nthey can access class properties of the child class just like regular class\nmethods:\n\n```php\n// original code\n\nclass A\n{\n    use Aimeos\\Macro\\Macroable;\n    private $name = 'A';\n};\n\nclass B extends A\n{\n    private $name = 'B';\n};\n```\n\nMacros added to the parent class will be available in child classes too:\n\n```php\n// user code\n\nA::macro( 'concat', function( array $values ) {\n   return $this->name . ':' . implode( '-', $values );\n} );\n\n(new B)->concat( ['1', '2', '3'] ); // returns 'B:1-2-3'\n```\n\nClass `B` extends from class `A` but provides a different `$name` property. The\nmacro inherited from class `A` will now use the property of class `B`.\n\n\n## Overwrite inherited macros\n\nIt's also possible to overwrite macros inherited from parent classes as it's\npossible with regular class methods:\n\n```php\n// original code\n\nclass A\n{\n    use Aimeos\\Macro\\Macroable;\n\n    public function do() {\n        return static::macro( 'concat' )( [1, 2, 3] );\n    }\n};\n\nclass B extends A {};\n\nclass C extends A {};\n```\n\nNow you can add macros to the parent class and one of the child classes:\n\n```php\n// user code\n\nA::macro( 'concat', function( array $values ) {\n   return implode( ',', $values );\n} );\n\nC::macro( 'concat', function( array $values ) {\n   return implode( '-', $values );\n} );\n\n(new B)->do(); // returns '1,2,3'\n\n(new C)->do(); // returns '1-2-3'\n```\n\nThis enables you to add special handling for single classes even if all other\nclasses still use the macro added to class `A`.\n\n## Overwrite protected methods\n\nBase classes often offer a set of methods that are used by the child classes.\nIn PHP, replacing the methods of a base class is impossible and thus, you have\nto overwrite each child class with your own implementation.\n\nTo avoid that, the original method can use the `call()` method instead of calling\nthe method of the parent class directly:\n\n```php\n// original code\n\nclass A\n{\n    use Aimeos\\Macro\\Macroable;\n\n    protected function getName( $prefix )\n    {\n        return $prefix . 'A';\n    }\n};\n\nclass B extends A\n{\n    public function do()\n    {\n        return $this->call( 'getName', 'B-' );\n    }\n};\n```\n\nThis will check if there's a macro `getName` available and will call that instead\nof the `getName()` method:\n\n```php\n// user code\n\n(new B)->do(); // returns 'B-A'\n\nA::macro( 'getName', function( $prefix ) {\n   return $this->getName( $prefix ) . '-123';\n} );\n\n(new B)->do(); // returns 'B-A-123'\n```\n\nThe original `getName()` method can still be used in the macro.\n\n## Reset macros\n\nSometimes, it may be necessary to remove macros from objects, especially when\nrunning automated tests. You can unset a macro by using:\n\n```php\nclass A\n{\n    use Aimeos\\Macro\\Macroable;\n};\n\n// add macro\nA::macro( 'test', function() {\n   return 'test';\n} );\n\n// remove macro\nA::unmacro( 'test' );\n```\n"
+        },
+        {
+          "name": "_config.yml",
+          "type": "blob",
+          "size": 0.025390625,
+          "content": "theme: jekyll-theme-cayman"
+        },
+        {
+          "name": "_layouts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "assets",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.359375,
+          "content": "{\n\t\"name\": \"aimeos/macro\",\n\t\"description\": \"Customize classes using closures\",\n\t\"license\": \"MIT\",\n\t\"type\": \"library\",\n\t\"require\": {\n\t\t\"php\": \"~7.1||~8.0\"\n\t},\n\t\"require-dev\": {\n        \"phpunit/phpunit\": \"~7.0||~8.0||~9.0\",\n        \"php-coveralls/php-coveralls\": \"~2.0\"\n\t},\n\t\"autoload\": {\n\t\t\"psr-4\": {\n\t\t\t\"Aimeos\\\\Macro\\\\\": \"src\"\n\t\t},\n\t\t\"classmap\": [\n\t\t\t\"src\"\n\t\t]\n\t}\n}\n"
+        },
+        {
+          "name": "phpunit.xml",
+          "type": "blob",
+          "size": 0.6328125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" backupGlobals=\"false\" backupStaticAttributes=\"false\" bootstrap=\"vendor/autoload.php\" convertErrorsToExceptions=\"true\" convertNoticesToExceptions=\"true\" convertWarningsToExceptions=\"true\" processIsolation=\"false\" stopOnFailure=\"false\" xsi:noNamespaceSchemaLocation=\"https://schema.phpunit.de/9.3/phpunit.xsd\">\n  <coverage>\n    <include>\n      <directory suffix=\".php\">src</directory>\n    </include>\n  </coverage>\n  <testsuites>\n    <testsuite name=\"unittest\">\n      <file>tests/MacroableTest.php</file>\n    </testsuite>\n  </testsuites>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

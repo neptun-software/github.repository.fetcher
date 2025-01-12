@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "timestamp": 1736712151756,
+    "page": 784,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjc5MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "symfony/web-link",
+      "stars": 1417,
+      "defaultBranch": "7.2",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.072265625,
+          "content": "/Tests export-ignore\n/phpunit.xml.dist export-ignore\n/.git* export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.033203125,
+          "content": "vendor/\ncomposer.lock\nphpunit.xml\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.09765625,
+          "content": "CHANGELOG\n=========\n\n4.4.0\n-----\n\n * implement PSR-13 directly\n\n3.3.0\n-----\n\n * added the component\n"
+        },
+        {
+          "name": "EventListener",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "GenericLinkProvider.php",
+          "type": "blob",
+          "size": 1.44921875,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\WebLink;\n\nuse Psr\\Link\\EvolvableLinkProviderInterface;\nuse Psr\\Link\\LinkInterface;\n\nclass GenericLinkProvider implements EvolvableLinkProviderInterface\n{\n    /**\n     * @var LinkInterface[]\n     */\n    private array $links = [];\n\n    /**\n     * @param LinkInterface[] $links\n     */\n    public function __construct(array $links = [])\n    {\n        $that = $this;\n\n        foreach ($links as $link) {\n            $that = $that->withLink($link);\n        }\n\n        $this->links = $that->links;\n    }\n\n    public function getLinks(): array\n    {\n        return array_values($this->links);\n    }\n\n    public function getLinksByRel(string $rel): array\n    {\n        $links = [];\n\n        foreach ($this->links as $link) {\n            if (\\in_array($rel, $link->getRels(), true)) {\n                $links[] = $link;\n            }\n        }\n\n        return $links;\n    }\n\n    public function withLink(LinkInterface $link): static\n    {\n        $that = clone $this;\n        $that->links[spl_object_id($link)] = $link;\n\n        return $that;\n    }\n\n    public function withoutLink(LinkInterface $link): static\n    {\n        $that = clone $this;\n        unset($that->links[spl_object_id($link)]);\n\n        return $that;\n    }\n}\n"
+        },
+        {
+          "name": "HttpHeaderSerializer.php",
+          "type": "blob",
+          "size": 1.7158203125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\WebLink;\n\nuse Psr\\Link\\LinkInterface;\n\n/**\n * Serializes a list of Link instances to an HTTP Link header.\n *\n * @see https://tools.ietf.org/html/rfc5988\n *\n * @author Kévin Dunglas <dunglas@gmail.com>\n */\nfinal class HttpHeaderSerializer\n{\n    /**\n     * Builds the value of the \"Link\" HTTP header.\n     *\n     * @param LinkInterface[]|\\Traversable $links\n     */\n    public function serialize(iterable $links): ?string\n    {\n        $elements = [];\n        foreach ($links as $link) {\n            if ($link->isTemplated()) {\n                continue;\n            }\n\n            $attributesParts = ['', \\sprintf('rel=\"%s\"', implode(' ', $link->getRels()))];\n            foreach ($link->getAttributes() as $key => $value) {\n                if (\\is_array($value)) {\n                    foreach ($value as $v) {\n                        $attributesParts[] = \\sprintf('%s=\"%s\"', $key, preg_replace('/(?<!\\\\\\\\)\"/', '\\\"', $v));\n                    }\n\n                    continue;\n                }\n\n                if (!\\is_bool($value)) {\n                    $attributesParts[] = \\sprintf('%s=\"%s\"', $key, preg_replace('/(?<!\\\\\\\\)\"/', '\\\"', $value));\n\n                    continue;\n                }\n\n                if (true === $value) {\n                    $attributesParts[] = $key;\n                }\n            }\n\n            $elements[] = \\sprintf('<%s>%s', $link->getHref(), implode('; ', $attributesParts));\n        }\n\n        return $elements ? implode(',', $elements) : null;\n    }\n}\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.04296875,
+          "content": "Copyright (c) 2004-present Fabien Potencier\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Link.php",
+          "type": "blob",
+          "size": 7.720703125,
+          "content": "<?php\n\n/*\n * This file is part of the Symfony package.\n *\n * (c) Fabien Potencier <fabien@symfony.com>\n *\n * For the full copyright and license information, please view the LICENSE\n * file that was distributed with this source code.\n */\n\nnamespace Symfony\\Component\\WebLink;\n\nuse Psr\\Link\\EvolvableLinkInterface;\n\nclass Link implements EvolvableLinkInterface\n{\n    // @see https://www.iana.org/assignments/link-relations/link-relations.xhtml\n    public const REL_ABOUT = 'about';\n    public const REL_ACL = 'acl';\n    public const REL_ALTERNATE = 'alternate';\n    public const REL_AMPHTML = 'amphtml';\n    public const REL_APPENDIX = 'appendix';\n    public const REL_APPLE_TOUCH_ICON = 'apple-touch-icon';\n    public const REL_APPLE_TOUCH_STARTUP_IMAGE = 'apple-touch-startup-image';\n    public const REL_ARCHIVES = 'archives';\n    public const REL_AUTHOR = 'author';\n    public const REL_BLOCKED_BY = 'blocked-by';\n    public const REL_BOOKMARK = 'bookmark';\n    public const REL_CANONICAL = 'canonical';\n    public const REL_CHAPTER = 'chapter';\n    public const REL_CITE_AS = 'cite-as';\n    public const REL_COLLECTION = 'collection';\n    public const REL_CONTENTS = 'contents';\n    public const REL_CONVERTEDFROM = 'convertedfrom';\n    public const REL_COPYRIGHT = 'copyright';\n    public const REL_CREATE_FORM = 'create-form';\n    public const REL_CURRENT = 'current';\n    public const REL_DESCRIBEDBY = 'describedby';\n    public const REL_DESCRIBES = 'describes';\n    public const REL_DISCLOSURE = 'disclosure';\n    public const REL_DNS_PREFETCH = 'dns-prefetch';\n    public const REL_DUPLICATE = 'duplicate';\n    public const REL_EDIT = 'edit';\n    public const REL_EDIT_FORM = 'edit-form';\n    public const REL_EDIT_MEDIA = 'edit-media';\n    public const REL_ENCLOSURE = 'enclosure';\n    public const REL_EXTERNAL = 'external';\n    public const REL_FIRST = 'first';\n    public const REL_GLOSSARY = 'glossary';\n    public const REL_HELP = 'help';\n    public const REL_HOSTS = 'hosts';\n    public const REL_HUB = 'hub';\n    public const REL_ICON = 'icon';\n    public const REL_INDEX = 'index';\n    public const REL_INTERVALAFTER = 'intervalafter';\n    public const REL_INTERVALBEFORE = 'intervalbefore';\n    public const REL_INTERVALCONTAINS = 'intervalcontains';\n    public const REL_INTERVALDISJOINT = 'intervaldisjoint';\n    public const REL_INTERVALDURING = 'intervalduring';\n    public const REL_INTERVALEQUALS = 'intervalequals';\n    public const REL_INTERVALFINISHEDBY = 'intervalfinishedby';\n    public const REL_INTERVALFINISHES = 'intervalfinishes';\n    public const REL_INTERVALIN = 'intervalin';\n    public const REL_INTERVALMEETS = 'intervalmeets';\n    public const REL_INTERVALMETBY = 'intervalmetby';\n    public const REL_INTERVALOVERLAPPEDBY = 'intervaloverlappedby';\n    public const REL_INTERVALOVERLAPS = 'intervaloverlaps';\n    public const REL_INTERVALSTARTEDBY = 'intervalstartedby';\n    public const REL_INTERVALSTARTS = 'intervalstarts';\n    public const REL_ITEM = 'item';\n    public const REL_LAST = 'last';\n    public const REL_LATEST_VERSION = 'latest-version';\n    public const REL_LICENSE = 'license';\n    public const REL_LINKSET = 'linkset';\n    public const REL_LRDD = 'lrdd';\n    public const REL_MANIFEST = 'manifest';\n    public const REL_MASK_ICON = 'mask-icon';\n    public const REL_MEDIA_FEED = 'media-feed';\n    public const REL_MEMENTO = 'memento';\n    public const REL_MICROPUB = 'micropub';\n    public const REL_MODULEPRELOAD = 'modulepreload';\n    public const REL_MONITOR = 'monitor';\n    public const REL_MONITOR_GROUP = 'monitor-group';\n    public const REL_NEXT = 'next';\n    public const REL_NEXT_ARCHIVE = 'next-archive';\n    public const REL_NOFOLLOW = 'nofollow';\n    public const REL_NOOPENER = 'noopener';\n    public const REL_NOREFERRER = 'noreferrer';\n    public const REL_OPENER = 'opener';\n    public const REL_OPENID_2_LOCAL_ID = 'openid2.local_id';\n    public const REL_OPENID_2_PROVIDER = 'openid2.provider';\n    public const REL_ORIGINAL = 'original';\n    public const REL_P_3_PV_1 = 'p3pv1';\n    public const REL_PAYMENT = 'payment';\n    public const REL_PINGBACK = 'pingback';\n    public const REL_PRECONNECT = 'preconnect';\n    public const REL_PREDECESSOR_VERSION = 'predecessor-version';\n    public const REL_PREFETCH = 'prefetch';\n    public const REL_PRELOAD = 'preload';\n    public const REL_PRERENDER = 'prerender';\n    public const REL_PREV = 'prev';\n    public const REL_PREVIEW = 'preview';\n    public const REL_PREVIOUS = 'previous';\n    public const REL_PREV_ARCHIVE = 'prev-archive';\n    public const REL_PRIVACY_POLICY = 'privacy-policy';\n    public const REL_PROFILE = 'profile';\n    public const REL_PUBLICATION = 'publication';\n    public const REL_RELATED = 'related';\n    public const REL_RESTCONF = 'restconf';\n    public const REL_REPLIES = 'replies';\n    public const REL_RULEINPUT = 'ruleinput';\n    public const REL_SEARCH = 'search';\n    public const REL_SECTION = 'section';\n    public const REL_SELF = 'self';\n    public const REL_SERVICE = 'service';\n    public const REL_SERVICE_DESC = 'service-desc';\n    public const REL_SERVICE_DOC = 'service-doc';\n    public const REL_SERVICE_META = 'service-meta';\n    public const REL_SIPTRUNKINGCAPABILITY = 'siptrunkingcapability';\n    public const REL_SPONSORED = 'sponsored';\n    public const REL_START = 'start';\n    public const REL_STATUS = 'status';\n    public const REL_STYLESHEET = 'stylesheet';\n    public const REL_SUBSECTION = 'subsection';\n    public const REL_SUCCESSOR_VERSION = 'successor-version';\n    public const REL_SUNSET = 'sunset';\n    public const REL_TAG = 'tag';\n    public const REL_TERMS_OF_SERVICE = 'terms-of-service';\n    public const REL_TIMEGATE = 'timegate';\n    public const REL_TIMEMAP = 'timemap';\n    public const REL_TYPE = 'type';\n    public const REL_UGC = 'ugc';\n    public const REL_UP = 'up';\n    public const REL_VERSION_HISTORY = 'version-history';\n    public const REL_VIA = 'via';\n    public const REL_WEBMENTION = 'webmention';\n    public const REL_WORKING_COPY = 'working-copy';\n    public const REL_WORKING_COPY_OF = 'working-copy-of';\n\n    // Extra relations\n    public const REL_MERCURE = 'mercure';\n\n    /**\n     * @var string[]\n     */\n    private array $rel = [];\n\n    /**\n     * @var array<string, string|bool|string[]>\n     */\n    private array $attributes = [];\n\n    public function __construct(\n        ?string $rel = null,\n        private string $href = '',\n    ) {\n        if (null !== $rel) {\n            $this->rel[$rel] = $rel;\n        }\n    }\n\n    public function getHref(): string\n    {\n        return $this->href;\n    }\n\n    public function isTemplated(): bool\n    {\n        return $this->hrefIsTemplated($this->href);\n    }\n\n    public function getRels(): array\n    {\n        return array_values($this->rel);\n    }\n\n    public function getAttributes(): array\n    {\n        return $this->attributes;\n    }\n\n    public function withHref(string|\\Stringable $href): static\n    {\n        $that = clone $this;\n        $that->href = $href;\n\n        return $that;\n    }\n\n    public function withRel(string $rel): static\n    {\n        $that = clone $this;\n        $that->rel[$rel] = $rel;\n\n        return $that;\n    }\n\n    public function withoutRel(string $rel): static\n    {\n        $that = clone $this;\n        unset($that->rel[$rel]);\n\n        return $that;\n    }\n\n    public function withAttribute(string $attribute, string|\\Stringable|int|float|bool|array $value): static\n    {\n        $that = clone $this;\n        $that->attributes[$attribute] = $value;\n\n        return $that;\n    }\n\n    public function withoutAttribute(string $attribute): static\n    {\n        $that = clone $this;\n        unset($that->attributes[$attribute]);\n\n        return $that;\n    }\n\n    private function hrefIsTemplated(string $href): bool\n    {\n        return str_contains($href, '{') || str_contains($href, '}');\n    }\n}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.34765625,
+          "content": "WebLink Component\n=================\n\nThe WebLink component manages links between resources. It is particularly\nuseful to advise clients to preload and prefetch documents through HTTP and\nHTTP/2 pushes.\n\nThis component implements the [HTML5's\nLinks](https://www.w3.org/TR/html5/links.html),\n[Preload](https://www.w3.org/TR/preload/) and [Resource\nHints](https://www.w3.org/TR/resource-hints/) W3C's specifications. It can also\nbe used with extensions defined in the [HTML5 link type extensions\nwiki](http://microformats.org/wiki/existing-rel-values#HTML5_link_type_extensions).\n\nGetting Started\n---------------\n\n```bash\ncomposer require symfony/web-link\n```\n\n```php\nuse Symfony\\Component\\WebLink\\GenericLinkProvider;\nuse Symfony\\Component\\WebLink\\HttpHeaderSerializer;\nuse Symfony\\Component\\WebLink\\Link;\n\n$linkProvider = (new GenericLinkProvider())\n    ->withLink(new Link('preload', '/bootstrap.min.css'));\n\nheader('Link: '.(new HttpHeaderSerializer())->serialize($linkProvider->getLinks()));\n\necho 'Hello';\n```\n\nResources\n---------\n\n * [Documentation](https://symfony.com/doc/current/web_link.html)\n * [Contributing](https://symfony.com/doc/current/contributing/index.html)\n * [Report issues](https://github.com/symfony/symfony/issues) and\n   [send Pull Requests](https://github.com/symfony/symfony/pulls)\n   in the [main Symfony repository](https://github.com/symfony/symfony)\n"
+        },
+        {
+          "name": "Tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.9853515625,
+          "content": "{\n    \"name\": \"symfony/web-link\",\n    \"type\": \"library\",\n    \"description\": \"Manages links between resources\",\n    \"keywords\": [\"link\", \"psr13\", \"http\", \"http2\", \"preload\", \"prefetch\", \"prerender\", \"dns-prefetch\", \"push\", \"performance\"],\n    \"homepage\": \"https://symfony.com\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Kévin Dunglas\",\n            \"email\": \"dunglas@gmail.com\"\n        },\n        {\n            \"name\": \"Symfony Community\",\n            \"homepage\": \"https://symfony.com/contributors\"\n        }\n    ],\n    \"provide\": {\n        \"psr/link-implementation\": \"1.0|2.0\"\n    },\n    \"require\": {\n        \"php\": \">=8.2\",\n        \"psr/link\": \"^1.1|^2.0\"\n    },\n    \"require-dev\": {\n        \"symfony/http-kernel\": \"^6.4|^7.0\"\n    },\n    \"conflict\": {\n        \"symfony/http-kernel\": \"<6.4\"\n    },\n    \"autoload\": {\n        \"psr-4\": { \"Symfony\\\\Component\\\\WebLink\\\\\": \"\" },\n        \"exclude-from-classmap\": [\n            \"/Tests/\"\n        ]\n    },\n    \"minimum-stability\": \"dev\"\n}\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.798828125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"http://schema.phpunit.de/9.3/phpunit.xsd\"\n         backupGlobals=\"false\"\n         colors=\"true\"\n         bootstrap=\"vendor/autoload.php\"\n         failOnRisky=\"true\"\n         failOnWarning=\"true\"\n>\n    <php>\n        <ini name=\"error_reporting\" value=\"-1\" />\n    </php>\n\n    <testsuites>\n        <testsuite name=\"Symfony WebLink Component Test Suite\">\n            <directory>./Tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <coverage>\n        <include>\n            <directory>./</directory>\n        </include>\n        <exclude>\n            <directory>./Tests</directory>\n            <directory>./vendor</directory>\n        </exclude>\n    </coverage>\n</phpunit>\n"
+        }
+      ]
+    }
+  ]
+}

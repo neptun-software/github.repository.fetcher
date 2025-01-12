@@ -1,0 +1,136 @@
+{
+  "metadata": {
+    "timestamp": 1736712016304,
+    "page": 522,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjUzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "dustin10/VichUploaderBundle",
+      "stars": 1861,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.34375,
+          "content": "/.git*            export-ignore\n/.php-cs-fixer*   export-ignore\n/CONTRIBUTING.md  export-ignore\n/Makefile         export-ignore\n/phpstan*.neon    export-ignore\n/README.md        export-ignore\n/UPGRADE.md       export-ignore\n/phpunit.xml.dist export-ignore\n/docker           export-ignore\n/docs             export-ignore\n/tests            export-ignore\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0419921875,
+          "content": ".*.cache\nphpunit.xml\ncomposer.lock\nvendor/\n"
+        },
+        {
+          "name": ".php-cs-fixer.php",
+          "type": "blob",
+          "size": 0.626953125,
+          "content": "<?php\n// see https://github.com/FriendsOfPHP/PHP-CS-Fixer\n\n$finder = PhpCsFixer\\Finder::create()\n    ->in([__DIR__.'/src', __DIR__.'/tests'])\n;\n\nreturn (new PhpCsFixer\\Config())\n    ->setRiskyAllowed(true)\n    ->setRules([\n        '@Symfony' => true,\n        '@Symfony:risky' => true,\n        '@PHP80Migration:risky' => true,\n        '@PHP81Migration' => true,\n        '@PHPUnit84Migration:risky' => true,\n        'declare_strict_types' => false,\n        'native_function_invocation' => ['include' => ['@all']],\n        'fopen_flags' => ['b_mode' => true],\n        'php_unit_mock_short_will_return' => true,\n    ])\n    ->setFinder($finder)\n;\n"
+        },
+        {
+          "name": "CONTRIBUTING.md",
+          "type": "blob",
+          "size": 1.974609375,
+          "content": "# Contributing\n\nFirst of all, **thank you** for contributing, **you are awesome**!\n\nHere are a few rules to follow to facilitate code reviews and discussions before\nmaintainers accept and merge your work.\n\nYou MUST follow the [PSR-1](//www.php-fig.org/psr/psr-1/) and\n[PSR-2](//www.php-fig.org/psr/psr-2/). If you don't know about any of them, you\nshould really read the recommendations. Can't wait? Use the [PHP-CS-Fixer\ntool](//cs.sensiolabs.org/).\n\nYou MUST run the test suite.\n\nYou MUST write (or update) unit tests.\n\nYou SHOULD write documentation.\n\nPlease, write [commit messages that make sense](//tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html),\nand [rebase your branch](//git-scm.com/book/en/v2/Git-Branching-Rebasing)\nbefore submitting your Pull Request.\n\nOne may ask you to [squash your commits](http://gitready.com/advanced/2009/02/10/squashing-commits-with-rebase.html)\ntoo. This is used to \"clean\" your Pull Request before merging it (we don't want\ncommits such as `fix tests`, `fix 2`, `fix 3`, etc.).\n\nThank you!\n\n## Running the test suite\n\nThe test suite uses Docker environments to be idempotent to OS's. We use multiple\nPHP versions in Docker, ensuring that the bundle is tested with\nthe same resources. There is no need to have PHP or Mongo installed.\n\nYou only need Docker set up.\n\nTo allow testing environments more smooth we implemented **Makefile**.\nYou have two commands available:\n\n```bash\nmake tests\n```\n\nwhich will execute all tests inside the docker.\n\n```bash\nmake test TEST=\"Tests/Util/FilenameUtilsTest.php\"\n```\n\nwill allow testing single Test classes.\n\nFour environments are available: PHP 8.1, PHP 8.2, PHP 8.3, and PHP 8.4.\nThe default environment is *PHP 8.1*. If you want to execute tests against\nother PHP versions, please use the environment variables as this:\n\n```bash\nmake tests #PHP 8.1 env\nTARGET=82 make tests #PHP 8.2 env\n\nmake test TEST=\"tests/Util/FilenameUtilsTest.php\" #PHP 8.1 env\nTARGET=82 make test TEST=\"tests/Util/FilenameUtilsTest.php\" #PHP 8.2 env\n```\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.03515625,
+          "content": "Copyright (c) 2011 Dustin Dobervich\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is furnished\nto do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE.\n"
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.1142578125,
+          "content": "#/bin/bash\n\nTARGET?=81\n\n.PHONY: tests\ntests:\n\tmake vichuploader-image\n\tdocker run dustin10/vichuploader_php${TARGET} -d date.timezone='UTC' vendor/bin/phpunit\n\n# Makes it easy to run a single test file. Example to run IndexTest.php: make test TEST=\"IndexTest.php\"\n.PHONY: test\ntest:\n\tmake vichuploader-image\n\tdocker run dustin10/vichuploader_php${TARGET} -d date.timezone='UTC' vendor/bin/phpunit -c ./ ${TEST}\n\n# Stops and removes all containers and removes all images\n.PHONY: destroy-environment\ndestroy-environment:\n\tmake remove-containers\n\t-docker rmi $(shell docker images -q)\n\n.PHONY: remove-containers\nremove-containers:\n\t-docker stop $(shell docker ps -a -q)\n\t-docker rm -v $(shell docker ps -a -q)\n\n## DOCKER IMAGES\n.PHONY: vichuploader-image\nvichuploader-image:\n\tdocker build -t dustin10/vichuploader_php${TARGET} -f ./docker/Dockerfile${TARGET} .\n\n# Builds all image locally. This can be used to use local images if changes are made locally to the Dockerfiles\n.PHONY: build-images\nbuild-images:\n\tmake vichuploader-image\n\n# Removes all local images\n.PHONY: clean-images\nclean-images:\n\tdocker rmi dustin10/vichuploader_php${TARGET}\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.6748046875,
+          "content": "# VichUploaderBundle\n\n[![Build Status](https://github.com/dustin10/VichUploaderBundle/workflows/build/badge.svg)](https://github.com/dustin10/VichUploaderBundle/actions)\n[![Total Downloads](https://poser.pugx.org/vich/uploader-bundle/downloads.png)](https://packagist.org/packages/vich/uploader-bundle)\n[![Latest Unstable Version](https://poser.pugx.org/vich/uploader-bundle/v/unstable.png)](https://packagist.org/packages/vich/uploader-bundle)\n[![Latest stable Version](https://poser.pugx.org/vich/uploader-bundle/v/stable.png)](https://packagist.org/packages/vich/uploader-bundle)\n\nThe VichUploaderBundle is a Symfony bundle that attempts to ease file\nuploads that are attached to ORM entities, MongoDB ODM documents, or PHPCR ODM\ndocuments.\n\n- Automatically name and save a file to a configured directory\n- Inject the file back into the entity or document when it is loaded from the datastore as an\ninstance of `Symfony\\Component\\HttpFoundation\\File\\File`\n- Delete the file from the file system upon removal of the entity or document from the datastore\n- Templating helpers to generate public URLs to the file\n\nAll of this functionality is fully configurable to allow for app-specific customization.\n\n## Documentation\n\nFor usage documentation, see:\n\n[docs/index.md](https://github.com/dustin10/VichUploaderBundle/blob/master/docs/index.md)\n\nIf upgrading from a previous version, also check:\n\n[UPGRADE.md](https://github.com/dustin10/VichUploaderBundle/blob/master/UPGRADE.md)\n\n## Contributing\n\nSee the [CONTRIBUTING](https://github.com/dustin10/VichUploaderBundle/blob/master/CONTRIBUTING.md) file.\n\n## License\n\nSee the bundled [LICENSE](https://github.com/dustin10/VichUploaderBundle/blob/master/LICENSE) file.\n"
+        },
+        {
+          "name": "UPGRADE.md",
+          "type": "blob",
+          "size": 1.51953125,
+          "content": "# Upgrading from v2.4 to v2.5\n\n* To address the question raised in the previous version, now the original extension '.csv' is retained\n  even if the mime type is guessed as 'text/plain'.\n\n# Upgrading from v2.3 to v2.4\n\n* To address a security question, the original extension of the uploaded file is not preserved anymore.\n  Instead, it is replaced by the extension of the matching mime type. This could cause a different\n  behaviour only if you use some non-standard extension, otherwise it should not change anything.\n\n# Upgrading from v2.1 to v2.2\n\n* The signature of `StorageInterface::resolveStream` method was changed. The $fieldName parameter is now nullable. \n* the `AdapterInterface` no longer requires `getObjectFromArgs` method.\n* the `AdapterInterface::recomputeChangeSet()` accepts `Doctrine\\Persistence\\Event\\LifecycleEventArgs` as argument.\n\n# Upgrading from v2.0 to v2.1\n\n* the internal class `FilenameUtils` has been removed.\n\n# Upgrading from v1 to v2.0\n\n* every class marked as `@final` is now final\n* all properties are now fully type-hinted\n* all methods arguments are now fully type-hinted\n* all methods have now return types\n* all constructors now use property promotion\n* all deprecated features were removed\n* the new default type for mapping is \"attribute\". You can still use annotations, but you need an explicit definition (set \"annotation\" as value for \"vich_uploader.metadata.type\" config key)\n* the service \"vich_uploader.current_date_time_helper\" has been removed. The `DateTimeHelper` interface has been\n  removed as well.\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 3.630859375,
+          "content": "{\n    \"name\": \"vich/uploader-bundle\",\n    \"type\": \"symfony-bundle\",\n    \"description\": \"Ease file uploads attached to entities\",\n    \"keywords\": [\n        \"file uploads\",\n        \"upload\"\n    ],\n    \"homepage\": \"https://github.com/dustin10/VichUploaderBundle\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Dustin Dobervich\",\n            \"email\": \"ddobervich@gmail.com\"\n        }\n    ],\n    \"require\": {\n        \"php\": \"^8.1\",\n        \"ext-simplexml\": \"*\",\n        \"doctrine/persistence\": \"^3.0\",\n        \"jms/metadata\": \"^2.4\",\n        \"symfony/config\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/console\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/dependency-injection\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/event-dispatcher-contracts\": \"^3.1\",\n        \"symfony/http-foundation\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/http-kernel\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/mime\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/property-access\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/string\": \"^5.4 || ^6.0 || ^7.0\"\n    },\n    \"require-dev\": {\n        \"ext-sqlite3\": \"*\",\n        \"dg/bypass-finals\": \"^1.8\",\n        \"doctrine/doctrine-bundle\": \"^2.7\",\n        \"doctrine/mongodb-odm\": \"^2.4\",\n        \"doctrine/orm\": \"^2.13\",\n        \"knplabs/knp-gaufrette-bundle\": \"dev-master\",\n        \"league/flysystem-bundle\": \"^2.4 || ^3.0\",\n        \"league/flysystem-memory\": \"^2.0 || ^3.0\",\n        \"matthiasnoback/symfony-dependency-injection-test\": \"^5.1\",\n        \"mikey179/vfsstream\": \"^1.6.11\",\n        \"phpunit/phpunit\": \"^9.6\",\n        \"symfony/asset\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/browser-kit\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/css-selector\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/doctrine-bridge\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/dom-crawler\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/form\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/framework-bundle\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/phpunit-bridge\": \"^7.0\",\n        \"symfony/security-csrf\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/translation\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/twig-bridge\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/twig-bundle\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/validator\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/var-dumper\": \"^5.4 || ^6.0 || ^7.0\",\n        \"symfony/yaml\": \"^5.4 || ^6.0 || ^7.0\",\n        \"yoast/phpunit-polyfills\": \"^2.0\"\n    },\n    \"suggest\": {\n        \"doctrine/doctrine-bundle\": \"For integration with Doctrine\",\n        \"doctrine/mongodb-odm-bundle\": \"For integration with Doctrine ODM\",\n        \"doctrine/orm\": \"For integration with Doctrine ORM\",\n        \"doctrine/phpcr-odm\": \"For integration with Doctrine PHPCR\",\n        \"knplabs/knp-gaufrette-bundle\": \"For integration with Gaufrette\",\n        \"liip/imagine-bundle\": \"To generate image thumbnails\",\n        \"league/flysystem-bundle\": \"For integration with Flysystem\",\n        \"oneup/flysystem-bundle\": \"For integration with Flysystem\",\n        \"symfony/asset\": \"To generate better links\",\n        \"symfony/form\": \"To handle uploads in forms\",\n        \"symfony/yaml\": \"To use YAML mapping\"\n    },\n    \"conflict\": {\n        \"doctrine/annotations\": \"<1.12\",\n        \"league/flysystem\": \"<2.0\"\n    },\n    \"config\": {\n        \"platform\": {\n            \"ext-mongo\": \"1.8.2\"\n        },\n        \"sort-packages\": true\n    },\n    \"extra\": {\n        \"branch-alias\": {\n            \"dev-master\": \"2.x-dev\"\n        }\n    },\n    \"autoload\": {\n        \"psr-4\": {\n            \"Vich\\\\UploaderBundle\\\\\": \"src\"\n        }\n    },\n    \"autoload-dev\": {\n        \"psr-4\": {\n            \"Vich\\\\TestBundle\\\\\": \"tests/Fixtures/TestBundle/src\",\n            \"Vich\\\\UploaderBundle\\\\Tests\\\\\": \"tests\"\n        }\n    }\n}\n"
+        },
+        {
+          "name": "config",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docs",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpstan-baseline.neon",
+          "type": "blob",
+          "size": 3.7158203125,
+          "content": "parameters:\n\tignoreErrors:\n\t\t-\n\t\t\tmessage: \"#^Call to an undefined method Doctrine\\\\\\\\Persistence\\\\\\\\ObjectManager\\\\:\\\\:getUnitOfWork\\\\(\\\\)\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: src/Adapter/PHPCR/PHPCRAdapter.php\n\n\t\t-\n\t\t\tmessage: \"#^Call to an undefined method Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\NodeDefinition\\\\:\\\\:children\\\\(\\\\)\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: src/DependencyInjection/Configuration.php\n\n\t\t-\n\t\t\tmessage: \"#^Call to an undefined method Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\NodeParentInterface\\\\:\\\\:scalarNode\\\\(\\\\)\\\\.$#\"\n\t\t\tcount: 2\n\t\t\tpath: src/DependencyInjection/Configuration.php\n\n\t\t-\n\t\t\tmessage: \"#^Parameter \\\\#1 \\\\$node of method Vich\\\\\\\\UploaderBundle\\\\\\\\DependencyInjection\\\\\\\\Configuration\\\\:\\\\:addGeneralSection\\\\(\\\\) expects Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\ArrayNodeDefinition, Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\NodeDefinition given\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: src/DependencyInjection/Configuration.php\n\n\t\t-\n\t\t\tmessage: \"#^Parameter \\\\#1 \\\\$node of method Vich\\\\\\\\UploaderBundle\\\\\\\\DependencyInjection\\\\\\\\Configuration\\\\:\\\\:addMappingsSection\\\\(\\\\) expects Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\ArrayNodeDefinition, Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\NodeDefinition given\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: src/DependencyInjection/Configuration.php\n\n\t\t-\n\t\t\tmessage: \"#^Parameter \\\\#1 \\\\$node of method Vich\\\\\\\\UploaderBundle\\\\\\\\DependencyInjection\\\\\\\\Configuration\\\\:\\\\:addMetadataSection\\\\(\\\\) expects Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\ArrayNodeDefinition, Symfony\\\\\\\\Component\\\\\\\\Config\\\\\\\\Definition\\\\\\\\Builder\\\\\\\\NodeDefinition given\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: src/DependencyInjection/Configuration.php\n\n\t\t-\n\t\t\tmessage: \"#^Call to an undefined method Gaufrette\\\\\\\\FilesystemInterface\\\\:\\\\:getAdapter\\\\(\\\\)\\\\.$#\"\n\t\t\tcount: 2\n\t\t\tpath: src/Storage/GaufretteStorage.php\n\n\t\t-\n\t\t\tmessage: \"#^Return type of call to method PHPUnit\\\\\\\\Framework\\\\\\\\TestCase\\\\:\\\\:createMock\\\\(\\\\) contains unresolvable type\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/Adapter/ODM/MongoDB/MongoDBAdapterTest.php\n\n\t\t-\n\t\t\tmessage: \"#^PHPDoc tag @return contains unresolvable type\\\\.$#\"\n\t\t\tcount: 2\n\t\t\tpath: tests/EventListener/Doctrine/ListenerTestCase.php\n\n\t\t-\n\t\t\tmessage: \"#^Return type of call to method PHPUnit\\\\\\\\Framework\\\\\\\\MockObject\\\\\\\\MockBuilder\\\\<Vich\\\\\\\\UploaderBundle\\\\\\\\Handler\\\\\\\\UploadHandler\\\\>\\\\:\\\\:getMock\\\\(\\\\) contains unresolvable type\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/EventListener/Doctrine/ListenerTestCase.php\n\n\t\t-\n\t\t\tmessage: \"#^Return type of call to method PHPUnit\\\\\\\\Framework\\\\\\\\MockObject\\\\\\\\MockBuilder\\\\<Vich\\\\\\\\UploaderBundle\\\\\\\\Metadata\\\\\\\\MetadataReader\\\\>\\\\:\\\\:getMock\\\\(\\\\) contains unresolvable type\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/EventListener/Doctrine/ListenerTestCase.php\n\n\t\t-\n\t\t\tmessage: \"#^Return type of call to method PHPUnit\\\\\\\\Framework\\\\\\\\TestCase\\\\:\\\\:createMock\\\\(\\\\) contains unresolvable type\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/Functional/WebTestCase.php\n\n\t\t-\n\t\t\tmessage: \"#^Return type of call to method PHPUnit\\\\\\\\Framework\\\\\\\\TestCase\\\\:\\\\:createMock\\\\(\\\\) contains unresolvable type\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/Injector/FileInjectorTest.php\n\n\t\t-\n\t\t\tmessage: \"#^Trying to mock an undefined method findOneBySlug\\\\(\\\\) on class Doctrine\\\\\\\\ORM\\\\\\\\EntityRepository\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/Naming/SlugNamerTest.php\n\n\t\t-\n\t\t\tmessage: \"#^Trying to mock an undefined method getFilesystem\\\\(\\\\) on class League\\\\\\\\Flysystem\\\\\\\\MountManager\\\\.$#\"\n\t\t\tcount: 1\n\t\t\tpath: tests/Storage/Flysystem/MountManagerFlysystemStorageTest.php\n\n\t\t-\n\t\t\tmessage: \"#^Return type of call to method PHPUnit\\\\\\\\Framework\\\\\\\\TestCase\\\\:\\\\:createMock\\\\(\\\\) contains unresolvable type\\\\.$#\"\n\t\t\tcount: 4\n\t\t\tpath: tests/TestCase.php\n\n"
+        },
+        {
+          "name": "phpstan.neon",
+          "type": "blob",
+          "size": 0.19140625,
+          "content": "parameters:\n    checkGenericClassInNonGenericObjectType: false\n    checkMissingIterableValueType: false\n    level: 6\n    paths:\n        - src\n        - tests\nincludes:\n    - phpstan-baseline.neon\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.9833984375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"vendor/phpunit/phpunit/phpunit.xsd\"\n         bootstrap=\"vendor/autoload.php\"\n         colors=\"true\">\n    <testsuites>\n        <testsuite name=\"VichUploaderBundle Test Suite\">\n            <directory>./tests</directory>\n        </testsuite>\n    </testsuites>\n\n    <php>\n        <server name=\"KERNEL_DIR\" value=\"./tests/Fixtures/App/app\" />\n        <server name=\"KERNEL_CLASS\" value=\"AppKernel\" />\n        <server name=\"SHELL_VERBOSITY\" value=\"1\" />\n        <env name=\"SYMFONY_DEPRECATIONS_HELPER\" value=\"max[self]=0\" />\n    </php>\n\n    <coverage>\n        <include>\n            <directory>./src</directory>\n        </include>\n    </coverage>\n\n    <extensions>\n        <extension class=\"Vich\\UploaderBundle\\Tests\\BypassFinalHook\"/>\n    </extensions>\n\n    <listeners>\n        <listener class=\"Symfony\\Bridge\\PhpUnit\\SymfonyTestsListener\" />\n    </listeners>\n</phpunit>\n"
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "translations",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "vich_uploader.xsd",
+          "type": "blob",
+          "size": 1.376953125,
+          "content": "<xs:schema\n        attributeFormDefault=\"unqualified\"\n        elementFormDefault=\"qualified\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\"\n        targetNamespace=\"https://vich-uploader-bundle/schema/\"\n>\n    <xs:element name=\"vich_uploader\">\n        <xs:complexType>\n\n            <xs:sequence>\n\n                <xs:element name=\"field\">\n                    <xs:complexType>\n                        <xs:simpleContent>\n                            <xs:extension base=\"xs:string\">\n                                <xs:attribute type=\"xs:string\" name=\"name\" use=\"required\"/>\n                                <xs:attribute type=\"xs:string\" name=\"mapping\" use=\"required\"/>\n                                <xs:attribute type=\"xs:string\" name=\"filename_property\" use=\"required\"/>\n                                <xs:attribute type=\"xs:string\" name=\"size\"/>\n                                <xs:attribute type=\"xs:string\" name=\"dimensions\"/>\n                                <xs:attribute type=\"xs:string\" name=\"mime_type\"/>\n                                <xs:attribute type=\"xs:string\" name=\"original_name\"/>\n                            </xs:extension>\n                        </xs:simpleContent>\n                    </xs:complexType>\n                </xs:element>\n            </xs:sequence>\n\n            <xs:attribute type=\"xs:string\" name=\"class\" use=\"required\"/>\n\n        </xs:complexType>\n    </xs:element>\n</xs:schema>\n"
+        }
+      ]
+    }
+  ]
+}

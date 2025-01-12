@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "timestamp": 1736711924148,
+    "page": 329,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjMzMA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "phpmetrics/PhpMetrics",
+      "stars": 2489,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".dockerignore",
+          "type": "blob",
+          "size": 0.02734375,
+          "content": "*\n!releases/phpmetrics.phar\n"
+        },
+        {
+          "name": ".editorconfig",
+          "type": "blob",
+          "size": 0.3056640625,
+          "content": "; This file is for unifying the coding style for different editors and IDEs.\n; More information at https://editorconfig.org\n\nroot = true\n\n[*]\ncharset = utf-8\nindent_size = 4\nindent_style = space\nend_of_line = lf\ninsert_final_newline = true\ntrim_trailing_whitespace = true\n\n[*.md]\ntrim_trailing_whitespace = false\n"
+        },
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.466796875,
+          "content": ".git/               export-ignore\nreleases/           export-ignore\ntests/              export-ignore\nartifacts/          export-ignore\nbuild/              export-ignore\ndoc/                export-ignore\n\n.editorconfig       export-ignore\n.gitattributes      export-ignore\n.github/            export-ignore\n.gitignore          export-ignore\n.travis.yml         export-ignore\nMakefile            export-ignore\nphpcs.xml.dist      export-ignore\nphpunit.xml.dist    export-ignore\n\n"
+        },
+        {
+          "name": ".github",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.13671875,
+          "content": "composer.lock\nvendor\n.idea\nmd5sums\ncontrol\nfiles\nbuild/phpmetrics.dsc\nbuild/phpmetrics.deb\nbuild/phpmetrics.tar.gz\nbuild/phpmetrics.changes\n"
+        },
+        {
+          "name": ".semver",
+          "type": "blob",
+          "size": 0.0458984375,
+          "content": "---\n:major: 2\n:minor: 8\n:patch: 2\n:special: ''\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 1.671875,
+          "content": "sudo: false\ndist: trusty\nlanguage: php\n\nphp:\n - 5.5\n - 5.6\n - 7.0\n - 7.1\n - 7.2\n - 7.3\n - 7.4\n - 8.0\n - nightly\n - hhvm\n - hhvm-nightly\n\nenv:\n  matrix:\n   - DEPENDENCIES=\"--prefer-lowest --prefer-stable\"\n   - DEPENDENCIES=\"\"\n\nmatrix:\n  fast_finish: true\n  allow_failures:\n  - php: nightly\n  - php: hhvm\n  - php: hhvm-nightly\n\nservices:\n  - docker\n\ninstall:\n  - docker build -t test_phpmetrics .\n  - composer self-update --quiet\n  - travis_retry composer update --no-interaction --prefer-dist --no-progress $DEPENDENCIES\n\nbefore_script:\n  # Disable JIT compilation in hhvm, as the JIT is useless for short live scripts like tests.\n  - if [[ $TRAVIS_PHP_VERSION = hhvm* ]]; then echo 'hhvm.jit = 0' >> /etc/hhvm/php.ini; fi\n\nscript:\n  - make test\n  - make phpcs\n  - docker run --rm test_phpmetrics\n\nbefore_deploy:\n  - make build\n  - git add -f build/phpmetrics.phar # build/phpmetrics.deb \n\ndeploy:\n  - provider: releases\n    api_key:\n      secure: DfUbGENVB2IK6bggZeI89zJizOCSUbYqMEpXYVjhlbP73c7a+s4P6MrmTk8BiLACBeoyaoQDHW06DTHuc3MzgadXcTsPxzdxmZmSHaNsmGuUUJPlBR44Ypw/6ZccILrMVowzMbgRSAvk63XEIaV18DwcDMQaMhYU9uPf2WNpHL4=\n    file:\n      - \"releases/phpmetrics.phar\"\n    on:\n      repo: phpmetrics/PhpMetrics\n      tags: true\n      php: '7.0'\n      condition: '-z \"$DEPENDENCIES\"'\n    skip_cleanup: true\n  - provider: bintray\n    file: artifacts/bintray.json\n    user: \"halleck45\"\n    key:\n      secure: Pa7uB1ePY9bYKGHovrdC/F2HlrjXGapKTp6McAFcnIksvuwu06Xug0BszqQeUSzKX/y1kivC7ksIp6kI3icHv0cm6K0MvAi+PLxplqtwLsKJPtwoxX5L6r0VOQ8uNaNU2K7+9Gb/5WNov7SfESXpyxOmUUj/QwwnRkj2RqlL9rg=\n    on:\n      repo: phpmetrics/PhpMetrics\n      tags: true\n      php: '7.0'\n      condition: '-z \"$DEPENDENCIES\"'\n    skip_cleanup: true\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 4.0478515625,
+          "content": "# Changelog\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)\nand this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).\n\n## [2.8.2] - 2023-02-??\n\n### Fixed\n- Fixed errors in HTML template. (thanks @Hikingyo and @gemal)\n- Improved README.md contents. (thanks @kudashevs)\n- Fixed junit parameter in JSON configuration file\n- Minor removals of unnecessary source code\n- Remove wrong artefacts causing download issues\n- Add favicon to HTML rendered pages (thanks @gemal)\n- Add version to CSS and script to counter cache (thanks @gemal)\n\n## [2.8.1] - 2022-03-24\n\n### Fixed\n- Fixed issue with relative pat when using YAML configuration.\n\n## [2.8.0] - 2022-03-23\n\n### New features\n- Allow to search for patterns of code.\n- Possibility to add custom violation rules via configuration.\n- Allow to use YAML for configuration\n- Add `--metrics` option to display documentation about some metrics calculated and used by PhpMetrics.\n- Exclude getters and setters from the CCN (cyclomatic complexity number) and LCoM (lack in cohesion of method) calculations\n- Add `composer` option to enable or disable the composer packages analysis\n- Add `--report-summary-json` option to report a summarized information from the calculated metrics.\n\n### Fixed\n- Fixed issue with some columns in HTML reports\n\n## [2.7.4] - 2020-06-30\n\n### Fixed\n- Fixed compatibility issue where PHP 5 was no longer available on Debian systems  (#434)\n- Fixed issue with display of charts in groups (#429, #433)\n\n## [2.7.3] - 2020-06-27\n\n### Fixed\n- Fixed missing `composer.json` files when located in the root directory.\n\n## [2.7.2] - 2020-06-27\n\n### Fixed\n- Fixed path of violations HTML templates.\n\n## [2.7.1] - 2020-06-27\n\n### Fixed\n- Fixed error due to permission on generation of HTML report (#429)\n- Fixed analysis on composer packages wrongly reported outdated when latest version is used. (#431)\n\n## [2.7.0] - 2020-06-26\n\n### New features\n- Way to group analysis by layer\n\n### Fixed\n- Improved UI\n\n## [2.6.2] - 2020-04-02\n\n### Fixed\n- Improved UI\n\n## [2.6.1] - 2020-04-02\n\n### Fixed\n- Fixed undefined constant PROJECT_DIR (#426)\n\n## [2.6.0] - 2020-03-28\n\n### New features\n- Way to download report\n- Way to download chart\n- Resolve PHP7 getters / setters (#405)\n- Add metrics description file\n- Add a carousel in the main HTML report page to display both graph at the same time\n\n### Fixed\n- Explicitly define the class \\Hal\\Component\\Ast\\NodeTraverser to make PhpMetrics work using composer --classmap-authoritative. (#402)\n- Ensure the packagist license is an array, so they can be displayed. (#404)\n- Fix warning \"Division by zero\" when no package is defined. (#401)\n\n### Misc\n- Move templates out of src\n- Remove folders from phpcs\n\n## [2.5.0] - 2019-12-11\n\n### Changed\n- Test the codebase against PHP 7.3 and 7.4\n\n### Fixed\n- Skip `self` and `parent` from external dependencies of dependency graph (#370) thanks to (@lencse)\n- Don't leave notice when array is small in percentile function of loc report (#372) thanks to (@lencse)\n\n## [2.4.1] - 2017-07-10\n\n### Fixed\n - Fix parsing errors with PHP < 7 (#360, #361)\n - Remain CCN for backward compatibility (#359, #362)\n \n### Deprecated\n - CCN by classes is deprecated and will be removed in the next major release (#359, #362)\n\n## [2.4.0] - 2017-07-09\n\n### Added\n - Added package metrics (#283)\n\n### Changed\n - Enhanced composer package comparison (#337, #342, thanks @juliendufresne)\n - Better PHP 7 support (#335, #334, #336 thanks @carusogabriel)\n - Support nikic/php-parser:^4 (#345, #347)\n\n### Fixed\n - Refine Cyclomatic Complexity Metric (#343, #344, #353, #357, #358, thanks @fabianbadoi)\n - Improved composer package version comparison (#337, thanks @juliendufresne)\n - Resolved root path exclusion conflict (#355, thanks @fabianbadoi)\n - Fixed getter and setter detection with types (#335, #336, thanks @jakagacic)\n - Fixed documentation URL (#321, thanks @ottaviano)\n - Fix non unique block ids in HTML output (#356, thanks @dumith-erange)\n - Fix rounding of metrics (#339, thanks @ssfinney)\n"
+        },
+        {
+          "name": "Dockerfile",
+          "type": "blob",
+          "size": 0.3828125,
+          "content": "FROM php:7.1\n\nMAINTAINER \"niconoe-\" <nicolas.giraud.dev@gmail.com>\n\nCOPY releases/phpmetrics.phar /usr/local/bin/phpmetrics\n\nRUN chmod +x /usr/local/bin/phpmetrics \\\n    # Install git to be able to use option \"--git\".\n    && apt-get update && apt-get install -y git \\\n    && rm -rf /var/cache/apk/* /var/tmp/* /tmp/*\n\nVOLUME [\"/app\"]\nWORKDIR /app\n\nENTRYPOINT [\"phpmetrics\"]\nCMD [\"--version\"]\n"
+        },
+        {
+          "name": "LICENSE",
+          "type": "blob",
+          "size": 1.0869140625,
+          "content": "The MIT License (MIT)\n\nCopyright (c) 2013 Jean-François Lépine <http://blog.lepine.pro>\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in\nall copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN\nTHE SOFTWARE."
+        },
+        {
+          "name": "Makefile",
+          "type": "blob",
+          "size": 1.5009765625,
+          "content": ".PHONY: docker build\n\ninclude artifacts/Makefile\n\n# Run unit tests\ntest:\n\t./vendor/bin/phpunit -c phpunit.xml.dist\n\n# Codesniffer check\nphpcs:\n\t./vendor/bin/phpcs src/ tests/ --extensions=php -n\n\n# Codesniffer fix\nphpcbf:\n\t./vendor/bin/phpcbf src/ tests/ --extensions=php -n\n\n# Used for tag releasing\n# Don't use directly, use `make release` instead\ntag:\n\t@semver inc $(VERSION)\n\t@echo \"New release: `semver tag`\"\n\t@echo Releasing sources\n\t@sed -i -r \"s/(v[0-9]+\\.[0-9]+\\.[0-9]+)/`semver tag`/g\" \\\n\t\t.github/ISSUE_TEMPLATE/Bug_report.md \\\n\t\t.github/ISSUE_TEMPLATE/Feature_request.md \\\n\t\tsrc/functions.php \\\n\t\tartifacts/debian/control \\\n\t\tartifacts/bintray.json \\\n\t\tdoc/installation.md\n\t@sed -i -r \"s/([0-9]{4}\\-[0-9]{2}\\-[0-9]{2})/`date +%Y-%m-%d`/g\" artifacts/bintray.json\n\t@make changelog-deb\n\n\n# Tag git with last release\nnew_git_version: build tag\n\tgit add .semver .github/ISSUE_TEMPLATE/Bug_report.md .github/ISSUE_TEMPLATE/Feature_request.md src/functions.php doc/installation.md artifacts/* releases/*\n\tgit commit -m \"releasing `semver tag`\"\n\tgit tag `semver tag` -m \"releasing `semver tag`\"\n\tgit push -u origin master\n\tgit push origin `semver tag`\n\ndocker:\n\tdocker build -t phpmetrics/releasing ./docker/releasing\n\n# Publish new release. Usage:\n#   make tag VERSION=(major|minor|patch)\nrelease: docker\n\tdocker run -it --rm --mount type=bind,source=$$SSH_AUTH_SOCK,target=/ssh-agent --env SSH_AUTH_SOCK=/ssh-agent -v ~/.gitconfig:/etc/gitconfig -v $(PWD):/app -w /app phpmetrics/releasing make new_git_version VERSION=$(VERSION)\n"
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 1.96484375,
+          "content": "# PhpMetrics\n\n\n[![License](https://poser.pugx.org/phpmetrics/phpmetrics/license.svg)](https://packagist.org/packages/phpmetrics/phpmetrics)\n[![Latest Stable Version](https://poser.pugx.org/phpmetrics/phpmetrics/v/stable.svg)](https://packagist.org/packages/phpmetrics/phpmetrics)\n[![Slack](https://img.shields.io/badge/slack/phpmetrics-yellow.svg?logo=slack)](https://join.slack.com/t/phpmetrics/shared_invite/enQtODU3MjQ4ODAxOTM5LWRhOGFhODMxN2JmMDRmOGVjNGQ0ZjNjNzVlNDIwNzQ2MWQ2YzgxYmRlNmM5NzIzZjlhYTFjZjZhYzAyMjM0YmE)\n\n\n\n![Standard report](https://phpmetrics.github.io/website/assets/preview.png)\n\n\n<img src=\"https://phpmetrics.org/imagesmetrics-maintenability.png\" height=\"80px\" alt=\"PhpMetrics\" align=\"left\" style=\"margin-right:20px\"/>\n\nPhpMetrics provides metrics about PHP project and classes, with beautiful and readable HTML report. \n\n[Documentation](https://phpmetrics.github.io/website/) | [Twitter](https://twitter.com/Halleck45) | [Contributing](https://github.com/phpmetrics/PhpMetrics/blob/master/doc/contributing.md)\n\n<br/><br/>\n\n\n## Quick start\n\nFollow the [quick start guide](https://phpmetrics.github.io/website/getting-started/) to get started.\n```bash\n# install the package as a dev dependency\ncomposer require phpmetrics/phpmetrics --dev\n\n# run PHPMetrics to analyze a folder and generate a report\nphp ./vendor/bin/phpmetrics --report-html=myreport <folder-to-analyze>\n```\n\nThen open the generated `./myreport/index.html` file in your browser. \n\n> You can use a [configuration file](https://phpmetrics.github.io/website/configuration/) to customize \n> the report, add options, configure rules for Continuous Integration, etc.\n\n## Metrics\n\nYou'll find detailed list of metrics in [documentation](https://phpmetrics.github.io/website/metrics/), or \nrunning `php ./vendor/bin/phpmetrics --metrics`\n\n## Author\n\n+ Jean-François Lépine <[@Halleck45](https://twitter.com/Halleck45)>\n\n## License\n\nSee the [LICENSE](LICENSE) file.\n\n## Contributing\n\nSee the [CONTRIBUTING](doc/contributing.md) file.\n"
+        },
+        {
+          "name": "SECURITY.md",
+          "type": "blob",
+          "size": 0.34375,
+          "content": "# Security Policy\n\n## Supported Versions\n\n\n\n| Version | Supported          |\n| ------- | ------------------ |\n| v2.<latest>   | :white_check_mark:                |\n| v1.x   | :x: |\n\n\n## Reporting a Vulnerability\n\nPlease [open an issue](https://github.com/phpmetrics/PhpMetrics/issues) with the details to reproduce the exploit.\n\nThanks for your help !\n"
+        },
+        {
+          "name": "artifacts",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "bin",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "build",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 1.3251953125,
+          "content": "{\n    \"name\": \"phpmetrics/phpmetrics\",\n    \"replace\": {\n        \"halleck45/phpmetrics\": \"*\",\n        \"halleck45/php-metrics\": \"*\"\n    },\n    \"description\": \"Static analyzer tool for PHP : Coupling, Cyclomatic complexity, Maintainability Index, Halstead's metrics... and more !\",\n    \"license\": \"MIT\",\n    \"keywords\": [\n        \"quality\",\n        \"analysis\",\n        \"testing\",\n        \"qa\"\n    ],\n    \"authors\": [\n        {\n            \"name\": \"Jean-François Lépine\",\n            \"email\": \"lepinejeanfrancois@yahoo.fr\",\n            \"homepage\": \"http://www.lepine.pro\",\n            \"role\": \"Copyright Holder\"\n        }\n    ],\n    \"homepage\": \"http://www.phpmetrics.org\",\n    \"support\": {\n        \"issues\": \"https://github.com/PhpMetrics/PhpMetrics/issues\"\n    },\n    \"autoload\": {\n        \"psr-0\": {\n            \"Hal\\\\\": \"./src/\"\n        },\n        \"files\": [\"./src/functions.php\"]\n    },\n    \"require\": {\n        \"php\": \">=5.5\",\n        \"ext-dom\": \"*\",\n        \"ext-tokenizer\": \"*\",\n        \"nikic/php-parser\": \"^3|^4\"\n    },\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"^4.8.36 || ^5.7.27 || ^6.5.14\",\n        \"sebastian/comparator\": \">=1.2.3\",\n        \"squizlabs/php_codesniffer\": \"^3.5\",\n        \"symfony/dom-crawler\": \"^3.0 || ^4.0 || ^5.0\"\n    },\n    \"bin\": [\n        \"bin/phpmetrics\"\n    ],\n    \"config\": {\n        \"sort-packages\": true\n    }\n}\n"
+        },
+        {
+          "name": "config-example.json",
+          "type": "blob",
+          "size": 0.9091796875,
+          "content": "{\n    \"includes\": [\n        \"Controller\"\n    ],\n    \"excludes\": [\n        \"tests\"\n    ],\n    \"report\": {\n        \"html\": \"/tmp/report/\",\n        \"csv\": \"/tmp/report.csv\",\n        \"json\": \"/tmp/report.json\",\n        \"violations\": \"/tmp/violations.xml\"\n    },\n    \"groups\": [\n        {\n            \"name\": \"Component\",\n            \"match\": \"!component!i\"\n        },\n        {\n            \"name\": \"Reporters\",\n            \"match\": \"!Report!\"\n        }\n    ],\n    \"searches\": {\n        \"Repository which uses Service\": {\n            \"type\": \"class\",\n            \"instanceOf\": [\n                \"App\\\\MyRepository\"\n            ],\n            \"nameMatches\": \".*Repository.*\",\n            \"usesClasses\": [\n                \".*Service\"\n            ],\n            \"failIfFound\": true\n        },\n        \"Class with too complex code\": {\n            \"type\": \"class\",\n            \"ccn\": \">=3\",\n            \"failIfFound\": true\n        }\n    }\n}\n"
+        },
+        {
+          "name": "config.yml",
+          "type": "blob",
+          "size": 0.384765625,
+          "content": "---\ncomposer: false\nincludes:\n    - \"src\"\nexcludes:\nextensions:\n    - php\n    - php8\nreport:\n    html: \"/tmp/report/\"\n    csv: \"/tmp/report.csv\"\n    json: \"/tmp/report.json\"\n    violations: \"/tmp/violations.xml\"\ngroups:\n    - name: Component\n      match: \"!component!i\"\n    - name: Metric\n      match: \"!metric!i\"\nplugins:\n    git:\n        binary: git\n    junit:\n        file: \"/tmp/junit.xml\"\n"
+        },
+        {
+          "name": "doc",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "docker",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpcs.xml.dist",
+          "type": "blob",
+          "size": 3.498046875,
+          "content": "<?xml version=\"1.0\"?>\n<ruleset name=\"PhpMetrics\"\n         xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n         xsi:noNamespaceSchemaLocation=\"./vendor/squizlabs/php_codesniffer/phpcs.xsd\"\n>\n    <description>The coding standard of PhpMetrics package</description>\n\n    <arg value=\"p\"/>\n\n    <config name=\"ignore_warnings_on_exit\" value=\"1\"/>\n\n    <arg name=\"colors\"/>\n    <arg value=\"s\"/>\n\n    <rule ref=\"PSR2\">\n        <exclude-pattern>*/tests/*/examples/*.php</exclude-pattern>\n        <exclude-pattern>*/src/functions.php</exclude-pattern>\n    </rule>\n\n    <rule ref=\"PSR1.Classes.ClassDeclaration.MultipleClasses\">\n        <exclude-pattern>*/tests/*</exclude-pattern>\n    </rule>\n\n    <rule ref=\"Generic.Arrays.DisallowLongArraySyntax\"/>\n\n    <rule ref=\"Generic.Formatting.NoSpaceAfterCast\"/>\n\n    <!-- Forbid PHP 4 constructors -->\n    <rule ref=\"Generic.NamingConventions.ConstructorName\"/>\n    <rule ref=\"Generic.PHP.CharacterBeforePHPOpeningTag\"/>\n    <rule ref=\"Generic.PHP.ForbiddenFunctions\">\n        <properties>\n            <property name=\"forbiddenFunctions\" type=\"array\">\n                <element key=\"chop\" value=\"rtrim\"/>\n                <element key=\"close\" value=\"closedir\"/>\n                <element key=\"compact\" value=\"null\"/>\n                <element key=\"delete\" value=\"unset\"/>\n                <element key=\"doubleval\" value=\"floatval\"/>\n                <element key=\"extract\" value=\"null\"/>\n                <element key=\"fputs\" value=\"fwrite\"/>\n                <element key=\"ini_alter\" value=\"ini_set\"/>\n                <element key=\"is_double\" value=\"is_float\"/>\n                <element key=\"is_integer\" value=\"is_int\"/>\n                <element key=\"is_long\" value=\"is_int\"/>\n                <element key=\"is_null\" value=\"null\"/>\n                <element key=\"is_real\" value=\"is_float\"/>\n                <element key=\"is_writeable\" value=\"is_writable\"/>\n                <element key=\"join\" value=\"implode\"/>\n                <element key=\"key_exists\" value=\"array_key_exists\"/>\n                <element key=\"pos\" value=\"current\"/>\n                <element key=\"settype\" value=\"null\"/>\n                <element key=\"show_source\" value=\"highlight_file\"/>\n                <element key=\"sizeof\" value=\"count\"/>\n                <element key=\"strchr\" value=\"strstr\"/>\n            </property>\n        </properties>\n    </rule>\n\n    <rule ref=\"Squiz.Classes.LowercaseClassKeywords\"/>\n    <rule ref=\"Squiz.Operators.ValidLogicalOperators\"/>\n\n    <!-- Spacing rules -->\n    <rule ref=\"Squiz.Strings.ConcatenationSpacing\">\n        <properties>\n            <!-- The one space policy is applied according to PSR-12 -->\n            <property name=\"spacing\" value=\"1\"/>\n            <property name=\"ignoreNewlines\" value=\"true\"/>\n        </properties>\n    </rule>\n\n    <rule ref=\"Squiz.PHP.Eval\"/>\n    <rule ref=\"Squiz.PHP.LowercasePHPFunctions\"/>\n\n    <rule ref=\"Squiz.WhiteSpace.FunctionOpeningBraceSpace\" />\n    <rule ref=\"Squiz.WhiteSpace.SemicolonSpacing\"/>\n    <rule ref=\"Squiz.WhiteSpace.SuperfluousWhitespace\">\n        <properties>\n            <property name=\"ignoreBlankLines\" value=\"false\"/>\n        </properties>\n    </rule>\n    <rule ref=\"Squiz.WhiteSpace.SuperfluousWhitespace.StartFile\">\n        <severity>10</severity>\n    </rule>\n    <rule ref=\"Squiz.WhiteSpace.SuperfluousWhitespace.EndFile\">\n        <severity>10</severity>\n    </rule>\n    <rule ref=\"Squiz.WhiteSpace.SuperfluousWhitespace.EmptyLines\">\n        <severity>10</severity>\n    </rule>\n\n    <!-- Do not use a close tag for PHP -->\n    <rule ref=\"Zend.Files.ClosingTag\"/>\n</ruleset>\n"
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.7568359375,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<phpunit backupGlobals=\"false\"\n         backupStaticAttributes=\"false\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnFailure=\"false\"\n         syntaxCheck=\"false\"\n         bootstrap=\"./vendor/autoload.php\"\n        >\n\n    <testsuites>\n        <testsuite name=\"PhpMetrics Suite\">\n            <directory>./tests/</directory>\n        </testsuite>\n    </testsuites>\n\n    <groups>\n        <exclude>\n            <group>binary</group>\n        </exclude>\n    </groups>\n\n    <filter>\n        <whitelist>\n            <directory>./src</directory>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "releases",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "src",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "templates",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "tests",
+          "type": "tree",
+          "content": null
+        }
+      ]
+    }
+  ]
+}

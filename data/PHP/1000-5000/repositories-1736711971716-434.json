@@ -1,0 +1,82 @@
+{
+  "metadata": {
+    "timestamp": 1736711971716,
+    "page": 434,
+    "hasNextPage": true,
+    "endCursor": "Y3Vyc29yOjQ0MA==",
+    "completionStatus": "IN_PROGRESS"
+  },
+  "repositories": [
+    {
+      "nameWithOwner": "ircmaxell/password_compat",
+      "stars": 2146,
+      "defaultBranch": "master",
+      "files": [
+        {
+          "name": ".gitattributes",
+          "type": "blob",
+          "size": 0.1689453125,
+          "content": "* text=auto\n\n/test export-ignore\n/.gitattributes export-ignore\n/.gitignore export-ignore\n/.travis.yml export-ignore\n/phpunit.xml.dist export-ignore\n/README.md export-ignore\n"
+        },
+        {
+          "name": ".gitignore",
+          "type": "blob",
+          "size": 0.0322265625,
+          "content": "composer.lock\nphpunit.xml\nvendor\n"
+        },
+        {
+          "name": ".travis.yml",
+          "type": "blob",
+          "size": 0.2275390625,
+          "content": "language: php\n\nphp:\n  - 5.3\n  - 5.4\n  - 5.5\n  - 5.6\n  - hhvm\n\ninstall:\n  - travis_retry composer install --no-interaction --prefer-source\n\nscript:\n  - vendor/bin/phpunit\n\nmatrix:\n  allow_failures:\n    - php: hhvm\n  fast_finish: true\n"
+        },
+        {
+          "name": "CHANGELOG.md",
+          "type": "blob",
+          "size": 0.5625,
+          "content": "CHANGELOG\n=========\n\nThis changelog references the relevant changes (bug and security fixes) done in version 1.\n\n * 1.0.4 (2014-11-20)\n\n     * bug #63 - Password of `null` returns `null` while raising an error\n     * bug #64 - Support for process isolation via PHPUnit\n     * bug #56 - Minor formatting issues\n     * bug #48 - Integers aren't \"strings\" so exception is thrown\n     * PR #69 - Missing `PASSWORD_BCRYPT_DEFAULT_COST` constant definition\n     * PR #70 - Fix test suite with Travis\n     * PR #58 - Add `PasswordCompat\\binary\\check()` function to encapsulate tests\n"
+        },
+        {
+          "name": "LICENSE.md",
+          "type": "blob",
+          "size": 1.033203125,
+          "content": "Copyright (c) 2012 Anthony Ferrara\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+        },
+        {
+          "name": "README.md",
+          "type": "blob",
+          "size": 3.90625,
+          "content": "password_compat\n===============\n\n[![Build Status](https://travis-ci.org/ircmaxell/password_compat.png?branch=master)](https://travis-ci.org/ircmaxell/password_compat) [![Code Climate](https://codeclimate.com/github/ircmaxell/password_compat/badges/gpa.svg)](https://codeclimate.com/github/ircmaxell/password_compat)\n\nThis library is intended to provide forward compatibility with the [password_*](http://php.net/password) functions that ship with PHP 5.5.\n\nSee [the RFC](https://wiki.php.net/rfc/password_hash) for more detailed information.\n\n\nRequirements\n============\n\nThis library requires `PHP >= 5.3.7` OR a version that has the `$2y` fix backported into it (such as RedHat provides). Note that Debian's 5.3.3 version is **NOT** supported.\n\nThe runtime checks have been removed due to this version issue. To see if password_compat is available for your system, run the included `version-test.php`. If it outputs \"Pass\", you can safely use the library. If not, you cannot. \n\nIf you attempt to use password-compat on an unsupported version, attempts to create or verify hashes will return `false`. You have been warned!\n\nThe reason for this is that PHP prior to 5.3.7 contains a [security issue with its BCRYPT implementation](http://php.net/security/crypt_blowfish.php). Therefore, it's highly recommended that you upgrade to a newer version of PHP prior to using this layer.\n\nInstallation\n============\n\nTo install, simply `require` the `password.php` file under `lib`. \n\nYou can also install it via `Composer` by using the [Packagist archive](http://packagist.org/packages/ircmaxell/password-compat).\n\nUsage\n=====\n\n**Creating Password Hashes**\n\nTo create a password hash from a password, simply use the `password_hash` function.\n````PHP\n    $hash = password_hash($password, PASSWORD_BCRYPT);\n````\nNote that the algorithm that we chose is `PASSWORD_BCRYPT`. That's the current strongest algorithm supported. This is the `BCRYPT` crypt algorithm. It produces a 60 character hash as the result.\n\n`BCRYPT` also allows for you to define a `cost` parameter in the options array. This allows for you to change the CPU cost of the algorithm:\n````PHP\n    $hash = password_hash($password, PASSWORD_BCRYPT, array(\"cost\" => 10));\n````\nThat's the same as the default. The cost can range from `4` to `31`. I would suggest that you use the highest cost that you can, while keeping response time reasonable (I target between 0.1 and 0.5 seconds for a hash, depending on use-case).\n\nAnother algorithm name is supported:\n````PHP\n    PASSWORD_DEFAULT\n````\nThis will use the strongest algorithm available to PHP at the current time. Presently, this is the same as specifying `PASSWORD_BCRYPT`. But in future versions of PHP, it may be updated to use a stronger algorithm if one is introduced. It can also be changed if a problem is identified with the BCRYPT algorithm. Note that if you use this option, you are **strongly** encouraged to store it in a `VARCHAR(255)` column to avoid truncation issues if a future algorithm increases the length of the generated hash.\n\nIt is very important that you should check the return value of `password_hash` prior to storing it, because `false` or `null` may be returned if it encountered an error.\n\n**Verifying Password Hashes**\n\nTo verify a hash created by `password_hash`, simply call:\n````PHP\n\tif (password_verify($password, $hash)) {\n\t\t/* Valid */\n\t} else {\n\t\t/* Invalid */\n\t}\n````\nThat's all there is to it.\n\n**Rehashing Passwords**\n\nFrom time to time you may update your hashing parameters (algorithm, cost, etc). So a function to determine if rehashing is necessary is available:\n````PHP\n    if (password_verify($password, $hash)) {\n\t\tif (password_needs_rehash($hash, $algorithm, $options)) {\n\t\t\t$hash = password_hash($password, $algorithm, $options);\n\t\t\t/* Store new hash in db */\n\t\t}\n\t}\n````\n\nSecurity Vulnerabilities\n========================\n\nIf you have found a security issue, please contact the author directly at [ircmaxell@php.net](mailto:ircmaxell@php.net).\n"
+        },
+        {
+          "name": "composer.json",
+          "type": "blob",
+          "size": 0.5986328125,
+          "content": "{\n    \"name\": \"ircmaxell/password-compat\",\n    \"description\": \"A compatibility library for the proposed simplified password hashing algorithm: https://wiki.php.net/rfc/password_hash\",\n    \"keywords\": [\"password\", \"hashing\"],\n    \"homepage\": \"https://github.com/ircmaxell/password_compat\",\n    \"license\": \"MIT\",\n    \"authors\": [\n        {\n            \"name\": \"Anthony Ferrara\",\n            \"email\": \"ircmaxell@php.net\",\n            \"homepage\": \"http://blog.ircmaxell.com\"\n        }\n    ],\n    \"require-dev\": {\n        \"phpunit/phpunit\": \"4.*\"\n    },\n    \"autoload\": {\n        \"files\": [\"lib/password.php\"]\n    }\n}\n"
+        },
+        {
+          "name": "lib",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "phpunit.xml.dist",
+          "type": "blob",
+          "size": 0.9267578125,
+          "content": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<phpunit backupGlobals=\"true\"\n         backupStaticAttributes=\"false\"\n         bootstrap=\"lib/password.php\"\n         colors=\"true\"\n         convertErrorsToExceptions=\"true\"\n         convertNoticesToExceptions=\"true\"\n         convertWarningsToExceptions=\"true\"\n         processIsolation=\"false\"\n         stopOnError=\"false\"\n         stopOnFailure=\"false\"\n         syntaxCheck=\"true\"\n         strict=\"true\"\n         verbose=\"true\"\n>\n    <testsuites>\n        <testsuite name=\"Unit\">\n            <directory>test/Unit</directory>\n        </testsuite>\n    </testsuites>\n    <testsuites>\n        <testsuite name=\"Password Compat Test Suite\">\n            <directory suffix=\"Test.php\">./test</directory>\n        </testsuite>\n    </testsuites>\n    <filter>\n        <whitelist processUncoveredFilesFromWhitelist=\"true\">\n            <directory suffix=\".php\">./lib</directory>\n        </whitelist>\n    </filter>\n</phpunit>\n"
+        },
+        {
+          "name": "test",
+          "type": "tree",
+          "content": null
+        },
+        {
+          "name": "version-test.php",
+          "type": "blob",
+          "size": 0.1455078125,
+          "content": "<?php\n\nrequire \"lib/password.php\";\n\necho \"Test for functionality of compat library: \" . (PasswordCompat\\binary\\check() ? \"Pass\" : \"Fail\");\necho \"\\n\";"
+        }
+      ]
+    }
+  ]
+}
